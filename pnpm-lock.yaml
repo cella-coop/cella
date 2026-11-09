@@ -52,6 +52,12 @@ importers:
 
   apps/org/core/body/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../actions/ts
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../db/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../ui/ts

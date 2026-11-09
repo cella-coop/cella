@@ -120,6 +120,60 @@ A slice mounts the editor over its own draft: it hands it the Loro
 document, the action that posts an update and the live stream it
 listens on, and the editor knows nothing of where the bytes are kept.
 
+## The live session
+
+A record's body is edited live: the server joins each open body as one
+more Loro peer, in memory, merges what every editor sends and relays it
+to the others, and saves the merged document as a snapshot. The session
+is core body's (`./api`, `Session`), and it knows no feat: a feat that
+keeps bodies hands it, when its `./api` mounts, its kind (the collection
+its records are served under), how to read a record's circle and its
+saved body as the reader sees them, and its save action; the shell,
+which starts it, hands it its connections, membership's `may` and the
+scope's own deps a save is signed with. The session calls what it was
+handed and imports nothing.
+
+- **Joining.** An editor opens `/<collection>/<record>/body/live`, a
+  stream of server-sent events: `joined`, whether this peer may edit,
+  then an `update` holding all it lacks by the Loro version vector it
+  sends (`vv`), then each update merged, from any peer, its own too,
+  which Loro imports once. The first to open a body starts the session
+  from the saved snapshot, the next ones join it. Joining needs
+  `discuss` in the record's circle, asked of the membership feat's
+  `may` as every power is; one who may read the record and not discuss
+  it gets the body read-only, and one who reads no such record nothing.
+  An editor posts its updates to the same address, a Loro update in the
+  form's `update` field, answered as a form's post is; bytes that are
+  not a Loro update, or leave the body with no canonical form, are
+  refused.
+- **Mid-session.** The session asks again at every update a peer posts
+  and at every save, and drops the peer whose answer is no, telling it
+  why (`dropped`): a mandate revoked while its holder edits ends their
+  editing at their next keystroke, the update it sent refused; what
+  they sent while they held it stands, and the next save names them
+  among its contributors. At a save, a writable peer that may no longer
+  discuss the body is dropped, and any peer that no longer reads it.
+- **Saving.** The session saves through the feat's action: after a pause
+  of 3 seconds in the edits, every 30 seconds while editing goes on, and
+  when the last editor leaves. Each save is one entry the scope makes, as
+  the notary signs its receipts, never a member's device: it carries the
+  snapshot and the addresses of who contributed since the last save, and the
+  feat's fold sets the record's `body` column to it. A save with nothing
+  new is not made.
+- **A crash.** The updates since the last save are kept in a small
+  buffer beside the scope's state, a file a body, its first line the
+  snapshot they build on and then one line an update, its author and its
+  bytes, appended and flushed as each merges and cleared at each save; a
+  line a crash cut short is left out. A server that restarts replays it
+  into the session and saves at once (`recover`), so a crash loses at
+  most the update in flight. A save refused, or one that fails, keeps
+  its updates in the buffer and in the session, says why, and is tried
+  again after the next pause; a body whose recovery was refused carries
+  them into the session of the next to open it.
+
+A slice mounts the editor over the session's stream: the editor knows
+nothing of where the bytes are kept.
+
 ## Tests
 
 - Slice tests (`core/body/ts/_tests/`): the edits, marks, outlines,
@@ -127,7 +181,14 @@ listens on, and the editor knows nothing of where the bytes are kept.
   random concurrent edits; and the canonical form, the TypeScript one
   and the database's, byte for byte on 300 random bodies, refusing the
   same ones.
+- The live session's slice tests (`_tests/session.test.ts`), on a
+  clock of their own: two peers editing through a session over a save
+  of the test's own, converging, and a late joiner catching up; the
+  saves the pauses, the editing going on and the leaving make, and a
+  refused save kept for the next; a peer dropped when its answer turns
+  no, at an update and at a save, a reader who may not discuss and one
+  who reads nothing; a restart that replays the buffer, in memory and
+  on file, and saves; and the live route's events and posts.
 - The editor's browser walk stays the document feat's
   (`_e2e/editor.test.ts`), since a document's page is where it is
-  driven; a body's page drives the same editor
-  ([body](../body/index.md#tests)).
+  driven; a record's page drives the same editor.

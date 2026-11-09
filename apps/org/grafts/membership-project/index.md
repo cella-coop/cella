@@ -87,7 +87,7 @@ refused.
 
 Which projects a power covers is the project's owning circle, and the
 membership feat's one guard reads it
-([membership](../../feats/person/feats/membership/index.md#seats)): a
+([membership](../../feats/membership/index.md#seats)): a
 share's payload names its project's circle, as the project feat's own
 writes do, so a lead grants shares of their own circle's projects by a
 mandate on `own`, and no slice checks a project's circle again.

@@ -77,7 +77,7 @@ each as it is made.
 Each write on a project, a milestone, its budget or its archive names
 the project's circle in its payload, which the membership feat's guard
 reads a mandate's scope against, so a lead runs their own circle's
-projects alone ([membership](../person/feats/membership/index.md#seats)).
+projects alone ([membership](../membership/index.md#seats)).
 
 ## Folds
 

@@ -77,7 +77,7 @@ shell `meeting-membership/circles`, `api/circles.ts` and
   `membership.may` finds on any seat, is held there.
 - Whose meetings a power covers is the meeting's owning circle, which
   the membership feat's one guard reads from the payload
-  ([membership](../../feats/person/feats/membership/index.md#seats)):
+  ([membership](../../feats/membership/index.md#seats)):
   an attendance record names its meeting's circle, as the meeting feat's
   own writes do, so a lead's or secretary's `keep-minutes`, scoped to
   their own circle, covers it alone, and the manager's, on the whole

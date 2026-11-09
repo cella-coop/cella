@@ -230,10 +230,10 @@ export interface Slice {
   // into keeps what the graft added beside its own: `motion/circles`.
   name: string
   // The feat a nested feat nests in, whose collections it extends as a
-  // graft extends those of the feats it joins: membership's is person.
+  // graft extends those of the feats it joins.
   within?: string
-  // A library of the app's core, whose collections any slice may extend,
-  // since every feat builds on core: the circles.
+  // A core feat of the app, whose collections any slice may extend,
+  // since every feat builds on core: the circles, the people.
   core?: boolean
   collections?: Record<string, Collection>
   extends?: Record<string, Extension>

@@ -1,6 +1,6 @@
 +++
 title = "Circle"
-updated = 2026-11-10
+updated = 2026-11-11
 +++
 
 Core's circles: the co-op's structure and the authority that flows
@@ -99,7 +99,7 @@ ownership grants nothing by itself, only the label a scope is read
 against. The one guard that reads it on every action is the membership
 feat's, which knows whether each holder's seat counts, `membership.may`
 against the circle the write's payload names
-([membership](../../feats/person/feats/membership/index.md#seats)). A
+([membership](../../feats/membership/index.md#seats)). A
 mandate's procedure is what the motions acting under it are decided by,
 and passes down its chain: the motion feat, which knows procedures, holds it to one at least as strict as its
 parent's chain asks and fixes each motion's by it
@@ -222,7 +222,7 @@ statutes, and its values are copied into `circle.right` as it is
 adopted, as a mandate's are into `circle.mandate`, by the same
 `circle_policy.mandate_from`; what they may be is `circle_policy.right_flaw(marked)`:
 one right, a power, at most a limit, and no other value. Who is one of
-them on a day is person's core's to say, `person.holds(actor, right,
+them on a day is core person's to say, `person.holds(actor, right,
 day)`, by the function each kind of person registers there: `person`
 the people the co-op knows, `membership` its active members,
 `employment` those employed. The membership feat's guard on every op
@@ -332,7 +332,11 @@ them without reading the table it guards, and say no more than
 whether, and of the reader's own seats.
 `circle.unsecured()` names core's tables with the slices', so `cella
 migrate` fails a run that leaves one not enabled and forced, or with
-no policy the app role reads by.
+no policy the app role reads by. Core's tables are the circles', the
+register's and the people's (`circle.cored`), which the event trigger
+passes by: the people's are put under `circle` and `registry` by core's
+graft joining the circles to them
+([circle-person](../grafts/circle-person/index.md)).
 
 The authority reads past these policies, as it always has: `cella.may`
 and `cella.covered` run as their owner, so a person's mandates open
@@ -370,7 +374,7 @@ The parts are a list, by commas and a last `and`, each one of five:
 - `seats`: every member of each circle and every tenure, which name a
   circle, a role and their days, and their holder by the address the
   seat keeps and nothing more of them: a name, a membership or any
-  other personal value is the person feat's, behind its own policies;
+  other personal value is core person's, behind its own policies;
 - `register`: every policy of the register, its wordings and its
   values, which `circle_policy.says` then quotes to that reader too.
 
@@ -506,7 +510,7 @@ people and roles, and a person's tenures of roles, and the seats read
 from them (`007-seat.sql`). Any person may hold a role or be a member
 of a circle, member of the co-op or not; whether a seat counts on a day
 is the membership feat's to say, since the assembly's asks an active
-membership ([membership](../../feats/person/feats/membership/index.md#seats)).
+membership ([membership](../../feats/membership/index.md#seats)).
 
 - `circle.member`: a member of a circle, by circle id, and either a
   person, by address, or a role, by id, with no foreign key into a

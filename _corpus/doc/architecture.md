@@ -16,14 +16,12 @@ layers inside each package and the write labels and feat rulings of
 
 ```mermaid
 flowchart BT
-  core["apps/org/core: actions, circle, crypto, log, keystore, …"]
-  person["feats/person/core"]
-  membership["feats/person/feats/membership/core"]
+  core["apps/org/core: actions, circle, person, crypto, log, keystore, …"]
+  membership["feats/membership/core"]
   motion["feats/motion/core"]
   graft["grafts/membership-motion"]
   root["apps/org/ts: the shell"]
-  person --> core
-  membership --> person
+  membership --> core
   motion --> core
   graft --> membership
   graft --> motion
@@ -44,12 +42,13 @@ A node is a directory with a `feat.toml`. It holds:
   VAT, which invoices and bills share), `pdf`, `ui` (the shell's tokens
   and components) and later `auth`. Its **core feats** each own a schema,
   as a feat does: `circle` (the circles, their roles, tenures, seats and
-  mandates, [circles are core](#circles-are-core)), `policy` (the
-  register of the policies circles adopt by motion,
-  [policies](#policies)) and `analytics` (the port reports are read
-  through). Core feats that use one another are joined by **core
-  grafts**, in `core/grafts/` ([core grafts](#core-grafts)). A leaf
-  feat's core is all of it.
+  mandates, [circles are core](#circles-are-core)), `person` (the people,
+  their devices, the keyring and the inbox, [people are
+  core](#people-are-core)), `policy` (the register of the policies
+  circles adopt by motion, [policies](#policies)) and `analytics` (the
+  port reports are read through). Core feats that use one another are
+  joined by **core grafts**, in `core/grafts/` ([core
+  grafts](#core-grafts)). A leaf feat's core is all of it.
 - `feats/` — its child feats, the same shape.
 - `grafts/` — the joins between the feats below it, at any depth, that no
   child of it holds all of ([grafts](#grafts)).
@@ -83,17 +82,17 @@ members' capital accounts, reserves and funds, and their periods and
 balances; `transaction` holds the journal's entries, a collection in its own
 right. A federation-facing name more specific than these may come later.
 
-What is a top-level feat is decided case by case, and most of org's feats
-are top-level: they sit flat under `apps/org/feats/`. A feat nests under
-another only when it is a genuine sub-feature of that one feat, and
-`person` is the one that holds feats today: `membership` and
-`employment`, under `feats/person/feats/`. A person is who someone is,
-their name, their contact details and their devices; a membership and an
-employment are what they may hold, each with its own days. Nested, the
-children inherit the parent's core, so each reads the person and neither
-knows the other, and a person's roles are derived: a member is a person
-who holds a membership, a worker one who holds an employment. An agent
-is a later child of the same shape. A contact, an organisation or a
+What is a top-level feat is decided case by case, and every one of org's
+feats is top-level today: they sit flat under `apps/org/feats/`. A feat
+nests under another only when it is a genuine sub-feature of that one
+feat, whose core it inherits. A person is who someone is, their name,
+their contact details and their devices, and is core ([people are
+core](#people-are-core)); a membership and an employment are what they
+may hold, each with its own days, `membership` and `employment` feats of
+the app that each read the core person and neither knows the other, and
+a person's roles are derived: a member is a person who holds a
+membership, a worker one who holds an employment. An agent is a later
+feat of the same shape. A contact, an organisation or a
 person the co-op deals with, is not one: most contacts are organisations,
 so `contact` is a top-level feat of its own, and a person among them is
 no person of the co-op. What everything grafts onto belongs in the
@@ -117,7 +116,7 @@ named for it and declared in its `models/actions.ts` as a feat's are,
 and any slice may guard them. It knows no feat: whether a seat counts on
 a day is the membership feat's to say, so who may use a power,
 `membership.may`, and the authority every read asks are that feat's
-([membership](../../apps/org/feats/person/feats/membership/index.md#seats)).
+([membership](../../apps/org/feats/membership/index.md#seats)).
 A feat that reads circles reads core, as the motion feat reads a
 motion's circle and the meeting feat a meeting's, and a graft that
 joined the circles to a feat dissolved into that feat or into the graft
@@ -130,6 +129,25 @@ values and the publication are each copied from a policy as it is
 adopted, and the circles keep them in their own tables by the policy's
 id; what reads the policy is the core graft joining the circles to the
 register, `circle-policy` ([core grafts](#core-grafts)).
+
+### People are core
+
+People are core as circles are: every feat comes to name them, as a
+comment's author, a mention, a task's assignee or an expense's claimant,
+so none holds them. `apps/org/core/person` is a core feat of org's core
+with SQL, a shell slice and actions of its own: the people, their
+devices and the keyring that checks every signature, the rights
+registry, and the inbox, what waits on the acting person. Its tables are
+in the `person` schema, which every feat's and graft's SQL may reference
+as it references `circle.*`, a foreign key into `person.person` among
+them; its actions are named for it and declared in its
+`models/actions.ts`. It knows no feat: membership and employment are
+feats of the app whose rows name a core person, as a feat's rows name a
+circle, and each registers the right its people hold
+([person](../../apps/org/core/person/index.md)). No graft joins
+`person`, and `cella check feats` refuses one that does
+(`tools/_tests/tree.test.mjs`); what joins the people to the circles
+is core's graft `circle-person` ([core grafts](#core-grafts)).
 
 The notary is not a feat but a layer under every feat: the `cella`
 Postgres extension, a package of org's core (`apps/org/core/notary/rs`),
@@ -168,7 +186,7 @@ the shell's registry refuses, as the shell loads, a core feat's slice
 extending another core feat's collections, which only a core graft
 joining both may (`apps/org/ts/src/lib/server/slices.ts`).
 
-Org's core holds one, `circle-policy`
+Org's core holds two. `circle-policy`
 ([its doc](../../apps/org/core/grafts/circle-policy/index.md)), joining
 the circles to the register. It reads a policy's values from the
 register and issues them by the circles' writes as the policy is
@@ -181,7 +199,15 @@ feat attaches to a policy's adoption and end (`circle_policy.grants`,
 tables under the circles' row-level policies, which the register,
 knowing no circle, cannot; quotes a policy's wording to whoever may read
 it (`circle_policy.says`); and gives a mandate's page its policy's
-sentence and the motion that adopted it.
+sentence and the motion that adopted it. And `circle-person`
+([its doc](../../apps/org/core/grafts/circle-person/index.md)), joining
+the circles to the people: it binds each person's and each device's
+`circle` to its owning circle, a foreign key into `circle.circle` and
+the assembly by default, and puts the people's tables under the
+circles' row-level policies, which the people, knowing no circle,
+cannot. A core graft joining the circles alters a table of a core feat
+it joins only so, and `tools/sql-check.mjs` refuses any other alteration
+(`tools/_tests/core.test.mjs`).
 
 ## What may depend on what
 
@@ -245,13 +271,15 @@ A graft sits at the lowest node that holds every feat it joins: under that
 node's `grafts/`, where no child of the node holds them all. A graft
 joining two of org's feats sits in `apps/org/grafts/`, and so does one
 joining a nested feat to another of org's, as `membership-motion` joins
-`motion` and `person`'s `membership`; one joining two children of
-`person` sits in `feats/person/grafts/`, as `employment-membership`, a
-worker's candidacy for membership, does. A graft names the feats it joins
-whatever their depth, and never a feat with one nested in it: a child
-already reads its parent, so `membership-person` would join nothing. A
-graft that joins a nested feat reads its parent's core too, as the feat
-does: `membership-motion` reads the member's name from `person`.
+`motion` and `membership`, and as `employment-membership`, a worker's
+candidacy for membership, joins `employment` and `membership`; one
+joining two children of a feat would sit in that feat's `grafts/`. A
+graft names the feats it joins whatever their depth, and never a feat
+with one nested in it: a child already reads its parent. A graft that
+joins a nested feat reads its parent's core too, as the feat does. No
+graft joins a core feat, which every slice reads already:
+`membership-motion` reads the member's name from core's `person`, as it
+reads their seats from core's `circle`.
 
 No foreign key crosses a feat boundary. A feat handles an unlinked entity
 gracefully: an invoice without a contact is unbilled, not invalid. The graft
@@ -576,9 +604,9 @@ motion. Custom feats are how cella is extended.
 
 | SQL in | may reference |
 |---|---|
-| a node's core | `cella.*`; the notary's `vault.*`; the catalog; a core feat's own schema, named for it (`analytics`, `policy`, `circle`); a core graft's own, named for it (`circle_policy`), and those of the core feats it joins |
-| a feat's schema | its own schema; the schemas of the feats it nests in; `cella.*`; core's circles, `circle.*`; the policy register but its wording; core's grafts, `circle_policy.*`; the catalog |
-| a graft's schema | its own schema; the schemas of the feats it joins and of the feats they nest in; the schemas of its lower-order grafts, at or below its node; `cella.*`; core's circles, `circle.*`; the policy register but its wording; core's grafts, `circle_policy.*`; the catalog |
+| a node's core | `cella.*`; the notary's `vault.*`; the catalog; a core feat's own schema, named for it (`analytics`, `policy`, `circle`, `person`); a core graft's own, named for it (`circle_policy`, `circle_person`), and those of the core feats it joins |
+| a feat's schema | its own schema; the schemas of the feats it nests in; `cella.*`; core's circles, `circle.*`; core's people, `person.*`; the policy register but its wording; core's grafts, `circle_policy.*`; the catalog |
+| a graft's schema | its own schema; the schemas of the feats it joins and of the feats they nest in; the schemas of its lower-order grafts, at or below its node; `cella.*`; core's circles, `circle.*`; core's people, `person.*`; the policy register but its wording; core's grafts, `circle_policy.*`; the catalog |
 
 Every record names its **owning circle**: each table of a feat or a graft
 has a `circle` column, text, never null, a foreign key into core's
@@ -1168,7 +1196,7 @@ two halves of one **slice**, matched by name:
   to its parent's (`extends`, with `within` naming the parent): fields
   on each row (`list`, a select of each row's id and its fields), rows
   of its own in a collection that gathers them from the slices that know
-  each kind (`rows`, a select too), as the person feat's inbox gathers
+  each kind (`rows`, a select too), as core person's inbox gathers
   what waits on a person, data on an item, what it adds to the collection's `about`, such as the
   circles a new motion may be put in, writes, and whether it opens an
   item's bytes its owner keeps closed (`allows`), as a power over
@@ -1180,7 +1208,7 @@ two halves of one **slice**, matched by name:
   own writes, which the root runs as the importing member and records in
   the import feat; and the settings pages it serves (`settings`), each
   what it reads for the acting person and the writes that save it, as
-  the person feat's Account.
+  core person's Account.
 - from `./app`, its client side (`App` in `@cella/org-ui`): for each
   collection it owns, a view (its columns, its New form, the status
   badge its header shows and its dashboard's widgets) and a page (its title, its Properties, Related and Activity cards, its
@@ -1506,7 +1534,7 @@ are on their own circle, runs Web's projects and approves Web's time
 and is refused Brand's, and the manager's, on the whole co-op, cover
 every circle's records. Ownership grants nothing by itself, and a seat
 in a circle nothing over its records without a mandate
-([membership](../../apps/org/feats/person/feats/membership/index.md#seats)).
+([membership](../../apps/org/feats/membership/index.md#seats)).
 Reading reads the same scope: a mandate for `read`, the read group's
 power, which no action needs, lets its holder read every record its
 scope covers, and one for a power a feat names as reading its rows
@@ -1555,12 +1583,12 @@ person, every member or every employee as such (`{right: member}`),
 with no seat, never an agent or a service, so it has no grantee, no
 issuer and no chain. It is a policy of its own kind, `right`, and its
 values are copied into `circle.right` as a mandate's are into
-`circle.mandate`. Who holds a right on a day is said by person's
-core, which every kind of person nests in: `person.holds(actor, right,
+`circle.mandate`. Who holds a right on a day is said by core's
+person, which every kind of person is held by: `person.holds(actor, right,
 day)` asks the function each kind registers by `person.register_right`,
 `person` itself the known people, `membership` the active members by
 `membership.active`, `employment` those employed by
-`employment.employed`, so person's core knows none of its children by
+`employment.employed`, so core's person knows none of those feats by
 name. The membership feat's guard on every op with a power takes a
 right, found by `membership.entitled`, as it takes a mandate on
 the actor's seats, so a person with no seat holds their rights all the
@@ -1606,7 +1634,7 @@ motion of a circle holding `seat-member` as any seat is given, and holds that
 circle's mandates there, its participant's among them. A seat is how
 someone takes part in a circle; what is their own is still a right's,
 so a worker logs their time by their employment wherever they sit
-([membership](../../apps/org/feats/person/feats/membership/index.md#seats)).
+([membership](../../apps/org/feats/membership/index.md#seats)).
 
 **Who may vote or veto is the procedure's.** A motion's roll is what
 its procedure says: by default the people seated in its circle on the
@@ -1662,7 +1690,7 @@ co-op can grant, and a fixture shows who holds it. That a guard does
 what its check or its power says is its owner's and its tests'. An
 action not yet built is not declared: recovering a key from guardian
 shares comes with the power it needs and the mandate that grants it
-([person](../../apps/org/feats/person/index.md#powers)).
+([person](../../apps/org/core/person/index.md#powers)).
 
 Every critical invariant is enforced twice: the handler checks the
 permission and the feat's row-level policies and triggers back it up. An

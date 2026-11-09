@@ -27,7 +27,7 @@
 // and a view it cannot read, or a column of a type that is not plain,
 // fails the run. The analytics port, org's core library, publishes one too,
 // in its own schema: `analytics.head`, the log's head; and so do core's
-// circles, in theirs.
+// circles and people, in theirs.
 //
 // Then every table a feat or a graft makes is read for the reading rule:
 // a run that leaves one not under row-level security, enabled and forced,
@@ -143,9 +143,10 @@ const files = dirs
   .flatMap((dir) => sorted(dir).filter((f) => /^\d{3}-.+\.sql$/.test(f)).map((f) => join(dir, f)))
 const hashOf = (sql) => createHash('sha256').update(sql).digest('hex')
 // A slice publishes one, in a feat's core/sql/ or a graft's sql/, and so
-// does the analytics port, org's core library, for the log's head.
+// do the analytics port, org's core library, for the log's head, and
+// core's circles and people.
 const contracts = dirs
-  .filter((dir) => /\/(feats\/[^/]+\/core|grafts\/[^/]+|apps\/[^/]+\/core\/(analytics|circle))\/sql$/.test(dir) && existsSync(join(dir, CONTRACT)))
+  .filter((dir) => /\/(feats\/[^/]+\/core|grafts\/[^/]+|apps\/[^/]+\/core\/(analytics|circle|person))\/sql$/.test(dir) && existsSync(join(dir, CONTRACT)))
   .map((dir) => join(dir, CONTRACT))
 
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL })

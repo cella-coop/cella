@@ -38,7 +38,7 @@ RETURN cella.writing()
 -- The schemas of core and the notary, whose tables no slice makes.
 CREATE FUNCTION circle.cored(schema text) RETURNS boolean
 LANGUAGE sql IMMUTABLE
-RETURN schema IN ('cella', 'vault', 'migration', 'public', 'information_schema', 'circle', 'policy', 'analytics')
+RETURN schema IN ('cella', 'vault', 'migration', 'public', 'information_schema', 'circle', 'person', 'policy', 'analytics')
   OR schema LIKE 'pg\_%';
 
 -- Every table a feat or a graft makes is under row-level security as it
@@ -103,7 +103,7 @@ BEGIN ATOMIC
     END
   FROM pg_class c
   JOIN pg_namespace n ON n.oid = c.relnamespace
-  WHERE c.relkind IN ('r', 'p') AND (NOT circle.cored(n.nspname) OR n.nspname IN ('circle', 'policy'))
+  WHERE c.relkind IN ('r', 'p') AND (NOT circle.cored(n.nspname) OR n.nspname IN ('circle', 'person', 'policy'))
     AND NOT EXISTS (SELECT FROM pg_depend d WHERE d.objid = c.oid AND d.deptype = 'e')
     AND (NOT c.relrowsecurity OR NOT c.relforcerowsecurity OR NOT EXISTS (
       SELECT FROM pg_policy p

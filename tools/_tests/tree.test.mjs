@@ -15,7 +15,7 @@ import { join } from 'node:path'
 
 const checker = new URL('../feat-check.mjs', import.meta.url).pathname
 
-// A throwaway tree: org with motion and person, person with membership
+// A throwaway tree: org with motion and party, party with membership
 // and employment; each package named by its slice, depending on `deps`.
 // `grafts` places each graft by the node it sits at and names what it
 // declares and depends on; `extra` adds feats; `files` writes each file by
@@ -36,9 +36,9 @@ function tree({ grafts = {}, deps = {}, extra = [], files = {} }) {
   mkdirSync(join(repo, 'apps/org'), { recursive: true })
   writeFileSync(join(repo, 'apps/org/feat.toml'), 'name = "org"\n')
   feat('apps/org/feats/motion', 'motion', declared('motion'))
-  feat('apps/org/feats/person', 'person', declared('person'))
-  feat('apps/org/feats/person/feats/membership', 'membership', declared('membership'))
-  feat('apps/org/feats/person/feats/employment', 'employment', declared('employment'))
+  feat('apps/org/feats/party', 'party', declared('party'))
+  feat('apps/org/feats/party/feats/membership', 'membership', declared('membership'))
+  feat('apps/org/feats/party/feats/employment', 'employment', declared('employment'))
   for (const [node, name] of extra) {
     feat(node, name, declared(name))
   }
@@ -58,40 +58,49 @@ function tree({ grafts = {}, deps = {}, extra = [], files = {} }) {
 }
 
 const org = 'apps/org'
-const person = 'apps/org/feats/person'
+const party = 'apps/org/feats/party'
 
 test('a child builds on its parent, and a graft at the lowest node reads the cores its feats nest in and the lower grafts below it', () => {
   const errors = tree({
-    deps: { membership: ['person'], employment: ['person'] },
+    deps: { membership: ['party'], employment: ['party'] },
     grafts: {
-      'membership-motion': { at: org, by: 'membership', deps: ['motion', 'membership', 'person'] },
-      'employment-membership': { at: person, by: 'employment', deps: ['employment', 'membership', 'person'] },
-      'employment-membership-motion': { at: org, by: 'employment', deps: ['motion', 'employment-membership', 'person'] },
+      'membership-motion': { at: org, by: 'membership', deps: ['motion', 'membership', 'party'] },
+      'employment-membership': { at: party, by: 'employment', deps: ['employment', 'membership', 'party'] },
+      'employment-membership-motion': { at: org, by: 'employment', deps: ['motion', 'employment-membership', 'party'] },
     },
   })
   assert.equal(errors, '')
 })
 
 test('a parent never builds on its child', () => {
-  const errors = tree({ deps: { person: ['membership'] } })
-  assert.match(errors, /core apps\/org\/feats\/person .* may not depend on core apps\/org\/feats\/person\/feats\/membership/)
+  const errors = tree({ deps: { party: ['membership'] } })
+  assert.match(errors, /core apps\/org\/feats\/party .* may not depend on core apps\/org\/feats\/party\/feats\/membership/)
 })
 
 test('a graft sits at the lowest node that holds every feat it joins', () => {
   const errors = tree({ grafts: { 'employment-membership': { at: org, by: 'employment' } } })
-  assert.match(errors, /apps\/org\/grafts\/employment-membership: every feat it joins is below apps\/org\/feats\/person; a graft sits at the lowest node that holds them all/)
+  assert.match(errors, /apps\/org\/grafts\/employment-membership: every feat it joins is below apps\/org\/feats\/party; a graft sits at the lowest node that holds them all/)
 })
 
 test('a graft never joins a feat with one nested in it', () => {
-  const errors = tree({ grafts: { 'membership-person': { at: org, by: 'membership' } } })
-  assert.match(errors, /joins person and membership, nested in it; a child inherits its parent's core/)
+  const errors = tree({ grafts: { 'membership-party': { at: org, by: 'membership' } } })
+  assert.match(errors, /joins party and membership, nested in it; a child inherits its parent's core/)
+})
+
+test('a graft never joins a core feat, which every feat reads already', () => {
+  const errors = tree({
+    grafts: { 'motion-person': { at: org, by: 'motion' } },
+    files: { 'apps/org/core/person/ts/package.json': JSON.stringify({ name: '@t/person' }), 'apps/org/core/person/sql/001.sql': '' },
+  })
+  assert.match(errors, /apps\/org\/grafts\/motion-person: joins person, a core feat, which every feat and graft reads already; no graft joins core/)
+  assert.doesNotMatch(errors, /joins person, which is not a feat below/)
 })
 
 test('a graft reads no core of a feat it does not join, nor a graft above its node', () => {
   const errors = tree({
     grafts: {
       'membership-motion': { at: org, by: 'membership' },
-      'employment-membership': { at: person, by: 'employment', deps: ['motion', 'membership-motion'] },
+      'employment-membership': { at: party, by: 'employment', deps: ['motion', 'membership-motion'] },
     },
   })
   assert.match(errors, /graft employment-membership .* may not depend on core apps\/org\/feats\/motion/)
@@ -146,11 +155,11 @@ test('the site depends on the brand alone, and no package depends on the site', 
   const ok = tree({ files: { 'packages/brand/package.json': brand, 'apps/site/package.json': site({ '@t/brand': 'workspace:*' }) } })
   assert.equal(ok, '')
   const errors = tree({
-    deps: { person: ['site'] },
+    deps: { party: ['site'] },
     files: { 'packages/brand/package.json': brand, 'apps/site/package.json': site({ '@t/motion': 'workspace:*' }) },
   })
   assert.match(errors, /apps\/site: depends on apps\/org\/feats\/motion\/core\/ts; the site depends on no package of the repository but one outside the tree/)
-  assert.match(errors, /apps\/org\/feats\/person\/core\/ts: depends on apps\/site; no package depends on the site/)
+  assert.match(errors, /apps\/org\/feats\/party\/core\/ts: depends on apps\/site; no package depends on the site/)
 })
 
 test('a feat\'s name is unique in its app, at any depth', () => {
@@ -173,6 +182,6 @@ test('an action declared outside models/actions.ts is refused, as is a models/op
 })
 
 test('an action is its feat\'s own', () => {
-  const errors = tree({ files: { [`${src}/models/actions.ts`]: declaring.replace('motion:motion', 'person:motion') } })
-  assert.match(errors, /person:motion:propose is not an action of motion/)
+  const errors = tree({ files: { [`${src}/models/actions.ts`]: declaring.replace('motion:motion', 'party:motion') } })
+  assert.match(errors, /party:motion:propose is not an action of motion/)
 })

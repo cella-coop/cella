@@ -25,7 +25,7 @@ before(async () => {
   await db.query(`SET cella.clock = '2026-10-24'`)
   await db.query(`SET cella.scope = '${scope}'`)
   await db.query(`CREATE FUNCTION public.anyone(actor text, device bytea) RETURNS text LANGUAGE sql STABLE RETURN NULL`)
-  // Any device signs for anyone, in place of the person feat's keyring:
+  // Any device signs for anyone, in place of core person's keyring:
   // this test enrols no devices.
   await db.query('DELETE FROM cella.keyring')
   await db.query(`INSERT INTO cella.keyring (fn, owner) VALUES ('public.anyone(text, bytea)', 'test')`)

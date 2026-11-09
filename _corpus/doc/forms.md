@@ -127,7 +127,7 @@ employment-membership graft's, and puts the motion to admit them to the
 assembly in the same write, by membership-motion's, so the
 assembly must rule on it as it rules on any motion. The year is the
 guard's and not a value of the policy's: a co-op that rewords it changes
-no guard ([the membership feat](../../apps/org/feats/person/feats/membership/index.md)). A rule's
+no guard ([the membership feat](../../apps/org/feats/membership/index.md)). A rule's
 values are named for no feat, so no guard reads them: they bind by the
 members' judgement, as the law's floors do until a feat reads them.
 

@@ -55,8 +55,9 @@ before(async () => {
   for (const [k, v] of Object.entries(settings)) {
     await db.query(`SET cella.${k} = ${db.escapeLiteral(v)}`)
   }
-  // Any device signs for anyone: this slice has no keyring of its own.
+  // Any device signs for anyone, in place of core person's keyring.
   await db.query(`CREATE FUNCTION public.anyone(actor text, device bytea) RETURNS text LANGUAGE sql STABLE RETURN NULL`)
+  await db.query('DELETE FROM cella.keyring')
   await db.query(`INSERT INTO cella.keyring (fn, owner) VALUES ('public.anyone(text, bytea)', 'test')`)
   await db.query(`INSERT INTO invoice.series (name, next) VALUES ('F-2026', 1)`)
 })

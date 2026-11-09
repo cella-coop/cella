@@ -278,7 +278,7 @@ sequenceDiagram
   payload names, the root's where it names none, within its limit for
   the write's amount, or a right granting it, which reaches the whole
   co-op: every person,
-  every member or every employee, as person's core says the actor is one
+  every member or every employee, as core's person says the actor is one
   that day. It is the one guard that reads a permission's scope; a
   record's owning circle grants nothing by itself, and a seat in it
   nothing without a mandate. What is the actor's own (a profile, a device, their time, a

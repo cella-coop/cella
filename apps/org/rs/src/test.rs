@@ -480,10 +480,14 @@ mod tests {
         );
         assert_eq!(
             contract(Path::new(
-                "apps/org/feats/person/feats/membership/core/sql/analytics.sql"
+                "apps/org/feats/party/feats/membership/core/sql/analytics.sql"
             ))
             .as_deref(),
             Some("membership")
+        );
+        assert_eq!(
+            contract(Path::new("apps/org/core/person/sql/analytics.sql")).as_deref(),
+            Some("person")
         );
         assert_eq!(
             contract(Path::new(

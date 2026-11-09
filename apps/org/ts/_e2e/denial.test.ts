@@ -45,9 +45,11 @@ const retired = (schema: string, sql: string) =>
 // layers under every slice, and core's. The analytics port's is read as a
 // slice's is, and so are core's circles and its register of policies, the
 // co-op's structure, which a member of the scope reads whole
-// ([circle](../../core/circle/index.md#who-reads-the-structure)).
+// ([circle](../../core/circle/index.md#who-reads-the-structure)), and
+// core's people, read by their owning circle as a slice's records are.
 const LAYERS = new Set(['cella', 'vault', 'migration', 'public'])
 const STRUCTURE = ['circle', 'policy']
+const PEOPLE = 'person'
 const PORT = 'analytics'
 
 const nobody = 'nobody@denial.example'
@@ -153,11 +155,11 @@ test('every feat and graft the tree holds owns a schema of the database, and eve
   ).rows.map((r) => r.nspname)
   const missing = [...tree].filter(([s, { sql }]) => !schemas.includes(s) && !retired(s, sql)).map(([s]) => s)
   assert.deepEqual(missing, [], 'a slice makes SQL in no schema of its name, so its denial test reads nothing of it')
-  const astray = schemas.filter((s) => !tree.has(s) && !LAYERS.has(s) && !STRUCTURE.includes(s) && s !== PORT)
+  const astray = schemas.filter((s) => !tree.has(s) && !LAYERS.has(s) && !STRUCTURE.includes(s) && s !== PORT && s !== PEOPLE)
   assert.deepEqual(astray, [], 'a schema no slice owns escapes the denial test')
 })
 
-for (const [schema, name] of [[PORT, PORT] as const, ...STRUCTURE.map((s) => [s, s] as const), ...[...tree].map(([s, { name }]) => [s, name] as const)]) {
+for (const [schema, name] of [[PORT, PORT] as const, [PEOPLE, PEOPLE] as const, ...STRUCTURE.map((s) => [s, s] as const), ...[...tree].map(([s, { name }]) => [s, name] as const)]) {
   test(`${name} shows a person with no mandate nothing but what it declares shared`, async (t) => {
     const slice = tree.get(schema)
     if (slice && retired(schema, slice.sql)) return t.skip('retired: its migrations drop its schema')

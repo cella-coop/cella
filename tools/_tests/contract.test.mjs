@@ -179,12 +179,12 @@ test('nothing grants the analytics role anything but cella migrate', async () =>
   assert.match(granted, /001.sql: grants to cella_analytics: cella migrate grants it the views each slice's analytics.sql publishes/)
 })
 
-test('no core publishes a contract but the analytics port and the circles, each in its own schema', async () => {
+test('no core publishes a contract but the analytics port, the circles and the people, each in its own schema', async () => {
   const head = `CREATE VIEW analytics.head AS SELECT h.n, encode(h.hash, 'hex') AS hash FROM cella.head h;${as('analytics.head')}`
   const port = await check({}, { core: { analytics: { migration: 'CREATE SCHEMA analytics;', contract: head } } })
   assert.equal(port, '')
   const other = await check({}, { core: { vat: { migration: 'SELECT 1;', contract: 'CREATE VIEW cella.rates AS SELECT 1 AS one;' } } })
-  assert.match(other, /core\/vat\/sql\/analytics.sql: an analytical contract is a feat's or a graft's, never a core's but the analytics port's and the circles'/)
+  assert.match(other, /core\/vat\/sql\/analytics.sql: an analytical contract is a feat's or a graft's, never a core's but the analytics port's, the circles' and the people's/)
   const outside = await check({}, { core: { analytics: { migration: 'CREATE SCHEMA analytics;', contract: 'CREATE VIEW cella.log_view AS SELECT n FROM cella.log;' } } })
   assert.match(outside, /log_view: a core library publishes only in its own schema, analytics/)
   const circles = await check({}, { core: { circle: { migration: 'CREATE SCHEMA circle;\nCREATE TABLE circle.circle (id text PRIMARY KEY);', contract: 'CREATE VIEW circle.circles AS SELECT c.id FROM circle.circle c;' + as('circle.circles', 'shared by id') } } })

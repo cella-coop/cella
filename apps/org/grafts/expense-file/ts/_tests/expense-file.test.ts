@@ -27,6 +27,7 @@ before(async () => {
   await db.query(`SET cella.clock = '2026-10-24'`)
   await db.query(`SET cella.scope = '${scope}'`)
   await db.query(`CREATE FUNCTION public.anyone(actor text, device bytea) RETURNS text LANGUAGE sql STABLE RETURN NULL`)
+  await db.query('DELETE FROM cella.keyring')
   await db.query(`INSERT INTO cella.keyring (fn, owner) VALUES ('public.anyone(text, bytea)', 'test')`)
 })
 

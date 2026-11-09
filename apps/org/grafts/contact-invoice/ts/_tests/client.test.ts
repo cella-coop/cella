@@ -20,16 +20,6 @@ const scope = 'test.example'
 const julien = 'julien@test.example'
 const as: Deps = { db, actor: julien, sign: signer(scope, julien, fixture(julien, 'laptop')) }
 
-const settings = {
-  scope: scope,
-  scope_legal_name: 'Lanterne Worker Co-operative',
-  scope_form: 'worker co-operative limited company with variable capital',
-  scope_siren: '123456789',
-  scope_rcs: 'Bobigny',
-  scope_vat: 'FR12123456789',
-  scope_seat: '14 rue des Graviers, 93100 Montreuil, France',
-}
-
 const reason = (out: { state: string; reason?: string }) => (out.state === 'refused' ? (out.reason ?? '') : `not refused: ${out.state}`)
 const settled = (out: { state: string; reason?: string }) => assert.equal(out.state, 'settled', out.state === 'refused' ? out.reason : '')
 const billings = async (invoice: string) => (await db.query('SELECT contact FROM contact_invoice.billing WHERE invoice = $1', [invoice])).rows
@@ -55,9 +45,14 @@ before(async () => {
   // which reads seats and mandates this test does not make.
   await db.query(`DELETE FROM cella.guard WHERE fn = 'circle_person.empowered(jsonb)'::regprocedure`)
   await db.query(`SET cella.clock = '2026-10-24'`)
-  for (const [k, v] of Object.entries(settings)) {
-    await db.query(`SET cella.${k} = ${db.escapeLiteral(v)}`)
-  }
+  await db.query(`SET cella.scope = ${db.escapeLiteral(scope)}`)
+  // The co-op's particulars, as its assembly's rule sets them, which the
+  // invoices it issues name as their seller.
+  await db.query(
+    `INSERT INTO circle.particulars (policy, name, legal_name, form, siren, rcs, vat, seat, "from")
+     VALUES ('m-2026-001/1', 'Lanterne', 'Lanterne Worker Co-operative', 'worker co-operative limited company with variable capital',
+             '123456789', 'Bobigny', 'FR12123456789', '14 rue des Graviers, 93100 Montreuil, France', '2026-10-24')`,
+  )
   // Any device signs for anyone, in place of core person's keyring.
   await db.query(`CREATE FUNCTION public.anyone(actor text, device bytea) RETURNS text LANGUAGE sql STABLE RETURN NULL`)
   await db.query('DELETE FROM cella.keyring')

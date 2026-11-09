@@ -63,6 +63,25 @@ RETURN cella.reader() IS NOT NULL AND coalesce((
   LIMIT 1
 ), false);
 
+-- The co-op's particulars in force on the verdict date: those of the one
+-- rule standing then (`circle.overlap_flaw`), none where no rule stands.
+-- It runs as its owner, so every reader reads them, signed in or not:
+-- the co-op's name and its mentions are what its every paper prints.
+CREATE FUNCTION circle.particulars() RETURNS TABLE (policy text, name text, legal_name text, form text, capital text, siren text,
+                                                    rcs text, vat text, seat text)
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = pg_catalog, pg_temp
+BEGIN ATOMIC
+  SELECT r.policy, r.name, r.legal_name, r.form, r.capital, r.siren, r.rcs, r.vat, r.seat
+  FROM circle.particulars r
+  WHERE r."from" <= cella.verdict_date()
+    AND (r.until IS NULL OR r.until > cella.verdict_date())
+    AND (r.revoked IS NULL OR r.revoked > cella.verdict_date())
+  ORDER BY r."from" DESC, r.id DESC
+  LIMIT 1;
+END;
+COMMENT ON FUNCTION circle.particulars() IS 'audience: shared: the co-op''s name and the mentions its every paper prints are no one''s to keep from a reader';
+
 -- The assembly an application is made to, its name and the procedure
 -- that decides it, which a person reads before they are a member.
 CREATE FUNCTION circle.applied() RETURNS TABLE (id text, name text, procedure text)
@@ -132,3 +151,8 @@ ALTER TABLE circle.publication ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURI
 CREATE POLICY structure ON circle.publication TO cella_app
   USING ((SELECT circle.whole()) OR (SELECT circle.inside())) WITH CHECK (true);
 CREATE POLICY structure_guards ON circle.publication FOR SELECT TO cella_guards USING (true);
+
+ALTER TABLE circle.particulars ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
+CREATE POLICY structure ON circle.particulars TO cella_app
+  USING ((SELECT circle.whole()) OR (SELECT circle.inside())) WITH CHECK (true);
+CREATE POLICY structure_guards ON circle.particulars FOR SELECT TO cella_guards USING (true);

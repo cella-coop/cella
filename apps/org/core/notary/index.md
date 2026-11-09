@@ -1,6 +1,6 @@
 +++
 title = "Notary"
-updated = 2026-11-11
+updated = 2026-11-13
 +++
 
 The `cella` Postgres extension (pgrx, Postgres 18): the notary and the guard primitives as SQL, in schema `cella`. Every item is a thin wrapper over `cella-guards` (`core/guards/rs`) with no logic of its own, and the whole SQL surface is declared in one file, `rs/src/surface.rs`, whose header lists it; `rs/src/notary.rs` is the SPI plumbing `submit` and `verify_log` need.
@@ -202,7 +202,7 @@ Guards never run with the owner's rights. `submit` runs each guard as `cella_gua
 - `cella.clock` (superuser only): a fixed verdict date, `YYYY-MM-DD`, for fixtures and tests. Unset, the date is the clock's day in the scope's timezone, read once per transaction.
 - `cella.timezone` (superuser only): the scope's timezone, an IANA zone such as `Europe/Paris`, whose day is the verdict date, so a cutoff or a period's close falls on the co-op's day and not on UTC's, an hour or two apart around midnight. Unset, UTC. `cella seed` sets it on the database from the fixture's `scope.toml`; the shell reads its today from `cella.verdict_date()` too.
 - `cella.unbound` (superuser only): a session may write the registered state tables outside a write; set by the migrations and on a slice test's database ([above](#bound)). Off by default.
-- `cella.scope` (superuser only): the scope's address, such as `lanterne.example`, which every write signature names. Set in `postgresql.conf` or on the database; `cella seed` sets it on the database from the fixture's `scope.toml`, and beside it `cella.scope_name` and `cella.scope_legal_name`, the co-op's name and legal name, which the notary never reads and the shell calls the co-op by, and the mentions its invoices print (`cella.scope_form`, `_capital`, `_siren`, `_rcs`, `_vat`, `_seat`; [operations](../../../../_corpus/doc/operations.md#a-scopes-server)).
+- `cella.scope` (superuser only): the scope's address, such as `lanterne.example`, which every write signature names. Set in `postgresql.conf` or on the database; `cella seed` sets it on the database from the fixture's `scope.toml`. The co-op's name and the mentions its invoices print are no setting: they are its particulars, a policy its assembly adopts ([the co-op's particulars](../circle/index.md#the-co-ops-particulars)).
 
 The library is loaded through `shared_preload_libraries` so its settings exist before any session sets them.
 

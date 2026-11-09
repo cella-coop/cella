@@ -11,14 +11,12 @@ export async function scope(db: Db): Promise<string | null> {
 }
 
 // The scope as a person reads it: its address, and the co-op's name and
-// legal name, which `cella seed` sets on the database beside the address
-// (`cella.scope_name`, `cella.scope_legal_name`); the address stands in
-// for a name not set.
+// legal name, from its particulars in force (`circle.particulars()`); the
+// address stands in for a name none marks.
 export async function named(db: Db): Promise<{ address: string | null; name: string | null; legal: string | null }> {
   const { rows } = await db.query<{ address: string | null; name: string | null; legal: string | null }>(
-    `SELECT nullif(current_setting('cella.scope', true), '') AS address,
-            nullif(current_setting('cella.scope_name', true), '') AS name,
-            nullif(current_setting('cella.scope_legal_name', true), '') AS legal`,
+    `SELECT nullif(current_setting('cella.scope', true), '') AS address, p.name, p.legal_name AS legal
+     FROM (SELECT) one LEFT JOIN circle.particulars() p ON true`,
   )
   return rows[0]
 }

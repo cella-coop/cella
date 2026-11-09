@@ -124,7 +124,9 @@ END;
 -- written: `3 000 €` an amount in cents, `20 %` a share in percent,
 -- `2026-01-01` or `1 January 2026` a day, `10` a number; a value named
 -- `role` or `power`, or ending so (`payer_role`), a role or a power by
--- its id; anything else text.
+-- its id; the co-op's SIREN and capital (`particulars_siren`,
+-- `particulars_capital`) text, as its papers print them; anything else
+-- text.
 CREATE FUNCTION policy.typed(name text, literal text) RETURNS TABLE (type text, value jsonb)
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -134,6 +136,7 @@ BEGIN ATOMIC
     SELECT CASE
       WHEN typed.name ~ '(^|_)role$' THEN 'role'
       WHEN typed.name ~ '(^|_)power$' THEN 'power'
+      WHEN typed.name IN ('particulars_siren', 'particulars_capital') THEN 'text'
       WHEN b.bare ~ '^[0-9]+([.,][0-9]{1,2})?€$' THEN 'amount'
       WHEN b.bare ~ '^[0-9]+([.,][0-9]+)?%$' THEN 'share'
       WHEN typed.literal ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN 'day'

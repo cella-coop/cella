@@ -36,23 +36,26 @@ BEGIN ATOMIC
   LIMIT 1;
 END;
 
--- What is wrong with a disclosure rule or a publication applying from
+-- What is wrong with a disclosure rule, a publication or the particulars applying from
 -- `day`, perhaps until `until`, and replacing `replaces`, or null: one of
 -- each stands at a time, so one whose days meet those of another of its
 -- kind not yet revoked by then replaces that one, and the refusal names
--- it. `made` is the rule itself, once adopted. `what` is `disclosure` or
--- `publication`.
+-- it. `made` is the rule itself, once adopted. `what` is `disclosure`,
+-- `publication` or `particulars`.
 CREATE FUNCTION circle.overlap_flaw(what text, day date, until date, replaces text, made text) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
-  SELECT o.policy || CASE overlap_flaw.what WHEN 'disclosure' THEN ' sets open books'' disclosure values' ELSE ' publishes parts of the structure' END
+  SELECT o.policy || CASE overlap_flaw.what WHEN 'disclosure' THEN ' sets open books'' disclosure values'
+                         WHEN 'particulars' THEN ' sets the co-op''s particulars' ELSE ' publishes parts of the structure' END
     || ' from ' || to_char(o."from", 'YYYY-MM-DD') || coalesce(' until ' || to_char(o.ends, 'YYYY-MM-DD'), '')
-    || ': one ' || CASE overlap_flaw.what WHEN 'disclosure' THEN 'disclosure rule' ELSE 'publication' END
+    || ': one ' || CASE overlap_flaw.what WHEN 'disclosure' THEN 'disclosure rule' WHEN 'particulars' THEN 'particulars rule' ELSE 'publication' END
     || ' stands at a time, so one on days that meet its replaces ' || o.policy
   FROM (
     SELECT d.id, d.policy, d."from", least(d.until, d.revoked) AS ends FROM circle.disclosure d WHERE overlap_flaw.what = 'disclosure'
     UNION ALL
     SELECT p.id, p.policy, p."from", least(p.until, p.revoked) FROM circle.publication p WHERE overlap_flaw.what = 'publication'
+    UNION ALL
+    SELECT r.id, r.policy, r."from", least(r.until, r.revoked) FROM circle.particulars r WHERE overlap_flaw.what = 'particulars'
   ) o
   WHERE o.policy IS DISTINCT FROM overlap_flaw.replaces AND o.policy IS DISTINCT FROM overlap_flaw.made
     AND (o.ends IS NULL OR o.ends > overlap_flaw.day)
@@ -113,6 +116,38 @@ BEGIN ATOMIC
            (SELECT u.p FROM unnest(v.parts) WITH ORDINALITY AS u(p, n)
             WHERE u.p <> ALL (ARRAY['circles', 'roles', 'mandates', 'seats', 'register']) ORDER BY u.n LIMIT 1) AS unknown
     FROM (SELECT circle.parts(marks #>> '{publish,literal}') AS parts) v
+  ) x;
+END;
+
+-- The particulars a rule names: the eight values it may mark, each by
+-- its name in the rule and its column.
+CREATE FUNCTION circle.particular_names() RETURNS text[]
+LANGUAGE sql IMMUTABLE
+RETURN ARRAY['particulars_name', 'particulars_legal_name', 'particulars_form', 'particulars_capital',
+             'particulars_siren', 'particulars_rcs', 'particulars_vat', 'particulars_seat'];
+
+-- What is wrong with the particulars, by their marks as written, each name
+-- with its literal (`{"particulars_name": {"literal": "Lanterne"}}`), and
+-- the circle adopting them, or null: null too for a rule marking none of
+-- them. They are the assembly's, mark `particulars_name` and nothing but
+-- the eight, and a SIREN marked is nine digits, spaces aside.
+CREATE FUNCTION circle.particulars_flaw(marks jsonb, issuer text) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN NOT EXISTS (SELECT FROM jsonb_object_keys(coalesce(marks, '{}')) k WHERE k = ANY (circle.particular_names())) THEN NULL
+    WHEN issuer IS DISTINCT FROM circle.assembly()
+      THEN 'the co-op''s particulars are the assembly''s: only a motion of the assembly adopts them'
+    WHEN x.other IS NOT NULL
+      THEN 'the co-op''s particulars mark any of ' || array_to_string(circle.particular_names(), ', ') || ' and nothing else, not ' || x.other
+    WHEN coalesce(marks #>> '{particulars_name,literal}', '') !~ '\S'
+      THEN 'the co-op''s particulars name it, as {particulars_name: Lanterne}'
+    WHEN marks ? 'particulars_siren' AND translate(marks #>> '{particulars_siren,literal}', E'   ', '') !~ '^[0-9]{9}$'
+      THEN 'a SIREN is nine digits, as {particulars_siren: 123 456 789}, not ' || coalesce(marks #>> '{particulars_siren,literal}', 'none')
+  END
+  FROM (
+    SELECT (SELECT k FROM jsonb_object_keys(coalesce(marks, '{}')) k
+            WHERE k <> ALL (circle.particular_names()) ORDER BY k LIMIT 1) AS other
   ) x;
 END;
 
@@ -236,8 +271,21 @@ BEGIN ATOMIC
   RETURNING id;
 END;
 
+-- Sets the co-op's particulars the rule `ref` marks, on its days, each
+-- as written, a value it marks not being null. Returns the row it made.
+CREATE FUNCTION circle.particularise(ref text, name text, legal_name text, form text, capital text, siren text, rcs text,
+                                     vat text, seat text, "from" date, until date) RETURNS bigint
+LANGUAGE sql
+BEGIN ATOMIC
+  INSERT INTO circle.particulars (policy, name, legal_name, form, capital, siren, rcs, vat, seat, "from", until)
+  VALUES (particularise.ref, particularise.name, particularise.legal_name, particularise.form, particularise.capital,
+          particularise.siren, particularise.rcs, particularise.vat, particularise.seat, particularise."from", particularise.until)
+  RETURNING id;
+END;
+
 -- Revokes on `day` what the policy `ref` granted that is not revoked
--- yet: its right, its disclosure values and its publication, and its
+-- yet: its right, its disclosure values, its publication and its
+-- particulars, and its
 -- mandate with every mandate issued under it that still stands then
 -- (`circle.revoke`). Returns the mandate, or null, and the mandates it
 -- revoked, the policy's first.
@@ -249,6 +297,7 @@ DECLARE
 BEGIN
   UPDATE circle.disclosure d SET revoked = day WHERE d.policy = ref AND d.revoked IS NULL;
   UPDATE circle.publication o SET revoked = day WHERE o.policy = ref AND o.revoked IS NULL;
+  UPDATE circle.particulars o SET revoked = day WHERE o.policy = ref AND o.revoked IS NULL;
   UPDATE circle.right r SET revoked = day WHERE r.policy = ref AND r.revoked IS NULL;
   SELECT m.id, circle.revoke(m.id, day) INTO made, gone FROM circle.mandate m WHERE m.policy = ref;
   RETURN QUERY SELECT made, coalesce(gone, '{}');

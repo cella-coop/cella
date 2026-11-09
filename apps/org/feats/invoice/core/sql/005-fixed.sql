@@ -1,21 +1,17 @@
 -- The seller as an invoice names it (code de commerce, art. R123-237; CGI,
--- annexe II, art. 242 nonies A, I, 2°): the scope's settings when the
--- invoice issues, `cella.scope_legal_name` and beside it, a setting not
--- made being null; `invoice.identified` refuses an issue without any but
--- the capital, and the VAT number where no line carries VAT.
+-- annexe II, art. 242 nonies A, I, 2°): the co-op's particulars in force
+-- when the invoice issues (`circle.particulars()`), its legal name and
+-- beside it, a value they mark none of being null; `invoice.identified`
+-- refuses an issue without any but the capital, and the VAT number where
+-- no line carries VAT.
 CREATE FUNCTION invoice.seller() RETURNS jsonb LANGUAGE sql STABLE
-RETURN jsonb_build_object(
-  'name', nullif(current_setting('cella.scope_legal_name', true), ''),
-  'form', nullif(current_setting('cella.scope_form', true), ''),
-  'capital', nullif(current_setting('cella.scope_capital', true), ''),
-  'siren', nullif(current_setting('cella.scope_siren', true), ''),
-  'rcs', nullif(current_setting('cella.scope_rcs', true), ''),
-  'vat', nullif(current_setting('cella.scope_vat', true), ''),
-  'seat', nullif(current_setting('cella.scope_seat', true), ''));
+RETURN (
+  SELECT jsonb_build_object('name', p.legal_name, 'form', p.form, 'capital', p.capital, 'siren', p.siren,
+                            'rcs', p.rcs, 'vat', p.vat, 'seat', p.seat)
+  FROM (SELECT) one LEFT JOIN circle.particulars() p ON true);
 
 -- Kept with the invoice as it issues, so a seat that moves or a form that
--- changes later never alters an invoice issued before. An invoice issued
--- before it was kept takes the settings at this upgrade.
+-- changes later never alters an invoice issued before.
 ALTER TABLE invoice.invoice ADD COLUMN seller jsonb NOT NULL DEFAULT invoice.seller();
 
 -- The seller is issued with the rest and never changes either. The name

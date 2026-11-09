@@ -1,6 +1,6 @@
 -- A revoked mandate stays revoked, from its day or an earlier one, and
 -- its grant never changes; nor does a right's, nor open books' values,
--- nor a publication.
+-- nor a publication, nor the particulars.
 CREATE FUNCTION circle.stays_granted() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
   IF (to_jsonb(NEW) - 'revoked') IS DISTINCT FROM (to_jsonb(OLD) - 'revoked')
@@ -20,5 +20,7 @@ CREATE TRIGGER stays_granted BEFORE UPDATE ON circle.disclosure
   FOR EACH ROW EXECUTE FUNCTION circle.stays_granted('disclosure', 'policy');
 CREATE TRIGGER stays_granted BEFORE UPDATE ON circle.publication
   FOR EACH ROW EXECUTE FUNCTION circle.stays_granted('publication', 'policy');
+CREATE TRIGGER stays_granted BEFORE UPDATE ON circle.particulars
+  FOR EACH ROW EXECUTE FUNCTION circle.stays_granted('particulars', 'policy');
 
-GRANT INSERT, UPDATE (revoked) ON circle.mandate, circle.right, circle.disclosure, circle.publication TO cella_app;
+GRANT INSERT, UPDATE (revoked) ON circle.mandate, circle.right, circle.disclosure, circle.publication, circle.particulars TO cella_app;

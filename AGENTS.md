@@ -120,6 +120,7 @@ Read
   writes no SQL. See [the shell](_corpus/doc/architecture.md#the-shell).
 - **Docs are present-tense** and say what the thing is. A feat's doc is its
   `index.md`; when you change a feat, update its doc and its `updated`.
+  No tool sees a doc's tense or its `updated`; review holds both.
 
 ## Workflow
 

@@ -13,7 +13,7 @@ const from = 'FROM payslip.payslip p JOIN payslip.run r ON r.month = p.month'
 // The payslips as the collection lists them, the latest month first, each
 // with its title.
 export const listing: Read = {
-  sql: `SELECT ${columns}, 'Payslip ' || p.month AS label ${from}`,
+  sql: `SELECT ${columns}, 'Payslip ' || p.month AS label, p.circle ${from}`,
   order: 'month DESC, member',
 }
 

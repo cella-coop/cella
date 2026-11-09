@@ -130,3 +130,33 @@ milestone = 2
 [[filing]]
 task = "t-27"
 project = "terres-report"
+
+[[filing]]
+task = "t-28"
+project = "books-move"
+milestone = 3
+
+[[filing]]
+task = "t-29"
+project = "pipeline-2027"
+milestone = 2
+
+[[filing]]
+task = "t-34"
+project = "statutes-2027"
+milestone = 2
+
+[[filing]]
+task = "t-35"
+project = "pipeline-2027"
+milestone = 3
+
+[[filing]]
+task = "t-36"
+project = "books-move"
+milestone = 3
+
+[[filing]]
+task = "t-37"
+project = "statutes-2027"
+milestone = 2

@@ -22,8 +22,8 @@ const as: Deps = { db, actor: julien, sign: signer(scope, julien, fixture(julien
 
 const settings = {
   scope: scope,
-  scope_legal_name: 'Lanterne SCOP SARL',
-  scope_form: 'SCOP SARL à capital variable',
+  scope_legal_name: 'Lanterne Worker Co-operative',
+  scope_form: 'worker co-operative limited company with variable capital',
   scope_siren: '123456789',
   scope_rcs: 'Bobigny',
   scope_vat: 'FR12123456789',

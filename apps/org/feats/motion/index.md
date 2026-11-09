@@ -1,6 +1,6 @@
 +++
 title = "Motion"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 How a circle acts as a whole: motions, proposed, voted on and closed, each carrying the actions it decides beyond its text, or none. A passed motion is a decision in plain speech; the code keeps no row and no name called decision. An outcome is computed from the signed votes, never claimed; each member's latest vote counts once. Each action a passed motion carries is an effect in the close's transaction, citing it, its actor whoever closed it, judged by its own guards, and what follows it, such as the capital a departure moves, is the reaction of the graft that knows it ([trust](../../../../_corpus/doc/trust.md#three-kinds-of-action)). A motion may adopt a policy, a sentence its circle binds itself by, which the register in org's core keeps ([policies](../../../../_corpus/doc/architecture.md#policies)).
@@ -268,13 +268,18 @@ so is a right. It reads as its reader, so it shows the actions of the motions it
   may decide about it and holds, on the day, a collective mandate for
   every power in `powers`, the first by id, or else the assembly. For a
   grant, `powers` is `adopt-policy` and the power granted, `grant` its
-  values (its power, limit and budget in cents, period and scope), and the
-  circle's mandate for the power granted is one the grant is no wider
-  than (`circle.wider`), so a grant is put only to a circle that may
-  issue it under a mandate of its own and `circle.narrows` never
-  refuses it for its issuer: a circle holding `adopt-policy` alone, or
-  a mandate for the power narrower than the grant, is passed over for
-  the next, and where none is left the assembly decides it.
+  values (its power, limit and budget in cents, period and scope, and
+  the days it applies from and until), and the circle's mandate for the
+  power granted is one the grant is no wider than (`circle.wider`) over
+  the days it applies, from the day it names or else the motion's
+  deadline, until its own until or none: the days `motion.grant_flaw`
+  judges it on, never the day it is proposed, so a grant is put only to
+  a circle that may issue it under a mandate of its own, and neither
+  `motion.grant_flaw` nor `circle.narrows` refuses it for the issuer
+  `decider` chose: a circle holding `adopt-policy` alone, a mandate for
+  the power narrower than the grant, or one ending before the grant
+  applies or before its until, is passed over for the next, and where
+  none is left the assembly decides it.
 - `motion.grant_flaw(issuer, wording, from, until)`: what is wrong with
   a mandate policy of that wording a motion of `issuer` would adopt,
   applying from and until those days, as the field a form names it under
@@ -295,7 +300,8 @@ so is a right. It reads as its reader, so it shows the actions of the motions it
   `motion.grant_flaw` finds wrong with it; for the end or replacement of
   a mandate's policy, that mandate and every mandate below it its close
   revokes (`circle.under`), those standing on the day it ends while
-  open, those revoked that day once closed.
+  open, and once closed those its close revoked, as its write's
+  `revoked` says, never one another write revoked the same day.
 - `motion.circle_asks`, on `motion:motion:propose`: each mandate policy
   marks sound values (`circle.mandate_flaw`: a role or a circle, a
   power in lower case, a cap by limit or by budget per month or year,
@@ -388,8 +394,9 @@ a trigger on core's table
   procedure, since `membership-motion`'s `propose` gives it the
   one its requirements fix: for a grant, the issuer it names, or else
   the circle `decider` finds holding `adopt-policy` and a mandate for
-  the power granted that the grant is no wider than, the one it issues
-  the grant under, or else the assembly; titled with what it decides.
+  the power granted that the grant is no wider than over the days it
+  applies, the one it issues the grant under, or else the assembly;
+  titled with what it decides.
   Granting a mandate is proposing its policy, from and until the days it
   names, its legal wording made from the role or the circle, the power,
   what it grants in words, its cap and its scope, each value marked
@@ -423,12 +430,13 @@ a trigger on core's table
 
 Adds to the motions collection's `about` the circles a motion may be
 put in, which the motion feat's New form offers.
-On a circle's page, which circle decides about it, the open motions
+On a mandate's page, while it stands, Change… and Revoke… (below,
+under Shell). On a circle's page, which circle decides about it, the open motions
 about it, and Propose…: granting a mandate to one of its roles or to
 it, changing one of its mandates or revoking one, with a deadline and
 why, posted to the `put` membership-motion serves (below, under
-Shell); and its Policies,
-the policies it adopted that are in force, each as its legal wording
+Shell); and, in its Policies tab, the
+policies it adopted that are in force, each as its legal wording
 reads (`policy.sentence`), its kind, whether it takes a default of the
 co-op's legal form (Default, or Default, since updated, where cella has
 changed that default since) or is the co-op's own, the motion that
@@ -439,7 +447,7 @@ it left or never took, its sentence, its form, the motion's action that
 left it, linked, and the day (`departures`,
 [legal forms](../../../../_corpus/doc/forms.md)).
 
-On the assembly's page, Open books is where the co-op configures what
+On the assembly's page, in the same tab, Open books is where the co-op configures what
 it shares with every member of the totals of members' own figures,
 their pay, time, capital, work share and expenses (`disclosure`, read
 from `circle.disclosed` on the verdict date). It says whether a
@@ -483,7 +491,7 @@ The `motions` collection, open ones first. Its New form proposes one:
 the circle it is put in, from those its circles' part lists in the
 collection's `about`, and no procedure, since its requirements fix the one it is decided by, which its page shows; whom it is put by, its chosen circle or a role the acting member holds by a tenure on the day (`motion.authored`), the roles listed in the collection's `about` for that member (`authors`, by active tenure), its circle by default. Choosing a role sends its id as the proposal's `author`; choosing the circle sends no author. The server checks the choice again on the verdict date. The form also asks for the deadline, the title and the text; and the
 actions it carries, each a kind from `motion.carries`, whose arguments the
-form then asks for: Adopt a policy asks for its kind, from the three this feat adds to the collection's `about` (`policyKinds`), its wording with each value marked `{name: value}`, perhaps its plain words, the days it applies from and until, the policy it replaces, from those not ended (`policies`), the procedure that alone changes it, from those in force (`protections`), and the default it takes, from the defaults of the forms the register offers (`defaults`); End a policy asks for the policy it ends, from the same list. A motion's page shows who put it, its circle or the role by name (`authorName`), never the person who proposed it as that role, its proposal and each action it
+form then asks for: Adopt a policy asks for its kind, from the three this feat adds to the collection's `about` (`policyKinds`), its wording with each value marked `{name: value}`, perhaps its plain words, the days it applies from and until, the policy it replaces, from those not ended (`policies`), the procedure that alone changes it, from those in force (`protections`), and the default it takes, from the defaults of the forms the register offers (`defaults`); End a policy asks for the policy it ends, from the same list. A motion's page shows the circle it is put in by name (`circleName`), linking to its page, and who put it, its circle or the role by name (`authorName`), never the person who proposed it as that role, linking to the page of the circle it is or the role is of (`authorCircle`), its proposal and each action it
 carries, its arguments by its kind's labels, a member by name, the default a policy takes as its form names it, each default the motion leaves and by which of its actions, every stance given as its activity, on a secret ballot the reader's own alone, and closes it (`close`).
 Once closed, it shows under the close each effect the close's
 transaction wrote, as the log keeps them (`effects`, read with the
@@ -511,7 +519,10 @@ the stance it posts is this feat's `vote`, for the acting member.
 
 A mandate is granted, changed and revoked from where it is read, by a
 motion this feat proposes from the circle's page, its Propose… form
-posted to the `put` membership-motion serves. Grant a mandate asks for
+posted to the `put` membership-motion serves, or, for a mandate that
+stands, from its own page, whose Change… and Revoke… post the same
+forms, of its own policy, to the `put` membership-motion serves there
+(`revised`); a revoked or expired mandate's page offers neither. Grant a mandate asks for
 its grantee, a role of the circle or the circle itself, by motion; a
 power and what it grants in words; perhaps a limit per write or a
 budget and its period; perhaps a scope; perhaps the days it applies
@@ -523,7 +534,8 @@ policy's sentence with its values marked (`worded`, in the feat's
 `models/circles.ts`), shows it as it will read as it is typed, and
 proposes a motion of the issuer carrying Adopt a policy, its procedure
 the one its requirements fix. Change one of its mandates is the same
-form filled with the chosen mandate's values, proposing a policy that
+form filled with the chosen mandate's values, or with the values of
+the mandate whose page it is, proposing a policy that
 replaces its own, a motion of the circle that issued it, whose policy
 it is; Revoke one of its mandates proposes ending its policy, a motion
 of that circle too. Replacing or ending a mandate's policy revokes every
@@ -546,8 +558,9 @@ its deadline, and what `motion.grant_flaw` finds wrong with it as it
 stands, or once closed the mandate it granted and its parent; for each
 end or replacement of a mandate's policy, that mandate and every one
 below it its close revokes the same day (`circle.under`), or once
-closed those it revoked; each by its power, grantee, cap and issuer,
-linking to the page of the circle that lists it.
+closed those it revoked; each by its power, its grantee and its issuer
+by name, and its cap in the words of core circle's `cap`, linking to
+its own page and its chain.
 
 A motion's state is open, passed or rejected: open until its close,
 then passed or rejected by the outcome of the stances the close froze.
@@ -555,18 +568,21 @@ The outcome is the graft's, so the state is too: `membership-motion`
 reads it in SQL and gives the collection its State column and its board.
 Of its outcome, this feat reads only whether and when a motion closed.
 
-A motion's page has three tabs: Overview, the proposal in full under its
-deadline, once closed the effects its close carried, and what the grafts
-say is decided (whom it admits, the
-version it adopts, the outcome); Stances, the roll and the acting
-member's stance; and Discussion, its deliberation, each message under
-the one it answers, a mention drawn by `membership-motion`'s `member` embed
-and a link by `document-motion`'s `document` embed, and while it is
-open a message as the acting member, or a reply to the one chosen. The stances given in time order stay in the drawer's
-Activity card, their one home.
+A motion's page, its header's crumb its id, has four tabs: Overview,
+the proposal in full under its deadline and what the grafts say is
+decided (whom it admits, the version it adopts, the outcome), and under
+them its Activity, the stances given in time order, their one home;
+Stances, the roll and the acting member's stance; Discussion, its
+deliberation, each message under the one it answers, a mention drawn by
+`membership-motion`'s `member` embed and a link by `document-motion`'s
+`document` embed, and while it is open a message as the acting member,
+or a reply to the one chosen; and Effects, what its actions do to the
+mandates and, once closed, the effects its close carried, or that it
+carries them at its close. Who put it, by what procedure and in which
+circle are its properties.
 
 A motion drawn elsewhere is one card, the feat's `Card` (`./app`):
-its title, circle and who put it (the circle's name or the role's name), method and where it stands, linking to its page, over
+its title, the circle it is put in and who put it, each by name (the circle's name or the role's name), method and where it stands, linking to its page, over
 the motions `summaries` (`./api`) reads, including each motion's author and its readable name. `document-motion` embeds
 it in documents, `meeting-motion` in a meeting's minutes.
 

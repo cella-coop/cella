@@ -22,7 +22,13 @@
   ]
   const properties = $derived(all(page?.properties, (p) => p.properties))
   const related = $derived(all(page?.related, (p) => p.related))
-  const activity = $derived(all(page?.activity, (p) => p.activity))
+  // Each slice gives what happened newest first; the page shows them all
+  // oldest first, merged by when, a tie in the order it was given.
+  const activity = $derived(
+    [...(page?.activity?.(data.item) ?? []).reverse(), ...added.flatMap((a) => (a.page.activity?.(a.data) ?? []).reverse())].sort((x, y) =>
+      x.at < y.at ? -1 : x.at > y.at ? 1 : 0,
+    ),
+  )
   const tabs: Tab[] = $derived([...(page?.tabs ?? []), ...added.flatMap((a) => a.page.tabs ?? [])])
   const tab = $derived(tabs.find((t) => t.id === here.url.searchParams.get('tab'))?.id ?? tabs[0]?.id)
   const place = (p: Placed) => (typeof p === 'function' ? { tab: tabs[0]?.id, block: p } : p)
@@ -40,6 +46,11 @@
       ...added.flatMap((a) => Object.entries(a.page.embeds ?? {}).map(([k, embed]) => [k, { embed, data: a.data }])),
     ]),
   )
+  // The box that adds a comment: the owner's, or an extension's where the
+  // owner takes none.
+  const comment = $derived(
+    page?.comment ? { block: page.comment, data: data.item } : added.map((a) => (a.page.comment ? { block: a.page.comment as Block, data: a.data } : undefined)).find(Boolean),
+  )
   const writes = $derived([
     ...(page?.actions ? [{ block: page.actions, data: data.item }] : []),
     ...added.flatMap((a) => (a.page.actions ? [{ block: a.page.actions as Block, data: a.data }] : [])),
@@ -52,11 +63,18 @@
   {/each}
 {/snippet}
 
+{#snippet commenting()}
+  {#if comment}
+    <comment.block data={comment.data} id={data.id} viewer={data.viewer} />
+  {/if}
+{/snippet}
+
 {#if mounted && page}
   <Detail
     eyebrow={page.eyebrow}
     title={page.title(data.item)}
     subtitle={page.subtitle?.(data.item)}
+    summary={page.summary?.(data.item)}
     back={{ href: `/${data.name}`, label: mounted.view.title }}
     {tabs}
     {tab}
@@ -64,6 +82,7 @@
     {related}
     {activity}
     actions={writes.length ? header : undefined}
+    comment={comment ? commenting : undefined}
   >
     {#each blocks as b}
       <b.block data={b.data} id={data.id} {embeds} viewer={data.viewer} />

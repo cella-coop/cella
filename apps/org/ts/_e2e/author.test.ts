@@ -1,11 +1,13 @@
 // A motion's author is a grantee, end to end on a seeded Lanterne:
-// Camille, who holds the gérante role by a tenure, proposes to the
-// assembly as the gérante; Julien proposes as the assembly, naming no
-// one; and Julien proposing as the gérante, which he does not hold, or
+// Camille, who holds the manager role by a tenure, proposes to the
+// assembly as the manager; Julien proposes as the assembly, naming no
+// one; and Julien proposing as the manager, which he does not hold, or
 // as coordination, another circle, is refused, the reason naming the
 // role or the circle and never him. Run by `cella test e2e author`.
 
-import { after, before, test } from 'node:test'
+import { test as runTest } from 'node:test'
+import { createStory } from './story.ts'
+export const { before, after, test, unseeded, story } = createStory()
 import { mkdirSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import pg from 'pg'
@@ -52,16 +54,16 @@ after(async () => {
   await su.end()
 })
 
-test('Camille proposes to the assembly as the gérante, a role she holds that day', async () => {
-  const { motion, author } = settled(await propose(proposal('The gérante asks the assembly', 'manager'), as(camille)))
+test('Camille proposes to the assembly as the manager, a role she holds that day', async () => {
+  const { motion, author } = settled(await propose(proposal('The manager asks the assembly', 'manager'), as(camille)))
   assert.equal(author, 'manager')
   assert.equal(await authorOf(motion), 'manager')
   const page = await read(as(camille).db, motion)
   assert.equal(page?.author, 'manager')
-  assert.equal(page?.authorName, 'Gérante')
-  assert.ok((await authors(as(camille).db, camille)).some((a) => a.value === 'manager' && a.label === 'Gérante'))
+  assert.equal(page?.authorName, 'Manager')
+  assert.ok((await authors(as(camille).db, camille)).some((a) => a.value === 'manager' && a.label === 'Manager'))
   assert.ok(!(await authors(as(julien).db, julien)).some((a) => a.value === 'manager'))
-  assert.equal((await summaries(as(camille).db)).find((s) => s.id === motion)?.authorName, 'Gérante')
+  assert.equal((await summaries(as(camille).db)).find((s) => s.id === motion)?.authorName, 'Manager')
   const logged = await su.query<{ author: string }>(`SELECT form ->> 'author' AS author FROM cella.log WHERE op = 'motion:motion:propose' ORDER BY n DESC LIMIT 1`)
   assert.equal(logged.rows[0]?.author, 'manager')
 })
@@ -70,19 +72,19 @@ test('a proposal naming no author is the circle\'s', async () => {
   const { motion, author } = settled(await propose(proposal('The assembly asks itself'), as(julien)))
   assert.equal(author, 'ag')
   assert.equal(await authorOf(motion), 'ag')
-  assert.equal((await read(as(julien).db, motion))?.authorName, 'Assemblée générale')
-  assert.equal((await summaries(as(julien).db)).find((s) => s.id === motion)?.authorName, 'Assemblée générale')
+  assert.equal((await read(as(julien).db, motion))?.authorName, 'General assembly')
+  assert.equal((await summaries(as(julien).db)).find((s) => s.id === motion)?.authorName, 'General assembly')
 })
 
-test('the New form puts a motion as a held role or as its circle, and the page names that author in light and dark', async () => {
+unseeded('the New form puts a motion as a held role or as its circle, and the page names that author in light and dark', async () => {
   mkdirSync(shots, { recursive: true })
   for (const [engine, launch] of browsers()) {
     const browser = await launch()
     const dev = await serve()
     try {
       for (const [who, author, name] of [
-        [camille, 'manager', 'Gérante'],
-        [julien, '', 'Assemblée générale'],
+        [camille, 'manager', 'Manager'],
+        [julien, '', 'General assembly'],
       ]) {
         for (const scheme of ['light', 'dark'] as const) {
           const context = await browser.newContext({ colorScheme: scheme, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
@@ -125,7 +127,7 @@ test('the New form puts a motion as a held role or as its circle, and the page n
   }
 })
 
-test('Julien may propose as neither the gérante, which he does not hold, nor coordination', async () => {
+test('Julien may propose as neither the manager, which he does not hold, nor coordination', async () => {
   const unheld = await propose(proposal('Not his to ask', 'manager'), as(julien))
   assert.equal(unheld.state, 'refused')
   assert.match(
@@ -138,3 +140,5 @@ test('Julien may propose as neither the gérante, which he does not hold, nor co
   assert.match(reason, /a motion of ag is proposed as ag or as a role its proposer holds, not as coordination, another circle/)
   assert.doesNotMatch(reason, /julien/)
 })
+
+if (!process.env.CELLA_STORY) runTest('author story', async (t) => story((name, step) => t.test(name, step)))

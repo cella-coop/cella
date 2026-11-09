@@ -1,6 +1,6 @@
 +++
 title = "Payslip"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 Pay: each worker's salary, member or not, and a pay run each month, one
@@ -48,7 +48,7 @@ and then of `pay-payroll`, is `membership-payslip`'s, in their inbox.
 | Action | Power | Lanterne |
 |---|---|---|
 | generate | `prepare-payroll`, no limit | Julien, as finance |
-| approve | `approve-payroll`, no limit | Camille, as gérante |
+| approve | `approve-payroll`, no limit | Camille, as manager |
 | pay | `pay-payroll`, no limit | Julien, as finance |
 
 Wages are owed whatever their size, so no power has a limit.
@@ -122,8 +122,9 @@ Who reads pay is a row-level policy (`sql/004-reads.sql`, [the pattern](../../..
 
 The `payslips` collection in Payments, a table with a dashboard of the
 payroll by month (gross, net, the cost to the co-op, what awaits
-payment); preparing a month's run; and a payslip's page, line by line,
-with its run's approval and payment.
+payment); preparing a month's run; and a payslip's page with its
+run's approval and payment, and its Lines tab, the payslip line by line,
+the data central to it.
 
 ## Lanterne
 

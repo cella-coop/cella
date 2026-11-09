@@ -1,6 +1,6 @@
 +++
 title = "Project"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 The co-op's initiatives: a piece of work a client commissioned, or one of
@@ -40,8 +40,8 @@ membership feat checks it.
 
 | Power | Lanterne |
 |---|---|
-| `manage-project` | the circle leads and the gérante |
-| `set-budget` | the leads up to 15 000 €, the gérante up to 50 000 € |
+| `manage-project` | the circle leads and the manager |
+| `set-budget` | the leads up to 15 000 €, the manager up to 50 000 € |
 
 ## Invariants
 
@@ -94,12 +94,16 @@ the day its entry names, archiving twice changing nothing.
 
 The `projects` collection opens as a gallery, each card naming its contact,
 its milestones done of all, its budget and what its time spent of it (the
-root picks these fields, which come from three slices). A project's page
-has three tabs: Overview, with its summary, its milestones (completing
-one, adding the next), its budget and its shares; Tasks
-(`project-task`); and Time (`project-timesheet`). The two are tabs because
-each is a list long enough to crowd the overview. Archive is the header's
-write.
+root picks these fields, which come from three slices). A project's page,
+its header's crumb its id, holds its summary under its title, then
+whom it is for (`contact-project`) and its Activity; its circle, its
+milestones done of all and the next, its budget and its days are its
+properties. The data central to it is in tabs after the first:
+Milestones, completing one and adding the next; Budget, its budget, what
+is spent and left of it, and its shares (`membership-project`); Tasks
+(`project-task`); Time (`project-timesheet`); Expenses
+(`expense-project`); and Invoices (`invoice-project`). Archive is the
+header's write.
 
 ## Import
 
@@ -110,7 +114,8 @@ line a `project:project:create` as the importing member
 
 ## Lanterne
 
-Eight projects, one for each piece of work its clients commissioned:
+Eleven projects: eight, one for each piece of work its clients
+commissioned, and three of the circles' own, for no client:
 
 | Project | Circle | Budget | Milestones |
 |---|---|---|---|
@@ -122,6 +127,9 @@ Eight projects, one for each piece of work its clients commissioned:
 | Maison Ferrand, packaging | brand | 14 000 € | range concept and print-ready files done; print supervision open |
 | Fondation Terres Vives, annual report and microsite | brand | 18 000 € | report design done; microsite open |
 | Atelier Ondine, online shop | web | 9 500 € | delivered; archived on 1 September |
+| The statutes, revised for 2027 | ag | none | draft amendments done; members' comments and the extraordinary assembly open |
+| Pipeline and staffing for 2027 | coordination | none | client review done; rate card and staffing plan open |
+| The books move into cella | operations | none | chart and opening balances, pay runs and expenses done; October's close open |
 
 ## Analytics
 

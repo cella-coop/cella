@@ -8,7 +8,7 @@ const urgency: Record<Priority, Tone> = { urgent: 'negative', high: 'warning', n
 
 // The feat's client side: the tasks as a board by status, on which a card
 // dragged between columns is the move, or into Done the completion; a new
-// task; and a task's page with its status.
+// task; and a task's page with its status, which has no tab of its own.
 export const app: App = {
   name: 'task',
   collections: {

@@ -1,6 +1,6 @@
 +++
 title = "invoice-project"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 Which project an invoice bills work of. An invoice that names no project
@@ -49,7 +49,8 @@ is not checked in SQL; the fixture check holds Lanterne to it.
 ## Shell
 
 Adds to an invoice's page its project and the form that names it; to a
-project's overview what it invoiced and its invoices.
+project's page what it invoiced, among its properties, and its
+invoices, in an Invoices tab.
 
 ## Lanterne
 

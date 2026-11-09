@@ -8,11 +8,14 @@
 # time is worked for, its owning circle, and a period names it too: a
 # member's month is one per circle, holding that circle's runs, so a
 # circle's lead approves it by a mandate on their own circle. Each worker
-# here works for one circle, so each has one month a month.
+# here works for one circle, so each has one month a month, but for the
+# last week of October: Camille gives part of hers to coordination and
+# to the assembly, and Julien an hour a day to the assembly's accounts.
 #
 # September is submitted by everyone and approved: each circle's lead
 # approves their circle's members, Julien in finance the leads and Inès,
-# and Camille as gérante Julien. October is open.
+# and Camille as manager Julien. October is open, but for Sofia's,
+# submitted.
 
 # Web
 
@@ -391,12 +394,22 @@ note = "Management: contracts, the assembly and the rate card"
 [[run]]
 id = "camille-manage-c"
 member = "camille@lanterne.example"
-circle = "brand"
+circle = "coordination"
 from = 2026-10-19
 to = 2026-10-23
-hours = 7
+hours = 4
 billable = false
-note = "Management: contracts, the assembly and the rate card"
+note = "Coordination: the pipeline, staffing and the rate card"
+
+[[run]]
+id = "camille-assembly"
+member = "camille@lanterne.example"
+circle = "ag"
+from = 2026-10-19
+to = 2026-10-23
+hours = 3
+billable = false
+note = "Assembly: the amendment on members abroad, and the agenda for 31 October"
 
 # Marketing
 
@@ -445,10 +458,30 @@ id = "julien-books"
 member = "julien@lanterne.example"
 circle = "operations"
 from = 2026-09-01
-to = 2026-10-23
+to = 2026-10-16
 hours = 7
 billable = false
 note = "Books, invoicing, payroll and contracts"
+
+[[run]]
+id = "julien-close"
+member = "julien@lanterne.example"
+circle = "operations"
+from = 2026-10-19
+to = 2026-10-23
+hours = 6
+billable = false
+note = "Books: October's close, the first in cella alone"
+
+[[run]]
+id = "julien-assembly"
+member = "julien@lanterne.example"
+circle = "ag"
+from = 2026-10-19
+to = 2026-10-23
+hours = 1
+billable = false
+note = "Assembly: the accounts for 31 October"
 
 # Inès works with the web circle on no project of her own yet: her time
 # is reviews, internal tools and training, logged as a worker, since she
@@ -553,3 +586,12 @@ month = "2026-09"
 submitted = 2026-10-01
 approved = 2026-10-05
 approver = "julien@lanterne.example"
+
+# October, Sofia's submitted early, before her week off, for Hugo to
+# approve once the month is out.
+
+[[period]]
+member = "sofia@lanterne.example"
+circle = "brand"
+month = "2026-10"
+submitted = 2026-10-23

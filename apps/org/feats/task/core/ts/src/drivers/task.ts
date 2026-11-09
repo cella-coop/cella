@@ -7,7 +7,7 @@ const columns = `id, title, status, priority, to_char(due, 'YYYY-MM-DD') AS due,
 const order = `array_position(ARRAY['urgent', 'high', 'normal', 'low'], priority), due NULLS LAST, (substr(id, 3))::integer`
 
 // The tasks as the collection lists them, the most pressing first.
-export const listing: Read = { sql: `SELECT ${columns} FROM task.task`, order }
+export const listing: Read = { sql: `SELECT ${columns}, circle FROM task.task`, order }
 
 // Every task, the most pressing first.
 export async function tasks(db: Db): Promise<Task[]> {

@@ -7,6 +7,20 @@
 // perl -i, tee, mv, cp, rm, touch and their kin, git mv, rm, checkout or
 // restore, find's -delete or a writer it execs, a sh -c or eval of any
 // of these, and an inline script naming the path that writes a file.
+// It refuses the same done to a directory that holds the text, the
+// text's own or any above it to the filesystem's root, by any spelling
+// or glob, after cd and git -C: an rm -r, rmdir, mv or git mv of one,
+// an mv or cp that lands on one, a find -delete or a writer find execs
+// from one, and an rsync --delete into one; a git restore, checkout or
+// clean whose pathspec holds the text or lies in it (., :/, an
+// ancestor, a glob matching one), and a git clean with none run from
+// such a directory; and a git reset --hard, a git stash (bare, push or
+// save), and a git checkout or switch forced by -f, --force or
+// --discard-changes, while git status prints a change in the text. A
+// git rm's pathspecs are judged before -- and after it alike. A git
+// command run outside the text's repository, a branch checked out or
+// switched to unforced, and each of these on a directory beside the
+// text pass.
 // It refuses a write and nothing else: a read passes, and so does a call
 // that names the path without writing there, a search, a commit message
 // or a message sent through corpus among them, and every write elsewhere.
@@ -17,7 +31,8 @@
 //
 //   node tools/site-text-guard.mjs < <hook input>
 
-import { readFileSync, realpathSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { readdirSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -26,6 +41,15 @@ const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const TEXT = 'apps/site/src/content'
 // The path named in a word, wherever the command runs from.
 const NAMED = /(^|\/)apps\/site\/src\/content(\/|$)/
+// A word the shell, or git as a pathspec, matches as a glob.
+const GLOB = /[*?[]/
+// The options of git's subcommands that take a value.
+const VALUED = {
+  checkout: ['-b', '-B', '--orphan', '--conflict'],
+  restore: ['-s', '--source'],
+  clean: ['-e', '--exclude'],
+  stash: ['-m', '--message'],
+}
 
 // Operators, longest first; a redirect writes its target, an input reads it.
 const OPS = ['&>>', '<<<', '<<-', '&>', '>>', '>|', '>&', '<&', '<<', '&&', '||', ';;', '|&', ';', '|', '&', '(', ')', '>', '<']
@@ -211,15 +235,170 @@ export function guard(root = REPO) {
       }
     }
   }
+  const top = real(root)
   const text = real(join(root, TEXT))
   const inside = (p) => p === text || p.startsWith(text + sep)
+  // The text's directory and every directory above it: what holds it.
+  const above = [text]
+  while (dirname(above.at(-1)) !== above.at(-1)) above.push(dirname(above.at(-1)))
+  const within = (p) => p === top || p.startsWith(top + sep)
+  // A path as a reason shows it: inside the repository, from its root.
+  const shown = (p) => (p !== top && within(p) ? relative(top, p) : p)
+  const option = (word) => !word || (word.startsWith('-') && !word.includes('/'))
 
   /** The path of the text a word names, from `cwd`, or null. */
   const names = (word, cwd) => {
-    if (!word || (word.startsWith('-') && !word.includes('/'))) return null
+    if (option(word)) return null
     const p = real(resolve(cwd, word))
-    if (inside(p)) return relative(real(root), p) || TEXT
+    if (inside(p)) return relative(top, p) || TEXT
     if (NAMED.test(word.replace(/\/+/g, '/'))) return word
+    return null
+  }
+
+  /** A glob over absolute paths: the shell's `*` stops at a slash; git's
+   * crosses it, and matches every path below what it matches. */
+  const pattern = (path, git) => {
+    const at = path.search(GLOB)
+    const base = path.slice(0, path.lastIndexOf(sep, at)) || sep
+    const glob = join(real(base), path.slice(base.length))
+    let re = ''
+    for (let k = 0; k < glob.length; k++) {
+      const c = glob[k]
+      const close = c === '[' ? glob.indexOf(']', k + 2) : -1
+      if (c === '*') re += git ? '.*' : '[^/]*'
+      else if (c === '?') re += git ? '.' : '[^/]'
+      else if (close > 0) {
+        re += `[${glob.slice(k + 1, close).replace(/^!/, '^')}]`
+        k = close
+      } else re += c.replace(/[.+^${}()|\\\]]/g, '\\$&')
+    }
+    return new RegExp(`^${re}${git ? '(/.*)?' : ''}$`)
+  }
+
+  /** The text's directory or one holding it that a word names, from
+   * `cwd`, as a reason shows it, or null; a git pathspec's glob also
+   * matches where it matches a file in the text. */
+  const holds = (word, cwd, git = false) => {
+    if (option(word)) return null
+    const p = resolve(cwd, word)
+    if (!GLOB.test(word)) {
+      const r = real(p)
+      if (r === text) return TEXT
+      return above.includes(r) ? `${shown(r)}, which holds ${TEXT}` : null
+    }
+    const re = pattern(p, git)
+    if (above.some((a) => re.test(a))) return `${word}, which matches ${TEXT} or a directory holding it`
+    if (!git) return null
+    let files = []
+    try {
+      files = readdirSync(text, { recursive: true }).map((f) => join(text, f))
+    } catch {}
+    return files.some((f) => re.test(f)) ? `${word}, which matches a file in ${TEXT}` : null
+  }
+
+  /** Why `verb` changes the text, done to a word that names it or a
+   * directory holding it, or null. */
+  const either = (word, cwd, verb, git = false) => {
+    const hit = holds(word, cwd, git) ?? names(word, cwd)
+    return hit ? `${verb} ${hit}` : null
+  }
+
+  /** Whether git sees a change in the text it has not committed. */
+  const dirty = () => !!spawnSync('git', ['-C', top, 'status', '--porcelain', '--', TEXT], { encoding: 'utf8' }).stdout?.trim()
+
+  /** Why an mv or cp, `args` its arguments, changes the text: an mv of
+   * the text or of a directory holding it, or either landing on one,
+   * into the target where it is a directory; or null. */
+  const move = (cmd, args, cwd) => {
+    const verb = cmd === 'mv' ? 'mv moves' : 'cp writes'
+    const operands = []
+    let dest = null
+    let into = null
+    for (let k = 0; k < args.length; k++) {
+      const a = args[k]
+      if (a === '-t' || a === '--target-directory') {
+        dest = args[++k]
+        into = true
+      } else if (a.startsWith('--target-directory=')) {
+        dest = a.slice(a.indexOf('=') + 1)
+        into = true
+      } else if (a === '-T' || a === '--no-target-directory') into = false
+      else if (a === '-S' || a === '--suffix') k++
+      else if (!option(a)) operands.push(a)
+    }
+    if (dest === null && operands.length >= 2) dest = operands.pop()
+    for (const a of cmd === 'mv' ? operands : []) {
+      const why = either(a, cwd, verb)
+      if (why) return why
+    }
+    if (dest == null) return null
+    for (const a of operands) {
+      let d = real(resolve(cwd, dest))
+      try {
+        if (into ?? statSync(d).isDirectory()) d = join(d, basename(a))
+      } catch {}
+      const why = either(d, cwd, verb)
+      if (why) return why
+    }
+    return null
+  }
+
+  /** Why git's subcommand `sub`, `rest` its arguments, run in `cwd`,
+   * changes the text, or null. */
+  const git = (sub, rest, cwd) => {
+    const dash = rest.indexOf('--')
+    const plain = []
+    for (let k = 0; k < (dash < 0 ? rest.length : dash); k++) {
+      if ((VALUED[sub] ?? []).includes(rest[k])) k++
+      else if (!option(rest[k])) plain.push(rest[k])
+    }
+    // checkout's words before `--` name the tree it reads.
+    const specs = dash < 0 ? plain : [...(sub === 'checkout' ? [] : plain), ...rest.slice(dash + 1)]
+    // An option is read before `--`; what follows it is a pathspec.
+    const flag = (long, short) =>
+      rest.slice(0, dash < 0 ? rest.length : dash).some((a) => a === long || (short && new RegExp(`^-[a-zA-Z]*${short}`).test(a)))
+    /** Why `verb` changes the text, done to the first pathspec of `list`
+     * that holds it or lies in it, or null. */
+    const first = (list, verb) => {
+      for (const s of list) {
+        const magic = s.match(/^:(?:\(([^)]*)\)|([/!^]*))(.*)$/s)
+        const words = magic?.[1]?.split(',') ?? []
+        const short = magic?.[2] ?? ''
+        if (short.includes('!') || short.includes('^') || words.includes('exclude')) continue
+        const base = short.includes('/') || words.includes('top') ? top : cwd
+        const why = magic ? either(magic[3] || '.', base, verb, true) : either(s, cwd, verb, true)
+        if (why) return why
+      }
+      return null
+    }
+    const uncommitted = (verb) => (dirty() ? `${verb} the changes git has not committed in ${TEXT}` : null)
+
+    if (sub === 'mv') return move('mv', rest, cwd)?.replace(/^mv/, 'git mv') ?? null
+    if (sub === 'rm') {
+      if (flag('-r', 'r')) return first(specs, 'git rm -r removes')
+      for (const s of specs) {
+        const hit = names(s, cwd)
+        if (hit) return `git rm removes ${hit}`
+      }
+      return null
+    }
+    if (sub === 'checkout') {
+      return first(specs, 'git checkout overwrites') ?? (flag('--force', 'f') ? uncommitted('git checkout --force discards') : null)
+    }
+    if (sub === 'switch') {
+      return flag('--force', 'f') || flag('--discard-changes') ? uncommitted('git switch --discard-changes discards') : null
+    }
+    if (sub === 'restore') return flag('--staged', 'S') && !flag('--worktree', 'W') ? null : first(specs, 'git restore overwrites')
+    if (sub === 'clean') return flag('--dry-run', 'n') ? null : first(specs.length ? specs : ['.'], 'git clean removes')
+    if (sub === 'reset') return rest.includes('--hard') ? uncommitted('git reset --hard discards') : null
+    if (sub === 'stash') {
+      const [verb] = rest
+      if (verb !== undefined && !verb.startsWith('-') && verb !== 'push' && verb !== 'save') return null
+      // A stash whose pathspecs leave the text alone leaves it alone.
+      const given = verb === 'push' ? specs.slice(1) : dash < 0 ? [] : rest.slice(dash + 1)
+      if (given.length && !first(given, 'git stash takes')) return null
+      return uncommitted('git stash takes')
+    }
     return null
   }
 
@@ -303,10 +482,8 @@ export function guard(root = REPO) {
         if (args[k] === '-C') cwd = resolve(cwd, args[++k] ?? '.')
         else if (['-c', '--git-dir', '--work-tree', '--namespace'].includes(args[k])) k++
       }
-      const sub = args[k]
-      if (!['mv', 'rm', 'checkout', 'restore', 'clean'].includes(sub)) return null
-      const paths = args.slice(k + 1).filter((a) => !a.startsWith('-'))
-      return any(paths.map((a) => resolve(cwd, a)), `git ${sub}`)
+      // Another repository's git changes none of this one's files.
+      return within(real(cwd)) ? git(args[k], args.slice(k + 1), cwd) : null
     }
     if (cmd === 'find') {
       const starts = []
@@ -314,20 +491,31 @@ export function guard(root = REPO) {
         if (a.startsWith('-') || a === '!' || a === '(') break
         starts.push(a)
       }
-      const hits = starts.filter((s) => names(s, state.cwd))
+      // What find visits of the text: a start in it, or the text below a start holding it.
+      const hits = []
+      for (const s of starts) {
+        const held = holds(s, state.cwd)
+        if (held) hits.push({ from: held, path: text })
+        else if (names(s, state.cwd)) hits.push({ from: names(s, state.cwd), path: resolve(state.cwd, s) })
+      }
       if (!hits.length) return null
-      if (args.includes('-delete')) return `find -delete removes ${names(hits[0], state.cwd)}`
+      if (args.includes('-delete')) return `find -delete removes in ${hits[0].from}`
       for (let k = 0; k < args.length; k++) {
         if (!['-exec', '-execdir', '-ok', '-okdir'].includes(args[k])) continue
         const end = args.findIndex((a, j) => j > k && (a === ';' || a === '+'))
         const exec = args.slice(k + 1, end < 0 ? args.length : end)
         for (const hit of hits) {
-          const why = run(exec.map((a) => a.replaceAll('{}', hit)), { ...state })
-          if (why) return `find -exec: ${why}`
+          const why = run(exec.map((a) => a.replaceAll('{}', hit.path)), { ...state })
+          if (why) return `find -exec from ${hit.from}: ${why}`
         }
       }
       return null
     }
+    if (cmd === 'rm' && args.some((a) => a === '--recursive' || /^-[a-zA-Z]*[rR]/.test(a))) {
+      return operands.reduce((why, a) => why ?? either(a, state.cwd, 'rm -r removes'), null)
+    }
+    if (cmd === 'rmdir') return operands.reduce((why, a) => why ?? either(a, state.cwd, 'rmdir removes'), null)
+    if (cmd === 'mv' || cmd === 'cp') return move(cmd, args, state.cwd)
     if (IN_PLACE.has(cmd) && args.some((a) => a === '--in-place' || a.startsWith('--in-place=') || /^-[a-zA-Z]*i/.test(a))) {
       return any(operands, `${cmd} -i edits`)
     }
@@ -342,6 +530,10 @@ export function guard(root = REPO) {
       const t = args.findIndex((a) => a === '-t' || a === '--target-directory')
       const eq = args.find((a) => a.startsWith('--target-directory='))
       const dest = eq ? eq.slice(eq.indexOf('=') + 1) : t >= 0 ? args[t + 1] : operands.length >= 2 ? operands.at(-1) : null
+      if (dest && cmd === 'rsync' && args.some((a) => a.startsWith('--del'))) {
+        const why = either(dest, state.cwd, 'rsync --delete deletes in')
+        if (why) return why
+      }
       return dest ? any([dest], `${cmd} writes`) : null
     }
     if (cmd === 'dd') {

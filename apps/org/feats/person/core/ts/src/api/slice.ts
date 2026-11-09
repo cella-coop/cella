@@ -1,7 +1,8 @@
-import { action, type Slice } from '@cella/org-db'
+import { action, type Form, type Slice } from '@cella/org-db'
 import { forget, profile, revoke } from '../handlers/index.ts'
 import { devices, listing as listed } from '../drivers/device.ts'
 import { listing, people, person } from '../drivers/person.ts'
+import type { Profile } from '../models/person.ts'
 
 // The feat's server side as the shell mounts it: the people collection,
 // read from its schema, each person's devices on their page, and the
@@ -9,7 +10,8 @@ import { listing, people, person } from '../drivers/person.ts'
 // children's. The inbox, what waits on the acting person, is filled by
 // the slices that know each kind of ask; this feat keeps none of its own.
 // Every device, listed. A person revokes one of their devices from
-// another, on their own page; enrolling a later device is not offered yet.
+// another, on their own page and in their Account settings; enrolling a
+// later device is not offered yet.
 export const slice: Slice = {
   name: 'person',
   collections: {
@@ -29,4 +31,33 @@ export const slice: Slice = {
     inbox: {},
     devices: { list: listed },
   },
+  // The acting person's own Account settings: their name and contact
+  // details, saved by `profile` as their own, and their devices, each
+  // other current one revoked from this one.
+  settings: {
+    account: {
+      read: async (db, actor) => {
+        const found = await person(db, actor)
+        return found && { ...found, devices: await devices(db, actor) }
+      },
+      actions: {
+        profile: action('person:person:profile', (form, _, deps) => ({ person: deps.actor, ...given(form) }), profile),
+        revoke: action('person:device:revoke', (form) => ({ key: form.get('key') }), revoke),
+      },
+    },
+  },
+}
+
+// The profile fields a settings form posts, those it changed alone: a
+// name is never empty, and an email or phone left empty is cleared.
+function given(form: Form): Omit<Profile, 'person'> {
+  const sent = (name: string) => form.all(name).length > 0
+  if (sent('name') && !form.get('name').trim()) {
+    throw new Error('a name cannot be empty: type the name you go by')
+  }
+  return {
+    ...(sent('name') ? { name: form.get('name').trim() } : {}),
+    ...(sent('email') ? { email: form.get('email').trim() || null } : {}),
+    ...(sent('phone') ? { phone: form.get('phone').trim() || null } : {}),
+  }
 }

@@ -179,7 +179,7 @@ test('a payment in beyond what she owes is refused, as is one on no subscription
   assert.match(reason(none), /hugo@lanterne.example has no subscription to pay/)
 })
 
-test('Paul\'s first repayment is refused the day before it falls due and by the gérante, then paid on its day, once', async () => {
+test('Paul\'s first repayment is refused the day before it falls due and by the manager, then paid on its day, once', async () => {
   await on('2026-11-29')
   const early = await repay({ member: paul, n: 1 }, as(julien))
   assert.match(reason(early), /paul@lanterne.example's repayment 1 falls due on 2026-11-30/)
@@ -461,7 +461,7 @@ test('no hand edits the statutes, saves a version of them or adopts one', async 
   const from = draft.version()
   const last = order(draft).at(-1)
   assert.ok(last)
-  edits.after(draft, last.id, 'paragraph', {}, [{ text: 'The gérante may sign alone.' }])
+  edits.after(draft, last.id, 'paragraph', {}, [{ text: 'The manager may sign alone.' }])
   draft.commit()
   const generated = /statutes is generated from the policies of ag: it changes only as they do/
   assert.match(reason(await edit({ document: 'statutes', update: draft.export({ mode: 'update', from }) }, as(camille))), generated)

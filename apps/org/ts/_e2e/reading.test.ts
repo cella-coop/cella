@@ -101,7 +101,7 @@ test('reading follows the mandates: Inès reads Web\'s expenses and not Marketin
     assert.ok(expenses.text.includes(id), `Chloé, a member, reads ${id} by open books`)
   }
   assert.equal((await page('/expenses/ex-0002', chloe)).status, 200, 'Web\'s expense among them')
-  assert.equal((await page('/expenses/ex-0002', camille)).status, 200, 'the gérante, approving every circle\'s expenses, reads it')
+  assert.equal((await page('/expenses/ex-0002', camille)).status, 200, 'the manager, approving every circle\'s expenses, reads it')
 
   const pay = await page('/payslips', chloe)
   assert.ok(pay.text.includes(`2026-09~${chloe}`) && !pay.text.includes(`~${yusuf}`), 'she reads her own pay and not Yusuf\'s')
@@ -147,9 +147,9 @@ test('a worker reads their own capital account and its lines, and no colleague\'
   const accounts = await page('/accounts', chloe)
   assert.ok(accounts.text.includes('101310'), 'Chloé reads her capital account')
   assert.ok(!accounts.text.includes('101301'), 'and not Camille\'s')
-  assert.ok(accounts.text.includes('Banque'), 'the co-op\'s own accounts are every member\'s')
+  assert.ok(accounts.text.includes('Bank —'), 'the co-op\'s own accounts are every member\'s')
   assert.ok(accounts.text.includes('trial balance agrees'), 'and the whole trial balance agrees for her, as it does')
-  assert.ok(!(await page(`/people/${camille}`, chloe)).text.includes('101301'), 'Camille\'s page shows her no capital of Camille\'s')
+  assert.ok(!(await page(`/people/${camille}?tab=rights`, chloe)).text.includes('101301'), 'Camille\'s page shows her no capital of Camille\'s')
 
   // The opening balances carry every member's capital: Chloé reads the
   // entry and its lines on the co-op's own accounts and on her own.

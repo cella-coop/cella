@@ -18,7 +18,7 @@ const label = `CASE b.category ${categories.map((c) => `WHEN ${literal(c.code)} 
 // The bills as the collection lists them, the latest recorded first, each
 // category by its label.
 export const listing: Read = {
-  sql: `SELECT ${fields(label)} FROM bill.bill b`,
+  sql: `SELECT ${fields(label)}, b.circle FROM bill.bill b`,
   order: 'recorded DESC, id DESC',
 }
 

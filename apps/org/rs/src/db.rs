@@ -12,19 +12,49 @@ use crate::repo::Repo;
 use crate::run::{Fail, Result, Steps, last_line, quiet};
 
 /// The dev cluster: Postgres 18 in .data/pg, owned by the user, on
-/// 127.0.0.1 at `CELLA_PGPORT` (54342) and no socket, its database
-/// `CELLA_DB` (cella).
+/// 127.0.0.1 at [`pg_port`] and no socket, its database `CELLA_DB` (cella).
 pub struct Dev<'a> {
     pub repo: &'a Repo,
     pub port: String,
     pub db: String,
 }
 
+/// The dev cluster's port: `CELLA_PGPORT`, else the first of the block a
+/// corpus worker is handed, `CORPUS_PORT`, else 54342.
+pub fn pg_port() -> u16 {
+    port(
+        env::var("CELLA_PGPORT").ok(),
+        env::var("CORPUS_PORT").ok(),
+        0,
+        54342,
+    )
+}
+
+/// The analytics shell's port: `CELLA_ANALYTICS_PORT`, else the one after
+/// `CORPUS_PORT`, else 54343.
+pub fn analytics_port() -> u16 {
+    port(
+        env::var("CELLA_ANALYTICS_PORT").ok(),
+        env::var("CORPUS_PORT").ok(),
+        1,
+        54343,
+    )
+}
+
+/// A port: cella's own variable's, else the worker's block's first plus
+/// `offset`, else `fallback`; a value that is no port is passed over.
+fn port(own: Option<String>, corpus: Option<String>, offset: u16, fallback: u16) -> u16 {
+    let parsed = |v: Option<String>| v?.trim().parse::<u16>().ok();
+    parsed(own)
+        .or_else(|| parsed(corpus)?.checked_add(offset))
+        .unwrap_or(fallback)
+}
+
 impl<'a> Dev<'a> {
     pub fn new(repo: &'a Repo) -> Self {
         Self {
             repo,
-            port: env::var("CELLA_PGPORT").unwrap_or_else(|_| "54342".into()),
+            port: pg_port().to_string(),
             db: env::var("CELLA_DB").unwrap_or_else(|_| "cella".into()),
         }
     }
@@ -91,7 +121,7 @@ impl<'a> Dev<'a> {
             // write names none: the slice's database holds the root, as a
             // founded scope does.
             let mut root = self.on(db, "psql");
-            root.args(["-qc", "INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'Assemblée générale', true)"]);
+            root.args(["-qc", "INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'General assembly', true)"]);
             cmds.push(root);
         }
         if let Some(dir) = fixture {
@@ -271,4 +301,28 @@ fn staged(dir: &Path, path: &str) -> PathBuf {
 
 fn io(path: &Path) -> impl Fn(std::io::Error) -> Fail + '_ {
     move |e| Fail::new(format!("{}: {e}", path.display()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::port;
+
+    #[test]
+    fn a_lane_s_cluster_and_shell_listen_on_the_ports_its_worker_was_handed() {
+        let corpus = || Some("54410".to_string());
+        assert_eq!(port(None, corpus(), 0, 54342), 54410);
+        assert_eq!(port(None, corpus(), 1, 54343), 54411);
+    }
+
+    #[test]
+    fn cella_s_own_port_wins_and_none_falls_back_to_the_fixed_one() {
+        assert_eq!(
+            port(Some("20001".into()), Some("54410".into()), 0, 54342),
+            20001
+        );
+        assert_eq!(port(None, None, 0, 54342), 54342);
+        assert_eq!(port(None, None, 1, 54343), 54343);
+        assert_eq!(port(Some("x".into()), Some("y".into()), 1, 54343), 54343);
+        assert_eq!(port(None, Some("65535".into()), 1, 54343), 54343);
+    }
 }

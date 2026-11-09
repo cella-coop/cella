@@ -57,13 +57,23 @@ export interface Detail extends Circle {
   issuers: { id: string; name: string }[]
   issued: { id: string; name: string }[]
   roles: Role[]
-  mandates: Mandate[]
+  // The mandates granted to its roles, as the Mandates collection reads
+  // them.
+  mandates: Standing[]
 }
 
 // A circle someone may work for, as a form offers it.
 export interface Sat {
   id: string
   name: string
+}
+
+// A circle the co-op selector offers as a lens, and whether the member
+// sits in it.
+export interface Lens {
+  id: string
+  name: string
+  sits: boolean
 }
 
 // The circles a person sits in as a form offers them, the one a record
@@ -95,6 +105,10 @@ export interface Created {
 // ended, by its revocation or its term, and since when.
 export interface Standing extends Mandate {
   granteeName: string
+  // The issuer's name, and the name of the circle its scope covers, none
+  // for `own` or the whole co-op.
+  issuerName: string
+  scopeName: string | null
   circle: string | null
   procedure: string | null
   parent: string | null
@@ -109,8 +123,11 @@ export type Depth = Standing & { depth: number }
 
 // A mandate's page: the mandate, its chain from the root the assembly
 // issued down to itself, and every mandate issued under it, down its
-// provenance tree, each with its depth below it.
+// provenance tree, each with its depth below it; and whether the links
+// above the highest one the reader reads are withheld from them, that
+// link's parent one they do not read.
 export interface Provenance extends Standing {
   chain: Depth[]
   under: Depth[]
+  withheld: boolean
 }

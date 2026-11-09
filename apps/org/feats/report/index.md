@@ -1,6 +1,6 @@
 +++
 title = "Report"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 The co-op's reports: what the books and the work add up to, read through
@@ -23,7 +23,8 @@ A report's `kind` says how it is drawn:
 
 - `income` and `balance`, the **financial statements**: the income
   statement over a span and the balance sheet at its end, each against
-  the span before it, rubric by rubric in the PCG's presentation;
+  the span before it, rubric by rubric in the PCG's presentation,
+  its rubrics in English;
 - `margins`, the **project margins**: each project's margin, its budget
   burn, its forecasts at completion and whether it is watched, on the
   scope's day;
@@ -193,17 +194,15 @@ contracts share, which name no one but where a column declares it.
 ## Shell
 
 The `reports` collection, titled Reports, in Office: each saved report
-with its kind, the built-in ones first. A report's page draws it: the
-statements as two `Sheet`s, the span's figure and the span before's, its
-spans listed above it to move between (`span`); the margins as a table
+with its kind, the built-in ones first. A report's page, its header's
+crumb its id, opens on what it is about and the log's entry it read, or
+why it drew nothing, and draws it in its Figures tab, the data central
+to it: the statements as two `Sheet`s, the span's figure and the span
+before's, its spans listed in the drawer's Related to move between
+(`span`), each opening the Figures tab; the margins as a table
 over a summary of the margin, the time cost and how many are watched; the
 federation figures as sections; a custom report as its chart over a
-table. Each page says the log's entry it read. The New form saves a
-custom report from its title and its definition.
-
-The margins' rows are pinnable, as the collection `reports/margins` with
-the fields of its table (`pinnable`), and read through the port by
-`rows(port, id)`; no page pins them while the co-op's home is retired.
+table. The New form saves a custom report from its title and its definition.
 
 ## Lanterne
 

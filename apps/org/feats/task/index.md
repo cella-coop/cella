@@ -1,6 +1,6 @@
 +++
 title = "Task"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 Assignable work items: the atomic unit of the co-op's work. A task stands
@@ -87,17 +87,20 @@ priority and due day. Dragging a card into backlog, todo or doing is the
 `move`, into done the `complete`, posted with the column entered and
 signed as the acting member; a refused move leaves the card where it
 was. The board also groups by priority, assignee or project. A task's
-page moves and completes it in its header; its assignee and project are
-set in its content.
+page, its header's crumb its id, moves and completes it in its header;
+its assignee and project are set in its content, and it has no tab of
+its own, since its properties say all it holds.
 
 ## Lanterne
 
-Thirty-three tasks across the projects and the co-op's own work, each
-given to a member of the circle that runs its project: the Halles shop's
+Thirty-seven tasks across the projects and the co-op's own work, each
+its circle's, its project's where it is filed in one, so each circle's
+lens shows its own, and most given to a member of that circle: the Halles shop's
 launch checklist and its care (Yusuf, Thomas, Amina, Léa), Ferrand's
 proofs and press check (Hugo), Terres Vives's microsite (Léa, Amina),
-Nuvola's newsletter and social calendar (Chloé, Malik), and Julien's
-October close.
+Nuvola's newsletter and social calendar (Chloé, Malik), Julien's
+October close, the amendments the assembly drafts (Camille, Chloé) and
+coordination's staffing plan (Yusuf).
 
 ## Analytics
 

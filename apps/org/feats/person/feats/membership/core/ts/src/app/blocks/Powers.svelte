@@ -40,5 +40,5 @@
 </script>
 
 <Section title="Powers" {count}>
-  <Table {columns} rows={data.powers} href={(p: Power) => (p.mandate ? `/mandates/${p.mandate}` : undefined)} empty="No power on this day" />
+  <Table {columns} rows={data.powers} href={(p: Power) => (p.mandate ? `/mandates/${p.mandate}` : undefined)} empty="No power you may read on this day" />
 </Section>

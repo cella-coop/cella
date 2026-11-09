@@ -22,7 +22,7 @@ proposed = 2021-02-15
 deadline = 2021-03-01
 closed = 2021-03-01
 body = """
-The founders adopt the statutes of Lanterne SCOP SARL à capital variable,
+The founders adopt the statutes of Lanterne, a worker co-operative limited company with variable capital,
 and with them how its circles decide and the mandates they grant.
 """
 
@@ -444,7 +444,7 @@ body = """
 The 2025 surplus of 61 400 € is allocated as the statutes require: 45 % to
 the members as their share of work (participation), 54,27 % to the
 indivisible reserves and 0,73 % as interest on capital, 448,22 € on its
-13 000 €, within the 3,5 % the statutes pay (loi 47-1775, art. 14).
+13 000 €, within the 3,5 % the statutes pay (Act No. 47-1775, article 14).
 """
 # What it decides beyond its text: the 2025 distribution approved.
 [[motion.action]]
@@ -888,3 +888,88 @@ at = 2026-10-19
 member = "malik@lanterne.example"
 stance = "consent"
 at = 2026-10-21
+
+# The working circles decide their own work. Marketing publishes its case
+# studies openly; Brand's lead proposed sending all of Brand's print to
+# one printer, and Sofia, who buys it, objected, so it closed rejected;
+# Web's motion to make accessibility the floor of every site is open.
+[[motion]]
+id = "m-2026-015"
+circle = "marketing"
+proposer = "malik@lanterne.example"
+title = "Publish our client case studies under CC BY"
+procedure = "consent"
+proposed = 2026-09-28
+deadline = 2026-10-05
+closed = 2026-10-05
+body = """
+Every case study we write for a client goes on our site under CC BY 4.0,
+once the client agrees, so other co-ops can reuse them.
+"""
+
+[[motion.vote]]
+member = "malik@lanterne.example"
+stance = "consent"
+at = 2026-09-28
+
+[[motion.vote]]
+member = "chloe@lanterne.example"
+stance = "consent"
+at = 2026-09-30
+
+[[motion]]
+id = "m-2026-016"
+circle = "brand"
+proposer = "hugo@lanterne.example"
+title = "Send all of Brand's print to one printer"
+procedure = "consent"
+proposed = 2026-10-01
+deadline = 2026-10-08
+closed = 2026-10-08
+body = """
+Order all of Brand's print from Imprimerie du Parc, for a better rate and
+one press check a month.
+"""
+
+[[motion.vote]]
+member = "hugo@lanterne.example"
+stance = "consent"
+at = 2026-10-01
+
+[[motion.vote]]
+member = "camille@lanterne.example"
+stance = "consent"
+at = 2026-10-02
+
+[[motion.vote]]
+member = "sofia@lanterne.example"
+stance = "object"
+at = 2026-10-05
+
+[[motion]]
+id = "m-2026-017"
+circle = "web"
+proposer = "yusuf@lanterne.example"
+title = "Accessibility is the floor of every site we ship"
+procedure = "consent"
+proposed = 2026-10-20
+deadline = 2026-11-03
+body = """
+No site leaves Web without passing WCAG 2.2 at level AA, checked by
+someone who did not build it.
+"""
+
+[[motion.vote]]
+member = "yusuf@lanterne.example"
+stance = "consent"
+at = 2026-10-20
+
+[[motion.vote]]
+member = "lea@lanterne.example"
+stance = "consent"
+at = 2026-10-21
+
+[[motion.vote]]
+member = "amina@lanterne.example"
+stance = "consent"
+at = 2026-10-22

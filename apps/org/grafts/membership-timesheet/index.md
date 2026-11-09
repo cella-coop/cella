@@ -1,6 +1,6 @@
 +++
 title = "membership-timesheet"
-updated = 2026-11-06
+updated = 2026-11-08
 +++
 
 A member's time, as the members see it: none is a suspended or former
@@ -42,7 +42,7 @@ mandate covering the month's circle (`membership.may`), a row for each
 circle's month, naming the circle; linking to the person's page, which
 approves it. In Lanterne, Yusuf, Web's lead,
 approves Thomas's month, and Inès's, Web's; Hugo, Brand's, is refused
-them; Camille, the gérante, seated in the assembly by a mandate on the
+them; Camille, the manager, seated in the assembly by a mandate on the
 whole co-op, approves anyone's, and so does Julien, seated there as
 treasurer, for the pay run, who approved Inès's September. Its tests
 are the membership feat's of `may`, and the `governance` and `people`

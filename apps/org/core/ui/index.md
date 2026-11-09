@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -84,24 +84,41 @@ The theme is light, dark or the system's, a cookie the server writes into
 
 - `Shell`: the grid, sidebar · content. The sidebar's top and foot stay
   put and only its middle scrolls. Its top is the co-op selector, the
-  co-op's mark and name, its menu listing the scopes the shell serves
-  (one today) with their legal names; then, always shown, the Inbox,
-  where `/` and the sign-in land, and Activity, the log. The middle holds the sections as
+  co-op's mark and name, followed by the lensed circle's name where the
+  member has one, "Lanterne / Web", so a lens is never hidden. Its menu
+  lists the scopes the shell serves (one today) with their legal names,
+  then the circles the member reads: "All circles" first, which clears
+  the lens and is checked where there is none, then the circles the
+  member sits in, then the rest. A circle chosen there is the member's
+  **lens**, which every collection reads through
+  ([architecture](../../../../_corpus/doc/architecture.md#the-lens)): a cookie
+  of the scope's, written by `/lens` as `/theme` writes the theme, so
+  the server renders the lensed page and nothing of it enters the log;
+  a lens naming a circle the member no longer reads is none. Then,
+  always shown, the Inbox, whole whatever the lens, since it is what
+  waits on the member, where `/` and the sign-in land, and Activity,
+  the log read as a feed of who did what. The middle holds the sections as
   accordions, as Linear's teams: Governance, Office, Work, Payments,
   Ledger and Equity, flat, never nested, each its name
   and a caret, a dot on a shut one whose collections hold rows waiting
-  on the acting member. Open, a section's collections hang from a guide
+  on the acting member, whole whatever the lens as the Inbox is. Open,
+  a section's collections hang from a guide
   line; a section's collections that name a `subgroup` are labelled by
   it where it has more than one. A collection the view declares
-  `counted` shows how many rows it holds for the acting member, in a
-  small quiet pill. Several sections may be open at once: one the
+  `counted` shows how many rows it holds for the acting member, in the
+  lensed circle where there is a lens, the count its page heads with,
+  in a small quiet pill. Several sections may be open at once: one the
   viewer never touched is open while it holds the page, and one they
   opened or shut stays so. The foot is the command menu,
   then the account menu, the signed-in member, whose menu holds their
   address, Settings, Sign out and the theme. Settings is its own
-  sidebar, in place of the top and the sections while one of its pages
-  is open: Back to app, which returns to the last page left, then the
-  `platform` collections; the account and co-op menus lead into it. In
+  sidebar, one for the member and the co-op as Linear's, in place of
+  the top and the sections while one of its pages is open: Back to app,
+  which returns to the last page left, then the `platform` collections
+  in two groups, each under its heading, as each collection's
+  `subgroup` names: Personal, the member's own (Devices), then
+  Organization, the co-op's (Imports). The account menu's Settings opens
+  it at Personal's first page, the co-op menu's at Organization's. In
   dev mode a faint upright "prototype" with a test tube sits at the
   content's bottom right. The last write's outcome floats above.
 - `Gate`: what a person reaches before signing in, alone on the page,
@@ -124,15 +141,17 @@ The theme is light, dark or the system's, a cookie the server writes into
 - `Frame` (`PageFrame.svelte`): the one page frame, its header one
   compact row as Linear's, spanning the content and the drawer: on an
   item, a quiet caret back to its collection, on a collection its icon as
-  the sidebar shows it; the page's name, its
+  the sidebar shows it; the page's name (on an item, a muted crumb of
+  its kind and reference, its title the content's heading), its
   caption as the name's tooltip, with its count and status badges; the
   page's tabs right after, a collection's views, scrolling in their own
   strip; then the page's writes and one quiet icon group, the drawer's
   panel tabs beside its toggle, which stays there when the drawer is
   shut. A write in the header keeps the row one line: its fields'
   labels are read by assistive technology and not seen, and a choice is
-  at most 16rem wide.
-  Under it, the content (an item's subtitle first) and the drawer, which
+  at most 16rem wide. A form a header's popover opens is no part of
+  the row: its fields show their labels and its choices take its width.
+  Under it, the content and the drawer, which
   scrolls down and never across. The toggle, or `]` anywhere, shows and
   hides the drawer on every page at once; a cookie keeps the viewer's
   choice, so the server renders it. One tab per panel, the open one
@@ -141,20 +160,28 @@ The theme is light, dark or the system's, a cookie the server writes into
   and rows for every collection, and a drawer holding one card, View
   (`Viewing`): the text filter, the conditions on the rows (an
   enumeration's values as chips, a date's month or year), the layout
-  (list · table · gallery · board · calendar · dashboard, icon-only so
+  (list · feed · table · gallery · board · calendar · dashboard, icon-only so
   it fits) and, in a table, its columns, in a gallery or on a board, its
   cards' fields and the board's grouping, in a calendar, the date it
   places the items by, month or week, and its cards' fields, in a
   dashboard, its widgets; and saving what is shown as a view. Its rows
-  are the server's, kept, filtered, ordered and paged in SQL
-  ([reading at scale](../../../../_corpus/doc/architecture.md#reading-at-scale)):
-  a list, a table and a gallery draw a hundred rows at a time
+  are the server's, kept, filtered, ordered and paged in SQL, and only
+  the lensed circle's where the member has a lens: a collection whose
+  rows name no owning circle says under its header that the lens
+  leaves it whole
+  ([reading at scale](../../../../_corpus/doc/architecture.md#reading-at-scale),
+  [the lens](../../../../_corpus/doc/architecture.md#the-lens)):
+  a list, a feed, a table and a gallery draw a hundred rows at a time
   (`PAGE`), with a button under them that asks the address for the
   next hundred (`n`) and how many of the rows are drawn; the keyboard
   moving past the last drawn row asks for the next page, and the text
   filter goes into the address once the typing pauses, which draws the
   first page again. A board and a calendar place every row the view
-  keeps. `Gallery`
+  keeps. The feed draws each row as one line of who did what and when,
+  as a record's Activity reads: its first person column as their chip,
+  then its title, linked, then its first date, and the time links to
+  the row's own page where the view links its title elsewhere; it is
+  offered only where a column is a person and one a date. `Gallery`
   lays the items out as cards (`Tile`); `Board` puts them in a column
   per value of an enumeration, each with its count, the board offered
   only where a field enumerates; `Calendar` puts them on the days of a
@@ -168,7 +195,7 @@ The theme is light, dark or the system's, a cookie the server writes into
   (`models/calendar.ts`). A view, its extensions overriding it part by
   part, declares its `look`: its default layout, its board's grouping
   and columns' order (`lanes`), its cards' fields, its calendar's date
-  (`on`) and span; circles and projects open as a gallery, motions and
+  (`on`) and span; the log opens as a feed, circles and projects as a gallery, motions and
   tasks as a board, timesheets as a table, meetings as a calendar of
   months. A board move is
   a write only where a slice declares it (`shifts`: the field, the
@@ -213,16 +240,35 @@ The theme is light, dark or the system's, a cookie the server writes into
   carry none: the field the collection's read orders by first
   (`ordered`), where one select reads its rows and its order leads with
   a field by name; the view orders no rows of its own.
-- `Detail`: the one detail view, the item's blocks in the content and the
-  drawer's Details panel, its cards stacked as Linear stacks an issue's
-  properties: Properties (label and value rows), Related and Activity.
-  A page may declare tabs (`tabs`, the first its default), shown as
+- `Detail`: the one record page, the same for every collection, as
+  Linear's issue page. The content is the record's: its title, large,
+  then its free-form content, a document's blocks where its kind holds
+  them, a record's own words where it holds them as text, a circle's
+  purpose or a report's caption (`summary`, in the text face as
+  `Prose`), and under a hairline its Activity, what happened to it in
+  order, with its comments and the box that adds one where its kind
+  takes comments (`comment`). Each slice gives its events newest first
+  (`activity`), a comment's words as its `body`; the page merges every
+  slice's and shows them oldest first, the box last. The drawer's
+  Details panel holds its properties, label and value rows on the
+  drawer itself, with no card or panel around them, and under them
+  Related; nothing in the drawer is boxed. A record whose structured
+  data is central to it puts that data in a tab of its own after the
+  first (`tabs`): a motion's Stances and Effects, a meeting's Agenda, a
+  circle's Roles, Seats and Policies, a document's Versions, a report's
+  Figures, an invoice's Lines, a period's Entries, a project's
+  Milestones and Budget, a contact's Invoices, a person's Employment; the first tab is the
+  content and its Activity, and a kind with no free-form content shows
+  its overview's blocks there. The header's crumb names the record by
+  its kind and reference (`subtitle`, its id), never a sentence about
+  it, which its properties and content say. Tabs show as
   pills in the header when there are two or more, the open one in the
   URL (`?tab=`); a block sits in the tab it names (`{ tab, block }`), a
   bare one in the first, and an extension's blocks join the owner's
   tabs or add their own. A tab earns its place only as a genuinely
-  different view: motions have Overview and Stances; documents and
-  invoices have one. Esc goes back to the collection.
+  different view. Every collection's item page is drawn by `Detail`
+  alone, and the ui check refuses an item page that frames itself. Esc
+  goes back to the collection.
 - `Card` (a borderless card raised on the panel, in the drawer or the
   content), `Section` (a block in the content),
   `Properties`, `Related`, `Activity`, `Table`, `Sheet` (a financial
@@ -270,8 +316,10 @@ The theme is light, dark or the system's, a cookie the server writes into
 - `Blocks`: a document of blocks, the block editor's surface and its
   read-only reader's, and the look of every kind of block (headings, list
   items with their markers, to-dos, quotes, code, dividers, embeds' cards,
-  a block chosen whole, where a dragged block lands). The document feat's
-  components name its classes and draw nothing of their own.
+  a block chosen whole, where a dragged block lands), every kind set in
+  the body font, Inter (`--font-ui`), headings and all, wherever the
+  editor or its reader stands. The document feat's components name its
+  classes and draw nothing of their own.
 - `icons`: the Phosphor icons slices may name.
 
 A view whose rows are not its own items links each where its `href`
@@ -279,6 +327,63 @@ says, as an inbox's ask links to where it is done.
 
 A `Column` places itself in the list view by `role`: the title, the line
 under it, the trailing meta, or the table alone.
+
+## Settings
+
+A settings page is a plain form, `Settings`, one `Setting` a row: its
+label, its current value in its field, and under it in a quiet line
+what changes it, a write the reader makes or a motion of the circle
+that decides it. Every field is editable, whoever reads it; Save posts
+only the fields changed. A slice declares each setting with the write
+that changes it directly, if any, and the motion kind that changes it
+otherwise, its arguments filled from the field (`models/settings.ts`).
+
+A setting (`Declared`, as the package exports its type) names its
+field, its value in force, the page action that saves it, if one does,
+and, where the reader's write would be refused, why, as its slice reads
+the guard's reason before anything is written; and the motion that
+changes it otherwise: its kind, its arguments from the value typed and
+the one it replaces, those the reader may change before proposing
+labelled as the New form labels them and the rest carried as they are,
+and the words its title says the change in. The form is handed the
+circle that decides its motions and the deadline asked for, as its
+slice reads them. `plan` splits the fields changed into each write,
+posted once with all its fields, one after the other until one does not
+settle, and one motion: the kind of the first field changed that its
+reader may not write, which every other field of that kind joins, its
+arguments merged and its titles joined. A field of another kind waits
+for the next Save, marked not saved, as does one no motion is declared
+to change. The dev server alone serves a specimen of a form mixing the
+two kinds, `/specimens/settings`, a page of no slice that reads nothing
+and has no actions, for the browser test to see the dialog on.
+
+A field the reader may change saves by its write, and the form shows
+the outcome as any `Form` does: the last write's that names one, as
+the theme's cookie names none. A field they may not change, since its
+write needs a mandate they lack, or since only a motion changes it,
+does not save: Save opens `ProposeInstead`, a dialog in the top layer
+as `Popover` is, which says why in the guard's own words, the refusal
+its write's guard gives as early as it can, with the values it read,
+and offers to propose the change instead. Its form is the motions'
+New form, prefilled: the circle that decides it (`motion.decider`),
+its title saying the change ("Rename Coordination to Operations"),
+the action it carries with its arguments, from the value typed and the
+one it replaces, and the deadline the procedure its requirements fix
+asks for. The reader may edit any of it before proposing; Propose posts
+it to the page slice's own `propose` action, and the outcome names the
+log entry that proposes the
+motion. Closing the dialog keeps what was typed, and the field marks
+the change as not saved. A form whose fields mix the two saves the one
+kind and offers the motion for the other, in one go.
+
+The Settings section opens on Account, the acting person's own
+settings at `/settings/account`, which the account menu at the
+sidebar's foot links to as well: a `Settings` form of their name, email
+and phone, each saved by `profile`, every person's right on their own,
+and their theme, light, dark or the system's, saved in its cookie and worn at once; and
+under it their devices, the one their session signs with marked as this
+device and each other current one with its revoke, as on their page.
+Its fields are all the reader's own, so none opens a motion.
 
 ## Posting a write
 
@@ -300,8 +405,8 @@ exported.
 ## State
 
 A component holds no state of its own: the collection's filter and row,
-the command menu, the dismissed outcome, the drawer's opening and the
-people's names, and what a date field holds typed and says of it, are state classes in
+the command menu, the dismissed outcome, the drawer's opening, the
+lens and the people's names, and what a date field holds typed and says of it, are state classes in
 `hooks/` (`CollectionState`, `CommandState`, `ShellState`, `DateState`), and the sign-in and
 an invitation taken up (`SignInState`, `JoinState`), each reached through
 its `use*` hook, as [architecture](../../../../_corpus/doc/architecture.md#client-state)
@@ -361,23 +466,11 @@ values beside them, a line with its months and values in a table for
 assistive technology and each month's tooltip. `Widgets`, in the View
 card, adds, edits, reorders and removes them.
 
-`Home`, a dashboard over many collections, is mounted on no page: the
-co-op's home is retired until a better first page is designed, and `/`
-lands in the Inbox. Its
-widgets are pins (`Pin`): a standard widget and the collection it runs
-over, checked by `pins` against that collection's fields and run by the
-server in SQL over its rows as the acting member sees them; each card names
-its collection and links to it (`from`). The root declares the co-op's
-pins until a viewer makes their own, JSON in the address (`w`) as a
-collection's are. The View card lists them in order, dragged into place
-or removed, and edits one collection's with `Widgets` (`c` in the
-address), `repin` putting them back where the first of them stood.
-
 ## Accessibility
 
 The `a11y` e2e scenario (`apps/org/ts/_e2e/a11y.test.ts`) scans, with
 axe-core through Playwright, the sign-in page and, signed in as
-Camille on Lanterne, the home, every collection the sidebar mounts in
+Camille on Lanterne, the Inbox `/` lands on, every collection the sidebar mounts in
 its default view, the first item each lists and its form open on
 New, in light and in dark, on Chromium, Firefox and WebKit. A
 violation of impact serious or critical fails it. What it found when

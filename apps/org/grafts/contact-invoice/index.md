@@ -1,6 +1,6 @@
 +++
 title = "contact-invoice"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 Who an invoice bills: a client, a contact holding the client role
@@ -64,8 +64,8 @@ feat checks it.
 Adds to an invoice's page the client it bills, or that it is unbilled,
 with the form that links it (`link`), whose picker offers the clients
 not archived and no other contact; and to the contacts what each owes,
-from `contact_invoice.standing`, and to a contact's page the invoices that
-bill it.
+from `contact_invoice.standing`, and to a contact's page, in an Invoices tab, the invoices
+that bill it.
 
 ## Analytics
 

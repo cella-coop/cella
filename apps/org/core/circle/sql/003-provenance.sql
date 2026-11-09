@@ -87,7 +87,10 @@ BEGIN ATOMIC
 END;
 
 -- A mandate's chain, from its root down to itself: each mandate on it,
--- its grantee and its issuer, and its depth, the root's 0.
+-- its grantee and its issuer, and its depth, the root's 0. It reads as
+-- its caller reads `circle.mandate`, so it stops below the first link
+-- they do not read, the highest they read at depth 0, whose parent is
+-- what tells it from the root.
 CREATE FUNCTION circle.chain(mandate bigint) RETURNS TABLE (id bigint, grantee text, issuer text, depth int)
 LANGUAGE sql STABLE
 BEGIN ATOMIC

@@ -196,7 +196,7 @@ pub enum Command {
 pub enum Part {
     /// The feat tree's dependencies, imports, actions and SQL boundaries
     Feats,
-    /// The mock co-ops balance and their links resolve
+    /// The mock co-ops balance, their links resolve, and they show every feature and every circle a slice of its own
     Fixtures,
     /// The TypeScript type check of the server layers and tools
     Types,
@@ -247,7 +247,7 @@ pub enum Analytics {
         #[arg(long, value_name = "URL")]
         url: Option<String>,
 
-        /// The port it serves on, on localhost; CELLA_ANALYTICS_PORT or 54343
+        /// The port it serves on, on localhost; CELLA_ANALYTICS_PORT, else CORPUS_PORT plus one, else 54343
         #[arg(long)]
         port: Option<u16>,
     },

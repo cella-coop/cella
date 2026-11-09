@@ -20,7 +20,7 @@ before(async () => {
   await db.query(`SET cella.clock = '2026-10-24'`)
   await db.query(`WITH person AS (INSERT INTO person.person (address, name) VALUES ($1, 'Inès Haddad') ON CONFLICT DO NOTHING) INSERT INTO membership.member (address, status, shares, invited) VALUES ($1, 'invited', 0, '2026-09-30')`, [ines])
   await db.query(`WITH person AS (INSERT INTO person.person (address, name) VALUES ($1, 'Léa Bernard') ON CONFLICT DO NOTHING) INSERT INTO membership.member (address, status, since, shares) VALUES ($1, 'active', '2022-01-10', 20)`, [lea])
-  await db.query(`INSERT INTO document.document (id, title) VALUES ('internal-rules', 'Règlement intérieur'), ('rate-card', 'Rate card')`)
+  await db.query(`INSERT INTO document.document (id, title) VALUES ('internal-rules', 'Internal rules'), ('rate-card', 'Rate card')`)
   await db.query(`INSERT INTO document.adoption (receipt, document, version, base, adopted) VALUES (1, 'internal-rules', 'internal-rules@2', NULL, '2025-06-20')`)
   await db.query(`INSERT INTO document_membership.reading (version, member, read) VALUES ('internal-rules@2', $1, '2025-06-21')`, [lea])
 })

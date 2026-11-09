@@ -1,6 +1,6 @@
 +++
 title = "Account"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 The co-op's accounts and what its members own: the chart of accounts,
@@ -18,7 +18,7 @@ posted to it, which the `account-transaction` graft reads from the
 
 | Entity | Fields | Notes |
 |---|---|---|
-| account | `code`, `label`, `kind`, `cash`, `parent?`, `holder?`, `frozen` | `code` is unique in the scope and follows the national chart (the French PCG for a SCOP) |
+| account | `code`, `label`, `kind`, `cash`, `parent?`, `holder?`, `frozen` | `code` is unique in the scope and follows the national chart (the French PCG for a SCOP), its `label` in English |
 | period | `month`, `closed?` | one per month of the fiscal year; open until closed, never reopened |
 | terms | `id`, `policy`, `from`, `share`, `minimum`, `instalments`, `delay`, `repayments`, `adopted` | the statutes' capital clauses, copied from the rule (`policy`) a motion adopted, from the day it applies: the value of a share, the fewest shares an associate subscribes, the most monthly instalments they pay them in, the months after an exit before the first repayment and the number of yearly repayments |
 | rubric | `id`, `sheet`, `n`, `kind`, `label`, `side?`, `prefixes`, `adds`, `subtracts` | a rubric of the balance sheet or the income statement, in the order the PCG's models list them for a small company: a `heading`; a `line`, gathering the accounts whose code its longest matching prefix names, debit positive on the `debit` side (assets, expenses) and credit positive on the `credit` side (liabilities, income); or a `total`, adding and subtracting other rubrics of its sheet |
@@ -41,9 +41,14 @@ chart says which accounts are cash, and the `account-transaction` graft
 reads the flag to keep money from leaving one except through the writes
 with their own power and limit.
 
-The financial statements present the chart in the PCG's rubrics, the
-models of the annual accounts for a small company (Règlement ANC n°
-2014-03, the système de base, art. 821-1 ff., not verified on Légifrance).
+The financial statements present the chart in the PCG's rubrics, in the
+order and with the prefixes of the models of the annual accounts for a
+small company (Règlement ANC n° 2014-03, the système de base, art. 821-1
+ff., not verified on Légifrance), each labelled in English as IFRS and
+common EU usage name it: Assets, Non-current assets, Current assets,
+Trade receivables, Cash and cash equivalents, Equity, Share capital,
+Legal reserve, Retained earnings, Liabilities, Total equity and
+liabilities; Operating income, Operating expenses, Profit or loss.
 Each account sits in one rubric of each sheet, the line whose prefix of
 its code is longest, and every code of classes 1 to 7 has one: classes 6
 and 7 are the income statement's, and on the balance sheet they are the
@@ -225,7 +230,7 @@ its balance, as a bank overdraft is among the debts.
   one. It names no person, so a reason it gives may enter the log. Both
   guards that judge a subscription's terms call it, the subscription's
   own and the proposal's (`account-motion`), so they are written once.
-- `account.rubric`: the statements' rubrics, seeded with the PCG's;
+- `account.rubric`: the statements' rubrics, seeded with the PCG's, in English;
   `rubric_of(sheet, code)` the line an account is presented in.
 - `account.report`: the spans of the books, each with the span before it. It is the same for every reader, declared `audience: shared by kind, since`.
 - `account.kind_of(code)`: the kind of account a code's class makes it, by
@@ -331,11 +336,12 @@ The `accounts` collection, the chart by code; `periods`, the latest month
 first, its New form opening the month after the latest, and a period's
 page closing it; `terms`, the statutes' capital
 clauses, the latest first, governing, to apply or replaced, titled
-Capital. The financial
+Capital, a terms' page its header's crumb its id. The financial
 statements are the `report` feat's, drawn in the rubrics and over the
 spans this feat publishes.
 Printed, a page drops the shell and reads as a document. Balances, the trial
-balance and each account's ledger are `account-transaction`'s; the
+balance, each account's ledger and each period's entries are
+`account-transaction`'s, in a tab of the page's own; the
 motion that adopted a terms' rule, `account-motion`'s.
 
 ## Lanterne

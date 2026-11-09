@@ -4,3 +4,4 @@
 export * from './query.ts'
 export * from './drag.ts'
 export * from './calendar.ts'
+export * from './settings.ts'

@@ -1,11 +1,11 @@
 JournalCode|JournalLib|EcritureNum|EcritureDate|CompteNum|CompteLib|CompAuxNum|CompAuxLib|PieceRef|PieceDate|EcritureLib|Debit|Credit|EcritureLet|DateLet|ValidDate|Montantdevise|Idevise
-HA|Achats|HA-0101|20261005|6135|Locations mobilières|||LOC-1005|20261005|Location de mobilier, salon du livre|400,00|0,00|||20261006||
-HA|Achats|HA-0101|20261005|44566|TVA déductible sur autres biens et services|||LOC-1005|20261005|Location de mobilier, salon du livre|80,00|0,00|||20261006||
-HA|Achats|HA-0101|20261005|512|Banque — Crédit Coopératif|||LOC-1005|20261005|Location de mobilier, salon du livre|0,00|480,00|||20261006||
-VT|Ventes|VT-0207|20261012|411|Clients|CONDINE|Atelier Ondine|F-OLD-0411|20261012|Atelier Ondine, signalétique|1440,00|0,00|||20261012||
-VT|Ventes|VT-0207|20261012|706|Prestations de services|||F-OLD-0411|20261012|Atelier Ondine, signalétique|0,00|1200,00|||20261012||
-VT|Ventes|VT-0207|20261012|44571|TVA collectée|||F-OLD-0411|20261012|Atelier Ondine, signalétique|0,00|240,00|||20261012||
-OD|Opérations diverses|OD-0031|20261015|6226|Honoraires|||OD-31|20261015|Honoraires, écriture déséquilibrée|300,00|0,00|||20261015||
-OD|Opérations diverses|OD-0031|20261015|512|Banque — Crédit Coopératif|||OD-31|20261015|Honoraires, écriture déséquilibrée|0,00|250,00|||20261015||
-AN|À nouveaux|AN-0001|20250101|512|Banque — Crédit Coopératif|||AN|20250101|Report à nouveau 2025|1000,00|0,00|||20250101||
-AN|À nouveaux|AN-0001|20250101|1068|Autres réserves|||AN|20250101|Report à nouveau 2025|0,00|1000,00|||20250101||
+HA|Purchases|HA-0101|20261005|6135|Equipment rental|||LOC-1005|20261005|Furniture rental, book fair|400,00|0,00|||20261006||
+HA|Purchases|HA-0101|20261005|44566|Input VAT on goods and services|||LOC-1005|20261005|Furniture rental, book fair|80,00|0,00|||20261006||
+HA|Purchases|HA-0101|20261005|512|Bank — Crédit Coopératif|||LOC-1005|20261005|Furniture rental, book fair|0,00|480,00|||20261006||
+VT|Sales|VT-0207|20261012|411|Trade receivables|CONDINE|Atelier Ondine|F-OLD-0411|20261012|Atelier Ondine, signage|1440,00|0,00|||20261012||
+VT|Sales|VT-0207|20261012|706|Service revenue|||F-OLD-0411|20261012|Atelier Ondine, signage|0,00|1200,00|||20261012||
+VT|Sales|VT-0207|20261012|44571|Output VAT|||F-OLD-0411|20261012|Atelier Ondine, signage|0,00|240,00|||20261012||
+OD|Miscellaneous|OD-0031|20261015|6226|Professional fees|||OD-31|20261015|Professional fees, unbalanced entry|300,00|0,00|||20261015||
+OD|Miscellaneous|OD-0031|20261015|512|Bank — Crédit Coopératif|||OD-31|20261015|Professional fees, unbalanced entry|0,00|250,00|||20261015||
+AN|Opening balances|AN-0001|20250101|512|Bank — Crédit Coopératif|||AN|20250101|Balance carried forward 2025|1000,00|0,00|||20250101||
+AN|Opening balances|AN-0001|20250101|1068|Other reserves|||AN|20250101|Balance carried forward 2025|0,00|1000,00|||20250101||

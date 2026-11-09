@@ -92,6 +92,9 @@ test('Lanterne\'s records are owned as its fixtures place them', async () => {
     { id: 'ex-0002', circle: 'web' },
     { id: 'ex-0003', circle: 'marketing' },
     { id: 'ex-0004', circle: 'ag' },
+    { id: 'ex-0005', circle: 'coordination' },
+    { id: 'ex-0006', circle: 'operations' },
+    { id: 'ex-0007', circle: 'marketing' },
   ])
   assert.deepEqual(await all('SELECT id, circle FROM bill.bill ORDER BY id'), [
     { id: 'bi-0001', circle: 'brand' },
@@ -104,8 +107,16 @@ test('Lanterne\'s records are owned as its fixtures place them', async () => {
   ])
   assert.deepEqual(await all('SELECT count(*)::int AS n FROM meeting.item i JOIN meeting.meeting m ON m.id = i.meeting WHERE i.circle <> m.circle'), [{ n: 0 }])
   assert.deepEqual(await all('SELECT count(*)::int AS n FROM motion.vote v JOIN motion.motion m ON m.id = v.motion WHERE v.circle <> m.circle'), [{ n: 0 }])
+  // An invoice is its project's circle's, and its lines and payments too.
+  assert.deepEqual(
+    await all(`SELECT count(*)::int AS n FROM invoice.invoice i JOIN invoice_project.charge c ON c.invoice = i.id JOIN project.project p ON p.id = c.project WHERE i.circle <> p.circle`),
+    [{ n: 0 }],
+  )
+  for (const part of ['invoice.line', 'invoice.payment']) {
+    assert.deepEqual(await all(`SELECT count(*)::int AS n FROM ${part} x JOIN invoice.invoice i ON i.id = x.invoice WHERE x.circle <> i.circle`), [{ n: 0 }], part)
+  }
   // The books, pay and membership are the whole co-op's.
-  for (const table of ['transaction.entry', 'transaction.line', 'invoice.invoice', 'payslip.payslip', 'membership.member', 'contact.contact']) {
+  for (const table of ['transaction.entry', 'transaction.line', 'payslip.payslip', 'membership.member', 'contact.contact']) {
     assert.deepEqual(await all(`SELECT DISTINCT circle FROM ${table}`), [{ circle: 'ag' }], table)
   }
   // Time is the circle's it is worked for, and a month holds one circle's.

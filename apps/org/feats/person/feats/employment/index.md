@@ -1,6 +1,6 @@
 +++
 title = "Employment"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 A person's employment, member or not: the job, the contract, the days it
@@ -61,7 +61,7 @@ shell are not built; the salary is the `payslip` feat's.
 
 | Action | Power | Lanterne |
 |---|---|---|
-| hire | `hire-worker`, no limit | Camille, as gérante |
+| hire | `hire-worker`, no limit | Camille, as manager |
 
 `002-powers.sql` registers it in `cella.power`, and the
 membership feat checks it. What a hire costs is the salary's,
@@ -142,7 +142,10 @@ collection rather than owning one. Each row gains the Worker chip,
 employed or left, to filter and group by, with the job, the contract and
 the day employed beside it; the New form gains a hire with the worker's
 first device, under "Hire". A person's page gains their contract, the
-days it runs and the time it asks, and its days in the activity.
+days it runs and the time it asks, and its days in the activity, and an
+Employment tab, which the grafts joining employment fill: their months
+(`employment-timesheet`), their payslips (`employment-payslip`) and
+their employment records (`employment-file`).
 
 ## Lanterne
 

@@ -1,6 +1,6 @@
 +++
 title = "Circle"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 Core's circles: the co-op's structure and the authority that flows
@@ -24,7 +24,7 @@ Each circle also has a channel for its messages.
 | Entity | Fields | Notes |
 |---|---|---|
 | circle | `id`, `name`, `assembly`, `purpose`, `procedure` | `assembly` marks the general assembly, one circle and only one, which holds every power inherently; no circle contains another; `procedure` names the procedure its motions are decided by where nothing they act under asks another: consent, majority, two thirds or one of the co-op's own, which the motion feat holds and checks |
-| role | `id`, `circle`, `name`, `duty`, `holders?` | `circle` is one circle, or `*` for a role every working circle has; `holders` caps how many hold it at once in a circle, one gérante or one lead a circle, none uncapped; `participant`, built in, is every circle's, the assembly's too |
+| role | `id`, `circle`, `name`, `duty`, `holders?` | `circle` is one circle, or `*` for a role every working circle has; `holders` caps how many hold it at once in a circle, one manager or one lead a circle, none uncapped; `participant`, built in, is every circle's, the assembly's too |
 | grantee | `id`, `kind` | what a mandate is granted to, what a procedure's party names and what a motion is proposed as ([motion](../../feats/motion/index.md#schema)): a `circle` or a `role`, by its id, one row for each, made as the circle or the role is, so circles and roles share one key |
 | mandate | `id`, `grantee`, `issuer`, `parent?`, `power`, `policy`, `limit?`, `budget?`, `per?`, `procedure?`, `scope?`, `from`, `until?`, `revoked?` | the values of the mandate policy `policy` that grants it: its `grantee` is a role, an individual mandate, or a circle, a collective one; `issuer` is the circle whose motion adopted it, and `parent` the mandate it is issued under, none for one the assembly issues; `power` is an id; `limit` caps a single write, in cents, `budget` caps a cumulative total over its `per` ("month" or "year"); `procedure` names the procedure a motion acting under it is decided by, which passes down to every mandate issued under it, by name, since the motion feat holds procedures; `scope` is the condition on what it covers, a circle's id or `own`, the circle its holder holds the role in, none for the whole co-op; `from` and `until` are the days its policy applies |
 | right | `id`, `right`, `power`, `policy`, `limit?`, `from`, `until?`, `revoked?` | the values of the right policy `policy`: a power the legal form gives every `person`, `member` or `employee` as such; no mandate, so no grantee |
@@ -258,7 +258,7 @@ every record its scope covers, as `{scope: own}` on the participant
 role lets every participant read their own circle's records. A power a
 feat names as reading its rows in `cella.reading` reads them too, by
 its scope, as Expense's `approve-expense` lets Web's lead read Web's
-expenses and the gérante's, on the whole co-op, every circle's. Open books, where a
+expenses and the manager's, on the whole co-op, every circle's. Open books, where a
 co-op adopts it, is a mandate for `read` on the member role marking no
 scope, so every member reads every circle's records ([the default
 bundle](#the-default-bundle)). What the law gives every member to read, the year's accounts and the
@@ -533,6 +533,10 @@ membership ([membership](../../feats/person/feats/membership/index.md#seats)).
   as the circles a record may be worked for, and `offering` (`./models`)
   puts the one the record's own circle names first where they sit in
   it, as the week of time offers a project's circle.
+- `lenses(db, person, day)` (`./api`): every circle the person reads,
+  those they sit in on the day first, then the rest, each marked
+  `sits`, which the co-op selector offers as the member's lens
+  ([the lens](../../../../_corpus/doc/architecture.md#the-lens)).
 
 The app role and the guards role may select, the app role what [the
 structure's reading](#who-reads-the-structure) lets it; the app role may insert a
@@ -858,14 +862,22 @@ The `circles` collection, the assembly first and the others by name, as
 a gallery of cards by default, and its structure drawn as the mandates
 link the circles, never as a tree: each circle with the circles that
 issued what it and its roles hold, and those it issued to. A circle's
-page lists its roles,
-those every working circle has among them, and the mandates granted to
-them, each its policy's sentence as it reads (`sentences` in
-`@cella/org-policy`), with their limits, budgets, scopes and days, and
-who issued each, each linking to its mandate's page.
+page, its header's crumb its id, opens on its purpose, as the record's
+own words; its Roles tab lists its roles, those every working circle
+has among them, each with its duty and the circle it is of, and the
+mandates granted to them in the Mandates collection's columns: its
+power, the role it is granted to, its cap, what it covers, who issued
+it and whether it stands, each linking to its mandate's page, which
+reads its policy's sentence (`sentences` in `@cella/org-policy`).
 
 The `mandates` collection lists every mandate, by power, with its
 grantee, cap, scope, issuer and whether it stands on the verdict date.
+Every page that shows a mandate says it in the same words: a role, a
+circle, an issuer and the circle a scope covers by name, never by id; a
+cap as `cap` in `app/words.ts` says it, "up to 1 200,00 € a write" or
+"within 1 000,00 € a month", an amount as `models/format.ts` writes
+one; and what it covers as `covers` says it, the whole co-op, its own
+circle or a circle by name.
 A mandate's page, `/mandates/<id>`, as the shell addresses an item,
 shows where its authority comes from: its sentence, grantee, power,
 caps, scope, days and procedure, whether it stands, is yet to be, or
@@ -878,14 +890,20 @@ the motion that adopted its policy. Under it, what was issued under it (`circle.
 each linking to its own page, which its revocation would revoke the
 same day. The chain is the structure's, read by whoever reads the
 structure ([who reads it](#who-reads-the-structure)), and a link the
-reader does not read is left out; it names roles and circles, never
-who holds them. A grantee's name links to its circle, its issuer to
-its own, and the motion to its page.
+reader does not read is left out: the chain then starts at the highest
+link they read, under a line saying the links above it are withheld,
+and only a link issued under no mandate, its parent none, is called
+the root, the assembly's. It names roles and circles, never who holds
+them. A grantee's name links to its circle, its issuer to
+its own, and the motion to its page; a link of the chain and a mandate
+under it opens its own page.
 
 Who sits in a circle is the membership feat's, which names people.
 Proposing to grant a mandate to one of its roles or to it, or to
 change or revoke one, is the motion feat's, a seat in it membership-motion's: the page's writes propose, and the
-close of a passing motion carries them out.
+close of a passing motion carries them out. A mandate's page, while it
+stands, changes or revokes it the same way, by the motion feat's
+Change… and Revoke….
 
 ## Who builds on it
 
@@ -909,7 +927,7 @@ Every feat and graft reads core's circles; those that extend them:
 
 | Circle | Purpose |
 |---|---|
-| Assemblée générale, the assembly | every member, one vote: statutes, admissions, accounts and surplus |
+| General assembly, the assembly | every member, one vote: statutes, admissions, accounts and surplus |
 | Coordination | weekly: pipeline, staffing and anything that crosses circles |
 | Web, Brand, Marketing, Operations | the working circles |
 
@@ -919,11 +937,11 @@ mandates the assembly issued it, not by a place above them.
 | Role | Power | Cap |
 |---|---|---|
 | Member (every member, in `ag`) | `edit-contact`, `edit-document`, `edit-task`, `invite-member` | — |
-| Gérante (Camille, in `ag`, 2024–2028) | `commit` | 20 000 € limit |
-| Gérante | `approve-expense` | 2 000 € limit |
-| Gérante | `set-budget` | 50 000 € limit |
-| Gérante | `approve-bill` | 5 000 € limit |
-| Gérante | `approve-payroll`, `manage-project`, `approve-time` | — |
+| Manager (Camille, in `ag`, 2024–2028) | `commit` | 20 000 € limit |
+| Manager | `approve-expense` | 2 000 € limit |
+| Manager | `set-budget` | 50 000 € limit |
+| Manager | `approve-bill` | 5 000 € limit |
+| Manager | `approve-payroll`, `manage-project`, `approve-time` | — |
 | Treasurer (Julien, in `ag`) | `approve-time` | — |
 | Finance (Julien, in `operations`) | `pay-supplier`, `reimburse-expense` | 3 000 € limit |
 | Finance | `record-entry`, `issue-invoice`, `record-receipt`, `record-bill`, `close-period`, `prepare-payroll`, `pay-payroll` | — |
@@ -932,7 +950,7 @@ mandates the assembly issued it, not by a place above them.
 | Circle lead | `set-budget` | 15 000 € limit |
 | Circle lead | `manage-project`, `approve-time` | its own circle |
 | Circle lead | `schedule-meeting`, `keep-minutes` | its own circle |
-| Gérante | `schedule-meeting`, `erase-personal-data` | — |
+| Manager | `schedule-meeting`, `erase-personal-data` | — |
 | Secretary (`*`: Julien in the assembly, Malik in coordination) | `keep-minutes` | its own circle |
 | Print buyer (Sofia, in `brand`, since 12 October 2026) | `approve-bill` | 1 200 € limit, Brand's bills |
 | Participant (every seat, in its circle) | `propose`, `discuss` | — |
@@ -943,20 +961,20 @@ A cap of "its own circle" is the mandate's scope, `{scope: own}`: a
 lead runs, approves the time of and keeps the minutes of their own
 circle alone. The print buyer's names Brand, `{scope: brand}`, so it
 covers Brand's bills alone. Every other mandate marks none and covers
-the whole co-op, so the gérante's `manage-project` and the treasurer's
+the whole co-op, so the manager's `manage-project` and the treasurer's
 `approve-time` cover every circle's, and finance pays a Web supplier
 as it pays any.
 
-The gérante, the treasurer, finance, a circle's lead and a circle's
+The manager, the treasurer, finance, a circle's lead and a circle's
 secretary are each held by one person at a time (`holders` 1); the
 member role is uncapped. Each holds their role by a tenure, Camille
-hers as gérante from 20 June 2024 until 20 June 2028; the lead role is
+hers as manager from 20 June 2024 until 20 June 2028; the lead role is
 a member of coordination, so each working circle's lead sits there by
 their tenure, and Camille sits there as a member.
 
 | Circle, by motion | Power |
 |---|---|
-| Assemblée générale | `admit-member`, `suspend-member`, `exclude-member`, `adopt-policy`, `end-policy`, `approve-distribution`, `adopt-document`, `seat-member`, `create-circle` |
+| General assembly | `admit-member`, `suspend-member`, `exclude-member`, `adopt-policy`, `end-policy`, `approve-distribution`, `adopt-document`, `seat-member`, `create-circle` |
 | Coordination | `adopt-policy`, `end-policy`, `adopt-document`, `seat-member`; `approve-bill`, 3 000 € limit |
 | Operations | `adopt-policy`; `approve-bill`, 2 000 € limit |
 
@@ -966,10 +984,15 @@ their tenure, and Camille sits there as a member.
 | Every member | `draw-account`, `spread-capital`, `mark-attendance`, `save-report` |
 | Every employee | `log-time`, `claim-expense`, `apply-membership` |
 
-Each is a policy of the assembly, a mandate or a right, adopted with
-the statutes by the founding motion, m-2021-001, on 1 March 2021, and in force since;
-each mandate among them is a root, the assembly its issuer. The bills
-are the one chain three mandates deep, each narrower than the one above:
+Each is a policy, a mandate or a right. All but four are the
+assembly's, adopted with the statutes by the founding motion,
+m-2021-001, on 1 March 2021, and in force since, and each mandate among
+them is a root, the assembly its issuer. The four are the bills':
+coordination's `approve-bill`, Operations' `approve-bill` and
+`adopt-policy`, and the print buyer's `approve-bill`, which three later
+motions adopted, the assembly's, coordination's and Operations', and of
+which only coordination's is a root. They are the one chain three
+mandates deep, each narrower than the one above:
 
 | Mandate | Issued by | Under |
 |---|---|---|
@@ -988,7 +1011,7 @@ Two motions stay open on the verdict date, each past its deadline of
 - m-2026-014, the assembly's, ends coordination's `approve-bill`; its
   close revokes Operations' and the print buyer's under it the same day
   (`circle.revoke`), and finance's if m-2026-013 closed first, so the
-  gérante, whose own is a root, approves every bill alone again.
+  manager, whose own is a root, approves every bill alone again.
 
 On the verdict date Sofia, the print buyer, is refused each way a
 mandate refuses a write: recording a bill, `record-bill`, a power she

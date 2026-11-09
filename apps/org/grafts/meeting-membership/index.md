@@ -1,6 +1,6 @@
 +++
 title = "meeting-membership"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 Who came to a meeting, who was expected, the circle's seats on its day,
@@ -80,7 +80,7 @@ shell `meeting-membership/circles`, `api/circles.ts` and
   ([membership](../../feats/person/feats/membership/index.md#seats)):
   an attendance record names its meeting's circle, as the meeting feat's
   own writes do, so a lead's or secretary's `keep-minutes`, scoped to
-  their own circle, covers it alone, and the gérante's, on the whole
+  their own circle, covers it alone, and the manager's, on the whole
   co-op, every circle.
 - `meeting_membership.records`, on `meeting-membership:attendance:record`:
   the member recorded is seated in the meeting's circle on its day; any

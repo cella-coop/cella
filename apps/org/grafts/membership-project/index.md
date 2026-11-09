@@ -1,6 +1,6 @@
 +++
 title = "membership-project"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 Shares of a project's budget: a right granted to a member to spend up to
@@ -68,8 +68,8 @@ against the member and what is left of the budget again, as it did.
 ## Shell
 
 Adds to each project what was shared out (a hidden column), and to a
-project's overview its shares, what is left, and the form that grants
-one; to a person's page, the shares they hold.
+project's Budget tab its shares, what is left, and the form that grants
+one; to a person's Own and decide tab, the shares they hold.
 
 ## Lanterne
 
@@ -94,7 +94,7 @@ mandate on `own`, and no slice checks a project's circle again.
 
 In Lanterne, Hugo, Brand's lead, budgets Ferrand's packaging, Brand's;
 Yusuf, Web's, the Halles shop, and is refused Brand's, since the lead's
-mandates are on their own circle; Camille, whose gérante mandates are on
+mandates are on their own circle; Camille, whose manager mandates are on
 the whole co-op, any project. Its tests are the membership feat's of
 `may`, and the `work` and `governance` scenarios.
 

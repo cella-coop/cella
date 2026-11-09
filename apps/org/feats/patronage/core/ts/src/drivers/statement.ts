@@ -8,7 +8,7 @@ const columns = `s.id, s.distribution, s.year, s.worker, s.amount::float8 AS amo
 // The statements as the collection lists them, the latest year first,
 // the largest part first.
 export const parts: Read = {
-  sql: `SELECT ${columns} FROM patronage.statement s`,
+  sql: `SELECT ${columns}, s.circle FROM patronage.statement s`,
   order: 'year DESC, amount DESC, worker',
 }
 

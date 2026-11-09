@@ -1,5 +1,4 @@
-import { icons, type App, type Column } from '@cella/org-ui'
-import type { Margin } from '../models/margin.ts'
+import { icons, type App } from '@cella/org-ui'
 import type { Drawn, Report } from '../models/report.ts'
 import type { Statement as Sheet } from '../models/statement.ts'
 import type { Federation as Figures } from '../models/federation.ts'
@@ -13,7 +12,7 @@ import Custom from './blocks/Custom.svelte'
 // quarters, and the months of the year its span is in; the federation
 // figures' distributed years.
 function moves(d: Drawn): { label: string; sub?: string; href: string }[] {
-  const at = (q: string) => `/reports/${d.report.id}?${q}`
+  const at = (q: string) => `/reports/${d.report.id}?tab=figures&${q}`
   if ((d.report.kind === 'income' || d.report.kind === 'balance') && d.drawn) {
     const s = d.drawn as Sheet
     const year = s.span.id.slice(0, 4)
@@ -32,8 +31,9 @@ function moves(d: Drawn): { label: string; sub?: string; href: string }[] {
 // at, or why it drew nothing.
 const read = (d: Drawn) => (d.failed ? d.failed : d.head ? `read at the log's entry ${d.head.n}` : '')
 
-// The feat's client side: the saved reports, each page drawing its report
-// through the port, and saving a member's own.
+// The feat's client side: the saved reports, each page saying what its
+// report reads and drawing it through the port in its Figures tab, and
+// saving a member's own.
 export const app: App = {
   name: 'report',
   collections: {
@@ -56,35 +56,22 @@ export const app: App = {
       page: {
         eyebrow: 'Report',
         title: (d: Drawn) => d.report.title,
-        subtitle: (d: Drawn) => [d.report.caption, read(d)].filter(Boolean).join('; '),
+        subtitle: (d: Drawn) => d.report.id,
+        summary: (d: Drawn) => [d.report.caption, read(d)].filter(Boolean).join('; '),
         properties: (d: Drawn) => [
           { label: 'Kind', value: d.report.kind, kind: 'badge' },
           { label: 'Read at entry', value: d.head?.n ?? null, kind: 'number' },
           ...(d.report.owner ? [{ label: 'Saved by', value: d.report.owner }, { label: 'Saved on', value: d.report.saved, kind: 'date' as const }] : []),
         ],
         related: moves,
-        blocks: [Statement, Margins, Federation, Custom],
+        // What it reads and when, then what it drew, the data central to it,
+        // in a tab of its own.
+        tabs: [
+          { id: 'overview', label: 'Overview' },
+          { id: 'figures', label: 'Figures' },
+        ],
+        blocks: [Statement, Margins, Federation, Custom].map((block) => ({ tab: 'figures', block })),
       },
     },
-  },
-}
-
-// The reports whose rows the home may pin a widget over, as the
-// collection `reports/<id>`, and the fields of their rows: each project's
-// margin.
-export const pinnable: Record<string, { title: string; columns: Column<Margin>[] }> = {
-  margins: {
-    title: 'Project margins',
-    columns: [
-      { key: 'title', label: 'Project', kind: 'title', value: (m) => m.title },
-      { key: 'invoiced', label: 'Invoiced', kind: 'money', value: (m) => m.invoiced },
-      { key: 'cost', label: 'Time cost', kind: 'money', value: (m) => m.cost },
-      { key: 'expenses', label: 'Expenses', kind: 'money', value: (m) => m.expenses },
-      { key: 'margin', label: 'Margin', kind: 'money', value: (m) => m.margin },
-      { key: 'percent', label: 'Margin %', kind: 'number', value: (m) => m.percent },
-      { key: 'burn', label: 'Burn %', kind: 'number', value: (m) => m.burn },
-      { key: 'landing', label: 'Margin at completion', kind: 'money', value: (m) => m.landing },
-      { key: 'watch', label: 'Watch', kind: 'badge', value: (m) => m.watch },
-    ],
   },
 }

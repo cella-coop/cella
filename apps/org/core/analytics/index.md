@@ -1,6 +1,6 @@
 +++
 title = "Analytics"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 The analytics port (`@cella/org-analytics`): what a report asks of the

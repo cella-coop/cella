@@ -127,3 +127,19 @@ member = "julien@lanterne.example"
 [[assignment]]
 task = "t-33"
 member = "thomas@lanterne.example"
+
+[[assignment]]
+task = "t-34"
+member = "camille@lanterne.example"
+
+[[assignment]]
+task = "t-35"
+member = "yusuf@lanterne.example"
+
+[[assignment]]
+task = "t-36"
+member = "julien@lanterne.example"
+
+[[assignment]]
+task = "t-37"
+member = "chloe@lanterne.example"

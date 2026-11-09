@@ -43,20 +43,21 @@ test('every main page renders on the seed', async () => {
   const pages: [string, string][] = [
     ['/people', 'Camille Martin'],
     [`/people/${camille}`, 'Powers held'],
-    ['/circles', 'Assemblée générale'],
-    ['/circles/ag', 'Gérante'],
+    ['/circles', 'General assembly'],
+    ['/circles/ag?tab=roles', 'Manager'],
     ['/motions', 'Admit Inès Haddad'],
     ['/motions/m-2026-012', 'passes by consent'],
     ['/documents', 'Rate card 2027'],
-    ['/documents/internal-rules', 'Règlement intérieur'],
+    ['/documents/internal-rules', 'Internal rules'],
     ['/invoices', 'F-2026-0055'],
     ['/invoices/F-2026-0044', 'Compagnie Mauve Horizon'],
     ['/bills', 'Imprimerie du Parc'],
     ['/bills/bi-0002', 'Studio rent, October'],
     ['/contacts', 'Vélo Solidaire'],
-    ['/accounts', 'Banque'],
-    ['/accounts/512', 'Ledger'],
+    ['/accounts', 'Bank'],
+    ['/accounts/512?tab=ledger', 'Ledger'],
     ['/periods', '2026-10'],
+    ['/periods/2026-10?tab=entries', 'Invoice F-2026-0053'],
     ['/transactions', 'je-0001'],
     ['/transactions/je-0001', 'Opening balances'],
     ['/journal/je-0001', 'Opening balances'],
@@ -75,9 +76,103 @@ test('every main page renders on the seed', async () => {
 test('the sidebar names the co-op as the database does, and its menus open in the top layer', async () => {
   const { text } = await page('/people')
   assert.ok(text.includes('<title>Lanterne · cella</title>'), 'the co-op is called by its name')
-  assert.ok(text.includes('Lanterne SCOP SARL'), 'its menu gives its legal name')
+  assert.ok(text.includes('Lanterne Worker Co-operative Limited Company'), 'its menu gives its legal name')
   assert.ok(!text.includes('lanterne.example</b>'), 'not by its address')
   assert.equal((text.match(/popover="auto"/g) ?? []).length, 2, 'the co-op menu and the account menu are popovers')
+})
+
+test('the co-op selector lists the circles, and the one chosen is the lens its trigger names until it is cleared', async () => {
+  const session = await shell.signIn(camille)
+  const logged = async () => (await one<{ n: number }>('SELECT count(*)::int AS n FROM cella.log')).n
+  const before = await logged()
+  const lensing = async (lens: string) => {
+    const res = await fetch(`${shell.base}/lens`, {
+      method: 'POST',
+      headers: { origin: shell.base, 'x-forwarded-proto': 'http', cookie: session, 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ lens, back: '/projects' }),
+      redirect: 'manual',
+    })
+    return { status: res.status, location: res.headers.get('location'), cookie: res.headers.get('set-cookie') ?? '' }
+  }
+  const seen = async (lens?: string) => {
+    const res = await fetch(`${shell.base}/people`, { headers: { accept: 'text/html', cookie: lens ? `${session}; cella-lens=${lens}` : session } })
+    return res.text()
+  }
+  const checked = (text: string) => [...text.matchAll(/aria-checked="true"[^>]*name="lens" value="([^"]*)"/g)].map((m) => m[1])
+
+  const whole = await seen()
+  const menu = whole.slice(whole.indexOf('action="/lens"'))
+  const order = ['All circles', 'General assembly', 'Brand', 'Coordination', '<hr', 'Marketing', 'Operations', 'Web']
+  const at = order.map((s) => menu.indexOf(s))
+  assert.ok(at.every((i) => i >= 0), `the menu holds ${order.join(', ')}`)
+  assert.deepEqual([...at].sort((a, b) => a - b), at, 'All circles first, then the circles Camille sits in, then the rest')
+  assert.deepEqual(checked(whole), [''], 'with no lens, All circles is checked')
+  assert.ok(!whole.includes('Co-op: Lanterne / '), 'and the trigger names the co-op alone')
+
+  const set = await lensing('web')
+  assert.equal(set.status, 303)
+  assert.equal(set.location, '/projects', 'the menu returns to the page it was chosen on')
+  assert.match(set.cookie, /^cella-lens=web;.*HttpOnly/i, 'the lens is a cookie of the member\'s browser')
+  const lensed = await seen('web')
+  assert.ok(lensed.includes('Co-op: Lanterne / Web'), 'the trigger names the lens: Lanterne / Web')
+  assert.ok(lensed.replace(/<!--.*?-->|<[^>]+>/g, '').includes('Lanterne / Web'), 'in its visible text too')
+  assert.deepEqual(checked(lensed), ['web'], 'and Web is checked in the menu')
+
+  const stale = await seen('nowhere')
+  assert.ok(!stale.includes('Co-op: Lanterne / '), 'a lens naming no circle the member reads is none')
+  assert.deepEqual(checked(stale), [''])
+
+  const cleared = await lensing('')
+  assert.equal(cleared.status, 303)
+  assert.match(cleared.cookie, /^cella-lens=;.*Max-Age=0/i, 'All circles clears the lens')
+  assert.equal(await logged(), before, 'and nothing of it enters the log')
+})
+
+test('a lensed collection lists only its circle’s rows, and a registry says the lens leaves it whole', async () => {
+  const session = await shell.signIn(camille)
+  const seen = async (path: string, lens?: string) => {
+    const res = await fetch(`${shell.base}${path}`, { headers: { accept: 'text/html', cookie: lens ? `${session}; cella-lens=${lens}` : session } })
+    assert.equal(res.status, 200, `${path} renders`)
+    return res.text()
+  }
+  const listed = (html: string, name: string) => new Set([...html.matchAll(new RegExp(`href="/${name}/([^"/?#]+)"`, 'g'))].map((m) => decodeURIComponent(m[1])))
+  const owned = async (table: string) => new Set((await su.query<{ id: string }>(`SELECT id::text FROM ${table} WHERE circle = 'web'`)).rows.map((r) => r.id))
+
+  for (const [name, table] of [['expenses', 'expense.expense'], ['projects', 'project.project']] as const) {
+    const all = listed(await seen(`/${name}`), name)
+    const webs = await owned(table)
+    const lensed = await seen(`/${name}`, 'web')
+    const kept = listed(lensed, name)
+    assert.ok(kept.size > 0 && kept.size < all.size, `the lens on Web keeps some of the ${name}, not all: ${kept.size} of ${all.size}`)
+    assert.deepEqual([...kept].sort(), [...all].filter((id) => webs.has(id)).sort(), `the lens on Web keeps exactly Web's ${name}`)
+    assert.ok(lensed.includes('Co-op: Lanterne / Web'), 'the trigger reads Lanterne / Web')
+    assert.ok(!lensed.includes('whole: no circle owns its rows'), `the ${name} are not left whole`)
+  }
+
+  const chart = await seen('/accounts', 'web')
+  const counted = (html: string) => Number(/class="count[^"]*">(\d+)</.exec(html)?.[1] ?? NaN)
+  const unlensed = await seen('/accounts')
+  assert.match(chart, /The lens on Web leaves Accounts whole: no circle owns its rows\./, 'a registry says the lens leaves it whole')
+  assert.ok(counted(chart) > 0, 'the chart of accounts holds rows')
+  assert.equal(counted(chart), counted(unlensed), 'and keeps every one of them under the lens')
+  assert.ok(!unlensed.includes('leaves Accounts whole'), 'with no lens it says nothing')
+})
+
+test('the sidebar’s counts narrow with the lens, and the Inbox and a shut section’s dot stay whole', async () => {
+  const session = await shell.signIn(camille)
+  const seen = async (lens?: string) => {
+    const res = await fetch(`${shell.base}/projects`, { headers: { accept: 'text/html', cookie: lens ? `${session}; cella-lens=${lens}` : session } })
+    assert.equal(res.status, 200)
+    return res.text()
+  }
+  const pill = (html: string, href: string) => Number(new RegExp(`href="${href}"[^>]*>(?:(?!</a>).)*?<span class="count[^"]*" aria-label="(\\d+) waiting">`, 's').exec(html)?.[1] ?? 0)
+  const dots = (html: string) => [...html.matchAll(/aria-label="(\d+) waiting in ([^"]+)"/g)].map((m) => `${m[2]}: ${m[1]}`)
+  const whole = await seen()
+  const lensed = await seen('web')
+  assert.ok(lensed.includes('Co-op: Lanterne / Web'), 'the co-op is lensed on Web')
+  assert.ok(pill(whole, '/inbox') > 0, 'Camille has asks waiting in her Inbox')
+  assert.equal(pill(lensed, '/inbox'), pill(whole, '/inbox'), 'the Inbox counts what waits on her whatever the lens')
+  assert.deepEqual(dots(lensed), dots(whole), 'and a shut section’s dot is the same under the lens as without')
 })
 
 test('every collection has a dashboard, its widgets run by the server', async () => {
@@ -258,14 +353,14 @@ test('Julien issues F-2026-0056, posted to the books, and its PDF opens from its
   const made = await one<{ total: string; entry: string }>(
     `SELECT cella.cents(i.total) AS total, p.entry FROM invoice.invoice i JOIN invoice_transaction.posting p ON p.invoice = i.id WHERE i.id = 'F-2026-0056'`,
   )
-  assert.deepEqual(made, { total: '122460', entry: 'je-0041' })
+  assert.deepEqual(made, { total: '122460', entry: 'je-0044' })
   const { text } = await page('/invoices/F-2026-0056')
-  assert.ok(text.includes('Workshop on accessibility') && text.includes('je-0041'))
+  assert.ok(text.includes('Workshop on accessibility') && text.includes('je-0044'))
   assert.ok(text.includes('Download PDF'), 'the page offers the invoice as a PDF')
   const printed = await page('/invoices/F-2026-0056/content')
   assert.equal(printed.status, 200)
   assert.equal(printed.type, 'application/pdf')
-  for (const mention of ['%PDF-1.4', '(N', ' F-2026-0056)', '(42 rue de Romainville)', '(93100 Montreuil)', 'RCS Bobigny', 'L441-10']) {
+  for (const mention of ['%PDF-1.4', '(INVOICE)', '(No. F-2026-0056)', '(42 rue de Romainville)', '(93100 Montreuil)', 'RCS Bobigny', 'L441-10']) {
     assert.ok(printed.text.includes(mention), `the PDF prints ${mention}`)
   }
   const linked = await act('/invoices/F-2026-0056', 'link', { contact: 'velo' }, julien)
@@ -297,16 +392,16 @@ test('closed on 31 October, m-2026-012 admits Inès and seats her in the close\'
   const subscribed = await one<{ op: string; actor: string }>('SELECT op, actor FROM cella.log WHERE n = $1', [closed.then[0].then[0].entry])
   assert.deepEqual(subscribed, { op: 'account:capital:subscribe', actor: camille })
   const { text } = await page(`/people/${ines}`)
-  assert.ok(text.includes('active') && text.includes('Assemblée générale') && text.includes('phone'))
+  assert.ok(text.includes('active') && text.includes('General assembly') && text.includes('phone'))
   assert.ok((await page('/motions/m-2026-012')).text.includes('passed by consent'))
 })
 
 test("the assembly's page says what open books shares and what each value exposes; a value out of range is refused saying why, and Camille proposes new values as a motion of the assembly replacing the rule in force", async () => {
-  const { text } = await page('/circles/ag')
+  const { text } = await page('/circles/ag?tab=policies')
   for (const said of ['Open books', 'Fewest people in a total', 'A precaution, not a promise', 'Exposes personal data', 'Not checked']) {
     assert.ok(text.includes(said), `the assembly's page says ${said}`)
   }
-  assert.ok(!(await page('/circles/coordination')).text.includes('Open books'), "no other circle's page shows open books")
+  assert.ok(!(await page('/circles/coordination?tab=policies')).text.includes('Open books'), "no other circle's page shows open books")
   const values = (contributors: string) => ({ kind: 'disclose', 'arg.contributors': contributors, 'arg.largest': '40', 'arg.two': '70', deadline: '2026-11-14', body: '' })
   const low = await act('/circles/ag', 'put', values('1'), camille)
   assert.equal(low.state, 'refused')
@@ -345,8 +440,25 @@ test("withholding open books ends the disclosure rule in force and nothing else:
   assert.equal(await withholdings(), proposed, 'nothing is proposed')
 })
 
-test('the log the shell wrote verifies, and its page says so', async () => {
+test('the log the shell wrote verifies, and Activity reads it as a feed whose every line opens its record', async () => {
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
   const { text } = await page('/log')
-  assert.ok(text.includes('verifies') && text.includes('motion:motion:close'))
+  assert.ok(text.includes('verifies'))
+  assert.match(text, /class="list feed[\s"]/, 'Activity opens as a feed')
+  // Julien's issue, said from its op and linked to its invoice by the id
+  // `cella.records` reads.
+  assert.match(text, /<a href="\/invoices\/F-2026-0056" class="what stretched[^"]*"[^>]*>issued invoice F-2026-0056<\/a>/)
+  assert.match(text, /closed motion m-2026-012/)
+  // The time of a line that links to its record opens the entry itself.
+  assert.match(text, /<a href="\/log\/\d+" class="when[\s"]/)
+  const lines = [...text.matchAll(/<a href="([^"]+)" class="what stretched[\s"]/g)].map((m) => m[1].replaceAll('&amp;', '&'))
+  assert.ok(lines.length > 0)
+  for (const href of new Set(lines)) {
+    assert.equal((await page(href)).status, 200, `${href} opens`)
+  }
+  // An entry keeps no record id but under its op's thing or slices.
+  assert.deepEqual(
+    await one<{ r: unknown }>(`SELECT cella.records(n) AS r FROM cella.log WHERE op = 'invoice:invoice:issue' ORDER BY n DESC LIMIT 1`),
+    { r: { invoice: 'F-2026-0056' } },
+  )
 })

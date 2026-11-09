@@ -7,7 +7,7 @@ const columns = `t.id, t.policy, to_char(t."from", 'YYYY-MM-DD') AS "from", cell
 // The statutes' capital clauses, the latest to apply first, each governing
 // or replaced as its badge shows it.
 export const terms: Read = {
-  sql: `SELECT ${columns}, CASE WHEN t.id = account.capital_for(cella.verdict_date()) THEN 'governing'
+  sql: `SELECT ${columns}, t.circle, CASE WHEN t.id = account.capital_for(cella.verdict_date()) THEN 'governing'
           WHEN t."from" > cella.verdict_date() THEN 'to apply' ELSE 'replaced' END AS state
         FROM account.terms t`,
   order: '"from" DESC, adopted DESC, id',

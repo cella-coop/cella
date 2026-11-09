@@ -1,6 +1,6 @@
 +++
 title = "Membership"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 A person's membership, from invited to exited, with the shares they hold.
@@ -281,7 +281,7 @@ the shell, `membership/seats`, is `api/seats.ts` and `app/seats.ts`.
   actor holds a seat that counts in the circle on the verdict date,
   where the participant's `discuss` is held.
 
-Lanterne: Camille holds the gérante role by a tenure from 20 June 2024
+Lanterne: Camille holds the manager role by a tenure from 20 June 2024
 until 20 June 2028, and acts alone under its mandates while it runs.
 Julien issues invoices, records payments, posts entries, closes
 periods and pays suppliers up to 3 000 € a payment, as finance; Chloé
@@ -293,8 +293,8 @@ since her hire: she holds Web's participant mandates there, proposing
 and discussing in Web, and none of the assembly's; beside them, a
 person's rights and an employee's. Paul, gone, holds a person's alone.
 
-In the shell, `membership/seats` adds a circle's seats to its page, one
-row per person with every role they hold in it, and how many sit in it
+In the shell, `membership/seats` adds a circle's seats to its page, in
+a Seats tab of their own, one row per person with every role they hold in it, and how many sit in it
 to the list and its gallery cards; and to a person's page their seats
 and the powers they hold through them, each power by its plain name
 and its policy's sentence, the mandates `membership.holds` gives on
@@ -379,6 +379,9 @@ rights the person reads on their own page, member or not, by
 non-member reading another's page reads none, and no reader learns
 from the tab a right they neither hold nor read as a member ([who
 reads it](../../../../core/circle/index.md#who-reads-the-structure)).
+A tab with no line says "No power you may read on this day", which is
+true of a person who holds none and of a reader who may read none of
+another's.
 
 Beside it, the page gains two tabs. Joining lists what joining asks, step by step,
 each kept by the slice that knows it: the membership's own, invited and
@@ -388,7 +391,12 @@ ends (`employment-membership-motion`); the texts to read
 capital (`account-membership`). Own and decide reads back in plain
 sentences what membership is, one member, one vote; what the member owns,
 from the statutes' terms (`account-membership`); and what they decide,
-from their seats and mandates ([seats](#seats)). Each slice writes its
+from their seats and mandates ([seats](#seats)); and holds what the
+member owns in figures: their capital (`account-membership`), what they
+paid in and drew (`account-membership-transaction`), their instalments
+from pay (`account-membership-payslip-transaction`), their work share
+statements (`account-membership-patronage-transaction`) and the
+projects' budget shares they hold (`membership-project`). Each slice writes its
 sentences from its own guards and parameters, so the page says what the
 guards say. For a person who is no member, both say what joining would be.
 

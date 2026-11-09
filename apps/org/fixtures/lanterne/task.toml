@@ -1,9 +1,11 @@
 # Lanterne's tasks as they stand on 24 October 2026, numbered as created.
 # Who does each is the membership-task graft's; which project and milestone it
-# is in, the project-task graft's.
+# is in, the project-task graft's. Each names the circle that owns it, its
+# project's where it is filed in one, else the circle whose work it is.
 
 [[task]]
 id = "t-1"
+circle = "web"
 title = "Payment provider go-live checklist"
 status = "done"
 priority = "high"
@@ -13,6 +15,7 @@ completed = 2026-10-06
 
 [[task]]
 id = "t-2"
+circle = "web"
 title = "Load test the checkout"
 status = "done"
 priority = "high"
@@ -22,6 +25,7 @@ completed = 2026-10-05
 
 [[task]]
 id = "t-3"
+circle = "web"
 title = "Import products from the farmers' spreadsheet"
 status = "done"
 priority = "normal"
@@ -31,6 +35,7 @@ completed = 2026-09-25
 
 [[task]]
 id = "t-4"
+circle = "web"
 title = "Train the shops' staff on the back office"
 status = "doing"
 priority = "normal"
@@ -39,6 +44,7 @@ due = 2026-10-30
 
 [[task]]
 id = "t-5"
+circle = "web"
 title = "Write the handover guide"
 status = "todo"
 priority = "normal"
@@ -47,6 +53,7 @@ due = 2026-11-20
 
 [[task]]
 id = "t-6"
+circle = "web"
 title = "Fix VAT display on mixed baskets"
 status = "doing"
 priority = "urgent"
@@ -55,6 +62,7 @@ due = 2026-10-27
 
 [[task]]
 id = "t-7"
+circle = "web"
 title = "Monthly analytics report, October"
 status = "backlog"
 priority = "low"
@@ -63,6 +71,7 @@ due = 2026-11-05
 
 [[task]]
 id = "t-8"
+circle = "web"
 title = "RGAA audit of the templates"
 status = "done"
 priority = "high"
@@ -72,6 +81,7 @@ completed = 2026-09-03
 
 [[task]]
 id = "t-9"
+circle = "web"
 title = "Design system tokens and components"
 status = "done"
 priority = "normal"
@@ -81,6 +91,7 @@ completed = 2026-09-02
 
 [[task]]
 id = "t-10"
+circle = "marketing"
 title = "October newsletter"
 status = "done"
 priority = "normal"
@@ -90,6 +101,7 @@ completed = 2026-10-09
 
 [[task]]
 id = "t-11"
+circle = "marketing"
 title = "Social calendar, November"
 status = "doing"
 priority = "normal"
@@ -98,6 +110,7 @@ due = 2026-10-28
 
 [[task]]
 id = "t-12"
+circle = "marketing"
 title = "Q3 campaign report"
 status = "done"
 priority = "normal"
@@ -107,6 +120,7 @@ completed = 2026-10-02
 
 [[task]]
 id = "t-13"
+circle = "marketing"
 title = "Campaign for the community solar open day"
 status = "todo"
 priority = "high"
@@ -115,6 +129,7 @@ due = 2026-11-06
 
 [[task]]
 id = "t-14"
+circle = "marketing"
 title = "Q4 review and renewal proposal"
 status = "backlog"
 priority = "normal"
@@ -123,6 +138,7 @@ due = 2026-12-11
 
 [[task]]
 id = "t-15"
+circle = "brand"
 title = "Chase the overdue invoice F-2026-0044"
 status = "todo"
 priority = "high"
@@ -131,6 +147,7 @@ due = 2026-10-31
 
 [[task]]
 id = "t-16"
+circle = "brand"
 title = "Three logo concepts"
 status = "done"
 priority = "normal"
@@ -140,6 +157,7 @@ completed = 2026-08-27
 
 [[task]]
 id = "t-17"
+circle = "brand"
 title = "Brand guidelines"
 status = "done"
 priority = "normal"
@@ -149,6 +167,7 @@ completed = 2026-09-11
 
 [[task]]
 id = "t-18"
+circle = "brand"
 title = "Range concept boards"
 status = "done"
 priority = "high"
@@ -158,6 +177,7 @@ completed = 2026-09-10
 
 [[task]]
 id = "t-19"
+circle = "brand"
 title = "Die lines for the six packs"
 status = "done"
 priority = "normal"
@@ -167,6 +187,7 @@ completed = 2026-09-22
 
 [[task]]
 id = "t-20"
+circle = "brand"
 title = "Print-ready files"
 status = "done"
 priority = "high"
@@ -176,6 +197,7 @@ completed = 2026-09-25
 
 [[task]]
 id = "t-21"
+circle = "brand"
 title = "Press check at the printer"
 status = "todo"
 priority = "high"
@@ -184,6 +206,7 @@ due = 2026-11-04
 
 [[task]]
 id = "t-22"
+circle = "brand"
 title = "Order colour proofs"
 status = "doing"
 priority = "normal"
@@ -192,6 +215,7 @@ due = 2026-10-29
 
 [[task]]
 id = "t-23"
+circle = "brand"
 title = "Annual report layout"
 status = "done"
 priority = "high"
@@ -201,6 +225,7 @@ completed = 2026-10-14
 
 [[task]]
 id = "t-24"
+circle = "brand"
 title = "Infographics for the map of the farms"
 status = "done"
 priority = "normal"
@@ -210,6 +235,7 @@ completed = 2026-10-15
 
 [[task]]
 id = "t-25"
+circle = "brand"
 title = "Microsite wireframes"
 status = "doing"
 priority = "high"
@@ -218,6 +244,7 @@ due = 2026-10-30
 
 [[task]]
 id = "t-26"
+circle = "brand"
 title = "Microsite build"
 status = "todo"
 priority = "normal"
@@ -226,6 +253,7 @@ due = 2026-11-20
 
 [[task]]
 id = "t-27"
+circle = "brand"
 title = "Quotes for printing the report"
 status = "doing"
 priority = "normal"
@@ -234,6 +262,7 @@ due = 2026-10-28
 
 [[task]]
 id = "t-28"
+circle = "operations"
 title = "Close October's books"
 status = "todo"
 priority = "high"
@@ -242,6 +271,7 @@ due = 2026-11-05
 
 [[task]]
 id = "t-29"
+circle = "coordination"
 title = "Rate card 2027: answer Malik's comment"
 status = "todo"
 priority = "normal"
@@ -250,6 +280,7 @@ due = 2026-11-07
 
 [[task]]
 id = "t-30"
+circle = "ag"
 title = "Prepare Inès's onboarding as a member"
 status = "todo"
 priority = "normal"
@@ -258,6 +289,7 @@ due = 2026-11-02
 
 [[task]]
 id = "t-31"
+circle = "operations"
 title = "Renew the studio's insurance"
 status = "backlog"
 priority = "low"
@@ -266,6 +298,7 @@ due = 2026-12-01
 
 [[task]]
 id = "t-32"
+circle = "marketing"
 title = "Portfolio pages for Vélo Solidaire and Maison Ferrand"
 status = "backlog"
 priority = "low"
@@ -273,9 +306,47 @@ created = 2026-10-05
 
 [[task]]
 id = "t-33"
+circle = "web"
 title = "Plugin updates on Atelier Ondine's shop"
 status = "done"
 priority = "normal"
 created = 2026-09-21
 due = 2026-09-30
 completed = 2026-09-30
+
+[[task]]
+id = "t-34"
+circle = "ag"
+title = "Draft the amendment on members who live abroad"
+status = "doing"
+priority = "normal"
+created = 2026-10-14
+due = 2026-11-13
+
+[[task]]
+id = "t-35"
+circle = "coordination"
+title = "Staffing plan for the first quarter of 2027"
+status = "todo"
+priority = "normal"
+created = 2026-10-12
+due = 2026-12-07
+
+[[task]]
+id = "t-36"
+circle = "operations"
+title = "Reconcile October's bank lines with the previous tool"
+status = "done"
+priority = "high"
+created = 2026-10-14
+due = 2026-10-23
+completed = 2026-10-21
+
+[[task]]
+id = "t-37"
+circle = "ag"
+title = "Collect the members' comments on the draft amendments"
+status = "backlog"
+priority = "low"
+created = 2026-10-14
+due = 2026-12-18

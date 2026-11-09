@@ -1,6 +1,6 @@
 +++
 title = "Expense"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 What the co-op's workers spend for it from their own pocket, to be paid back:
@@ -44,7 +44,7 @@ this feat's `approving` and `reimbursing` specs.
 | Action | Power | Lanterne |
 |---|---|---|
 | capture, submit | `claim-expense`, every employee's right: the claimant's own | every worker, member or not |
-| approve | `approve-expense`, within the mandate's limit for the expense's total, and its budget for the month | each lead, 1 000 € a month; Camille, as gérante, up to 2 000 € an expense |
+| approve | `approve-expense`, within the mandate's limit for the expense's total, and its budget for the month | each lead, 1 000 € a month; Camille, as manager, up to 2 000 € an expense |
 | refuse | `approve-expense` | as approve |
 | reimburse | `reimburse-expense`, within the mandate's limit | Julien, as finance, up to 3 000 € |
 
@@ -123,7 +123,7 @@ over its circle, and whoever holds `approve-expense` or
 `reimburse-expense` over it (`sql/004-reads.sql`), since what a mandate
 acts on its holder reads. At Lanterne Inès, in Web and no member, reads
 Web's and the assembly's expenses and not Marketing's; every member,
-by open books, and the gérante and finance, whose mandates cover the
+by open books, and the manager and finance, whose mandates cover the
 whole co-op, read every one.
 
 ## Handlers
@@ -147,13 +147,18 @@ a card into the next column is that column's write (submit, approve,
 refuse, reimburse), with a dashboard of what awaits approval and
 reimbursement and the spend by category and month; a new claim as the
 acting member, which `expense-file` replaces with one carrying its
-receipt; and an expense's page with its next write and its receipts.
+receipt; and an expense's page, its header's crumb its id, with its next
+write; its receipts and its postings are the tabs `expense-file` and
+`expense-transaction` add after its first.
 
 ## Lanterne
 
-Four October expenses: Sofia's print proofs, 180 €, Chloé's workshop
-coffee and Léa's font licence, submitted; Thomas's train to Clairval, a
-draft.
+Seven October expenses, every circle's own: Sofia's print proofs, 180 €,
+Chloé's workshop coffee and Léa's font licence, submitted; Thomas's
+train to Clairval, a draft; Yusuf's train to the federation's regional
+day, coordination's, approved by Camille and reimbursed; Julien's label
+printer, Operations', approved and owed him; and Chloé's taxi, refused
+by Malik. Each approval and the reimbursement posted its entry.
 
 ## Analytics
 

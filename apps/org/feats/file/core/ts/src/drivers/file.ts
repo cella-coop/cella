@@ -10,7 +10,7 @@ const columns = `f.id, f.class, f.subject, f.name, f.type, f.size, encode(f.hash
 export const listing: Read = {
   sql: `SELECT f.id, CASE f.class ${Object.entries(kinds).map(([c, kind]) => `WHEN ${literal(c)} THEN ${literal(kind)}`).join(' ')} END AS class,
           f.class AS retention, f.subject, f.name, f.type, f.size, encode(f.hash, 'hex') AS hash, f.uploader,
-          to_char(f.uploaded, 'YYYY-MM-DD') AS uploaded
+          to_char(f.uploaded, 'YYYY-MM-DD') AS uploaded, f.circle
         FROM file.file f`,
   order: 'uploaded DESC, id DESC',
 }

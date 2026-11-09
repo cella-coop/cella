@@ -38,6 +38,7 @@
   import Gallery from './Gallery.svelte'
   import Pill from './Pill.svelte'
   import Cell from './Cell.svelte'
+  import Person from './Person.svelte'
   import Dashboard from './Dashboard.svelte'
   import DropIndicator from './DropIndicator.svelte'
   import Frame from './PageFrame.svelte'
@@ -46,7 +47,7 @@
   import Viewing from './Viewing.svelte'
 
   // The one collection component: the same header, view bar and rows for
-  // every collection, as a list, a table, a gallery, a board, a calendar
+  // every collection, as a list, a feed, a table, a gallery, a board, a calendar
   // or a dashboard, and the drawer's
   // View card holding how they are shown. The view bar's tabs are the
   // collection's preset views, then the viewer's own; the active one, and
@@ -64,6 +65,7 @@
     kept,
     matched,
     href,
+    own,
     about,
     creates = [],
     status = [],
@@ -79,6 +81,7 @@
     shifts,
     dashboard = null,
     sorted = null,
+    whole = false,
   }: {
     name: string
     title: string
@@ -92,6 +95,9 @@
     kept: number
     matched: number
     href?: (row: any) => string | undefined
+    // The row's own page, where `href` links it elsewhere, as a feed's
+    // line links to its record and its time to the row.
+    own?: (row: any) => string | undefined
     about?: unknown
     // The New forms, each under its title where there are several.
     creates?: { title?: string; form: Component<{ rows: any[]; about: any }> }[]
@@ -115,6 +121,9 @@
     // The field the rows are ordered by first, and which way, which a
     // table's header says.
     sorted?: { key: string; dir: 'ascending' | 'descending' } | null
+    // Whether the member's lens leaves the collection whole, as it does
+    // one whose rows name no circle that owns them, which its header says.
+    whole?: boolean
   } = $props()
 
   const typed = $derived(fields(columns))
@@ -151,6 +160,9 @@
   const titled = $derived(columns.find((c) => c.role === 'title') ?? columns[0])
   const subs = $derived(columns.filter((c) => c.role === 'sub'))
   const metas = $derived(columns.filter((c) => c.role === 'meta'))
+  // A feed's who and when: its first person column and its first date.
+  const who = $derived(columns.find((c) => c.kind === 'person'))
+  const when = $derived(columns.find((c) => c.kind === 'date'))
   const visible = $derived(arranged(columns, spec.order).filter((c) => c === titled || !hidden.has(c.key)))
 
   const active = $derived(views.find((v) => v.id === view))
@@ -182,7 +194,7 @@
   const placing = $derived(typed.find((f) => f.key === spec.on) ?? typed.find((f) => f.type === 'date'))
   const shownPeriod = $derived(period(anchor(page.url.searchParams.get('at'), today), spec.span, today))
 
-  // A list, a table and a gallery draw a page of rows at a time; a board
+  // A list, a feed, a table and a gallery draw a page of rows at a time; a board
   // and a calendar place every row the view keeps, and a dashboard draws
   // none.
   const paging = $derived(!(spec.layout === 'dashboard' || (spec.layout === 'board' && grouped) || (spec.layout === 'calendar' && placing)))
@@ -304,6 +316,7 @@
   {icon}
   {count}
   {caption}
+  subtitle={whole && shell.lens ? `The lens on ${shell.lens.name} leaves ${title} whole: no circle owns its rows.` : undefined}
   badges={status.map((s) => s(about)).filter((b) => b !== undefined)}
   panels={[{ id: 'view', label: 'View', icon: SlidersHorizontal, body: viewing }]}
 >
@@ -406,6 +419,35 @@
       />
     {:else if spec.layout === 'calendar' && placing}
       <Calendar rows={state.shown} on={placing} period={shownPeriod} {titled} {shown} {href} link={at} />
+    {:else if spec.layout === 'feed' && who && when}
+      <ol class="list feed">
+        {#each state.shown as row, i (row.id)}
+          {const to = $derived(href?.(row))}
+          {const self = $derived(own?.(row))}
+          <!-- svelte-ignore a11y_no_noninteractive_tabindex: the keyboard roves the rows, one in the tab order, so a screen reader reads the row it is on -->
+          <li
+            class:active={i === state.active}
+            tabindex={i === state.stop ? 0 : -1}
+            onfocusin={() => (state.active = i)}
+            {@attach focused(i === state.active)}
+          >
+            <span class="dot"></span>
+            <span class="main">
+              <b class="who"><Person address={String(who.value(row))} /></b>
+              {#if to}
+                <a href={to} class="what stretched" tabindex="-1">{titled.value(row)}</a>
+              {:else}
+                <span class="what">{titled.value(row)}</span>
+              {/if}
+            </span>
+            {#if self && self !== to}
+              <a href={self} class="when" tabindex="-1"><Cell value={when.value(row)} kind="date" /></a>
+            {:else}
+              <span class="when"><Cell value={when.value(row)} kind="date" /></span>
+            {/if}
+          </li>
+        {/each}
+      </ol>
     {:else}
       <ul class="list">
         {#each state.shown as row, i (row.id)}
@@ -536,6 +578,49 @@
     align-items: center;
     gap: var(--space-4);
     flex-shrink: 0;
+  }
+  /* A feed's line, as a record's Activity: a dot, who, what they did, and
+     when, quiet, at the end; the time opens the row's own page above the
+     line's link. */
+  .feed li {
+    justify-content: flex-start;
+    gap: var(--space-2);
+  }
+  .feed .dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-border);
+  }
+  .feed .main {
+    gap: var(--space-2);
+  }
+  .who {
+    flex: none;
+    max-width: 40%;
+    font-weight: 500;
+    overflow: hidden;
+  }
+  .what {
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  a.what {
+    text-decoration: none;
+  }
+  .when {
+    position: relative;
+    flex: none;
+    color: var(--text-subtle);
+    font-size: var(--text-xs);
+    white-space: nowrap;
+    text-decoration: none;
+  }
+  a.when:hover {
+    color: var(--text);
   }
   .empty {
     color: var(--text-muted);

@@ -4,7 +4,7 @@ import type { Canon } from '../models/canonical.ts'
 import { merged } from '../handlers/loro.ts'
 import { canonical, hash } from '../models/canonical.ts'
 
-const listed = (adopted: string) => `SELECT d.id, d.title, (SELECT count(*)::int FROM document.version v WHERE v.document = d.id) AS versions,
+const listed = (adopted: string) => `SELECT d.id, d.title, d.circle, (SELECT count(*)::int FROM document.version v WHERE v.document = d.id) AS versions,
   ${adopted} AS adopted, (SELECT to_char(max(at), 'YYYY-MM-DD') FROM document.update u WHERE u.document = d.id) AS edited
   FROM document.document d LEFT JOIN document.adopted a ON a.document = d.id`
 

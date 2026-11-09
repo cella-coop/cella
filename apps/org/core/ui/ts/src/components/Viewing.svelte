@@ -5,6 +5,7 @@
   import SquaresFour from 'phosphor-svelte/lib/SquaresFour'
   import Kanban from 'phosphor-svelte/lib/Kanban'
   import CalendarDots from 'phosphor-svelte/lib/CalendarDots'
+  import ClockCounterClockwise from 'phosphor-svelte/lib/ClockCounterClockwise'
   import type { Column } from '../models/view.ts'
   import { spans } from '../models/calendar.ts'
   import { arranged, type Custom, type Field, type Layout, type Result, type Spec, type Where, type Widget } from '../models/query.ts'
@@ -71,16 +72,23 @@
 
   const groups = $derived(fields.filter((f) => f.type === 'enum'))
   // A board only where a field enumerates what it groups by, a calendar
-  // only where one is a date.
+  // only where one is a date, and a feed only where one is and a column
+  // is a person.
   const layouts: { id: Layout; label: string; icon: typeof Rows }[] = $derived(
     [
       { id: 'list' as const, label: 'List', icon: Rows },
+      { id: 'feed' as const, label: 'Feed', icon: ClockCounterClockwise },
       { id: 'table' as const, label: 'Table', icon: TableIcon },
       { id: 'gallery' as const, label: 'Gallery', icon: SquaresFour },
       { id: 'board' as const, label: 'Board', icon: Kanban },
       { id: 'calendar' as const, label: 'Calendar', icon: CalendarDots },
       { id: 'dashboard' as const, label: 'Dashboard', icon: ChartBar },
-    ].filter((l) => (l.id !== 'board' || groups.length > 0) && (l.id !== 'calendar' || dates.length > 0)),
+    ].filter(
+      (l) =>
+        (l.id !== 'board' || groups.length > 0) &&
+        (l.id !== 'calendar' || dates.length > 0) &&
+        (l.id !== 'feed' || (dates.length > 0 && columns.some((c) => c.kind === 'person'))),
+    ),
   )
   const enums = $derived(fields.filter((f) => f.type === 'enum' && (values[f.key]?.length ?? 0) > 1))
   const showing = $derived(new Set(shown.map((c) => c.key)))

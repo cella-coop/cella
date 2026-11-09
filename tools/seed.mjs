@@ -12,7 +12,7 @@ import pg from 'pg'
 import { seed } from './seed/found.mjs'
 
 const dir = process.argv[2]
-const stories = ['governance', 'authority', 'mandate', 'provenance', 'procedure']
+const stories = ['governance', 'authority', 'mandate', 'provenance', 'procedure', 'chain', 'powers', 'grant', 'refusal', 'author', 'tenure', 'role-seat', 'collective', 'authority-walk']
 const scenarios = []
 for (let i = 3; i < process.argv.length; i += 2) {
   if (process.argv[i] !== '--scenario' || !stories.includes(process.argv[i + 1])) {

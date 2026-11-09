@@ -62,11 +62,3 @@ export function reporting(port: Analytics): Slice {
     },
   }
 }
-
-// The rows of a report the home pins a widget over: each project's margin.
-export async function rows(port: Analytics, id: string): Promise<Record<string, unknown>[] | null> {
-  if (id === 'margins') {
-    return (await margins(port)).margins.projects as unknown as Record<string, unknown>[]
-  }
-  return null
-}

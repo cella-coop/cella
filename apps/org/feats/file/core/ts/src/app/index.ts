@@ -12,6 +12,7 @@ export const app: App = {
     files: {
       view: {
         group: 'platform',
+        subgroup: 'Organization',
         // A file belongs to the record it is attached to, so it is no
         // stop in the sidebar; the command menu reaches the list.
         listed: false,

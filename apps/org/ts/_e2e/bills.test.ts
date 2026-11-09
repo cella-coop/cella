@@ -1,5 +1,5 @@
 // The bills scenario, end to end on a seeded Lanterne: Julien records a
-// supplier's bill, its lines counted as an invoice's are; the gérante
+// supplier's bill, its lines counted as an invoice's are; the manager
 // approves it within her limit, not Julien who recorded it, which charges
 // it to the books and moves the income statement by its net; Julien pays
 // it from the bank within his, which leaves the income statement where it
@@ -113,7 +113,7 @@ test('a bill is paid only once approved', async () => {
   assert.match(reason(early), new RegExp(`${bill} is recorded, and cannot become paid`))
 })
 
-test('the gérante approves it, which charges it to the books and lowers the year\'s result by its net', async () => {
+test('the manager approves it, which charges it to the books and lowers the year\'s result by its net', async () => {
   const before = await result()
   // Who recorded it does not approve it too; a lead holds no approve-bill.
   const julienTries = await approve({ bill }, as(julien))
@@ -160,7 +160,7 @@ test('Julien pays it from the bank: the supplier is settled and the result stays
   await balanced()
 })
 
-test('beyond the gérante\'s 5 000 € an approval is refused, and beyond Julien\'s 3 000 € a payment', async () => {
+test('beyond the manager\'s 5 000 € an approval is refused, and beyond Julien\'s 3 000 € a payment', async () => {
   const press = (reference: string, unit_price: number): Incoming => ({
     supplier: 'Imprimerie du Parc',
     reference,

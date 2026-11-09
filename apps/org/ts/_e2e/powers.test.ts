@@ -2,7 +2,7 @@
 // and the built shell: for every person and every power, the Powers tab
 // lists a line exactly where `membership.may` or `membership.entitled`
 // grants it on the verdict date, each read signed in as the person whose
-// page it is. Camille's tab names the gérante's tenure,
+// page it is. Camille's tab names the manager's tenure,
 // 2024 to 2028, and its 20 000 € commit; Hugo's, Brand's lead, the lead's
 // approve-expense within 1 000 € a month, its budget unchecked; and
 // Inès's, Web's participant's mandates and her rights as a person and an
@@ -12,7 +12,9 @@
 // through; `SHOTS` names where its screenshots go. Run by `cella test e2e
 // powers`.
 
-import { after, before, test } from 'node:test'
+import { test as runTest } from 'node:test'
+import { createStory } from './story.ts'
+export const { before, after, test, unseeded, story } = createStory()
 import { mkdirSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import pg from 'pg'
@@ -75,12 +77,12 @@ test('for every person and every power, their own tab lists a line exactly where
   assert.ok(lines > 0)
 })
 
-test('Camille holds the commit as gérante, by her tenure from 2024 to 2028, up to 20 000 € a write', async () => {
+test('Camille holds the commit as manager, by her tenure from 2024 to 2028, up to 20 000 € a write', async () => {
   const listed = await seats.powers(reader(app, camille), camille)
   const commit = listed.filter((p) => p.power === 'commit')
   assert.deepEqual(commit.map((p) => [p.role, p.circle, p.since, p.until, p.limit, p.scope]), [['manager', 'ag', '2024-06-20', '2028-06-20', 2_000_000, null]])
   const { html, text } = await tab(camille)
-  for (const says of ['Powers', 'Commit', 'Gérante in Assemblée générale', '20 Jun 2024 – 20 Jun 2028', 'the whole co-op', 'seat in Coordination', "every member's right"]) {
+  for (const says of ['Powers', 'Commit', 'Manager in General assembly', '20 Jun 2024 – 20 Jun 2028', 'the whole co-op', 'seat in Coordination', "every member's right"]) {
     assert.ok(text.includes(says), `Camille's tab says ${says}`)
   }
   assert.ok(html.includes(`href="/mandates/${await mandate('manager', 'commit')}"`), 'the commit\'s line opens its mandate')
@@ -105,7 +107,7 @@ test('Inès, no member, holds Web\'s participant mandates by her seat there, and
   assert.deepEqual([...new Set(listed.map((p) => p.right).filter((r) => r !== null))].sort(), ['employee', 'person'])
   assert.ok(listed.some((p) => p.power === 'log-time' && p.right === 'employee'))
   const { text } = await tab(ines)
-  for (const says of ['Propose', 'seat in Web', 'Log time', "every employee's right", "every person's right", 'their own', 'Web, its own', 'Assemblée générale']) {
+  for (const says of ['Propose', 'seat in Web', 'Log time', "every employee's right", "every person's right", 'their own', 'Web, its own', 'General assembly']) {
     assert.ok(text.includes(says), `Inès's tab says ${says}`)
   }
   assert.ok(!text.includes("every member's right"), 'she holds no member\'s right')
@@ -120,7 +122,7 @@ test('Inès, no member, reading Camille\'s tab finds no right on it', async () =
   }
 })
 
-test('in every browser, light and dark, Camille\'s Powers tab opens and its commit\'s line leads to the mandate\'s chain', async () => {
+unseeded('in every browser, light and dark, Camille\'s Powers tab opens and its commit\'s line leads to the mandate\'s chain', async () => {
   const commit = await mandate('manager', 'commit')
   await shell.stop()
   mkdirSync(shots, { recursive: true })
@@ -158,3 +160,5 @@ test('in every browser, light and dark, Camille\'s Powers tab opens and its comm
     }
   }
 })
+
+if (!process.env.CELLA_STORY) runTest('powers story', async (t) => story((name, step) => t.test(name, step)))

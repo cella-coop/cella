@@ -31,12 +31,12 @@ after(async () => {
 })
 
 test('a file of the co-op\'s own folds with its name and bytes, uploaded by the entry\'s actor on its day, and refuses bytes that hash to another', async () => {
-  const stored = { file: 'fi-9001', class: 'none', subject: null, type: 'text/plain', size: 3, hash: abc, name: 'statuts.txt', bytes: 'YWJj' }
+  const stored = { file: 'fi-9001', class: 'none', subject: null, type: 'text/plain', size: 3, hash: abc, name: 'statutes.txt', bytes: 'YWJj' }
   await fold(1, stored)
   assert.deepEqual(
     await one(`SELECT class, subject, name, type, size, encode(bytes, 'escape') AS bytes, encode(hash, 'hex') AS hash, uploader, to_char(uploaded, 'YYYY-MM-DD') AS uploaded
                FROM file.file WHERE id = 'fi-9001'`),
-    { class: 'none', subject: null, name: 'statuts.txt', type: 'text/plain', size: 3, bytes: 'abc', hash: abc, uploader: sacha, uploaded: '2041-02-03' },
+    { class: 'none', subject: null, name: 'statutes.txt', type: 'text/plain', size: 3, bytes: 'abc', hash: abc, uploader: sacha, uploaded: '2041-02-03' },
   )
   await db.query('SAVEPOINT refused')
   await assert.rejects(fold(2, { ...stored, file: 'fi-9002', bytes: 'YWJk' }), /entry 2 stores fi-9002 hashing to 6437b3ac.*, but its bytes hash to /)

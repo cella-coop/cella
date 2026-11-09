@@ -5,6 +5,7 @@
   import { page } from '$app/state'
   import { useForm } from '../hooks/useForm.ts'
   import { lost, post, type Result } from '../post.ts'
+  import { target } from '../models/target.ts'
   import Button from './Button.svelte'
 
   // A write: the fields post to the page's named action, files and all,
@@ -73,15 +74,10 @@
     }
   }
 
-  // The action keeps the page's address, as its open tab, so the page
-  // the write returns to is the one it was made from.
-  const target = $derived.by(() => {
-    const kept = [...page.url.searchParams].filter(([k]) => !k.startsWith('/'))
-    return `?/${action}${kept.length ? `&${new URLSearchParams(kept)}` : ''}`
-  })
+  const to = $derived(target(action, page.url.searchParams))
 </script>
 
-<form method="post" enctype="multipart/form-data" action={target} class="form" class:inline {onsubmit}>
+<form method="post" enctype="multipart/form-data" action={to} class="form" class:inline {onsubmit}>
   {#if children}
     <div class="fields">{@render children()}</div>
   {/if}

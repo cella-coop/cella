@@ -6,7 +6,8 @@
   // draw it: the surface and the look of every kind of block, which the
   // document feat's components name by class and data attribute and never
   // style themselves. Its attributes, handlers and attachments pass
-  // through to the surface.
+  // through to the surface. Every kind is set in the body face, Inter
+  // (`--font-ui`), headings and embeds' titles too.
   //
   // - `.block` holds a block: its `.line` (the grip and the `.body`) and
   //   its `.children`, indented one step; the grip is the UI core's

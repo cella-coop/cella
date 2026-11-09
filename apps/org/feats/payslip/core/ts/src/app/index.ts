@@ -6,7 +6,7 @@ import Slip from './blocks/Slip.svelte'
 
 // The feat's client side: every payslip in a table, with a dashboard of
 // the payroll by month; preparing a month's run; and a payslip's page,
-// line by line, with its run's approval and payment.
+// with its run's approval and payment, its lines in a tab of their own.
 export const app: App = {
   name: 'payslip',
   collections: {
@@ -42,7 +42,6 @@ export const app: App = {
       page: {
         eyebrow: 'Payslip',
         title: (p: Payslip) => `Payslip ${p.month}`,
-        subtitle: (p: Payslip) => `Run ${p.state}`,
         properties: (p: Payslip) => [
           { label: 'Run', value: p.state, kind: 'badge', tone: tones[p.state] },
           { label: 'Gross', value: p.gross, kind: 'money' },
@@ -55,7 +54,11 @@ export const app: App = {
           ...(p.approved ? [{ at: p.approved, text: 'approved', who: p.approver ?? undefined }] : []),
           { at: p.generated, text: 'prepared' },
         ],
-        blocks: [Slip],
+        tabs: [
+          { id: 'overview', label: 'Overview' },
+          { id: 'lines', label: 'Lines' },
+        ],
+        blocks: [{ tab: 'lines', block: Slip }],
         actions: Run,
       },
     },

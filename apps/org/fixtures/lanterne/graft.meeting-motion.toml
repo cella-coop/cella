@@ -36,3 +36,13 @@ motion = "m-2026-012"
 meeting = "ag-2026-10-31"
 item = 3
 motion = "m-2026-011"
+
+[[tabled]]
+meeting = "operations-2026-10-05"
+item = 2
+motion = "m-2026-010"
+
+[[tabled]]
+meeting = "web-2026-10-20"
+item = 3
+motion = "m-2026-017"

@@ -6,7 +6,7 @@ const listed = `e.id, to_char(e.date, 'YYYY-MM-DD') AS date, e.label, e.corrects
 
 // The journal as the collection lists it, the latest entry first.
 export const listing: Read = {
-  sql: `SELECT ${listed} FROM transaction.entry e`,
+  sql: `SELECT ${listed}, e.circle FROM transaction.entry e`,
   order: 'id DESC',
 }
 

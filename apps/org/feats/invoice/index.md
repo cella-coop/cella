@@ -1,6 +1,6 @@
 +++
 title = "Invoice"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 What the co-op bills: issue an invoice, send it, record what is paid
@@ -215,8 +215,10 @@ dashboard shows what is owed and overdue, what was invoiced this year,
 the amounts by month and the invoices by standing; overdue reads the
 server's clock, a read no guard depends on. New issues one (`issue`) in a
 series the feat offers, to a name and the address billed. An invoice's
-page shows its lines and payments, marks it sent (`send`) and links its
-PDF. `api/forms.ts` reads the shell's forms into the handlers' inputs,
+page, its header's crumb its number, is titled by what it bills for,
+with whom it bills among its properties; it marks it sent (`send`) and
+links its PDF, and its Lines tab holds its lines and payments, the data
+central to it. `api/forms.ts` reads the shell's forms into the handlers' inputs,
 amounts typed in euros and VAT rates in percent (`5,5`), so a graft's writes read the same forms:
 `invoice-transaction` replaces issue, payment and void with the writes
 that post them. Whom an invoice bills is `contact-invoice`'s.
@@ -226,16 +228,20 @@ that post them. Whom an invoice bills is `contact-invoice`'s.
 An issued invoice's bytes, `/invoices/<id>/content`, are its PDF, which
 the slice's `content` makes on the server from the invoice as issued
 (`printed`, then `pdf`, through [`@cella/org-pdf`](../../core/pdf/index.md))
-and whoever reads the invoice may open. It is in French, as loi n° 94-665
-art. 2 asks of an invoice, and prints the mentions a client's accountant
-checks: the list is the customs' control sheet of March 2026, which cites
-each article (code de commerce L441-9; CGI, annexe II, art. 242 nonies A),
-and the registry's sheet on business papers (code de commerce R123-237).
+and whoever reads the invoice may open. It is in English, since the
+prototype is not bound to French law (the operator, 2026-10-25): its
+amounts read `€1,500.00`, its dates `24 October 2026`, its rates `5.5%`,
+and its words "Net amount", "VAT 20% on …", "Total incl. VAT", "Payment
+terms". It prints, in English, the mentions a client's accountant
+checks: the list is the customs' control sheet of March 2026, which
+cites each article (code de commerce L441-9; CGI, annexe II, art. 242
+nonies A), and the registry's sheet on business papers (code de commerce
+R123-237).
 
 | Mention | Printed from | Law |
 |---|---|---|
-| seller's legal name, form, seat; capital where it is fixed | `seller`, from `cella.scope_legal_name`, `_form`, `_seat`, `_capital` | L441-9; R123-237; "à capital variable" for a capital that varies |
-| SIREN, "RCS" and the registry's town | `seller`, from `cella.scope_siren`, `_rcs` | R123-237; 242 nonies A, I, 2° |
+| seller's legal name, form, seat; capital where it is fixed | `seller`, from `cella.scope_legal_name`, `_form`, `_seat`, `_capital` | L441-9; R123-237; "with variable capital" for a capital that varies |
+| SIREN, the trade register ("RCS") and its town | `seller`, from `cella.scope_siren`, `_rcs` | R123-237; 242 nonies A, I, 2° |
 | seller's VAT number | `seller`, from `cella.scope_vat` | 242 nonies A, I, 2° |
 | buyer's name and address | `bill_to`, `bill_address` | L441-9; 242 nonies A, I, 1° |
 | number, in one gapless series, and date of issue | `id`, `issued` | 242 nonies A, I, 6° and 7° |
@@ -244,7 +250,7 @@ and the registry's sheet on business papers (code de commerce R123-237).
 | due date; no discount for paying early; late penalties at the ECB's rate plus ten points; the 40 € recovery indemnity owed by a professional | `due`, and the code's terms | L441-9, I, al. 5; L441-10; D441-5 |
 
 The seller's mentions close every page, with its number; a voided
-invoice is marked "ANNULÉE" and its date. Payments are not printed: the
+invoice is marked "VOID" and its date. Payments are not printed: the
 PDF is the invoice as issued, its seller too: the mentions are kept with
 the invoice when it issues, so a seat that moves later never alters the
 PDF of an invoice issued before. Every mention of the seller and the
@@ -263,22 +269,24 @@ Not printed yet:
 - Factur-X and sending through an approved platform, at rung 3.
 
 Légifrance refuses the box this was written on, so the articles are cited
-as the customs and the registry quote them; the "à capital variable"
+as the customs and the registry quote them; the variable capital
 mention's article in the code de commerce (among L231-1 to L231-8) was
 not verified.
 
 ## Lanterne
 
-- Series F-2026 runs from 0041 to 0055; the next is 0056.
+- Series F-2026 runs from 0041 to 0055; the next is 0056. Each is the
+  circle's whose project it bills, Web's, Brand's or Marketing's.
 - Clients owe 57 180 €. Compagnie Mauve Horizon's posters (0044, 7 440 €)
   are three months overdue.
 - Vélo Solidaire has paid 1 980 € of 0051's 3 960 €: the invoice is
   partial.
 - 0050 was voided the day after issue, before any payment, and reissued as
   0051 at the solidarity rate.
-- Every invoice carries its client's address. Lanterne prints as Lanterne
-  SCOP SARL, a SCOP SARL à capital variable registered at RCS Bobigny,
-  the registry for Montreuil; its SIREN and VAT number are placeholders.
+- Every invoice carries its client's address. Lanterne prints as
+  Lanterne, a worker co-operative limited company with variable capital
+  registered at the Bobigny trade register (RCS), the registry for
+  Montreuil; its SIREN and VAT number are placeholders.
 
 ## Analytics
 

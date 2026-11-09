@@ -1,6 +1,6 @@
 +++
 title = "invoice-transaction"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 An issued invoice, its payments and its void post balanced transactions,
@@ -72,8 +72,8 @@ credit note behind.
 
 ## Shell
 
-Adds an invoice's postings, line by line, to its page, with the payment
-and void forms; and replaces the invoice feat's issue, payment and void
+Adds an invoice's postings, line by line, to its page in a Postings tab,
+with the payment and void forms; and replaces the invoice feat's issue, payment and void
 with this graft's `issue`, `payment` and `annul`, which post in the same
 verdict, reading the same forms through the invoice feat's `forms`.
 

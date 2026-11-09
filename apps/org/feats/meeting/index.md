@@ -1,6 +1,6 @@
 +++
 title = "Meeting"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 Circles meeting: when and where, what is on the agenda, and whether the
@@ -53,7 +53,7 @@ document, `document-meeting`'s.
 
 | Action | Power or check | Lanterne |
 |---|---|---|
-| schedule, cancel | `schedule-meeting` | a circle's lead, the gérante for any circle |
+| schedule, cancel | `schedule-meeting` | a circle's lead, the manager for any circle |
 | item.add, .move, .remove | `discuss`, held in the meeting's circle | the circle's participants |
 | hold, minute | `keep-minutes` | a circle's secretary or its lead |
 
@@ -166,16 +166,17 @@ The `meetings` collection, in Governance, opens as a calendar of the
 month by the day each meeting meets (the UI core's calendar layout,
 `look.on = 'at'`), each entry tinted by its status; the list, table,
 gallery, board by status and dashboard are a click away in the View
-card. A new meeting is scheduled from the New form. A meeting's page
-has two tabs: **Agenda**, the agenda as the UI core's `Ordered` list,
-its items dragged into order (each drop the `move` write, shown at once
-by `AgendaState` and put back if refused), removed and added while the
-meeting is scheduled, with what the grafts add under it, the motions
-it tables and who came; and **Minutes**, `document-meeting`'s, a
-document read as a document is. Minutes earn their tab: they are a
-different thing from the agenda, a text written after it, as a
-motion's stances are beside its overview. Holding and cancelling are
-the header's writes.
+card. A new meeting is scheduled from the New form. A meeting's page,
+its header's crumb its id, has two tabs: **Overview**, its content, the
+minutes `document-meeting` draws there, a document read as a document
+is, and under them its Activity: scheduled, minutes begun, held or
+cancelled; and **Agenda**, the data central to it, the agenda as the UI
+core's `Ordered` list, its items dragged into order (each drop the
+`move` write, shown at once by `AgendaState` and put back if refused),
+removed and added while the meeting is scheduled, with what the grafts
+add under it, the motions it tables and who came. Its circle, day,
+place and link are its properties. Holding and cancelling are the
+header's writes.
 
 ## Tests
 
@@ -202,6 +203,12 @@ the header's writes.
   guest on 21 September; the 26 October one scheduled.
 - The general assembly of 31 October 2026, scheduled, its agenda Inès's
   admission, the 2027 rate card and the minutes of 20 June.
+- The working circles' own: Operations on 5 October, Julien alone,
+  over September's close and the print buyer's mandate (m-2026-010);
+  Brand's review on 15 October and Web on 20 October, held and marked by
+  their leads, Web's tabling its accessibility motion (m-2026-017);
+  Marketing's of 22 October cancelled, its next on 29 October, and Web's
+  next on 3 November, scheduled.
 
 ## Analytics
 

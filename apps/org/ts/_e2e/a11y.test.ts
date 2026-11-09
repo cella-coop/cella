@@ -1,6 +1,6 @@
 // The accessibility scan, on a seeded Lanterne through the built shell:
 // axe-core, through Playwright, reads the sign-in page and, signed in as
-// Camille, the home, every collection the sidebar mounts in its default
+// Camille, the Inbox `/` lands on, every collection the sidebar mounts in its default
 // view, section by section, the first item each lists and its form open on New, in light and
 // in dark, on each browser `BROWSERS` names. A violation of impact
 // serious or critical fails it, unless `waiting` lists its rule on that
@@ -92,9 +92,13 @@ for (const [name, launch] of browsers()) {
           const links = () => nav.locator('a[href^="/"]').evaluateAll((as) => as.map((a) => a.getAttribute('href')!))
           const hrefs = await links()
           found.push(...(await scan(page, scheme)))
-          const settings = await nav.locator('a[role="menuitem"]', { hasText: 'Settings' }).first().getAttribute('href')
-          assert.ok(settings, 'the account menu leads into Settings')
+          const menus = nav.locator('a[role="menuitem"]', { hasText: 'Settings' })
+          const organization = await menus.nth(0).getAttribute('href')
+          const settings = await menus.nth(1).getAttribute('href')
+          assert.equal(organization, '/imports', 'the co-op menu opens Settings at Organization')
+          assert.equal(settings, '/settings/account', 'the account menu opens Settings at Personal, on Account')
           await visit(settings)
+          assert.deepEqual(await nav.locator('p.group').allTextContents(), ['Personal', 'Organization'], "Settings groups the member's pages, then the co-op's")
           hrefs.push(...(await links()))
           const collections = [...new Set(hrefs)].filter((h) => h !== '/')
           assert.ok(collections.length > 10, `the sidebar mounts the collections: ${collections.join(' ')}`)

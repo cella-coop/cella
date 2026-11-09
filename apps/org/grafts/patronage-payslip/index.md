@@ -1,6 +1,6 @@
 +++
 title = "patronage-payslip"
-updated = 2026-11-05
+updated = 2026-11-09
 +++
 
 How a surplus's work share divides among the workers by pay and in equal
@@ -33,7 +33,7 @@ art. 33, 3°, gives the share to every employee). Declared by `patronage`.
   `patronage.part` itself; the graft writes no part and puts no trigger
   on `patronage.distribution`.
 - `work_share`: each worker's part by pay as it divides now, which the
-  distribution's page shows until it is approved.
+  distribution's Split tab shows until it is approved.
 
 ## Guards
 
@@ -57,8 +57,8 @@ guards take; parts no longer what the year's pay gives are refused.
 
 ## Shell
 
-Adds to a distribution's page, until it is approved, how its portion by
-pay would divide, member by member.
+Adds to a distribution's Split tab, until it is approved, how its portion
+by pay would divide, member by member.
 
 ## Lanterne
 

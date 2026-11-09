@@ -1,4 +1,4 @@
-import type { Action, Collection, Deps, Done, Extension, Reaction, Slice, Source } from '@cella/org-db'
+import type { Action, Collection, Deps, Done, Extension, Reaction, SettingsPage, Slice, Source } from '@cella/org-db'
 import type { Permission } from '@cella/org-actions'
 import { slice as log } from '@cella/org-log/api'
 import { slice as person } from '@cella/org-person/api'
@@ -249,8 +249,10 @@ export const reacting = (deps: Deps): Deps => ({ ...deps, react })
 // of the extensions that add rows of their own, and each extension's
 // select of the fields it adds to them. `@cella/org-db` composes them
 // into one statement, as the acting member reads, and filters, orders and
-// pages it there.
-export function source(name: string): Source | undefined {
+// pages it there; under the member's lens, `lens`, it keeps only the lensed
+// circle's rows, but in the Inbox, which is what waits on the member and
+// reads whatever the lens.
+export function source(name: string, lens: string | null = null): Source | undefined {
   const m = collections.get(name)
   if (!m) {
     return undefined
@@ -258,5 +260,23 @@ export function source(name: string): Source | undefined {
   return {
     rows: [m.collection.list, ...m.extensions.map((e) => e.extension.rows)].filter((r) => r !== undefined),
     fields: m.extensions.flatMap((e) => (e.extension.list ? [e.extension.list] : [])),
+    lens: name === 'inbox' ? null : lens,
   }
 }
+
+// The settings pages the slices serve, by the name in their address, and
+// the writes each saves by.
+const pages = new Map<string, SettingsPage>()
+for (const s of slices) {
+  for (const [name, page] of Object.entries(s.settings ?? {})) {
+    if (pages.has(name)) {
+      throw new Error(`two slices serve the settings page ${name}`)
+    }
+    pages.set(name, page)
+  }
+}
+
+export const setting = (name: string) => pages.get(name)
+
+// Every settings page's write name, for the settings route's action table.
+export const saves = [...new Set([...pages.values()].flatMap((p) => Object.keys(p.actions ?? {})))]

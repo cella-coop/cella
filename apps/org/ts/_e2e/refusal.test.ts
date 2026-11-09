@@ -7,7 +7,9 @@
 // closed from its own. Run by `cella test`, which builds the shell first,
 // on a fresh database.
 
-import { after, before, test } from 'node:test'
+import { test as runTest } from 'node:test'
+import { createStory } from './story.ts'
+export const { before, after, test, unseeded, story } = createStory()
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { vote } from '@cella/org-motion/api'
@@ -115,3 +117,5 @@ test('revoked: once the leads\' set-budget is revoked by motion, Yusuf\'s own pr
   const reason = refused(await shell.act('/projects/clairval-site', 'budget', { amount: '14000' }, yusuf))
   assert.match(reason, new RegExp(`^the actor holds no mandate for set-budget up to 14000\\.00 €: mandate ${id} grants it to lead in web, revoked on 2026-11-16; a motion of [a-z-]+ granting it anew would allow it$`))
 })
+
+if (!process.env.CELLA_STORY) runTest('refusal story', async (t) => story((name, step) => t.test(name, step)))

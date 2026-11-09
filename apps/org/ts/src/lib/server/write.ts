@@ -46,9 +46,9 @@ export function reason(e: unknown): string {
 // waits on the signature: its reads borrow one each, and its write one
 // for its transaction once it is signed. The post that starts it, and the
 // post carrying the proof back, is answered with the run's next step:
-// what the device is to sign, or the outcome.
-export async function perform(event: RequestEvent, collection: string, name: string, id?: string) {
-  const write = action(collection, name)
+// what the device is to sign, or the outcome. A settings page hands the
+// write it found, as no collection names it.
+export async function perform(event: RequestEvent, collection: string, name: string, id?: string, write = action(collection, name)) {
   if (!write) {
     error(404, `${collection} has no write ${name}`)
   }

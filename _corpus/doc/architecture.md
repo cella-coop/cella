@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 # Architecture
@@ -146,11 +146,13 @@ repository's root becomes the top node and the library moves into its core.
 Architecture rules are enforced by tooling wherever a tool can see them.
 `tools/feat-check.mjs` (`cella check feats`) reads each `package.json` and
 `cargo metadata`, the manifests cargo and pnpm read, and not the lockfile.
-It places each package by its path and refuses any other edge; a package
-in `packages/` sits outside the tree, may be depended on by any, and may
-depend on no package of the repository; the site, `apps/site`, sits
-outside it too, may depend on such a package alone, and no package may
-depend on it. It also
+It places each package by its path and refuses any other edge, as the
+table above gives them: the brand, `packages/brand`, sits outside the
+tree, may be depended on by any, and depends on no package of the
+repository; the diagrams, `packages/diagrams`, sit outside it too,
+depend on the brand alone, and only the site depends on them; the site,
+`apps/site`, sits outside it as well, depends on the brand and the
+diagrams alone, and no package depends on it. It also
 checks that every graft is declared by a feat it joins, that its name is
 in order, that every feat it names is below its node and that no child of
 its node holds them all, that it joins no feat with one nested in it, that
@@ -960,7 +962,9 @@ two halves of one **slice**, matched by name:
   motion carries in its close's; and the kinds of file
   it imports from other tools (`imports`), each record read as one of its
   own writes, which the root runs as the importing member and records in
-  the import feat.
+  the import feat; and the settings pages it serves (`settings`), each
+  what it reads for the acting person and the writes that save it, as
+  the person feat's Account.
 - from `./app`, its client side (`App` in `@cella/org-ui`): for each
   collection it owns, a view (its columns, its New form, the status
   badge its header shows and its dashboard's widgets) and a page (its title, its Properties, Related and Activity cards, its
@@ -968,7 +972,10 @@ two halves of one **slice**, matched by name:
   over the fields it adds, cards and blocks over its data on an item,
   and a New form for a write of its own, replacing the owner's, or, where
   several slices offer one, beside the others under its title, as the
-  people collection takes membership's invitation and employment's hire.
+  people collection takes membership's invitation and employment's hire;
+  and for each settings page it serves, its title, its icon, the group
+  of Settings it sits in, Personal or Organization, and the block that
+  draws it.
 
 The root lists the slices, server and client, and mounts them on
 routes that are the same for every collection: `/[collection]`, the one collection
@@ -981,8 +988,12 @@ bytes, such as a file's, which the collection's owner serves (`content`)
 to whom its guard or an extension's `allows` opens them; `/sign-in`,
 `/session`, the challenge and the device's answer to it, and
 `/sign-out`; `/join/[secret]`, an invitation's link, taken up through
-membership's `accept`; `/theme` for the user menu; `/journal`, the transactions' old address,
-which redirects to them; and `/`, which lands a member in their Inbox until the co-op has a
+membership's `accept`; `/settings/[page]`, a settings page a slice
+serves, with its writes and `theme`, which saves the theme as `/theme`
+does; `/theme` for the user menu; `/lens` for the co-op selector's circles; `/journal`, the transactions' old address,
+which redirects to them; `/specimens/settings`, on the dev server alone, a
+settings form of no slice for the browser test to see
+([settings](../../apps/org/core/ui/index.md#settings)); and `/`, which lands a member in their Inbox until the co-op has a
 first page of its own. A collection's owner is a feat,
 or a core library, the log or the circles. A graft extends only a collection of a feat it
 joins, or of a feat one of them nests in, and a nested feat its parent's,
@@ -1059,8 +1070,8 @@ writes' only HTTP path.
 A collection is read in SQL, a page at a time. `@cella/org-db` composes
 its owner's select, the selects of the extensions that add rows, and one
 join per extension that adds fields into one statement (`src/read.ts`),
-each row the JSON of its fields; the view's conditions, its text filter,
-the collection's order and the page's limit run in it, so the server
+each row the JSON of its fields; the member's lens ([the lens](#the-lens)), the view's conditions, its
+text filter, the collection's order and the page's limit run in it, so the server
 holds a page of rows and Postgres the rest. Which rows its reader reads
 is asked once per statement, not once per row: each row-level policy
 asks the circles the reader reads in as an uncorrelated subquery,
@@ -1068,7 +1079,7 @@ asks the circles the reader reads in as an uncorrelated subquery,
 row's owning circle with that list, so a page costs the same reading
 by mandate as reading everything. The same statement counts
 the rows each tab keeps and that the sidebar counts, gives each
-enumeration's values, and runs a dashboard's or the home's widgets as
+enumeration's values, and runs a dashboard's widgets as
 SQL aggregates. A field is read in SQL as the row holds it under the
 column's key, so a slice's select returns what each badge and date
 column shows under its key, already derived, such as an invoice's
@@ -1086,6 +1097,36 @@ scope's timezone ([the notary](../../apps/org/core/notary/index.md#settings)).
 The UI core, `@cella/org-ui`, holds the tokens and every component the
 slices compose ([its doc](../../apps/org/core/ui/index.md)); a slice's
 blocks style nothing themselves.
+
+### The lens
+
+A member may lens the co-op on one of its circles, from the co-op
+selector ([the shell](../../apps/org/core/ui/index.md#components)): the
+circles they read, "All circles" first and the default. The lens is
+the member's view and never a write: a cookie of the scope's, which
+`/lens` writes and the root layout reads, as `/theme` and the drawer's
+are, naming one circle the member reads, or none. Nothing of it
+enters the log and no row-level policy reads it, so it narrows what a
+reader reads and never widens it; a lens naming a circle the member
+no longer reads, or one of another scope, is none.
+
+Every collection reads through the lens. An owner's `list`, and each
+select that adds rows (`rows`), exposes the circle that owns each row
+under `circle`, as nearly every table holds one since circles are core
+([circles are core](#circles-are-core)), and where the member has a
+lens the composed read keeps only the rows whose `circle` is the
+lens's, one condition in the one statement
+([reading at scale](#reading-at-scale)): its page, its tabs' counts,
+its enumerations' values and its dashboard's widgets all narrow with
+it. The lens is one circle and not its subcircles, so a record the
+root circle owns, the assembly's, leaves the view while a working
+circle is lensed. A collection whose rows name no owning circle, a
+registry (the chart of accounts, the periods, the imports, the circles
+and the log), reads whole whatever the lens, and says so under its
+header; a row that names none, as a report the feat draws itself, is
+kept. An item's page,
+the command menu and the Inbox, which is what waits on the member,
+read whatever the lens.
 
 ## The analytics shell
 
@@ -1245,7 +1286,7 @@ the rest. One guard reads it on every action, the membership feat's
 day)` against the record's owning circle, `about`, which the write's
 payload names, and core's `circle.covers`: Web's lead, whose mandates
 are on their own circle, runs Web's projects and approves Web's time
-and is refused Brand's, and the gérante's, on the whole co-op, cover
+and is refused Brand's, and the manager's, on the whole co-op, cover
 every circle's records. Ownership grants nothing by itself, and a seat
 in a circle nothing over its records without a mandate
 ([membership](../../apps/org/feats/person/feats/membership/index.md#seats)).

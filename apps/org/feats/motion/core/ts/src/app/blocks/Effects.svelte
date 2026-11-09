@@ -2,11 +2,12 @@
   import { Note, Section, Table, type Column } from '@cella/org-ui'
   import type { Detail, Effect } from '../../models/motion.ts'
 
-  // What the close carried, under it: each effect its transaction wrote,
+  // What the close carried, in its Effects tab: each effect its transaction wrote,
   // in the order logged, whether it settled or was forgone and the entry
   // it follows; under them each forgone one's reason, as its entry keeps
   // it, so an effect forgone with one it requires names the refusal it
-  // follows above that refusal's own.
+  // follows above that refusal's own. Until it closes, or where it
+  // carried none, the tab says so.
   let { data }: { data: Detail; id: string } = $props()
 
   const named = (e: Effect) => e.label ?? e.op
@@ -32,5 +33,9 @@
     {#each forgone as e (e.id)}
       <Note text="{named(e)}, entry {e.entry}, forgone: {e.reason ?? 'its reason is not disclosed to you'}." />
     {/each}
+  </Section>
+{:else}
+  <Section title="Effects of the close">
+    <Note text={data.closed ? 'Its close carried no effects.' : 'Its effects are carried at its close.'} />
   </Section>
 {/if}

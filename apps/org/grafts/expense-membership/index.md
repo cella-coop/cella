@@ -1,6 +1,6 @@
 +++
 title = "expense-membership"
-updated = 2026-11-05
+updated = 2026-11-09
 +++
 
 Whose an expense is, by name. The expense feat holds the claimant's
@@ -45,7 +45,7 @@ approved one they may reimburse, holding `reimburse-expense`. Whether an
 approval stays within their budget is `within`'s, judged when they
 approve. In Lanterne, Hugo approves Sofia's 180 € proofs within his
 1 000 € for October; a further 960 € plotter repair is beyond it, and
-Camille approves it within her 2 000 € limit as gérante.
+Camille approves it within her 2 000 € limit as manager.
 
 ## Tests
 
@@ -57,7 +57,7 @@ trigger on the expenses.
 ## Shell
 
 Adds the claimant's name to each expense, on the board's cards and its
-page with who decided it; and to a person's page their expenses.
+page with who decided it; and to a person's page, in an Expenses tab, their expenses.
 
 ## Lanterne
 

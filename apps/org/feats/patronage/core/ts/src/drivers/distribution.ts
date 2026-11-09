@@ -9,7 +9,7 @@ const columns = `d.id, d.year, cella.cents(d.surplus)::float8 AS surplus, d.basi
 // The distributions as the collection lists them, the latest year first,
 // each drafted, approved or distributed as its badge shows it.
 export const years: Read = {
-  sql: `SELECT ${columns},
+  sql: `SELECT ${columns}, d.circle,
           CASE WHEN d.distributed IS NOT NULL THEN 'distributed' WHEN d.approved IS NOT NULL THEN 'approved' ELSE 'draft' END AS state
         FROM patronage.distribution d`,
   order: 'year DESC',

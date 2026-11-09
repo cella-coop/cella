@@ -1,5 +1,6 @@
-# Lanterne's projects, one for each piece of work a client commissioned,
-# with its milestones as quoted and invoiced. Budgets are in cents, net of
+# Lanterne's projects: one for each piece of work a client commissioned,
+# with its milestones as quoted and invoiced, and the circles' own, for no
+# client. Each names the circle that runs it. Budgets are in cents, net of
 # VAT, as quoted. Which contact each is for is the contact-project graft's;
 # the shares of a budget, the membership-project graft's.
 
@@ -172,3 +173,76 @@ summary = "An online shop for a ceramics studio, at a fixed price."
 title = "Shop, fixed price"
 due = 2026-07-28
 completed = 2026-07-28
+
+# The circles' own projects, for no client: what the assembly,
+# coordination and operations are working through this autumn.
+[[project]]
+id = "statutes-2027"
+title = "The statutes, revised for 2027"
+circle = "ag"
+started = 2026-09-01
+due = 2027-03-20
+summary = """
+The assembly's review of the statutes before the 2027 assembly: the
+variable capital clause, the shares a new member subscribes, and how a
+member who lives abroad takes part and votes."""
+
+[[project.milestone]]
+title = "Draft amendments"
+due = 2026-10-16
+completed = 2026-10-14
+
+[[project.milestone]]
+title = "Members' comments"
+due = 2026-12-18
+
+[[project.milestone]]
+title = "Extraordinary assembly"
+due = 2027-03-20
+
+[[project]]
+id = "pipeline-2027"
+title = "Pipeline and staffing for 2027"
+circle = "coordination"
+started = 2026-09-14
+due = 2026-12-14
+summary = """
+Which clients and projects the co-op takes on for 2027, who works on
+them, and the rate card they are quoted at."""
+
+[[project.milestone]]
+title = "Client review"
+due = 2026-10-12
+completed = 2026-10-12
+
+[[project.milestone]]
+title = "Rate card published"
+due = 2026-11-09
+
+[[project.milestone]]
+title = "Staffing plan"
+due = 2026-12-14
+
+[[project]]
+id = "books-move"
+title = "The books move into cella"
+circle = "operations"
+started = 2026-06-15
+due = 2026-11-30
+summary = """
+The books, pay and expenses move from the previous accounting tool into
+cella, a month closed in each before the next moves."""
+
+[[project.milestone]]
+title = "Chart and opening balances"
+due = 2026-07-01
+completed = 2026-07-01
+
+[[project.milestone]]
+title = "Pay runs and expenses"
+due = 2026-10-01
+completed = 2026-10-05
+
+[[project.milestone]]
+title = "October closed in cella alone"
+due = 2026-11-10

@@ -24,6 +24,7 @@
     subtitle,
     badges = [],
     back,
+    heading = true,
     actions,
     bar,
     panels = [],
@@ -36,11 +37,15 @@
     count?: string
     // What the page is, in its trade's words: the name's tooltip.
     caption?: string
-    // An item's line under its name, at the top of the content.
+    // An item's line under its name, or what a lens leaves of a
+    // collection, at the top of the content.
     subtitle?: string
     // Whether the whole page's subject holds, beside its count.
     badges?: { label: string; tone: Tone }[]
     back?: { href: string; label: string }
+    // Whether the name is the page's heading; a record's page names its
+    // kind and reference here and holds its title as the heading.
+    heading?: boolean
     actions?: Snippet
     bar?: Snippet
     panels?: Panel[]
@@ -65,7 +70,11 @@
         <a href={back.href} class="back" title="Back to {back.label}  Esc" aria-label="Back to {back.label}"><Icon icon={CaretLeft} /></a>
       {/if}
       {#if icon && !back}<span class="mark" aria-hidden="true"><Icon {icon} size="1.15rem" /></span>{/if}
-      <h1 title={caption}>{title}</h1>
+      {#if heading}
+        <h1 title={caption}>{title}</h1>
+      {:else}
+        <span class="crumb" title={caption}>{title}</span>
+      {/if}
       {#if count}<span class="count">{count}</span>{/if}
       {#each badges as b (b.label)}<Badge tone={b.tone}>{b.label}</Badge>{/each}
     </div>
@@ -163,13 +172,17 @@
     flex: none;
     color: var(--text-muted);
   }
-  h1 {
+  h1,
+  .crumb {
     font-family: var(--font-ui);
     font-size: var(--text-md);
     font-weight: 500;
     line-height: 1.35;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .crumb {
+    color: var(--text-muted);
   }
   .count {
     font-size: var(--text-sm);
@@ -192,8 +205,10 @@
     flex: none;
   }
   /* A write in the header keeps it one row: its fields' labels are read,
-     not seen, and its choices stay narrow. */
-  .actions :global(.field .label) {
+     not seen, and its choices stay narrow. A form in a popover opened
+     from the header is no part of the row: its labels show and its
+     choices take its width, as in any form. */
+  .actions :global(.field:not(.popover *) .label) {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -201,7 +216,7 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
-  .actions :global(select) {
+  .actions :global(select:not(.popover *)) {
     max-width: 16rem;
   }
   /* The quiet icon group: the drawer's panel tabs, then its toggle; the

@@ -10,7 +10,9 @@ import type { Look, Preset, Shift, Widget } from './query.ts'
 // shown; then accordions: governance; office, the documents, meetings and
 // reports; work; payments, money in and out; ledger, the accounts, their
 // periods and transactions; equity, the members' capital and what the
-// surplus builds; and `platform`, Settings, a sidebar of its own.
+// surplus builds; and `platform`, Settings, a sidebar of its own, its
+// collections under Personal, the member's own, or Organization, the
+// co-op's, as each names its `subgroup`.
 export type Group = 'home' | 'governance' | 'office' | 'work' | 'payments' | 'ledger' | 'equity' | 'platform'
 
 // A `person` is an address, shown as the person's chip: their name, the
@@ -30,7 +32,7 @@ export interface Column<R = any> {
   role?: 'title' | 'sub' | 'meta' | 'hidden'
 }
 
-// A label and value row in the drawer's Properties card.
+// A label and value row in the drawer's Details.
 export interface Prop {
   label: string
   value: unknown
@@ -50,6 +52,8 @@ export interface Event {
   text: string
   // Who did it, by address, shown as their chip.
   who?: string
+  // What a comment says, under its line.
+  body?: string
 }
 
 // A thing of one slice drawn inside another's item, such as a motion
@@ -91,10 +95,20 @@ export interface Page<T = any> {
   // The kind of item, the tooltip on its name.
   eyebrow: string
   title: (data: T) => string
+  // The record's reference, its id, the header's crumb.
   subtitle?: (data: T) => string
+  // The record's own words where it holds them as text, a circle's
+  // purpose or a report's caption, under its title.
+  summary?: (data: T) => string | null | undefined
+  // The drawer's label and value rows, and the records it links to.
   properties?: (data: T) => Prop[]
   related?: (data: T) => Link[]
+  // What happened to the item, newest first; the page merges every
+  // slice's and shows them oldest first, under its content.
   activity?: (data: T) => Event[]
+  // The box that adds a comment, under the Activity, where the kind
+  // takes comments.
+  comment?: Block<T>
   // The page's tabs, the first its default, as pills in the header; an
   // extension may add its own after the owner's.
   tabs?: Tab[]
@@ -160,6 +174,21 @@ export interface View<R = any> {
   counted?: boolean
 }
 
+// The theme a person wears: light, dark or the system's.
+export type Theme = 'light' | 'dark' | 'system'
+
+// A settings page a slice serves at `/settings/<name>`, in Settings'
+// sidebar under its group, first in it: its title and icon, and the block
+// that draws it, given what its server side read for the acting person,
+// who looks, and the theme they wear.
+export interface SettingsPage<T = any> {
+  subgroup: 'Personal' | 'Organization'
+  title: string
+  caption?: string
+  icon: Component<any>
+  block: Component<{ data: T; viewer: Viewer | null; theme: Theme }>
+}
+
 // A collection a feat owns: its view, and its items' page if it has one.
 export interface Owned<R = any, T = any> {
   view: View<R>
@@ -187,11 +216,13 @@ export interface Added<E = any> {
   // `title`.
   create?: Component<{ rows: any[]; about: any }>
   title?: string
-  page?: Omit<Partial<Page<E>>, 'eyebrow' | 'title' | 'subtitle'>
+  page?: Omit<Partial<Page<E>>, 'eyebrow' | 'title' | 'subtitle' | 'summary'>
 }
 
-// The sidebar's navigation, by group.
-export type Nav = { group: string; items: { href: string; title: string; icon: Component<any>; count?: number; subgroup?: string; listed?: boolean }[] }[]
+// The sidebar's navigation, by group: a collection's `count` is its rows
+// for the acting member in the lensed circle, its pill; `waiting`, all of
+// them whatever the lens, which a shut section's dot sums.
+export type Nav = { group: string; items: { href: string; title: string; icon: Component<any>; count?: number; waiting?: number; subgroup?: string; listed?: boolean }[] }[]
 
 // A member the dev server may act as.
 export interface Person {
@@ -211,6 +242,7 @@ export interface App {
   name: string
   collections?: Record<string, Owned>
   extends?: Record<string, Added>
+  settings?: Record<string, SettingsPage>
 }
 
 // An account a statement's line gathers, with its figure in each column,

@@ -1,6 +1,6 @@
 +++
 title = "bill-transaction"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 A bill's approval and its payment post balanced entries, in the same
@@ -60,7 +60,7 @@ all of it back.
 ## Shell
 
 Replaces the bill feat's approve and pay with these, and adds a bill's
-postings, line by line, to its page.
+postings, line by line, to its page in a Postings tab.
 
 ## Analytics
 

@@ -2,11 +2,13 @@
 // distributions, pay, expenses and bills into the account, patronage, payslip,
 // expense and bill schemas and their grafts' (account-membership,
 // account-membership-transaction's repayments, employment-payslip,
-// payslip-transaction, expense-project). The chart, the
+// payslip-transaction, expense-project, expense-transaction). The chart, the
 // journal, the members and their time load first: a capital account names
 // its holder and its parent once every account is in; a pay run's payslips
 // load before it is approved, September's with the minutes of the members'
-// approved months; a carried run links the journal entry that posted it.
+// approved months; a carried run links the journal entry that posted it;
+// an expense is submitted, decided and reimbursed in turn, and its
+// postings link the entries its approval and reimbursement posted.
 
 export async function finance(db, read, day) {
   const books = read('account')
@@ -63,6 +65,17 @@ export async function finance(db, read, day) {
     if (e.submitted) {
       await db.query(`UPDATE expense.expense SET status = 'submitted', submitted = $2 WHERE id = $1`, [e.id, day(e.submitted)])
     }
+    // Decided, approved or refused, then reimbursed, one step at a time
+    // as the expense feat's writes move it.
+    if (e.decided) {
+      await db.query('UPDATE expense.expense SET status = $2, decided = $3, decider = $4 WHERE id = $1', [e.id, e.status, day(e.decided), e.decider])
+    }
+    if (e.reimbursed) {
+      await db.query(`UPDATE expense.expense SET status = 'reimbursed', reimbursed = $2 WHERE id = $1`, [e.id, day(e.reimbursed)])
+    }
+  }
+  for (const p of read('graft.expense-transaction').posting ?? []) {
+    await db.query('INSERT INTO expense_transaction.posting (entry, expense, event) VALUES ($1, $2, $3)', [p.entry, p.expense, p.event])
   }
   if (expenses.length) {
     await db.query(`SELECT setval('expense.number', $1)`, [Math.max(...expenses.map((e) => Number(e.id.slice(3))))])

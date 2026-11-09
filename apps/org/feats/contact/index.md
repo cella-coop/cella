@@ -1,6 +1,6 @@
 +++
 title = "Contact"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 The organisations and people the co-op deals with: its CRM. Companies
@@ -73,7 +73,7 @@ ordered write's guard, so none of them waits.
 |---|---|---|
 | add, update | `edit-contact` | every member, through the `member` role's mandate |
 | archive | `edit-contact` | every member, through the `member` role's mandate |
-| erase | `erase-personal-data` | the gérante |
+| erase | `erase-personal-data` | the manager |
 
 `002-powers.sql` registers the power in `cella.power`, and the
 membership feat checks it as any other: a power every member holds is
@@ -142,10 +142,13 @@ later value for them refused.
 The `contacts` collection, archived ones left out, each with its client
 stage, blank for a contact that is no client. Its `Clients` view, beside
 `All`, keeps the contacts holding the role, a condition on `client` the
-address keeps (`/contacts?v=clients`). A contact's page shows its role
-and sets it (`update`, the `client` field alone, a stage or none), and
-edits its note (`update`, the note field alone). What a contact owes and
-the invoices that bill it are `contact-invoice`'s.
+address keeps (`/contacts?v=clients`). A contact's page, its
+header's crumb its id, its kind and form among its properties, shows its
+role and sets it (`update`, the `client` field alone, a stage or none),
+and edits its note (`update`, the note field alone). The data central to
+it is in tabs after the first: what it owes and the invoices that bill
+it, in Invoices (`contact-invoice`), and the projects it commissioned,
+in Projects (`contact-project`).
 
 ## Import
 

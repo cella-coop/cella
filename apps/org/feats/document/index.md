@@ -1,6 +1,6 @@
 +++
 title = "Document"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 The co-op's texts: statutes, internal rules, rate cards, policies and
@@ -353,7 +353,9 @@ since it), whether this member's edits are saved and that `/` adds a
 block, which an empty block it holds the caret in, and the last block
 when empty, also say; the draft's hash as the page was read is among
 its Properties. The header saves the draft as a version (`version`), and
-the page comments on one (`comment`). The server renders the draft read-only; the editor takes it
+the box under its Activity comments on one (`comment`), each comment
+in the Activity with what it quotes. Its saved versions, the data
+central to it, are the Versions tab after the draft. The server renders the draft read-only; the editor takes it
 over once the browser holds the Loro document. A generated document's
 page reads its draft without the editor or the header's Save, and says
 whose policies it is generated from.
@@ -434,7 +436,8 @@ a motion's page.
 ## Lanterne
 
 - The statutes are generated from the assembly's policies, around the
-  fixed text of a SCOP SARL à capital variable: `statutes@1`, adopted on
+  fixed text of a worker co-operative limited company with variable
+  capital: `statutes@1`, adopted on
   1 March 2021 with m-2021-001's procedures, mandates and rules, and
   `statutes@2`, on 20 June 2026, once m-2026-007 adopted the internal
   rules' five rules. The seed generates each and adopts it that day.
@@ -445,6 +448,10 @@ a motion's page.
   m-2026-011, adds online shops and raises brand identity to 6 500 €. The
   seed carries each version over as one Loro update from one peer,
   patching the outline onto the one before.
+- Each working circle keeps a working text of its own: Web's
+  accessibility checklist, embedding m-2026-017, Brand's print
+  specifications, Marketing's newsletter style guide, embedding
+  m-2026-015, and Operations' month-end close.
 - Malik commented on version 2's retainer price, asking whether Nuvola's
   renewal in January keeps the current rate; he objects to m-2026-011,
   which would adopt version 2, by its hash, open until 9 November.

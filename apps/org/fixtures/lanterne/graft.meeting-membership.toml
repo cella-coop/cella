@@ -1,7 +1,8 @@
 # Who came to each meeting held, as its secretary recorded it on the day:
-# Julien for the assembly, Malik for coordination. A member not seated in
-# the circle marks themselves and comes as a guest, as Léa did to present
-# the Halles shop's launch. The meetings still scheduled have no marks.
+# Julien for the assembly, Malik for coordination, and each working
+# circle's lead for its own. A member not seated in the circle marks
+# themselves and comes as a guest, as Léa did to present the Halles
+# shop's launch. The meetings still scheduled, or cancelled, have no marks.
 
 [[attendance]]
 meeting = "ag-2026-06-20"
@@ -60,3 +61,20 @@ excused = ["yusuf@lanterne.example"]
 meeting = "coordination-2026-10-19"
 by = "malik@lanterne.example"
 present = ["camille@lanterne.example", "yusuf@lanterne.example", "hugo@lanterne.example", "malik@lanterne.example", "julien@lanterne.example"]
+
+# The working circles' meetings, each marked by its lead.
+[[attendance]]
+meeting = "operations-2026-10-05"
+by = "julien@lanterne.example"
+present = ["julien@lanterne.example"]
+
+[[attendance]]
+meeting = "brand-2026-10-15"
+by = "hugo@lanterne.example"
+present = ["hugo@lanterne.example", "sofia@lanterne.example"]
+excused = ["camille@lanterne.example"]
+
+[[attendance]]
+meeting = "web-2026-10-20"
+by = "yusuf@lanterne.example"
+present = ["yusuf@lanterne.example", "lea@lanterne.example", "thomas@lanterne.example", "amina@lanterne.example"]

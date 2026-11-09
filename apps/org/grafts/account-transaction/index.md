@@ -1,6 +1,6 @@
 +++
 title = "account-transaction"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 A transaction's lines post to accounts. The graft resolves each line's
@@ -118,17 +118,21 @@ Adds each account's debits, credits and balance to the chart, from
 `account_transaction.balance`, with whether the whole trial balance agrees
 (`agrees`, the collection's `about`) as the collection's status, and the chart's dashboard: the debits, the
 credits, the cash the cash accounts hold and the balance by kind; an
-account's ledger, every line posted to it, to its page. The financial
+account's ledger, every line posted to it, to its page in a Ledger tab;
+and a period's entries, every entry dated in its month as its reader
+reads the journal, each with what it moved, to its page in an Entries
+tab. The financial
 statements are the `report` feat's.
 
 ## Lanterne
 
 July to September 2026 are closed; October to December are open. The
-seeded books give the bank, `512`, its one cash account, 39 296 € and
+seeded books give the bank, `512`, its one cash account, 39 190,40 € and
 clients 57 180 €. A post touching `512` is refused; Julien pays suppliers
 through pay. The statements: a loss of 22 860 € over the
 third quarter, which paid three months' wages against two quarters'
-invoices, and of 80 € over 2026 so far; a balance sheet of 97 080 €,
+invoices, and of 265 € over 2026 so far, after October's approved expenses; a
+balance sheet of 97 001,80 €,
 with the 2025 result of 61 400 € still to distribute.
 
 ## Analytics

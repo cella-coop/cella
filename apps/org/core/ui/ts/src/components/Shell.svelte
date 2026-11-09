@@ -8,7 +8,7 @@
   import CaretRight from 'phosphor-svelte/lib/CaretRight'
   import CaretUpDown from 'phosphor-svelte/lib/CaretUpDown'
   import Check from 'phosphor-svelte/lib/Check'
-  import type { Jump, Nav, Person } from '../models/view.ts'
+  import type { Jump, Nav, Person, Theme } from '../models/view.ts'
   import type { Outcome as Done } from '../models/outcome.ts'
   import { useShell } from '../hooks/useShell.ts'
   import Command from './Command.svelte'
@@ -16,6 +16,7 @@
   import Outcome from './Outcome.svelte'
   import Popover from './Popover.svelte'
   import { typing } from '../models/keys.ts'
+  import { worn } from '../models/theme.ts'
   import { TestTube } from '../icons.ts'
 
   // The shell: the sidebar and the content beside it; the last write's
@@ -34,6 +35,8 @@
     source,
     drawer,
     people,
+    circles = [],
+    lens = null,
     children,
   }: {
     // The co-op the shell serves: its address, name and legal name.
@@ -41,16 +44,20 @@
     nav: Nav
     actor: Person | null
     dev: boolean
-    theme: 'light' | 'dark' | 'system'
+    theme: Theme
     outcome: Done | null
     source: string
     drawer: boolean
     // The names of the people the co-op knows, by address.
     people: Record<string, string>
+    // The circles the member reads, those they sit in first, and the one
+    // they lensed the co-op on, if any.
+    circles?: { id: string; name: string; sits: boolean }[]
+    lens?: { id: string; name: string } | null
     children: Snippet
   } = $props()
 
-  const state = useShell(() => outcome, () => drawer, () => people)
+  const state = useShell(() => outcome, () => drawer, () => people, () => lens)
 
   function onkeydown(e: KeyboardEvent) {
     if (e.key !== ']' || e.metaKey || e.ctrlKey || e.altKey || typing(e) || document.querySelector('dialog[open]')) {
@@ -78,7 +85,8 @@
   const has = (group: string) => nav.some((g) => g.group === group)
   // The group the page is in: its section and group open by themselves.
   const held = $derived(nav.find((g) => g.items.some((i) => here(i.href) && i.href !== '/'))?.group)
-  // A group's collections by subgroup, in the order each first appears;
+  // A group's collections by subgroup, in the order each first appears,
+  // Settings' in its areas' order;
   // labelled only where there is more than one.
   const parts = (group: string) => {
     const by = new Map<string, Nav[number]['items']>()
@@ -86,14 +94,19 @@
       const key = item.subgroup ?? ''
       by.set(key, [...(by.get(key) ?? []), item])
     }
-    return [...by].map(([sub, items]) => ({ sub, items }))
+    const parted = [...by].map(([sub, items]) => ({ sub, items }))
+    return group === 'platform' ? parted.sort((a, b) => areas.indexOf(a.sub) - areas.indexOf(b.sub)) : parted
   }
   // Settings is its own sidebar, in place of the sections, while a page
-  // of it is open; the account and co-op menus lead into it.
+  // of it is open: the member's own pages, then the co-op's. The account
+  // menu leads into it at Personal, the co-op menu at Organization.
+  const areas = ['Personal', 'Organization']
   const settings = $derived(held === 'platform')
-  const first = $derived(parts('platform')[0]?.items[0]?.href)
+  const opens = (area: string) => (parts('platform').find((p) => p.sub === area) ?? parts('platform')[0])?.items[0]?.href
+  const personal = $derived(opens('Personal'))
+  const organization = $derived(opens('Organization'))
   state.follow(() => back, () => settings)
-  const waiting = (group: string) => nav.find((g) => g.group === group)?.items.reduce((n, i) => n + (i.count ?? 0), 0) ?? 0
+  const waiting = (group: string) => nav.find((g) => g.group === group)?.items.reduce((n, i) => n + (i.waiting ?? i.count ?? 0), 0) ?? 0
 </script>
 
 <svelte:window {onkeydown} />
@@ -116,7 +129,7 @@
   {/each}
 {/snippet}
 
-<div class="shell">
+<div class="shell" {@attach worn(theme)}>
   <nav class="sidebar" aria-label="Main">
     {#if settings}
     <div class="top">
@@ -129,10 +142,10 @@
     {:else}
     <div class="top">
     <div class="coop">
-      <Popover label="Co-op: {scope.name}">
+      <Popover label="Co-op: {scope.name}{lens ? ` / ${lens.name}` : ''}">
         {#snippet trigger()}
           <span class="mark" aria-hidden="true">{scope.name.slice(0, 1).toUpperCase()}</span>
-          <b class="name">{scope.name}</b>
+          <b class="name">{scope.name}{#if lens}<span class="lensed"> / {lens.name}</span>{/if}</b>
           <Icon icon={CaretUpDown} size="0.9em" />
         {/snippet}
         <button role="menuitemradio" aria-checked="true" class="item">
@@ -143,7 +156,24 @@
           </span>
           <Icon icon={Check} />
         </button>
-        {#if first}<a class="item" role="menuitem" href={first}>Settings</a>{/if}
+        {#if circles.length}
+          <!-- The circles: the one chosen is the member's lens, which every
+               collection reads through; All circles clears it. -->
+          <p class="label">Circles</p>
+          <form method="post" action="/lens" class="list" role="group" aria-label="Circles">
+            <input type="hidden" name="back" value={back} />
+            <button role="menuitemradio" aria-checked={!lens} class="item" name="lens" value="">
+              All circles{#if !lens}<Icon icon={Check} />{/if}
+            </button>
+            {#each circles as c, i (c.id)}
+              {#if i > 0 && !c.sits && circles[i - 1]?.sits}<hr />{/if}
+              <button role="menuitemradio" aria-checked={lens?.id === c.id} class="item" name="lens" value={c.id}>
+                {c.name}{#if lens?.id === c.id}<Icon icon={Check} />{/if}
+              </button>
+            {/each}
+          </form>
+        {/if}
+        {#if organization}<a class="item" role="menuitem" href={organization}>Settings</a>{/if}
       </Popover>
     </div>
 
@@ -191,7 +221,7 @@
           <p class="label">Signed in</p>
           <p class="hint">{actor.address}, on this device</p>
           <div class="list">
-            {#if first}<a class="item" role="menuitem" href={first}>Settings</a>{/if}
+            {#if personal}<a class="item" role="menuitem" href={personal}>Settings</a>{/if}
             <form method="post" action="/sign-out" class="list">
               <button class="item">Sign out</button>
             </form>
@@ -372,6 +402,9 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .lensed {
+    color: var(--text-muted);
+  }
   .names {
     display: grid;
     flex: 1;
@@ -394,6 +427,11 @@
   }
   .list {
     display: grid;
+  }
+  .list hr {
+    margin: var(--space-1) var(--space-2);
+    border: none;
+    border-top: 1px solid var(--line);
   }
   .item,
   .themes button {

@@ -1,6 +1,6 @@
 +++
 title = "Timesheet"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 Time worked, by worker and day, member or not, and each worker's
@@ -56,7 +56,7 @@ the approval updates it, so Postgres serialises them.
 | Power | Lanterne |
 |---|---|
 | `log-time` | every employee, by their right, member or not |
-| `approve-time` | the circle leads, finance and the gérante |
+| `approve-time` | the circle leads, finance and the manager |
 
 Logging, correcting and submitting are also the member's own
 (`timesheet.logs`, `timesheet.corrects`, `timesheet.submits`), and
@@ -150,8 +150,9 @@ by the worker among the circles they sit in, and its hours log in that
 circle's month: a project's row offers the project's circle first where
 the worker sits in it, and the co-op's own time the root's, so time
 logged from the shell lands in the month of the circle it was worked
-for and is approved by whoever holds `approve-time` over that circle. An entry's page shows its worker's month and, in its
-header, lets its worker correct the entry's hours down while the month is not approved,
+for and is approved by whoever holds `approve-time` over that circle. An entry's page is titled by its note, or without one its hours and day,
+its header's crumb its id, and its Month tab shows its worker's month; in its
+header, it lets its worker correct the entry's hours down while the month is not approved,
 and submits the entry's month, its circle's, while open or approves it
 once submitted; a person's page lists their months, a row for each
 circle's, with the same writes (`employment-timesheet`).
@@ -162,11 +163,14 @@ Timesheets began on 1 September 2026. Every worker logs seven hours a
 working day, the 35-hour week of the internal rules, under a third of it
 billable, in line with what the invoices bill at the 80 € hourly rate.
 Each works for one circle, so each has one month a month, which the
-fixture names with its circle as it names their entries'.
+fixture names with its circle as it names their entries', but for the
+last week of October, when Camille gives part of hers to coordination
+and the assembly and Julien an hour a day to the assembly's accounts.
 September is submitted by everyone and approved: each lead approved their
 circle's, Julien in finance the leads and Inès, who is no member yet
-and sits in Web, and Camille as gérante Julien. Inès logs hers by her
-right as every worker does. October is open.
+and sits in Web, and Camille as manager Julien. Inès logs hers by her
+right as every worker does. October is open, but for Sofia's, submitted
+early for Hugo to approve.
 
 ## Analytics
 

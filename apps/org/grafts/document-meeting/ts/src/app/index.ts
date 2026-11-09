@@ -25,17 +25,17 @@ function stands(d: OnMeeting): string {
   return m.latest ? `version ${n(m.latest)}` : 'draft'
 }
 
-// The graft's client side: a meeting's minutes in a tab of its own, read
-// as the document is, and the meeting card the minutes open with; on a
-// document's page, the meeting it minutes.
+// The graft's client side: a meeting's minutes as its page's content,
+// read as the document is, its agenda in the tab after them, and the
+// meeting card the minutes open with; on a document's page, the meeting
+// it minutes.
 export const app: App = {
   name: 'document-meeting',
   extends: {
     meetings: {
       page: {
         properties: (d: OnMeeting) => [{ label: 'Minutes', value: stands(d), href: d.minutes ? `/documents/${d.minutes.document}` : undefined }],
-        tabs: [{ id: 'minutes', label: 'Minutes' }],
-        blocks: [{ tab: 'minutes', block: Minutes }],
+        blocks: [Minutes],
         embeds: { meeting },
       },
     },

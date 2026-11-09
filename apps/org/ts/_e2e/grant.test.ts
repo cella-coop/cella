@@ -15,7 +15,9 @@
 // the revocation's page shows what it revoked; `SHOTS` names where its
 // screenshots go. Run by `cella test e2e grant`.
 
-import { after, before, test } from 'node:test'
+import { test as runTest } from 'node:test'
+import { createStory } from './story.ts'
+export const { before, after, test, unseeded, story } = createStory()
 import { mkdirSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import pg from 'pg'
@@ -164,7 +166,7 @@ test('from coordination\'s page, the assembly revoking coordination\'s send-quot
   assert.deepEqual(await all('SELECT closed, revokes::text[] FROM motion.issues($1)', [m.id]), [{ closed: true, revokes: [up.id, down.id] }])
 })
 
-test('in every browser, light and dark, Operations\' page refuses a grant wider than its parent before proposing it, and the revocation\'s page shows what it revoked', async () => {
+unseeded('in every browser, light and dark, Operations\' page refuses a grant wider than its parent before proposing it, and the revocation\'s page shows what it revoked', async () => {
   // The assembly grants coordination send-quote again, so a grant under it
   // has a parent to be wider than.
   const again = await decided(
@@ -207,7 +209,7 @@ test('in every browser, light and dark, Operations\' page refuses a grant wider 
         assert.match((await refusal.textContent()) ?? '', new RegExp(`mandate ${parent.id}, the send-quote coordination holds to issue it under: its cap, up to 20000\\.00 € a write, is wider than its parent's, up to 15000\\.00 € a write`))
         await page.screenshot({ path: `${shots}/refused-${engine}-${scheme}.png`, fullPage: true })
 
-        await page.goto(`${dev.base}/motions/${revoking}`)
+        await page.goto(`${dev.base}/motions/${revoking}?tab=effects`)
         await page.waitForLoadState('networkidle')
         const section = page.locator('section', { has: page.getByRole('heading', { name: 'Mandates' }) })
         assert.match((await section.textContent()) ?? '', /Action 1 revoked 2 mandates the same day, the one it ends and every one issued under it\./)
@@ -228,3 +230,5 @@ test('in every browser, light and dark, Operations\' page refuses a grant wider 
 test('the log verifies', async () => {
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
 })
+
+if (!process.env.CELLA_STORY) runTest('grant story', async (t) => story((name, step) => t.test(name, step)))

@@ -22,7 +22,8 @@ mod vault;
 /// opens by taking the tests' advisory lock, shared or, alone, exclusive.
 #[cfg(test)]
 pub mod pg_test {
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
+    use std::sync::atomic::{AtomicU64, Ordering};
 
     fn dir() -> PathBuf {
         std::env::var_os("CELLA_NOTARY_TEST").map_or_else(
@@ -31,13 +32,22 @@ pub mod pg_test {
         )
     }
 
+    /// Runs on every test thread before the tests' lock is taken, so each
+    /// key file is written whole to a file of this thread's own and renamed
+    /// over the last: a test beside it never reads one empty or short.
     pub fn setup(_options: Vec<&str>) {
         let dir = dir();
         std::fs::create_dir_all(&dir).expect("the test directory");
-        std::fs::write(dir.join("notary.key"), crate::tests::NOTARY_SEED)
-            .expect("the notary's key file");
-        std::fs::write(dir.join("vault.key"), crate::tests::VAULT_KEY)
-            .expect("the vault's key file");
+        write_whole(&dir, "notary.key", &crate::tests::NOTARY_SEED);
+        write_whole(&dir, "vault.key", &crate::tests::VAULT_KEY);
+    }
+
+    fn write_whole(dir: &Path, name: &str, bytes: &[u8]) {
+        static NEXT: AtomicU64 = AtomicU64::new(0);
+        let n = NEXT.fetch_add(1, Ordering::Relaxed);
+        let part = dir.join(format!(".{name}.{}.{n}", std::process::id()));
+        std::fs::write(&part, bytes).unwrap_or_else(|e| panic!("the {name} file: {e}"));
+        std::fs::rename(&part, dir.join(name)).unwrap_or_else(|e| panic!("the {name} file: {e}"));
     }
 
     pub fn postgresql_conf_options() -> Vec<&'static str> {

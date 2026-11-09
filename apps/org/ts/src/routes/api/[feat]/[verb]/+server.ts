@@ -1,4 +1,5 @@
-import { called, reply } from '#lib/server/api.ts'
+import { called, fetched, reply } from '#lib/server/api.ts'
+import { item } from '#lib/server/calls.ts'
 import { commands } from '#lib/server/slices.ts'
 import { failed, owner, perform, relayed } from '#lib/server/write.ts'
 import type { RequestHandler } from './$types'
@@ -44,3 +45,10 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
   }
   return reply(await perform(who, form.action, given.fields, given.id))
 }
+
+// An item over HTTP, at `/api/<collection>/<id>`, which shares the
+// command's shape and differs by method: the query the item's page reads,
+// each extension's data on it, as JSON, the query string what the page's
+// address takes.
+export const GET: RequestHandler = ({ params, url, locals, cookies }) =>
+  fetched(item, { name: params.feat, id: params.verb, search: url.search }, locals, cookies)

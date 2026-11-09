@@ -213,9 +213,17 @@ export interface Importer {
   read(text: string, db: Db): Promise<Imported[]>
 }
 
+// A settings page a slice serves at `/settings/<name>`: what it reads for
+// the acting person, as their own name and devices, and the writes that
+// save it, as a collection's page makes them.
+export interface SettingsPage {
+  read(db: Db, actor: string): Promise<unknown | null>
+  actions?: Record<string, Action>
+}
+
 // A slice's server side, which the root mounts: the collections it owns,
 // what it adds to the collections of the feats it joins or nests in, its reactions,
-// and the kinds of file it imports.
+// the kinds of file it imports, and the settings pages it serves.
 export interface Slice {
   // The feat's or graft's name, or `<name>/<part>` for one part of a
   // slice mounted in parts, as a feat a graft of the circles dissolved
@@ -231,4 +239,5 @@ export interface Slice {
   extends?: Record<string, Extension>
   on?: Partial<Record<Permission, Reaction>>
   imports?: Record<string, Importer>
+  settings?: Record<string, SettingsPage>
 }

@@ -960,7 +960,9 @@ two halves of one **slice**, matched by name:
   motion carries in its close's; and the kinds of file
   it imports from other tools (`imports`), each record read as one of its
   own writes, which the root runs as the importing member and records in
-  the import feat.
+  the import feat; and the settings pages it serves (`settings`), each
+  what it reads for the acting person and the writes that save it, as
+  the person feat's Account.
 - from `./app`, its client side (`App` in `@cella/org-ui`): for each
   collection it owns, a view (its columns, its New form, the status
   badge its header shows and its dashboard's widgets) and a page (its title, its Properties, Related and Activity cards, its
@@ -968,7 +970,10 @@ two halves of one **slice**, matched by name:
   over the fields it adds, cards and blocks over its data on an item,
   and a New form for a write of its own, replacing the owner's, or, where
   several slices offer one, beside the others under its title, as the
-  people collection takes membership's invitation and employment's hire.
+  people collection takes membership's invitation and employment's hire;
+  and for each settings page it serves, its title, its icon, the group
+  of Settings it sits in, Personal or Organization, and the block that
+  draws it.
 
 The root lists the slices, server and client, and mounts them on
 routes that are the same for every collection: `/[collection]`, the one collection
@@ -981,7 +986,9 @@ bytes, such as a file's, which the collection's owner serves (`content`)
 to whom its guard or an extension's `allows` opens them; `/sign-in`,
 `/session`, the challenge and the device's answer to it, and
 `/sign-out`; `/join/[secret]`, an invitation's link, taken up through
-membership's `accept`; `/theme` for the user menu; `/lens` for the co-op selector's circles; `/journal`, the transactions' old address,
+membership's `accept`; `/settings/[page]`, a settings page a slice
+serves, with its writes and `theme`, which saves the theme as `/theme`
+does; `/theme` for the user menu; `/lens` for the co-op selector's circles; `/journal`, the transactions' old address,
 which redirects to them; `/specimens/settings`, on the dev server alone, a
 settings form of no slice for the browser test to see
 ([settings](../../apps/org/core/ui/index.md#settings)); and `/`, which lands a member in their Inbox until the co-op has a

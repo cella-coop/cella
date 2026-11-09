@@ -357,7 +357,8 @@ two kinds, `/specimens/settings`, a page of no slice that reads nothing
 and has no actions, for the browser test to see the dialog on.
 
 A field the reader may change saves by its write, and the form shows
-the outcome as any `Form` does. A field they may not change, since its
+the outcome as any `Form` does: the last write's that names one, as
+the theme's cookie names none. A field they may not change, since its
 write needs a mandate they lack, or since only a motion changes it,
 does not save: Save opens `ProposeInstead`, a dialog in the top layer
 as `Popover` is, which says why in the guard's own words, the refusal
@@ -373,6 +374,15 @@ log entry that proposes the
 motion. Closing the dialog keeps what was typed, and the field marks
 the change as not saved. A form whose fields mix the two saves the one
 kind and offers the motion for the other, in one go.
+
+The Settings section opens on Account, the acting person's own
+settings at `/settings/account`, which the account menu at the
+sidebar's foot links to as well: a `Settings` form of their name, email
+and phone, each saved by `profile`, every person's right on their own,
+and their theme, light, dark or the system's, saved in its cookie and worn at once; and
+under it their devices, the one their session signs with marked as this
+device and each other current one with its revoke, as on their page.
+Its fields are all the reader's own, so none opens a motion.
 
 ## Posting a write
 

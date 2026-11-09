@@ -1,4 +1,4 @@
-import type { Action, Collection, Deps, Done, Extension, Reaction, Slice, Source } from '@cella/org-db'
+import type { Action, Collection, Deps, Done, Extension, Reaction, SettingsPage, Slice, Source } from '@cella/org-db'
 import type { Permission } from '@cella/org-actions'
 import { slice as log } from '@cella/org-log/api'
 import { slice as person } from '@cella/org-person/api'
@@ -263,3 +263,20 @@ export function source(name: string, lens: string | null = null): Source | undef
     lens: name === 'inbox' ? null : lens,
   }
 }
+
+// The settings pages the slices serve, by the name in their address, and
+// the writes each saves by.
+const pages = new Map<string, SettingsPage>()
+for (const s of slices) {
+  for (const [name, page] of Object.entries(s.settings ?? {})) {
+    if (pages.has(name)) {
+      throw new Error(`two slices serve the settings page ${name}`)
+    }
+    pages.set(name, page)
+  }
+}
+
+export const setting = (name: string) => pages.get(name)
+
+// Every settings page's write name, for the settings route's action table.
+export const saves = [...new Set([...pages.values()].flatMap((p) => Object.keys(p.actions ?? {})))]

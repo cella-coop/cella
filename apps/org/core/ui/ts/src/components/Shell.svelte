@@ -8,7 +8,7 @@
   import CaretRight from 'phosphor-svelte/lib/CaretRight'
   import CaretUpDown from 'phosphor-svelte/lib/CaretUpDown'
   import Check from 'phosphor-svelte/lib/Check'
-  import type { Jump, Nav, Person } from '../models/view.ts'
+  import type { Jump, Nav, Person, Theme } from '../models/view.ts'
   import type { Outcome as Done } from '../models/outcome.ts'
   import { useShell } from '../hooks/useShell.ts'
   import Command from './Command.svelte'
@@ -16,6 +16,7 @@
   import Outcome from './Outcome.svelte'
   import Popover from './Popover.svelte'
   import { typing } from '../models/keys.ts'
+  import { worn } from '../models/theme.ts'
   import { TestTube } from '../icons.ts'
 
   // The shell: the sidebar and the content beside it; the last write's
@@ -43,7 +44,7 @@
     nav: Nav
     actor: Person | null
     dev: boolean
-    theme: 'light' | 'dark' | 'system'
+    theme: Theme
     outcome: Done | null
     source: string
     drawer: boolean
@@ -128,7 +129,7 @@
   {/each}
 {/snippet}
 
-<div class="shell">
+<div class="shell" {@attach worn(theme)}>
   <nav class="sidebar" aria-label="Main">
     {#if settings}
     <div class="top">

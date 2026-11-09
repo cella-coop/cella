@@ -1,4 +1,4 @@
-import { type Added, type App, type Column, type Look, type Nav, type Owned, type Preset, type Shift, type Widget } from '@cella/org-ui'
+import { type Added, type App, type Column, type Look, type Nav, type Owned, type Preset, type SettingsPage, type Shift, type Widget } from '@cella/org-ui'
 import { presets } from '@cella/org-ui/models'
 import { app as log } from '@cella/org-log/app'
 import { app as person } from '@cella/org-person/app'
@@ -184,7 +184,8 @@ export const views = (name: string): Preset[] =>
 const order = ['home', 'governance', 'office', 'work', 'payments', 'ledger', 'equity', 'platform']
 
 // The sidebar's sections: what waits on the acting member, then each
-// section's collections, of which the sidebar shows one at a time.
+// section's collections, of which the sidebar shows one at a time, and
+// Settings' pages, each first in its group, before its collections.
 // `counts` are the counted collections' rows for the acting member, by
 // address, in the lensed circle where there is a lens; `waiting`, all of
 // them whatever the lens.
@@ -193,6 +194,9 @@ export const nav = (counts: Record<string, number> = {}, waiting: Record<string,
     .map((group) => ({
       group,
       items: [
+        ...(group === 'platform'
+          ? apps.flatMap((a) => Object.entries(a.settings ?? {}).map(([name, s]) => ({ href: `/settings/${name}`, title: s.title, icon: s.icon, subgroup: s.subgroup })))
+          : []),
         ...apps.flatMap((a) =>
           Object.entries(a.collections ?? {})
             .filter(([, c]) => c.view.group === group)
@@ -205,3 +209,6 @@ export const nav = (counts: Record<string, number> = {}, waiting: Record<string,
 // The collections the sidebar counts for the acting member.
 export const counted = (): string[] =>
   apps.flatMap((a) => Object.entries(a.collections ?? {}).flatMap(([name, c]) => (c.view.counted ? [name] : [])))
+
+// A settings page, by the name in its address.
+export const settings = (name: string): SettingsPage | undefined => apps.find((a) => a.settings?.[name])?.settings?.[name]

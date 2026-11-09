@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 # Architecture
@@ -982,7 +982,9 @@ to whom its guard or an extension's `allows` opens them; `/sign-in`,
 `/session`, the challenge and the device's answer to it, and
 `/sign-out`; `/join/[secret]`, an invitation's link, taken up through
 membership's `accept`; `/theme` for the user menu; `/lens` for the co-op selector's circles; `/journal`, the transactions' old address,
-which redirects to them; and `/`, which lands a member in their Inbox until the co-op has a
+which redirects to them; `/specimens/settings`, on the dev server alone, a
+settings form of no slice for the browser test to see
+([settings](../../apps/org/core/ui/index.md#settings)); and `/`, which lands a member in their Inbox until the co-op has a
 first page of its own. A collection's owner is a feat,
 or a core library, the log or the circles. A graft extends only a collection of a feat it
 joins, or of a feat one of them nests in, and a nested feat its parent's,

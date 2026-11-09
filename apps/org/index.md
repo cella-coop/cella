@@ -1,26 +1,53 @@
 +++
 title = "Org"
-updated = 2026-11-09
+updated = 2026-11-13
 +++
 
 The cooperative workspace, for member-governed organisations. One deployment
 serves one scope: a co-op, a joint circle of co-ops, or a federation.
 
-- `core/` is what every feat inherits, one library each: `actions` (action
-  labels, permissions, outcomes), `crypto`, `log`, `keystore`, `guards` (the pure
-  guard primitives), `notary` (the `cella` Postgres extension over them),
-  `db` (a write's transaction and a slice's server side), `sign` (a
-  device's signature on a write), `analytics` (the port reports are read
-  through, [its doc](core/analytics/index.md)) and `ui` (the shell's
-  tokens and components, [its doc](core/ui/index.md)).
-- `feats/` holds one domain each; none imports another.
-- `grafts/` joins feats, through their cores.
+Org is an app, the root node of a tree built by the six axioms of
+[architecture](../../_corpus/doc/architecture.md#the-axioms): a node is
+a core, which cannot be removed, the feats on it and the grafts that
+own the relationships between them. Every slice, a feat or a graft,
+owns its schema; a slice depends only on the cores of its lineage, and
+a graft on the feats it joins and the lower-order grafts at or below
+its node; every write is a command the notary logs, with a power and
+a fold; and other slices use only a slice's contract, while only
+shells import its app. Its tree today:
+
+- `core/` is org's core, never removed. Its **libs** hold shared code
+  and no data: `actions` (the commands' labels, permissions and
+  outcomes, by the code's name), `body` (a record's blocks and the block
+  editor), `crypto`, `log`, `keystore`, `guards` (the pure guard
+  primitives), `db` (a command's transaction and a slice's server side),
+  `sign` (a device's signature on a command), `vat`, `pdf` and `ui`
+  (the shell's tokens and components, [its doc](core/ui/index.md)).
+  `notary` is the layer under every slice, the `cella` Postgres
+  extension over them. Its **core feats** each own a schema: `circle`,
+  `person`, `policy` and `analytics` (the port reports are read
+  through, [its doc](core/analytics/index.md)); no core feat uses
+  another, and the **core grafts** in `core/grafts/`, `circle-person`
+  and `circle-policy`, join those that meet.
+- `feats/` holds the feats on org's node, one domain each; none imports
+  another, and each can be removed with its subtree and the grafts that
+  join it.
+- `grafts/` holds the grafts joining them, each in the lowest node that
+  holds all its feats.
 - `rs/` is `cella`, the CLI that runs every development and production
   task ([its doc](rs/index.md)).
-- `ts/` is the shell, the SvelteKit 3 app that mounts every slice.
+- `ts/` is the web shell, the SvelteKit 3 app that mounts every slice
+  and serves its calls.
 - The analytics shell, a DuckDB 2.0 server that `cella analytics` runs
   beside Postgres, reads the views the slices publish for every report
   ([architecture](../../_corpus/doc/architecture.md#the-analytics-shell)).
+
+That tree is today's. The axioms' target, which [the target
+tree](../../_corpus/doc/architecture.md#the-target-tree) maps path by
+path, lays core out as a node, `core/libs/`, `core/feats/` and
+`core/grafts/`; a leaf feat's folders as its layers; and the shells
+under `shells/`, `ts/` as `shells/web/`, `rs/` as `shells/cli/` and the
+analytics shell as `shells/analytics/`.
 
 ## The shell
 

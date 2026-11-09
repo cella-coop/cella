@@ -1,6 +1,6 @@
 +++
 title = "Conflicts"
-updated = 2026-11-06
+updated = 2026-11-11
 +++
 
 # Conflicts
@@ -239,7 +239,7 @@ d-2026-012. Inès is not on its roll: her admission is what it decides.
 
 ## A mandate's limit
 
-Owner: the membership feat, through `membership.may(actor, power,
+Owner: the membership feat, through `circle_person.may(actor, power,
 cents, about, day)`, which reads mandates (the `circle` feat's), seats (its own)
 and whether the member is active (the `membership` feat's). It spans every
 feat that spends, but org's core may read no feat's schema; each feat
@@ -479,7 +479,7 @@ undone, which its outcome shows.
 ## A mandate covers what its scope names
 
 Owners: the membership feat for what a mandate covers
-(`membership.may`, reading its scope against the circle a write's
+(`circle_person.may`, reading its scope against the circle a write's
 payload names); the feat whose record a write concerns for naming its
 circle.
 

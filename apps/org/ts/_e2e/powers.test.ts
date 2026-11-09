@@ -1,6 +1,6 @@
 // A person's powers, end to end on a seeded Lanterne, through the driver
 // and the built shell: for every person and every power, the Powers tab
-// lists a line exactly where `membership.may` or `membership.entitled`
+// lists a line exactly where `circle_person.may` or `circle_person.entitled`
 // grants it on the verdict date, each read signed in as the person whose
 // page it is. Camille's tab names the manager's tenure,
 // 2024 to 2028, and its 20 000 € commit; Hugo's, Brand's lead, the lead's
@@ -68,7 +68,7 @@ test('for every person and every power, their own tab lists a line exactly where
     const by = new Set(listed.map((p) => p.power))
     for (const power of powers) {
       const granted = (await all<{ g: boolean }>(
-        'SELECT membership.may($1, $2, NULL, NULL, $3) OR membership.entitled($1, $2, NULL, $3) AS g',
+        'SELECT circle_person.may($1, $2, NULL, NULL, $3) OR circle_person.entitled($1, $2, NULL, $3) AS g',
         [person, power, day],
       ))[0].g
       assert.equal(by.has(power), granted, `${person} ${power}`)

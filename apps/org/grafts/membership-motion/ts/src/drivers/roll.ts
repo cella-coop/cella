@@ -3,10 +3,10 @@ import { stances, type Stance } from '@cella/org-motion/models'
 import type { Roll, Voter } from '../models/roll.ts'
 
 // A motion's state, in SQL over `d`: open until its close, then passed
-// or rejected as `membership_motion.tally` reads the stances the
+// or rejected as `motion.tally` reads the stances the
 // close froze.
 const state = `CASE WHEN d.closed IS NULL THEN 'open'
-                    WHEN (membership_motion.tally(d.id)).passes THEN 'passed'
+                    WHEN (motion.tally(d.id)).passes THEN 'passed'
                     ELSE 'rejected' END`
 
 // A motion's roll, each member's latest stance before its cutoff, none
@@ -22,7 +22,7 @@ export async function roll(db: Db, motion: string, actor: string | null = null):
                               'quorum', json_build_array(p.quorum_num, p.quorum_den)) AS turnout
      FROM motion.motion d
      JOIN motion.procedure p ON p.id = d.procedure
-     CROSS JOIN LATERAL membership_motion.tally(d.id) t
+     CROSS JOIN LATERAL motion.tally(d.id) t
      WHERE d.id = $1`,
     [motion],
   )
@@ -32,8 +32,8 @@ export async function roll(db: Db, motion: string, actor: string | null = null):
   }
   const voters = await db.query<Voter>(
     `SELECT r.member AS id, r.member, mp.name, v.stance, v.receipt::int AS receipt,
-            EXISTS (SELECT FROM membership_motion.counted c WHERE c.motion = r.motion AND c.member = r.member) AS counted
-     FROM membership_motion.roll r
+            EXISTS (SELECT FROM motion.counted c WHERE c.motion = r.motion AND c.member = r.member) AS counted
+     FROM motion.roll r
      JOIN motion.motion d ON d.id = r.motion
      LEFT JOIN person.person mp ON mp.address = r.member
      LEFT JOIN LATERAL (
@@ -56,7 +56,7 @@ export async function roll(db: Db, motion: string, actor: string | null = null):
       )
     : null
   const seated = actor
-    ? (await db.query(`SELECT FROM membership_motion.roll WHERE motion = $1 AND member = $2`, [motion, actor])).rowCount
+    ? (await db.query(`SELECT FROM motion.roll WHERE motion = $1 AND member = $2`, [motion, actor])).rowCount
     : 0
   return {
     ...d,
@@ -78,8 +78,8 @@ export const turnout = `SELECT d.id, ${state} AS state,
   LEFT JOIN (
     SELECT r.motion, count(*)::int AS roll,
            count(*) FILTER (WHERE EXISTS (SELECT FROM motion.vote v WHERE v.motion = r.motion AND v.member = r.member))::int AS given
-    FROM membership_motion.roll r GROUP BY r.motion
+    FROM motion.roll r GROUP BY r.motion
   ) t ON t.motion = d.id
   LEFT JOIN LATERAL (
-    SELECT s.given, s.counted FROM membership_motion.tally(d.id) s WHERE d.ballot = 'secret' AND d.closed IS NOT NULL
+    SELECT s.given, s.counted FROM motion.tally(d.id) s WHERE d.ballot = 'secret' AND d.closed IS NOT NULL
   ) x ON true`

@@ -1,16 +1,16 @@
 +++
 title = "membership-payslip"
-updated = 2026-11-04
+updated = 2026-11-11
 +++
 
 Who a pay run waits on. Approving and paying a run need powers, which
 mandates on circles' roles grant to the members seated in them, as the
-membership feat's `membership.may` says, so the pay runs waiting on a
+core's `circle_person.may` says, so the pay runs waiting on a
 member join the two feats. Declared by `payslip`.
 
 ## Schema
 
-None of its own: it reads `membership.may` and the payslip feat's runs.
+None of its own: it reads `circle_person.may` and the payslip feat's runs.
 
 ## Shell
 

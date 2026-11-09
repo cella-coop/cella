@@ -60,8 +60,8 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
   assert.equal(out.state, 'settled', reason(out))
   return out.value as T
 }
-const passes = async (d: string) => (await one<{ p: boolean }>('SELECT membership_motion.passes($1) AS p', [d])).p
-const turnout = async (d: string) => one('SELECT counted, given, quorate FROM membership_motion.turnout($1)', [d])
+const passes = async (d: string) => (await one<{ p: boolean }>('SELECT motion.passes($1) AS p', [d])).p
+const turnout = async (d: string) => one('SELECT counted, given, quorate FROM motion.turnout($1)', [d])
 // A page as text, its tags gone.
 const read = async (path: string, actor?: string) => {
   const { status, text } = await shell.page(path, actor)

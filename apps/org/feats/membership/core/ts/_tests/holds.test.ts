@@ -1,8 +1,8 @@
 // The mandates a person holds by their seats, on a database holding the
 // app's core, its circles, and the person and membership feats:
-// `membership.holds` gives every seat that counts and has begun its
+// `circle_person.holds` gives every seat that counts and has begun its
 // role's mandates and the participant's, once for each circle the person
-// sits in, and `membership.may` grants a power exactly where it lists a
+// sits in, and `circle_person.may` grants a power exactly where it lists a
 // mandate for it. Run by `cella test slice membership`.
 
 import { after, before, test } from 'node:test'
@@ -20,7 +20,7 @@ let root = ''
 type Held = { power: string; grantee: string; circle: string }
 const holds = async (person: string) =>
   (await db.query<Held>(
-    `SELECT m.power, m.grantee, h.circle FROM membership.holds($1, $2) h JOIN circle.mandate m ON m.id = h.mandate
+    `SELECT m.power, m.grantee, h.circle FROM circle_person.holds($1, $2) h JOIN circle.mandate m ON m.id = h.mandate
      ORDER BY h.circle, m.grantee, m.power`,
     [person, day],
   )).rows
@@ -89,7 +89,7 @@ test('may grants a power exactly where holds lists a mandate for it', async () =
   for (const person of [ines, chloe, paul, lea]) {
     const held = new Set((await holds(person)).map((h) => h.power))
     for (const power of powers) {
-      const { rows } = await db.query<{ may: boolean }>('SELECT membership.may($1, $2, NULL, NULL, $3) AS may', [person, power, day])
+      const { rows } = await db.query<{ may: boolean }>('SELECT circle_person.may($1, $2, NULL, NULL, $3) AS may', [person, power, day])
       assert.equal(rows[0].may, held.has(power), `${person} ${power}`)
     }
   }

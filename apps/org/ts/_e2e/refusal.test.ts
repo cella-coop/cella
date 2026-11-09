@@ -90,7 +90,7 @@ test('suspended: Thomas, suspended, marks a client, and the page says his mandat
   await su.query(`UPDATE membership.member SET status = 'suspended', suspended = '2026-10-20' WHERE address = $1`, [thomas])
   try {
     const reason = refused(await shell.act('/contacts/halles-roux', 'client', { client: 'lead' }, thomas))
-    assert.match(reason, /^the actor holds no mandate for [a-z-]+, their membership being suspended: mandate \d+ grants it to [a-z-]+ in [a-z-]+ for an active member alone, and an active membership would allow it$/)
+    assert.match(reason, /^the actor holds no mandate for [a-z-]+: mandate \d+ grants it to [a-z-]+ in [a-z-]+, on a seat that does not count there: (its seats are its active members', their membership being suspended|membership has suspended them or let them go); a seat that counts would allow it$/)
   } finally {
     await su.query(`UPDATE membership.member SET status = 'active', suspended = NULL WHERE address = $1`, [thomas])
     await su.query('SET cella.unbound = off')
@@ -108,7 +108,7 @@ test('revoked: once the leads\' set-budget is revoked by motion, Yusuf\'s own pr
   const put = await shell.act('/circles/web', 'put', { kind: 'revoke', 'arg.policy': policy, deadline: '2026-11-16' }, camille)
   assert.equal(put.state, 'settled', put.reason)
   const { motion } = await one<{ motion: string }>('SELECT id AS motion FROM motion.motion ORDER BY id DESC LIMIT 1')
-  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1 AND member <> $2', [motion, chloe])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1 AND member <> $2', [motion, chloe])) {
     assert.equal((await vote({ motion, member, stance: 'consent' }, as(member))).state, 'settled')
   }
   await on('2026-11-16')

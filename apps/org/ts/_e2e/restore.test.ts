@@ -291,7 +291,7 @@ async function excluded(member: string, until: string) {
   const { motion } = (proposed as { value: { motion: string } }).value
   const roll = (
     await su.query<{ member: string }>(
-      `SELECT r.member FROM membership_motion.roll r JOIN membership.member m ON m.address = r.member
+      `SELECT r.member FROM motion.roll r JOIN membership.member m ON m.address = r.member
        WHERE r.motion = $1 AND m.status = 'active'`,
       [motion],
     )

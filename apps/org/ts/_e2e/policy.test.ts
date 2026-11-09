@@ -83,7 +83,7 @@ test('the assembly proposes the solidarity rate as a rule, and every member cons
     ),
   )
   motion = proposed.motion
-  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
 })
@@ -159,7 +159,7 @@ test('a motion closed so late its policies would end on or before the day they a
     ),
   )
   const late = proposed.motion
-  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [late])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [late])) {
     settled(await vote({ motion: late, member, stance: 'consent' }, as(member)))
   }
   await on('2026-12-01')
@@ -190,7 +190,7 @@ test('two passed motions replace the same policy: the first close replaces it, a
         as(camille),
       ),
     )
-    for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [proposed.motion])) {
+    for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [proposed.motion])) {
       settled(await vote({ motion: proposed.motion, member, stance: 'consent' }, as(member)))
     }
     return proposed.motion

@@ -51,7 +51,7 @@ const readsBrand = async (actor: string, day: string) =>
   (
     await one<{ r: boolean }>(
       `SELECT EXISTS (
-         SELECT FROM membership.holds($1, $2) h JOIN circle.mandate m ON m.id = h.mandate
+         SELECT FROM circle_person.holds($1, $2) h JOIN circle.mandate m ON m.id = h.mandate
          WHERE h.circle = 'brand' AND m.power = 'read' AND m.scope = 'own'
        ) AS r`,
       [actor, day],
@@ -76,7 +76,7 @@ async function decided(title: string, actions: Action[], deadline: string) {
 // and gives a stance.
 async function votesInBrand(by: string, voter: string, deadline: string) {
   const { motion } = settled(await propose({ circle: 'brand', title: 'A new mark', deadline, body: '', actions: [] }, as(by)))
-  const roll = await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1 ORDER BY member', [motion])
+  const roll = await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1 ORDER BY member', [motion])
   assert.ok(roll.some((r) => r.member === voter), `${voter} is on the roll of Brand's motion`)
   settled(await vote({ motion, member: voter, stance: 'consent' }, as(voter)))
 }

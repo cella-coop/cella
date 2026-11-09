@@ -56,7 +56,7 @@ async function decided(circle: string, fields: Record<string, string>, from: str
   await on(from)
   settled(await shell.act(`/circles/${circle}`, 'put', { ...fields, deadline }, camille))
   const { id } = await one<{ id: string }>('SELECT id FROM motion.motion ORDER BY id DESC LIMIT 1')
-  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1 AND member <> $2', [id, chloe])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1 AND member <> $2', [id, chloe])) {
     assert.equal((await vote({ motion: id, member, stance: 'consent' }, as(member))).state, 'settled')
   }
   return { id, close: async () => {

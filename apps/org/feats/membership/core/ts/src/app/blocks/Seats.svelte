@@ -3,7 +3,7 @@
   import type { Held, Seat } from '@cella/org-circle/models'
 
   // Where a member sits, and the powers their seats give them: what
-  // `membership.may` checks a write against.
+  // `circle_person.may` checks a write against.
   let { data }: { data: { seats: Seat[]; held: Held[] }; id: string } = $props()
 
   const seats: Column<Seat>[] = [

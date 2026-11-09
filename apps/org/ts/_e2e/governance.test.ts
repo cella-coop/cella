@@ -72,7 +72,7 @@ const closing = async (motion: string) => {
 
 // Every member on a motion's roll consents.
 async function consented(motion: string) {
-  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
 }
@@ -123,18 +123,12 @@ test('only the assembly admits, the one circle holding the collective admit-memb
     as(camille),
   )
   assert.match(reason(astray), /coordination holds no collective mandate for admit-member, so its motion may not admit a member/)
-  // The motion feat's proposal alone fixes no roll, and is refused.
-  const alone = await proposeAlone(
-    { circle: 'ag', title: 'Admit Nadia', procedure: 'consent', deadline: '2026-11-07', body: '', actions: [{ kind: 'admit', args: { member: nadia, shares: 20 } }] },
-    as(malik),
-  )
-  assert.match(reason(alone), /'s proposal did not fix its roll: its roll is those its procedure calls in ag on the day it is proposed/)
 
   const proposed = settled(await put({ kind: 'admit', args: { member: nadia, shares: 20 }, deadline: '2026-11-07', body: 'Nadia has worked with marketing since spring.' }, as(malik)))
   admission = proposed.motion
   assert.equal(admission, 'm-2026-018')
   const d = await one<{ circle: string; title: string; roll: string }>(
-    `SELECT circle, title, (SELECT count(*) FROM membership_motion.roll r WHERE r.motion = d.id) AS roll FROM motion.motion d WHERE id = $1`,
+    `SELECT circle, title, (SELECT count(*) FROM motion.roll r WHERE r.motion = d.id) AS roll FROM motion.motion d WHERE id = $1`,
     [admission],
   )
   assert.deepEqual(d, { circle: 'ag', title: 'Admit Nadia Benali as a member', roll: '10' })
@@ -153,7 +147,7 @@ test('only the assembly admits, the one circle holding the collective admit-memb
   await app.query(`SELECT set_config('cella.actor', $1, false)`, [camille])
   const read = (await app.query<{ member: string }>('SELECT member FROM motion.vote WHERE motion = $1', [admission])).rows
   assert.deepEqual(read, [{ member: camille }])
-  const tally = (await app.query('SELECT passes, counted, given, quorate FROM membership_motion.tally($1)', [admission])).rows[0]
+  const tally = (await app.query('SELECT passes, counted, given, quorate FROM motion.tally($1)', [admission])).rows[0]
   assert.deepEqual(tally, { passes: null, counted: null, given: null, quorate: null })
   await app.query(`SELECT set_config('cella.actor', '', false)`)
   assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM motion.vote WHERE motion = $1', [admission])).n, '10')
@@ -178,7 +172,7 @@ test('the close admits Nadia and seats her in the assembly, an effect in its tra
   assert.equal(await status(nadia), 'active')
   // Closed, the secret ballot's tally opens to every member.
   assert.deepEqual(
-    (await app.query('SELECT passes, counted, given, quorate FROM membership_motion.tally($1)', [admission])).rows[0],
+    (await app.query('SELECT passes, counted, given, quorate FROM motion.tally($1)', [admission])).rows[0],
     { passes: true, counted: 10, given: 10, quorate: true },
   )
   assert.deepEqual(
@@ -250,7 +244,7 @@ test('coordination grants the finance role send-quote by motion, under the send-
     ),
   )
   // Chloé, suspended, gives no stance; consent passes with no objection.
-  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1 AND member <> $2', [issuing.motion, chloe])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1 AND member <> $2', [issuing.motion, chloe])) {
     settled(await vote({ motion: issuing.motion, member, stance: 'consent' }, as(member)))
   }
   await on('2026-11-28')
@@ -325,7 +319,7 @@ test('a grant no circle holds a mandate to issue under is put to the assembly: c
     await putCircle({ circle: 'operations', kind: 'grant', args: { role: 'finance', power: 'approve-expense', text: 'approve expenses', limit: 3000 }, deadline: '2026-12-08', body: '' }, as(camille)),
   )
   assert.equal((await one<{ circle: string }>('SELECT circle FROM motion.motion WHERE id = $1', [proposed.motion])).circle, 'ag')
-  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1 AND member <> $2', [proposed.motion, chloe])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1 AND member <> $2', [proposed.motion, chloe])) {
     settled(await vote({ motion: proposed.motion, member, stance: 'consent' }, as(member)))
   }
   await on('2026-12-08')
@@ -338,7 +332,7 @@ test('a grant no circle holds a mandate to issue under is put to the assembly: c
 
 // Every member on a motion's roll but Chloé, suspended, consents.
 async function consentedBut(motion: string) {
-  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1 AND member <> $2', [motion, chloe])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1 AND member <> $2', [motion, chloe])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
 }

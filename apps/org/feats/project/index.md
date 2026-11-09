@@ -1,6 +1,6 @@
 +++
 title = "Project"
-updated = 2026-11-09
+updated = 2026-11-11
 +++
 
 The co-op's initiatives: a piece of work a client commissioned, or one of
@@ -75,9 +75,9 @@ assembly's, unless the write that makes it names another.
 milestones are in its circle, which `project.in_its_circle` copies into
 each as it is made.
 Each write on a project, a milestone, its budget or its archive names
-the project's circle in its payload, which the membership feat's guard
+the project's circle in its payload, which core's guard on every power
 reads a mandate's scope against, so a lead runs their own circle's
-projects alone ([membership](../membership/index.md#seats)).
+projects alone ([who may act](../../core/grafts/circle-person/index.md#who-may-act)).
 
 ## Folds
 

@@ -1,12 +1,14 @@
 +++
 title = "membership-motion"
-updated = 2026-11-09
+updated = 2026-11-11
 +++
 
 What a motion decides of a membership: admitting someone invited,
-suspending a member, excluding a member; and who may vote on a motion
-of a circle, whether it passes, and the seats it gives and ends
-([circles](#circles)). Declared by the `membership` feat.
+suspending a member, excluding a member; and the seats a motion gives
+and ends and the circles it makes ([circles](#circles)). Who may vote
+on a motion and whether it passes are the motion feat's ([the
+roll](../../feats/motion/index.md#the-roll)). Declared by the
+`membership` feat.
 
 ## Schema
 
@@ -47,9 +49,13 @@ assembly's, unless the write that makes it names another.
 The admission, suspension and exclusion cite their motion: this graft registers
 them by `motion.register_cite`, with their powers, `admit-member`,
 `suspend-member` and `exclude-member`,
-and this graft, which counts the roll, attaches its guard that it
-closed and passed; that each admission seats its member is the roll's
-too ([circles](#circles)). A member's
+and the motion feat's guard `motion.carried` holds each to a motion that
+closed and passed on its roll; that each admission seats its member is this graft's
+too ([circles](#circles)). Where the cited motion is none, or has not
+closed and passed, that is `motion.carried`'s to say, so `closes`,
+`ends` and the guards of the seats and circles a motion carries say
+nothing of it (`membership_motion.uncarried`), and that reason comes
+first. A member's
 withdrawal, and their erasure once they have left, are their own rights,
 no motion's, so neither is this
 graft's ([membership](../../feats/membership/index.md)).
@@ -59,21 +65,18 @@ graft's ([membership](../../feats/membership/index.md)).
 The founding (`membership_motion.fold_found`, `sql/018-folds.sql`,
 [folds](../../../../_corpus/doc/architecture.md#folds)) carries every row of the state
 the co-op held before its log, which the fold applies before it runs; a
-founding that carries none refuses to fold. A close
-(`membership_motion.fold_close`) counts the motion's roll, as its
-handler does once the motion feat's fold has closed it. A proposal
-(`membership_motion.fold_propose`) fixes the motion's roll, as its
-handler does once the motion feat's fold has inserted the motion; an
+founding that carries none refuses to fold. An
 application (`membership_motion.fold_apply`) proposes the motion its
 entry carries by the motion feat's `motion.fold_proposal`, after the
-membership feat's fold has the applicant, and fixes its roll. An admission a
+membership feat's fold has the applicant, which fixes its roll as a
+proposal's fold does. An admission a
 carried motion makes names the circle and the seat its entry carries,
 which core's circles fold.
 
 ## Handlers
 
 None of its own: a close that admits, and the suspensions and exclusions a
-passing motion carries out, need the roll, so they are
+passing motion carries out, are carried by its close, so they are
 `membership-motion`'s. What follows each in the books, the member's capital
 subscribed, frozen and withdrawn, is the reaction of the grafts joining
 `membership` to the books (`account-membership`,
@@ -93,16 +96,15 @@ after it.
 
 ## Circles
 
-The electorate: who may vote on a motion, and whether it passes on
-their stances; and what a passing motion does to members and seats. A
-roll is a relation of the graft's feats and core's circles: the people
-seated in a motion's circle (core), as the assembly's seats ask a
-membership (member), when it was proposed and as its procedure says
-(motion). Seats are core's and whether one counts the membership
-feat's, what a motion asks of circles the motion feat's; none of them
-reads this graft, so the roll and everything that counts it live here
-(`004-circle.sql` to `016-founding.sql`, and in the shell
-`membership-motion/circles`, `api/circles.ts` and `app/circles.ts`).
+What a passing motion does to members and seats: the seats it gives
+and ends, the circles it makes and amends, and the founding. Who may
+vote on a motion and whether it passes are the motion feat's, its roll
+counted by core's seats and whether each counts ([the
+roll](../../feats/motion/index.md#the-roll)); this graft reads the roll
+to draw it and does not compute it (`006-seats.sql`, `008-governance.sql`,
+`011-active.sql` and `015-application.sql` to `016-founding.sql`, and in
+the shell `membership-motion/circles`, `api/circles.ts` and
+`app/circles.ts`).
 
 ### Founding
 
@@ -159,31 +161,8 @@ as entry 1.
 
 ### Schema of the roll
 
-`membership_motion`, its roll's part (`004-circle.sql` to `016-founding.sql`):
+`membership_motion`, its circles' part:
 
-- `membership_motion.roll`: a motion and a person on its roll, by
-  id and address, with no foreign key into any feat, and whether they
-  may veto it (`veto`), fixed by `membership_motion.fix(motion)`,
-  which this graft's `propose` calls in the proposal's own write, from
-  `membership_motion.called(motion)`: the people seated in its
-  circle on the day it is proposed, in core's `circle.seat`, by its
-  procedure's parties (`motion.party`): every seat, or where it has
-  parties that vote the seats in those roles (`participant` every
-  seat), and the seats in a role that vetoes, who may veto. Seats are people's,
-  so no agent and no service is ever on a roll, and only the motion's
-  own circle's seats are read, so a seat in one circle carries no vote in another. `fix` runs
-  with its owner's rights, since nothing else writes the roll, and only the app
-  role may call it; the app role and the guards role, `cella_guards`, may
-  select the roll.
-- `membership_motion.counted`: who was counted, the people on a
-  motion's roll whose seat counted (`membership.counts`: in the
-  assembly an active member, elsewhere one membership has not suspended
-  or let go) on the day it closed, fixed by
-  `membership_motion.count(motion)`, which this graft's `close`
-  calls in the close's own write. A suspension or exit after the close
-  cannot change the outcome. `count` runs with its owner's rights,
-  since nothing else writes the table, and only the app role may call
-  it.
 - `membership_motion.seating`: the seats motions give and end: an
   admission's, in the motion's circle as `member`, and those the
   `seat` and `unseat` actions name, kinds this graft registers by
@@ -199,49 +178,6 @@ she is on no roll of the assembly's.
 
 ### Guards of the roll
 
-- `membership_motion.electorate(motion)`: who counts on it, once
-  it is closed the people counted at its close, while it is open the
-  people on its roll whose seat counts in its circle on the verdict date
-  (`membership.counts`); `stances(motion)`, their
-  stances received before its cutoff, but a redacted one; and `turnout(motion)`, how many
-  count, how many of them gave a stance, an abstention taking part, and
-  whether that meets its procedure's quorum.
-- `membership_motion.tally(motion)`: what a reader of the motion reads
-  of its count, whether it passes and its turnout, by `passes` and
-  `turnout`; on a secret ballot ([ballots](../../feats/motion/index.md#ballots))
-  sealed, every field null, until its close. It runs as its owner, since a
-  member reads no other's secret stance, and only the app role may call it;
-  it keeps the count to whoever reads the motion in its circle and to a
-  write, every field null to anyone else, and is declared `audience:
-  shared by ref` ([reading](../../../../_corpus/doc/architecture.md#reading)).
-- `membership_motion.passes(motion)`: whether a motion passes by
-  its procedure over those stances: its quorum met, and then by its method,
-  `cella.consent`, or for a majority `cella.majority`, more for than
-  against, or `cella.share`, at least the share of the votes cast the
-  procedure needs, as two thirds, abstentions counting for neither; and
-  no veto: no one on the roll who may veto it (`veto`) and counts gave,
-  as their latest stance, one against or an objection.
-- `membership_motion.on_roll`, on `motion:motion:vote`: the
-  actor holds `vote`, the power the motion's procedure gives the seats
-  on its roll: they are on the roll, and their seat counts in its
-  circle on the verdict date, so a suspended or exited member, or one
-  the assembly's seat no longer counts, gives no stance.
-- `membership_motion.sits`, on `motion:motion:propose`,
-  `motion:motion:close` and `motion:message:post`: the actor holds a
-  seat that counts in the motion's circle on the verdict date
-  (`membership.sits_in`), so
-  the participant's `propose` (propose, close) and `discuss` (post),
-  which `membership.may` finds on any seat, are held in the
-  motion's circle: a circle's participants put, close and deliberate on
-  its motions. A message may be posted, too, from a seat in the circle
-  the motion's procedure consults, so that circle is heard.
-- `membership_motion.consulted`, on `motion:motion:close`: a
-  motion whose procedure consults a circle (`consult`) closes only once
-  someone seated in that circle on the day they posted it has said
-  something on its deliberation, so a motion of Web under a mandate whose
-  chain asks coordination's consultation is refused its close until
-  someone of coordination has spoken
-  ([procedures](../../feats/motion/index.md#procedures)).
 - `membership_motion.circle_asks`, on `motion:motion:propose`: a seat
   given or ended is the motion of a circle that may decide about it,
   never itself but for the assembly (`motion.decides`), and names for a role of that circle, or as
@@ -252,21 +188,6 @@ she is on no roll of the assembly's.
   members go is no rule of this graft's: it is the one holding the
   collective mandate for it, the motion feat's guard `empowers`, and in
   Lanterne that is the assembly alone.
-- `membership_motion.carried`, on every action in `motion.cites`: the
-  motion the payload cites is closed and passes. The motion feat keeps
-  that list; a graft that joins motion to a write's feat registers its
-  action there with its power by `motion.register_cite` (`membership-motion` for
-  admission, suspension and exclusion,
-  `document-motion` for `document:document:adopt`, and the
-  motion feat itself for `motion:policy:adopt` and `:end`), and this
-  graft registers the guard by `motion.register_cite_guard`, which
-  attaches it to every action listed, then and later: the motion feat's
-  register functions attach it, and this graft puts no trigger on
-  `motion.cites`; the motion feat covers the same list with `mandated`,
-  that the motion's circle holds the power. A graft that cites a motion so never reads
-  this one, and this one never names a feat it does not join. This graft
-  registers `circle:seat:add` and `:remove`, and `circle:role:seat` and
-  `:unseat`, itself, core's actions.
 - `membership_motion.role_asks`, on `motion:motion:propose`: a role
   seated in a circle or unseated is the motion of a circle that may
   decide who sits there (`motion.decides`), and its terms pass
@@ -284,22 +205,13 @@ she is on no roll of the assembly's.
   verdict date, and the cited motion ends it.
 - `membership_motion.seats`, on `circle:seat:add`: the
   seat is one the cited motion gives (`seating`), to a person whose seat
-  counts there (`membership.counts`), from the verdict date, where they held no such seat. `unseats`, on
+  counts there (`circle_person.counts`), from the verdict date, where they held no such seat. `unseats`, on
   `:remove`: the seat ended on the verdict date, and the cited motion
   ends it. `membership_motion.creates`, on `circle:circle:create`: the
   circle the write made is one the cited motion creates, by its id, name
   and purpose, and the payload names the bundle in force on the verdict
   date (`circle.bundle`). A slice may register guards on core's actions,
   as on its feats'.
-- `membership_motion.counts`, on `motion:motion:close`: those
-  counted are exactly the people of the roll whose seat counts in its
-  circle on the verdict date, so a close that did not count its roll, as the motion feat's own
-  `close` alone does not, is refused.
-- `membership_motion.fixed`, on `motion:motion:propose`: the
-  motion's roll is exactly those its procedure calls on the day it is
-  proposed (`called`), each who may veto marked so, so a proposal that
-  did not fix its roll, as the motion feat's own `propose` alone does
-  not, is refused.
 - `membership_motion.puts`, on `membership:member:apply`: the
   application put the motion to admit the applicant in its own write:
   the motion its payload names asks only to admit them, with the shares
@@ -308,8 +220,8 @@ she is on no roll of the assembly's.
   `balloted` and `decides_by`, `motion.empowers` (its circle holds
   the collective mandate to admit), `motion.requires` (it is
   decided as its requirements fix), `membership_motion.asks` (someone
-  invited, a whole number of shares) and `fixed` (its roll). No seat is
-  asked of the applicant, whose right puts it, so `sits` is not run; an
+  invited, a whole number of shares) and the motion feat's `motion.fixed` (its roll). No seat is
+  asked of the applicant, whose right puts it, so `motion.sits` is not run; an
   application that puts no motion, as the membership feat's `applying`
   alone does not, is refused. This graft lists the application in
   `motion.puts` by `motion.register_put`, so every guard judging what a
@@ -327,7 +239,7 @@ she is on no roll of the assembly's.
   it, and the one that adopted every policy taking a default of the
   form. Its founders are the members whose membership began by the day
   it closed: each sits in the root with a vote that day, a seat
-  counting then (`membership.sits_in`) and, where the procedure names
+  counting then (`circle_person.sits_in`) and, where the procedure names
   the roles that vote, holding one; and each has a stance on the
   motion, so its founders decided it. The signer is one of them, with a
   vote on the verdict date. A founding with no procedure for its root,
@@ -339,18 +251,18 @@ she is on no roll of the assembly's.
 
 - `propose` (confluent), replacing the motion feat's in the shell: the
   motion feat's `proposing`, by the procedure its requirements fix
-  (`motion.required`) whatever the proposal names, then `fix`, in
+  (`motion.required`) whatever the proposal names, which fixes its roll, in
   one transaction under one verdict; the guards of each slice judge it
-  (`motion.proposes`, `sits`, `asks`, `fixed`, `motion.requires`,
+  (`motion.proposes`, `motion.sits`, `asks`, `motion.fixed`, `motion.requires`,
   and the guard of each action's kind). Every proposal
   goes through it: the New motion form, `put`, and on a circle's page
   what the motion feat proposes about its powers, read by its
   `about` and made by its `putting`, and on a mandate's page its
   change or its revocation, read by its `revised`.
 - `close` (ordered), replacing the motion feat's in the shell: the
-  motion feat's `closing`, then `count`, in one transaction under one
-  verdict; the guards of each slice judge it (`motion.closes`, `sits`,
-  `counts`). What it passed, its admissions among them,
+  motion feat's `closing`, which counts its roll, in one transaction under one
+  verdict; the guards of each slice judge it (`motion.closes`, `motion.sits`,
+  `motion.counted_roll`). What it passed, its admissions among them,
   `carried` writes in the same transaction.
 - `carried(motion)`: in the transaction of a passing motion's close, after
   its `submit`, carries out its other actions in the order proposed, each
@@ -379,7 +291,7 @@ she is on no roll of the assembly's.
   (`apply-membership`), from their own page: in one transaction under one
   verdict, the membership feat's `applying`, which invites them, the
   motion feat's `proposing` of their admission to the assembly, by the
-  procedure its requirements fix and a secret ballot, titled as `put` titles one, and `fix`.
+  procedure its requirements fix and a secret ballot, titled as `put` titles one, which fixes its roll.
   It submits the application's op, `membership:member:apply`, with the
   application and the proposal in its payload; the guards judge it
   (`membership.applies`, employment-membership's `serves`, `puts`, and
@@ -398,7 +310,7 @@ she is on no roll of the assembly's.
 
 Adds to a motion's page its roll: each person by name,
 their latest stance received before the cutoff, whether the close counted them, the outcome
-`membership_motion.passes` computes by the motion's procedure, how
+`motion.passes` computes by the motion's procedure, how
 many of those counted took part against its quorum, and the acting member's own
 stance, read by receipt for them. On the roll and open, the stance form
 offers the method's stances, starts at their latest and posts the motion

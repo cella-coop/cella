@@ -58,7 +58,7 @@ const amending = (args: Record<string, string>, circle = 'ag') =>
 // Every member on the motion's roll consents, and on its deadline Camille
 // closes it; what its close carried.
 async function decided(motion: string) {
-  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
   const { deadline } = await one<{ deadline: string }>(`SELECT to_char(deadline, 'YYYY-MM-DD') AS deadline FROM motion.motion WHERE id = $1`, [motion])

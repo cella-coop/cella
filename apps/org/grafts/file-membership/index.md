@@ -1,6 +1,6 @@
 +++
 title = "file-membership"
-updated = 2026-11-07
+updated = 2026-11-11
 +++
 
 A member's records on file, such as their signed subscription form: files
@@ -39,7 +39,7 @@ it: a member whose seat gives them a power over what the file records
   `approve-expense` and `reimburse-expense` open receipts;
   `approve-payroll`, `pay-payroll` and `hire-worker` employment records;
   `invite-member` members' records. `file_membership.opens(id, actor)`
-  reads `membership.may` on the verdict date.
+  reads `circle_person.may` on the verdict date.
 - Each opener is also registered as a power that reads its class
   (`cella.reading`), so the file feat's policy lets its holder see the
   file before `opens` opens it.

@@ -29,6 +29,9 @@ const budgets: Save = {
 
 before(async () => {
   await db.connect()
+  // Every actor holds every power, in place of core's guard on every power,
+  // which reads seats and mandates this test does not make.
+  await db.query(`DELETE FROM cella.guard WHERE fn = 'circle_person.empowered(jsonb)'::regprocedure`)
   await db.query(`SET cella.clock = '2026-10-30'`)
   await db.query(`SET cella.scope = '${scope}'`)
   // Any device signs for anyone, in place of core person's keyring.

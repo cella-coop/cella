@@ -16,7 +16,7 @@ const db = new pg.Client()
 
 // Who reads, on the app's role as the server connects: the rows a query
 // returns read as `actor`, or as no one. A stub authority stands in for
-// the membership feat's, which says who holds a power.
+// core's, which says who holds a power by seats this test does not make.
 const app = new pg.Client({ user: 'cella_app' })
 const reading = async (actor: string | null, sql: string, values: unknown[] = []) => {
   await app.query(`SELECT set_config('cella.actor', $1, false)`, [actor ?? ''])
@@ -42,6 +42,9 @@ const refused = async (run: () => Promise<unknown>, says: RegExp) => {
 
 before(async () => {
   await db.connect()
+  // Every actor holds every power, in place of core's guard on every power,
+  // which reads seats and mandates this test does not make.
+  await db.query(`DELETE FROM cella.guard WHERE fn = 'circle_person.empowered(jsonb)'::regprocedure`)
   await db.query(`SET cella.clock = '2026-10-24'`)
   await db.query(`SET cella.scope = '${scope}'`)
   // Any device signs for anyone, in place of core person's keyring.
@@ -139,7 +142,7 @@ test('as the app role, the co-op\'s own files are their circle\'s readers\', a p
     `CREATE FUNCTION mandate.covered(actor text, power text, day date) RETURNS text[]
      LANGUAGE sql STABLE RETURN CASE WHEN (power = 'read' AND actor <> 'anyone@test.example') OR mandate.may(actor, power, NULL, NULL, day) THEN ARRAY(SELECT id FROM circle.circle) ELSE '{}' END`,
   )
-  await db.query(`INSERT INTO cella.authority (fn, covered, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'mandate.covered(text, text, date)', 'test')`)
+  await db.query(`INSERT INTO cella.authority (fn, covered, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'mandate.covered(text, text, date)', 'test') ON CONFLICT (one) DO UPDATE SET fn = excluded.fn, covered = excluded.covered, owner = excluded.owner`)
   await db.query(`INSERT INTO cella.reading (what, key, power, owner) VALUES ('file', 'expense-receipt', 'approve-expense', 'test')`)
   const add = (id: string, cls: string, subject: string | null, uploader: string) =>
     db.query(

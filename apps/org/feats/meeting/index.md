@@ -1,6 +1,6 @@
 +++
 title = "Meeting"
-updated = 2026-11-09
+updated = 2026-11-11
 +++
 
 Circles meeting: when and where, what is on the agenda, and whether the
@@ -124,11 +124,11 @@ core's circles, so a meeting of no circle is impossible, and the feat
 keeps how each circle meets (`003-circle.sql`, and
 in the shell `meeting/circles`, `api/circles.ts` and `app/circles.ts`).
 Who is expected, the circle's seats, is `meeting-membership`'s, since
-whether a seat counts is the membership feat's.
+whether a seat counts is core's, as membership says what bars one.
 Each write with a power on a meeting, its schedule, hold, cancel and
 minutes, names the meeting's circle in its payload, which the membership
 feat's guard reads a mandate's scope against
-([membership](../membership/index.md#seats)).
+([who may act](../../core/grafts/circle-person/index.md#who-may-act)).
 
 - `meeting.setting`, by circle: its `quorum`, the share of its seats a
   meeting needs present, in percent, and `adopts`, whether its minutes

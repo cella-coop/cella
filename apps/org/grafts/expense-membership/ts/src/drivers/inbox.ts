@@ -14,7 +14,7 @@ export const expenses: Read = {
                e.id AS expense
         FROM expense.expense e
         LEFT JOIN (membership.member m JOIN person.person mp ON mp.address = m.address) ON m.address = e.member
-        WHERE (e.status = 'submitted' AND e.member <> cella.reader() AND membership.may(cella.reader(), 'approve-expense', expense.total(e), e.circle, cella.verdict_date()))
-           OR (e.status = 'approved' AND membership.may(cella.reader(), 'reimburse-expense', expense.total(e), e.circle, cella.verdict_date()))`,
+        WHERE (e.status = 'submitted' AND e.member <> cella.reader() AND circle_person.may(cella.reader(), 'approve-expense', expense.total(e), e.circle, cella.verdict_date()))
+           OR (e.status = 'approved' AND circle_person.may(cella.reader(), 'reimburse-expense', expense.total(e), e.circle, cella.verdict_date()))`,
   order: 'expense',
 }

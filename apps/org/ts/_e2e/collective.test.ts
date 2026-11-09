@@ -156,7 +156,7 @@ test('a collective mandate wider than the one it is issued under is refused as i
       as(camille),
     ),
   )
-  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
   await on('2026-12-06')
@@ -175,7 +175,7 @@ async function carriedOut(title: string, actions: { kind: string; args: Record<s
   await on(from)
   const { motion } = settled(await propose({ circle: 'ag', title, procedure: 'consent', deadline, body: '', actions }, as(camille)))
   const { method } = await one<{ method: string }>('SELECT method FROM motion.motion WHERE id = $1', [motion])
-  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: method === 'consent' ? 'consent' : 'for' }, as(member)))
   }
   await on(deadline)
@@ -236,7 +236,7 @@ test('two motions each ending one of the assembly\'s two adopt-policy mandates p
       await propose({ circle: 'ag', title: `End ${policy}`, procedure: 'consent', deadline: '2027-02-21', body: '', actions: [{ kind: 'end', args: { policy } }] }, as(camille)),
     )
     const { method } = await one<{ method: string }>('SELECT method FROM motion.motion WHERE id = $1', [motion])
-    for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
+    for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [motion])) {
       settled(await vote({ motion, member, stance: method === 'consent' ? 'consent' : 'for' }, as(member)))
     }
     return motion
@@ -258,7 +258,7 @@ test('two motions each ending one of the assembly\'s two adopt-policy mandates p
 const voted = async (title: string, actions: { kind: string; args: Record<string, string> }[], deadline: string) => {
   const { motion } = settled(await propose({ circle: 'ag', title, procedure: 'consent', deadline, body: '', actions }, as(camille)))
   const { method } = await one<{ method: string }>('SELECT method FROM motion.motion WHERE id = $1', [motion])
-  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: method === 'consent' ? 'consent' : 'for' }, as(member)))
   }
   return motion

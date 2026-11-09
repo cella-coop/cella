@@ -12,7 +12,7 @@ export const runs: Read = {
                coalesce('/payslips/' || r.month || '~' || (SELECT min(p.member) FROM payslip.payslip p WHERE p.month = r.month), '/payslips') AS href,
                r.month
         FROM payslip.run r
-        WHERE (r.approved IS NULL AND membership.may(cella.reader(), 'approve-payroll', NULL, r.circle, cella.verdict_date()))
-           OR (r.approved IS NOT NULL AND r.paid IS NULL AND membership.may(cella.reader(), 'pay-payroll', NULL, r.circle, cella.verdict_date()))`,
+        WHERE (r.approved IS NULL AND circle_person.may(cella.reader(), 'approve-payroll', NULL, r.circle, cella.verdict_date()))
+           OR (r.approved IS NOT NULL AND r.paid IS NULL AND circle_person.may(cella.reader(), 'pay-payroll', NULL, r.circle, cella.verdict_date()))`,
   order: 'month',
 }

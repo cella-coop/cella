@@ -50,7 +50,6 @@ export async function apply(input: Applying, deps: Deps): Promise<Settled<Applie
       const applied = await a.state(tx, proof)
       p = proposing(await required(proposal, tx))
       proposed = await p.state(tx, proof)
-      await tx.query('SELECT membership_motion.fix($1)', [proposed.motion])
       return { ...applied, motion: proposed.motion, proposed: proposed.proposed }
     },
     payload: (v) => ({ ...a.payload(v), ...(p && proposed ? p.payload(proposed) : {}) }),

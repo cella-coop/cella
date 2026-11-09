@@ -1,6 +1,6 @@
 +++
 title = "membership-project"
-updated = 2026-11-09
+updated = 2026-11-11
 +++
 
 Shares of a project's budget: a right granted to a member to spend up to
@@ -86,8 +86,8 @@ refused.
 ## Circles
 
 Which projects a power covers is the project's owning circle, and the
-membership feat's one guard reads it
-([membership](../../feats/membership/index.md#seats)): a
+core's one guard on every power reads it
+([who may act](../../core/grafts/circle-person/index.md#who-may-act)): a
 share's payload names its project's circle, as the project feat's own
 writes do, so a lead grants shares of their own circle's projects by a
 mandate on `own`, and no slice checks a project's circle again.

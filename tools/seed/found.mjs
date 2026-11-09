@@ -188,7 +188,7 @@ export async function seed(db, read, { from, dir }) {
       if (!taken.rowCount) {
         throw new Error(`${d.id} is taken by ${d.procedure}, which is no procedure`)
       }
-      await db.query('SELECT membership_motion.fix($1)', [d.id])
+      await db.query('SELECT motion.fix($1)', [d.id])
       moved += await actions(db, d)
       for (const v of d.vote ?? []) {
         await db.query(
@@ -199,7 +199,7 @@ export async function seed(db, read, { from, dir }) {
       }
       if (d.closed) {
         await db.query(`UPDATE motion.motion SET closed = $2, cutoff = ${receipt} WHERE id = $1`, [d.id, day(d.closed)])
-        await db.query('SELECT membership_motion.count($1)', [d.id])
+        await db.query('SELECT motion.count($1)', [d.id])
         policies += await adopted(db, d)
       }
     }

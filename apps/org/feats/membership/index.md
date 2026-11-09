@@ -112,7 +112,7 @@ acceptance commits to it, as the invitation's and as the device's.
 - `membership.ends`, on `membership:member:suspend` and `:exclude`: the write left the member suspended, or exited with `exit` `excluded`, on the verdict date. A carried one refused is forgone in the log with its reason, so the reason names no one: the member's status and the day it began.
 - `membership.erases`, on `membership:member:erase`: the member is the actor and has left, and the write erased every class of their personal data, at once or restricted.
 
-Whether the cited motion of an admission, a suspension or an exclusion asks it is the `membership-motion` graft's guard on the same actions; whether it closed and passed on its roll, `membership-motion`'s.
+Whether the cited motion of an admission, a suspension or an exclusion asks it is the `membership-motion` graft's guard on the same actions; whether it closed and passed on its roll, the motion feat's (`motion.carried`).
 
 ## Folds
 
@@ -183,101 +183,30 @@ it.
 
 ## Seats
 
-Whether a seat counts on a day, and so who may use a power: core's
-circles hold the seats and the mandates
+Who may act is core's: the seats and the mandates are core's circles'
 ([circle](../../core/circle/index.md#seats)), and whether a seat
-counts is this feat's to say, since the assembly's asks an active
-membership. Its SQL is `010-may.sql` to `015-rights.sql`; its part of
-the shell, `membership/seats`, is `api/seats.ts` and `app/seats.ts`.
+counts, who holds a power and the guard on every power are core's
+graft `circle-person`'s ([who may
+act](../../core/grafts/circle-person/index.md#who-may-act)), which
+asks each kind of person what bars a seat. This feat says it of the
+members, and holds the shares, the capital, the joining and the
+leaving; it holds no authority, and a scope without it bars no seat.
+Its SQL is `010-standing.sql`; its part of the shell, `membership/seats`,
+is `api/seats.ts` and `app/seats.ts`.
 
-- `membership.counts(person, circle, day)` (`014-counts.sql`): whether a
-  seat counts on a day: in the assembly, where the person is active
-  (`membership.active`); in any other circle, where the person is one
-  the co-op knows (`person.known`) and this feat has not suspended them
-  or let them go. A worker who is no member, invited or never, holds a
-  seat in their working circle; a suspended member's seats grant nothing
-  until the suspension is lifted.
-- `membership.sits_in(person, circle, day)`: they hold a seat in the
-  circle on the day, and it counts; the guards that know the circle an
-  action concerns ask it.
-- `membership.may(actor, power, cents, about, day)`: the actor holds,
-  on the day, a seat that counts, whose role, or the participant role
-  every seat holds, has a mandate in force for the power, not revoked
-  by the day, whose scope covers `about`, the owning circle of the
-  record a write concerns (`circle.covers`, [core's
-  scope](../../core/circle/index.md#mandates)), within its `limit`
-  when the write carries an amount. A mandate marking no scope covers
-  every circle's records; one on a circle (`{scope: web}`) that
-  circle's alone; one on `own` those of the circle of the seat it is
-  held by, so a lead's covers their own circle and no other. Circles
-  never nest, so a power held in one circle reaches no other by where
-  it sits; the record's circle grants nothing by itself, and a seat in
-  it nothing without a mandate. `about` null asks of no record and any
-  mandate for the power answers it, as a key's reach and the log's
-  disclosure ask. A `budget` is not checked: it needs the spend over its
-  period tracked.
-- `membership.holds(person, day)` (`014-counts.sql`): the mandates in
-  force the person holds on the day by their seats, each with the circle
-  of the seat it is held by: on every seat that counts and has begun and
-  not ended, its role's and the participant role's every seat holds, so
-  a seat with no role still holds the participant's, and each of those
-  once for every circle the person sits in. It is the one place the
-  seats and mandates are joined: `may` and `covered` ask it, and a
-  person's page lists it, so nothing lists a mandate `may` would not
-  grant, or leaves out one it would.
-- `membership.covered(actor, power, day)` (`013-authority.sql`): the
-  owning circles whose records the actor's mandates for the power cover
-  on the day, by the same seats and mandates as `may`: every circle for
-  one marking no scope, the seat's circle for `own`, the circle it
-  names for any other. With `may` it is the authority every read asks
-  (`cella.authority`): on the verdict date it says in which circles
-  the reader holds `read`, or a power a feat names as reading its rows
-  in `cella.reading`
-  ([reading](../../core/circle/index.md#reading)), and it finds no
-  right.
-- `membership.rights(person, day)` (`015-rights.sql`): the rights in
-  force in `circle.right` the person holds on the day, where person's
-  core says they are one of the people each names (`person.holds`). It
-  is the one place the rights and the people are joined, as `holds` is
-  for the seats: `entitled` asks it, and a person's page lists it. It
-  runs as its owner, and to the app's reader it answers for themselves,
-  or for anyone where they are a member (`circle.inside()`), and
-  otherwise nothing: a person who is not a member reads the rights they
-  hold, each with its power and limit, and no other row of
-  `circle.right`.
-- `membership.entitled(actor, power, cents, day)` (`015-rights.sql`):
-  the actor holds the power by a right, with no seat: a right
-  `membership.rights` gives them on the day, within its `limit`. A
-  right lets each act on what is their own, which
-  the feat's guard checks, so it opens no one else's rows to read
-  ([rights](../../core/circle/index.md#rights)). A right reaches
-  the whole co-op.
-- `membership.empowered`, on every action in `cella.power`, the one
-  guard that reads a permission's scope: the actor may use the action's
-  power on the verdict date over the record the write concerns, by a
-  seat's mandate covering its circle (`may`) or by a right
-  (`entitled`), for the amount the payload names in the action's
-  `amount` field. The payload names the record's owning circle,
-  `circle`, as its handler reads it from the record or writes it there,
-  and one naming none concerns the root's, the assembly's. Refused, it
-  names the mandate missing or exceeded and what would fix it, read by
-  `membership.why_not(actor, power, cents, about, day)`, with the values
-  it read: where the actor holds the power by a mandate whose limit the
-  amount exceeds, that mandate, its role and circle, its limit and the
-  amount, and that a motion of its issuer raising the limit, or someone
-  holding a mandate up to the amount, would allow it; where they hold it
-  by a mandate whose scope does not cover the record's circle, that
-  mandate, what it covers and the record's circle; where they held one
-  that is revoked or expired by the day, that one and since when; where
-  they hold none, the power, and the roles that hold it in the record's
-  circle, with the circle whose motion grants it. It names roles,
-  circles and mandates, never a person. Each feat and core registers the power its
-  actions need in `cella.power`; this feat attaches its guard to every
-  op listed, then and later, as `membership-motion` attaches its own to
-  `motion.cites`. A write with no power, or whose power is in
-  `motion.cites`, a collective mandate's, gets no such guard. No slice
-  checks a scope again: a project's, a month's and a meeting's circle
-  are read here, from the payload their writes name.
+- `membership.standing(person, circle, day)` (`010-standing.sql`),
+  registered by `circle_person.register_standing`: why a seat does not
+  count on a day, or null where membership bars none. In the assembly
+  it bars the seat of anyone not active on the day
+  (`membership.active`), saying their membership's status; in any other
+  circle that of someone this feat has suspended or let go, so a worker
+  who is no member, invited or never, holds a seat in their working
+  circle, and a suspended member's seats grant nothing until the
+  suspension is lifted. Core's `circle_person.counts` asks it beside
+  whether the person is one the co-op knows.
+- `member`, the right every active member holds (`009-active.sql`),
+  registered by `person.register_right`: whom core's `person.holds`
+  names for a right given to every member.
 
 Lanterne: Camille holds the manager role by a tenure from 20 June 2024
 until 20 June 2028, and acts alone under its mandates while it runs.
@@ -295,8 +224,8 @@ In the shell, `membership/seats` adds a circle's seats to its page, in
 a Seats tab of their own, one row per person with every role they hold in it, and how many sit in it
 to the list and its gallery cards; and to a person's page their seats
 and the powers they hold through them, each power by its plain name
-and its policy's sentence, the mandates `membership.holds` gives on
-the verdict date, which `membership.may` would grant before any limit
+and its policy's sentence, the mandates `circle_person.holds` gives on
+the verdict date, which `circle_person.may` would grant before any limit
 is spent: the participant's `propose` and `discuss` in each circle they
 sit in, Inès's in Web, beside their roles', and none of a suspended
 member's; and to the list the circles they sit in;
@@ -323,14 +252,14 @@ a new link is for someone invited who has not taken it up; an admission
 of someone holding no device is refused and leaves nothing, and one of
 someone who took it up enrols nothing more.
 Its inviter acts by a mandate of a seat that counts, and the invitee
-takes it up by a person's right, as `membership.empowered` asks.
-`counts.test.ts`, `may.test.ts` and `rights.test.ts`: a seat counts in
+takes it up by a person's right, as `circle_person.empowered` asks.
+`counts.test.ts`, `may.test.ts` and `rights.test.ts`, on core's authority with this feat's standing registered: a seat counts in
 the assembly for an active member and elsewhere for anyone known whom
 membership has not suspended or let go; a mandate's scope covers the
 records of its circle, its holder's own or the whole co-op, and a seat
 with no mandate covers none; and a right is held by
 whoever core's person says is one of its people, with no seat, and
-`membership.rights` lists a right exactly where `entitled` grants its
+`circle_person.rights` lists a right exactly where `entitled` grants its
 power. `powers` (`cella test e2e powers`) reads the Powers tab of
 every Lanterne person against `may` and `entitled`, power by power,
 each signed in as the person whose page it is, Inès as herself, and a
@@ -357,7 +286,7 @@ asks them to confirm and signs `erase`. Seats and powers are this
 feat's `membership/seats` ([seats](#seats)).
 
 A person's page has a Powers tab: what they may do on the verdict date,
-power by power, each as `membership.may` and `membership.entitled`
+power by power, each as `circle_person.may` and `circle_person.entitled`
 answer it and through what. A power held by a seat names the circle it
 is held in, the role, the tenure that holds the role, from and until,
 or the seat alone for the participant's, and the mandate, with its
@@ -367,13 +296,13 @@ a circle or the seat's own circle, each mandate linking to its page and
 its chain ([the shell](../../core/circle/index.md#shell)). A power
 held twice, by two seats or two mandates, lists each. A power held by a
 right names what the person is, person, member or employee, that gives
-it, and covers what is their own. It reads `membership.holds` and
-`membership.rights`, the two places a person's mandates and rights are
+it, and covers what is their own. It reads `circle_person.holds` and
+`circle_person.rights`, the two places a person's mandates and rights are
 read, and joins them only to the tenure, the circles and the mandate or
 right they name, so it lists exactly what the guard grants. Whoever
 reads the person's seats reads the mandates they hold by them; their
 rights the person reads on their own page, member or not, by
-`membership.rights`, and a member reads them on anyone's, while a
+`circle_person.rights`, and a member reads them on anyone's, while a
 non-member reading another's page reads none, and no reader learns
 from the tab a right they neither hold nor read as a member ([who
 reads it](../../core/circle/index.md#who-reads-the-structure)).

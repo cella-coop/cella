@@ -17,12 +17,11 @@ export async function required(input: Propose, tx: Db): Promise<Propose> {
   return { ...input, procedure: rows[0]?.procedure ?? input.procedure }
 }
 
-// Proposes a motion and fixes its roll, in the proposal's one
-// transaction under one verdict: the motion feat's proposal, by the
-// procedure its requirements fix, then the members seated in its circle
-// that day. The guards of each slice judge it: the proposal's own,
-// `motion.requires` that it is decided as its requirements fix,
-// and `fixed` that the roll was fixed. Every proposal goes through here:
+// Proposes a motion, in the proposal's one transaction under one
+// verdict: the motion feat's proposal, by the procedure its requirements
+// fix, which fixes its roll. The guards of each slice judge it: the
+// proposal's own, `motion.fixed` that the roll was fixed among them, and
+// `motion.requires` that it is decided as its requirements fix. Every proposal goes through here:
 // the motion feat's New form, a member's page and a circle's. What the
 // member signs is the proposal without a procedure, since it names none.
 export async function propose(input: Propose, deps: Deps): Promise<Settled<Proposed> | Refused> {
@@ -34,9 +33,7 @@ export async function propose(input: Propose, deps: Deps): Promise<Settled<Propo
     request: asked,
     state: async (tx, proof) => {
       w = proposing(await required(asked, tx))
-      const proposed = await w.state(tx, proof)
-      await tx.query('SELECT membership_motion.fix($1)', [proposed.motion])
-      return proposed
+      return w.state(tx, proof)
     },
     payload: (v) => w.payload(v),
   })

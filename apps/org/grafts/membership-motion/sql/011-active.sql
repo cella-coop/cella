@@ -1,32 +1,14 @@
--- Whose seat counts is the membership feat's to say, on a day
--- (`membership.counts`): any person's whom membership has not
--- suspended or let go, and in the assembly an active member's. Who gives a
--- stance, who counts while a motion is open and who is counted at its
--- close read it on the verdict date, not a copy of the member's status;
--- who puts, closes and deliberates on a motion, and who is seated by one,
--- is whoever holds, or may hold, a seat that counts in its circle; and a
--- message may be posted, too, from a seat that counts in the circle the
--- motion's procedure consults.
-CREATE OR REPLACE FUNCTION membership_motion.sits(payload jsonb) RETURNS text
-LANGUAGE sql STABLE
-BEGIN ATOMIC
-  SELECT CASE
-    WHEN d.id IS NULL THEN 'no motion ' || coalesce(p.motion, 'is named')
-    WHEN NOT membership.sits_in(cella.actor(), d.circle, cella.verdict_date())
-      AND NOT (cella.action() = 'motion:message:post' AND EXISTS (
-        SELECT FROM motion.procedure o
-        WHERE o.id = d.procedure AND membership.sits_in(cella.actor(), motion.consults(o.id), cella.verdict_date())
-      ))
-      THEN cella.actor() || ' holds no seat in ' || d.circle || ', so may not ' || split_part(cella.action(), ':', 3) || ' ' || d.id
-  END
-  FROM (SELECT payload ->> 'motion' AS motion) p
-  LEFT JOIN motion.motion d ON d.id = p.motion;
-END;
-
+-- Whose seat counts is core's to say, on a day (`circle_person.counts`),
+-- as each kind of person says what bars one: membership the assembly's
+-- but an active member's, and any of one it suspended or let go. A seat
+-- a motion gives, and one its proposal asks, is to a person whose seat
+-- counts in the circle on the verdict date, and a refusal says why not
+-- (`circle_person.unseated`).
 CREATE OR REPLACE FUNCTION membership_motion.seats(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
+    WHEN membership_motion.uncarried(payload ->> 'motion') THEN NULL
     WHEN s.id IS NULL THEN 'no seat ' || coalesce(p.seat::text, 'is named')
     WHEN s.since IS DISTINCT FROM cella.verdict_date() OR s.until IS NOT NULL
       THEN 'seat ' || s.id || ' was not added by this write'
@@ -35,9 +17,9 @@ BEGIN ATOMIC
       SELECT FROM membership_motion.seating g
       WHERE g.motion = d.id AND g.kind = 'seat' AND g.circle = s.circle AND g.member = s.member AND g.role IS NOT DISTINCT FROM s.role
     ) THEN d.id || ' does not seat ' || s.member || ' in ' || s.circle || coalesce(' as ' || s.role, '')
-    WHEN NOT membership.counts(s.member, s.circle, cella.verdict_date())
+    WHEN NOT circle_person.counts(s.member, s.circle, cella.verdict_date())
       THEN s.member || ' may not sit in ' || s.circle || ': '
-        || CASE WHEN c.assembly THEN 'its seats are its active members''' ELSE 'no person the co-op knows, or one membership suspended or let go' END
+        || circle_person.unseated(s.member, s.circle, cella.verdict_date())
     WHEN EXISTS (
       SELECT FROM circle.seat o
       WHERE o.id <> s.id AND o.circle = s.circle AND o.member = s.member AND o.role IS NOT DISTINCT FROM s.role
@@ -50,24 +32,6 @@ BEGIN ATOMIC
   LEFT JOIN motion.motion d ON d.id = p.motion;
 END;
 
--- motion:motion:vote — the actor holds `vote`, the power the motion's
--- procedure gives the seats on its roll: they are on the roll, and their
--- seat counts in its circle on the verdict date.
-CREATE OR REPLACE FUNCTION membership_motion.on_roll(payload jsonb) RETURNS text
-LANGUAGE sql STABLE
-BEGIN ATOMIC
-  SELECT CASE
-    WHEN NOT EXISTS (
-      SELECT FROM membership_motion.roll r WHERE r.motion = p.motion AND r.member = p.member
-    ) THEN coalesce(p.member, 'no one') || ' is not on the roll of ' || coalesce(p.motion, 'no motion')
-    WHEN NOT membership.counts(p.member, d.circle, cella.verdict_date())
-      THEN p.member || CASE WHEN c.assembly THEN ' is not an active member' ELSE ' may sit in ' || d.circle || ' no longer' END
-  END
-  FROM (SELECT payload ->> 'motion' AS motion, payload ->> 'member' AS member) p
-  LEFT JOIN motion.motion d ON d.id = p.motion
-  LEFT JOIN circle.circle c ON c.id = d.circle;
-END;
-
 -- A seat names a circle there is, or one an earlier `circle` action of
 -- the same motion creates; a circle created names an id in lower case
 -- that no circle or role has, and a name.
@@ -77,9 +41,9 @@ BEGIN ATOMIC
   SELECT r FROM (
     SELECT CASE
       WHEN c.id IS NULL AND NOT g.made THEN 'no circle ' || coalesce(g.circle, 'is named')
-      WHEN g.kind = 'seat' AND NOT membership.counts(g.member, g.circle, cella.verdict_date())
+      WHEN g.kind = 'seat' AND NOT circle_person.counts(g.member, g.circle, cella.verdict_date())
         THEN coalesce(g.member, 'no one') || ' may not sit in ' || g.circle || ': '
-          || CASE WHEN c.assembly THEN 'its seats are its active members''' ELSE 'no person the co-op knows, or one membership suspended or let go' END
+          || circle_person.unseated(g.member, g.circle, cella.verdict_date())
       WHEN g.kind = 'seat' AND g.role IS NOT NULL
         AND NOT EXISTS (SELECT FROM circle.role x WHERE x.id = g.role AND x.circle IN (g.circle, '*'))
         THEN 'no role ' || g.role || ' in ' || g.circle
@@ -116,27 +80,3 @@ BEGIN ATOMIC
   LIMIT 1;
 END;
 
-CREATE OR REPLACE FUNCTION membership_motion.electorate(ref text) RETURNS SETOF text
-LANGUAGE sql STABLE
-BEGIN ATOMIC
-  SELECT c.member
-  FROM membership_motion.counted c
-  JOIN motion.motion d ON d.id = c.motion AND d.closed IS NOT NULL
-  WHERE c.motion = ref
-  UNION
-  SELECT r.member
-  FROM membership_motion.roll r
-  JOIN motion.motion d ON d.id = r.motion AND d.closed IS NULL
-  WHERE r.motion = ref AND membership.counts(r.member, d.circle, cella.verdict_date());
-END;
-
-CREATE OR REPLACE FUNCTION membership_motion.count_roll() RETURNS trigger
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
-BEGIN
-  INSERT INTO membership_motion.counted (motion, member)
-  SELECT r.motion, r.member
-  FROM membership_motion.roll r
-  WHERE r.motion = NEW.id AND membership.active(r.member, cella.verdict_date());
-  RETURN NULL;
-END
-$$;

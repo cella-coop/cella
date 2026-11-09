@@ -155,9 +155,9 @@ test('the distribution and the credits of shares follow the approval in its tran
      FROM cella.log WHERE n = ANY($1::bigint[]) ORDER BY n`,
     [[then[0].entry, ...credits.map((c) => c.entry)]],
   )
-  assert.deepEqual(logged[0], { op: 'patronage:distribution:distribute', actor: camille, owners: ['membership-motion', 'motion', 'motion-patronage', 'patronage', 'patronage-transaction'] })
+  assert.deepEqual(logged[0], { op: 'patronage:distribution:distribute', actor: camille, owners: ['motion', 'motion-patronage', 'patronage', 'patronage-transaction'] })
   for (const l of logged.slice(1)) {
-    assert.deepEqual(l, { op: 'patronage:part:employ', actor: camille, owners: ['account-membership-patronage-transaction', 'membership-motion', 'motion', 'motion-patronage', 'patronage'] })
+    assert.deepEqual(l, { op: 'patronage:part:employ', actor: camille, owners: ['account-membership-patronage-transaction', 'motion', 'motion-patronage', 'patronage'] })
   }
   const entry = (await one<{ entry: string }>(`SELECT entry FROM patronage_transaction.distribution WHERE distribution = '2025'`)).entry
   assert.deepEqual((await all(`SELECT account FROM transaction.line WHERE entry = $1 ORDER BY n`, [entry])).length, 5, 'the distribution\'s entry posts its split alone')
@@ -291,7 +291,7 @@ test('the assembly adopts a rule mixing pay and time from 2027, and its values a
   assert.match(reason(loose), new RegExp(`the work share's terms replace the latest, ${founding}`))
 
   const motion = settled(await put(rule)).motion
-  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
   await on('2026-11-16')
@@ -359,7 +359,7 @@ test('the second year runs with no fixture SQL: finance opens 2027, closes 2026 
     ),
   )
   const motion = proposed.motion
-  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
   await on('2027-01-29')

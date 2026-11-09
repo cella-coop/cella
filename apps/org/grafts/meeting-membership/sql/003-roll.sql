@@ -27,7 +27,7 @@ GROUP BY m.id, s.quorum;
 
 -- meeting:item:add, :move, :remove — the actor is an active member
 -- seated in the meeting's circle on the verdict date: the participant's
--- `discuss`, which membership.may finds on any seat, is held in
+-- `discuss`, which circle_person.may finds on any seat, is held in
 -- the meeting's circle.
 CREATE FUNCTION meeting_membership.sits(payload jsonb) RETURNS text
 LANGUAGE sql STABLE

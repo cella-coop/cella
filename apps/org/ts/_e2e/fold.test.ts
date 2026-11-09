@@ -117,7 +117,7 @@ const motions = new Map<string, string>()
 async function proposed(name: string, circle: string, title: string, actions: Action[], deadline: string) {
   const { motion } = settled(await propose({ circle, title, procedure: 'consent', deadline, body: '', actions }, as(camille))) as { motion: string }
   for (const { member } of await all<{ member: string }>(
-    `SELECT r.member FROM membership_motion.roll r JOIN membership.member m ON m.address = r.member WHERE r.motion = $1 AND m.status = 'active'`,
+    `SELECT r.member FROM motion.roll r JOIN membership.member m ON m.address = r.member WHERE r.motion = $1 AND m.status = 'active'`,
     [motion],
   )) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))

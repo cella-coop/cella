@@ -48,7 +48,7 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
 }
 
 const may = async (actor: string, power: string, day: string) =>
-  (await one<{ may: boolean }>('SELECT membership.may($1, $2, NULL, NULL, $3) AS may', [actor, power, day])).may
+  (await one<{ may: boolean }>('SELECT circle_person.may($1, $2, NULL, NULL, $3) AS may', [actor, power, day])).may
 
 // An expense Thomas, of Web, spends on `day` and claims: 50 € and its VAT.
 async function spent(label: string, day: string) {
@@ -62,7 +62,7 @@ async function spent(label: string, day: string) {
 async function decided(circle: string, title: string, actions: { kind: string; args: Record<string, string> }[], from: string, deadline: string) {
   await on(from)
   const { motion } = settled(await propose({ circle, title, procedure: 'consent', deadline, body: '', actions }, as(camille)))
-  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
   await on(deadline)

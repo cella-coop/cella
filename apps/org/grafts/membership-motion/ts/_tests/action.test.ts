@@ -57,10 +57,20 @@ test('a proposal asks of each member what can become of them', async () => {
 test('a suspension or an exclusion cites a motion that asks it of that member', async () => {
   assert.match((await guard('admits', { motion: 'm-1', member: 'ines@lanterne.example', shares: 40 })) ?? '', /m-1 does not admit ines@lanterne.example with 40 shares/)
   assert.equal(await guard('admits', { motion: 'm-1', member: 'ines@lanterne.example', shares: 20 }), null)
-  assert.equal(await guard('ends', { motion: 'nowhere', member: 'chloe@lanterne.example' }), 'no motion nowhere')
+  // No motion is the motion feat's to refuse (`motion.carried`), so this
+  // guard says nothing of it.
+  assert.equal(await guard('ends', { motion: 'nowhere', member: 'chloe@lanterne.example' }), null)
 })
 
 test('an admission a close carries seats the member it admits', async () => {
+  // Before its motion closed and passed, an admission is the motion feat's
+  // to refuse (`motion.carried`), and this guard says nothing of it.
+  assert.equal(await guard('closes', { motion: 'm-1', member: 'ines@lanterne.example', shares: 20 }), null)
+  // Closed with Chloé's consent, the one stance its roll counted, it passes.
+  await db.query(`INSERT INTO motion.vote (receipt, motion, member, stance, at) VALUES (9001, 'm-1', 'chloe@lanterne.example', 'consent', '2026-10-20')`)
+  await db.query(`UPDATE motion.motion SET closed = '2026-10-31', cutoff = 9002 WHERE id = 'm-1'`)
+  await db.query(`INSERT INTO motion.counted (motion, member) VALUES ('m-1', 'chloe@lanterne.example')`)
+  assert.equal((await db.query<{ p: boolean }>(`SELECT motion.passes('m-1') AS p`)).rows[0].p, true)
   assert.equal(
     await guard('closes', { motion: 'm-1', member: 'ines@lanterne.example', shares: 20 }),
     "m-1 admits a member this write seats nowhere: an admission seats its member in the motion's circle",

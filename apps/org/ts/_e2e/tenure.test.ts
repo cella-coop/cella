@@ -46,7 +46,7 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
   return out.value as T
 }
 const may = async (actor: string, power: string, day: string) =>
-  (await one<{ may: boolean }>('SELECT membership.may($1, $2, NULL, NULL, $3) AS may', [actor, power, day])).may
+  (await one<{ may: boolean }>('SELECT circle_person.may($1, $2, NULL, NULL, $3) AS may', [actor, power, day])).may
 const seated = async (circle: string, day: string) =>
   (await all<{ s: string }>('SELECT s FROM circle.seated($1, $2) s ORDER BY s', [circle, day])).map((r) => r.s)
 

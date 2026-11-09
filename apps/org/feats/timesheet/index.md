@@ -1,6 +1,6 @@
 +++
 title = "Timesheet"
-updated = 2026-11-09
+updated = 2026-11-11
 +++
 
 Time worked, by worker and day, member or not, and each worker's
@@ -115,10 +115,10 @@ and its month is that circle's: the first entry of a member's month in a
 circle makes the month there, so a month of Web's holds Web's time and
 no other circle's. Every write on a month, its submission and its
 approval, names the month's circle in its request and its payload,
-which the membership feat's guard reads a mandate's scope against: a
+which core's guard on every power reads a mandate's scope against: a
 lead approves their own circle's months and is refused another's, the
 refusal naming the circle
-([membership](../membership/index.md#seats)).
+([who may act](../../core/grafts/circle-person/index.md#who-may-act)).
 
 ## Folds
 

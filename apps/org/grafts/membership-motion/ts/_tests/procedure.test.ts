@@ -1,9 +1,10 @@
-// Whether a motion passes by its procedure, on a database holding the
+// Whether a motion passes by its procedure, the motion feat's roll counted
+// by core with membership's standing registered, on a database holding the
 // app's core, the circle, motion and member feats and the grafts beneath
 // this one: two thirds of the votes cast, abstentions counting for neither;
 // a quorum of those counted, an abstention taking part; who counts while
 // a motion is open, and at its close; `fixed`, which refuses a proposal
-// that did not fix its roll, and `counts`, a close that did not count it;
+// that did not fix its roll, and `counted_roll`, a close that did not count it;
 // and a secret ballot's tally, sealed to the app until its close and to
 // whoever reads no motion of its circle. Run by
 // `cella test slice membership-motion`.
@@ -18,14 +19,14 @@ const ten = ['camille', 'yusuf', 'hugo', 'malik', 'julien', 'amina', 'thomas', '
 let receipt = 0
 
 // A motion as the motion feat inserts it; `propose` also fixes its
-// roll, as this graft's proposal does.
+// roll, as the motion feat's proposal does.
 const insert = (id: string, procedure: string) =>
   db.query(
     `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, proposed, deadline)
      SELECT $1, 'ag', 'camille@lanterne.example', $1, p.method, p.id, '2026-10-20', '2026-11-03' FROM motion.procedure p WHERE p.id = $2`,
     [id, procedure],
   )
-const fix = async (id: string) => (await db.query<{ n: number }>('SELECT membership_motion.fix($1) AS n', [id])).rows[0].n
+const fix = async (id: string) => (await db.query<{ n: number }>('SELECT motion.fix($1) AS n', [id])).rows[0].n
 const propose = async (id: string, procedure: string) => {
   await insert(id, procedure)
   await fix(id)
@@ -33,13 +34,13 @@ const propose = async (id: string, procedure: string) => {
 const vote = (motion: string, name: string, stance: string) =>
   db.query(`INSERT INTO motion.vote (receipt, motion, member, stance, at) VALUES ($1, $2, $3, $4, '2026-10-21')`, [++receipt, motion, at(name), stance])
 const passes = async (motion: string) =>
-  (await db.query<{ p: boolean | null }>('SELECT membership_motion.passes($1) AS p', [motion])).rows[0].p
+  (await db.query<{ p: boolean | null }>('SELECT motion.passes($1) AS p', [motion])).rows[0].p
 const turnout = async (motion: string) =>
-  (await db.query('SELECT counted, given, quorate FROM membership_motion.turnout($1)', [motion])).rows[0]
+  (await db.query('SELECT counted, given, quorate FROM motion.turnout($1)', [motion])).rows[0]
 const counts = async (motion: string) =>
-  (await db.query<{ r: string | null }>('SELECT membership_motion.counts($1) AS r', [{ motion }])).rows[0].r
+  (await db.query<{ r: string | null }>('SELECT motion.counted_roll($1) AS r', [{ motion }])).rows[0].r
 const fixed = async (motion: string) =>
-  (await db.query<{ r: string | null }>('SELECT membership_motion.fixed($1) AS r', [{ motion }])).rows[0].r
+  (await db.query<{ r: string | null }>('SELECT motion.fixed($1) AS r', [{ motion }])).rows[0].r
 
 before(async () => {
   await db.connect()
@@ -104,7 +105,7 @@ test('a member suspended while it is open no longer counts, and the close fixes 
   assert.deepEqual(await turnout('m-2026-104'), { counted: 9, given: 2, quorate: false })
   assert.equal(await passes('m-2026-104'), false)
   await db.query(`UPDATE motion.motion SET closed = '2026-11-03', cutoff = $2 WHERE id = $1`, ['m-2026-104', ++receipt])
-  await db.query('SELECT membership_motion.count($1)', ['m-2026-104'])
+  await db.query('SELECT motion.count($1)', ['m-2026-104'])
   await db.query(`UPDATE membership.member SET status = 'active' WHERE address = $1`, [at('hugo')])
   assert.deepEqual(await turnout('m-2026-104'), { counted: 9, given: 2, quorate: false })
 })
@@ -113,7 +114,7 @@ test('a close that did not count its roll is refused; counted, it is not', async
   await propose('m-2026-105', 'majority')
   await db.query(`UPDATE motion.motion SET closed = '2026-11-03', cutoff = $2 WHERE id = $1`, ['m-2026-105', ++receipt])
   assert.equal(await counts('m-2026-105'), "m-2026-105's close did not count its roll: those counted are those of its roll whose seat counts on the day it closes")
-  assert.equal((await db.query<{ n: number }>('SELECT membership_motion.count($1) AS n', ['m-2026-105'])).rows[0].n, 10)
+  assert.equal((await db.query<{ n: number }>('SELECT motion.count($1) AS n', ['m-2026-105'])).rows[0].n, 10)
   assert.equal(await counts('m-2026-105'), null)
 })
 
@@ -141,7 +142,7 @@ test('a secret ballot\'s tally is sealed to the app until its close, and to whoe
     try {
       await db.query('SET LOCAL ROLE cella_app')
       await db.query(`SELECT set_config('cella.actor', $1, true), set_config('cella.writing', $2, true)`, [at('camille'), writing ? 'on' : ''])
-      return (await db.query('SELECT passes, counted, given, quorate FROM membership_motion.tally($1)', ['m-2026-106'])).rows[0]
+      return (await db.query('SELECT passes, counted, given, quorate FROM motion.tally($1)', ['m-2026-106'])).rows[0]
     } finally {
       await db.query('ROLLBACK')
     }
@@ -149,7 +150,7 @@ test('a secret ballot\'s tally is sealed to the app until its close, and to whoe
   assert.deepEqual(await tally(true), { passes: null, counted: null, given: null, quorate: null })
   assert.equal(await passes('m-2026-106'), true)
   await db.query(`UPDATE motion.motion SET closed = '2026-11-03', cutoff = $2 WHERE id = $1`, ['m-2026-106', ++receipt])
-  await db.query('SELECT membership_motion.count($1)', ['m-2026-106'])
+  await db.query('SELECT motion.count($1)', ['m-2026-106'])
   assert.deepEqual(await tally(true), { passes: true, counted: 10, given: 3, quorate: true })
   assert.deepEqual(await tally(), { passes: null, counted: null, given: null, quorate: null }, 'closed, it is still none to a reader who reads no motion of ag')
   await db.query(`UPDATE motion.vote SET stance = 'redacted' WHERE motion = $1 AND member = $2`, ['m-2026-106', at('yusuf')])
@@ -157,28 +158,28 @@ test('a secret ballot\'s tally is sealed to the app until its close, and to whoe
   assert.equal(await passes('m-2026-106'), false)
 })
 
-test('the guard covers every action that cites a motion, registered before this graft migrated or after, and refuses one until its motion passed', async () => {
-  const carried = `'membership_motion.carried(jsonb)'::regprocedure`
+test('the guard covers every action that cites a motion, registered before the motion feat migrated or after, and refuses one until its motion passed', async () => {
+  const carried = `'motion.carried(jsonb)'::regprocedure`
   const uncovered = await db.query(`SELECT c.op FROM motion.cites c WHERE NOT EXISTS (SELECT FROM cella.guard g WHERE g.op = c.op AND g.fn = ${carried})`)
   assert.deepEqual(uncovered.rows, [])
   assert.ok((await db.query('SELECT op FROM motion.cites')).rows.length >= 2)
-  assert.deepEqual((await db.query('SELECT fn::text AS fn, owner FROM motion.cite_guard ORDER BY owner')).rows, [
-    { fn: 'membership_motion.carried(jsonb)', owner: 'membership-motion' },
+  assert.deepEqual((await db.query('SELECT fn::text AS fn, owner FROM motion.cite_guard ORDER BY owner, fn::text')).rows, [
+    { fn: 'motion.carried(jsonb)', owner: 'motion' },
     { fn: 'motion.mandated(jsonb)', owner: 'motion' },
   ])
 
   await db.query(`SELECT motion.register_cite('later:thing:do', 'do-thing', 'later')`)
   assert.deepEqual((await db.query(`SELECT owner FROM cella.guard WHERE op = 'later:thing:do' AND fn = ${carried}`)).rows, [
-    { owner: 'membership-motion' },
+    { owner: 'motion' },
   ])
   const judge = async (motion: string) =>
-    (await db.query<{ r: string | null }>('SELECT membership_motion.carried($1) AS r', [{ motion }])).rows[0].r
+    (await db.query<{ r: string | null }>('SELECT motion.carried($1) AS r', [{ motion }])).rows[0].r
   await propose('m-2026-108', 'majority')
   assert.equal(await judge('m-2026-108'), 'm-2026-108 is not closed')
   for (const name of ten) {
     await vote('m-2026-108', name, 'for')
   }
   await db.query(`UPDATE motion.motion SET closed = '2026-11-03', cutoff = $2 WHERE id = $1`, ['m-2026-108', ++receipt])
-  await db.query('SELECT membership_motion.count($1)', ['m-2026-108'])
+  await db.query('SELECT motion.count($1)', ['m-2026-108'])
   assert.equal(await judge('m-2026-108'), null)
 })

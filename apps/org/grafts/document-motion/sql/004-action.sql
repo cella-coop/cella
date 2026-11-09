@@ -21,7 +21,7 @@ WHERE m.kind = 'adopt';
 -- document:document:adopt — the cited motion asks to adopt this
 -- document, and the version adopted hashes as the motion names it: the
 -- members voted on that content, whichever version holds it. That it
--- closed and passed on its roll is membership-motion's guard,
+-- closed and passed on its roll is the motion feat's guard, motion.carried,
 -- attached through motion.cites; that the version is the document's
 -- and its base has not moved, the document feat's.
 CREATE OR REPLACE FUNCTION document_motion.adopts(payload jsonb) RETURNS text

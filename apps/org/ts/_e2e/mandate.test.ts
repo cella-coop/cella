@@ -198,8 +198,8 @@ test('every employee still logs their time by right, no mandate: the right is th
   )
   assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM circle.mandate WHERE power = 'log-time'`)).n, 0)
   const employees = await all<{ address: string; entitled: boolean; may: boolean }>(
-    `SELECT w.address, membership.entitled(w.address, 'log-time', NULL, '2026-12-19') AS entitled,
-            membership.may(w.address, 'log-time', NULL, NULL, '2026-12-19') AS may
+    `SELECT w.address, circle_person.entitled(w.address, 'log-time', NULL, '2026-12-19') AS entitled,
+            circle_person.may(w.address, 'log-time', NULL, NULL, '2026-12-19') AS may
      FROM employment.worker w WHERE employment.employed(w.address, '2026-12-19') ORDER BY w.address`,
   )
   assert.ok(employees.length > 0)

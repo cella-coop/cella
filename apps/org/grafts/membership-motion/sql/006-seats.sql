@@ -1,5 +1,5 @@
 -- circle:seat:add and :remove cite a motion: the motion feat
--- attaches membership-motion's `carried` to them as it registers
+-- attaches its own `carried` to them as it registers
 -- them, as to every action listed.
 SELECT motion.register_cite('circle:seat:add', 'seat-member', 'membership-motion');
 SELECT motion.register_cite('circle:seat:remove', 'seat-member', 'membership-motion');
@@ -36,6 +36,7 @@ CREATE FUNCTION membership_motion.seats(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
+    WHEN membership_motion.uncarried(payload ->> 'motion') THEN NULL
     WHEN s.id IS NULL THEN 'no seat ' || coalesce(p.seat::text, 'is named')
     WHEN s.since IS DISTINCT FROM cella.verdict_date() OR s.until IS NOT NULL
       THEN 'seat ' || s.id || ' was not added by this write'
@@ -63,6 +64,7 @@ CREATE FUNCTION membership_motion.unseats(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
+    WHEN membership_motion.uncarried(payload ->> 'motion') THEN NULL
     WHEN s.id IS NULL THEN 'no seat ' || coalesce(p.member, 'of no one') || ' holds in ' || coalesce(p.circle, 'no circle')
     WHEN s.until IS DISTINCT FROM cella.verdict_date() THEN 'seat ' || s.id || ' was not ended by this write'
     WHEN d.id IS NULL THEN 'no motion ' || coalesce(p.motion, 'is cited')
@@ -161,6 +163,7 @@ CREATE FUNCTION membership_motion.seats_role(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
+    WHEN membership_motion.uncarried(payload ->> 'motion') THEN NULL
     WHEN s.id IS NULL OR s.role IS NULL THEN 'no seat of a role ' || coalesce(p.seat::text, 'is named')
     WHEN s.since IS DISTINCT FROM cella.verdict_date() OR s.until IS NOT NULL
       THEN 'seat ' || s.id || ' was not added by this write'
@@ -182,6 +185,7 @@ CREATE FUNCTION membership_motion.unseats_role(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
+    WHEN membership_motion.uncarried(payload ->> 'motion') THEN NULL
     WHEN s.id IS NULL OR s.role IS NULL
       THEN 'the ' || coalesce(p.role, 'no') || ' role holds no seat in ' || coalesce(p.circle, 'no circle') || ' to end'
     WHEN s.until IS DISTINCT FROM cella.verdict_date() THEN 'seat ' || s.id || ' was not ended by this write'
@@ -210,6 +214,7 @@ CREATE FUNCTION membership_motion.creates(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
+    WHEN membership_motion.uncarried(payload ->> 'motion') THEN NULL
     WHEN c.id IS NULL THEN 'no circle ' || coalesce(p.circle, 'is named')
     WHEN c.assembly THEN c.id || ' is the assembly, which the founding makes'
     WHEN d.id IS NULL THEN 'no motion ' || coalesce(p.motion, 'is cited')

@@ -16,39 +16,15 @@ $$;
 
 SELECT cella.lets_fold('membership-motion:scope:found', 1, 'membership_motion.fold_found(jsonb)', 'membership-motion');
 
--- motion:motion:close: the close counts the motion's roll, as its handler
--- does once the motion feat's fold has closed it (`membership_motion.count`).
-CREATE FUNCTION membership_motion.fold_close(entry jsonb) RETURNS void
-LANGUAGE plpgsql AS $$
-BEGIN
-  PERFORM membership_motion.count(entry -> 'payload' ->> 'motion');
-END
-$$;
-
-SELECT cella.lets_fold('motion:motion:close', 1, 'membership_motion.fold_close(jsonb)', 'membership-motion');
-
--- motion:motion:propose: the roll the proposal fixed, those its procedure
--- calls in its circle on the day it is proposed, as its handler fixes it
--- once the motion feat's fold has inserted the motion
--- (`membership_motion.fix`).
-CREATE FUNCTION membership_motion.fold_propose(entry jsonb) RETURNS void
-LANGUAGE plpgsql AS $$
-BEGIN
-  PERFORM membership_motion.fix(entry -> 'payload' ->> 'motion');
-END
-$$;
-
-SELECT cella.lets_fold('motion:motion:propose', 1, 'membership_motion.fold_propose(jsonb)', 'membership-motion');
-
 -- membership:member:apply: the motion the application proposes in the same
 -- write, once the membership feat's fold has the applicant: the motion
 -- feat's `motion.fold_proposal` from the proposal the entry carries, its
--- proposer the entry's actor, and its roll fixed as a proposal's is.
+-- proposer the entry's actor, which fixes its roll as a proposal's fold
+-- does.
 CREATE FUNCTION membership_motion.fold_apply(entry jsonb) RETURNS void
 LANGUAGE plpgsql AS $$
 BEGIN
   PERFORM motion.fold_proposal((entry ->> 'n')::bigint, entry ->> 'actor', (entry ->> 'date')::date, entry -> 'payload');
-  PERFORM membership_motion.fix(entry -> 'payload' ->> 'motion');
 END
 $$;
 

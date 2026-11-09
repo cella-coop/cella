@@ -1,5 +1,5 @@
 // Why a power is refused, on a database holding the app's core, its
-// circles, and the person and membership feats: `membership.why_not`
+// circles, and the person and membership feats: `circle_person.why_not`
 // names the mandate missing or exceeded and what would fix it, with the
 // values it read, one cause each: a mandate held as a suspended member, a
 // limit the amount exceeds, a scope not covering the record's circle, a
@@ -20,7 +20,7 @@ const thomas = 'thomas@why'
 const amina = 'amina@why'
 
 const whyNot = async (actor: string, power: string, about: string, cents: number | null = null, day = '2026-10-24') =>
-  (await db.query<{ w: string | null }>('SELECT membership.why_not($1, $2, $3, $4, $5) AS w', [actor, power, cents, about, day])).rows[0].w
+  (await db.query<{ w: string | null }>('SELECT circle_person.why_not($1, $2, $3, $4, $5) AS w', [actor, power, cents, about, day])).rows[0].w
 const id = async (policy: string) => (await db.query<{ id: string }>('SELECT id FROM circle.mandate WHERE policy = $1', [policy])).rows[0].id
 
 before(async () => {
@@ -86,7 +86,7 @@ test('a tenure ended names the mandate it carried and that a new tenure would al
 })
 
 test('a suspended member\'s mandate grants to an active member alone', async () => {
-  assert.equal(await whyNot(thomas, 'pay-supplier', 'ag', 100_00), `the actor holds no mandate for pay-supplier up to 100.00 €, their membership being suspended: mandate ${await id('why/1')} grants it to treasurer in operations for an active member alone, and an active membership would allow it`)
+  assert.equal(await whyNot(thomas, 'pay-supplier', 'ag', 100_00), `the actor holds no mandate for pay-supplier up to 100.00 €: mandate ${await id('why/1')} grants it to treasurer in operations, on a seat that does not count there: membership has suspended them or let them go; a seat that counts would allow it`)
 })
 
 test('no mandate at all names the roles holding the power over the record\'s circle, or the assembly that may grant it', async () => {

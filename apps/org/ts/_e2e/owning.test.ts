@@ -61,6 +61,7 @@ test('every table of a feat or a graft names its owning circle, never null, keye
   const registries = tables.filter((t) => t.registry).map((t) => t.table)
   assert.deepEqual(registries, [
     'account.rubric',
+    'circle_person.standing',
     'file_membership.opener',
     'motion.ask_guard',
     'motion.carries',

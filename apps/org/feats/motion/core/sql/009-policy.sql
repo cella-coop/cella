@@ -13,8 +13,8 @@ SELECT motion.register_carries('policy', 'Adopt a policy', '[{"name": "kind", "l
 SELECT motion.register_carries('end', 'End a policy', '[{"name": "policy", "label": "Policy", "type": "text", "options": "policies"}]', 'motion:policy:end', 'motion');
 
 -- An adoption and an end cite the motion that carries them, with the
--- powers a collective mandate of its circle grants them: the graft that
--- counts the roll attaches its guard that the motion closed and passed.
+-- powers a collective mandate of its circle grants them: this feat's
+-- `motion.carried` judges that the motion closed and passed.
 SELECT motion.register_cite('motion:policy:adopt', 'adopt-policy', 'motion');
 SELECT motion.register_cite('motion:policy:end', 'end-policy', 'motion');
 

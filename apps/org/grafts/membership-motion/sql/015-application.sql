@@ -7,8 +7,8 @@
 -- to admit (`motion.empowers`), by the procedure its requirements
 -- fix (`motion.requires`),
 -- someone invited with a whole number of shares (`membership_motion.asks`),
--- its roll fixed (`fixed`). No seat is asked of the applicant: their
--- right puts it, so `sits` is not run.
+-- its roll fixed (`motion.fixed`). No seat is asked of the applicant: their
+-- right puts it, so `motion.sits` is not run.
 CREATE FUNCTION membership_motion.puts(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -25,7 +25,7 @@ BEGIN ATOMIC
     motion.empowers(payload),
     motion.requires(payload),
     membership_motion.asks(payload),
-    membership_motion.fixed(payload)
+    motion.fixed(payload)
   )
   FROM (SELECT payload ->> 'member' AS member, payload ->> 'motion' AS motion) p
   LEFT JOIN motion.motion d ON d.id = p.motion;

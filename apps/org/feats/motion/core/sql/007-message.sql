@@ -62,7 +62,7 @@ CREATE TRIGGER open_for_messages BEFORE INSERT ON motion.message
 
 -- motion:message:post — the message is the actor's own, and mentions and
 -- links what its payload names, which are its text's. That the actor sits in the motion's
--- circle is membership-motion's guard on the same op; that each
+-- circle is `motion.sits` on the same op; that each
 -- mention is a member's and each link a document's, membership-motion's and
 -- document-motion's.
 CREATE FUNCTION motion.posts(payload jsonb) RETURNS text
@@ -91,8 +91,8 @@ GRANT SELECT ON motion.message TO cella_guards;
 
 -- What a motion's writes need, the participant's mandates in the motion's
 -- circle: `propose` to propose one and close it, `discuss` to post on its
--- deliberation. The membership feat checks the actor holds the power,
--- membership-motion that they hold it in the motion's circle.
+-- deliberation. Core's guard on every power checks the actor holds it,
+-- `motion.sits` that they hold it in the motion's circle.
 INSERT INTO cella.power (op, power, amount, owner) VALUES
   ('motion:motion:propose', 'propose', NULL, 'motion'),
   ('motion:motion:close', 'propose', NULL, 'motion'),

@@ -1,6 +1,6 @@
 +++
 title = "Report"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 The co-op's reports: what the books and the work add up to, read through
@@ -23,7 +23,8 @@ A report's `kind` says how it is drawn:
 
 - `income` and `balance`, the **financial statements**: the income
   statement over a span and the balance sheet at its end, each against
-  the span before it, rubric by rubric in the PCG's presentation;
+  the span before it, rubric by rubric in the PCG's presentation,
+  its rubrics in English;
 - `margins`, the **project margins**: each project's margin, its budget
   burn, its forecasts at completion and whether it is watched, on the
   scope's day;

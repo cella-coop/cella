@@ -24,7 +24,7 @@ under `pages/` in the text, and one for each post of the blog.
 |---|---|---|
 | `/` | `src/pages/index.astro` | the `home` page: whatever its file places |
 | `/<name>` | `src/pages/[page].astro` | every other page but `blog`: whatever its file places |
-| `/blog/` | `src/pages/blog/index.astro` | what the `blog` page's file places, then the posts newest first |
+| `/blog/` | `src/pages/blog/index.astro` | what the `blog` page's file places, then the posts newest first, each with its cover beside it where it names one: its photo engraved and cut into a few large cells round its focus, the box trimmed to them, a hint of the post at a glance, over the words on a narrow screen. A post's ink is its own `ink`, or else its place in the order the posts were published, oldest first, in the five inks' turn (`postInk` in `src/lib/place.ts`), so it never changes as posts follow it, no two posts in a row share one, and the post's own page wears the same |
 | `/blog/<name>/` | `src/pages/blog/[post].astro` | one post: its title as the hero, its date over it and its summary under it, its authors, its body |
 
 Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:

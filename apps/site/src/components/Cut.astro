@@ -2,7 +2,8 @@
 // A photo's engraving cut into a cluster's cells (index.md, figures): the
 // print's paper washed with its ink, the mask's lines in that ink, both
 // clipped by the cells, in a box w by h the photo covers, shown from
-// `top` down for `tall`, the band the cells fill.
+// `top` down for `tall` and from `left` across for `wide`, the part the
+// cells fill.
 import type { Status } from '../schemas'
 import { engravingUrl } from '../lib/engrave'
 
@@ -14,16 +15,18 @@ interface Props {
   h: number
   top?: number
   tall?: number
+  left?: number
+  wide?: number
   id: string
   label?: string
   // which layout shows it, where a figure is cut twice (Engraving.astro)
   fit?: 'wide' | 'narrow'
 }
 
-const { photo, ink, cells, w, h, top = 0, tall = h, id, label, fit } = Astro.props
+const { photo, ink, cells, w, h, top = 0, tall = h, left = 0, wide = w, id, label, fit } = Astro.props
 ---
 
-<svg class="cut" data-fit={fit} viewBox={`0 ${top} ${w} ${tall}`} role="img" aria-label={label} style={{ '--ink': `var(--print-${ink}-deep)` }}>
+<svg class="cut" data-fit={fit} viewBox={`${left} ${top} ${wide} ${tall}`} role="img" aria-label={label} style={{ '--ink': `var(--print-${ink}-deep)` }}>
   <defs>
     <clipPath id={`${id}-c`}>{cells.map((d) => <path d={d} />)}</clipPath>
     <mask id={`${id}-m`} maskUnits="userSpaceOnUse" x="0" y="0" width={w} height={h}>

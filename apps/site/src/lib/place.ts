@@ -19,6 +19,19 @@ export async function inkAt(page: string, turn: number): Promise<Status> {
   return TURN[(start + turn) % TURN.length]
 }
 
+/** A post's ink: its own `ink`, or its place in the order the posts were
+ * published, oldest first, in the five inks' turn, so it never changes as
+ * posts follow it and no two posts in a row share one. */
+export async function postInk(id: string): Promise<Status> {
+  const { posts } = await import('./text')
+  const all = (await posts()).slice().sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf() || a.id.localeCompare(b.id))
+  const post = all.find((p) => p.id === id)
+  if (post?.data.ink) {
+    return post.data.ink
+  }
+  return TURN[Math.max(0, all.indexOf(post!)) % TURN.length]
+}
+
 /** A seed, the same on every build, from a section's page and place. */
 export const seedOf = (key: string) => [...key].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 997
 

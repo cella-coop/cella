@@ -1,13 +1,42 @@
 ---
 // The blog's index: what the blog page's file places, its hero first,
-// then every post newest first, its date, title and summary.
+// then every post newest first, its date, title and summary, and beside
+// them its cover where it names one: the photo engraved and cut into a
+// few large cells round its focus, a hint of the post at a glance, in the
+// post's own ink, the same here and on the post (postInk).
+import { cluster } from '@cella/brand'
+import Cut from '../../components/Cut.astro'
 import { figures } from '../../components/figures'
 import Page from '../../layouts/Page.astro'
+import { focusIn } from '../../lib/focus'
+import { postInk, seedOf } from '../../lib/place'
 import { dated, page, posts, siteData } from '../../lib/text'
 
 const { Content, ...p } = await page('blog')
 const site = await siteData()
 const all = await posts()
+
+// a cover's cut: wider than tall, its cells larger than a figure's, so
+// they read at the size of a hint, its box trimmed to the cells all round
+const [W, H] = [1000, 720]
+const bounds = (paths: string[]) => {
+  const nums = paths.flatMap((d) => (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number))
+  const xs = nums.filter((_, k) => k % 2 === 0)
+  const ys = nums.filter((_, k) => k % 2 === 1)
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)]
+  return { left: Math.floor(x0), wide: Math.ceil(x1 - x0), top: Math.floor(y0), tall: Math.ceil(y1 - y0) }
+}
+const covers = await Promise.all(
+  all.map(async (post) => {
+    const photo = post.data.photo
+    if (!photo) {
+      return undefined
+    }
+    const seed = seedOf(`blog/${post.id}`)
+    const cells = cluster(W, H, { pitch: 150, gutter: 16, round: 22, seed, drop: 0.12, focus: await focusIn(photo, W, H) })
+    return { photo, cells, box: bounds(cells), ink: await postInk(post.id), alt: post.data.alt ?? post.data.caption ?? post.data.title }
+  }),
+)
 ---
 
 <Page {...p}>
@@ -18,12 +47,19 @@ const all = await posts()
         <p class="empty" data-drafted={site.drafted('blog.empty')}>{site.blog.empty}</p>
       ) : (
         <ol role="list">
-          {all.map((p) => (
+          {all.map((p, i) => (
             <li>
-              <a href={`/blog/${p.id}/`}>
-                <time class="label" datetime={p.data.date.toISOString()}>{dated(p.data.date)}</time>
-                <h2>{p.data.title}</h2>
-                <p>{p.data.description}</p>
+              <a href={`/blog/${p.id}/`} data-covered={covers[i] ? '' : undefined}>
+                <div class="words">
+                  <time class="label" datetime={p.data.date.toISOString()}>{dated(p.data.date)}</time>
+                  <h2>{p.data.title}</h2>
+                  <p>{p.data.description}</p>
+                </div>
+                {covers[i] && (
+                  <div class="cover">
+                    <Cut photo={covers[i].photo} ink={covers[i].ink} cells={covers[i].cells} w={W} h={H} {...covers[i].box} id={`cover-${p.id}`} label={covers[i].alt} />
+                  </div>
+                )}
               </a>
             </li>
           ))}
@@ -39,7 +75,7 @@ const all = await posts()
   }
 
   .list > * {
-    max-width: 48rem;
+    max-width: 60rem;
   }
 
   ol {
@@ -52,11 +88,42 @@ const all = await posts()
     border-top: 1px solid var(--rule);
   }
 
+  /* a post's words, and its cover beside them where it has one */
   a {
     display: grid;
-    gap: 0.6rem;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem 2.5rem;
+    align-items: center;
     padding-block: 2rem;
     text-decoration: none;
+  }
+
+  a[data-covered] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 15rem);
+  }
+
+  .words {
+    display: grid;
+    gap: 0.6rem;
+    max-width: 44rem;
+  }
+
+  .cover :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* on a narrow screen the cover stands over the words, smaller */
+  @media (max-width: 40rem) {
+    a[data-covered] {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cover {
+      order: -1;
+      width: min(100%, 18rem);
+    }
   }
 
   a:hover h2 {

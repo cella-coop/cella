@@ -8,6 +8,7 @@ import { render } from 'astro:content'
 import { figures } from '../../components/figures'
 import Hero from '../../components/Hero.astro'
 import Page from '../../layouts/Page.astro'
+import { postInk } from '../../lib/place'
 import { dated, posts, siteData } from '../../lib/text'
 
 export async function getStaticPaths() {
@@ -17,11 +18,13 @@ export async function getStaticPaths() {
 const { post } = Astro.props
 const { Content } = await render(post)
 const site = await siteData()
+// its cover's ink, the post's own and the same as on the index
+const ink = await postInk(post.id)
 const blog = 'blog'
 ---
 
 <Page title={post.data.title} description={post.data.description}>
-  <Hero heading={post.data.title} eyebrow={dated(post.data.date)} page={blog} photo={post.data.photo} caption={post.data.caption} alt={post.data.alt} ink={post.data.ink}>
+  <Hero heading={post.data.title} eyebrow={dated(post.data.date)} page={blog} photo={post.data.photo} caption={post.data.caption} alt={post.data.alt} ink={ink}>
     <p>{post.data.description}</p>
   </Hero>
   {

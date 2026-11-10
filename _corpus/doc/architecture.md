@@ -896,7 +896,10 @@ file anywhere else fails `cella test`:
   state table, including the accounts from July through December 2026,
   row for row. Every other scenario folds and compares its own logged
   writes after it runs, unless its file names staged state the log cannot
-  reproduce.
+  reproduce. A scenario passes on every run in every browser it drives,
+  or it is red: it waits on what the page shows, never on a guess at how
+  long the page takes, so a timeout that passes on a rerun is a fault,
+  fixed in the scenario or in the page where it lies, never retried.
 
 Both run on the dev cluster (`cella db start`), on `cella_test`, renewed
 for each slice and each scenario.

@@ -1,3 +1,4 @@
+import { browser } from '$app/env'
 import { generate } from '@cella/org-sign'
 import { keep } from './kept.svelte.ts'
 import { post } from '../post.ts'
@@ -5,9 +6,11 @@ import { post } from '../post.ts'
 // Taking up an invitation: a fresh device key, made and kept here, its
 // private half not exportable; the acceptance posted with its public key
 // and signed by it through the relay; then, signed in, the invitee's own
-// page, loaded afresh under the new session.
+// page, loaded afresh under the new session. Until this browser runs the
+// page's script, its button does nothing, so the page the server sends
+// reads as busy and a click waits for it.
 export class JoinState {
-  busy = $state(false)
+  busy = $state(!browser)
   problem = $state<string | null>(null)
   // What the invitee calls this device.
   label = $state('')

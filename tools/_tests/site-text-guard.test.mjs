@@ -17,7 +17,7 @@ const repo = new URL('../..', import.meta.url).pathname
 const check = guard(repo)
 const bash = (command, cwd = repo) => check({ tool_name: 'Bash', tool_input: { command }, cwd })
 const tool = (tool_name, tool_input, cwd = repo) => check({ tool_name, tool_input, cwd })
-const yaml = 'apps/site/src/content/site.yaml'
+const yaml = 'apps/site/src/content/site.toml'
 const text = dirname(yaml)
 
 test('a write into the text by a shell command is refused, naming the path', () => {
@@ -50,7 +50,7 @@ test('a write into the text by a shell command is refused, naming the path', () 
     `git checkout -- ${yaml}`,
     `git checkout main -- apps/site/src/content`,
     `git restore --source=HEAD~1 ${yaml}`,
-    `git -C apps/site restore src/content/site.yaml`,
+    `git -C apps/site restore src/content/site.toml`,
     `find apps/site/src/content -name '*.mdx' -delete`,
     `find apps/site/src/content -name '*.mdx' -exec sed -i 's/a/b/' {} +`,
     `bash -c "echo x > ${yaml}"`,
@@ -61,9 +61,9 @@ test('a write into the text by a shell command is refused, naming the path', () 
     `sudo -u ixxie rm ${yaml}`,
     `true && echo x > ${yaml}`,
     `echo $(echo x > ${yaml})`,
-    `D=apps/site/src/content; echo x > $D/site.yaml`,
-    `cd apps/site/src/content && echo x > site.yaml`,
-    `cd apps/site && sed -i s/a/b/ src/content/site.yaml`,
+    `D=apps/site/src/content; echo x > $D/site.toml`,
+    `cd apps/site/src/content && echo x > site.toml`,
+    `cd apps/site && sed -i s/a/b/ src/content/site.toml`,
     `dd if=/dev/zero of=${yaml} count=1`,
     `node -e "require('fs').writeFileSync('${yaml}', 'x')"`,
     `python3 -c "open('${yaml}', 'w').write('x')"`,
@@ -77,8 +77,8 @@ test('a write into the text by a shell command is refused, naming the path', () 
 })
 
 test('from the text\'s own directory, a relative write is refused', () => {
-  assert.ok(bash('echo x > site.yaml', join(repo, 'apps/site/src/content')))
-  assert.ok(bash('sed -i s/a/b/ src/content/site.yaml', join(repo, 'apps/site')))
+  assert.ok(bash('echo x > site.toml', join(repo, 'apps/site/src/content')))
+  assert.ok(bash('sed -i s/a/b/ src/content/site.toml', join(repo, 'apps/site')))
 })
 
 test('a read of the text and a write elsewhere pass', () => {
@@ -88,7 +88,7 @@ test('a read of the text and a write elsewhere pass', () => {
     `git diff -- apps/site/src/content`,
     `git log --stat -- apps/site/src/content`,
     `head -n 5 ${yaml} > /tmp/head.txt`,
-    `cp ${yaml} /tmp/site.yaml`,
+    `cp ${yaml} /tmp/site.toml`,
     `sed -n 1,5p ${yaml}`,
     `sed -i s/a/b/ apps/site/src/pages/index.astro`,
     `echo x > apps/site/src/components/new.astro`,
@@ -166,7 +166,7 @@ test('a remove, move or restore of a directory holding the text is refused, by a
     'git restore :/',
     'git restore ":(top)apps/site"',
     'git restore "apps/*"',
-    'git restore "*.yaml"',
+    'git restore "*.toml"',
     'git restore -SW .',
     'git checkout .',
     'git checkout -- .',
@@ -303,7 +303,7 @@ test('the hook\'s wrapper runs the guard with a node, and with none refuses only
 })
 
 test('an Edit, Write or NotebookEdit of the text is refused, and of anything else passes', () => {
-  assert.match(tool('Edit', { file_path: join(repo, yaml), old_string: 'a', new_string: 'b' }), /Edit writes apps\/site\/src\/content\/site\.yaml/)
+  assert.match(tool('Edit', { file_path: join(repo, yaml), old_string: 'a', new_string: 'b' }), /Edit writes apps\/site\/src\/content\/site\.toml/)
   assert.match(tool('Write', { file_path: join(repo, 'apps/site/src/content/sections/new.mdx'), content: 'x' }), /Write writes/)
   assert.ok(tool('Write', { file_path: yaml, content: 'x' }))
   assert.ok(tool('NotebookEdit', { notebook_path: join(repo, 'apps/site/src/content/x.ipynb'), new_source: 'x' }))
@@ -317,7 +317,7 @@ test('the hook refuses by exit 2, its reason on stderr, and lets the rest throug
   const refused = call({ hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { command: `sed -i s/a/b/ ${yaml}` }, cwd: repo })
   assert.equal(refused.status, 2)
   assert.match(refused.stderr, /operator's/)
-  assert.match(refused.stderr, /apps\/site\/src\/content\/site\.yaml/)
+  assert.match(refused.stderr, /apps\/site\/src\/content\/site\.toml/)
   assert.equal(refused.stderr.trim(), reason(`sed -i edits ${yaml}`))
   const passed = call({ hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { command: `cat ${yaml}` }, cwd: repo })
   assert.equal(passed.status, 0)

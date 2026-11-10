@@ -20,6 +20,29 @@ BEGIN
 END
 $$;
 
+-- circle:circle:amend: the circle its entry names, its name, purpose or
+-- procedure changed to the values it carries, each from what the entry
+-- says it was.
+CREATE FUNCTION circle.fold_amend(entry jsonb) RETURNS void
+LANGUAGE plpgsql AS $$
+DECLARE
+  p jsonb := entry -> 'payload';
+  was jsonb;
+BEGIN
+  SELECT jsonb_build_object('name', c.name, 'purpose', c.purpose, 'procedure', c.procedure) INTO was
+  FROM circle.circle c WHERE c.id = p ->> 'circle';
+  IF was IS NULL THEN
+    RAISE EXCEPTION 'circle: entry % amends %, which the fold has no circle of', entry ->> 'n', p ->> 'circle';
+  END IF;
+  IF EXISTS (SELECT FROM jsonb_each(p -> 'was') w WHERE was -> w.key IS DISTINCT FROM w.value) THEN
+    RAISE EXCEPTION 'circle: entry % says % was %, where the fold has %', entry ->> 'n', p ->> 'circle', p -> 'was', was;
+  END IF;
+  UPDATE circle.circle
+  SET name = coalesce(p ->> 'name', name), purpose = coalesce(p ->> 'purpose', purpose), procedure = coalesce(p ->> 'procedure', procedure)
+  WHERE id = p ->> 'circle';
+END
+$$;
+
 -- circle:seat:add: the seat its entry names, by its id, from the entry's
 -- day: a tenure of the role it names, or a membership of the circle where
 -- it names none.
@@ -86,6 +109,7 @@ END
 $$;
 
 SELECT cella.lets_fold('circle:circle:create', 1, 'circle.fold_create(jsonb)', 'circle');
+SELECT cella.lets_fold('circle:circle:amend', 1, 'circle.fold_amend(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:circle:message', 1, 'circle.fold_message(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:seat:add', 1, 'circle.fold_seat_add(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:seat:remove', 1, 'circle.fold_seat_remove(jsonb)', 'circle');

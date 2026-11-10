@@ -51,3 +51,23 @@ export interface Applying {
   deadline: string
   body: string
 }
+
+// On a circle's Settings tab: its name, purpose and procedure in force,
+// the procedures in force it may take, the circle that decides its
+// amendment and the deadline asked, two weeks on, and why no write of the
+// reader's changes them.
+export interface Amending {
+  circle: string
+  name: string
+  purpose: string
+  procedure: string
+  procedures: { value: string; label: string }[]
+  decider: { circle: string; name: string; deadline: string }
+  refused: string
+}
+
+// A circle's page as the graft reads it: whom a motion may seat there,
+// and its terms as its Settings tab shows them.
+export interface OnCircle extends Appointing {
+  amending: Amending
+}

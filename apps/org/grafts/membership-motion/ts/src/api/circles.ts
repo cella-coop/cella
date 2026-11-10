@@ -8,7 +8,7 @@ import { close } from '../handlers/close.ts'
 import { propose } from '../handlers/propose.ts'
 import { put } from '../handlers/put.ts'
 import { roll, turnout } from '../drivers/roll.ts'
-import { appointing, standing } from '../drivers/asking.ts'
+import { amending, appointing, standing } from '../drivers/asking.ts'
 import { stances } from '../drivers/asks.ts'
 import * as forms from './forms.ts'
 
@@ -21,7 +21,7 @@ export type { Founded, Founding } from '../models/founding.ts'
 export { propose } from '../handlers/propose.ts'
 export { put } from '../handlers/put.ts'
 export { roll, turnout } from '../drivers/roll.ts'
-export { appointing, standing } from '../drivers/asking.ts'
+export { amending, appointing, standing } from '../drivers/asking.ts'
 export { stances } from '../drivers/asks.ts'
 
 // A motion's roll and outcome on its page and its turnout in the list;
@@ -30,9 +30,9 @@ export { stances } from '../drivers/asks.ts'
 // transaction, what it decides, carried out, its admissions among them.
 // On a member's page, proposing their
 // admission, suspension or exclusion, and on an employee's own, applying
-// to join; on a circle's, a seat in it, or what
-// the motion feat proposes about its powers; and on a mandate's, its
-// change or its revocation.
+// to join; on a circle's, a seat in it, what the motion feat proposes
+// about its powers, or, from its Settings tab, its amendment; and on a
+// mandate's, its change or its revocation.
 export const slice: Slice = {
   name: 'membership-motion/circles',
   extends: {
@@ -54,8 +54,13 @@ export const slice: Slice = {
     // The stances waiting on the acting member, in their inbox.
     inbox: { rows: stances },
     circles: {
-      item: (db, circle) => appointing(db, circle),
+      item: async (db, circle) => {
+        const seats = await appointing(db, circle)
+        const terms = await amending(db, circle)
+        return seats && terms ? { ...seats, amending: terms } : null
+      },
       actions: {
+        propose: action('motion:motion:propose', (form, _, deps) => motionForms.propose(form, deps.db), propose),
         appoint: action('motion:motion:propose', (form, id, deps) => forms.appointing(form, id ?? '', deps.db), put),
         put: action('motion:motion:propose', (form, id, deps) => circles.about(form, id ?? '', deps.db), async (input, deps) => propose(await circles.putting(input, deps.db), deps)),
       },

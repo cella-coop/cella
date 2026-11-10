@@ -28,3 +28,8 @@ ALTER FUNCTION circle.granted_to() SECURITY DEFINER SET search_path = pg_catalog
 REVOKE EXECUTE ON FUNCTION circle.granted_to() FROM PUBLIC;
 
 GRANT INSERT (id, name, purpose) ON circle.circle TO cella_app;
+
+-- A circle is amended by motion, `circle:circle:amend`: its name, its
+-- purpose or its procedure, from the verdict date, its id never, so
+-- every record, mandate and seat it owns stays its own.
+GRANT UPDATE (name, purpose, procedure) ON circle.circle TO cella_app;

@@ -176,6 +176,7 @@ each action is carried out ([motion](../../feats/motion/index.md#circles)).
 | `adopt-document` | adopting a document's version (`document:document:adopt`) |
 | `seat-member` | giving and ending a seat (`circle:seat:add`, `:remove`) |
 | `create-circle` | creating a circle (`circle:circle:create`) |
+| `amend-circle` | changing a circle's name, purpose or procedure (`circle:circle:amend`) |
 
 Whom a circle's motion decides about is `motion.decides`, and
 never where a circle sits, since none nests: the assembly decides about
@@ -646,6 +647,7 @@ tenure changes who holds the role, never what it holds.
 | Action | Label | Why |
 |---|---|---|
 | `POST /api/circle/create` | ordered | a new circle, by motion |
+| `POST /api/circle/amend` | ordered | a circle's name, purpose or procedure, by motion |
 | `POST /api/circle/message` | confluent | the circle's channel |
 | `POST /api/circle/seat.add` | ordered | who holds which role |
 | `POST /api/circle/seat.remove` | ordered | who holds which role |
@@ -666,6 +668,11 @@ and `revoking`. Creating a circle places it nowhere: circles never nest.
   default bundle in force on the verdict date (`circle.bundle`), so its
   members read its records and its roles act on them from that day.
   Ordered, since the same motion's later actions seat people in it.
+- **amend** changes a circle's name, its purpose or its procedure, by
+  the motion it cites, each from the verdict date; its id never
+  changes, so every record, mandate and seat it owns stays its own.
+  It commits what it changed and what it was. Ordered, since the
+  procedure it sets decides the motions put to the circle after it.
 - **message** posts to the channel. Messages merge in any order; it has
   no handler yet.
 - **seat.add** and **seat.remove** begin and end a tenure, where they
@@ -690,6 +697,7 @@ and `revoking`. Creating a circle places it nowhere: circles never nest.
 |---|---|---|
 | a mandate policy adopted or ended | `adopt-policy` or `end-policy`, collective mandates: the cited motion adopts or ends it, and carried | the assembly or coordination, by motion |
 | create | `create-circle`, a collective mandate: the motion it cites creates this circle | the assembly, by motion |
+| amend | `amend-circle`, a collective mandate: the motion it cites changes this circle so | the assembly, by motion |
 | message | `discuss`, held in the circle | the circle's participants |
 | seat.add | `seat-member`, a collective mandate: the motion it cites gives this seat | the assembly, admitting a member; coordination, seating one in a working circle, and the assembly in coordination or itself |
 | seat.remove | `seat-member`, a collective mandate: the motion it cites ends this seat | as seat.add |
@@ -703,6 +711,15 @@ creates this circle with the name and purpose it gives, and that the
 entry names the bundle in force that day. The same motion may seat
 people in it by its later actions, whose proposal reads the circle an
 earlier action creates as one there is.
+
+A circle is amended by the motion it cites, an `amend-circle` action
+of a motion of a circle holding `amend-circle` that may decide about
+it (`motion.decides`), which membership-motion's guard judges at the
+proposal and again as it is written: the circle is one there is; a
+name given is not blank and no other circle's; a procedure given is
+one in force on the day, built in or a policy's (`motion.decides_by`);
+and it changes something. Each refusal names the circle, the value it
+read and what would fix it.
 
 A seat is given and ended by the motion it cites: the guards that judge
 it are membership-motion's, which joins the motion, that the cited
@@ -906,6 +923,8 @@ them. A grantee's name links to its circle, its issuer to
 its own, and the motion to its page; a link of the chain and a mandate
 under it opens its own page.
 
+A circle's page has a Settings tab, a `Settings` form ([settings](../ui/index.md#settings)) of its name, its purpose and its procedure, from those in force. None saves directly: Save opens the dialog proposing an `amend-circle` motion of the circle that decides about it, the assembly unless another holding `amend-circle` may (`motion.decider`), its reason the guard's, why no write of the reader's changes it.
+
 Who sits in a circle is the membership feat's, which names people.
 Proposing to grant a mandate to one of its roles or to it, or to
 change or revoke one, is the motion feat's, a seat in it membership-motion's: the page's writes propose, and the
@@ -985,7 +1004,7 @@ their tenure, and Camille sits there as a member.
 
 | Circle, by motion | Power |
 |---|---|
-| General assembly | `admit-member`, `suspend-member`, `exclude-member`, `adopt-policy`, `end-policy`, `approve-distribution`, `adopt-document`, `seat-member`, `create-circle` |
+| General assembly | `admit-member`, `suspend-member`, `exclude-member`, `adopt-policy`, `end-policy`, `approve-distribution`, `adopt-document`, `seat-member`, `create-circle`, `amend-circle` |
 | Coordination | `adopt-policy`, `end-policy`, `adopt-document`, `seat-member`; `approve-bill`, 3 000 € limit |
 | Operations | `adopt-policy`; `approve-bill`, 2 000 € limit |
 

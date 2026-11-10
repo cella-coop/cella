@@ -381,6 +381,12 @@ args = { kind = "right", wording = "Every {right: employee} holds {power: apply-
 kind = "policy"
 args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: create-circle}, to create a circle, by motion", takes = "scop-sarl-fr:create-circle" }
 
+# How a circle is changed: the assembly gives one a new name, purpose
+# or procedure by motion, its id kept, so all it owns stays its own.
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: amend-circle}, to change a circle's name, purpose or procedure, by motion", takes = "scop-sarl-fr:amend-circle" }
+
 # Reading, the last of the founding motion: every seat reads its own
 # circle's records and the assembly's, the whole co-op's, and Lanterne
 # keeps open books, so every member reads every circle's records, and

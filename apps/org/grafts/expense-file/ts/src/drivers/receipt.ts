@@ -1,4 +1,4 @@
-import type { Db } from '@cella/org-db'
+import { numbered, type Db } from '@cella/org-db'
 import type { Receipt } from '../models/receipt.ts'
 
 // How many receipts each expense holds, by the expense's id.
@@ -16,7 +16,7 @@ export async function receipts(db: Db, expense: string): Promise<Receipt[]> {
   const { rows } = await db.query<Receipt>(
     `SELECT f.id, f.name, f.type, f.size, to_char(f.uploaded, 'YYYY-MM-DD') AS uploaded
      FROM expense_file.receipt r JOIN file.file f ON f.id = r.file
-     WHERE r.expense = $1 ORDER BY f.id`,
+     WHERE r.expense = $1 ORDER BY ${numbered('f.id')}`,
     [expense],
   )
   return rows

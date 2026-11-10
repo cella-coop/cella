@@ -1,4 +1,4 @@
-import type { Db, Read } from '@cella/org-db'
+import { numbered, type Db, type Read } from '@cella/org-db'
 import { leftBy } from '@cella/org-policy'
 import type { Motion, Detail, Effect, Given, Kind, Labelled, Procedure, Summary } from '../models/motion.ts'
 import type { Message } from '../models/thread.ts'
@@ -18,12 +18,12 @@ const columns = `id, circle, coalesce((SELECT c.name FROM circle.circle c WHERE 
 // latest proposed.
 export const listing: Read = {
   sql: `SELECT ${columns} FROM motion.motion`,
-  order: 'closed IS NOT NULL, proposed DESC, id DESC',
+  order: `closed IS NOT NULL, proposed DESC, ${numbered('id', 'DESC')}`,
 }
 
 // Open motions first, then the latest proposed.
 export async function motions(db: Db): Promise<Motion[]> {
-  const { rows } = await db.query<Motion>(`SELECT ${columns} FROM motion.motion ORDER BY closed IS NOT NULL, proposed DESC, id DESC`)
+  const { rows } = await db.query<Motion>(`SELECT ${columns} FROM motion.motion ORDER BY closed IS NOT NULL, proposed DESC, ${numbered('id', 'DESC')}`)
   return rows
 }
 
@@ -95,7 +95,7 @@ export async function procedures(db: Db): Promise<Procedure[]> {
 // a picker that searches replaces the list when they are many.
 export async function summaries(db: Db): Promise<Summary[]> {
   const { rows } = await db.query<Summary>(
-    `SELECT ${columns} FROM motion.motion ORDER BY proposed DESC, id DESC`,
+    `SELECT ${columns} FROM motion.motion ORDER BY proposed DESC, ${numbered('id', 'DESC')}`,
   )
   return rows
 }

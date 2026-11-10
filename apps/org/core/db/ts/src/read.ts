@@ -11,6 +11,12 @@ export interface Read {
   order: string
 }
 
+// An order by a numbered id, `je-0041`, by its number: its length first,
+// so `je-10000` follows `je-9999`, which as text it precedes. The ids it
+// orders share their prefix, or an order before it parts those that do
+// not, as a motion's day parts its year's.
+export const numbered = (id: string, dir: 'ASC' | 'DESC' = 'ASC') => `length(${id}) ${dir}, ${id} ${dir}`
+
 // What one collection's rows are read from: its owner's select and those
 // of the extensions that add rows of their own, in that order, and each
 // extension's select of `id` and the fields it adds to that row; and the
@@ -163,11 +169,12 @@ export const counts = async (db: Db, s: Source, keeps: Keep[]) => (await read(db
 export const values = async (db: Db, s: Source, keys: string[]) => (await read(db, s, { values: keys })).values
 
 // The field the rows are ordered by first, and which way: where one select
-// reads them and its order leads with a field it selects by name. None
-// where an expression leads, or where extensions' rows follow the owner's.
+// reads them and its order leads with a field it selects by name, or with
+// an id by its number, as `numbered` orders one. None where another
+// expression leads, or where extensions' rows follow the owner's.
 export function ordered(s: Source): { key: string; dir: 'ascending' | 'descending' } | null {
-  const lead = s.rows.length === 1 ? /^\s*"?([a-z_][a-z0-9_]*)"?(?:\s+(asc|desc))?\s*(?:,|$)/i.exec(s.rows[0].order) : null
-  return lead ? { key: lead[1], dir: lead[2]?.toLowerCase() === 'desc' ? 'descending' : 'ascending' } : null
+  const lead = s.rows.length === 1 ? /^\s*(?:length\(([a-z_][a-z0-9_]*)\)|"?([a-z_][a-z0-9_]*)"?)(?:\s+(asc|desc))?\s*(?:,|$)/i.exec(s.rows[0].order) : null
+  return lead ? { key: lead[1] ?? lead[2], dir: lead[3]?.toLowerCase() === 'desc' ? 'descending' : 'ascending' } : null
 }
 
 // A field's number, where the row holds one under its key.

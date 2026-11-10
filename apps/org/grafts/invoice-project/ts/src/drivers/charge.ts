@@ -1,4 +1,4 @@
-import type { Db } from '@cella/org-db'
+import { numbered, type Db } from '@cella/org-db'
 import type { Charged, Invoiced } from '../models/charge.ts'
 
 // The project each invoice bills, by invoice.
@@ -23,7 +23,7 @@ export async function invoiced(db: Db, project: string): Promise<Invoiced> {
   const { rows } = await db.query<{ id: string; label: string; issued: string; net: string; voided: string | null }>(
     `SELECT i.id, i.label, to_char(i.issued, 'YYYY-MM-DD') AS issued, cella.cents(i.net) AS net, to_char(i.voided, 'YYYY-MM-DD') AS voided
      FROM invoice_project.charge c JOIN invoice.invoice i ON i.id = c.invoice
-     WHERE c.project = $1 ORDER BY i.issued DESC, i.id DESC`,
+     WHERE c.project = $1 ORDER BY i.issued DESC, ${numbered('i.id', 'DESC')}`,
     [project],
   )
   const invoices = rows.map((r) => ({ ...r, net: Number(r.net) }))

@@ -105,7 +105,8 @@ journal at rung 3.
 `transaction` (`core/sql/`):
 
 - `transaction.entry`: id (`je-0041`, gapless, its number four digits or
-  more, so `je-10000` follows `je-9999`), date, label,
+  more, so `je-10000` follows `je-9999`, in every list too, which orders
+  ids by their number, never as text), date, label,
   `corrects` and the receipt it was posted at; an entry carried over from
   before the log has no receipt.
 - `transaction.line`: the entry, its line number, the account code, a
@@ -185,7 +186,8 @@ slice transaction`), runs on the app's core and this feat alone: an entry
 balances or is refused, ids are gapless and a refused entry returns its
 number, nothing posted changes, `transaction.pays` takes a payment and
 nothing else, `transaction.corrects` refuses a second correction from the same base,
-and the journal numbers on past four digits, `je-10000` after `je-9999`.
+and the journal numbers on past four digits, `je-10000` after `je-9999`,
+and lists `je-10000` before `je-9999`, the latest first.
 
 ## Reads
 
@@ -194,9 +196,10 @@ Every entry and line reads for whoever holds `record-entry`, `carry-books` or `c
 ## Shell
 
 The journal, as the `transactions` collection, the latest entry first,
-each with the sum of its debits; an entry's page, its header's crumb its id,
-is titled by its label, links the entries that correct it and holds its
-lines in its Lines tab. `/journal` and its entries' old addresses
+by its number, so `je-10000` lists before `je-9999`, each with the sum of
+its debits; an entry's page, its header's crumb its id, is titled by its
+label, links the entries that correct it, in their numbers' order, and
+holds its lines in its Lines tab. `/journal` and its entries' old addresses
 redirect there. Posting
 from the shell is not offered: the pilot's entries come from invoices,
 bills and expenses, through their grafts.

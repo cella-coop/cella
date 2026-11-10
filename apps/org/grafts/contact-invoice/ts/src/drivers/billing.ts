@@ -1,4 +1,4 @@
-import type { Db } from '@cella/org-db'
+import { numbered, type Db } from '@cella/org-db'
 import type { Bill, Billed } from '../models/billing.ts'
 
 export async function billed(db: Db, invoice: string): Promise<Billed> {
@@ -21,7 +21,7 @@ export async function bills(db: Db, contact: string): Promise<Bill[]> {
   const { rows } = await db.query<Bill>(
     `SELECT i.id, i.label, to_char(i.issued, 'YYYY-MM-DD') AS issued, s.total::bigint AS total, s.owed::bigint AS owed, s.state
      FROM contact_invoice.billing b JOIN invoice.invoice i ON i.id = b.invoice JOIN invoice.standing s ON s.id = i.id
-     WHERE b.contact = $1 ORDER BY i.issued DESC, i.id DESC`,
+     WHERE b.contact = $1 ORDER BY i.issued DESC, ${numbered('i.id', 'DESC')}`,
     [contact],
   )
   return rows.map((r) => ({ ...r, total: Number(r.total), owed: Number(r.owed) }))

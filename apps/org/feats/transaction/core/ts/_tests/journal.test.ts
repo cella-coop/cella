@@ -1,14 +1,15 @@
 // The journal alone, on a database holding only the app's core and this
 // feat: entries balance, ids are gapless, nothing posted changes, a payment
-// is exactly one, and a correction names its base; and each write's
-// payload folds into the journal it wrote (`sql/009-folds.sql`). Run by
-// `cella test slice transaction`.
+// is exactly one, a correction names its base, and the journal lists its
+// latest entry first by its number; and each write's payload folds into
+// the journal it wrote (`sql/009-folds.sql`). Run by `cella test slice
+// transaction`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import type { Write } from '@cella/org-db'
-import { adjusting, paying, posting } from '@cella/org-transaction/api'
+import { ordered, type Write } from '@cella/org-db'
+import { adjusting, journal as listed, paying, posting, slice } from '@cella/org-transaction/api'
 
 const db = new pg.Client()
 
@@ -271,6 +272,25 @@ test('the journal numbers on past four digits: je-10000 follows je-9999, and nei
       ids.push((await db.query<{ id: string }>(`INSERT INTO transaction.entry (date, label) VALUES ('2026-10-24', $1) RETURNING id`, [label])).rows[0].id)
     }
     assert.deepEqual(ids, ['je-9999', 'je-10000', 'je-10001'])
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})
+
+test('the journal lists je-10000 before je-9999, the latest first, by its number and never as text', async () => {
+  await db.query('BEGIN')
+  try {
+    await db.query('UPDATE transaction.journal SET last = 9997')
+    for (const label of ['the 9,998th', 'the 9,999th', 'the 10,000th']) {
+      await db.query(`INSERT INTO transaction.entry (date, label) VALUES ('2026-10-24', $1)`, [label])
+    }
+    const latest = ['je-10000', 'je-9999', 'je-9998']
+    assert.deepEqual((await listed(db)).slice(0, 3).map((e) => e.id), latest)
+    const list = slice.collections?.transactions.list
+    assert.ok(list)
+    const { rows } = await db.query<{ id: string }>(`SELECT id FROM (${list.sql}) x ORDER BY ${list.order}`)
+    assert.deepEqual(rows.slice(0, 3).map((r) => r.id), latest)
+    assert.deepEqual(ordered({ rows: [list], fields: [] }), { key: 'id', dir: 'descending' })
   } finally {
     await db.query('ROLLBACK')
   }

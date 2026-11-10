@@ -1,6 +1,6 @@
 +++
 title = "Brand"
-updated = 2026-11-09
+updated = 2026-11-10
 +++
 
 `@cella/brand` is cella's house style as one package: the tones and
@@ -68,10 +68,11 @@ from the explorer:
   toward the largest's size as its neighbours leave room, so its power
   cell holds it whole and centred and no gutter comes within its
   radius; two regions that fit one largest disk, or stand too close for
-  a gutter between them, share one, the circle round both; near an edge
-  it does not bleed past, a disk moves in as far as its region stays
-  inside, and its cell is always kept, cut by the box only where it
-  must be; the outline closes round each, and the other cells shrink
+  the smallest cell and its gutters between them, which would split one
+  subject, share one, the circle round both, at most half as large again
+  as the largest; near an edge it does not bleed past, a disk moves in
+  as far as its region stays inside, and its cell is always kept, cut
+  by the box only where it must be; the outline closes round each, and the other cells shrink
   away from them as well as toward the rim;
   `silhouette`, the shape its cells fill, `'blob'` by default, an
   organic one by name or `{ kind, limbs }`, or `{ field, depth }`, any

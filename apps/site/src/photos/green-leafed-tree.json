@@ -4,5 +4,6 @@
   "photoUrl": "https://unsplash.com/photos/green-leafed-tree-surrounded-by-fog-during-daytime-S297j2CsdlM",
   "id": "S297j2CsdlM",
   "licence": "Unsplash License",
-  "licenceUrl": "https://unsplash.com/license"
+  "licenceUrl": "https://unsplash.com/license",
+  "focus": [{ "x": 0.47, "y": 0.42, "r": 0.2 }]
 }

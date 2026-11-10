@@ -50,7 +50,7 @@ const REACH_SIDES = 14
 export function cluster(w: number, h: number, { pitch, gutter, round, seed, drop = 0, bleed = null, silhouette = 'blob', focus = [], loose = 1 }: ClusterOptions): string[] {
   const [rmin, rmax, alpha] = [pitch * 0.2, pitch * 1.3, 1.5]
   const sep = gutter * 0.4
-  const foci = seat(focus, { w, h, gutter, sep, rmax, bleed })
+  const foci = seat(focus, { w, h, gutter, sep, rmin, rmax, bleed })
 
   // The outline: a blob whose radius wobbles with the angle, and a lobe,
   // its tail. Bleeding off one side, its middle leans toward that edge and
@@ -206,11 +206,11 @@ const MERGE = 1.5
  * it leaves its neighbours room. Disks apart keep their regions inside
  * their own power cells, so two regions become one, the circle round
  * both, where that fits a largest disk, or where they stand too close
- * for a gutter between them, unless that grows too large. A region
- * running off an edge the cluster does not bleed past comes in off it,
+ * for the smallest cell and its gutters between them, which would split
+ * one subject, unless that grows too large. A region running off an edge the cluster does not bleed past comes in off it,
  * and its disk with it, so its cell is round, not cut by the box; a
  * region whose middle lies outside the box is left out. */
-function seat(focus: Focus[], { w, h, gutter, sep, rmax, bleed }: { w: number; h: number; gutter: number; sep: number; rmax: number; bleed: 'l' | 'r' | null }) {
+function seat(focus: Focus[], { w, h, gutter, sep, rmin, rmax, bleed }: { w: number; h: number; gutter: number; sep: number; rmin: number; rmax: number; bleed: 'l' | 'r' | null }) {
   let regions = focus.filter((f) => f.x >= 0 && f.x <= w && f.y >= 0 && f.y <= h && f.r > 0).map((f) => ({ ...f }))
   for (let merged = true; merged; ) {
     merged = false
@@ -223,7 +223,7 @@ function seat(focus: Focus[], { w, h, gutter, sep, rmax, bleed }: { w: number; h
           return
         }
         const round = enclose(p, q)
-        if (round.r + gutter <= rmax * SEAT || (g < gutter * 2 + sep && round.r <= rmax * MERGE)) {
+        if (round.r + gutter <= rmax * SEAT || (g < rmin * 2 + gutter * 2 + sep && round.r <= rmax * MERGE)) {
           best = [i, j, round]
           gap = g
         }

@@ -16,8 +16,12 @@ const SIZE = 64
 const READ = SIZE * 4
 
 const CACHE = join(process.cwd(), '.astro/interest')
-// A change to how interest is measured bumps it, so no stale grid is reused
-const VERSION = 1
+// A change to how interest is measured bumps it, so no stale grid, nor
+// focus found from one, is reused
+export const VERSION = 5
+
+// How much a colour apart from the photo's own counts, against its edges
+const DISTINCT = 1
 
 const file = (name: string) => {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) {
@@ -35,10 +39,12 @@ export async function interest(name: string): Promise<Grid> {
   const { width: w, height: h } = info
   const lum = new Float32Array(w * h)
   const skin = new Float32Array(w * h)
+  const lab = new Float32Array(w * h * 3)
   for (let i = 0; i < w * h; i++) {
     const [r, g, b] = [data[i * 3], data[i * 3 + 1], data[i * 3 + 2]]
     const y = 0.299 * r + 0.587 * g + 0.114 * b
     lum[i] = y / 255
+    lab.set(cielab(r, g, b), i * 3)
     // skin sits in a narrow band of chroma whatever its tone: a soft
     // likelihood round its middle, in YCbCr, but never in the deep shadows
     const cb = 128 - 0.168736 * r - 0.331264 * g + 0.5 * b
@@ -59,15 +65,20 @@ export async function interest(name: string): Promise<Grid> {
   const sigma = w / 40
   const [mean, square] = await Promise.all([blur(lum, w, h, sigma), blur(lum.map((v) => v * v), w, h, sigma)])
   const contrast = mean.map((m, i) => Math.sqrt(Math.max(0, square[i] - m * m)))
-  const [edges, skins] = await Promise.all([blur(edge, w, h, sigma), blur(skin, w, h, sigma)])
-  const [e, c, s] = [normal(edges), normal(contrast), normal(skins)]
+  // distinctness: how far each pixel's colour stands from the photo's
+  // mean, in CIELAB, so a figure stands out from the ground it is set on
+  // whatever its texture (Achanta's frequency-tuned saliency)
+  const avg = [0, 1, 2].map((k) => lab.reduce((s, v, i) => (i % 3 === k ? s + v : s), 0) / (w * h))
+  const apart = Float32Array.from({ length: w * h }, (_, i) => Math.hypot(lab[i * 3] - avg[0], lab[i * 3 + 1] - avg[1], lab[i * 3 + 2] - avg[2]))
+  const [edges, skins, distinct] = await Promise.all([blur(edge, w, h, sigma), blur(skin, w, h, sigma), blur(apart, w, h, sigma)])
+  const [e, c, s, d] = [normal(edges), normal(contrast), normal(skins), normal(distinct)]
   const raw = new Float32Array(w * h)
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const [u, v] = [(x / w - 0.5) * 2, (y / h - 0.5) * 2]
       const centre = Math.exp(-(u * u + v * v) / (2 * 0.6 * 0.6))
       const i = y * w + x
-      raw[i] = (0.4 * e[i] + 0.25 * c[i] + 0.6 * s[i]) * (0.45 + 0.55 * centre)
+      raw[i] = (0.4 * e[i] + 0.25 * c[i] + 0.6 * s[i] + DISTINCT * d[i]) * (0.45 + 0.55 * centre)
     }
   }
   // blurred broad, so a region reads, not a pixel, then down to the grid
@@ -100,4 +111,19 @@ function normal(field: Float32Array) {
   const [lo, hi] = [sorted[Math.floor(sorted.length * 0.02)], sorted[Math.floor(sorted.length * 0.98)]]
   const span = Math.max(hi - lo, 1e-6)
   return field.map((v) => Math.max(0, Math.min(1, (v - lo) / span)))
+}
+
+/** A colour in CIELAB, from sRGB 0 to 255, under D65. */
+function cielab(r: number, g: number, b: number): [number, number, number] {
+  const lin = (v: number) => {
+    const c = v / 255
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+  }
+  const [lr, lg, lb] = [lin(r), lin(g), lin(b)]
+  const x = (0.4124 * lr + 0.3576 * lg + 0.1805 * lb) / 0.95047
+  const y = 0.2126 * lr + 0.7152 * lg + 0.0722 * lb
+  const z = (0.0193 * lr + 0.1192 * lg + 0.9505 * lb) / 1.08883
+  const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116)
+  const [fx, fy, fz] = [f(x), f(y), f(z)]
+  return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)]
 }

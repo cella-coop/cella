@@ -4,5 +4,6 @@
   "photoUrl": "https://unsplash.com/photos/waving-blue-and-yellow-flag-wRAHbIziQfg",
   "id": "wRAHbIziQfg",
   "licence": "Unsplash License",
-  "licenceUrl": "https://unsplash.com/license"
+  "licenceUrl": "https://unsplash.com/license",
+  "focus": [{ "x": 0.51, "y": 0.5, "r": 0.11 }]
 }

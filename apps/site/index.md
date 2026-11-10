@@ -255,18 +255,27 @@ the box. Its largest cells hold the photo's **focus**
 (`src/lib/focus.ts`), what the photo is of: each region whole and
 centred in one, the cells shrinking away from it. The focus is the
 sidecar's where it names one ([photos](#photos)); otherwise it is found
-at build: the faces in the photo, then the people no face was found on,
-by the detectors of Human (`@vladmandic/human`), their weights shipped
-in its package and run on TensorFlow's WASM backend, offline and with
-no native build; and where neither is found, the peaks of its
-**interest** (`src/lib/interest.ts`), a 64-cell-wide grid, 0 to 1, of
-the energy of its edges, its local contrast and how like skin its
-colour is, weighed toward its middle, blurred broad and normalised.
-What is found is kept in the ignored `.astro/focus/` and `.astro/interest/`
-by the photo's modification time and a version, as the engravings are,
-then laid over the figure's box as the photo covers it; a region whose
-middle the box cuts off is left out. So a face is never cut by a gutter,
-and the plain background breaks small. The figure's SVG
+at build, in tiers, by the detectors of Human (`@vladmandic/human`),
+their weights shipped in its package and run on TensorFlow's WASM
+backend, offline and with no native build: the faces in the photo with
+the people no face was found on, then its hands at work, then its
+people alone, and last the peaks of its **interest**
+(`src/lib/interest.ts`), a 64-cell-wide grid, 0 to 1, of the energy of
+its edges, its local contrast, how like skin its colour is and how far
+its colour stands from the photo's own, weighed toward its middle,
+blurred broad and normalised, a peak that would overlap a stronger one
+left out. A face the detector is unsure of counts only on skin and held
+by a person found round it, so a cup, a watch or a map is no face; a
+person whose box runs off the photo's top has no head in it. What is
+found is kept in the ignored `.astro/focus/` and `.astro/interest/` by
+the photo's modification time and a version, as the engravings are,
+then laid over the figure's box as the photo covers it. A figure holds
+the best tier its box shows one of the leads of, a face, a hand, a
+person or a peak: a region shows when its middle lies inside the box by
+a quarter of its radius, and one a third the size of the largest shown
+is left to the small cells, as a crowd behind the subject is. So a cut
+that loses a photo's faces to its edges holds its hands, a face is
+never cut by a gutter, and the plain background breaks small. The figure's SVG
 (`src/components/Cut.astro`) clips the print by the cluster and shows
 the box only from its highest cell to its lowest, so no bare paper
 stands between the cells and the caption. Each

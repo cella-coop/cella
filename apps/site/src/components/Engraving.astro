@@ -26,31 +26,33 @@ const { figure, ink, seed, bleed, aspect = 1.25, credit, drafted } = Astro.props
 const w = 1000
 const h = Math.round(w / aspect)
 const gutter = 12
-const focus = await focusIn(figure.photo, w, h)
-const cut = (side: 'l' | 'r' | undefined) => cluster(w, h, { pitch: 115, gutter, round: 16, seed, drop: 0.25, bleed: side, focus })
-const cells = cut(bleed)
-// a figure bleeding left stands beside words to its right; once the
-// layout stacks it has none, so it is cut a second time bleeding right,
-// as the hero's does, and the narrow layout shows that cut
-const narrow = bleed === 'l' ? cut('r') : undefined
-const [wide, slim] = narrow ? (['wide', 'narrow'] as const) : [undefined, undefined]
+const cut = (height: number, side: 'l' | 'r' | undefined, focus: Awaited<ReturnType<typeof focusIn>>) =>
+  cluster(w, height, { pitch: 115, gutter, round: 16, seed, drop: 0.25, bleed: side, focus })
+const cells = cut(h, bleed, await focusIn(figure.photo, w, h))
+// stacked under its words, a figure takes the column's whole width, so
+// it is cut a second time, wider than tall, lest it fill the screen, and
+// bleeding right, as the hero's does; the narrow layout shows that cut
+const NARROW = 1.9
+const hn = Math.round(w / NARROW)
+const narrow = cut(hn, 'r', await focusIn(figure.photo, w, hn))
 // the band of the box the cells fill, so no empty paper stands between
 // the cells and the caption
-const band = (paths: string[]) => {
+const band = (paths: string[], height: number) => {
   const ys = paths.flatMap((d) => (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number).filter((_, k) => k % 2 === 1))
   const top = Math.max(0, Math.floor(Math.min(...ys) - gutter))
-  const foot = Math.min(h, Math.ceil(Math.max(...ys) + gutter))
+  const foot = Math.min(height, Math.ceil(Math.max(...ys) + gutter))
   return { top, tall: foot - top }
 }
+const [wide, slim] = ['wide', 'narrow'] as const
 const id = `cells-${figure.photo}-${seed}`
 const meta = JSON.parse(readFileSync(join(process.cwd(), 'src/photos', `${figure.photo}.json`), 'utf8')) as { photographer: string; photographerUrl: string; photoUrl: string }
 const [before, rest = ''] = credit.template.split('{name}')
 const [between, after = ''] = rest.split('{unsplash}')
 ---
 
-<figure class="engraving" data-bleed={bleed} data-turns={narrow ? '' : undefined}>
-  <Cut photo={figure.photo} ink={ink} cells={cells} w={w} h={h} {...band(cells)} id={id} label={figure.alt ?? figure.caption} fit={wide} />
-  {narrow && <Cut photo={figure.photo} ink={ink} cells={narrow} w={w} h={h} {...band(narrow)} id={`${id}-n`} label={figure.alt ?? figure.caption} fit={slim} />}
+<figure class="engraving" data-bleed={bleed} data-turns>
+  <Cut photo={figure.photo} ink={ink} cells={cells} w={w} h={h} {...band(cells, h)} id={id} label={figure.alt ?? figure.caption} fit={wide} />
+  <Cut photo={figure.photo} ink={ink} cells={narrow} w={w} h={hn} {...band(narrow, hn)} id={`${id}-n`} label={figure.alt ?? figure.caption} fit={slim} />
   <figcaption>
     <span class="caption" data-drafted={drafted('figure.caption')}>{figure.caption}</span>
     <span class="credit">{before}<a href={meta.photographerUrl}>{meta.photographer}</a>{between}<a href={meta.photoUrl}>{credit.unsplash}</a>{after}</span>
@@ -131,8 +133,8 @@ const [between, after = ''] = rest.split('{unsplash}')
     display: none;
   }
 
-  /* stacked under its words (Block.astro's breakpoint), a figure cut
-     twice wears its right-bleeding cut and bleeds right */
+  /* stacked under its words (Block.astro's breakpoint), a figure wears
+     its second cut, wider than tall, and bleeds right */
   @media (max-width: 56rem) {
     [data-turns] > :global([data-fit='wide']) {
       display: none;

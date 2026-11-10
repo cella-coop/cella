@@ -38,6 +38,23 @@ const FACE = { clahe: 48, gamma: 1.8, light: 0.28 }
 type Kind = 'photo' | 'person'
 const DIRS: Record<Kind, string> = { photo: 'src/photos', person: 'src/people' }
 
+// A photo whose subject lives in its mid-tones, as an aerial forest or an
+// abstract does, engraves as even stripes; its sidecar may ask for a
+// portrait's treatment, `tone`: its contrast evened out locally over
+// tiles of `clahe` pixels, its mid-tones lifted by `gamma`, its lines
+// swelling only from `light`. Unset, a photo is only levelled
+type Tone = { clahe?: number; gamma?: number; light?: number }
+function toneOf(name: string, kind: Kind): Tone {
+  if (kind === 'person') {
+    return FACE
+  }
+  try {
+    return (JSON.parse(readFileSync(join(process.cwd(), DIRS.photo, `${name}.json`), 'utf8')) as { tone?: Tone }).tone ?? {}
+  } catch {
+    return {}
+  }
+}
+
 const file = (name: string, kind: Kind = 'photo') => {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) {
     throw new Error(`invalid photo name: ${name}`)
@@ -70,7 +87,9 @@ const VERSION = 4
 const clamp = (v: number) => Math.max(0, Math.min(1, v))
 
 export async function engrave(name: string, width: number, kind: Kind = 'photo') {
-  const cached = join(CACHE, `${kind}-${name}-${width}-${statSync(file(name, kind)).mtimeMs}-${VERSION}.png`)
+  const tone = toneOf(name, kind)
+  const toned = [tone.clahe, tone.gamma, tone.light].join('_')
+  const cached = join(CACHE, `${kind}-${name}-${width}-${statSync(file(name, kind)).mtimeMs}-${toned}-${VERSION}.png`)
   if (existsSync(cached)) {
     return readFileSync(cached)
   }
@@ -80,16 +99,16 @@ export async function engrave(name: string, width: number, kind: Kind = 'photo')
   let picture = sharp(readFileSync(file(name, kind)))
     .resize(face ? { width, height: width, fit: 'cover', position: 'attention' } : { width })
     .grayscale()
-  if (face) {
-    picture = picture.clahe({ width: FACE.clahe, height: FACE.clahe, maxSlope: 3 })
+  if (tone.clahe) {
+    picture = picture.clahe({ width: tone.clahe, height: tone.clahe, maxSlope: 3 })
   }
   picture = picture.normalise({ lower: 2, upper: 98 })
-  if (face) {
-    picture = picture.gamma(FACE.gamma)
+  if (tone.gamma) {
+    picture = picture.gamma(tone.gamma)
   }
   const { data, info } = await picture.blur(0.8 * s).raw().toBuffer({ resolveWithObject: true })
   // where the lines begin to swell, the lights below it only hairlines
-  const light = face ? FACE.light : 0.18
+  const light = tone.light ?? 0.18
   const { width: w, height: h } = info
   const px = Buffer.alloc(w * h * 2)
   // a line's coverage at a position across it: a cut covering `width` of

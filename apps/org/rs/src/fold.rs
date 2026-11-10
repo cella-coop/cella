@@ -39,6 +39,40 @@ pub const EVERY: i64 = 10_000;
 /// per write, waits for no flush, since a fold that stops is folded again.
 const UNBOUND: &str = "-c cella.unbound=on -c synchronous_commit=off";
 
+/// What a session of the fold answers last: the peak of its process's
+/// resident memory, `VmHWM`, less the shared buffers it touched, which
+/// every session of the cluster shares and `shared_buffers` bounds, in kB,
+/// as the superuser reads its own `/proc/self/status`; on a line no row
+/// line can be, since a row line starts with its table's name.
+const PEAK: &str = "SELECT 'cella:peak ' || ((regexp_match(s, 'VmHWM:\\s+(\\d+) kB'))[1]::bigint - (regexp_match(s, 'RssShmem:\\s+(\\d+) kB'))[1]::bigint) FROM pg_read_file('/proc/self/status') s";
+
+/// The peak a session's `PEAK` line names, in kB.
+fn peak(line: &str) -> Option<u64> {
+    line.strip_prefix("cella:peak ")?.trim().parse().ok()
+}
+
+/// The peak resident memory of this process, in kB.
+fn own_peak() -> u64 {
+    std::fs::read_to_string("/proc/self/status")
+        .ok()
+        .and_then(|s| {
+            s.lines().find_map(|l| {
+                l.strip_prefix("VmHWM:")?
+                    .trim()
+                    .trim_end_matches("kB")
+                    .trim()
+                    .parse()
+                    .ok()
+            })
+        })
+        .unwrap_or(0)
+}
+
+#[allow(clippy::cast_precision_loss)]
+fn mb(kb: u64) -> String {
+    format!("{:.1} MB", kb as f64 / 1024.0)
+}
+
 /// psql on a database of the dev cluster, one value per field, tab apart.
 fn psql(dev: &Dev, db: &str, sql: &str) -> Result<String> {
     let mut cmd = dev.on(db, "psql");
@@ -136,6 +170,11 @@ pub fn fold(repo: &Repo, steps: &Steps, f: &Fold<'_>) -> Result {
         .collect();
     let mut done = at;
     let mut checkpoints = 0;
+    // The peak memory of the fold's sessions, and what it was by the first
+    // checkpoint a tenth of the way, so a peak that grows with the log shows.
+    let mut sessions = 0;
+    let mut tenth: Option<(i64, u64)> = None;
+    let folding = Instant::now();
     while done < to {
         let want = (done + f.every).min(to);
         let end = number(
@@ -152,19 +191,24 @@ pub fn fold(repo: &Repo, steps: &Steps, f: &Fold<'_>) -> Result {
         call.env("PGOPTIONS", UNBOUND).args([
             "-X",
             "-q",
+            "-t",
+            "-A",
             "-v",
             "ON_ERROR_STOP=1",
             "-c",
             &format!("CALL cella.fold_log({end})"),
+            "-c",
+            PEAK,
         ]);
-        Steps::read(&mut call).map_err(|e| Fail {
+        let called = Steps::read(&mut call).map_err(|e| Fail {
             code: e.code,
             msg: Some(format!(
                 "the fold stopped in the write after entry {done}: {}",
                 e.msg.unwrap_or_else(|| "see above".into())
             )),
         })?;
-        let (state, _) = hash(&dev, f.into, &schemas)?;
+        let ((state, _), hashed) = hash(&dev, f.into, &schemas)?;
+        sessions = sessions.max(peak(&called).unwrap_or(0)).max(hashed);
         psql(
             &dev,
             f.into,
@@ -176,11 +220,30 @@ pub fn fold(repo: &Repo, steps: &Steps, f: &Fold<'_>) -> Result {
         )?;
         checkpoints += 1;
         done = end;
+        if tenth.is_none() && (done - at) * 10 >= to - at {
+            tenth = Some((done, sessions));
+        }
     }
+    let folded_in = folding.elapsed().as_secs_f64();
     // A fold resumed at a checkpoint verifies the log after it, from the
     // checkpoint's entry, which is the source's; a fold from the first
     // entry verifies it whole.
-    if psql(&dev, f.into, &format!("SELECT cella.verify_log({at})"))? != "t" {
+    let mut verify = dev.on(f.into, "psql");
+    verify.args([
+        "-X",
+        "-q",
+        "-t",
+        "-A",
+        "-v",
+        "ON_ERROR_STOP=1",
+        "-c",
+        &format!("SELECT cella.verify_log({at})"),
+        "-c",
+        PEAK,
+    ]);
+    let verified = Steps::read(&mut verify)?;
+    sessions = sessions.max(verified.lines().find_map(peak).unwrap_or(0));
+    if verified.lines().next() != Some("t") {
         return Err(Fail::new(format!(
             "the log folded into {} does not verify after entry {at}",
             f.into
@@ -201,6 +264,17 @@ pub fn fold(repo: &Repo, steps: &Steps, f: &Fold<'_>) -> Result {
             || "none".to_owned(),
             |(n, s)| format!("at entry {n}, state {s}")
         ),
+    );
+    #[allow(clippy::cast_precision_loss)]
+    let rate = (to - at) as f64 / folded_in.max(0.001);
+    println!(
+        "measured: {rate:.0} entries/s folded, checkpoints hashed; peak memory: its sessions {}{}, beside the shared buffers; this process {}",
+        mb(sessions),
+        tenth.map_or_else(String::new, |(n, kb)| format!(
+            ", {} by entry {n}, a tenth of the way",
+            mb(kb)
+        )),
+        mb(own_peak()),
     );
     if f.compare {
         compare(&dev, f, &folded)
@@ -280,7 +354,7 @@ fn resume(dev: &Dev, f: &Fold<'_>, n: i64, to: i64) -> Result<i64> {
         .filter(|s| s.1)
         .map(|s| s.0.as_str())
         .collect();
-    let (now, _) = hash(dev, f.into, &schemas)?;
+    let ((now, _), _) = hash(dev, f.into, &schemas)?;
     if hex(&now) != state {
         return Err(Fail::new(format!(
             "the state of {} hashes to {}, not to its checkpoint's {state} at entry {n}: it changed since it was folded",
@@ -453,6 +527,8 @@ struct Rows {
     db: String,
     child: Child,
     lines: BufReader<ChildStdout>,
+    /// The peak memory of the session, in kB, from its last line.
+    peak: u64,
 }
 
 impl Rows {
@@ -467,12 +543,16 @@ impl Rows {
         cmd.args([
             "-X",
             "-q",
+            "-t",
+            "-A",
             "-v",
             "ON_ERROR_STOP=1",
             "-c",
             &format!(
                 "COPY (SELECT tab, r FROM cella.state_rows(ARRAY[{list}]::text[]){only}) TO STDOUT"
             ),
+            "-c",
+            PEAK,
         ])
         .stdout(Stdio::piped());
         let mut child = cmd.spawn().map_err(|e| Fail::new(format!("psql: {e}")))?;
@@ -483,10 +563,12 @@ impl Rows {
             db: db.to_owned(),
             child,
             lines: BufReader::new(out),
+            peak: 0,
         })
     }
 
-    /// The next line, without its newline; none at the end.
+    /// The next row line, without its newline; none at the end, where the
+    /// session names its peak.
     fn next(&mut self) -> Result<Option<String>> {
         let mut line = String::new();
         if self
@@ -498,6 +580,10 @@ impl Rows {
             return Ok(None);
         }
         line.truncate(line.trim_end_matches('\n').len());
+        if let Some(kb) = peak(&line) {
+            self.peak = kb;
+            return Ok(None);
+        }
         Ok(Some(line))
     }
 
@@ -520,21 +606,26 @@ impl Rows {
 type Hashes = ([u8; 32], BTreeMap<String, [u8; 32]>);
 
 /// The state hash of the schemas' tables, the BLAKE3 of every row line in
-/// canonical order, and each table's own.
-fn hash(dev: &Dev, db: &str, schemas: &[&str]) -> Result<Hashes> {
+/// canonical order, and each table's own; and the peak memory of the
+/// session that read them, in kB.
+fn hash(dev: &Dev, db: &str, schemas: &[&str]) -> Result<(Hashes, u64)> {
     let mut state = blake3::Hasher::new();
     let mut tables: BTreeMap<String, blake3::Hasher> = BTreeMap::new();
     let mut rows = Rows::open(dev, db, schemas, None)?;
     while let Some(line) = rows.next()? {
         add(&mut state, &mut tables, &line);
     }
+    let kb = rows.peak;
     rows.close()?;
     Ok((
-        *state.finalize().as_bytes(),
-        tables
-            .into_iter()
-            .map(|(t, h)| (t, *h.finalize().as_bytes()))
-            .collect(),
+        (
+            *state.finalize().as_bytes(),
+            tables
+                .into_iter()
+                .map(|(t, h)| (t, *h.finalize().as_bytes()))
+                .collect(),
+        ),
+        kb,
     ))
 }
 
@@ -569,8 +660,8 @@ fn compare(dev: &Dev, f: &Fold<'_>, folded: &[(String, bool, String)]) -> Result
         .filter(|s| !s.1)
         .map(|s| s.0.clone())
         .collect();
-    let (ours, our_tables) = hash(dev, f.source, &schemas)?;
-    let (theirs, their_tables) = hash(dev, f.into, &schemas)?;
+    let ((ours, our_tables), _) = hash(dev, f.source, &schemas)?;
+    let ((theirs, their_tables), _) = hash(dev, f.into, &schemas)?;
     let not = if unfolded.is_empty() {
         String::new()
     } else {

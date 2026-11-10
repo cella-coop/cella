@@ -842,6 +842,22 @@ file anywhere else fails `cella test`:
 Both run on the dev cluster (`cella db start`), on `cella_test`, renewed
 for each slice and each scenario.
 
+The fold's **scale tier**, `cella test scale`, is a Rust test no other
+target runs, since it takes hours at its size. A TEST-ONLY generator
+grows Lanterne to ten thousand members over twenty years, about ten
+million entries, written straight into a log the notary verifies,
+each payload the one its handler logs: admissions by motion with their
+votes and subscriptions, hires, time entries and their months, expenses,
+purchases and sales, the payroll and the books' months. The tier folds
+it with a checkpoint every ten thousand entries, then re-folds from
+its latest checkpoint, ten thousand entries before the head. It says
+the entries folded a second, the fold's peak memory beside the shared
+buffers, a tenth of the way and at the end, the re-fold's time and the
+log's bytes an entry with its receipt; and it fails where the peak at
+the end is more than 64 MB over the peak a tenth of the way, where the
+re-fold takes more than thirty seconds, or where the fold runs under
+its floor, a thousand entries a second until a run at full size sets it.
+
 Every feat and graft has a denial test, generated, which no slice opts
 into or out of (`cella test e2e denial`, run by every `cella test`): on
 the database migrated whole and seeded with Lanterne, so each table has

@@ -31,6 +31,7 @@ pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>) -> Result {
         Some(Test::Tools) => tools(repo, steps),
         Some(Test::Slice { name }) => slices(repo, steps, name.as_deref()),
         Some(Test::E2e { name }) => e2e(repo, steps, name.as_deref()),
+        Some(Test::Scale { members, years }) => scale(repo, steps, members, years),
     }
 }
 
@@ -38,6 +39,38 @@ fn rust(repo: &Repo, steps: &Steps, name: &str, package: &str) -> Result {
     let mut cmd = repo.cmd("cargo");
     cmd.args(["test", "--quiet", "-p", package]);
     steps.run(name, &mut [cmd], passed)
+}
+
+/// The fold's scale tier, `tests/scale.rs`, which `cella test cli` leaves
+/// out: a release build, since its generator signs millions of entries, on
+/// the dev cluster, sized by its arguments; it says what it measured.
+fn scale(repo: &Repo, steps: &Steps, members: usize, years: u32) -> Result {
+    let dev = Dev::new(repo);
+    dev.up()?;
+    let mut cmd = repo.cmd("cargo");
+    cmd.args([
+        "test",
+        "--release",
+        "--quiet",
+        "-p",
+        "cella-cli",
+        "--test",
+        "scale",
+        "--",
+        "--ignored",
+        "--nocapture",
+    ])
+    .env("CELLA_SCALE_MEMBERS", members.to_string())
+    .env("CELLA_SCALE_YEARS", years.to_string());
+    steps.run("scale", &mut [cmd], measured)
+}
+
+/// The scale tier's measurements, as its line `scale: …` says them.
+fn measured(out: &str) -> Option<String> {
+    out.lines()
+        .rev()
+        .find_map(|l| l.strip_prefix("scale: "))
+        .map(str::to_owned)
 }
 
 /// The notary's `#[pg_test]`s, on a cluster pgrx makes for them and drops.

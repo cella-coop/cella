@@ -354,33 +354,44 @@ REVOKE EXECUTE ON FUNCTION cella.fold_carried(bigint, jsonb) FROM PUBLIC;
 -- sides, never as the commitment its field had before. A column that
 -- cannot hold `redacted`, as a payslip's figures, a fold leaves null
 -- under its commitment, so its null reads as `cella.committed` gives it.
--- A partition's rows are its own, never its parent's again. The owner's.
+-- A partition's rows are its own, never its parent's again. Each personal
+-- column's newest commitments are joined once, by subject, from the vault
+-- and from the commitments a fold applied, as `cella.committed` reads them
+-- one row at a time, so a table reads in one pass whatever its size. The
+-- owner's.
 CREATE FUNCTION cella.state_rows(schemas text[]) RETURNS TABLE (tab text, r text)
 LANGUAGE plpgsql STABLE SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
   t record;
   personal text;
+  joins text;
   generated text;
 BEGIN
   FOR t IN SELECT s.schema, s.tab FROM cella.state s WHERE s.schema = ANY (schemas)
              AND (SELECT c.relkind FROM pg_class c WHERE c.oid = to_regclass(format('%I.%I', s.schema, s.tab))) = 'r'
            ORDER BY s.schema COLLATE "C", s.tab COLLATE "C" LOOP
     SELECT string_agg(
-             CASE WHEN a.atttypid IN ('text'::regtype, 'varchar'::regtype)
-               THEN format('%L, CASE WHEN x.%I IS NULL THEN NULL ELSE cella.committed(%L, x.%I::text, x.%I) END', p.col, p.col, p.schema || '.' || p.tab || '.' || p.col, p.subject, p.col)
-               ELSE format('%L, cella.committed(%L, x.%I::text, x.%I::text)', p.col, p.schema || '.' || p.tab || '.' || p.col, p.subject, p.col)
-             END, ', ' ORDER BY p.col)
-      INTO personal
-      FROM cella.personal p
-      JOIN pg_attribute a ON a.attrelid = to_regclass(format('%I.%I', p.schema, p.tab)) AND a.attname = p.col
-      WHERE p.schema = t.schema AND p.tab = t.tab;
+             CASE WHEN p.typ IN ('text'::regtype, 'varchar'::regtype)
+               THEN format('%L, CASE WHEN x.%I IS NULL THEN NULL ELSE coalesce(v%s.c, f%s.c, x.%I::text) END', p.col, p.col, p.i, p.i, p.col)
+               ELSE format('%L, coalesce(v%s.c, f%s.c, x.%I::text)', p.col, p.i, p.i, p.col)
+             END, ', ' ORDER BY p.col),
+           string_agg(format(
+             ' LEFT JOIN (SELECT DISTINCT ON (s.subject) s.subject, encode(s.commitment, ''hex'') AS c FROM vault.secret s WHERE s.field = %L ORDER BY s.subject, s.receipt DESC, s.commitment DESC) v%s ON v%s.subject = x.%I::text'
+             ' LEFT JOIN (SELECT DISTINCT ON (c.subject) c.subject, encode(c.commitment, ''hex'') AS c FROM cella.commitment c WHERE c.field = %L ORDER BY c.subject, c.n DESC, c.commitment DESC) f%s ON f%s.subject = x.%I::text',
+             p.field, p.i, p.i, p.subject, p.field, p.i, p.i, p.subject), '' ORDER BY p.col)
+      INTO personal, joins
+      FROM (SELECT q.col, q.subject, q.schema || '.' || q.tab || '.' || q.col AS field, a.atttypid AS typ,
+                   row_number() OVER (ORDER BY q.col) AS i
+            FROM cella.personal q
+            JOIN pg_attribute a ON a.attrelid = to_regclass(format('%I.%I', q.schema, q.tab)) AND a.attname = q.col
+            WHERE q.schema = t.schema AND q.tab = t.tab) p;
     generated := cella.generated(t.schema, t.tab);
     RETURN QUERY EXECUTE format(
-      'SELECT %L::text, y.r FROM (SELECT (to_jsonb(x)%s%s)::text AS r FROM ONLY %I.%I x) y ORDER BY y.r COLLATE "C"',
+      'SELECT %L::text, y.r FROM (SELECT (to_jsonb(x)%s%s)::text AS r FROM ONLY %I.%I x%s) y ORDER BY y.r COLLATE "C"',
       t.schema || '.' || t.tab,
       CASE WHEN generated IS NULL THEN '' ELSE format(' - %L::text[]', generated) END,
       CASE WHEN personal IS NULL THEN '' ELSE ' || jsonb_build_object(' || personal || ')' END,
-      t.schema, t.tab);
+      t.schema, t.tab, coalesce(joins, ''));
   END LOOP;
 END
 $$;

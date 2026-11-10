@@ -12,6 +12,7 @@ menu = "Menu"
 toggle = "Switch theme"
 
 [footer]
+home = "Home"
 line = "The cooperative workspace"
 disclaimer = "Cella is an early prototype. We don't have any commercial offering at the moment, and are not yet incorporated as a coop. Stay tuned!"
 links = [
@@ -42,4 +43,12 @@ list = "Sign up for the newsletter"
 pilot = "My coop might pilot Cella"
 submit = "Send"
 done = "Thank you. We read every message and will write back."
+failed = "That did not go through. Try again in a moment."
+
+[signup]
+label = "Email address"
+placeholder = "you@your.coop"
+pilot = "My coop might pilot Cella"
+submit = "Sign up"
+done = "Check your inbox for a link to confirm."
 failed = "That did not go through. Try again in a moment."

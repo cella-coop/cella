@@ -1,0 +1,45 @@
+title = "Cella"
+description = "The cooperative workspace."
+titled = "{page} · {site}"
+nav = [
+  { label = "About", href = "/about" },
+  { label = "Blog", href = "/blog" },
+  { label = "Contact", href = "/contact" },
+]
+menu = "Menu"
+
+[theme]
+toggle = "Switch theme"
+
+[footer]
+line = "The cooperative workspace"
+disclaimer = "Cella is an early prototype. We don't have any commercial offering at the moment, and are not yet incorporated as a coop. Stay tuned!"
+links = [
+  { label = "About", href = "/about" },
+  { label = "Blog", href = "/blog" },
+  { label = "Contact", href = "/contact" },
+]
+
+[blog]
+empty = "No posts yet."
+back = "All posts"
+
+[diagram]
+mark = "AI-generated"
+
+[photo]
+credit = "Photo by {name} on {unsplash}"
+unsplash = "Unsplash"
+
+[contact]
+name = "Name"
+namePlaceholder = "Your name"
+email = "Email"
+emailPlaceholder = "you@your.coop"
+note = "Message"
+notePlaceholder = "Your message"
+list = "Sign up for the newsletter"
+pilot = "My coop might pilot Cella"
+submit = "Send"
+done = "Thank you. We read every message and will write back."
+failed = "That did not go through. Try again in a moment."

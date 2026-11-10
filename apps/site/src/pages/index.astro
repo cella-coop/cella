@@ -1,10 +1,13 @@
 ---
-// The home page, `pages/home/`: its hero, then its sections. Every word it
+// The home page, `pages/home.mdx`: whatever its body places. Every word it
 // shows is the text's (index.md, the text).
+import { figures } from '../components/figures'
 import Page from '../layouts/Page.astro'
 import { page } from '../lib/text'
 
-const { hero, sections } = await page('home')
+const { Content, ...p } = await page('home')
 ---
 
-<Page name="home" hero={hero} sections={sections} />
+<Page {...p}>
+  <Content components={figures} />
+</Page>

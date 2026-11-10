@@ -19,6 +19,7 @@
     "@tensorflow/tfjs-converter": "4.22.0",
     "@tensorflow/tfjs-core": "4.22.0",
     "@vladmandic/human": "3.3.6",
+    "prettier": "3.9.10",
     "typescript": "6.0.3"
   }
 }

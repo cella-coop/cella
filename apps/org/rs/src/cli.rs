@@ -299,6 +299,12 @@ pub enum Site {
     },
     /// Build the figure fixture and take its four screenshots into apps/site/test
     Screenshots,
+    /// Format the site's text and drafts, its pages, posts and site.yaml, with Prettier
+    Fmt {
+        /// Say which files it would change, and change none
+        #[arg(long)]
+        check: bool,
+    },
     /// Vendor an Unsplash photo with its attribution
     Photo {
         #[command(subcommand)]

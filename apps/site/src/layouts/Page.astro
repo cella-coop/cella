@@ -1,59 +1,49 @@
 ---
-// A page of the site: the header with the page marked in its links, the
-// page's hero, its sections and the footer. Down the page the sections
-// trade sides, and the figures take the five inks in turn, home's hero the coral and
-// each other page a step further along; a
-// section that asks for one, `ghost: true`, carries a ghost numeral,
-// counted among those that do.
+// A page of the site, or a post: the header with the page marked in its
+// links, the page's body, its hero and sections as it places them, and
+// the footer. Words its body writes outside a section keep to a readable
+// column at the sections' left edge, as a post's prose does. A page drafted
+// whole is marked so; an unlisted one is kept from search engines, and a
+// header that links one fails the build.
 import Footer from '../components/Footer.astro'
 import Header from '../components/Header.astro'
-import Section from '../components/Section.astro'
-import type { Status } from '../schemas'
-import { siteData, type Rendered } from '../lib/text'
+import { refuse } from '../lib/refuse'
+import { siteData, unlisted } from '../lib/text'
 import Base from './Base.astro'
 
 interface Props {
-  name: string
-  hero: Rendered
-  sections?: Rendered[]
+  title: string
+  description?: string
+  unlisted?: boolean
+  drafted?: boolean
 }
 
-const { name, hero, sections = [] } = Astro.props
+const { title, description, unlisted: hidden = false, drafted = false } = Astro.props
 const site = await siteData()
-const page = hero.title ?? hero.heading
-const full = page === site.title ? page : site.titled.replace('{page}', page).replace('{site}', site.title)
-const credit = { template: site.photo.credit, unsplash: site.photo.unsplash }
-const forms = { signup: site.signup, contact: site.contact, drafted: site.drafted }
+const full = title === site.title ? title : site.titled.replace('{page}', title).replace('{site}', site.title)
 
-const TURN: Status[] = ['error', 'info', 'warning', 'success', 'help']
-// where a page starts in the turn: home at the coral, every other page a
-// step on for each place it holds in the header's links, so no two open
-// alike; a post starts as its blog does
-const root = name.split('/')[0]
-const start = root === 'home' ? 0 : site.nav.findIndex((l) => l.href.replace(/\/$/, '') === `/${root}`) + 1
-const turn = (i: number) => TURN[(start + i) % TURN.length]
-// a section's seed, the same on every build: its page's and its own name
-const seedOf = (id: string) => [...`${name}/${id}`].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 997
-let figures = 1
-let plain = 0
-const laid = sections.map((s, i) => {
-  // the sections trade sides down the page, the first away from the hero's
-  const flip = i % 2 === 0
-  const ink = turn(figures)
-  if (s.figure) {
-    figures++
-  }
-  const num = s.ghost ? ++plain : undefined
-  return { s, flip, ink, num }
-})
+const kept = await unlisted()
+const linked = site.nav.filter((l) => kept.includes(l.href.replace(/^\/|\/$/g, '')))
+if (linked.length > 0) {
+  throw refuse.unlistedInNav(linked.map((l) => l.href))
+}
 ---
 
-<Base title={full} description={hero.description ?? site.description}>
+<Base title={full} description={description ?? site.description} noindex={hidden}>
   <Header title={site.title} nav={site.nav} toggle={site.theme.toggle} menu={site.menu} />
-  <main>
-    <Section section={hero} ink={turn(0)} seed={seedOf('hero')} credit={credit} forms={forms} />
+  <main class="flow" data-drafted={drafted || undefined}>
     <slot />
-    {laid.map(({ s, flip, ink, num }) => <Section section={s} ink={ink} seed={seedOf(s.id)} flip={flip} num={num} credit={credit} forms={forms} />)}
   </main>
   <Footer footer={site.footer} nav={site.nav} drafted={site.drafted} />
 </Base>
+
+<style>
+  /* what a page writes outside its sections: a readable column at the
+     sections' left edge */
+  .flow > :global(:not(section, script, style)) {
+    box-sizing: border-box;
+    max-width: calc(44rem + 32px);
+    margin-inline: max(0px, calc((100% - var(--wrap)) / 2)) auto;
+    padding-inline: max(16px, env(safe-area-inset-left, 0px));
+  }
+</style>

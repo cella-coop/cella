@@ -1,15 +1,17 @@
 ---
-// The blog's index: the blog page's hero, then every post newest first,
-// its date, title and summary.
+// The blog's index: what the blog page's file places, its hero first,
+// then every post newest first, its date, title and summary.
+import { figures } from '../../components/figures'
 import Page from '../../layouts/Page.astro'
 import { dated, page, posts, siteData } from '../../lib/text'
 
-const { hero, sections } = await page('blog')
+const { Content, ...p } = await page('blog')
 const site = await siteData()
 const all = await posts()
 ---
 
-<Page name="blog" hero={hero} sections={sections}>
+<Page {...p}>
+  <Content components={figures} />
   <section class="wrap list">
     {
       all.length === 0 ? (

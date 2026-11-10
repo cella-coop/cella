@@ -5,11 +5,13 @@
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import type { Status } from '../schemas'
+import { swatch } from '../lib/place'
 
 interface Props {
   name: string
   label: string
-  ink: Status
+  // its ink, else its section's, which it inherits
+  ink?: Status
   checked?: boolean
   drafted?: true
 }
@@ -17,10 +19,9 @@ interface Props {
 const { name, label, ink, checked = false, drafted } = Astro.props
 // the tick: Phosphor's bold check, its path alone
 const tick = readFileSync(createRequire(import.meta.url).resolve('@phosphor-icons/core/assets/bold/check-bold.svg'), 'utf8').replace(/^[\s\S]*?<svg[^>]*>|<\/svg>\s*$/g, '')
-const P = { error: 0, warning: 1, success: 2, info: 3, help: 4 }
 ---
 
-<label class="check" data-drafted={drafted} style={{ '--ink': `var(--p${P[ink]})` }}>
+<label class="check" data-drafted={drafted} style={ink ? { '--ink': swatch(ink) } : undefined}>
   <input type="checkbox" name={name} checked={checked} />
   <svg class="box" viewBox="0 0 100 100" aria-hidden="true">
     <rect class="shape" x="6" y="6" width="88" height="88" rx="24" />

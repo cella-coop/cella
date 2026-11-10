@@ -1,12 +1,12 @@
-// The site's text as every page reads it (index.md, the text). A page's
-// section is the operator's file whole once it exists, and its draft only
-// where they have written none. The site's shared text, site.yaml, is
-// their entry with its draft laid under it, field by field: a field they
-// wrote wins whole, one they left out is the draft's. What a draft gives
-// is marked drafted, so the dev server underlines it and a release
-// refuses it while any remains.
-import { getCollection, render, type CollectionEntry } from 'astro:content'
-import { section, site as siteSchema, type Section } from '../schemas'
+// The site's text as every page reads it (index.md, the text). A page is
+// the operator's file whole once it exists, and its draft only where they
+// have written none. The site's shared text, site.yaml, is their entry
+// with its draft laid under it, field by field: a field they wrote wins
+// whole, one they left out is the draft's. What a draft gives is marked
+// drafted, so the dev server underlines it and a release refuses it while
+// any remains.
+import { getCollection, render } from 'astro:content'
+import { site as siteSchema } from '../schemas'
 
 type Json = Record<string, unknown>
 const plain = (v: unknown): v is Json => !!v && typeof v === 'object' && !Array.isArray(v) && !(v instanceof Date)
@@ -58,55 +58,33 @@ export async function siteData() {
   return { ...parsed.data, drafted: marks(drafted) }
 }
 
-export type Rendered = Section & {
-  id: string
-  drafted: Marks
-  Content: Awaited<ReturnType<typeof render>>['Content'] | null
-}
-
-/** One section: the operator's file, or its draft where they wrote none. */
-async function compose(id: string, own?: CollectionEntry<'pages'>, draft?: CollectionEntry<'pageDrafts'>): Promise<Rendered> {
-  // a section is the operator's whole once their file exists; a draft
-  // stands only for one they have not written, every field of it drafted
-  const drafted = new Set<string>()
-  const entry = own ?? draft
-  const data = { ...(entry?.data as Json) }
-  if (!own && draft) {
-    Object.keys(draft.data).forEach((k) => drafted.add(k))
-  }
-  if (id.endsWith('/hero')) {
-    data.kind = 'hero'
-  }
-  const parsed = section.safeParse(data)
-  if (!parsed.success) {
-    throw invalid(`src/${own ? 'content' : 'drafts'}/pages/${id}.mdx`, parsed.error)
-  }
-  const body = entry?.body?.trim() ? entry : undefined
-  if (body && !own) {
-    drafted.add('body')
-  }
-  record(`pages/${id}.mdx`, drafted)
-  const Content = body ? (await render(body)).Content : null
-  return { ...parsed.data, id: id.split('/')[1], drafted: marks(drafted), Content }
-}
-
-/** Every page's name: a folder in the text or the drafts. */
+/** Every page's name: a file in the text or the drafts. */
 export async function pageNames() {
-  const ids = [...(await getCollection('pages')), ...(await getCollection('pageDrafts'))].map((e) => e.id.split('/')[0])
+  const ids = [...(await getCollection('pages')), ...(await getCollection('pageDrafts'))].map((e) => e.id)
   return [...new Set(ids)].sort()
 }
 
-/** A page: its hero and its sections in their order. */
+/** A page: the operator's file, or its draft where they wrote none, whole
+ * and marked drafted; its frontmatter and its body to render. */
 export async function page(name: string) {
-  const own = (await getCollection('pages')).filter((e) => e.id.startsWith(`${name}/`))
-  const drafts = (await getCollection('pageDrafts')).filter((e) => e.id.startsWith(`${name}/`))
-  const ids = [...new Set([...own, ...drafts].map((e) => e.id))]
-  const all = await Promise.all(ids.map((id) => compose(id, own.find((e) => e.id === id), drafts.find((e) => e.id === id))))
-  const hero = all.find((s) => s.kind === 'hero')
-  if (!hero) {
-    throw new Error(`pages/${name}/ has no hero.mdx, in src/content/ or src/drafts/`)
+  const own = (await getCollection('pages')).find((e) => e.id === name)
+  const draft = (await getCollection('pageDrafts')).find((e) => e.id === name)
+  const entry = own ?? draft
+  if (!entry) {
+    throw new Error(`there is no page "${name}": write src/content/pages/${name}.mdx`)
   }
-  return { hero, sections: all.filter((s) => s !== hero).sort((a, b) => a.order - b.order) }
+  const drafted = !own
+  record(`pages/${name}.mdx`, new Set(drafted ? ['the whole page'] : []))
+  const { Content } = await render(entry)
+  return { ...entry.data, drafted, Content }
+}
+
+/** The pages kept from search and from the header's links: an operator's
+ * page that says so, or a draft of one they have not written. */
+export async function unlisted() {
+  const own = await getCollection('pages')
+  const drafts = (await getCollection('pageDrafts')).filter((d) => !own.some((e) => e.id === d.id))
+  return [...own, ...drafts].filter((e) => e.data.unlisted).map((e) => e.id)
 }
 
 /** The blog's posts, newest first; draft posts only in the dev server. */
@@ -118,4 +96,5 @@ export const dated = (d: Date) => d.toLocaleDateString('en', { day: 'numeric', m
 
 /** A heading's parts: plain, and thin where it marks them `*so*`. */
 export const parts = (heading: string) =>
-  heading.split(/(\*[^*]+\*)/).filter(Boolean).map((p) => (p.startsWith('*') && p.endsWith('*') ? { thin: true, text: p.slice(1, -1) } : { thin: false, text: p }))
+  // a written `\n` breaks the line, as a JSX attribute keeps it literal
+  heading.replace(/\\n/g, '\n').split(/(\*[^*]+\*)/).filter(Boolean).map((p) => (p.startsWith('*') && p.endsWith('*') ? { thin: true, text: p.slice(1, -1) } : { thin: false, text: p }))

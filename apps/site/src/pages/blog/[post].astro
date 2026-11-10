@@ -1,11 +1,13 @@
 ---
 // One post at `/blog/<name>/`: its title as the hero, its date above and
-// its summary under, its authors, its body in the prose column, and the
-// way back to the index.
+// its summary under as the lede, its authors, its body, prose in a
+// readable column and the sections it places as a page's, and the way
+// back to the index.
 import { render } from 'astro:content'
 import { figures } from '../../components/figures'
+import Hero from '../../components/Hero.astro'
 import Page from '../../layouts/Page.astro'
-import { dated, posts, siteData, type Rendered } from '../../lib/text'
+import { dated, posts, siteData } from '../../lib/text'
 
 export async function getStaticPaths() {
   return (await posts()).map((p) => ({ params: { post: p.id }, props: { post: p } }))
@@ -14,58 +16,31 @@ export async function getStaticPaths() {
 const { post } = Astro.props
 const { Content } = await render(post)
 const site = await siteData()
-const hero: Rendered = {
-  kind: 'hero',
-  id: 'hero',
-  order: 0,
-  title: post.data.title,
-  description: post.data.description,
-  eyebrow: dated(post.data.date),
-  heading: post.data.title,
-  items: [],
-  numbered: false,
-  quote: false,
-  ghost: false,
-  drafted: () => undefined,
-  Content: null,
-}
+const blog = 'blog'
 ---
 
-<Page name={`blog/${post.id}`} hero={hero}>
-  <article class="wrap prose">
-    <p class="summary">{post.data.description}</p>
-    {
-      post.data.authors.length > 0 && (
-        <ul class="authors label" role="list">
-          {post.data.authors.map((a) => (
-            <li>{a}</li>
-          ))}
-        </ul>
-      )
-    }
-    <Content components={figures} />
-    <p class="back"><a href="/blog/" data-drafted={site.drafted('blog.back')}>{site.blog.back}</a></p>
-  </article>
+<Page title={post.data.title} description={post.data.description}>
+  <Hero heading={post.data.title} eyebrow={dated(post.data.date)} page={blog}>
+    <p>{post.data.description}</p>
+  </Hero>
+  {
+    post.data.authors.length > 0 && (
+      <ul class="authors label" role="list">
+        {post.data.authors.map((a) => (
+          <li>{a}</li>
+        ))}
+      </ul>
+    )
+  }
+  <Content components={figures} />
+  <p class="back"><a href="/blog/" data-drafted={site.drafted('blog.back')}>{site.blog.back}</a></p>
 </Page>
 
 <style>
-  article {
-    padding-block: 2rem 6rem;
-  }
-
-  article > :global(*) {
-    max-width: 44rem;
-  }
-
-  .summary {
-    color: var(--text-muted);
-    font-size: clamp(1.1rem, 1.45vw, 1.28rem);
-  }
-
   .authors {
     display: flex;
     flex-wrap: wrap;
-    margin: 1.5rem 0 2.5rem;
+    margin-block: 2rem 2.5rem;
     padding: 0;
     list-style: none;
   }
@@ -75,7 +50,7 @@ const hero: Rendered = {
   }
 
   .back {
-    margin-top: 4rem;
+    margin-block: 4rem 6rem;
     color: var(--text-muted);
   }
 </style>

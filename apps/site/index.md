@@ -1,6 +1,6 @@
 +++
 title = "Site"
-updated = 2026-11-09
+updated = 2026-11-10
 +++
 
 `apps/site` (`@cella/site`) is cella's landing site: an
@@ -17,15 +17,15 @@ nothing of it goes public until the operator says so.
 
 ## The pages
 
-The site is home, blog, about and contact: one page for each
-folder under `pages/` in the text, and one for each post of the blog.
+The site is home, blog, about and contact: one page for each file
+under `pages/` in the text, and one for each post of the blog.
 
 | Route | File | What |
 |---|---|---|
-| `/` | `src/pages/index.astro` | the `home` page: its hero, then its sections |
-| `/<name>` | `src/pages/[page].astro` | every other page but `blog`: its hero, then its sections |
-| `/blog/` | `src/pages/blog/index.astro` | the `blog` page's hero, then the posts newest first |
-| `/blog/<name>/` | `src/pages/blog/[post].astro` | one post: its title, date, summary and authors, its body |
+| `/` | `src/pages/index.astro` | the `home` page: whatever its file places |
+| `/<name>` | `src/pages/[page].astro` | every other page but `blog`: whatever its file places |
+| `/blog/` | `src/pages/blog/index.astro` | what the `blog` page's file places, then the posts newest first |
+| `/blog/<name>/` | `src/pages/blog/[post].astro` | one post: its title as the hero, its date over it and its summary under it, its authors, its body |
 
 Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:
 
@@ -35,87 +35,140 @@ Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:
   entry's links, the current page's marked, and the theme toggle, an
   icon alone in the bar's far corner. On a narrow screen the links fold
   into a menu under Phosphor's `list` icon, a `<details>` with no script.
-- **the sections**, the hero first, each laid out by its kind
-  (`src/components/Section.astro`):
-
-  | Kind | Layout |
-  |---|---|
-  | `hero` | the page's top: an eyebrow, the heading large, the body as a lede, two actions; its figure overhangs the section after it |
-  | `prose` | its body in a readable column, the default |
-  | `features` | its body as a lede, then its items as a list of cells |
-  | `steps` | its body, then its items as steps |
-  | `list` | its body, then its items as ruled rows |
-
-Every section's `items` are one list (`List.astro`, each item an
-`Item.astro`), under its body, laid out by its `arrange`, or by what its
-kind implies (`arrange`, not `layout`, which MDX takes as a component to
-wrap the file in):
-
-| Layout | What |
-|---|---|
-| `column` | cells down the page, each beside its title and words; a section's default |
-| `row` | cells side by side, each over its words, as many to a row as fit |
-| `grid` | cells in two columns, each beside its words, one on a narrow screen |
-| `ruled` | no cells: a title and its words in two columns every row shares, a rule under each; a `list`'s default |
-| `steps` | no cells: a large thin numeral in the item's ink over its title and words, in two columns; a `steps`'s default |
-
-The items take the five inks in turn however many there are, four on a
-band, which leaves its own out. A cell is the brand's, seeded by the
-item's place or its title, and holds the item's number where the list
-is `numbered: true`, its Phosphor `icon` (the regular weight) in the
-paper, or a person's portrait, `photo` ([the people](#the-people));
-else it is bare. A body writes the same list inline, with words before
-and after it: `<List layout="grid" numbered>` holding `<Item title="…"
-icon="…" photo="…">`s, each its words as markdown.
-  | `band` | a band of a strong ink, `ink` one of the five (`success` unset: deep sage; `error` the coral), its edges cut as a cell's, holding what any section may (eyebrow, heading, body, items, actions, a form) with its diagram beside them; with `quote: true` its body set large and its heading the attribution |
-  | `quote` | a band that quotes, sage unless its `ink` says |
-  | `cta` | a band, coral unless its `ink` says |
-
+- **the page's body**, whatever its file places, in the order it places
+  them ([the layout](#the-layout)); words it writes outside a section,
+  as a post's prose, keep to a readable column at the sections' left
+  edge.
 - **the footer**, on the page's own paper and its grid: the lockup
   and the site's closing line, the header's links in a row, the home
   page's first, and under them the note that the site shows prototype
   work, not yet a product.
 
+## The layout
+
+A page is one MDX file, and its body places the site's components by
+name, with no import, the prose between them markdown (`src/components/figures.ts`):
+
+```mdx
+---
+title: About
+---
+
+<Hero eyebrow="Project status" heading="An early-stage project" photo="white-red-and">
+
+Cella is currently in an early prototyping phase.
+
+<Actions>
+  <Action href="/contact" primary>Get in touch</Action>
+</Actions>
+
+</Hero>
+
+<Section heading="Team" photo="aerial-shot-of" caption="Many trees, one canopy" ghost>
+
+Cella is made by …
+
+</Section>
+
+<Band ink="help" icon="heart" eyebrow="We want you" heading="*Looking for*\ncofounders">
+
+A one-member cooperative is sad! …
+
+<Signup />
+
+</Band>
+```
+
+| Component | What |
+|---|---|
+| `Hero` | the page's top: its `eyebrow`, its `heading`, the page's one `h1`, its body as a lede, and its `photo`, engraved in the page's first ink, overhanging the section after it |
+| `Section` | a section: its `eyebrow`, `heading` and body, a lede unless `prose` sets it as reading text, beside its `photo`, engraved in the page's next ink, with its `caption` and its `alt`; `ink` sets the photo's ink where the turn should not |
+| `Band` | a band of a strong ink, `ink` one of the five (`success` unset: deep sage; `error` the coral), its edges cut as a cell's, holding what a section may beside the diagram its `diagram` names or the Phosphor icon its `icon` names, never a photo; with `quote` its body set large and its heading the attribution |
+| `List`, `Item` | a list, laid out by its `layout` and counted where `numbered` ([the lists](#the-lists)) |
+| `Actions`, `Action` | a row of links as a row of cells, `primary` the solid one |
+| `Signup`, `ContactForm` | the compact sign-up and the contact form ([the forms](#the-forms)), their words the site's |
+| `Diagram`, `Photo`, `Icon`, `Figure` | a figure in the prose ([its figures](#its-figures)) |
+
+A `Section` and a `Band` are told where they stand at build, before the
+file is compiled (`src/lib/sections.ts`, a Vite transform of the
+source, never the file): the page's top-level `Hero`, `Section` and
+`Band`, each written at the start of a line, learn their page, and each
+`Section` and `Band` its place among them, the ink of its photo's turn,
+and, where it asks with `ghost`, its numeral. So a page lays itself out
+by the order it is written in: down the page the sections trade sides,
+the hero's figure on the right and the first section's on the left,
+words alone keeping to their column on their side, a band's diagram and
+its icon as a figure; the photos take the five inks in turn, home's hero
+the coral and every other page starting a step on for each place it
+holds in the header's links, so no two pages open alike, a post as its
+blog (`src/lib/place.ts`). A figure bleeds past the column to the
+screen's edge on its outer side, its caption at that edge. A section
+that asks with `ghost` is numbered among those that do, 01 on, as a
+ghost numeral: the display face's thinnest weight, huge and faint behind
+the section's words, out at the screen's edge on their outer side, a
+gutter in from it. A heading may mark its closing part with stars,
+`*like this*`, set thin, and break its line where it writes `\n`.
+
+A section's ink is set on it, so what its body places, its actions, its
+forms and its ticks, takes it, and a band hands its lists the four other
+inks. Its anchor is its heading's words, lowercased and joined by dashes,
+or its `id`. A component placed wrongly fails the build, saying what is
+wrong, where, and what would fix it (`src/lib/refuse.ts`): a band with
+neither a diagram nor an icon, or both, or a photo; a section with a
+diagram or an icon; a diagram or a photo the site does not have.
+
+A component reads the same however its source is laid out: an
+`Action`'s label written on its own line, which MDX makes a paragraph,
+is unwrapped, and an `Item`'s words set alike either way, so a
+formatter may lay the file out as it likes ([formatting](#formatting)).
+
+## The lists
+
+A `List` holds `Item`s (`List.astro`, `Item.astro`), each its `title`
+and its words as markdown, laid out by its `layout`:
+
+| Layout | What |
+|---|---|
+| `column` | cells down the page, each beside its title and words; the default |
+| `row` | cells side by side, each over its words, as many to a row as fit |
+| `grid` | cells in two columns, each beside its words, one on a narrow screen |
+| `ruled` | no cells: a title and its words in two columns every row shares, a rule under each |
+| `steps` | no cells: a large thin numeral in the item's ink over its title and words, in two columns |
+
+The items take the five inks in turn however many there are, four on a
+band, which leaves its own out. A cell is the brand's, seeded by the
+item's place or its title, and holds the item's number where the list
+is `numbered`, its Phosphor `icon` (the regular weight) in the paper,
+or a person's portrait, `photo` ([the people](#the-people)); else it is
+bare. A section whose list stands side by side, `row`, `grid` or
+`steps`, gives its words half the width beside its figure.
+
+## Bands and actions
+
 A band's edges are a rounded outline in its own box (`EDGES` in
-`Section.astro`), a few long edges meeting at wide turns rounded by the
-brand's own corner, its corners at the screen's sides standing past it.
+`Block.astro`, the layout every section shares), a few long edges
+meeting at wide turns rounded by the brand's own corner, its corners at
+the screen's sides standing past it.
 
 A band is a strong ink, its words and its diagram light on it: the
 sage a deep shade of the success ink's hue, `--band-a`, and the coral
 the error's, `--band-b`, each with its light ink, `--band-a-ink` and
 `--band-b-ink`, mixed from the brand's inks in `Base.astro` and deep
-enough for light text in either theme. A band holds no photo: it draws
-the diagram its section's `diagram` names, from `@cella/diagrams`
+enough for light text in either theme. It draws the diagram its
+`diagram` names, from `@cella/diagrams`
 ([its language](../../packages/diagrams/index.md#the-language)), light
 on its colour, its glyphs' rings and its labels' halos the band's own,
 under it the mark every diagram wears; or, in the diagram's place, the
 Phosphor icon its `icon` names, one large glyph in the band's light
-ink. A band that names neither, or both, fails the build, naming its
-file and the field; a `figure` on a band is dropped (`src/schemas.ts`).
+ink.
 
-A section's actions, its `primary`, `action` and `secondary` links, are
-a row of cells (`Actions.astro`): side by side, their tops and feet
-aligned, each pair sharing a slanted edge cut by one gutter and the
-row's two ends bulging, the first solid in the section's ink and the
-rest a wash of it; on a band, the band's light ink and a veil of it. A small script draws the cells once the row is laid out and again
-when it changes size, the cut seeded by the section; before it, and
-with no script, each link is a plain rounded fill. A hovered or focused
-cell swells a little.
-
-A section with a figure sets it beside its words; down the page every
-section trades sides, the hero's figure on the right and the first
-section's on the left, words alone keeping to their column on their
-side, a band's diagram and a quote's as a figure; the figures take the
-five inks in
-turn, home's hero the coral and every other page starting a step on for
-each place it holds in the header's links, so no two pages open alike,
-a post as its blog (`Page.astro`). A figure bleeds past the
-column to the screen's edge on its outer side, its caption at that
-edge. A section that asks for it, `ghost: true`, is numbered among
-those that do, 01 on, as a ghost numeral: the display face's thinnest
-weight, huge and faint behind the section's words, out at the
-screen's edge on their outer side, a gutter in from it. A heading may
-mark its closing part with stars, `*like this*`, set thin.
+A row of `Action`s is a row of cells (`Actions.astro`): side by side,
+their tops and feet aligned, each pair sharing a slanted edge cut by one
+gutter and the row's two ends bulging, the `primary` one solid in the
+section's ink and the rest a wash of it; on a band, the band's light ink
+and a veil of it. A small script draws the cells once the row is laid
+out and again when it changes size; before it, and with no script, each
+link is a plain rounded fill. A hovered or focused cell swells a little.
 
 The page is the panel, an off-white in the light theme, under a wide
 grid of the text's ink at a breath of strength, 15rem squares (9rem on
@@ -135,8 +188,9 @@ and a press back to the system's theme forgets the choice.
 
 A section's figure is a vendored photo ([photos](#photos)) as a **line
 engraving** in one of the five inks, cut into a **cluster** of the
-brand's cells (`src/components/Engraving.astro`): `figure: { photo,
-caption, alt, ink }` in its frontmatter, the ink the page's turn unset.
+brand's cells (`src/components/Engraving.astro`): a `Hero`'s or a
+`Section`'s `photo`, `caption`, `alt` and `ink`, the ink the page's turn
+unset.
 
 The engraving (`src/lib/engrave.ts`) is rippled horizontal lines that
 swell with the tone, a hairline even in the lights, as a burin leaves,
@@ -239,30 +293,41 @@ passes, so it holds no copy.
 
 Every word the site shows lives in its text, in two places laid out
 alike: the operator's, `src/content/`, and an agent's **drafts**,
-`src/drafts/`. A page's section is the operator's file whole once it
-exists, and its draft, whole, only where they have written none; a
-draft is a complete section, and goes once the operator writes theirs,
-so deleting their file deletes the section rather than bringing a draft
-back. The site's shared text, `site.yaml`, is read as the operator's
-file with its draft laid under it, field by field (`src/lib/text.ts`):
-a field the operator wrote wins whole, an object merges key by key, and
-a field they left out is the draft's.
+`src/drafts/`. A page is the operator's file whole once it exists, and
+its draft, whole, only where they have written none; a draft is a
+complete page and goes once the operator writes theirs, so deleting
+their file deletes the page rather than bringing a draft back. The
+site's shared text, `site.yaml`, is read as the operator's file with its
+draft laid under it, field by field (`src/lib/text.ts`): a field the
+operator wrote wins whole, an object merges key by key, and a field
+they left out is the draft's.
 
 | Collection | Where | What it holds |
 |---|---|---|
-| `site`, `siteDrafts` | `site.yaml` | what every page shares: the site's title, description and tab title, the header's links, the menu's label, the theme toggle's label, the footer's line, home link and disclaimer, the blog's labels, the mark a diagram wears and the credit under a photo |
-| `pages`, `pageDrafts` | `pages/<page>/<section>.mdx` | a page is a folder of sections, its hero `hero.mdx`, with the page's `title` and `description`; each section's `kind`, `order`, `eyebrow`, `heading`, `items`, `figure` and actions in its frontmatter, its body below; `home` is `/` and `blog` heads the blog |
-| `blog` | `blog/<name>.mdx` | one post a file, the operator's alone: its title, summary, date, authors and whether it is a draft post, which shows in the dev server and is left out of the build |
+| `site`, `siteDrafts` | `site.yaml` | what every page shares: the site's title, description and tab title, the header's links, the menu's label, the theme toggle's label, the footer's line, home link and disclaimer, the blog's labels, the forms' words, the mark a diagram wears and the credit under a photo |
+| `pages`, `pageDrafts` | `pages/<name>.mdx` | a page a file: its `title`, its `description` and whether it is `unlisted` in its frontmatter, and in its body the components it places ([the layout](#the-layout)); `home` is `/` and `blog` heads the blog |
+| `blog` | `blog/<name>.mdx` | one post a file, the operator's alone: its title, summary, date, authors and whether it is a draft post, which shows in the dev server and is left out of the build; its body places what a page's may |
 
-Both places load loose, since either may hold part of an entry; the
-merged entry is held to its schema (`src/schemas.ts`), and one missing
-a field in both fails the build, naming the file, the field, and where
-to write it.
+A page's frontmatter and a merged `site.yaml` are held to their schemas
+(`src/schemas.ts`), and one missing a field fails the build, naming the
+file, the field, and where to write it.
 
-An item's title and line, which the frontmatter holds as plain strings,
-read inline markdown (`src/lib/inline.ts`, `marked`): **bold**,
-*italic*, [links](…) and `code`, no blocks. A heading keeps its own
-convention, its stars setting a part thin.
+**An unlisted page** (`unlisted: true`), such as a pitch sent by its
+address alone, is kept from search engines (`noindex, nofollow`), and
+the build fails while the header's links, and so the footer's, link it.
+
+An item's title reads inline markdown (`src/lib/inline.ts`, `marked`):
+**bold**, *italic*, [links](…) and `code`, no blocks; its words are
+markdown. A heading keeps its own convention, its stars setting a part
+thin.
+
+## Formatting
+
+`cella site fmt` formats the text and the drafts with Prettier, by the
+site's `.prettierrc.json`, which an editor formatting on save reads too;
+`--check` names what it would change. The operator runs it on their own
+text. A component reads the same however its source is laid out
+([the layout](#the-layout)), so formatting changes no word on a page.
 
 **Drafted text is marked.** In the dev server, Alt+Shift+D underlines
 dotted, in the info ink, every element whose text a draft supplied, so

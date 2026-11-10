@@ -7,22 +7,23 @@
 // `wash` or `plain`, a breath of the text's own ink, as a form's field
 // and button. The cells are drawn once the row
 // is laid out, and again when it changes size; before that, and with no
-// script, each is a plain rounded fill.
+// script, each is a plain rounded fill. Its ink is `ink`, or else its
+// section's, which it inherits; a page writes its links as `Action`s.
 import type { Link, Status } from '../schemas'
 import type { Marks } from '../lib/text'
+import { swatch } from '../lib/place'
 
 interface Props {
   links?: { link: Link; field: string }[]
-  ink: Status
-  seed: number
+  ink?: Status
+  seed?: number
   drafted?: Marks
 }
 
-const { links = [], ink, seed, drafted = () => undefined } = Astro.props
-const P = { error: 0, warning: 1, success: 2, info: 3, help: 4 }
+const { links = [], ink, seed = 7, drafted = () => undefined } = Astro.props
 ---
 
-<div class="actions" data-cells data-seed={seed} style={{ '--ink': `var(--p${P[ink]})` }}>
+<div class="actions" data-cells data-seed={seed} style={ink ? { '--ink': swatch(ink) } : undefined}>
   <svg aria-hidden="true"></svg>
   {
     links.map(({ link, field }, i) => (

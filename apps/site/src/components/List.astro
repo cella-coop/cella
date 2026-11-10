@@ -1,9 +1,9 @@
 ---
 // A list (index.md, the lists): its items, each an `Item`, taking the
-// five inks in turn however many there are, leaving out the one `skip`
-// names, as a band's own, and counted where `numbered`. Its items are its
-// `items`, as a section's frontmatter gives them, or its slot, the
-// `Item`s a body writes inline. Its `layout`:
+// five inks in turn however many there are, or on a band the four it
+// hands down, leaving out its own, and counted where `numbered`. Its
+// items are its `items`, or its slot, the `Item`s a page writes inline.
+// Its `layout`:
 //   `column`, unset: cells down the page, each beside its words;
 //   `row`: cells side by side, each over its words, as many as fit;
 //   `grid`: cells in two columns, each beside its words;
@@ -12,7 +12,6 @@
 //   `steps`: no cells, a large numeral in the item's ink over its title
 //     and words, in two columns.
 import { inline } from '../lib/inline'
-import { STATUSES, type Status } from '../schemas'
 import Item from './Item.astro'
 
 export type Layout = 'column' | 'row' | 'grid' | 'ruled' | 'steps'
@@ -23,17 +22,12 @@ interface Props {
   numbered?: boolean
   seed?: number
   drafted?: true
-  // an ink the items leave out, as a band's own, so none sinks into it
-  skip?: Status
 }
 
-const { items, layout = 'column', numbered = false, seed = 1, drafted, skip } = Astro.props
-// the turn of inks, as custom properties each item reads by its place
-const inks = STATUSES.map((_, i) => i).filter((i) => STATUSES[i] !== skip)
-const turn = Object.fromEntries(inks.map((p, k) => [`--c${k}`, `var(--p${p})`]))
+const { items, layout = 'column', numbered = false, seed = 1, drafted } = Astro.props
 ---
 
-<ul class="list" data-layout={layout} data-cycle={inks.length} data-numbered={numbered ? '' : undefined} style={turn} role="list" data-drafted={drafted}>
+<ul class="list" data-layout={layout} data-numbered={numbered ? '' : undefined} role="list" data-drafted={drafted}>
   {
     items
       ? items.map((it, i) => (
@@ -57,16 +51,17 @@ const turn = Object.fromEntries(inks.map((p, k) => [`--c${k}`, `var(--p${p})`]))
     counter-reset: item;
   }
 
-  /* each item's ink, its place in the turn of five, or of four on a band */
-  [data-cycle='5'] > :global(.item:nth-child(5n + 1)) { --ink: var(--c0); }
-  [data-cycle='5'] > :global(.item:nth-child(5n + 2)) { --ink: var(--c1); }
-  [data-cycle='5'] > :global(.item:nth-child(5n + 3)) { --ink: var(--c2); }
-  [data-cycle='5'] > :global(.item:nth-child(5n + 4)) { --ink: var(--c3); }
-  [data-cycle='5'] > :global(.item:nth-child(5n)) { --ink: var(--c4); }
-  [data-cycle='4'] > :global(.item:nth-child(4n + 1)) { --ink: var(--c0); }
-  [data-cycle='4'] > :global(.item:nth-child(4n + 2)) { --ink: var(--c1); }
-  [data-cycle='4'] > :global(.item:nth-child(4n + 3)) { --ink: var(--c2); }
-  [data-cycle='4'] > :global(.item:nth-child(4n)) { --ink: var(--c3); }
+  /* each item's ink, its place in the turn of five; on a band, of the
+     four the band hands down as --b0 to --b3, its own left out */
+  .list > :global(.item:nth-child(5n + 1)) { --ink: var(--p0); }
+  .list > :global(.item:nth-child(5n + 2)) { --ink: var(--p1); }
+  .list > :global(.item:nth-child(5n + 3)) { --ink: var(--p2); }
+  .list > :global(.item:nth-child(5n + 4)) { --ink: var(--p3); }
+  .list > :global(.item:nth-child(5n)) { --ink: var(--p4); }
+  :global([data-band]) .list > :global(.item:nth-child(4n + 1)) { --ink: var(--b0); }
+  :global([data-band]) .list > :global(.item:nth-child(4n + 2)) { --ink: var(--b1); }
+  :global([data-band]) .list > :global(.item:nth-child(4n + 3)) { --ink: var(--b2); }
+  :global([data-band]) .list > :global(.item:nth-child(4n)) { --ink: var(--b3); }
 
   [data-layout='row'] {
     grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));

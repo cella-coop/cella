@@ -8,15 +8,18 @@ import '@cella/brand/fonts.css'
 import '@cella/brand/tokens.css'
 import '@cella/brand/print.css'
 import favicon from '@cella/brand/favicon.svg?url'
+import { NOINDEX } from '../lib/refuse'
 
 const dev = import.meta.env.DEV
 
 interface Props {
   title: string
   description: string
+  // kept from search engines, for an unlisted page
+  noindex?: boolean
 }
 
-const { title, description } = Astro.props
+const { title, description, noindex = false } = Astro.props
 ---
 
 <!doctype html>
@@ -25,6 +28,7 @@ const { title, description } = Astro.props
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content={NOINDEX} />}
     <link rel="icon" type="image/svg+xml" href={favicon} />
     <title>{title}</title>
     <script is:inline>
@@ -190,33 +194,34 @@ const { title, description } = Astro.props
     outline-offset: 3px;
   }
 
-  /* A post's body */
-  .prose {
+  /* What a page or a post writes outside its sections, a post's prose
+     above all (Page.astro) */
+  .flow > :is(p, ul, ol, blockquote, h2, h3) {
     font-size: var(--t-lg);
   }
 
-  .prose h2 {
-    margin: 2.5em 0 0.6em;
+  .flow > h2 {
+    margin-block: 2.5em 0.6em;
     font-size: var(--t-2xl);
   }
 
-  .prose h3 {
-    margin: 2em 0 0.5em;
+  .flow > h3 {
+    margin-block: 2em 0.5em;
     font-size: var(--t-xl);
   }
 
-  .prose p + p {
+  .flow > p + p {
     margin-top: 1em;
   }
 
-  .prose blockquote {
-    margin: 1.5em 0;
+  .flow > blockquote {
+    margin-block: 1.5em;
     padding-inline-start: 1.25rem;
     border-inline-start: 3px solid var(--line);
     color: var(--text-muted);
   }
 
-  .prose code {
+  .flow code {
     padding: 0.1em 0.35em;
     border-radius: 4px;
     background: var(--sunk);

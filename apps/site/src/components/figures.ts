@@ -1,11 +1,18 @@
-// The components the renderer hands every section's and post's body
-// (index.md, the text), so the text places a figure or a list by its name
-// and imports none.
+// The components every page's and post's body may place by name, with no
+// import (index.md, the text): the sections, what goes in them, and the
+// figures.
+import Action from './Action.astro'
+import Actions from './Actions.astro'
+import Band from './Band.astro'
+import ContactForm from './ContactForm.astro'
 import Diagram from './Diagram.astro'
 import Figure from './Figure.astro'
+import Hero from './Hero.astro'
 import Icon from './Icon.astro'
 import Item from './Item.astro'
 import List from './List.astro'
 import Photo from './Photo.astro'
+import Section from './Section.astro'
+import Signup from './Signup.astro'
 
-export const figures = { List, Item, Diagram, Photo, Icon, Figure }
+export const figures = { Hero, Section, Band, List, Item, Actions, Action, Signup, ContactForm, Diagram, Photo, Icon, Figure }

@@ -1,0 +1,28 @@
+---
+// A page's hero (index.md, the layout): its eyebrow, its heading, the page's
+// one `h1`, its body as a lede, and its photo, engraved in the page's first
+// ink beside it and overhanging the section after it. It opens the page.
+import type { Status } from '../schemas'
+import { inkAt, seedOf } from '../lib/place'
+import Block from './Block.astro'
+
+interface Props {
+  heading: string
+  eyebrow?: string
+  photo?: string
+  caption?: string
+  alt?: string
+  // the photo's ink, where the page's turn should not choose it
+  ink?: Status
+  // set at build (lib/sections.ts)
+  page?: string
+}
+
+const { heading, eyebrow, photo, caption, alt, ink, page = 'home' } = Astro.props
+const own = await inkAt(page, 0)
+const kind = 'hero'
+---
+
+<Block kind={kind}heading={heading} eyebrow={eyebrow} figure={photo ? { photo, caption, alt, ink } : undefined} ink={own} seed={seedOf(`${page}/hero`)}>
+  <slot />
+</Block>

@@ -1,6 +1,7 @@
 ---
-// Every page folder but home and the blog's, at `/<name>`: its hero, then
-// its sections.
+// Every page but home and the blog's, at `/<name>`: whatever its file's
+// body places.
+import { figures } from '../components/figures'
 import Page from '../layouts/Page.astro'
 import { page, pageNames } from '../lib/text'
 
@@ -8,8 +9,9 @@ export async function getStaticPaths() {
   return (await pageNames()).filter((p) => p !== 'home' && p !== 'blog').map((p) => ({ params: { page: p } }))
 }
 
-const name = Astro.params.page
-const { hero, sections } = await page(name)
+const { Content, ...p } = await page(Astro.params.page)
 ---
 
-<Page name={name} hero={hero} sections={sections} />
+<Page {...p}>
+  <Content components={figures} />
+</Page>

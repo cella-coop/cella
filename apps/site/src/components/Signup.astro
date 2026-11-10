@@ -2,29 +2,24 @@
 // The compact sign-up for news (index.md, the forms): the email field and
 // the button as one row of cells, the field plain ink and the button the
 // section's, and a box a coop that might pilot ticks, in line with the
-// field's words. It posts to `PUBLIC_SIGNUP_URL`, the list's endpoint.
-import type { Status } from '../schemas'
-import type { Marks } from '../lib/text'
+// field's words. Its words are the site's (`signup` in site.yaml) and its
+// ink its section's, so a page places it bare, `<Signup />`. It posts to
+// `PUBLIC_SIGNUP_URL`, the list's endpoint.
+import { siteData } from '../lib/text'
 import Actions from './Actions.astro'
 import Check from './Check.astro'
 
-interface Props {
-  text: { label: string; placeholder: string; pilot: string; submit: string; done: string; failed: string }
-  ink: Status
-  drafted: Marks
-}
-
-const { text, ink, drafted } = Astro.props
+const { signup: text, drafted } = await siteData()
 const endpoint = import.meta.env.PUBLIC_SIGNUP_URL ?? ''
 const d = (k: string) => drafted(`signup.${k}`)
 ---
 
 <form class="signup" action={endpoint || undefined} method="post" data-form data-endpoint={endpoint}>
-  <Actions ink={ink} seed={11}>
+  <Actions seed={11}>
     <input class="cell field" data-tone="plain" type="email" name="email" required autocomplete="email" aria-label={text.label} placeholder={text.placeholder} data-drafted={d('label')} />
     <button class="cell" data-tone="fill" type="submit" data-drafted={d('submit')}>{text.submit}</button>
   </Actions>
-  <div class="ticks"><Check name="pilot" label={text.pilot} ink={ink} drafted={d('pilot')} /></div>
+  <div class="ticks"><Check name="pilot" label={text.pilot} drafted={d('pilot')} /></div>
   <p class="said" role="status" aria-live="polite" hidden></p>
   <template data-done>{text.done}</template>
   <template data-failed>{text.failed}</template>

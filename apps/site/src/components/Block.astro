@@ -1,0 +1,366 @@
+---
+// The layout every section of a page shares (index.md, the layout), which
+// `Hero`, `Section` and `Band` hand their props and body to. Its words
+// stand beside its figure, on the side `flip` gives, the figure bleeding
+// off the screen's outer edge; a band is a strong ink, its edges cut as a
+// cell's, holding no photo but its diagram or its icon, drawn light on its
+// colour, and quoting where it says so. Its ink is set on it, so what its
+// body places, actions, forms and lists, takes it; a band hands its lists
+// the four other inks. Its `numeral`, where it has one, is a ghost numeral.
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
+import { roundedPath, type Point } from '@cella/brand'
+import { diagrams, type DiagramName } from '@cella/diagrams'
+import type { Figure, Status } from '../schemas'
+import { anchor, handed, swatch } from '../lib/place'
+import { refuse, where } from '../lib/refuse'
+import { siteData } from '../lib/text'
+import Diagram from './Diagram.astro'
+import Engraving from './Engraving.astro'
+import Heading from './Heading.astro'
+import Icon from './Icon.astro'
+
+interface Props {
+  kind: 'hero' | 'section' | 'band'
+  id?: string
+  eyebrow?: string
+  heading: string
+  figure?: Figure
+  diagram?: string
+  icon?: string
+  ink: Status
+  quote?: boolean
+  // its body set as reading text, not as a lede
+  prose?: boolean
+  flip?: boolean
+  numeral?: number
+  seed: number
+}
+
+const { kind, id, eyebrow, heading, figure, diagram, icon, ink, quote = false, prose = false, flip = false, numeral, seed } = Astro.props
+const hero = kind === 'hero'
+const band = kind === 'band'
+const at = where(kind, heading)
+
+// a band holds a diagram or an icon and no photo; anything else, no plate
+if (band && !diagram && !icon) {
+  throw refuse.plateless(at)
+}
+if (band && diagram && icon) {
+  throw refuse.twoPlates(at)
+}
+if (band && figure) {
+  throw refuse.photoOnBand(at, figure.photo)
+}
+if (!band && (diagram || icon)) {
+  throw refuse.plateOffBand(at)
+}
+if (diagram && !(diagram in diagrams)) {
+  throw refuse.unknownDiagram(at, diagram)
+}
+if (figure && !existsSync(join(process.cwd(), 'src/photos', `${figure.photo}.json`))) {
+  throw refuse.unknownPhoto(at, figure.photo)
+}
+
+const site = await siteData()
+const credit = { template: site.photo.credit, unsplash: site.photo.unsplash }
+const none = () => undefined
+const body = Astro.slots.has('default')
+
+// A band's outline, as a cell's: a few long edges meeting at wide,
+// rounded corners, in the band's own box, so it stretches with it, one of
+// two by its seed. The corners at the screen's sides stand past it, so
+// only the turns inside show rounded
+const EDGES: Point[][] = [
+  [[-0.1, 0.155], [0.34, 0], [1.1, 0.08], [1.1, 0.89], [0.71, 1], [-0.1, 0.94]],
+  [[-0.1, 0.07], [0.58, 0], [1.1, 0.125], [1.1, 0.92], [0.36, 1], [-0.1, 0.95]],
+]
+const anchorId = hero ? undefined : (id ?? anchor(heading))
+const clip = band ? `band-${anchorId ?? seed}` : undefined
+const outline = band ? roundedPath(EDGES[seed % 2], 0.07, (v) => v.toFixed(4)) : undefined
+const paired = Boolean(figure || diagram || icon)
+const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? { 'clip-path': `url(#${clip})` } : {}) }
+---
+
+<section id={anchorId} class:list={['section', { hero }]} data-band={band ? ink : undefined} style={style}>
+  {
+    outline && (
+      <svg class="edge" width="0" height="0" aria-hidden="true">
+        <clipPath id={clip} clipPathUnits="objectBoundingBox"><path d={outline} /></clipPath>
+      </svg>
+    )
+  }
+  {
+    band && quote ? (
+      <div class:list={['wrap', 'pair', { flip }]}>
+        <blockquote>
+          {body && <div class="said"><slot /></div>}
+          <cite class="label">{heading}</cite>
+        </blockquote>
+        {diagram && <div class="plate"><Diagram name={diagram as DiagramName} band /></div>}
+        {icon && <div class="plate glyph"><Icon name={icon} role="current" /></div>}
+      </div>
+    ) : (
+      <div class:list={['wrap', paired ? 'pair' : 'single', { flip, overhang: hero }]}>
+        <div class="copy">
+          {numeral !== undefined && <span class="num" aria-hidden="true">{String(numeral).padStart(2, '0')}</span>}
+          {eyebrow && <p class="label">{eyebrow}</p>}
+          <Heading text={heading} level={hero ? 1 : 2} />
+          {body && <div class:list={['body', { lede: !prose }]}><slot /></div>}
+        </div>
+        {diagram && <div class="plate"><Diagram name={diagram as DiagramName} band /></div>}
+        {icon && <div class="plate glyph"><Icon name={icon} role="current" /></div>}
+        {figure && <Engraving figure={figure} ink={figure.ink ?? ink} seed={seed} bleed={flip ? 'l' : 'r'} aspect={hero ? 1.3 : 1.2} credit={credit} drafted={none} />}
+      </div>
+    )
+  }
+</section>
+
+<style>
+  .section {
+    position: relative;
+  }
+
+  .hero {
+    padding-top: clamp(2.5rem, 6vw, 5rem);
+  }
+
+  .pair {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: clamp(2rem, 5vw, 5rem);
+    align-items: center;
+    padding-block: clamp(3.5rem, 7vw, 6rem);
+  }
+
+  .pair.flip {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+
+  /* words whose cells stand side by side take half the width, not five
+     twelfths, so the cells have room */
+  .pair:has(:global(.list:is([data-layout='row'], [data-layout='grid'], [data-layout='steps']))) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .pair.flip > :global(figure),
+  .pair.flip > .plate {
+    order: -1;
+  }
+
+  .single {
+    padding-block: clamp(3.5rem, 7vw, 6rem);
+  }
+
+  .single .copy {
+    max-width: 44rem;
+  }
+
+  /* words alone trade sides too, their column to the right */
+  .single.flip .copy {
+    margin-left: auto;
+  }
+
+  /* the hero's figure overhangs the section after it */
+  .overhang {
+    margin-bottom: clamp(-7rem, -8vw, -3rem);
+  }
+
+  .copy {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    gap: 1.5rem;
+    align-content: center;
+  }
+
+  /* the number: a ghost numeral, huge and faint behind the words, out at
+     the screen's edge on their outer side, the left unless the figure
+     takes it, a gutter in from it, whole on any width */
+  .num {
+    --out: calc((100vw - min(100vw, var(--wrap))) / 2);
+    position: absolute;
+    top: -0.32em;
+    left: calc(-1 * var(--out));
+    z-index: -1;
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: clamp(11rem, 24vw, 22rem);
+    font-weight: 200;
+    letter-spacing: -0.05em;
+    line-height: 1;
+    opacity: 0.07;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .flip .num {
+    right: calc(-1 * var(--out));
+    left: auto;
+  }
+
+  .body > :global(*) {
+    margin-block: 0;
+  }
+
+  .body > :global(* + *) {
+    margin-top: 1em;
+  }
+
+  .body > :global(.list) {
+    margin-block: 2rem 2.25rem;
+  }
+
+  .body > :global(:is(.actions, form)) {
+    margin-top: 1.75rem;
+  }
+
+  .body > :global(.actions) {
+    width: fit-content;
+  }
+
+  .lede > :global(p) {
+    max-width: 33rem;
+    color: var(--text-muted);
+    font-size: clamp(1.1rem, 1.45vw, 1.28rem);
+  }
+
+  /* the breaks: shaped bands of ink, their edges cut as a cell's */
+  [data-band] {
+    padding-block: clamp(7rem, 12vw, 10rem) clamp(5rem, 9vw, 8rem);
+  }
+
+  /* a band is a strong ink, its words and its diagram light on it: the
+     sage and the coral the site set first, the other three deepened
+     alike from their inks */
+  [data-band='success'] {
+    --band: var(--band-a);
+    --band-ink: var(--band-a-ink);
+  }
+
+  [data-band='error'] {
+    --band: var(--band-b);
+    --band-ink: var(--band-b-ink);
+  }
+
+  [data-band='warning'] {
+    --band: oklch(from var(--p1) calc(0.5 + var(--theme) * 0.03) 0.1 h);
+  }
+
+  [data-band='info'] {
+    --band: oklch(from var(--p3) calc(0.47 + var(--theme) * 0.03) 0.1 h);
+  }
+
+  [data-band='help'] {
+    --band: oklch(from var(--p4) calc(0.47 + var(--theme) * 0.03) 0.1 h);
+  }
+
+  [data-band='warning'],
+  [data-band='info'],
+  [data-band='help'] {
+    --band-ink: oklch(from var(--band) 0.975 0.01 h);
+  }
+
+  [data-band] {
+    --text: var(--band-ink);
+    --text-muted: color-mix(in oklch, var(--band-ink) 88%, transparent);
+    --dg-ground: var(--band);
+    background: var(--band);
+    color: var(--band-ink);
+  }
+
+  .edge {
+    position: absolute;
+  }
+
+  [data-band] .pair {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    padding-block: 0;
+  }
+
+  [data-band] .pair.flip {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+
+  .plate {
+    justify-self: center;
+    width: 100%;
+    max-width: 30rem;
+  }
+
+  /* an icon in a diagram's place: one glyph, large, in the band's ink */
+  .glyph {
+    display: grid;
+    place-items: center;
+  }
+
+  .glyph :global(.icon) {
+    width: min(100%, 16rem);
+  }
+
+  /* on a band, the cells are the band's own light ink, a veil of it, and
+     a field an opaque tint of it; a tick fills with that ink */
+  [data-band] :global(.actions) {
+    --fill: var(--band-ink);
+    --on-fill: var(--band);
+    --fill-on: color-mix(in oklch, var(--band-ink) 88%, var(--band));
+    --wash: color-mix(in oklch, var(--band-ink) 22%, transparent);
+    --on-wash: var(--band-ink);
+    --plain: color-mix(in oklch, var(--band-ink) 18%, var(--band));
+    --plain-on: color-mix(in oklch, var(--band-ink) 26%, var(--band));
+    --on-plain: var(--band-ink);
+  }
+
+  [data-band] :global(.check) {
+    --check-fill: var(--band-ink);
+    --check-tick: var(--band);
+  }
+
+  blockquote {
+    display: grid;
+    gap: 1.6rem;
+    max-width: 54rem;
+    margin: 0;
+  }
+
+  .said :global(p) {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 3.6vw, 3.1rem);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+  }
+
+  .said :global(strong) {
+    font-weight: 760;
+  }
+
+  cite {
+    color: inherit;
+    font-style: normal;
+    opacity: 0.75;
+  }
+
+  @media (max-width: 56rem) {
+    .pair,
+    .pair.flip,
+    .pair:has(:global(.list)),
+    [data-band] .pair {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pair.flip > :global(figure),
+    .pair.flip > .plate {
+      order: 0;
+    }
+
+    .single.flip .copy {
+      margin-left: 0;
+    }
+
+    .overhang {
+      margin-bottom: 0;
+    }
+  }
+</style>

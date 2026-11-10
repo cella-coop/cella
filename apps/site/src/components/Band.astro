@@ -1,0 +1,46 @@
+---
+// A band (index.md, the layout): a strong ink, `ink`, sage unset, its edges
+// cut as a cell's, holding what a section may and, beside it, the diagram
+// of `@cella/diagrams` its `diagram` names or the Phosphor icon its `icon`
+// names, light on its colour; never a photo. With `quote` its body is set
+// large and its heading is the attribution. It trades sides as the
+// sections around it do.
+import type { Status } from '../schemas'
+import { seedOf } from '../lib/place'
+import Block from './Block.astro'
+
+interface Props {
+  heading: string
+  ink?: Status
+  diagram?: string
+  icon?: string
+  eyebrow?: string
+  id?: string
+  quote?: boolean
+  ghost?: boolean
+  // set at build (lib/sections.ts)
+  page?: string
+  place?: string
+  numeral?: string
+}
+
+const { heading, ink = 'success', diagram, icon, eyebrow, id, quote, page = 'blog', place = '0', numeral } = Astro.props
+const at = Number(place)
+const kind = 'band'
+---
+
+<Block
+  kind={kind}
+  id={id}
+  heading={heading}
+  eyebrow={eyebrow}
+  diagram={diagram}
+  icon={icon}
+  ink={ink}
+  quote={quote}
+  flip={at % 2 === 0}
+  numeral={numeral ? Number(numeral) : undefined}
+  seed={seedOf(`${page}/${at}`)}
+>
+  <slot />
+</Block>

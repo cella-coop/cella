@@ -1,0 +1,15 @@
+---
+// One action in a row of them (`Actions`): a link, solid in the row's ink
+// where it is the `primary` one, a wash of it else. Its label reads the
+// same written on one line or on its own, where MDX makes it a paragraph.
+interface Props {
+  href: string
+  primary?: boolean
+}
+
+const { href, primary = false } = Astro.props
+const html = (await Astro.slots.render('default')).trim()
+const label = html.match(/^<p>([\s\S]*)<\/p>$/)?.[1] ?? html
+---
+
+<a class="cell" data-tone={primary ? 'fill' : 'wash'} href={href} set:html={label} />

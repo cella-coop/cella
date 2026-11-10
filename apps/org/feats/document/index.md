@@ -385,7 +385,11 @@ again from Loro. Its parts:
 - `ChoiceState`: blocks chosen whole (Shift and an arrow at an edge,
   Escape, a grip, a drag leaving its block), deleted, copied, cut, nested
   and moved together; the page hears their copy and cut too, since
-  Chromium leaves the selection mirroring them outside the editor;
+  Chromium leaves the selection mirroring them outside the editor, but
+  only those fired at that selection: a press outside the editor ends
+  the choice, and text selected and copied or cut anywhere else on the
+  page, a comment's under Activity or a field's, is that text's, never
+  the chosen blocks', which stay in the draft;
 - `MenuState`: the slash menu, the embeds the page offers among its
   items, the toolbar over a selection, and Ctrl-K's link in the UI core's
   popover; the menu and the toolbar follow their caret as the window is
@@ -448,7 +452,9 @@ a motion's page.
   first block; the caret leaving a code block that ends the document; the
   caret after a picked embed, and its picker browsed by arrow without
   picking; the slash menu near the window's bottom; the drag preview
-  holding its text; chosen blocks copied and pasted; a comment quoting
+  holding its text; chosen blocks copied and pasted, and a comment's
+  text cut and copied while blocks are chosen, the blocks left in the
+  draft and the clipboard holding the text; a comment quoting
   the selection, highlighted once posted; and the toolbar following its
   selection as the window narrows. Real IMEs, touch, screen readers and
   right-to-left text are not tested.

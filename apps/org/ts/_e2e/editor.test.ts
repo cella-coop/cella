@@ -142,7 +142,7 @@ for (const [name, launch] of browsers()) {
     async function converged() {
       let last: string[] = []
       for (let i = 0; i < 100; i++) {
-        const states = await Promise.all([a, bo].map((pg) => pg.locator('[data-state]').evaluate((el) => [el.getAttribute('data-state'), el.getAttribute('data-hash')])))
+        const states = await Promise.all([a, bo].map((pg) => pg.locator('[data-state][data-hash]').evaluate((el) => [el.getAttribute('data-state'), el.getAttribute('data-hash')])))
         last = states.flat() as string[]
         if (states[0][0] === 'saved' && states[1][0] === 'saved' && states[0][1] === states[1][1]) {
           const canon = (pg: Page) => pg.evaluate(() => JSON.stringify((document.querySelector('[data-editor]') as any).cellaEditor.rows.length))
@@ -862,6 +862,58 @@ for (const [name, launch] of browsers()) {
         const r = await rows()
         assert.equal(r.length, 28)
         assert.deepEqual([r[4].kind, r[4].text], ['heading', 'Rate card 2027'])
+        await converged()
+      })
+
+      it("cuts and copies a comment's text as its own while blocks are chosen, and a press outside ends the choice", async () => {
+        await fresher()
+        await a.getByRole('button', { name: 'Save version' }).click()
+        await a.locator('input[name=quote]').waitFor()
+        await editable(0).click()
+        await a.keyboard.press('Control+Home')
+        await a.keyboard.press('Shift+End')
+        await settle()
+        assert.equal(await a.locator('input[name=quote]').inputValue(), 'Rate card 2027')
+        await a.locator('textarea[name=text]').fill('The year is right.')
+        await a.getByRole('button', { name: 'Comment', exact: true }).click()
+        await a.locator('[data-editor] [data-block] mark').first().waitFor({ timeout: 10000 })
+        const said = a.getByText('The year is right.', { exact: true }).first()
+        await said.waitFor({ timeout: 10000 })
+        const choose = async () => {
+          await line(0).hover()
+          await line(0).locator('[data-drag-handle]').click()
+          assert.equal(await a.locator('[data-editor][data-chosen]').count(), 1, 'the block is chosen')
+        }
+        const intact = async () => {
+          const r = await rows()
+          assert.equal(r.length, 27, 'no block was cut')
+          assert.deepEqual([r[0].kind, r[0].text], ['heading', 'Rate card 2027'])
+        }
+        // The comment's text selected with no press, as the keyboard may:
+        // the choice stands, and the cut and the copy are the text's.
+        await choose()
+        await said.evaluate((el) => {
+          const r = document.createRange()
+          r.selectNodeContents(el)
+          const s = document.getSelection()!
+          s.removeAllRanges()
+          s.addRange(r)
+        })
+        await a.keyboard.press('Control+x')
+        await intact()
+        await a.keyboard.press('Control+c')
+        await end(3)
+        await a.keyboard.press('Control+v')
+        assert.equal((await rows())[3].text, 'ServicesThe year is right.', 'the clipboard holds the text')
+        await a.keyboard.press('Control+z')
+        await until((x) => x[3].text === 'Services')
+        // A press in the comment's text ends the choice.
+        await choose()
+        await said.click({ clickCount: 3 })
+        assert.equal(await a.locator('[data-editor][data-chosen]').count(), 0, 'the choice ended')
+        await a.keyboard.press('Control+x')
+        await a.keyboard.press('Control+c')
+        await intact()
         await converged()
       })
 

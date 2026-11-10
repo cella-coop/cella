@@ -235,6 +235,22 @@ export class ChoiceState {
     }
   }
 
+  // A press outside the editor ends a choice of blocks too.
+  away(e: PointerEvent): void {
+    const t = e.target
+    if (this.range && !(t instanceof Node && this.#ed.root?.contains(t))) {
+      this.range = null
+    }
+  }
+
+  // Whether the page's selection still mirrors the choice, as Chromium
+  // leaves it, rather than holding text selected elsewhere on the page.
+  mirrored(): boolean {
+    const root = this.#ed.root
+    const s = document.getSelection()
+    return !!this.range && !!root && !!s && s.rangeCount > 0 && s.getRangeAt(0).intersectsNode(root)
+  }
+
   pointermove(e: PointerEvent): void {
     if (!this.#press || !(e.buttons & 1) || this.#ed.drag.lifted) {
       return

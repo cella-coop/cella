@@ -2,7 +2,7 @@
 // collections, the operator's under src/content/ and an agent's drafts
 // under src/drafts/, the same files in the same places. A page is one MDX
 // file the operator's whole once it exists, its draft standing only for
-// one they have not written; the site's shared text, site.yaml, is merged
+// one they have not written; the site's shared text, site.toml, is merged
 // field by field, the operator's word winning (lib/text.ts).
 import { defineCollection } from 'astro:content'
 import { glob } from 'astro/loaders'
@@ -11,8 +11,8 @@ import { page, post } from './schemas'
 
 const loose = z.looseObject({})
 
-const site = defineCollection({ loader: glob({ pattern: 'site.yaml', base: './src/content' }), schema: loose })
-const siteDrafts = defineCollection({ loader: glob({ pattern: 'site.yaml', base: './src/drafts' }), schema: loose })
+const site = defineCollection({ loader: glob({ pattern: 'site.toml', base: './src/content' }), schema: loose })
+const siteDrafts = defineCollection({ loader: glob({ pattern: 'site.toml', base: './src/drafts' }), schema: loose })
 
 // A page is a file, `pages/<name>.mdx`; `home` is `/`, `blog` heads the
 // blog's index, every other is `/<name>`.

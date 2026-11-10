@@ -50,9 +50,9 @@ A page is one MDX file, and its body places the site's components by
 name, with no import, the prose between them markdown (`src/components/figures.ts`):
 
 ```mdx
----
-title: About
----
++++
+title = "About"
++++
 
 <Hero eyebrow="Project status" heading="An early-stage project" photo="white-red-and">
 
@@ -297,18 +297,20 @@ alike: the operator's, `src/content/`, and an agent's **drafts**,
 its draft, whole, only where they have written none; a draft is a
 complete page and goes once the operator writes theirs, so deleting
 their file deletes the page rather than bringing a draft back. The
-site's shared text, `site.yaml`, is read as the operator's file with its
+site's shared text, `site.toml`, is read as the operator's file with its
 draft laid under it, field by field (`src/lib/text.ts`): a field the
-operator wrote wins whole, an object merges key by key, and a field
-they left out is the draft's.
+operator wrote wins whole, a table merges key by key, and a field
+they left out is the draft's. The text is TOML throughout, as every doc
+in the repository is: `site.toml`, and each page's and post's
+frontmatter between `+++` lines.
 
 | Collection | Where | What it holds |
 |---|---|---|
-| `site`, `siteDrafts` | `site.yaml` | what every page shares: the site's title, description and tab title, the header's links, the menu's label, the theme toggle's label, the footer's line, home link and disclaimer, the blog's labels, the forms' words, the mark a diagram wears and the credit under a photo |
+| `site`, `siteDrafts` | `site.toml` | what every page shares: the site's title, description and tab title, the header's links, the menu's label, the theme toggle's label, the footer's line, home link and disclaimer, the blog's labels, the forms' words, the mark a diagram wears and the credit under a photo |
 | `pages`, `pageDrafts` | `pages/<name>.mdx` | a page a file: its `title`, its `description` and whether it is `unlisted` in its frontmatter, and in its body the components it places ([the layout](#the-layout)); `home` is `/` and `blog` heads the blog |
 | `blog` | `blog/<name>.mdx` | one post a file, the operator's alone: its title, summary, date, authors and whether it is a draft post, which shows in the dev server and is left out of the build; its body places what a page's may |
 
-A page's frontmatter and a merged `site.yaml` are held to their schemas
+A page's frontmatter and a merged `site.toml` are held to their schemas
 (`src/schemas.ts`), and one missing a field fails the build, naming the
 file, the field, and where to write it.
 

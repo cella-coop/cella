@@ -11,7 +11,7 @@ export const refuse = {
   plateOffBand: (where: string) => new Error(`the ${where} names a diagram or an icon, which only a band holds: make it a <Band>, or drop them`),
   unknownDiagram: (where: string, name: string) => new Error(`the ${where} names the diagram "${name}", which is not one of ${known()}`),
   unknownPhoto: (where: string, photo: string) => new Error(`the ${where} names the photo "${photo}", which is not in src/photos/`),
-  unlistedInNav: (hrefs: string[]) => new Error(`site.yaml's nav links ${hrefs.join(', ')}, unlisted: take the link out of nav, or drop unlisted from the page`),
+  unlistedInNav: (hrefs: string[]) => new Error(`site.toml's nav links ${hrefs.join(', ')}, unlisted: take the link out of nav, or drop unlisted from the page`),
 }
 
 /** How an error names a section: its kind and its heading. */

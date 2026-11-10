@@ -1,6 +1,6 @@
 // The site's text as every page reads it (index.md, the text). A page is
 // the operator's file whole once it exists, and its draft only where they
-// have written none. The site's shared text, site.yaml, is their entry
+// have written none. The site's shared text, site.toml, is their entry
 // with its draft laid under it, field by field: a field they wrote wins
 // whole, one they left out is the draft's. What a draft gives is marked
 // drafted, so the dev server underlines it and a release refuses it while
@@ -52,9 +52,9 @@ export async function siteData() {
   const drafted = new Set<string>()
   const parsed = siteSchema.safeParse(merge(own?.data, draft?.data, '', drafted))
   if (!parsed.success) {
-    throw invalid('site.yaml', parsed.error)
+    throw invalid('site.toml', parsed.error)
   }
-  record('site.yaml', drafted)
+  record('site.toml', drafted)
   return { ...parsed.data, drafted: marks(drafted) }
 }
 

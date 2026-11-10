@@ -1,0 +1,13 @@
+# Drafted site-wide text: a field here fills one that site.toml in
+# src/content/ leaves out.
+
+[footer]
+home = "Home"
+
+[signup]
+label = "Email address"
+placeholder = "you@your.coop"
+pilot = "My coop might pilot Cella"
+submit = "Sign up"
+done = "Check your inbox for a link to confirm."
+failed = "That did not go through. Try again in a moment."

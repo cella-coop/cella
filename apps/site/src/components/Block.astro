@@ -155,8 +155,10 @@ const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? {
     max-width: 44rem;
   }
 
-  /* words alone trade sides too, their column to the right */
-  .single.flip .copy {
+  /* words alone trade sides too, their column to the right, a quote's
+     as a heading's, so a band's icon stands clear of them */
+  .single.flip .copy,
+  .single.flip blockquote {
     margin-left: auto;
   }
 
@@ -392,7 +394,8 @@ const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? {
       order: 0;
     }
 
-    .single.flip .copy {
+    .single.flip .copy,
+    .single.flip blockquote {
       margin-left: 0;
     }
 

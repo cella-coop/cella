@@ -3,10 +3,11 @@
 // body places.
 import { figures } from '../components/figures'
 import Page from '../layouts/Page.astro'
-import { page, pageNames } from '../lib/text'
+import { held, page, pageNames } from '../lib/text'
 
 export async function getStaticPaths() {
-  return (await pageNames()).filter((p) => p !== 'home' && p !== 'blog').map((p) => ({ params: { page: p } }))
+  const out = await held()
+  return (await pageNames()).filter((p) => p !== 'home' && p !== 'blog' && !out.includes(p)).map((p) => ({ params: { page: p } }))
 }
 
 const { Content, ...p } = await page(Astro.params.page)

@@ -3,15 +3,19 @@
 // its summary under as the lede, its cover beside it where it names one,
 // its authors, its body, prose in a
 // readable column and the sections it places as a page's, and the way
-// back to the index.
+// back to the index. A build leaves every post out while the blog's page
+// is a draft.
 import { render } from 'astro:content'
 import { figures } from '../../components/figures'
 import Hero from '../../components/Hero.astro'
 import Page from '../../layouts/Page.astro'
 import { postInk } from '../../lib/place'
-import { dated, posts, siteData } from '../../lib/text'
+import { dated, held, posts, siteData } from '../../lib/text'
 
 export async function getStaticPaths() {
+  if ((await held()).includes('blog')) {
+    return []
+  }
   return (await posts()).map((p) => ({ params: { post: p.id }, props: { post: p } }))
 }
 

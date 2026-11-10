@@ -79,13 +79,29 @@ export async function page(name: string) {
   return { ...entry.data, drafted, Content }
 }
 
-/** The pages kept from search and from the header's links: an operator's
- * page that says so, or a draft of one they have not written. */
-export async function unlisted() {
+/** Every page's entry: the operator's, or a draft of one they have not
+ * written. */
+async function entries() {
   const own = await getCollection('pages')
   const drafts = (await getCollection('pageDrafts')).filter((d) => !own.some((e) => e.id === d.id))
-  return [...own, ...drafts].filter((e) => e.data.unlisted).map((e) => e.id)
+  return [...own, ...drafts]
 }
+
+/** The pages kept from search and from the header's links: a page that
+ * says so. */
+export async function unlisted() {
+  return (await entries()).filter((e) => e.data.unlisted).map((e) => e.id)
+}
+
+/** The pages a build leaves out, and its links to them: a page that says
+ * `draft`; none in the dev server, which shows them all. */
+export async function held() {
+  return import.meta.env.DEV ? [] : (await entries()).filter((e) => e.data.draft).map((e) => e.id)
+}
+
+/** The page a link of the site goes to: its path's first part, home's
+ * empty. */
+export const linkedPage = (href: string) => href.replace(/^\/+/, '').split('/')[0]
 
 /** The blog's posts, newest first; draft posts only in the dev server. */
 export async function posts() {

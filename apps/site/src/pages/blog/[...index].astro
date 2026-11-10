@@ -6,13 +6,19 @@
 // panel holding its date, title and summary, the panel on the right and
 // the left in turn, under the photo on a narrow screen. A post with no
 // cover is its words alone. A whole card is its link. A cover wears the
-// post's own ink, the same here and on the post (postInk).
+// post's own ink, the same here and on the post (postInk). It is a rest
+// route of one path, `/blog/`, so a build leaves it out while the blog's
+// page is a draft.
 import Avatar from '../../components/Avatar.astro'
 import { figures } from '../../components/figures'
 import Page from '../../layouts/Page.astro'
 import { coverUrl } from '../../lib/engrave'
 import { postInk, seedOf } from '../../lib/place'
-import { dated, page, posts, siteData } from '../../lib/text'
+import { dated, held, page, posts, siteData } from '../../lib/text'
+
+export async function getStaticPaths() {
+  return (await held()).includes('blog') ? [] : [{ params: { index: undefined } }]
+}
 
 const { Content, ...p } = await page('blog')
 const site = await siteData()

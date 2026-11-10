@@ -77,6 +77,9 @@ export const page = z.object({
   title: z.string(),
   description: z.string().optional(),
   unlisted: z.boolean().default(false),
+  // a draft page shows in the dev server alone: a build leaves it out,
+  // its links with it, and the blog's its posts too
+  draft: z.boolean().default(false),
 })
 
 // A vendored photo engraved in one of the five inks, inside a cluster of

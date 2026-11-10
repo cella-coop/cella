@@ -394,7 +394,7 @@ frontmatter between `+++` lines.
 | Collection | Where | What it holds |
 |---|---|---|
 | `site`, `siteDrafts` | `site.toml` | what every page shares: the site's title, description and tab title, the header's links, the menu's label, the theme toggle's label, the footer's line, home link and disclaimer, the blog's labels, the forms' words, the mark a diagram wears and the credit under a photo |
-| `pages`, `pageDrafts` | `pages/<name>.mdx` | a page a file: its `title`, its `description` and whether it is `unlisted` in its frontmatter, and in its body the components it places ([the layout](#the-layout)); `home` is `/` and `blog` heads the blog |
+| `pages`, `pageDrafts` | `pages/<name>.mdx` | a page a file: its `title`, its `description` and whether it is `unlisted` or a `draft` in its frontmatter, and in its body the components it places ([the layout](#the-layout)); `home` is `/` and `blog` heads the blog |
 | `blog` | `blog/<name>.mdx` | one post a file, the operator's alone: its title, summary, date, authors, its cover (`photo`, with `caption`, `alt` and `ink`, engraved beside its title as a page's hero's) and whether it is a draft post, which shows in the dev server and is left out of the build; its body places what a page's may |
 
 A page's frontmatter and a merged `site.toml` are held to their schemas
@@ -404,6 +404,13 @@ file, the field, and where to write it.
 **An unlisted page** (`unlisted: true`), such as a pitch sent by its
 address alone, is kept from search engines (`noindex, nofollow`), and
 the build fails while the header's links, and so the footer's, link it.
+
+**A draft page** (`draft: true`) shows in the dev server alone, as a
+draft post does: a build leaves it out (`held` in `src/lib/text.ts`),
+and its links leave the header and the footer, so a page in progress
+stays in the text and keeps being written. The blog's page held holds
+its posts too, its index a rest route of one path so a build can leave
+it out.
 
 An item's title reads inline markdown (`src/lib/inline.ts`, `marked`):
 **bold**, *italic*, [links](…) and `code`, no blocks; its words are

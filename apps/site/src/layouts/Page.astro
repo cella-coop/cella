@@ -4,11 +4,12 @@
 // the footer. Words its body writes outside a section keep to a readable
 // column at the sections' left edge, as a post's prose does. A page drafted
 // whole is marked so; an unlisted one is kept from search engines, and a
-// header that links one fails the build.
+// header that links one fails the build; a draft one's links leave the
+// header and the footer where a build leaves it out.
 import Footer from '../components/Footer.astro'
 import Header from '../components/Header.astro'
 import { refuse } from '../lib/refuse'
-import { siteData, unlisted } from '../lib/text'
+import { held, linkedPage, siteData, unlisted } from '../lib/text'
 import Base from './Base.astro'
 
 interface Props {
@@ -27,14 +28,18 @@ const linked = site.nav.filter((l) => kept.includes(l.href.replace(/^\/|\/$/g, '
 if (linked.length > 0) {
   throw refuse.unlistedInNav(linked.map((l) => l.href))
 }
+// a draft page's links leave the header and the footer where a build
+// leaves the page out
+const out = await held()
+const nav = site.nav.filter((l) => !out.includes(linkedPage(l.href)))
 ---
 
 <Base title={full} description={description ?? site.description} noindex={hidden}>
-  <Header title={site.title} nav={site.nav} toggle={site.theme.toggle} menu={site.menu} />
+  <Header title={site.title} nav={nav} toggle={site.theme.toggle} menu={site.menu} />
   <main class="flow" data-drafted={drafted || undefined}>
     <slot />
   </main>
-  <Footer footer={site.footer} nav={site.nav} email={site.email} drafted={site.drafted} />
+  <Footer footer={site.footer} nav={nav} email={site.email} drafted={site.drafted} />
 </Base>
 
 <style>

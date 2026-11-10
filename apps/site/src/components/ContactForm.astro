@@ -6,12 +6,14 @@
 // field. Its words are the site's (`[contact]` in site.toml) and its ink its
 // section's, so a page places it bare, `<ContactForm />`. It posts to
 // `PUBLIC_CONTACT_URL`.
-import { nowhere } from '../lib/refuse'
+import { nowhere, worded } from '../lib/refuse'
 import { siteData } from '../lib/text'
 import Actions from './Actions.astro'
 import Check from './Check.astro'
 
-const { contact: text, drafted } = await siteData()
+const site = await siteData()
+const text = worded('contact', site.contact)
+const { drafted } = site
 const endpoint = import.meta.env.PUBLIC_CONTACT_URL ?? ''
 nowhere('contact', endpoint)
 const d = (k: string) => drafted(`contact.${k}`)

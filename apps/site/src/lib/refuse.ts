@@ -19,6 +19,15 @@ const SENDS: Record<string, string> = {
   contact: 'PUBLIC_CONTACT_URL',
 }
 
+/** A form placed on a page needs its words, `[signup]` or `[contact]` in
+ * site.toml. */
+export function worded<T>(form: string, text: T | undefined): T {
+  if (!text) {
+    throw new Error(`a page places the ${form} form, but site.toml has no [${form}]: write its words there, or take the form out of the page`)
+  }
+  return text
+}
+
 /** A release refuses a form that posts nowhere, which in the dev server
  * only says what it would send, and would tell a visitor it had sent. */
 export function nowhere(form: string, sends: unknown) {

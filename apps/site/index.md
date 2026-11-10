@@ -262,7 +262,10 @@ A section's body places a form by its name, `<Signup />` or
   newsletter, ticked at first, and one for the pilot, sent as `list` and
   `pilot`, and the button, one cell in the section's ink. Its fields are
   plain rounded fills of the text's ink over the paper. It posts to
-  `PUBLIC_CONTACT_URL`, which nothing serves yet.
+  `PUBLIC_CONTACT_URL` (`/message`), the production host's contact
+  endpoint, which keeps the message, mails it to the inbox and
+  subscribes its sender to the lists its boxes tick. A form sends its
+  fields URL-encoded, as an HTML form does.
 
 A tick box is `Check.astro`: a rounded square outlined in ink, filled
 with the button's ink and ticked once checked. On a band, cells, fields

@@ -5,12 +5,14 @@
 // field's words. Its words are the site's (`[signup]` in site.toml) and its
 // ink its section's, so a page places it bare, `<Signup />`. It posts to
 // `PUBLIC_SIGNUP_URL`, the list's endpoint.
-import { nowhere } from '../lib/refuse'
+import { nowhere, worded } from '../lib/refuse'
 import { siteData } from '../lib/text'
 import Actions from './Actions.astro'
 import Check from './Check.astro'
 
-const { signup: text, drafted } = await siteData()
+const site = await siteData()
+const text = worded('signup', site.signup)
+const { drafted } = site
 // listmonk's public form and the lists it adds a subscriber to, the
 // newsletter always and the pilot's where its box is ticked (the
 // production host's index.md); a release refuses a form that posts nowhere

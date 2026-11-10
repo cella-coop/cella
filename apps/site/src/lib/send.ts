@@ -17,7 +17,9 @@ export function wire(selector: string) {
       form.dataset.busy = ''
       try {
         if (endpoint) {
-          const res = await fetch(endpoint, { method: 'POST', body: new FormData(form) })
+          // URL-encoded, as an HTML form posts and every endpoint reads
+          const body = new URLSearchParams([...new FormData(form)].map(([k, v]) => [k, String(v)]))
+          const res = await fetch(endpoint, { method: 'POST', body })
           if (!res.ok) {
             throw new Error(String(res.status))
           }

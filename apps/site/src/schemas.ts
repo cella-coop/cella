@@ -33,15 +33,18 @@ export const site = z.object({
   blog: z.object({ empty: z.string(), back: z.string() }),
   // The compact sign-up for news: the field's label read aloud and its
   // placeholder, the box a coop that might pilot ticks, the button, and
-  // what it says once sent or failed.
-  signup: z.object({
-    label: z.string(),
-    placeholder: z.string(),
-    pilot: z.string(),
-    submit: z.string(),
-    done: z.string(),
-    failed: z.string(),
-  }),
+  // what it says once sent or failed. A form's words are needed only
+  // where a page places it, which refuses to build without them.
+  signup: z
+    .object({
+      label: z.string(),
+      placeholder: z.string(),
+      pilot: z.string(),
+      submit: z.string(),
+      done: z.string(),
+      failed: z.string(),
+    })
+    .optional(),
   // The contact form: its fields' labels and placeholders, the boxes for
   // the newsletter and the pilot, the button, and what it says once sent
   // or failed.
@@ -57,7 +60,7 @@ export const site = z.object({
     submit: z.string(),
     done: z.string(),
     failed: z.string(),
-  }),
+  }).optional(),
   // The mark under a diagram, which says it was made by a model.
   diagram: z.object({ mark: z.string() }),
   photo: z.object({ credit: z.string(), unsplash: z.string() }),

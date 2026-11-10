@@ -1,0 +1,81 @@
+---
+// A band's icon (index.md, bands): Phosphor's filled glyph engraved in
+// rippled lines (src/lib/glyph.ts), large and faint behind the band's
+// words, running off its far side and turned away in perspective, the
+// turn mirrored on a flipped band. It shows the band's light ink.
+import { engravedLines } from '../lib/glyph'
+import { glyphPaths } from '../lib/icon'
+
+interface Props {
+  name: string
+  seed: number
+  flip?: boolean
+}
+
+const { name, seed, flip = false } = Astro.props
+const shape = glyphPaths(name, 'fill')
+const lines = engravedLines(seed)
+const id = `glyph-${name}-${seed}`
+const off = 'false'
+---
+
+<svg class="band-glyph" data-flip={flip || undefined} viewBox="0 0 256 256" aria-hidden="true" focusable={off}>
+  <defs>
+    <clipPath id={id}><Fragment set:html={shape} /></clipPath>
+  </defs>
+  <g clip-path={`url(#${id})`}>
+    {lines.map((l) => <path d={l.d} stroke-width={l.width} />)}
+  </g>
+</svg>
+
+<style>
+  /* it stands just past the words' column, a little beyond its outer
+     edge, so on a wide screen it keeps near the words rather than at the
+     band's far boundary, and on a narrower one runs off the screen */
+  .band-glyph {
+    --past: max(-4%, calc((100% - var(--wrap)) / 2 - 8rem));
+    position: absolute;
+    top: 50%;
+    right: var(--past);
+    z-index: 0;
+    /* as tall as the band allows, within its cut edges, and no wider than
+       the words' far half */
+    height: min(70%, 36rem);
+    width: auto;
+    max-width: 52vw;
+    aspect-ratio: 1;
+    overflow: visible;
+    color: var(--band-ink);
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    opacity: 0.2;
+    pointer-events: none;
+    transform: translateY(-50%) perspective(60rem) rotateY(-28deg) rotateX(10deg) rotateZ(-6deg);
+  }
+
+  .band-glyph[data-flip] {
+    right: auto;
+    left: var(--past);
+    transform: translateY(-50%) perspective(60rem) rotateY(28deg) rotateX(10deg) rotateZ(6deg);
+  }
+
+  @media (max-width: 56rem) {
+    .band-glyph {
+      top: auto;
+      right: -14%;
+      bottom: 4%;
+      height: auto;
+      width: 78vw;
+      max-width: none;
+      opacity: 0.14;
+      transform: perspective(50rem) rotateY(-24deg) rotateX(8deg) rotateZ(-6deg);
+    }
+
+    .band-glyph[data-flip] {
+      right: -14%;
+      left: auto;
+      transform: perspective(50rem) rotateY(-24deg) rotateX(8deg) rotateZ(-6deg);
+    }
+  }
+</style>

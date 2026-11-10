@@ -1,14 +1,15 @@
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 
-/** A Phosphor icon's paths alone, in its regular weight, for an SVG that
- * places and colours them. */
-export function glyphPaths(name: string): string {
+/** A Phosphor icon's paths alone, in its regular weight or filled, for an
+ * SVG that places and colours them. */
+export function glyphPaths(name: string, weight: 'regular' | 'fill' = 'regular'): string {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) {
     throw new Error(`unknown Phosphor icon: ${name}`)
   }
   try {
-    const path = createRequire(import.meta.url).resolve(`@phosphor-icons/core/assets/regular/${name}.svg`)
+    const file = weight === 'fill' ? `fill/${name}-fill` : `regular/${name}`
+    const path = createRequire(import.meta.url).resolve(`@phosphor-icons/core/assets/${file}.svg`)
     return readFileSync(path, 'utf8').replace(/^[\s\S]*?<svg[^>]*>|<\/svg>\s*$/g, '')
   } catch {
     throw new Error(`unknown Phosphor icon: ${name}`)

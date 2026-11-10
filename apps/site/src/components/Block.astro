@@ -18,7 +18,7 @@ import { siteData } from '../lib/text'
 import Diagram from './Diagram.astro'
 import Engraving from './Engraving.astro'
 import Heading from './Heading.astro'
-import Icon from './Icon.astro'
+import BandGlyph from './BandGlyph.astro'
 
 interface Props {
   kind: 'hero' | 'section' | 'band'
@@ -73,7 +73,8 @@ const body = Astro.slots.has('default')
 const anchorId = hero ? undefined : (id ?? anchor(heading))
 const clip = band ? `band-${anchorId ?? seed}` : undefined
 const outline = band ? outlinePath(seed) : undefined
-const paired = Boolean(figure || diagram || icon)
+// a band's icon stands behind its words, not beside them (BandGlyph)
+const paired = Boolean(figure || diagram)
 const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? { '--clip': `url(#${clip})`, '--outline': outlineShape(seed) } : {}) }
 ---
 
@@ -85,15 +86,15 @@ const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? {
       </svg>
     )
   }
+  {icon && <BandGlyph name={icon} seed={seed} flip={flip} />}
   {
     band && quote ? (
-      <div class:list={['wrap', 'pair', { flip }]}>
+      <div class:list={['wrap', paired ? 'pair' : 'single', { flip }]}>
         <blockquote>
           {body && <div class="said"><slot /></div>}
           <cite class="label">{heading}</cite>
         </blockquote>
         {diagram && <div class="plate"><Diagram name={diagram as DiagramName} band edge={flip ? 'l' : 'r'} /></div>}
-        {icon && <div class="plate glyph"><Icon name={icon} role="current" /></div>}
       </div>
     ) : (
       <div class:list={['wrap', paired ? 'pair' : 'single', { flip, overhang: hero }]}>
@@ -104,7 +105,6 @@ const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? {
           {body && <div class:list={['body', { lede: !prose }]}><slot /></div>}
         </div>
         {diagram && <div class="plate"><Diagram name={diagram as DiagramName} band edge={flip ? 'l' : 'r'} /></div>}
-        {icon && <div class="plate glyph"><Icon name={icon} role="current" /></div>}
         {figure && <Engraving figure={figure} ink={figure.ink ?? ink} seed={seed} bleed={flip ? 'l' : 'r'} aspect={hero ? 1.3 : 1.2} credit={credit} drafted={none} />}
       </div>
     )
@@ -325,14 +325,10 @@ const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? {
     }
   }
 
-  /* an icon in a diagram's place: one glyph, large, in the band's ink */
-  .glyph {
-    display: grid;
-    place-items: center;
-  }
-
-  .glyph :global(.icon) {
-    width: min(100%, 16rem);
+  /* a band's words stand over its icon, which lies behind them */
+  [data-band] > .wrap {
+    position: relative;
+    z-index: 1;
   }
 
   /* on a band, the cells are the band's own light ink, a veil of it, and
@@ -389,10 +385,6 @@ const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? {
 
     [data-band] {
       --reach: 28rem;
-    }
-
-    .glyph :global(.icon) {
-      width: min(100%, 9rem);
     }
 
     .pair.flip > :global(figure),

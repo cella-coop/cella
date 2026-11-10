@@ -90,12 +90,19 @@ export type Figure = {
 }
 export type Link = z.infer<typeof link>
 
-// A post: its title, its summary, its date and its authors. A draft post
-// shows in the dev server and is left out of the build.
+// A post: its title, its summary, its date and its authors, and its cover,
+// a vendored photo engraved and cut into cells beside its title, as a
+// page's hero holds one: `photo`, with its `caption`, its `alt` and its
+// `ink` where the blog's turn should not choose it. A draft post shows in
+// the dev server and is left out of the build.
 export const post = z.object({
   title: z.string(),
   description: z.string(),
   date: z.coerce.date(),
   authors: z.array(z.string()).default([]),
   draft: z.boolean().default(false),
+  photo: z.string().optional(),
+  caption: z.string().optional(),
+  alt: z.string().optional(),
+  ink: z.enum(STATUSES).optional(),
 })

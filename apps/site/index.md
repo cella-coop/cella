@@ -85,7 +85,7 @@ A one-member cooperative is sad! …
 |---|---|
 | `Hero` | the page's top: its `eyebrow`, its `heading`, the page's one `h1`, its body as a lede, and its `photo`, engraved in the page's first ink, overhanging the section after it |
 | `Section` | a section: its `eyebrow`, `heading` and body, a lede unless `prose` sets it as reading text, beside its `photo`, engraved in the page's next ink, with its `caption` and its `alt`; `ink` sets the photo's ink where the turn should not |
-| `Band` | a band of a strong ink, `ink` one of the five (`success` unset: deep sage; `error` the coral), its edges cut as a cell's, holding what a section may beside the diagram its `diagram` names or the Phosphor icon its `icon` names, never a photo; with `quote` its body set large and its heading the attribution |
+| `Band` | a band of a strong ink, `ink` one of the five (`success` unset: deep sage; `error` the coral), its edges cut as a cell's, holding what a section may beside the diagram its `diagram` names, or over the engraved Phosphor icon its `icon` names, never a photo; with `quote` its body set large and its heading the attribution |
 | `List`, `Item` | a list, laid out by its `layout` and counted where `numbered` ([the lists](#the-lists)) |
 | `Actions`, `Action` | a row of links as a row of cells, `primary` the solid one |
 | `Signup`, `ContactForm` | the compact sign-up and the contact form ([the forms](#the-forms)), their words the site's |
@@ -183,11 +183,19 @@ enough for light text in either theme. It draws the diagram its
 `diagram` names, from `@cella/diagrams`
 ([its language](../../packages/diagrams/index.md#the-language)), light
 on its colour, its glyphs' rings and its labels' halos the band's own,
-under it the mark every diagram wears, on the band's outer side; or, in
-the diagram's place, the Phosphor icon its `icon` names, one large glyph
-in the band's light ink. Its diagram keeps 22rem beside its words on a
-wide screen, and a diagram drawn under 440px wide sets its labels
-larger in its own units, so they still read.
+under it the mark every diagram wears, on the band's outer side. Its
+diagram keeps 22rem beside its words on a wide screen, and a diagram
+drawn under 440px wide sets its labels larger in its own units, so they
+still read.
+
+A band may hold, instead, the Phosphor icon its `icon` names
+(`BandGlyph.astro`, `src/lib/glyph.ts`): the filled glyph engraved as a
+photo is, cut from rippled lines that swell and thin down it, their
+phase the band's own by its seed; large and faint in the band's light
+ink, behind its words, which then take their column as a section's
+alone would; running off the band's far side and turned away in
+perspective, the turn mirrored as the bands trade sides; on a narrow
+screen, fainter still, at the band's foot.
 
 A row of `Action`s is a row of cells (`Actions.astro`): side by side,
 their tops and feet aligned, each pair sharing a slanted edge cut by one
@@ -362,7 +370,7 @@ frontmatter between `+++` lines.
 |---|---|---|
 | `site`, `siteDrafts` | `site.toml` | what every page shares: the site's title, description and tab title, the header's links, the menu's label, the theme toggle's label, the footer's line, home link and disclaimer, the blog's labels, the forms' words, the mark a diagram wears and the credit under a photo |
 | `pages`, `pageDrafts` | `pages/<name>.mdx` | a page a file: its `title`, its `description` and whether it is `unlisted` in its frontmatter, and in its body the components it places ([the layout](#the-layout)); `home` is `/` and `blog` heads the blog |
-| `blog` | `blog/<name>.mdx` | one post a file, the operator's alone: its title, summary, date, authors and whether it is a draft post, which shows in the dev server and is left out of the build; its body places what a page's may |
+| `blog` | `blog/<name>.mdx` | one post a file, the operator's alone: its title, summary, date, authors, its cover (`photo`, with `caption`, `alt` and `ink`, engraved beside its title as a page's hero's) and whether it is a draft post, which shows in the dev server and is left out of the build; its body places what a page's may |
 
 A page's frontmatter and a merged `site.toml` are held to their schemas
 (`src/schemas.ts`), and one missing a field fails the build, naming the

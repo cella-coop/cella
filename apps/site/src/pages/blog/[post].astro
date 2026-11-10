@@ -1,6 +1,7 @@
 ---
 // One post at `/blog/<name>/`: its title as the hero, its date above and
-// its summary under as the lede, its authors, its body, prose in a
+// its summary under as the lede, its cover beside it where it names one,
+// its authors, its body, prose in a
 // readable column and the sections it places as a page's, and the way
 // back to the index.
 import { render } from 'astro:content'
@@ -20,7 +21,7 @@ const blog = 'blog'
 ---
 
 <Page title={post.data.title} description={post.data.description}>
-  <Hero heading={post.data.title} eyebrow={dated(post.data.date)} page={blog}>
+  <Hero heading={post.data.title} eyebrow={dated(post.data.date)} page={blog} photo={post.data.photo} caption={post.data.caption} alt={post.data.alt} ink={post.data.ink}>
     <p>{post.data.description}</p>
   </Hero>
   {

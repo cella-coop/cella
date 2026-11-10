@@ -322,7 +322,10 @@ impl Aggregate<Share> for Share {
 // kept in `cella.signer`, and each receipt and entry names its own. A
 // receipt keeps the salt of the request its member signed, outside its
 // hash, which holds the salted digest already; the salt is the owner's, as
-// everyone else could confirm a guess of the request with it.
+// everyone else could confirm a guess of the request with it. A receipt
+// keeps the entry that names it, which the notary writes with it under the
+// head's lock, so one no entry names has none, and the index of those
+// finds it without reading the receipts that do.
 
 extension_sql!(
     r"
@@ -350,8 +353,10 @@ CREATE TABLE cella.receipt (
     sig bytea NOT NULL,
     UNIQUE (device, nonce),
     key integer NOT NULL REFERENCES cella.signer,
-    salt text
+    salt text,
+    entry bigint UNIQUE
 );
+CREATE INDEX receipt_unnamed ON cella.receipt (n) WHERE entry IS NULL;
 CREATE TABLE cella.log (
     n bigint PRIMARY KEY,
     op text NOT NULL,
@@ -396,7 +401,7 @@ CREATE TABLE cella.power (
 CREATE SEQUENCE cella.receipt_seq;
 REVOKE ALL ON cella.head, cella.signer, cella.log, cella.receipt, cella.guard, cella.guard_text, cella.keyring, cella.power, cella.receipt_seq FROM PUBLIC;
 GRANT SELECT ON cella.head, cella.signer, cella.log, cella.guard, cella.guard_text, cella.keyring, cella.power TO PUBLIC;
-GRANT SELECT (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key) ON cella.receipt TO PUBLIC;
+GRANT SELECT (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key, entry) ON cella.receipt TO PUBLIC;
 SELECT pg_catalog.pg_extension_config_dump('cella.head', '');
 SELECT pg_catalog.pg_extension_config_dump('cella.signer', '');
 SELECT pg_catalog.pg_extension_config_dump('cella.log', '');

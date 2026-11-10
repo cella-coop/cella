@@ -699,9 +699,10 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
         let key = signer(c, n);
         let receipt_hash = receipt.hash();
         let receipt_sig = with_key(|k| k.sign(&receipt_hash));
+        // The receipt keeps the entry that names it, appended below.
         spi(c.update(
-            "INSERT INTO cella.receipt (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key, salt)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
+            "INSERT INTO cella.receipt (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key, salt, entry)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)",
             None,
             &[
                 number.into(),
@@ -717,6 +718,7 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
                 receipt_sig.to_vec().into(),
                 key.into(),
                 s.salt.clone().into(),
+                n.into(),
             ],
         ));
 
@@ -1108,13 +1110,14 @@ pub fn verify_log() -> bool {
 /// Verifies the log after entry `after`, as it stands here: from entry
 /// `after`'s hash, where a checkpoint the fold recorded starts, or from the
 /// genesis at 0, every entry and receipt after it, each write's effects,
-/// that the head names the last entry and that every receipt above the
-/// highest the entries up to `after` name names a verdict it walked. What
-/// came before `after` is the checkpoint's, which it trusts and never
-/// reads; `after` is the end of a write, since a write is checked whole.
+/// that the head names the last entry, that every receipt keeping an entry
+/// after `after` is one a verdict it walked names, and that no receipt
+/// anywhere keeps none. What came before `after` is the checkpoint's,
+/// which it trusts and never reads; `after` is the end of a write, since a
+/// write is checked whole.
 pub fn verify_after(after: i64) -> bool {
     let scope = scope();
-    let (signers, follows, start, floor) = Spi::connect(|c| {
+    let (signers, follows, start) = Spi::connect(|c| {
         let start = if after == 0 {
             Some(log::GENESIS.to_vec())
         } else {
@@ -1129,29 +1132,8 @@ pub fn verify_after(after: i64) -> bool {
                 spi(rows.first().get_one::<Vec<u8>>())
             }
         };
-        // A write takes its receipt's number at its first use, before it
-        // locks the head, so a later entry may name a lower number than an
-        // earlier one: the checkpoint's receipts are those up to the highest
-        // its entries name, read down the log's receipt index past the
-        // receipts of the entries after it, never through its own.
-        let floor = if after == 0 {
-            Some(0)
-        } else {
-            let rows = spi(c.select(
-                "SELECT coalesce((SELECT receipt FROM cella.log
-                                   WHERE n <= $1 AND receipt IS NOT NULL
-                                   ORDER BY receipt DESC LIMIT 1), 0)",
-                Some(1),
-                &[after.into()],
-            ));
-            spi(rows.first().get_one::<i64>())
-        };
-        (signers(c), follows(c), start, floor)
+        (signers(c), follows(c), start)
     });
-    let Some(floor) = floor else {
-        warning!("cella: the receipts up to entry {after} are unreadable");
-        return false;
-    };
     let Some(mut last) = start else {
         warning!("cella: the log holds no entry {after} to verify after");
         return false;
@@ -1177,7 +1159,7 @@ pub fn verify_after(after: i64) -> bool {
             let rows = spi(c.select(
                 "SELECT l.n, l.op, l.actor, to_char(l.date, 'YYYY-MM-DD'), l.payload, l.guards, l.prev, l.hash, l.sig, l.receipt,
                         r.op, r.actor, r.device, r.nonce, r.request, r.signature, r.payload, r.at, r.hash, r.sig, l.form,
-                        l.key, r.key, l.cause, l.cause_hash, l.settled
+                        l.key, r.key, l.cause, l.cause_hash, l.settled, r.entry
                  FROM cella.log l LEFT JOIN cella.receipt r ON r.n = l.receipt
                  WHERE l.n > $1
                  ORDER BY l.n
@@ -1268,9 +1250,18 @@ pub fn verify_after(after: i64) -> bool {
                         warning!("cella: log broken at {}: {}", b.n, b.why);
                         return None;
                     }
-                    if receipt.n > floor {
-                        decisions += 1;
+                    // The receipt keeps the entry that names it, so the
+                    // receipts after the checkpoint are found by it alone.
+                    let kept = spi(row.get::<i64>(27));
+                    if kept != Some(n) {
+                        warning!(
+                            "cella: log broken at {n}: its receipt {} keeps entry {}, not {n}",
+                            receipt.n,
+                            kept.map_or_else(|| "none".to_owned(), |k| k.to_string())
+                        );
+                        return None;
                     }
+                    decisions += 1;
                 }
                 let hash = bytes(8);
                 if let Err(b) = chain.check(&entry, key, &bytes(7), &hash, &bytes(9)) {
@@ -1304,15 +1295,28 @@ pub fn verify_after(after: i64) -> bool {
             warning!("cella: the head does not name the log's last entry");
             return false;
         }
-        // Every receipt above the checkpoint's names a verdict this walk
-        // checked; the log names a receipt once, so their counts agree.
+        // Every receipt keeping an entry after the checkpoint's is one a
+        // verdict this walk checked names, read by the receipts' entry
+        // index from `after` up; the log names a receipt once, so their
+        // counts agree. A receipt no entry names keeps none, wherever its
+        // number falls, and the index of those holds it alone, so neither
+        // reads a receipt before the checkpoint.
         let receipts = spi(c.select(
-            "SELECT count(*) FROM cella.receipt WHERE n > $1",
+            "SELECT (SELECT count(*) FROM cella.receipt WHERE entry > $1),
+                    (SELECT min(n) FROM cella.receipt WHERE entry IS NULL)",
             Some(1),
-            &[floor.into()],
+            &[after.into()],
         ));
-        if spi(receipts.first().get_one::<i64>()) != Some(decisions) {
-            warning!("cella: a receipt names no verdict");
+        let (kept, unnamed) = spi(receipts.first().get_two::<i64, i64>());
+        if let Some(r) = unnamed {
+            warning!("cella: receipt {r} names no verdict: no entry names it");
+            return false;
+        }
+        if kept != Some(decisions) {
+            warning!(
+                "cella: a receipt names no verdict: {} keep an entry after {after}, and the verdicts after it name {decisions}",
+                kept.unwrap_or_default()
+            );
             return false;
         }
         true

@@ -185,7 +185,12 @@ sequenceDiagram
   same state. Every so many entries the fold records a checkpoint, the
   hash of the non-personal state at that entry, so a verification, a move
   to another host or a witness starts from a trusted checkpoint, never
-  from the first entry. `cella test e2e fold` runs Lanterne's year, folds
+  from the first entry. A checkpoint holds the entries and receipts up to
+  it, which a verification starting there trusts and never reads: each
+  receipt keeps the entry that names it, so it reads only the receipts
+  keeping an entry after the checkpoint's, and still finds a receipt no
+  entry names, wherever its number falls, by the index of those keeping
+  none. `cella test e2e fold` runs Lanterne's year, folds
   its log into a fresh database and compares the two, which must match
   exactly, so a write that changes state its entry does not carry fails
   the day it is written; its scale tier folds a generated scope of ten

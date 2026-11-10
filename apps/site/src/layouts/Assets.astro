@@ -14,9 +14,11 @@ const site = await siteData()
 
 <Base title={site.title} description={site.description}>
   <Header title={site.title} nav={nav} toggle={site.theme.toggle} menu={site.menu} home={'/assets'} />
-  <main class="wrap">
-    {part && <h1><code>{part}</code></h1>}
-    <slot />
+  <main>
+    <div class="wrap">
+      {part && <h1><code>{part}</code></h1>}
+      <slot />
+    </div>
   </main>
   <Footer footer={site.footer} nav={site.nav} email={site.email} drafted={site.drafted} />
 </Base>

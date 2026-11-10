@@ -1,12 +1,16 @@
 ---
 // Every photo of the library cut as the site cuts it (Engraving.astro):
-// its cells placed round its focus, as a section beside its words wears
-// it, 1.2 wide to 1 tall, and as a stacked figure on a narrow screen
-// wears it, 1.9 to 1, both bleeding right, in the five inks in turn. A
-// photo's seed is its name's, so a tile is the same on every reload.
+// its cells placed round its focus, in the five inks in turn, each
+// photo's seed its name's, so a tile is the same on every reload. Two
+// buttons that follow the page choose what every tile shows: its cut, as a
+// section beside its words wears it, 1.2 wide to 1 tall, or as a stacked
+// figure on a narrow screen, 1.9 to 1; and its side, bleeding off the
+// right as most sections' figures do, or the left as a flipped one's,
+// set against that side of the page. The choice is kept in the browser.
 import { cluster } from '@cella/brand'
 import { photoNames } from '../../lib/assets'
 import { focusIn } from '../../lib/focus'
+import { iconMarkup } from '../../lib/icon'
 import { seedOf } from '../../lib/place'
 import { STATUSES } from '../../schemas'
 import Cut from '../Cut.astro'
@@ -16,43 +20,84 @@ const CUTS = [
   { name: 'section', aspect: 1.2 },
   { name: 'phone', aspect: 1.9 },
 ]
+const SIDES = ['r', 'l'] as const
 
 const photos = await Promise.all(
   photoNames().map(async (photo, i) => {
     const seed = seedOf(photo)
-    const cuts = await Promise.all(
-      CUTS.map(async (c) => {
-        const h = Math.round(W / c.aspect)
-        const focus = await focusIn(photo, W, h)
-        return { ...c, h, cells: cluster(W, h, { pitch: 115, gutter: 12, round: 16, seed, drop: 0.25, bleed: 'r', focus }) }
-      }),
-    )
+    const cuts = (
+      await Promise.all(
+        CUTS.map(async (c) => {
+          const h = Math.round(W / c.aspect)
+          const focus = await focusIn(photo, W, h)
+          return SIDES.map((side) => ({ ...c, side, h, cells: cluster(W, h, { pitch: 115, gutter: 12, round: 16, seed, drop: 0.25, bleed: side, focus }) }))
+        }),
+      )
+    ).flat()
     return { photo, ink: STATUSES[i % STATUSES.length], cuts }
   }),
 )
+// the toggles, named by the attribute each turns
+const [cut, side] = ['cut', 'side']
+const icons = {
+  section: iconMarkup('monitor', 'current'),
+  phone: iconMarkup('device-mobile', 'current'),
+  r: iconMarkup('align-right', 'current'),
+  l: iconMarkup('align-left', 'current'),
+}
 ---
 
-<ul class="photos" role="list">
-  {
-    photos.map(({ photo, ink, cuts }) => (
-      <li class="photo">
-        <h2>
-          <code>{photo}</code>
-        </h2>
-        <div class="cuts">
+<div class="cutouts" data-cut="section" data-side="r">
+  <ul class="photos" role="list">
+    {
+      photos.map(({ photo, ink, cuts }) => (
+        <li class="photo">
+          <h2>
+            <code>{photo}</code>
+          </h2>
           {cuts.map((c) => (
-            <figure class:list={['cut', c.name]}>
-              <Cut photo={photo} ink={ink} cells={c.cells} w={W} h={c.h} id={`co-${photo}-${c.name}`} label={photo} />
-              <figcaption>
-                <code>{c.name}</code>
-              </figcaption>
+            <figure class="cut" data-cut={c.name} data-side={c.side}>
+              <Cut photo={photo} ink={ink} cells={c.cells} w={W} h={c.h} id={`co-${photo}-${c.name}-${c.side}`} label={photo} />
             </figure>
           ))}
-        </div>
-      </li>
-    ))
+        </li>
+      ))
+    }
+  </ul>
+
+  <div class="fab" role="toolbar">
+    <button type="button" class="toggle" data-toggle="cut" data-values="section phone" aria-label={cut}>
+      <span data-show="section" set:html={icons.section} />
+      <span data-show="phone" set:html={icons.phone} />
+    </button>
+    <button type="button" class="toggle" data-toggle="side" data-values="r l" aria-label={side}>
+      <span data-show="r" set:html={icons.r} />
+      <span data-show="l" set:html={icons.l} />
+    </button>
+  </div>
+</div>
+
+<script>
+  // each toggle turns its attribute to its next value, kept in the browser
+  const root = document.querySelector<HTMLElement>('.cutouts')!
+  for (const button of root.querySelectorAll<HTMLButtonElement>('[data-toggle]')) {
+    const key = button.dataset.toggle!
+    const values = button.dataset.values!.split(' ')
+    try {
+      const kept = localStorage.getItem(`cutouts-${key}`)
+      if (kept && values.includes(kept)) {
+        root.dataset[key] = kept
+      }
+    } catch {}
+    button.addEventListener('click', () => {
+      const next = values[(values.indexOf(root.dataset[key]!) + 1) % values.length]
+      root.dataset[key] = next
+      try {
+        localStorage.setItem(`cutouts-${key}`, next)
+      } catch {}
+    })
   }
-</ul>
+</script>
 
 <style>
   .photos {
@@ -69,26 +114,79 @@ const photos = await Promise.all(
     font-weight: normal;
   }
 
-  .cuts {
-    display: grid;
-    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
-    gap: 2rem;
-    align-items: end;
-  }
-
+  /* a tile shows only the cut and side the buttons chose, against that
+     side of the page, at the width a section's figure takes */
   .cut {
+    display: none;
+    width: min(100%, 44rem);
     margin: 0;
   }
 
-  figcaption {
-    margin-top: 0.25rem;
-    color: var(--text-muted);
-    font-size: var(--t-sm);
+  .cutouts[data-cut='section'][data-side='r'] .cut[data-cut='section'][data-side='r'],
+  .cutouts[data-cut='section'][data-side='l'] .cut[data-cut='section'][data-side='l'],
+  .cutouts[data-cut='phone'][data-side='r'] .cut[data-cut='phone'][data-side='r'],
+  .cutouts[data-cut='phone'][data-side='l'] .cut[data-cut='phone'][data-side='l'] {
+    display: block;
   }
 
-  @media (max-width: 40rem) {
-    .cuts {
-      grid-template-columns: minmax(0, 1fr);
-    }
+  /* as on a page, it runs past the column to the screen's edge on its side
+     (Engraving.astro's bleed) */
+  .photo {
+    --bleed: calc((100vw - 100%) / 2);
+  }
+
+  .cut[data-side='r'] {
+    margin-right: calc(-1 * var(--bleed));
+    margin-left: auto;
+  }
+
+  .cut[data-side='l'] {
+    margin-left: calc(-1 * var(--bleed));
+  }
+
+  .cutouts[data-cut='phone'] .cut {
+    width: min(100%, 26rem);
+  }
+
+  /* the buttons, following the page in its corner */
+  .fab {
+    position: fixed;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    z-index: 20;
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .toggle {
+    display: grid;
+    place-items: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    padding: 0.8rem;
+    border: 0;
+    border-radius: 1.1rem 0.6rem 1.2rem 0.7rem;
+    background: var(--text);
+    color: var(--panel);
+    box-shadow: 0 0.4rem 1.2rem color-mix(in oklch, var(--text) 25%, transparent);
+    cursor: pointer;
+  }
+
+  .toggle span {
+    display: none;
+    width: 100%;
+    height: 100%;
+  }
+
+  .toggle :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .cutouts[data-cut='section'] [data-toggle='cut'] [data-show='section'],
+  .cutouts[data-cut='phone'] [data-toggle='cut'] [data-show='phone'],
+  .cutouts[data-side='r'] [data-toggle='side'] [data-show='r'],
+  .cutouts[data-side='l'] [data-toggle='side'] [data-show='l'] {
+    display: block;
   }
 </style>

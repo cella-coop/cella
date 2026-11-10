@@ -176,6 +176,11 @@ const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? {
     margin-bottom: clamp(-7rem, -8vw, -3rem);
   }
 
+  /* but not into a band, whose ink would cover its caption */
+  .hero:has(+ :global([data-band])) .overhang {
+    margin-bottom: 0;
+  }
+
   /* the words' column is a container, so what they hold, lists and
      forms, lays itself out by the column's width, not the screen's */
   .copy {

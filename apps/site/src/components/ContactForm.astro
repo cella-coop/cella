@@ -116,9 +116,10 @@ const d = (k: string) => drafted(`contact.${k}`)
     opacity: 0.4;
   }
 
+  /* each tick is a finger's height already (Check.astro), so none
+     between them */
   .ticks {
     display: grid;
-    gap: 0.7rem;
   }
 
   /* the boxes, and the button to their right */
@@ -140,6 +141,14 @@ const d = (k: string) => drafted(`contact.${k}`)
     color: var(--text);
     font-size: 0.9rem;
     font-weight: 600;
+  }
+
+  /* the name over the email where the section's column is narrow
+     (Block.astro's container), or, with none, the screen */
+  @container (width < 24rem) {
+    .pair {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 
   @media (max-width: 30rem) {

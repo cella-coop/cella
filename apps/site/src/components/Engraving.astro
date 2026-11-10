@@ -25,16 +25,32 @@ interface Props {
 const { figure, ink, seed, bleed, aspect = 1.25, credit, drafted } = Astro.props
 const w = 1000
 const h = Math.round(w / aspect)
+const gutter = 12
 const focus = await focusIn(figure.photo, w, h)
-const cells = cluster(w, h, { pitch: 115, gutter: 12, round: 16, seed, drop: 0.25, bleed, focus })
+const cut = (side: 'l' | 'r' | undefined) => cluster(w, h, { pitch: 115, gutter, round: 16, seed, drop: 0.25, bleed: side, focus })
+const cells = cut(bleed)
+// a figure bleeding left stands beside words to its right; once the
+// layout stacks it has none, so it is cut a second time bleeding right,
+// as the hero's does, and the narrow layout shows that cut
+const narrow = bleed === 'l' ? cut('r') : undefined
+const [wide, slim] = narrow ? (['wide', 'narrow'] as const) : [undefined, undefined]
+// the band of the box the cells fill, so no empty paper stands between
+// the cells and the caption
+const band = (paths: string[]) => {
+  const ys = paths.flatMap((d) => (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number).filter((_, k) => k % 2 === 1))
+  const top = Math.max(0, Math.floor(Math.min(...ys) - gutter))
+  const foot = Math.min(h, Math.ceil(Math.max(...ys) + gutter))
+  return { top, tall: foot - top }
+}
 const id = `cells-${figure.photo}-${seed}`
 const meta = JSON.parse(readFileSync(join(process.cwd(), 'src/photos', `${figure.photo}.json`), 'utf8')) as { photographer: string; photographerUrl: string; photoUrl: string }
 const [before, rest = ''] = credit.template.split('{name}')
 const [between, after = ''] = rest.split('{unsplash}')
 ---
 
-<figure class="engraving" data-bleed={bleed}>
-  <Cut photo={figure.photo} ink={ink} cells={cells} w={w} h={h} id={id} label={figure.alt ?? figure.caption} />
+<figure class="engraving" data-bleed={bleed} data-turns={narrow ? '' : undefined}>
+  <Cut photo={figure.photo} ink={ink} cells={cells} w={w} h={h} {...band(cells)} id={id} label={figure.alt ?? figure.caption} fit={wide} />
+  {narrow && <Cut photo={figure.photo} ink={ink} cells={narrow} w={w} h={h} {...band(narrow)} id={`${id}-n`} label={figure.alt ?? figure.caption} fit={slim} />}
   <figcaption>
     <span class="caption" data-drafted={drafted('figure.caption')}>{figure.caption}</span>
     <span class="credit">{before}<a href={meta.photographerUrl}>{meta.photographer}</a>{between}<a href={meta.photoUrl}>{credit.unsplash}</a>{after}</span>
@@ -76,11 +92,20 @@ const [between, after = ''] = rest.split('{unsplash}')
     color: inherit;
   }
 
+  /* a credit's link is small type; its padding gives a finger room
+     without moving a line */
+  .credit a {
+    padding-block: 16px;
+  }
+
   /* bleeding, the figure runs past the column to the screen's edge on its
-     outer side, and its caption stands at that edge */
+     outer side, and its caption stands toward that edge, a gutter in from
+     it and never more than 5rem past the column, so a wide screen keeps
+     it by the cells */
   [data-bleed] {
     --bleed: calc((100vw - min(100vw, var(--wrap))) / 2 + max(16px, env(safe-area-inset-right, 0px)));
     --edge: max(16px, env(safe-area-inset-right, 0px));
+    --inset: max(var(--edge), calc(var(--bleed) - 5rem));
   }
 
   [data-bleed='r'] {
@@ -89,7 +114,7 @@ const [between, after = ''] = rest.split('{unsplash}')
 
   [data-bleed='r'] figcaption {
     justify-items: end;
-    padding-right: var(--edge);
+    padding-right: var(--inset);
     text-align: right;
   }
 
@@ -99,6 +124,34 @@ const [between, after = ''] = rest.split('{unsplash}')
 
   [data-bleed='l'] figcaption {
     justify-items: start;
-    padding-left: var(--edge);
+    padding-left: var(--inset);
+  }
+
+  .engraving > :global([data-fit='narrow']) {
+    display: none;
+  }
+
+  /* stacked under its words (Block.astro's breakpoint), a figure cut
+     twice wears its right-bleeding cut and bleeds right */
+  @media (max-width: 56rem) {
+    [data-turns] > :global([data-fit='wide']) {
+      display: none;
+    }
+
+    [data-turns] > :global([data-fit='narrow']) {
+      display: block;
+    }
+
+    [data-turns][data-bleed='l'] {
+      margin-right: calc(-1 * var(--bleed));
+      margin-left: 0;
+    }
+
+    [data-turns][data-bleed='l'] figcaption {
+      justify-items: end;
+      padding-right: var(--inset);
+      padding-left: 0;
+      text-align: right;
+    }
   }
 </style>

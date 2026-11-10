@@ -38,10 +38,12 @@ const site = await siteData()
     margin: 0;
   }
 
-  /* the mark runs out to the screen's edge on the diagram's outer side */
+  /* the mark runs out toward the screen's edge on the diagram's outer
+     side, a gutter in from it and never more than 5rem past the column,
+     so a wide screen keeps it by the diagram */
   figcaption {
-    --bleed: calc((100vw - min(100vw, var(--wrap))) / 2 + max(16px, env(safe-area-inset-right, 0px)));
     --edge: max(16px, env(safe-area-inset-right, 0px));
+    --bleed: min(calc((100vw - min(100vw, var(--wrap))) / 2 + var(--edge)), calc(5rem + var(--edge)));
     display: flex;
     align-items: center;
     gap: 0.4rem;

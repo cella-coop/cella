@@ -121,9 +121,10 @@ const box = (() => {
   }
 
   /* a portrait: the person engraved in a deep shade of the ink, on the
-     print's paper washed with it, as a figure is */
+     print's paper washed with it, as a figure is; sized by the column it
+     stands in, so its words keep their room beside it */
   .portrait {
-    width: clamp(7.5rem, 26vw, 12rem);
+    width: clamp(5.5rem, 34cqi, 12rem);
     height: auto;
   }
 
@@ -210,5 +211,23 @@ const box = (() => {
   :global([data-layout='ruled']) .mark,
   :global([data-layout='steps']) .mark {
     display: none;
+  }
+
+  /* ruled in a narrow column (Block.astro's container), or in a post's
+     prose on a narrow screen: the title over its words */
+  @container (width < 28rem) {
+    :global([data-layout='ruled']) .item {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.15rem;
+      padding: 0.75rem 0;
+    }
+  }
+
+  @media (max-width: 30rem) {
+    :global([data-layout='ruled']) .item {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.15rem;
+      padding: 0.75rem 0;
+    }
   }
 </style>

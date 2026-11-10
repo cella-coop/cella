@@ -34,7 +34,9 @@ Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:
   through and borderless: the brand's lockup linking home, the `site`
   entry's links, the current page's marked, and the theme toggle, an
   icon alone in the bar's far corner. On a narrow screen the links fold
-  into a menu under Phosphor's `list` icon, a `<details>` with no script.
+  into a menu under Phosphor's `list` icon, a `<details>`, which opens
+  and closes with no script; a small one closes it too on a press
+  outside it or Escape.
 - **the page's body**, whatever its file places, in the order it places
   them ([the layout](#the-layout)); words it writes outside a section,
   as a post's prose, keep to a readable column at the sections' left
@@ -102,12 +104,23 @@ its icon as a figure; the photos take the five inks in turn, home's hero
 the coral and every other page starting a step on for each place it
 holds in the header's links, so no two pages open alike, a post as its
 blog (`src/lib/place.ts`). A figure bleeds past the column to the
-screen's edge on its outer side, its caption at that edge. A section
+screen's edge on its outer side, its caption toward that edge, a gutter
+in from it and at most 5rem past the column. A section
 that asks with `ghost` is numbered among those that do, 01 on, as a
 ghost numeral: the display face's thinnest weight, huge and faint behind
-the section's words, out at the screen's edge on their outer side, a
-gutter in from it. A heading may mark its closing part with stars,
+the section's words, out toward the screen's edge on their outer side, a
+gutter in from it and at most 6rem past the column. A heading may mark its closing part with stars,
 `*like this*`, set thin, and break its line where it writes `\n`.
+
+Under 56rem a section stacks, whatever it holds: its words over its
+figure, a band's words over its diagram or its icon, the icon smaller.
+A section's words are a container (`container-type: inline-size`), so
+what they hold lays itself out by their column's width, not the
+screen's: a list's two columns fold to one, a ruled list sets each
+title over its words, the contact form's name over its email, and a
+portrait keeps a third of the column. Everything a finger presses, a
+link of the header, the menu, the footer or a credit, a cell, a tick,
+is at least 44px tall.
 
 A section's ink is set on it, so what its body places, its actions, its
 forms and its ticks, takes it, and a band hands its lists the four other
@@ -131,28 +144,36 @@ and its words as markdown, laid out by its `layout`:
 |---|---|
 | `column` | cells down the page, each beside its title and words; the default |
 | `row` | cells side by side, each over its words, as many to a row as fit |
-| `grid` | cells in two columns, each beside its words, one on a narrow screen |
-| `ruled` | no cells: a title and its words in two columns every row shares, a rule under each |
-| `steps` | no cells: a large thin numeral in the item's ink over its title and words, in two columns |
+| `grid` | cells in two columns, each beside its words, one in a narrow column |
+| `ruled` | no cells: a title and its words in two columns every row shares, a rule under each; in a narrow column the title over its words |
+| `steps` | no cells: a large thin numeral in the item's ink over its title and words, in two columns, one in a narrow column |
 
 The items take the five inks in turn however many there are, four on a
 band, which leaves its own out. A cell is the brand's, seeded by the
 item's place or its title, and holds the item's number where the list
 is `numbered`, its Phosphor `icon` (the regular weight) in the paper,
 or a person's portrait, `photo` ([the people](#the-people)); else it is
-bare. A section whose list stands side by side, `row`, `grid` or
-`steps`, gives its words half the width beside its figure.
+bare. On a wide screen, a section whose list stands side by side,
+`row`, `grid` or `steps`, or that holds a form, gives its words half
+the width beside its figure.
 
 ## Bands and actions
 
-A band's edges are a rounded outline in its own box (`edges` in
-`Block.astro`, the layout every section shares), a few long edges
-meeting at wide turns rounded by the brand's own corner, its corners at
-the screen's sides standing past it. Each band's bends are its own,
-drawn from its seed by the brand's seeded `rng` and the same on every
-build: its top rises to a crest and its foot dips to a trough, each
-somewhere along the width and well apart from the other, so no two
-bands lean alike.
+A band's edges are a rounded outline in its own box (`src/lib/edge.ts`,
+which `Block.astro`, the layout every section shares, clips the band
+by), a few long edges meeting at wide turns rounded by the brand's own
+corner, its corners at the screen's sides standing past it. Each band's
+bends are its own, drawn from its seed by the brand's seeded `rng` and
+the same on every build: its top rises to a crest and its foot dips to
+a trough, each somewhere along the width and well apart from the other,
+so no two bands lean alike. The outline is a CSS `shape()` whose top
+edge is measured down from the band's top and its foot's up from its
+foot, each as deep as the band's height makes it but never deeper than
+`--reach`: past any wide band's height, so a wide band is cut as its
+outline stretched over it, and 28rem under 56rem, where a band stacks
+and grows tall, so its edges never sink into its words. A browser with
+no `shape()` clips the band by the same outline as an SVG clip path,
+which stretches with it.
 
 A band is a strong ink, its words and its diagram light on it: the
 sage a deep shade of the success ink's hue, `--band-a`, and the coral
@@ -162,9 +183,11 @@ enough for light text in either theme. It draws the diagram its
 `diagram` names, from `@cella/diagrams`
 ([its language](../../packages/diagrams/index.md#the-language)), light
 on its colour, its glyphs' rings and its labels' halos the band's own,
-under it the mark every diagram wears; or, in the diagram's place, the
-Phosphor icon its `icon` names, one large glyph in the band's light
-ink.
+under it the mark every diagram wears, on the band's outer side; or, in
+the diagram's place, the Phosphor icon its `icon` names, one large glyph
+in the band's light ink. Its diagram keeps 22rem beside its words on a
+wide screen, and a diagram drawn under 440px wide sets its labels
+larger in its own units, so they still read.
 
 A row of `Action`s is a row of cells (`Actions.astro`): side by side,
 their tops and feet aligned, each pair sharing a slanted edge cut by one
@@ -236,10 +259,16 @@ by the photo's modification time and a version, as the engravings are,
 then laid over the figure's box as the photo covers it; a region whose
 middle the box cuts off is left out. So a face is never cut by a gutter,
 and the plain background breaks small. The figure's SVG
-(`src/components/Cut.astro`) clips the print by the cluster. Each
+(`src/components/Cut.astro`) clips the print by the cluster and shows
+the box only from its highest cell to its lowest, so no bare paper
+stands between the cells and the caption. Each
 section's cluster is seeded by its page's and its own name, so it is
-the same on every build. Under the figure, at the screen's edge on the
-side it bleeds to and quiet, its caption in the display face over the
+the same on every build. A figure that bleeds left is cut twice, the
+second cut bleeding right: stacked under its words under 56rem, it has
+no words beside it to point its tail to, so it wears the second cut and
+bleeds right, as the hero does. Under the figure, toward the screen's
+edge on the side it bleeds to, at most 5rem past the column, and quiet,
+its caption in the display face over the
 credit Unsplash asks for, a small spaced label: the `site` entry's photo
 credit, the photographer's name linked to their profile and "Unsplash"
 to the photo's page.
@@ -262,7 +291,8 @@ A section's body places a form by its name, `<Signup />` or
   their ids and Listmonk live on the production host
   (`hosts/prod/production/` in the workshop).
 - **the contact form** (`ContactForm.astro`), as the contact page holds
-  it: a name and an email side by side, a note, a box for the
+  it: a name and an email side by side, one over the other in a narrow
+  column, a note, a box for the
   newsletter, ticked at first, and one for the pilot, sent as `list` and
   `pilot`, and the button, one cell in the section's ink. Its fields are
   plain rounded fills of the text's ink over the paper. It posts to
@@ -377,8 +407,9 @@ renderer hands it:
   `@cella/diagrams` inside a `<figure>`, its `alt` its `meta`'s, and
   under it the mark every diagram wears: the `site` entry's diagram
   label, "AI-generated", in the muted text with Phosphor's sparkle, run
-  out to the screen's edge on the diagram's outer side, `edge` (`r`
-  unset), the sparkle outermost, which the wrapper always prints and no
+  out toward the screen's edge on the diagram's outer side, `edge` (`r`
+  unset), a gutter in from it and at most 5rem past the column, the
+  sparkle outermost, which the wrapper always prints and no
   prop removes. On the paper its particles take the
   status tones; a band's, `band`, are its light ink alone. A name the
   diagrams do not list fails the build, naming it.
@@ -419,7 +450,8 @@ no credit sidecar. An item of a list of cells names it, `photo: <name>`,
 and its cell becomes the portrait: the picture cut square round its
 most telling part, engraved as a figure is but coarser for its small
 size, at 480 pixels, in a deep shade of the item's ink on the print's
-paper washed with it, and clipped to the cell, larger than an icon's.
+paper washed with it, and clipped to the cell, larger than an icon's:
+a third of the column it stands in, 5.5rem to 12rem.
 Each portrait is its own file, `/portrait/<name>-480.png`, made by the
 static endpoint `src/pages/portrait/[key].png.ts` and cached as an
 engraving is.

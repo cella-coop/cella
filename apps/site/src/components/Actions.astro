@@ -204,9 +204,10 @@ const { links = [], ink, seed = 7, drafted = () => undefined } = Astro.props
     outline: none;
   }
 
+  /* narrower on a phone, but never under a finger's 44px tall */
   @media (max-width: 30rem) {
     .actions :global(.cell) {
-      padding: 0.85rem 1.2rem;
+      padding: 0.95rem 1.2rem;
       font-size: 0.9rem;
     }
   }

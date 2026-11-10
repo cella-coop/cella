@@ -57,6 +57,25 @@ const current = (href: string) => {
   </div>
 </header>
 
+<script>
+  // The menu opens and closes as a <details> with no script; with one, a
+  // press outside it or Escape closes it too, Escape handing focus back
+  // to its button
+  for (const menu of document.querySelectorAll<HTMLDetailsElement>('.menu')) {
+    document.addEventListener('pointerdown', (e) => {
+      if (menu.open && !menu.contains(e.target as Node)) {
+        menu.open = false
+      }
+    })
+    menu.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && menu.open) {
+        menu.open = false
+        menu.querySelector('summary')?.focus()
+      }
+    })
+  }
+</script>
+
 <style>
   .header {
     position: sticky;
@@ -88,9 +107,18 @@ const current = (href: string) => {
     transform: translateY(-50%);
   }
 
+  /* the lockup, the menu's links and the bar's two buttons each a
+     finger's 44px tall */
   .home {
     display: flex;
+    padding-block: 11px;
     color: var(--text);
+  }
+
+  .corner :global(.toggle) {
+    width: 44px;
+    height: 44px;
+    padding: 11px;
   }
 
   .home :global(svg) {
@@ -104,6 +132,10 @@ const current = (href: string) => {
     margin-inline-start: auto;
   }
 
+  .bar > nav a {
+    padding-block: 11px;
+  }
+
   /* On a narrow screen the links fold into a menu under a list icon */
   .menu {
     display: none;
@@ -113,9 +145,9 @@ const current = (href: string) => {
   .menu summary {
     display: grid;
     place-items: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    padding: 0.4rem;
+    width: 44px;
+    height: 44px;
+    padding: 11px;
     border-radius: var(--radius-control);
     cursor: pointer;
     list-style: none;
@@ -147,7 +179,7 @@ const current = (href: string) => {
   }
 
   .menu nav a {
-    padding: 0.6rem 0.75rem;
+    padding: 0.75rem;
     border-radius: var(--radius-control);
   }
 

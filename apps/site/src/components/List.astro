@@ -85,6 +85,16 @@ const { items, layout = 'column', numbered = false, seed = 1, drafted } = Astro.
     max-width: none;
   }
 
+  /* two columns need room: one where the section's column is narrow
+     (Block.astro's container), or, in a post's prose, which has none,
+     where the screen is */
+  @container (width < 34rem) {
+    [data-layout='grid'],
+    [data-layout='steps'] {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
   @media (max-width: 40rem) {
     [data-layout='grid'],
     [data-layout='steps'] {

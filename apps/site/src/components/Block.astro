@@ -9,9 +9,9 @@
 // the four other inks. Its `numeral`, where it has one, is a ghost numeral.
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { rng, roundedPath, type Point } from '@cella/brand'
 import { diagrams, type DiagramName } from '@cella/diagrams'
 import type { Figure, Status } from '../schemas'
+import { outlinePath, outlineShape } from '../lib/edge'
 import { anchor, handed, swatch } from '../lib/place'
 import { refuse, where } from '../lib/refuse'
 import { siteData } from '../lib/text'
@@ -67,32 +67,14 @@ const credit = { template: site.photo.credit, unsplash: site.photo.unsplash }
 const none = () => undefined
 const body = Astro.slots.has('default')
 
-// A band's outline, as a cell's: a few long edges meeting at wide,
-// rounded corners, in the band's own box, so it stretches with it, its
-// bends its own, drawn from its seed and the same on every build. Its top
-// rises to a crest and its foot dips to a trough, each somewhere along
-// the width and apart from the other; the corners at the screen's sides
-// stand past it, so only the turns inside show rounded
-function edges(seed: number): Point[] {
-  const r = rng((seed * 2654435761) >>> 0)
-  const span = (lo: number, hi: number) => lo + r() * (hi - lo)
-  const crest = span(0.22, 0.78)
-  // the trough stands well apart from the crest, so the band leans
-  const trough = crest < 0.5 ? span(crest + 0.2, 0.8) : span(0.2, crest - 0.2)
-  return [
-    [-0.1, span(0.05, 0.17)],
-    [crest, 0],
-    [1.1, span(0.05, 0.17)],
-    [1.1, span(0.84, 0.95)],
-    [trough, 1],
-    [-0.1, span(0.84, 0.95)],
-  ]
-}
+// A band's outline (lib/edge.ts): a CSS shape whose edges keep their
+// depth however tall the band grows, and, where a browser lacks shape(),
+// the same outline as an SVG clip that stretches with the band
 const anchorId = hero ? undefined : (id ?? anchor(heading))
 const clip = band ? `band-${anchorId ?? seed}` : undefined
-const outline = band ? roundedPath(edges(seed), 0.07, (v) => v.toFixed(4)) : undefined
+const outline = band ? outlinePath(seed) : undefined
 const paired = Boolean(figure || diagram || icon)
-const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? { 'clip-path': `url(#${clip})` } : {}) }
+const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? { '--clip': `url(#${clip})`, '--outline': outlineShape(seed) } : {}) }
 ---
 
 <section id={anchorId} class:list={['section', { hero }]} data-band={band ? ink : undefined} style={style}>
@@ -110,7 +92,7 @@ const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? {
           {body && <div class="said"><slot /></div>}
           <cite class="label">{heading}</cite>
         </blockquote>
-        {diagram && <div class="plate"><Diagram name={diagram as DiagramName} band /></div>}
+        {diagram && <div class="plate"><Diagram name={diagram as DiagramName} band edge={flip ? 'l' : 'r'} /></div>}
         {icon && <div class="plate glyph"><Icon name={icon} role="current" /></div>}
       </div>
     ) : (
@@ -121,7 +103,7 @@ const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? {
           <Heading text={heading} level={hero ? 1 : 2} />
           {body && <div class:list={['body', { lede: !prose }]}><slot /></div>}
         </div>
-        {diagram && <div class="plate"><Diagram name={diagram as DiagramName} band /></div>}
+        {diagram && <div class="plate"><Diagram name={diagram as DiagramName} band edge={flip ? 'l' : 'r'} /></div>}
         {icon && <div class="plate glyph"><Icon name={icon} role="current" /></div>}
         {figure && <Engraving figure={figure} ink={figure.ink ?? ink} seed={seed} bleed={flip ? 'l' : 'r'} aspect={hero ? 1.3 : 1.2} credit={credit} drafted={none} />}
       </div>
@@ -150,10 +132,14 @@ const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? {
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
   }
 
-  /* words whose cells stand side by side take half the width, not five
-     twelfths, so the cells have room */
-  .pair:has(:global(.list:is([data-layout='row'], [data-layout='grid'], [data-layout='steps']))) {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  /* words whose cells stand side by side, or that hold a form, take half
+     the width, not five twelfths, so the cells and the fields have room;
+     on a wide screen alone, since this outranks the narrow screen's one
+     column */
+  @media (min-width: 56.01rem) {
+    .pair:has(:global(:is(.list:is([data-layout='row'], [data-layout='grid'], [data-layout='steps']), form))) {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
   }
 
   .pair.flip > :global(figure),
@@ -179,19 +165,24 @@ const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? {
     margin-bottom: clamp(-7rem, -8vw, -3rem);
   }
 
+  /* the words' column is a container, so what they hold, lists and
+     forms, lays itself out by the column's width, not the screen's */
   .copy {
     position: relative;
     isolation: isolate;
+    container-type: inline-size;
     display: grid;
     gap: 1.5rem;
     align-content: center;
   }
 
-  /* the number: a ghost numeral, huge and faint behind the words, out at
-     the screen's edge on their outer side, the left unless the figure
-     takes it, a gutter in from it, whole on any width */
+  /* the number: a ghost numeral, huge and faint behind the words, out
+     toward the screen's edge on their outer side, the left unless the
+     figure takes it, a gutter in from it and never more than 6rem past
+     the column, so a wide screen keeps it by its words; whole on any
+     width */
   .num {
-    --out: calc((100vw - min(100vw, var(--wrap))) / 2);
+    --out: min(calc((100vw - min(100vw, var(--wrap))) / 2), 6rem);
     position: absolute;
     top: -0.32em;
     left: calc(-1 * var(--out));
@@ -278,27 +269,60 @@ const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? {
     --text: var(--band-ink);
     --text-muted: color-mix(in oklch, var(--band-ink) 88%, transparent);
     --dg-ground: var(--band);
+    /* how deep its edges may cut, from its top and from its foot: past
+       any wide band's height, so a wide band is cut as its outline
+       stretched over it, and shallow where a band stacks and grows tall */
+    --reach: 100rem;
     background: var(--band);
     color: var(--band-ink);
+    clip-path: var(--clip);
+  }
+
+  @supports (clip-path: shape(from 0 0, line to 0 0)) {
+    [data-band] {
+      clip-path: var(--outline);
+    }
   }
 
   .edge {
     position: absolute;
   }
 
+  /* the plate keeps room enough for a diagram's labels beside the words */
   [data-band] .pair {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-columns: minmax(0, 7fr) minmax(22rem, 5fr);
     padding-block: 0;
   }
 
   [data-band] .pair.flip {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    grid-template-columns: minmax(22rem, 5fr) minmax(0, 7fr);
   }
 
   .plate {
+    container-type: inline-size;
     justify-self: center;
     width: 100%;
     max-width: 30rem;
+  }
+
+  /* a diagram's labels are sized in its own units, which shrink with its
+     plate; a small plate sets them larger, so they still read */
+  @container (width < 440px) {
+    .plate :global(.dg .kind) {
+      font-size: 10.5px;
+    }
+
+    .plate :global(.dg .name) {
+      font-size: 15px;
+    }
+
+    .plate :global(.dg .say) {
+      font-size: 12.5px;
+    }
+
+    .plate :global(.dg .code) {
+      font-size: 11px;
+    }
   }
 
   /* an icon in a diagram's place: one glyph, large, in the band's ink */
@@ -358,9 +382,17 @@ const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? {
   @media (max-width: 56rem) {
     .pair,
     .pair.flip,
-    .pair:has(:global(.list)),
-    [data-band] .pair {
+    [data-band] .pair,
+    [data-band] .pair.flip {
       grid-template-columns: minmax(0, 1fr);
+    }
+
+    [data-band] {
+      --reach: 28rem;
+    }
+
+    .glyph :global(.icon) {
+      width: min(100%, 9rem);
     }
 
     .pair.flip > :global(figure),

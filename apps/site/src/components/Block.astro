@@ -67,8 +67,7 @@ const site = await siteData()
 const credit = { template: site.photo.credit, unsplash: site.photo.unsplash }
 const none = () => undefined
 const body = Astro.slots.has('default')
-// a quote's marks, Phosphor's filled quotes, a closing mark, the opening
-// one turned
+// a quote's opening mark, Phosphor's filled quotes, a closing mark, turned
 const marks = band && quote ? glyphPaths('quotes', 'fill') : ''
 const box = '0 0 256 256'
 
@@ -98,9 +97,8 @@ const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? {
         <blockquote>
           {body && (
             <div class="said">
-              <svg class="mark open" viewBox={box} aria-hidden="true" set:html={marks} />
+              <svg class="mark" viewBox={box} aria-hidden="true" set:html={marks} />
               <slot />
-              <svg class="mark close" viewBox={box} aria-hidden="true" set:html={marks} />
             </div>
           )}
           <cite class="label">{heading}</cite>
@@ -382,32 +380,24 @@ const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? {
     font-weight: 760;
   }
 
-  /* the quote's marks, large and faint in the band's light ink: the
-     opening one, turned, over its first line, the closing one past its
-     last, out of the words and hidden from a screen reader */
+  /* the quote's opening mark, as a pull quote wears one: large and faint
+     in the band's light ink, over its first line and hanging a little
+     past its edge, as print hangs it, out of the words and hidden from a
+     screen reader */
   .said {
     position: relative;
   }
 
   .mark {
     position: absolute;
+    top: 0;
+    left: clamp(-1.9rem, -2.6vw, -0.9rem);
     width: clamp(4rem, 8vw, 7rem);
     height: auto;
     fill: var(--band-ink);
     opacity: 0.16;
     pointer-events: none;
-  }
-
-  .open {
-    top: 0;
-    left: -0.4rem;
     transform: translateY(-90%) rotate(180deg);
-  }
-
-  .close {
-    right: 0;
-    bottom: 0;
-    transform: translateY(78%);
   }
 
   cite {

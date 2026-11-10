@@ -13,16 +13,18 @@ interface Props {
   // its ink, else its section's, which it inherits
   ink?: Status
   checked?: boolean
+  // what it sends when ticked, `on` unset
+  value?: string
   drafted?: true
 }
 
-const { name, label, ink, checked = false, drafted } = Astro.props
+const { name, label, ink, checked = false, value, drafted } = Astro.props
 // the tick: Phosphor's bold check, its path alone
 const tick = readFileSync(createRequire(import.meta.url).resolve('@phosphor-icons/core/assets/bold/check-bold.svg'), 'utf8').replace(/^[\s\S]*?<svg[^>]*>|<\/svg>\s*$/g, '')
 ---
 
 <label class="check" data-drafted={drafted} style={ink ? { '--ink': swatch(ink) } : undefined}>
-  <input type="checkbox" name={name} checked={checked} />
+  <input type="checkbox" name={name} value={value} checked={checked} />
   <svg class="box" viewBox="0 0 100 100" aria-hidden="true">
     <rect class="shape" x="6" y="6" width="88" height="88" rx="24" />
     <g class="tick" transform="translate(24 24) scale(0.203)" set:html={tick} />

@@ -242,30 +242,36 @@ to the photo's page.
 
 ## The forms
 
-A section may hold a form under its words, `form: signup` or `form:
-contact`, its words the `site` entry's `signup` and `contact`:
+A section's body places a form by its name, `<Signup />` or
+`<ContactForm />`, its words the `site` entry's `[signup]` and
+`[contact]`:
 
 - **the sign-up** (`Signup.astro`), compact, as the home page's Join
   band holds it: the email field and the button as one row of cells,
   the field plain ink and the button the section's, and a box a coop
-  that might pilot ticks, sent as `pilot`, in line with the field's
-  words. It posts to the list's endpoint, `PUBLIC_SIGNUP_URL`, the list
-  sending a confirmation before anyone is on it (double opt-in).
+  that might pilot ticks, in line with the field's words. It posts to
+  Listmonk's public form on the site's own domain,
+  `PUBLIC_SIGNUP_URL` (`/subscription/form`), naming the lists by
+  their ids: the newsletter always, `PUBLIC_SIGNUP_LIST`, and the
+  pilot's where its box is ticked, `PUBLIC_PILOT_LIST`. Listmonk sends a
+  confirmation before anyone is on a list (double opt-in). The lists,
+  their ids and Listmonk live on the production host
+  (`hosts/prod/production/` in the workshop).
 - **the contact form** (`ContactForm.astro`), as the contact page holds
   it: a name and an email side by side, a note, a box for the
   newsletter, ticked at first, and one for the pilot, sent as `list` and
   `pilot`, and the button, one cell in the section's ink. Its fields are
   plain rounded fills of the text's ink over the paper. It posts to
-  `PUBLIC_CONTACT_URL`.
+  `PUBLIC_CONTACT_URL`, which nothing serves yet.
 
 A tick box is `Check.astro`: a rounded square outlined in ink, filled
 with the button's ink and ticked once checked. On a band, cells, fields
 and ticks take the band's light ink. Each form posts itself in the page
 (`src/lib/send.ts`), so the page stays put: once sent it clears and
 says what came of it, failed it says so; with no endpoint set, as in
-the dev server, it sends nothing and only shows what it would say. The
-list behind them is to be a self-hosted Listmonk, moving into a running
-Cella scope later; neither is wired yet.
+the dev server, it sends nothing and only shows what it would say. So
+a release refuses a form that posts nowhere, naming what to set or
+telling the page to drop it, rather than tell a visitor it sent.
 
 ## The assets
 

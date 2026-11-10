@@ -5,21 +5,30 @@
 // field's words. Its words are the site's (`[signup]` in site.toml) and its
 // ink its section's, so a page places it bare, `<Signup />`. It posts to
 // `PUBLIC_SIGNUP_URL`, the list's endpoint.
+import { nowhere } from '../lib/refuse'
 import { siteData } from '../lib/text'
 import Actions from './Actions.astro'
 import Check from './Check.astro'
 
 const { signup: text, drafted } = await siteData()
+// listmonk's public form and the lists it adds a subscriber to, the
+// newsletter always and the pilot's where its box is ticked (the
+// production host's index.md); a release refuses a form that posts nowhere
 const endpoint = import.meta.env.PUBLIC_SIGNUP_URL ?? ''
+const news = import.meta.env.PUBLIC_SIGNUP_LIST ?? ''
+const pilot = import.meta.env.PUBLIC_PILOT_LIST ?? ''
+nowhere('signup', endpoint && news && pilot)
 const d = (k: string) => drafted(`signup.${k}`)
+const list = 'l'
 ---
 
 <form class="signup" action={endpoint || undefined} method="post" data-form data-endpoint={endpoint}>
+  {news && <input type="hidden" name={list} value={news} />}
   <Actions seed={11}>
     <input class="cell field" data-tone="plain" type="email" name="email" required autocomplete="email" aria-label={text.label} placeholder={text.placeholder} data-drafted={d('label')} />
     <button class="cell" data-tone="fill" type="submit" data-drafted={d('submit')}>{text.submit}</button>
   </Actions>
-  <div class="ticks"><Check name="pilot" label={text.pilot} drafted={d('pilot')} /></div>
+  <div class="ticks"><Check name={pilot ? list : 'pilot'} value={pilot || undefined} label={text.pilot} drafted={d('pilot')} /></div>
   <p class="said" role="status" aria-live="polite" hidden></p>
   <template data-done>{text.done}</template>
   <template data-failed>{text.failed}</template>

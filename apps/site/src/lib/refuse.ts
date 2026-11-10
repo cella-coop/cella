@@ -14,6 +14,19 @@ export const refuse = {
   unlistedInNav: (hrefs: string[]) => new Error(`site.toml's nav links ${hrefs.join(', ')}, unlisted: take the link out of nav, or drop unlisted from the page`),
 }
 
+const SENDS: Record<string, string> = {
+  signup: 'PUBLIC_SIGNUP_URL, PUBLIC_SIGNUP_LIST and PUBLIC_PILOT_LIST',
+  contact: 'PUBLIC_CONTACT_URL',
+}
+
+/** A release refuses a form that posts nowhere, which in the dev server
+ * only says what it would send, and would tell a visitor it had sent. */
+export function nowhere(form: string, sends: unknown) {
+  if (!import.meta.env.DEV && process.env.CELLA_SITE_RELEASE === '1' && !sends) {
+    throw new Error(`the ${form} form posts nowhere: set ${SENDS[form]} for the release, or take the form out of the page`)
+  }
+}
+
 /** How an error names a section: its kind and its heading. */
 export const where = (kind: string, heading: string) => `${kind} "${heading}"`
 

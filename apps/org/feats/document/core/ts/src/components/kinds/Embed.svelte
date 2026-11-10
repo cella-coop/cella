@@ -4,7 +4,8 @@
 
   // A thing of another slice, drawn by the slice that knows its kind; the
   // document holds only its kind and ref. Inserted from the slash menu it
-  // has a kind and no ref yet, and asks which record it shows.
+  // has a kind and no ref yet, and asks which record it shows: its
+  // arrows browse the choices, a click or Enter picks one.
   let { view }: { view: View } = $props()
   const ed = useEditor()
   const found = $derived(ed.embeds()[view.props.embed ?? ''])
@@ -17,7 +18,8 @@
       <span class="kind">{found.embed.label}</span>
       <select
         aria-label="Which {found.embed.label.toLowerCase()} this block shows"
-        onchange={(e) => ed.menu.pick(view.id, String(view.props.embed), e.currentTarget.value)}
+        onkeydown={(e) => ed.menu.pickKey(e, view.id, String(view.props.embed))}
+        onchange={(e) => ed.menu.picked(e, view.id, String(view.props.embed))}
         {@attach (el) => el.focus()}
       >
         <option value="" selected disabled>Choose a {found.embed.label.toLowerCase()}…</option>

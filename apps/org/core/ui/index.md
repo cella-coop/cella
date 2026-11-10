@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-09
+updated = 2026-11-10
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -325,8 +325,10 @@ The theme is light, dark or the system's, a cookie the server writes into
   since it may have been written), `Command`.
 - `Floating`: what floats at a point rather than from a trigger, a menu at
   the caret or a toolbar over a selection: in the top layer, opened
-  manually, kept in the viewport; a press on its buttons never takes the
-  focus, so the caret stays.
+  manually, kept in the viewport by its own measured size, and drawn above
+  the point it is given (`above`) where below it would pass the window's
+  bottom; a press on its buttons never takes the focus, so the caret
+  stays.
 - `Blocks`: a document of blocks, the block editor's surface and its
   read-only reader's, and the look of every kind of block (headings, list
   items with their markers, to-dos, quotes, code, dividers, embeds' cards,
@@ -444,9 +446,10 @@ and down arrow buttons that move things. The primitives:
 - `sortable(drag, { list, axis, label, onmove })`, an attachment on the
   list: its items carry `data-drag-item` and `data-drag-index`, each
   item's handle `data-drag-handle`. The pointer (mouse, touch, pen) lifts
-  past a few pixels, drags a floating preview (inside a popover, in its
-  top layer, so it shows above it), scrolls the list's
-  scroller near its edges and drops on release; Escape cancels. On a
+  past a few pixels, drags a floating preview, drawn inside an empty
+  copy of the list so the list's own styles reach it (inside a popover,
+  in its top layer, so it shows above it), scrolls the list's scroller
+  near its edges and drops on release; Escape cancels. On a
   focused handle the keyboard lifts with Space (or Enter on a button),
   moves with the arrows, drops with Space or Enter, cancels with Escape,
   each step announced in a live region. `onmove(from, to)` hears the

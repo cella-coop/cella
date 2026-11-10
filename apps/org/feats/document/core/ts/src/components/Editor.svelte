@@ -15,6 +15,12 @@
   // sortable, by pointer or by keyboard.
   let { doc, name, anchors = [], embeds = {} }: { doc: LoroDoc; name: string; anchors?: Anchor[]; embeds?: Embeds } = $props()
   const ed = useEditor(() => ({ doc, anchors, embeds: () => embeds }))
+  // A comment posted refreshes the page's anchors; its quote is
+  // highlighted then, not at the next reload.
+  const highlight = () => {
+    const a = anchors
+    queueMicrotask(() => ed.highlight(a))
+  }
 
   const attach = (el: HTMLElement) => {
     // Tests and tools reach the editor from its element, as other editors
@@ -32,6 +38,16 @@
   // are the field's.
   const ours = (e: Event) => !(e.target as HTMLElement).closest('input, textarea, select, [popover]')
 
+  // Chosen blocks mirror themselves in the page's selection, which
+  // Chromium may settle outside the editor, before it: their copy and cut
+  // are fired there, and heard here.
+  const outside = (e: ClipboardEvent, cut: boolean) => {
+    const t = e.target
+    if (ed.chosen.range && ed.root && !(t instanceof Node && ed.root.contains(t)) && !(t instanceof Element && t.closest('input, textarea, select, [contenteditable]'))) {
+      ed.clip.copy(e, cut)
+    }
+  }
+
   // A press on a grip, or on a block without text, chooses it whole.
   function onclick(e: MouseEvent) {
     const t = e.target as HTMLElement
@@ -46,7 +62,12 @@
   }
 </script>
 
-<svelte:document onselectionchange={() => ed.selectionChanged()} onpointerup={() => ed.chosen.pointerup()} />
+<svelte:document
+  onselectionchange={() => ed.selectionChanged()}
+  onpointerup={() => ed.chosen.pointerup()}
+  oncopy={(e: ClipboardEvent) => outside(e, false)}
+  oncut={(e: ClipboardEvent) => outside(e, true)}
+/>
 
 <Blocks
   tabindex={-1}
@@ -56,6 +77,7 @@
   data-chosen={ed.chosen.range ? '' : undefined}
   {@attach attach}
   {@attach drag}
+  {@attach highlight}
   onbeforeinput={(e: InputEvent) => ours(e) && ed.input.beforeinput(e)}
   onkeydown={(e: KeyboardEvent) => ours(e) && (ed.chosen.range ? ed.chosen.key(e) : ed.input.key(e))}
   oncompositionstart={() => ed.input.compositionstart()}

@@ -40,10 +40,11 @@
 
   // Chosen blocks mirror themselves in the page's selection, which
   // Chromium may settle outside the editor, before it: their copy and cut
-  // are fired there, and heard here.
+  // are fired there, and heard here while the selection still mirrors
+  // them; text selected elsewhere on the page copies as itself.
   const outside = (e: ClipboardEvent, cut: boolean) => {
     const t = e.target
-    if (ed.chosen.range && ed.root && !(t instanceof Node && ed.root.contains(t)) && !(t instanceof Element && t.closest('input, textarea, select, [contenteditable]'))) {
+    if (ed.chosen.mirrored() && ed.root && !(t instanceof Node && ed.root.contains(t)) && !(t instanceof Element && t.closest('input, textarea, select, [contenteditable]'))) {
       ed.clip.copy(e, cut)
     }
   }
@@ -64,6 +65,7 @@
 
 <svelte:document
   onselectionchange={() => ed.selectionChanged()}
+  onpointerdown={(e: PointerEvent) => ed.chosen.away(e)}
   onpointerup={() => ed.chosen.pointerup()}
   oncopy={(e: ClipboardEvent) => outside(e, false)}
   oncut={(e: ClipboardEvent) => outside(e, true)}

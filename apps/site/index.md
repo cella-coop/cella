@@ -149,7 +149,11 @@ and its words as markdown, laid out by its `layout`:
 | `steps` | no cells: a large thin numeral in the item's ink over its title and words, in two columns, one in a narrow column |
 
 The items take the five inks in turn however many there are, four on a
-band, which leaves its own out. A cell is the brand's, seeded by the
+band, which leaves its own out. Each list's turn starts where and runs
+in the order its own seed draws (`shuffled` in `src/lib/place.ts`): its
+`seed`, or, unset, one from its items' words, never their tags, so the
+dev server and a build agree; a list that wants another order is given
+a `seed`. A cell is the brand's, seeded by the
 item's place or its title, and holds the item's number where the list
 is `numbered`, its Phosphor `icon` (the regular weight) in the paper,
 or a person's portrait, `photo` ([the people](#the-people)); else it is

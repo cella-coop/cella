@@ -73,7 +73,10 @@ from the explorer:
   as the largest; near an edge it does not bleed past, a disk moves in
   as far as its region stays inside, and its cell is always kept, cut
   by the box only where it must be; the outline closes round each, and the other cells shrink
-  away from them as well as toward the rim;
+  away from them as well as toward the rim, though never below the
+  smallest, so the background still fills however far the focus
+  stands; a focus pulls a bleeding cluster's middle toward the words,
+  never past 0.55 of the box toward the edge it bleeds off;
   `silhouette`, the shape its cells fill, `'blob'` by default, an
   organic one by name or `{ kind, limbs }`, or `{ field, depth }`, any
   signed distance in the box's units, negative inside, its cells full

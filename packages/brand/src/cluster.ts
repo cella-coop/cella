@@ -44,6 +44,15 @@ const f = (v: number) => v.toFixed(1)
 /** How far a cell may reach from its seed, in its disk's radii, and the
  * sides of the polygon that bounds it. */
 const REACH = 1.5
+
+/** How far toward the edge it bleeds off a cluster's middle may stand, a
+ * share of the box's width. */
+const HUB = 0.55
+
+/** How large a cell far from any focus may grow, a share of the largest's
+ * size: its cap a little over the smallest disk, (rmin / rmax) ** (1 / 1.6)
+ * being 0.31, so small disks still fill the background. */
+const FAR = 0.42
 const REACH_SIDES = 14
 
 /** A cluster's cells, as SVG paths, in a box w by h. */
@@ -110,6 +119,11 @@ function diagram(w: number, h: number, { pitch, gutter, round, seed, drop = 0, b
     cx = (cx + foci.reduce((s, d) => s + d.x * d.r * d.r, 0) / mass) / 2
     cy = (cy + foci.reduce((s, d) => s + d.y * d.r * d.r, 0) / mass) / 2
   }
+  // bleeding, its middle stays near the box's, toward the words at most,
+  // lest a subject near the edge it bleeds off leave the other side bare:
+  // the outline already reaches past that edge, and the cells close round
+  // each focus whatever the outline
+  cx = bleed === 'r' ? Math.min(cx, w * HUB) : bleed === 'l' ? Math.max(cx, w * (1 - HUB)) : cx
   const tail = bleed === 'r' ? Math.PI + (shape() - 0.5) * 1.4 : bleed === 'l' ? (shape() - 0.5) * 1.4 : shape() * 6.3
   const blob = (x: number, y: number) => {
     let u = (x - cx) / (w / 2)
@@ -140,10 +154,11 @@ function diagram(w: number, h: number, { pitch, gutter, round, seed, drop = 0, b
   // the blob's outline is how far from its middle, so its falloff is
   // steepened to its rim; any other is how deep in it, and a cell grows
   // only as deep as it stands. Far from a focus the cap still lets the
-  // smallest disks in, so the background fills with small cells
+  // smallest disks in, a little over the least a disk may be, so the
+  // background fills with small cells however far the focus stands
   const steep = silhouette === 'blob' ? 3 : 1
   const rim = (x: number, y: number) => 1.05 - outline(x, y) ** steep * 0.85
-  const size = foci.length ? (x: number, y: number) => Math.min(rim(x, y), 0.28 + 0.6 * Math.exp(-(away(x, y) ** 2) * 3)) : rim
+  const size = foci.length ? (x: number, y: number) => Math.min(rim(x, y), FAR + (1 - FAR) * 0.68 * Math.exp(-(away(x, y) ** 2) * 3)) : rim
   const cap = (x: number, y: number) => rmax * Math.max(0.12, size(x, y)) ** 1.6
   const margin = rmax
   // enough disks to fill the box with small ones, at any pitch

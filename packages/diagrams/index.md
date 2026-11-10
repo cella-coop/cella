@@ -1,6 +1,6 @@
 +++
 title = "Diagrams"
-updated = 2026-11-08
+updated = 2026-11-10
 +++
 
 `@cella/diagrams` is the landing site's diagrams: Svelte components,
@@ -37,6 +37,7 @@ word. The text around it is the operator's
 | `mandate-tree` | authority narrowing from the GA to the board to two roles, an act, then a revoke cascading down what derived from it and the next act refused | |
 | `scope-notary` | an action through a scope's notary: judged, state and signed log written in one transaction, answered; a second refused, nothing written | |
 | `signed-log` | the notary appending entries to a scope's log, each signed and carrying the hash of the one before, the next drawn pending | |
+| `you-join` | a coop of one member and a newcomer, You: You apply, the member consents, the motion passes and You are admitted; a mandate goes to the Cofounder role, You take it, and its first act is coffee | |
 
 ## The language
 
@@ -74,7 +75,7 @@ the geometry of the particles' paths.
   with the ground (`Glyph`): `check` consents, `x` says no, `hand-palm`
   objects, `hourglass-simple` stays silent, `gavel` a motion passing,
   `stamp` acts under a mandate, or the act's own icon where it says more,
-  as `coins` a payment, `prohibit` in a dashed ring an act refused,
+  as `coins` a payment, `coffee` a cofounder's first act, `prohibit` in a dashed ring an act refused,
   `link-break` a mandate ending, `seal-check` a signed record received,
   `handshake` a party joining. A line's name wears its kind's icon, or
   its own where it has one, as `wallet` a treasurer. `src/lang/glyphs.ts` holds Phosphor's paths, vendored so the

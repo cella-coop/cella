@@ -146,7 +146,7 @@ for (const [verb, statement] of Object.entries(verbs)) {
     ['quoted', '"transaction"."line"', (s) => s],
     ['mixed', 'TrAnSaCtIoN.LiNe', (s) => s.replace(/\b(insert|into|update|delete|from|merge|using|truncate|table|create|trigger|after|on|for|each|row|execute|function)\b/gi, (w) => w[0].toLowerCase() + w.slice(1).toUpperCase())],
   ]) {
-    test(`${verb} with ${spelling} names a foreign table`, async () => {
+    test(`${verb} with ${spelling} names a foreign table and the notary's`, async () => {
       const repo = mkdtempSync(join(tmpdir(), 'cella-writes-ts-'))
       try {
         const dir = 'apps/org/grafts/own-other/ts'
@@ -159,6 +159,7 @@ for (const [verb, statement] of Object.entries(verbs)) {
         ).join('\n'))
         assert.deepEqual((await scanTs(repo, dir, 'own-other', 'own_other')).map((f) => f.what), [
           `src/handler.ts ${verb === 'trigger' ? 'triggers on' : 'writes'} transaction.line`,
+          `src/handler.ts ${verb === 'trigger' ? 'triggers on' : 'writes'} cella.guard`,
         ])
       } finally {
         rmSync(repo, { recursive: true, force: true })
@@ -167,7 +168,7 @@ for (const [verb, statement] of Object.entries(verbs)) {
   }
 }
 
-test('literals, interpolation, CTEs, comments and own tables', async () => {
+test('literals, interpolation, CTEs, comments and own tables, the notary\'s found', async () => {
   const repo = mkdtempSync(join(tmpdir(), 'cella-writes-ts-'))
   try {
     const dir = 'apps/org/grafts/own-other/ts'
@@ -185,6 +186,7 @@ test('literals, interpolation, CTEs, comments and own tables', async () => {
     assert.deepEqual((await scanTs(repo, dir, 'own-other', 'own_other')).map((f) => f.what), [
       'src/handler.ts writes transaction.line',
       'src/handler.ts writes transaction.line',
+      'src/handler.ts writes cella.guard',
     ])
   } finally {
     rmSync(repo, { recursive: true, force: true })
@@ -220,9 +222,11 @@ test('unparseable interpolated writes, joined literals, and COPY FROM are checke
     ].map((s, i) => `const q${i} = ${s}`).join('\n'))
     assert.deepEqual((await scanTs(repo, dir, 'own-other', 'own_other')).map((f) => f.what), [
       ...Array(5).fill('src/handler.ts writes transaction.line'),
+      ...Array(5).fill('src/handler.ts writes cella.guard'),
       'src/handler.ts writes transaction.line',
       'src/handler.ts writes transaction.line',
       'src/handler.ts writes transaction.line',
+      'src/handler.ts writes cella.guard',
       'src/handler.ts writes transaction.extra',
       'src/handler.ts writes transaction.line',
       'src/handler.ts triggers on transaction.line',
@@ -300,4 +304,108 @@ SELECT cella.lets_fold('invoice:invoice:issue', 3, 'invoice_member.' || 'fold(js
     "registers the fold invoice.fold_issue(jsonb) of invoice:invoice:issue: a fold is a function in its owner's own schema, invoice_member",
     'calls cella.lets_fold with an argument that is no literal, which the check cannot see',
   ])
+})
+
+// Org's core with core's circles, the register, the notary's SQL and one
+// core library, `ledger`, each library's SQL as given. Answers the
+// check's errors and the foreign writes it found.
+async function core({ ledger = '', notary = '' }) {
+  const repo = mkdtempSync(join(tmpdir(), 'cella-writes-core-'))
+  try {
+    const write = (dir, text) => {
+      mkdirSync(join(repo, dir), { recursive: true })
+      writeFileSync(join(repo, dir, '001.sql'), text)
+    }
+    mkdirSync(join(repo, 'apps/org'), { recursive: true })
+    writeFileSync(join(repo, 'apps/org/feat.toml'), 'name = "org"\n')
+    write('apps/org/core/circle/sql', 'CREATE SCHEMA circle;\nCREATE TABLE circle.circle (id text PRIMARY KEY);')
+    write('apps/org/core/policy/sql', 'CREATE SCHEMA policy;\nCREATE TABLE policy.policy (id text PRIMARY KEY);')
+    write('apps/org/core/ledger/sql', `CREATE SCHEMA ledger;\nCREATE TABLE ledger.line (id text PRIMARY KEY);\n${ledger}`)
+    if (notary) {
+      write('apps/org/core/notary/sql', notary)
+    }
+    const found = { powers: [], guards: [], cites: [], personal: [], impersonal: [], columns: [], foreign: [] }
+    const errors = await checkSql(repo, ['apps/org'], new Set(['cella', 'circle', 'policy', 'ledger']), found)
+    return { errors: errors.join('\n'), foreign: found.foreign.map((f) => `${f.owner}: ${f.what}`) }
+  } finally {
+    rmSync(repo, { recursive: true, force: true })
+  }
+}
+
+test('a core library\'s SQL that writes or triggers on another core library\'s table is found, its own not', async () => {
+  const { foreign } = await core({ ledger: `INSERT INTO ledger.line (id) VALUES ('a');
+INSERT INTO policy.policy (id) VALUES ('a');
+CREATE FUNCTION ledger.opens() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE circle.circle SET id = NEW.id WHERE id = NEW.id;
+  RETURN NEW;
+END $$;
+CREATE TRIGGER opens AFTER INSERT ON policy.policy FOR EACH ROW EXECUTE FUNCTION ledger.opens();` })
+  assert.deepEqual(foreign, [
+    'ledger: 001.sql writes policy.policy',
+    'ledger: ledger.opens() writes circle.circle',
+    'ledger: trigger opens on policy.policy',
+  ])
+  assert.match(refuse([{ owner: 'ledger', what: '001.sql writes policy.policy', path: 'apps/org/core/ledger/sql/001.sql' }])[0], /a table it does not own/)
+})
+
+test('a core library\'s SQL writes cella.* only to register; the notary\'s writes the log', async () => {
+  const log = await core({ ledger: `INSERT INTO cella.entry (n) VALUES (1);
+UPDATE cella.head SET n = 2;` })
+  assert.match(log.errors, /writes cella\.entry: a core library writes cella\.\* only to register its guards, its powers, its personal columns or who reads; only the notary writes the log/)
+  assert.match(log.errors, /writes cella\.head: a core library writes cella\.\* only to register/)
+  const registers = await core({ ledger: `INSERT INTO cella.power (op, power, amount, owner) VALUES ('ledger:line:post', 'post-line', NULL, 'ledger');` })
+  assert.equal(registers.errors, '')
+  const notary = await core({ notary: `CREATE TABLE cella.entry (n bigint);
+INSERT INTO cella.entry (n) VALUES (0);` })
+  assert.deepEqual([notary.errors, notary.foreign], ['', []])
+})
+
+// A package's src/ with one file of the lines given, scanned as the
+// owner named; answers what was found, each as `refuse` says it.
+async function scanned(dir, owner, own, lines, options) {
+  const repo = mkdtempSync(join(tmpdir(), 'cella-writes-ts-'))
+  try {
+    mkdirSync(join(repo, dir, 'src'), { recursive: true })
+    writeFileSync(join(repo, dir, 'src/handler.ts'), lines.join('\n'))
+    const found = await scanTs(repo, dir, owner, own, options)
+    return { what: found.map((f) => f.what), refused: refuse(found) }
+  } finally {
+    rmSync(repo, { recursive: true, force: true })
+  }
+}
+
+test('a core library\'s TypeScript that writes another core library\'s table is found, its own not', async () => {
+  const { what } = await scanned('apps/org/core/ledger/ts', 'ledger', 'ledger', [
+    'await db.query(`INSERT INTO ledger.line (id) VALUES ($1)`)',
+    'await db.query(`UPDATE policy.policy SET id = $1`)',
+    'await db.query(`DELETE FROM circle.circle WHERE id = ${id}`)',
+  ])
+  assert.deepEqual(what, ['src/handler.ts writes policy.policy', 'src/handler.ts writes circle.circle'])
+})
+
+test('a core library\'s or a slice\'s TypeScript that writes the log is refused, the notary\'s not', async () => {
+  const lines = ['await db.query(`INSERT INTO cella.entry (n) VALUES ($1)`)', 'await db.query(`UPDATE cella.head SET n = n + 1`)']
+  const ledger = await scanned('apps/org/core/ledger/ts', 'ledger', 'ledger', lines)
+  assert.deepEqual(ledger.what, ['src/handler.ts writes cella.entry', 'src/handler.ts writes cella.head'])
+  assert.match(ledger.refused[0], /ledger src\/handler\.ts writes cella\.entry, the notary's: only the notary writes cella\.\*/)
+  const feat = await scanned('apps/org/feats/invoice/core/ts', 'invoice', 'invoice', lines)
+  assert.equal(feat.what.length, 2)
+  const notary = await scanned('apps/org/core/notary/ts', 'notary', 'notary', lines, { notary: true })
+  assert.deepEqual(notary.what, [])
+})
+
+test('a handler that calls cella.begin, cella.submit or cella.follow itself is refused; write in @cella/org-db calls them', async () => {
+  const lines = [
+    'await tx.query(`SELECT cella.begin($1, $2, decode($3, \'hex\'))`, [op, actor, device])',
+    'await tx.query(\'SELECT verdict FROM cella.submit($1, $2, $3, $4)\', [op, payload, actor, signed])',
+    'await tx.query(`SELECT verdict FROM CELLA.FOLLOW(${args})`)',
+    '// cella.submit in prose is no call',
+    'const reason = "the write was not begun by cella.begin"',
+  ]
+  const handler = await scanned('apps/org/feats/invoice/core/ts', 'invoice', 'invoice', lines)
+  assert.deepEqual(handler.what, ['src/handler.ts calls cella.begin', 'src/handler.ts calls cella.submit', 'src/handler.ts calls cella.follow'])
+  assert.match(handler.refused[1], /invoice src\/handler\.ts calls cella\.submit, which only write in @cella\/org-db calls: a handler writes through write/)
+  const db = await scanned('apps/org/core/db/ts', 'db', 'db', lines, { writer: true })
+  assert.deepEqual(db.what, [])
 })

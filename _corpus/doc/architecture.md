@@ -237,7 +237,11 @@ from a feat's row it reads by a view in its own schema, as
 parent's rows the same way, through the parent's write. No SQL of a
 feat or a graft inserts, updates, deletes, merges or truncates a table
 outside its own schema, or makes a trigger on one; it writes `cella.*`
-only to register ([SQL](#sql)).
+only to register ([SQL](#sql)). A node's core library is held to the
+same: its code changes only its own schema's rows, never another core
+library's, and it writes `cella.*` only to register. The notary alone
+writes the log, and `write` in `@cella/org-db` alone calls it to:
+`cella.begin`, `cella.submit` and `cella.follow`.
 
 What follows a passed motion is its carried actions, never a trigger.
 Each is its owner's published action, run in the close's transaction as
@@ -310,8 +314,9 @@ withholdings, the rights and the notary's authority are all called so.
 such write and trigger that the owner's migrations leave standing. A
 later file that drops the trigger, or drops or replaces the function,
 takes it away, and a slice may drop its own trigger on another's table.
-`tools/writes.mjs` reads each feat's and graft's TypeScript, its tests
-aside, as Postgres would: every string and template literal that holds
+It collects a core library's the same way, the notary's aside.
+`tools/writes.mjs` reads each feat's, graft's and core library's
+TypeScript, its tests aside, as Postgres would: every string and template literal that holds
 SQL is parsed with libpg_query, as `sql-check.mjs` parses migrations,
 each interpolation standing in as a parameter and literals joined by
 `+` read as one, and every statement that writes a table outside its
@@ -321,8 +326,14 @@ spelling: in capitals or not, its names quoted or not, inside a
 `WITH`. A literal that does not parse whole, as one whose `SET`,
 `VALUES` or column list is interpolated, is not passed: it is read
 token by token with Postgres's scanner, and a write verb followed by a
-qualified target is found there just the same. The check refuses every
-such write and trigger; there are no exceptions, the last of those
+qualified target is found there just the same. A write or a trigger
+on a table of `cella.*` is found the same way in every package but the
+notary's, since a slice and a core library register there from their
+migrations alone, and so is a call of `cella.begin`, `cella.submit` or
+`cella.follow` in every package but `@cella/org-db`, read from the
+literal's parse tree, or its tokens where it does not parse whole, so
+the name in prose or a message is no call. The check refuses every
+such write, trigger and call; there are no exceptions, the last of those
 that predated the rule having moved to their owners' registers and
 published writes. A write no tool can see is left to review: SQL built
 at run time (`EXECUTE`, or a statement whose verb or table is itself
@@ -557,17 +568,20 @@ trigger of its own on another's table.
 
 A node's core is held to the same: a core library's SQL creates, alters,
 indexes, drops and grants only in its own schema, named for it; never
-reads the clock or randomness; and never reads a policy's wording, but
-the register's own SQL, whose table it is. `cella check feats` refuses
-each by name, the core library's as a slice's (`tools/sql-check.mjs`,
-its negative tests in `tools/_tests/core.test.mjs`). Until the core
+reads the clock or randomness; never reads a policy's wording, but
+the register's own SQL, whose table it is; writes and triggers on no
+table outside its own schema; and writes `cella.*` only to register, by
+a literal row, its guards, its powers, its personal columns or who
+reads. `cella check feats` refuses each by name, the core library's as
+a slice's (`tools/sql-check.mjs`, its negative tests in
+`tools/_tests/core.test.mjs` and `tools/_tests/writes.test.mjs`). Until the core
 libraries that use one another are joined by core grafts, a core
 library acts in the schema of one its package depends on as in its
 own: core's circles put the register's tables under their row-level
 policies and make `policy.says`, which quotes a policy's wording to a
 guard's reason. The notary's SQL (`core/notary/sql`) is the one
 exemption, as the layer under every slice that writes the log: it
-makes `cella.*` and the vault, the pure functions every slice calls
+writes the log and makes `cella.*` and the vault, the pure functions every slice calls
 beside its own among them, a document's line arithmetic
 (`cella.line_amount`, `cella.line_vat`), and stamps what it notarises
 from the clock. Core's circles read the role a session runs as, which
@@ -679,6 +693,11 @@ not locked, and `cella migrate --lock` locks the new ones. A change is a
 new file. The notary changes the same way: its upgrade script ships with the
 extension, and a migration appended to `core/notary/sql/` runs `ALTER
 EXTENSION cella UPDATE` ([the notary](../../apps/org/core/notary/index.md#build)).
+It never changes by a drop, which takes the log, its receipts and the
+vault with it: `cella check feats` refuses `DROP EXTENSION cella` in
+every `sql/` directory, the notary's own with the slices' and core's
+(`tools/sql-check.mjs`, its negative test in
+`tools/_tests/powers.test.mjs`).
 
 ### Analytical contracts
 
@@ -1491,7 +1510,11 @@ trigger on every table a feat or a graft makes refuses a row written
 outside one, and a begun transaction commits only with its verdict, so
 authorisation and logging hold for every state change but a
 superuser's ([trust](trust.md#one-server)). `write` in `@cella/org-db`
-begins, writes and submits, and a handler writes through it alone.
+begins, writes and submits, and a handler writes through it alone:
+`cella check feats` refuses a call of `cella.begin`, `cella.submit` or
+`cella.follow` in the TypeScript of any package but `@cella/org-db`,
+and a write of `cella.*` in any but the notary's
+([writes stay home](#writes-stay-home)).
 
 ### Folds
 

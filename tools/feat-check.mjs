@@ -30,7 +30,9 @@
 // through ui-check.mjs the client layers' rules, that a feat's or graft's
 // actions are named for it and declared only in its models/actions.ts,
 // through sql-check.mjs every sql/ file's boundaries,
-// through writes.mjs that no feat or graft writes a table it does not own,
+// through writes.mjs that no feat, graft or core library writes a table it
+// does not own, that only the notary writes cella.* and only @cella/org-db
+// calls its write functions,
 // with no exceptions, and through
 // powers.mjs that the power each action's label names is the one its SQL
 // registers, that a mandate a fixture adopts grants it, that an
@@ -375,14 +377,20 @@ if (sql) {
   }
   const found = { powers: [], guards: [], cites: [], stances: [], personal: [], impersonal: [], columns: [], foreign: [], follows: [] }
   errors.push(...placed(repo, apps), ...await checkSql(repo, apps, known, found), ...undeclared(found), ...unowned(found), ...unread(found), ...definers(found), ...unshared(found))
-  // What a feat's or a graft's TypeScript writes outside its own schema,
-  // refused with what its SQL does there.
-  for (const dir of byName.values()) {
+  // What a feat's, a graft's or a core library's TypeScript writes
+  // outside its own schema, refused with what its SQL does there; what it
+  // writes in cella.*, but the notary's; and a call of the notary's write
+  // functions, but @cella/org-db's.
+  for (const [name, dir] of byName) {
     const p = place(dir)
+    const writer = name === '@cella/org-db'
     if (p?.kind === 'graft') {
       found.foreign.push(...await scanTs(repo, dir, p.name, schemaName(p.name)))
     } else if (p?.kind === 'core' && parentOf(p.node)) {
       found.foreign.push(...await scanTs(repo, dir, basename(p.node), basename(p.node)))
+    } else if (p?.kind === 'core') {
+      const lib = basename(dirname(dir)) === 'core' ? basename(p.node) : basename(dirname(dir))
+      found.foreign.push(...await scanTs(repo, dir, lib, schemaName(lib), { notary: lib === 'notary', writer }))
     }
   }
   errors.push(...refuse(found.foreign))

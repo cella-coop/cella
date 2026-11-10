@@ -1,6 +1,7 @@
 -- A document's lines, as every feat that bills or is billed counts them:
 -- an invoice the co-op issues and a bill it receives add up alike. Pure
--- functions beside the notary's, which any feat's SQL may call.
+-- functions in cella.*, the notary's, which any feat's SQL may call; the
+-- vat library prices a write's lines by them (core/vat/index.md).
 
 -- A line's amount in cents: its quantity times its unit price, rounded to
 -- the cent.

@@ -1,6 +1,6 @@
 +++
 title = "VAT"
-updated = 2026-10-30
+updated = 2026-11-10
 +++
 
 A document's lines, their amounts and their VAT (`@cella/org-vat`), the
@@ -11,8 +11,12 @@ arithmetic from here, never from each other.
 
 ## SQL
 
-`sql/001-vat.sql` adds two pure functions beside the notary's in
-`cella.*`, which every feat's SQL may call:
+The vat library has no SQL of its own: the two pure functions every
+feat's SQL calls are the notary's, in `cella.*`
+(`core/notary/sql/016-lines.sql`), since a core library makes nothing
+outside its own schema and a feat reads no core library's schema but
+the circles' and the register's
+([architecture](../../../../_corpus/doc/architecture.md#sql)):
 
 - `cella.line_amount(quantity numeric, unit_price bigint)`: a line's
   amount in cents, its quantity times its unit price rounded to the cent.

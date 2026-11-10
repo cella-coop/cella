@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-11-09
+updated = 2026-11-10
 +++
 
 # Architecture
@@ -554,6 +554,25 @@ person's data drops for its own. It
 also refuses a write or a trigger on a table outside the owner's schema
 and `cella.*` ([writes stay home](#writes-stay-home)). A slice may drop a
 trigger of its own on another's table.
+
+A node's core is held to the same: a core library's SQL creates, alters,
+indexes, drops and grants only in its own schema, named for it; never
+reads the clock or randomness; and never reads a policy's wording, but
+the register's own SQL, whose table it is. `cella check feats` refuses
+each by name, the core library's as a slice's (`tools/sql-check.mjs`,
+its negative tests in `tools/_tests/core.test.mjs`). Until the core
+libraries that use one another are joined by core grafts, a core
+library acts in the schema of one its package depends on as in its
+own: core's circles put the register's tables under their row-level
+policies and make `policy.says`, which quotes a policy's wording to a
+guard's reason. The notary's SQL (`core/notary/sql`) is the one
+exemption, as the layer under every slice that writes the log: it
+makes `cella.*` and the vault, the pure functions every slice calls
+beside its own among them, a document's line arithmetic
+(`cella.line_amount`, `cella.line_vat`), and stamps what it notarises
+from the clock. Core's circles read the role a session runs as, which
+a slice never does, to let a superuser's session past row-level
+security (`circle.whole`).
 
 Reading follows the mandates. Every record table is under row-level
 security for the app role, forced, by its owning circle

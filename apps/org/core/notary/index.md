@@ -1,6 +1,6 @@
 +++
 title = "Notary"
-updated = 2026-11-08
+updated = 2026-11-10
 +++
 
 The `cella` Postgres extension (pgrx, Postgres 18): the notary and the guard primitives as SQL, in schema `cella`. Every item is a thin wrapper over `cella-guards` (`core/guards/rs`) with no logic of its own, and the whole SQL surface is declared in one file, `rs/src/surface.rs`, whose header lists it; `rs/src/notary.rs` is the SPI plumbing `submit` and `verify_log` need.
@@ -42,7 +42,7 @@ The notary is the scope's office for every action, and a layer under every feat 
 | `cella.redact(subject, class)` | the owner's: sets a subject's registered columns of a class to `redacted` (text), `"redacted"` (JSON) or NULL |
 
 The org core's SQL beside the extension (`sql/`) adds the app's role, the
-guards' and the analytics', who reads ([below](#reads)) and the folds, so the extension ships no new version for them:
+guards' and the analytics', who reads ([below](#reads)), the folds and a document's line arithmetic, so the extension ships no new version for them. It is the one core SQL that makes `cella.*` and reads the clock ([architecture](../../../../_corpus/doc/architecture.md#sql)):
 
 | SQL | What |
 |---|---|
@@ -51,6 +51,7 @@ guards' and the analytics', who reads ([below](#reads)) and the folds, so the ex
 | `cella.may(power)`, `cella.covered(power)` | whether the reader holds the power on the verdict date, by any mandate, as the authority says; and the owning circles their mandates for it cover that day |
 | `cella.circles(what)`, `cella.sees(what)`, `cella.reaches(what, key)` | the owning circles whose rows of `what` the reader reads, by the powers that read them; whether they see every row: a write's transaction, or a current role past row-level security (a superuser's tools, or a function running as its owner to sum the whole); and whether they reach one row by its key: a power for that key, or a graft's function |
 | `cella.disclosed(n)` | entry `n` opened, for the reader who wrote it, whom all its commitments are about, or who holds its action's power; null for anyone else |
+| `cella.line_amount(quantity, unit_price)`, `cella.line_vat(amount, rate)` | a document's line arithmetic, which every feat that bills or is billed calls, and the vat library prices a write's lines by ([vat](../vat/index.md)): a line's amount in cents, its quantity times its unit price rounded to the cent; and the VAT on an amount at a rate in percent (`5.50`), rounded to the cent, so a document's VAT by rate adds up to its lines' |
 | `cella.records(n)` | the records entry `n` is about, by the name its form holds each under: every plain text or number under its op's thing or a slice its op names, `{"invoice": "F-2026-004"}` for `invoice:invoice:send`, `{"role": …, "circle": …}` for `circle:role:seat`; never a commitment nor any other of the form's values, so Activity links an entry to its record and reads nothing else of the form |
 | `cella.fold`, `cella.lets_fold(op, version, fn, owner)`, `cella.folds_of(op, n)` | the folds: each slice's fold of an action by version, `(op, owner, version, fn, since)`, registered by the slice from its migration, a superuser's, `since` the first entry after it; and the folds entry `n` of `op` runs, each owner's version in force at `n`, the action's own slice's first, then core's and the feats', then the grafts' by how many feats they join ([architecture](../../../../_corpus/doc/architecture.md#folds)) |
 | `cella.fold_log(upto)`, `cella.fold_head`, `cella.checkpoint` | a procedure, a superuser's, that applies the log copied into a database by its folds from the entry after the fold's head through `upto`, one write per transaction, committed with the head, `cella.clock` set to each entry's date, the founding's carried rows before its folds and an entry's erasures after them; how far it has applied the log; and the checkpoints `cella fold` records, `(n, hash, state)` |

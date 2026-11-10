@@ -1,7 +1,10 @@
 ---
 // A list (index.md, the lists): its items, each an `Item`, taking the
 // five inks in turn however many there are, or on a band the four it
-// hands down, leaving out its own, and counted where `numbered`. Its
+// hands down, leaving out its own, and counted where `numbered`. The
+// turn's start and order are its own, drawn from `seed`, or, unset, from
+// its words, so two lists rarely match and one is the same on every
+// build. Its
 // items are its `items`, or its slot, the `Item`s a page writes inline.
 // Its `layout`:
 //   `column`, unset: cells down the page, each beside its words;
@@ -12,6 +15,7 @@
 //   `steps`: no cells, a large numeral in the item's ink over its title
 //     and words, in two columns.
 import { inline } from '../lib/inline'
+import { seedOf, shuffled } from '../lib/place'
 import Item from './Item.astro'
 
 export type Layout = 'column' | 'row' | 'grid' | 'ruled' | 'steps'
@@ -24,10 +28,20 @@ interface Props {
   drafted?: true
 }
 
-const { items, layout = 'column', numbered = false, seed = 1, drafted } = Astro.props
+const { items, layout = 'column', numbered = false, drafted } = Astro.props
+// an inline list's items, rendered once, both to show and to seed it, by
+// their words alone: the dev server marks its tags, a build does not
+const written = items ? undefined : await Astro.slots.render('default')
+const words = items ? items.map((it) => it.title).join('\n') : (written ?? '').replace(/<[^>]*>/g, '')
+const seed = Astro.props.seed ?? seedOf(words)
+// the turn this list takes: the five inks, or the band's four, in its order
+const turn = Object.fromEntries([
+  ...shuffled(5, seed).map((k, i) => [`--q${i}`, `var(--p${k})`]),
+  ...shuffled(4, seed + 1).map((k, i) => [`--c${i}`, `var(--b${k})`]),
+])
 ---
 
-<ul class="list" data-layout={layout} data-numbered={numbered ? '' : undefined} role="list" data-drafted={drafted}>
+<ul class="list" data-layout={layout} data-numbered={numbered ? '' : undefined} role="list" data-drafted={drafted} style={turn}>
   {
     items
       ? items.map((it, i) => (
@@ -35,7 +49,7 @@ const { items, layout = 'column', numbered = false, seed = 1, drafted } = Astro.
             <Fragment set:html={inline(it.body)} />
           </Item>
         ))
-      : <slot />
+      : <Fragment set:html={written} />
   }
 </ul>
 
@@ -51,17 +65,18 @@ const { items, layout = 'column', numbered = false, seed = 1, drafted } = Astro.
     counter-reset: item;
   }
 
-  /* each item's ink, its place in the turn of five; on a band, of the
-     four the band hands down as --b0 to --b3, its own left out */
-  .list > :global(.item:nth-child(5n + 1)) { --ink: var(--p0); }
-  .list > :global(.item:nth-child(5n + 2)) { --ink: var(--p1); }
-  .list > :global(.item:nth-child(5n + 3)) { --ink: var(--p2); }
-  .list > :global(.item:nth-child(5n + 4)) { --ink: var(--p3); }
-  .list > :global(.item:nth-child(5n)) { --ink: var(--p4); }
-  :global([data-band]) .list > :global(.item:nth-child(4n + 1)) { --ink: var(--b0); }
-  :global([data-band]) .list > :global(.item:nth-child(4n + 2)) { --ink: var(--b1); }
-  :global([data-band]) .list > :global(.item:nth-child(4n + 3)) { --ink: var(--b2); }
-  :global([data-band]) .list > :global(.item:nth-child(4n)) { --ink: var(--b3); }
+  /* each item's ink, its place in the list's turn of five, --q0 to --q4;
+     on a band, of the four the band hands down, its own left out, in the
+     list's order, --c0 to --c3 */
+  .list > :global(.item:nth-child(5n + 1)) { --ink: var(--q0); }
+  .list > :global(.item:nth-child(5n + 2)) { --ink: var(--q1); }
+  .list > :global(.item:nth-child(5n + 3)) { --ink: var(--q2); }
+  .list > :global(.item:nth-child(5n + 4)) { --ink: var(--q3); }
+  .list > :global(.item:nth-child(5n)) { --ink: var(--q4); }
+  :global([data-band]) .list > :global(.item:nth-child(4n + 1)) { --ink: var(--c0); }
+  :global([data-band]) .list > :global(.item:nth-child(4n + 2)) { --ink: var(--c1); }
+  :global([data-band]) .list > :global(.item:nth-child(4n + 3)) { --ink: var(--c2); }
+  :global([data-band]) .list > :global(.item:nth-child(4n)) { --ink: var(--c3); }
 
   [data-layout='row'] {
     grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));

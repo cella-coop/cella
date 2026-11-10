@@ -35,6 +35,22 @@ export async function postInk(id: string): Promise<Status> {
 /** A seed, the same on every build, from a section's page and place. */
 export const seedOf = (key: string) => [...key].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 997
 
+/** The numbers 0 to n - 1 in an order drawn from `seed`, the same on every
+ * build: a Fisher–Yates shuffle over a small linear congruential stream. */
+export function shuffled(n: number, seed: number) {
+  let s = (seed * 2654435761) >>> 0 || 1
+  const next = () => {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0
+    return s / 2 ** 32
+  }
+  const out = [...Array(n).keys()]
+  for (let i = n - 1; i > 0; i--) {
+    const j = Math.floor(next() * (i + 1))
+    ;[out[i], out[j]] = [out[j], out[i]]
+  }
+  return out
+}
+
 /** An anchor from a heading: its words, lowercased, joined by dashes. */
 export const anchor = (heading: string) =>
   heading

@@ -19,6 +19,9 @@ export const site = z.object({
   // A page's tab title, whose {page} is the page's and {site} the site's.
   titled: z.string(),
   nav: z.array(link).default([]),
+  // The address people write to, shown in the footer and wherever a page
+  // places `<Email />`, hidden from harvesters (src/lib/email.ts).
+  email: z.string().optional(),
   // The narrow screen's menu button's label, read aloud.
   menu: z.string(),
   theme: z.object({ toggle: z.string() }),

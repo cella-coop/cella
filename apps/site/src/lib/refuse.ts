@@ -21,6 +21,14 @@ const SENDS: Record<string, string> = {
 
 /** A form placed on a page needs its words, `[signup]` or `[contact]` in
  * site.toml. */
+/** A page that places the email address needs it, `email` in site.toml. */
+export function addressed(email: string | undefined): string {
+  if (!email) {
+    throw new Error(`a page places the email address, but site.toml has no email: write email = "…" there, or take <Email /> out of the page`)
+  }
+  return email
+}
+
 export function worded<T>(form: string, text: T | undefined): T {
   if (!text) {
     throw new Error(`a page places the ${form} form, but site.toml has no [${form}]: write its words there, or take the form out of the page`)

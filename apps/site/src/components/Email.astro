@@ -1,0 +1,31 @@
+---
+// The site's email address (site.toml's `email`), shown to people and
+// hidden from harvesters (src/lib/email.ts): its parts with hidden digits
+// between them, a link once the page runs. A page places it bare,
+// `<Email />`; the footer shows it under the site's line.
+import { obscure } from '../lib/email'
+import { addressed } from '../lib/refuse'
+import { siteData } from '../lib/text'
+
+const { email, drafted } = await siteData()
+const { user, at, domain, decoy, link } = obscure(addressed(email))
+---
+
+<a class="email" data-link={link} data-drafted={drafted('email')}>{user}<span class="decoy" aria-hidden="true">{decoy}</span>{at}{domain}</a>
+
+<script>
+  // the link, from the address encoded, once the page runs
+  for (const a of document.querySelectorAll<HTMLAnchorElement>('a.email[data-link]')) {
+    a.href = atob(a.dataset.link!)
+  }
+</script>
+
+<style>
+  .decoy {
+    display: none;
+  }
+
+  .email {
+    overflow-wrap: anywhere;
+  }
+</style>

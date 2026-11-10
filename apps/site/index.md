@@ -310,6 +310,17 @@ the dev server, it sends nothing and only shows what it would say. So
 a release refuses a form that posts nowhere, naming what to set or
 telling the page to drop it, rather than tell a visitor it sent.
 
+## The address
+
+The site's email address, `email` in `site.toml`, shows in the footer
+under the site's line and wherever a page places `<Email />`
+(`Email.astro`, `src/lib/email.ts`). People see it whole and can copy
+it; the page's source never holds it whole: a few digits the page hides
+stand between its parts, so a harvester reading the source takes a
+broken address, and its `mailto:` link is written from the address
+encoded once the page runs. A page that places `<Email />` with no
+address in `site.toml` fails the build.
+
 ## The assets
 
 `/assets`, `src/pages/assets/[...path].astro`, is the asset library,

@@ -1,6 +1,8 @@
 # Drafted site-wide text: a field here fills one that site.toml in
 # src/content/ leaves out.
 
+email = "hello@cella.coop"
+
 [footer]
 home = "Home"
 

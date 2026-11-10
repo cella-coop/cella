@@ -18,7 +18,7 @@ const site = await siteData()
     {part && <h1><code>{part}</code></h1>}
     <slot />
   </main>
-  <Footer footer={site.footer} nav={site.nav} drafted={site.drafted} />
+  <Footer footer={site.footer} nav={site.nav} email={site.email} drafted={site.drafted} />
 </Base>
 
 <style>

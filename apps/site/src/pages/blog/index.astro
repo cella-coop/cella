@@ -120,15 +120,21 @@ const covers = await Promise.all(
     transition: transform 160ms var(--ease);
   }
 
+  /* the words read as the cover's caption, a short measure under it, not
+     a line its full width */
   h2 {
+    max-width: 22ch;
     margin: 0;
     font-size: clamp(1.45rem, 2.2vw, 1.9rem);
     line-height: 1.15;
+    text-wrap: balance;
   }
 
   p {
+    max-width: 38ch;
     margin: 0;
     color: var(--text-muted);
+    text-wrap: pretty;
   }
 
   @media (max-width: 44rem) {

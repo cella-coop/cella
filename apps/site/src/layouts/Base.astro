@@ -214,6 +214,16 @@ const { title, description, noindex = false } = Astro.props
     margin-top: 1em;
   }
 
+  /* prose meeting a band, as a post places one: room either side, since
+     the band's cut edge rises into its own padding and toward the words */
+  .flow > :not(section, script, style):has(+ [data-band]) {
+    margin-bottom: clamp(3rem, 6vw, 5rem);
+  }
+
+  .flow > [data-band] + :not(section, script, style) {
+    margin-top: clamp(3rem, 6vw, 5rem);
+  }
+
   .flow > blockquote {
     margin-block: 1.5em;
     padding-inline-start: 1.25rem;

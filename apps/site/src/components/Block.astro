@@ -9,7 +9,7 @@
 // the four other inks. Its `numeral`, where it has one, is a ghost numeral.
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { roundedPath, type Point } from '@cella/brand'
+import { rng, roundedPath, type Point } from '@cella/brand'
 import { diagrams, type DiagramName } from '@cella/diagrams'
 import type { Figure, Status } from '../schemas'
 import { anchor, handed, swatch } from '../lib/place'
@@ -68,16 +68,29 @@ const none = () => undefined
 const body = Astro.slots.has('default')
 
 // A band's outline, as a cell's: a few long edges meeting at wide,
-// rounded corners, in the band's own box, so it stretches with it, one of
-// two by its seed. The corners at the screen's sides stand past it, so
-// only the turns inside show rounded
-const EDGES: Point[][] = [
-  [[-0.1, 0.155], [0.34, 0], [1.1, 0.08], [1.1, 0.89], [0.71, 1], [-0.1, 0.94]],
-  [[-0.1, 0.07], [0.58, 0], [1.1, 0.125], [1.1, 0.92], [0.36, 1], [-0.1, 0.95]],
-]
+// rounded corners, in the band's own box, so it stretches with it, its
+// bends its own, drawn from its seed and the same on every build. Its top
+// rises to a crest and its foot dips to a trough, each somewhere along
+// the width and apart from the other; the corners at the screen's sides
+// stand past it, so only the turns inside show rounded
+function edges(seed: number): Point[] {
+  const r = rng((seed * 2654435761) >>> 0)
+  const span = (lo: number, hi: number) => lo + r() * (hi - lo)
+  const crest = span(0.22, 0.78)
+  // the trough stands well apart from the crest, so the band leans
+  const trough = crest < 0.5 ? span(crest + 0.2, 0.8) : span(0.2, crest - 0.2)
+  return [
+    [-0.1, span(0.05, 0.17)],
+    [crest, 0],
+    [1.1, span(0.05, 0.17)],
+    [1.1, span(0.84, 0.95)],
+    [trough, 1],
+    [-0.1, span(0.84, 0.95)],
+  ]
+}
 const anchorId = hero ? undefined : (id ?? anchor(heading))
 const clip = band ? `band-${anchorId ?? seed}` : undefined
-const outline = band ? roundedPath(EDGES[seed % 2], 0.07, (v) => v.toFixed(4)) : undefined
+const outline = band ? roundedPath(edges(seed), 0.07, (v) => v.toFixed(4)) : undefined
 const paired = Boolean(figure || diagram || icon)
 const style = { '--ink': swatch(ink), ...(band ? handed(ink) : {}), ...(clip ? { 'clip-path': `url(#${clip})` } : {}) }
 ---

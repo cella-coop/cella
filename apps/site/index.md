@@ -145,10 +145,14 @@ bare. A section whose list stands side by side, `row`, `grid` or
 
 ## Bands and actions
 
-A band's edges are a rounded outline in its own box (`EDGES` in
+A band's edges are a rounded outline in its own box (`edges` in
 `Block.astro`, the layout every section shares), a few long edges
 meeting at wide turns rounded by the brand's own corner, its corners at
-the screen's sides standing past it.
+the screen's sides standing past it. Each band's bends are its own,
+drawn from its seed by the brand's seeded `rng` and the same on every
+build: its top rises to a crest and its foot dips to a trough, each
+somewhere along the width and well apart from the other, so no two
+bands lean alike.
 
 A band is a strong ink, its words and its diagram light on it: the
 sage a deep shade of the success ink's hue, `--band-a`, and the coral

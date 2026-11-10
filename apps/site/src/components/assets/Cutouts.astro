@@ -1,73 +1,86 @@
 ---
-// Every photo of the library cut as the site cuts it (Engraving.astro):
-// its cells placed round its focus, in the five inks in turn, each
-// photo's seed its name's, so a tile is the same on every reload. Two
-// buttons that follow the page choose what every tile shows: its cut, as a
-// section beside its words wears it, 1.2 wide to 1 tall, or as a stacked
-// figure on a narrow screen, 1.9 to 1; and its side, bleeding off the
-// right as most sections' figures do, or the left as a flipped one's,
-// set against that side of the page. The choice is kept in the browser.
+// Every photo of the library as a page wears it (index.md, the assets):
+// the site's own figure (Engraving.astro) in a section's own grid, grey
+// bars standing for its words, so scale, place and bleed are a page's.
+// Two buttons that follow the page choose what each shows: its side, the
+// figure right of its words bleeding off the right as most sections' do,
+// or left of them bleeding off the left as a flipped one's; and the
+// screen, a wide one, or a phone, 390px wide, where the figure stacks
+// under its words in its narrow cut and bleeds right. The ink turns per
+// photo; each photo's seed is its name's. The choice is kept in the
+// browser.
 import { cluster } from '@cella/brand'
 import { photoNames } from '../../lib/assets'
 import { focusIn } from '../../lib/focus'
 import { iconMarkup } from '../../lib/icon'
 import { seedOf } from '../../lib/place'
+import { siteData } from '../../lib/text'
 import { STATUSES } from '../../schemas'
 import Cut from '../Cut.astro'
+import Engraving from '../Engraving.astro'
 
+const site = await siteData()
+const credit = { template: site.photo.credit, unsplash: site.photo.unsplash }
+const none = () => undefined
+
+// the phone's cut, as Engraving cuts its narrow one
 const W = 1000
-const CUTS = [
-  { name: 'section', aspect: 1.2 },
-  { name: 'phone', aspect: 1.9 },
-]
-const SIDES = ['r', 'l'] as const
-
+const HN = Math.round(W / 1.9)
 const photos = await Promise.all(
   photoNames().map(async (photo, i) => {
     const seed = seedOf(photo)
-    const cuts = (
-      await Promise.all(
-        CUTS.map(async (c) => {
-          const h = Math.round(W / c.aspect)
-          const focus = await focusIn(photo, W, h)
-          return SIDES.map((side) => ({ ...c, side, h, cells: cluster(W, h, { pitch: 115, gutter: 12, round: 16, seed, drop: 0.25, bleed: side, focus }) }))
-        }),
-      )
-    ).flat()
-    return { photo, ink: STATUSES[i % STATUSES.length], cuts }
+    const narrow = cluster(W, HN, { pitch: 115, gutter: 12, round: 16, seed, drop: 0.25, bleed: 'r', focus: await focusIn(photo, W, HN) })
+    return { photo, seed, ink: STATUSES[i % STATUSES.length], narrow }
   }),
 )
+const SIDES = ['r', 'l'] as const
 // the toggles, named by the attribute each turns
-const [cut, side] = ['cut', 'side']
+const [screen, side] = ['screen', 'side']
 const icons = {
-  section: iconMarkup('monitor', 'current'),
+  wide: iconMarkup('monitor', 'current'),
   phone: iconMarkup('device-mobile', 'current'),
   r: iconMarkup('align-right', 'current'),
   l: iconMarkup('align-left', 'current'),
 }
+const bars = [100, 92, 96, 64]
 ---
 
-<div class="cutouts" data-cut="section" data-side="r">
+<div class="cutouts" data-screen="wide" data-side="r">
   <ul class="photos" role="list">
     {
-      photos.map(({ photo, ink, cuts }) => (
+      photos.map(({ photo, seed, ink, narrow }) => (
         <li class="photo">
           <h2>
             <code>{photo}</code>
           </h2>
-          {cuts.map((c) => (
-            <figure class="cut" data-cut={c.name} data-side={c.side}>
-              <Cut photo={photo} ink={ink} cells={c.cells} w={W} h={c.h} id={`co-${photo}-${c.name}-${c.side}`} label={photo} />
-            </figure>
+          {SIDES.map((s) => (
+            <div class="pair" data-on="wide" data-side={s}>
+              <div class="words" aria-hidden="true">
+                {bars.map((b) => (
+                  <span style={{ width: `${b}%` }} />
+                ))}
+              </div>
+              <Engraving figure={{ photo }} ink={ink} seed={seed} bleed={s} aspect={1.2} credit={credit} drafted={none} />
+            </div>
           ))}
+          <div class="phone" data-on="phone">
+            <div class="words" aria-hidden="true">
+              {bars.map((b) => (
+                <span style={{ width: `${b}%` }} />
+              ))}
+            </div>
+            <div class="bleed">
+              <Cut photo={photo} ink={ink} cells={narrow} w={W} h={HN} id={`co-${photo}-phone`} label={photo} />
+            </div>
+          </div>
         </li>
       ))
     }
   </ul>
 
   <div class="fab" role="toolbar">
-    <button type="button" class="toggle" data-toggle="cut" data-values="section phone" aria-label={cut}>
-      <span data-show="section" set:html={icons.section} />
+    <button type="button" class="toggle" data-toggle="screen" data-values="wide phone" aria-label={screen}>
+      <span data-show="wide" set:html={icons.wide} />
       <span data-show="phone" set:html={icons.phone} />
     </button>
     <button type="button" class="toggle" data-toggle="side" data-values="r l" aria-label={side}>
@@ -102,7 +115,7 @@ const icons = {
 <style>
   .photos {
     display: grid;
-    gap: 3rem;
+    gap: 4rem;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -114,38 +127,72 @@ const icons = {
     font-weight: normal;
   }
 
-  /* a tile shows only the cut and side the buttons chose, against that
-     side of the page, at the width a section's figure takes */
-  .cut {
+  /* a section's own grid (Block.astro's .pair): words five twelfths,
+     the figure seven, the figure first where the section is flipped */
+  .pair {
     display: none;
-    width: min(100%, 44rem);
-    margin: 0;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: clamp(2rem, 5vw, 5rem);
+    align-items: center;
   }
 
-  .cutouts[data-cut='section'][data-side='r'] .cut[data-cut='section'][data-side='r'],
-  .cutouts[data-cut='section'][data-side='l'] .cut[data-cut='section'][data-side='l'],
-  .cutouts[data-cut='phone'][data-side='r'] .cut[data-cut='phone'][data-side='r'],
-  .cutouts[data-cut='phone'][data-side='l'] .cut[data-cut='phone'][data-side='l'] {
+  .pair[data-side='l'] {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+
+  .pair[data-side='l'] > :global(figure) {
+    order: -1;
+  }
+
+  .cutouts[data-screen='wide'][data-side='r'] .pair[data-side='r'],
+  .cutouts[data-screen='wide'][data-side='l'] .pair[data-side='l'] {
+    display: grid;
+  }
+
+  /* words, as grey bars of a lede's measure */
+  .words {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .words span {
     display: block;
+    height: 0.8rem;
+    border-radius: 0.4rem;
+    background: color-mix(in oklch, var(--text) 12%, transparent);
   }
 
-  /* as on a page, it runs past the column to the screen's edge on its side
-     (Engraving.astro's bleed) */
-  .photo {
-    --bleed: calc((100vw - 100%) / 2);
+  .words span:first-child {
+    height: 2.2rem;
+    margin-bottom: 0.6rem;
+    background: color-mix(in oklch, var(--text) 18%, transparent);
   }
 
-  .cut[data-side='r'] {
-    margin-right: calc(-1 * var(--bleed));
-    margin-left: auto;
+  /* a phone, 390px wide, its words over its figure, the figure bleeding
+     off its right edge past a 16px gutter */
+  .phone {
+    display: none;
+    width: 390px;
+    margin-inline: auto;
+    padding: 2rem 16px;
+    border: 1px solid color-mix(in oklch, var(--text) 20%, transparent);
+    border-radius: 2rem;
+    overflow: hidden;
   }
 
-  .cut[data-side='l'] {
-    margin-left: calc(-1 * var(--bleed));
+  .cutouts[data-screen='phone'] .phone {
+    display: grid;
+    gap: 2rem;
   }
 
-  .cutouts[data-cut='phone'] .cut {
-    width: min(100%, 26rem);
+  .phone .bleed {
+    margin-right: -16px;
+  }
+
+  .phone .bleed :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
   }
 
   /* the buttons, following the page in its corner */
@@ -183,10 +230,14 @@ const icons = {
     height: 100%;
   }
 
-  .cutouts[data-cut='section'] [data-toggle='cut'] [data-show='section'],
-  .cutouts[data-cut='phone'] [data-toggle='cut'] [data-show='phone'],
+  .cutouts[data-screen='wide'] [data-toggle='screen'] [data-show='wide'],
+  .cutouts[data-screen='phone'] [data-toggle='screen'] [data-show='phone'],
   .cutouts[data-side='r'] [data-toggle='side'] [data-show='r'],
   .cutouts[data-side='l'] [data-toggle='side'] [data-show='l'] {
     display: block;
+  }
+
+  .cutouts[data-screen='phone'] [data-toggle='side'] {
+    opacity: 0.4;
   }
 </style>

@@ -39,7 +39,7 @@ export async function adopted(db, d) {
     ])
     await db.query('UPDATE policy.policy SET adopted = $2 WHERE id = $1', [rows[0].id, closed])
     await db.query('SELECT motion.procedure_from($1)', [rows[0].id])
-    await db.query('SELECT circle.mandate_from($1)', [rows[0].id])
+    await db.query('SELECT circle_policy.mandate_from($1)', [rows[0].id])
     await db.query('SELECT account.terms_from($1)', [rows[0].id])
     await db.query('SELECT patronage.terms_from($1)', [rows[0].id])
     n++

@@ -1,8 +1,8 @@
 import { type Db } from '@cella/org-db'
-import type { Granted } from '../models/circle.ts'
+import type { Granted } from '../models/index.ts'
 
-// The mandate and the mandates revoked, as `circle.mandate_from` and
-// `circle.mandate_ended` return them.
+// The mandate and the mandates revoked, as `circle_policy.mandate_from` and
+// `circle_policy.mandate_ended` return them.
 async function granted(tx: Db, sql: string, policy: string): Promise<Granted> {
   const { rows } = await tx.query<{ mandate: string | null; revoked: string[] | null }>(sql, [policy])
   const row = rows[0]
@@ -18,18 +18,18 @@ async function granted(tx: Db, sql: string, policy: string): Promise<Granted> {
 // none for the assembly's; and the mandate of the policy it replaces
 // revoked the day it applies, with every mandate issued under it. Returns
 // the mandate, or null for a policy of another kind, and those revoked.
-// `circle.grants`, which the motion feat attaches to the adoption, checks
+// `circle_policy.grants`, which the motion feat attaches to the adoption, checks
 // it did.
 export async function granting(tx: Db, policy: string): Promise<Granted> {
-  return granted(tx, 'SELECT mandate, revoked FROM circle.mandate_from($1)', policy)
+  return granted(tx, 'SELECT mandate, revoked FROM circle_policy.mandate_from($1)', policy)
 }
 
 // Revokes the mandate of a mandate policy, in the transaction of the write
 // that ends it, on the day it ends, and with it every mandate issued under
 // it, down the provenance tree: a write received after it is refused, a
 // share granted before it runs out on its own. Returns the mandate, or
-// null, and those revoked, the mandate first. `circle.revokes` checks it
+// null, and those revoked, the mandate first. `circle_policy.revokes` checks it
 // did.
 export async function revoking(tx: Db, policy: string): Promise<Granted> {
-  return granted(tx, 'SELECT mandate, revoked FROM circle.mandate_ended($1)', policy)
+  return granted(tx, 'SELECT mandate, revoked FROM circle_policy.mandate_ended($1)', policy)
 }

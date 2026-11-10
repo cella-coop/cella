@@ -143,7 +143,7 @@ END;
 -- subscription over monthly instalments from their pay: their own, no
 -- more instalments than the statutes allow less those their pay has
 -- withheld already, under this plan or an earlier one, a refusal quoting
--- the rule they copy (`policy.says`), each what is owed divided by them,
+-- the rule they copy (`circle_policy.says`), each what is owed divided by them,
 -- rounded up to the cent, and set by this write, which counts those
 -- withheld before it.
 CREATE FUNCTION account_membership_payslip_transaction.spreads(payload jsonb) RETURNS text
@@ -154,7 +154,7 @@ BEGIN ATOMIC
     WHEN t.instalments IS NULL OR x.instalments > t.instalments - k.n
       THEN x.member || ' spreads their subscription over ' || x.instalments || ' instalments'
         || CASE WHEN k.n > 0 THEN ', ' || k.n || ' already withheld from their pay' ELSE '' END || ': '
-        || coalesce('"' || policy.says(t.policy) || '"', t.id || ' allow at most ' || t.instalments, 'no adopted terms allow any')
+        || coalesce('"' || circle_policy.says(t.policy) || '"', t.id || ' allow at most ' || t.instalments, 'no adopted terms allow any')
     WHEN p.member IS NULL OR p.since IS DISTINCT FROM cella.verdict_date() OR p.instalments <> x.instalments
       OR cella.cents(p.each) <> (c.unpaid + x.instalments - 1) / x.instalments OR p.prior <> k.n
       THEN x.member || '''s plan was not set by this write: ' || x.instalments || ' instalments of what they owe, rounded up to the cent'

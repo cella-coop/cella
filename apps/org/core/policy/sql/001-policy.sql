@@ -228,7 +228,9 @@ END;
 -- A policy's legal wording as it reads, for a guard to quote in the
 -- reason it refuses: never a value to decide by, which a guard reads from
 -- its own columns. It runs with its owner's rights, since the guards role
--- reads no wording.
+-- reads no wording, and no role calls it: who may read a policy is the
+-- circles' to say, so it is quoted through core's graft joining them to
+-- the register, `circle_policy.says`.
 CREATE FUNCTION policy.says(ref text) RETURNS text
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp
 RETURN (SELECT policy.sentence(w.legal) FROM policy.wording w WHERE w.policy = says.ref);
@@ -429,7 +431,6 @@ GRANT USAGE ON SCHEMA policy TO cella_app, cella_guards;
 GRANT SELECT ON policy.policy, policy.value TO cella_app, cella_guards;
 GRANT SELECT ON policy.wording TO cella_app;
 REVOKE EXECUTE ON FUNCTION policy.says(text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION policy.says(text) TO cella_app, cella_guards;
 REVOKE EXECUTE ON FUNCTION policy.offer(text, text, text, text, text, text, text) FROM PUBLIC;
 
 -- The forms and their defaults: the app reads them whole; the guards role

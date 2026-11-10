@@ -152,7 +152,7 @@ BEGIN ATOMIC
     WHEN t.id IS NULL THEN 'no adopted terms value a share on ' || to_char(day, 'YYYY-MM-DD')
       || ': the members adopt the capital''s terms by motion first'
     WHEN shares < t.minimum THEN shares || ' shares are fewer than the ' || t.minimum || ' the capital''s terms ask, by '
-      || t.policy || coalesce(' ("' || policy.says(t.policy) || '")', '') || ': ask at least ' || t.minimum || ' shares'
+      || t.policy || coalesce(' ("' || circle_policy.says(t.policy) || '")', '') || ': ask at least ' || t.minimum || ' shares'
     WHEN p.closed IS NOT NULL THEN p.month || ' is closed, so nothing subscribed on ' || to_char(day, 'YYYY-MM-DD') || ' posts into it: '
       || coalesce('the first open month is ' || o.month, 'no month of the books is open')
   END

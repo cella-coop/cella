@@ -192,7 +192,7 @@ test('Yara\'s subscription, refused at the close by the terms raised since her m
   const [subscription] = admission.then
   assert.deepEqual([admission.then.length, subscription.op, subscription.state, subscription.forgone], [1, 'account:capital:subscribe', 'refused', true])
   const rule = `${motions.raising}/1`
-  const sentence = (await one<{ s: string }>('SELECT policy.says($1) AS s', [rule])).s
+  const sentence = (await one<{ s: string }>('SELECT circle_policy.says($1) AS s', [rule])).s
   assert.equal(subscription.reason, `20 shares are fewer than the 30 the capital's terms ask, by ${rule} ("${sentence}"): ask at least 30 shares`)
   assert.equal(admission.reason, `membership:member:admit is forgone with account:capital:subscribe, which it requires: ${subscription.reason}`)
   const close = before + 1

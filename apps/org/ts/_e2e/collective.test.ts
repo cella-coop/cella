@@ -10,7 +10,7 @@
 // `adopt-policy` with no `until`: a motion ending its last, replacing it
 // with one that lapses, or ending it before adopting another is refused
 // at its proposal, and of two motions each ending one of two, the end
-// carried out second is refused as it is written (`circle.sovereign`);
+// carried out second is refused as it is written (`circle_policy.sovereign`);
 // through it, it grants itself again an `end-policy` it let lapse. One
 // that applies only from a later day keeps nothing until then: a motion
 // ending its only one in force beside adopting such a one is refused at

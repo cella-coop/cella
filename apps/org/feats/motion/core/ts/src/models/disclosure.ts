@@ -38,7 +38,7 @@ export const levels: Record<Level, { label: string; tone: Tone }> = {
 export type Setting = 'share' | keyof Values
 
 // Each setting the Open books page shows, its label, and its default and
-// range as the study gives them and `circle.disclosure_flaw` holds them.
+// range as the study gives them and `circle_policy.disclosure_flaw` holds them.
 export const settings: { setting: Setting; label: string; range: string }[] = [
   { setting: 'share', label: 'Share totals of members’ own figures', range: 'off by default' },
   { setting: 'contributors', label: 'Fewest people in a total', range: '5 by default, from 2 to 200' },

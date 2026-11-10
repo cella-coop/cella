@@ -1,11 +1,11 @@
-// Core's circles, POST /api/circle/<op> once the server exists: the state
-// of a mandate's grant and revocation, which the motion feat's writes
-// extend; the circles and the seats, which a passing motion creates,
-// gives and ends; its reads, and its slice, which the shell mounts.
+// Core's circles, POST /api/circle/<op> once the server exists: the
+// circles and the seats, which a passing motion creates, gives and ends;
+// its reads, and its slice, which the shell mounts. A mandate's grant and
+// revocation, which the motion feat's writes extend, are core's graft
+// joining the circles to the register's, circle-policy's.
 import type { Slice } from '@cella/org-db'
 import { circle, circles, listing, mandate, mandating } from '../drivers/circle.ts'
 
-export { granting, revoking } from '../handlers/index.ts'
 export { create } from '../handlers/circle.ts'
 export { add, remove, seatRole, seating, unseatRole } from '../handlers/seat.ts'
 export { circle, circles, lenses, mandate, sitting } from '../drivers/circle.ts'

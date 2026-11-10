@@ -1,6 +1,6 @@
 +++
 title = "Circle"
-updated = 2026-11-08
+updated = 2026-11-10
 +++
 
 Core's circles: the co-op's structure and the authority that flows
@@ -72,11 +72,16 @@ sentence; revoking one is ending its policy, which revokes its mandate
 on the verdict date. A mandate policy replacing another revokes the
 other's mandate the day it applies. Either revocation revokes every
 mandate issued under the one revoked, down its provenance tree, the
-same day ([revocation](#revocation)). The copy is core's, by
-`circle.mandate_from(policy)` and `circle.mandate_ended(policy)`, which
-read the register's values and never its wording; the write that calls
-them is the motion feat's adoption and ending of a policy. What a
-mandate's values may be is core's too, `circle.mandate_flaw(marked)`: one grantee, a role it has
+same day ([revocation](#revocation)). The circles know no policy but by
+its id: the copy is core's graft joining them to the register,
+[circle-policy](../grafts/circle-policy/index.md)'s, by
+`circle_policy.mandate_from(policy)` and
+`circle_policy.mandate_ended(policy)`, which read the register's values
+and never its wording, and write through the circles' own writes,
+`circle.issue`, `circle.give`, `circle.disclose`, `circle.publish` and
+`circle.withdraw`; the write that calls them is the motion feat's
+adoption and ending of a policy. What a mandate's values may be is
+circle-policy's too, `circle_policy.mandate_flaw(marked)`: one grantee, a role it has
 or a circle it has, a power named in lower case, at most a limit or a
 budget, an amount, a budget with its `per`, perhaps a procedure by name,
 perhaps a scope, a circle it has or `own`, and no other value.
@@ -213,7 +218,7 @@ no grantee, no issuer and no chain. It is a policy of its own kind,
 `right`, which the form offers and the founding motion adopts with the
 statutes, and its values are copied into `circle.right` as it is
 adopted, as a mandate's are into `circle.mandate`, by the same
-`circle.mandate_from`; what they may be is `circle.right_flaw(marked)`:
+`circle_policy.mandate_from`; what they may be is `circle_policy.right_flaw(marked)`:
 one right, a power, at most a limit, and no other value. Who is one of
 them on a day is person's core's to say, `person.holds(actor, right,
 day)`, by the function each kind of person registers there: `person`
@@ -365,16 +370,17 @@ The parts are a list, by commas and a last `and`, each one of five:
   seat keeps and nothing more of them: a name, a membership or any
   other personal value is the person feat's, behind its own policies;
 - `register`: every policy of the register, its wordings and its
-  values, which `policy.says` then quotes to that reader too.
+  values, which `circle_policy.says` then quotes to that reader too.
 
 The rights and open books' values core copies are no part: they stay
 the members', though a published register shows the policies they are
 copied from.
-Core copies the parts into `circle.publication` in the write that
-adopts the rule, as it copies open books' values, and ends them with
-it: `circle.publication_from` and `circle.publication_ended`, which
-`circle.mandate_from` and `circle.mandate_ended` call, so `granting`
-and `revoking` carry them ([handlers](#handlers)). A rule marking
+Circle-policy copies the parts into `circle.publication` in the write
+that adopts the rule, as it copies open books' values, and ends them
+with it: `circle_policy.publication_from`, which
+`circle_policy.mandate_from` calls, and `circle.withdraw`, which
+`circle_policy.mandate_ended` calls, so `granting` and `revoking` carry
+them ([handlers](#handlers)). A rule marking
 `publish` is the publication: it marks nothing else, only the assembly
 adopts it, and it names at least one part and none but the five; one
 that does not is refused as its motion is proposed and again as it is
@@ -415,16 +421,16 @@ Open books shares a total of members' own figures with every member where at lea
   80 % it holds every total the p% rule holds at p = 10 %.
 
 The defaults are those [the disclosure study](../../../../_corpus/review/2026-11-05/disclosure.md)
-recommends; the contract fixes none. Core copies them into
+recommends; the contract fixes none. Circle-policy copies them into
 `circle.disclosure` in the write that adopts the rule, as it copies a
-mandate's values, and ends them with it: `circle.disclosure_from` and
-`circle.disclosure_ended`, which `circle.mandate_from` and
-`circle.mandate_ended` call, so `granting` and `revoking` carry them
-([handlers](#handlers)). A rule marking any of the three is the
+mandate's values, and ends them with it: `circle_policy.disclosure_from`,
+which `circle_policy.mandate_from` calls, and `circle.withdraw`, which
+`circle_policy.mandate_ended` calls, so `granting` and `revoking` carry
+them ([handlers](#handlers)). A rule marking any of the three is the
 disclosure rule: it marks all three and nothing else, only the
 assembly adopts it, and one that does not is refused as its motion is
 proposed and again as it is adopted, saying what is wrong
-(`circle.disclosure_flaw`). One disclosure rule stands at a time, as
+(`circle_policy.disclosure_flaw`). One disclosure rule stands at a time, as
 one publication does: a rule whose days meet those of a disclosure
 rule not revoked is refused unless it replaces that one, saying which
 (`circle.overlap_flaw`). A later rule replaces it the day it applies,
@@ -483,7 +489,13 @@ one for `adopt-policy` in force on the verdict date with no `until`
 once the policies `ending` end
 and the mandates `adopting` are granted ([authority](#authority)), and
 `circle.bundle(day)` names the default bundle on a day: every mandate
-in force then on a role every circle has (`*`), by id.
+in force then on a role every circle has (`*`), by id. A mandate, a
+right, open books' values and a publication are written by the circles'
+own writes alone, which circle-policy calls as a policy is adopted and
+ends: `circle.issue`, `circle.give`, `circle.disclose` and
+`circle.publish` each make one by the policy's id and the values it
+marks, and `circle.withdraw(policy, day)` revokes what a policy granted
+on a day, its mandate with every mandate issued under it.
 
 ## Seats
 
@@ -568,7 +580,7 @@ it always keeps: `circle.sovereignty` says why the assembly would hold
 no collective `adopt-policy` mandate in force on the verdict date, with
 no `until` and never revoked, once a write or a motion is carried out,
 one whose `from` is a later day keeping nothing until then, so a
-replacement leaves no day without one; and `circle.sovereign`, on
+replacement leaves no day without one; and `circle_policy.sovereign`, on
 every write that adopts, replaces or ends a policy, refuses one that
 ends or replaces a policy granting such a mandate (`circle.sovereign_by`)
 and leaves it without one. A motion of the assembly ending its last such mandate,
@@ -586,7 +598,7 @@ longer, from no earlier and until no later than the parent's; and its
 procedure, where it states one, is no looser
 than what the parent's chain asks, which the motion feat checks, since
 core knows procedures by name alone. The parent is found as the policy is adopted,
-`circle.parent_of(policy)`: the first of the issuer's mandates for the
+`circle_policy.parent_of(policy)`: the first of the issuer's mandates for the
 power, standing on the day the policy applies, that the new one is
 narrower than, or else the first it holds for the power, so a refusal
 says how the new one is wider. It reads the policy's values through
@@ -642,8 +654,8 @@ tenure changes who holds the role, never what it holds.
 
 A mandate has no action of its own: it is granted and revoked by the
 motion feat's `motion:policy:adopt` and `motion:policy:end`, both
-ordered, which the motion feat extends with core's `granting` and
-`revoking`. Creating a circle places it nowhere: circles never nest.
+ordered, which the motion feat extends with circle-policy's `granting`
+and `revoking`. Creating a circle places it nowhere: circles never nest.
 
 - A mandate's grant and revocation change what a role may do. A
   revocation takes effect at its receipt: a write received after it is
@@ -723,7 +735,10 @@ the message's circle that counts.
 
 ## Guards
 
-- `circle.grants`, which the motion feat attaches to `motion:policy:adopt`:
+The guards that read a policy are circle-policy's, since the circles
+know no policy ([its doc](../grafts/circle-policy/index.md#guards)):
+
+- `circle_policy.grants`, which the motion feat attaches to `motion:policy:adopt`:
   a mandate policy the write adopted has its mandate, to the grantee,
   for the power, capped, scoped and on the days its values and its
   policy say, and a right policy its right; the mandate or the right of the policy
@@ -733,10 +748,13 @@ the message's circle that counts.
   disclosure rule has its values in `circle.disclosure`, and a
   publication its parts in `circle.publication`, and those of the rule
   it replaces are revoked the day it applies.
-- `circle.revokes`, which the motion feat attaches to `motion:policy:end`:
+- `circle_policy.revokes`, which the motion feat attaches to `motion:policy:end`:
   the mandate, the right, the disclosure values or the publication of a
   policy the write ended are revoked by the verdict date, and with the mandate every
   mandate issued under it, down its provenance tree (`circle.outlives`).
+
+The circles' own:
+
 - `circle.narrows`, which the motion feat attaches to both: after the
   write, every mandate standing on the verdict date, in force or yet to
   be, is a root the assembly issued, or is issued under a parent its
@@ -750,17 +768,10 @@ the message's circle that counts.
 
 ## Handlers
 
-- `granting(tx, policy)` and `revoking(tx, policy)`, the state of a write
-  the motion feat extends: copy a mandate policy's values into `circle.mandate`,
-  with its issuer, the policy's circle, and its parent,
-  a right policy's into `circle.right`, a disclosure rule's into
-  `circle.disclosure` or a publication's into `circle.publication`,
-  and revoke those of an ended
-  one and of the one a new policy replaces, by `circle.mandate_from` and
-  `circle.mandate_ended`, the mandate with every mandate issued under it
-  (`circle.revoke`); each returns the mandate, or none for a right or a
-  policy of another kind, and every mandate it revoked, the one ended or
-  replaced first, which the motion feat submits.
+A mandate's grant and revocation, `granting(tx, policy)` and
+`revoking(tx, policy)`, are circle-policy's
+([its doc](../grafts/circle-policy/index.md#handlers)).
+
 - `create` (ordered): inserts the circle, by the id, name and purpose
   the cited motion gives, and commits them with the motion and the
   bundle in force on the verdict date. The membership-motion graft
@@ -805,17 +816,13 @@ the state before it (`sql/011-folds.sql`,
 - `circle:circle:message` (`circle.fold_message`) has no handler, so no
   entry of it is logged, and its fold refuses one rather than change
   nothing.
-- `motion:policy:adopt` and `motion:policy:end` (`circle.fold_granting`,
-  `circle.fold_revoking`), after the motion feat's own folds, run
-  `circle.mandate_from` or `circle.mandate_ended` on the policy register
-  as it then stands, the mandate's id pinned to the entry's, and refuse
-  a mandate or a revocation other than the entry's. A right's, a
-  disclosure's and a publication's ids are not in the entry, so they come from their
-  sequences.
 - `membership:member:admit` (`circle.fold_admitting`), as a motion
   carried admits, seats the member in the motion's circle as a member,
   by the seat id and circle its entry carries, from the entry's day; an
   admission that names no seat seats no one.
+
+What a policy's adoption and end write here, circle-policy folds
+([its doc](../grafts/circle-policy/index.md#folds)).
 
 The roles and the circles a scope begins with are the founding's, whose
 entry carries them with every other row it wrote, so a fold of
@@ -851,8 +858,9 @@ graft's.
 
 ## What it does not know
 
-Core's circles know no members, motions or accounts; it reads the policy
-register in org's core, never a policy's wording. Templates of roles for
+Core's circles know no members, motions, accounts or policies: a
+mandate names its policy by id alone, and what reads the register is
+core's graft joining the circles to it, circle-policy. Templates of roles for
 common co-op shapes, colleges of a multi-stakeholder co-op and mandates
 requested by another scope (rung 5) build on these entities later.
 
@@ -868,7 +876,7 @@ has among them, each with its duty and the circle it is of, and the
 mandates granted to them in the Mandates collection's columns: its
 power, the role it is granted to, its cap, what it covers, who issued
 it and whether it stands, each linking to its mandate's page, which
-reads its policy's sentence (`sentences` in `@cella/org-policy`).
+reads its policy's sentence, circle-policy's to give.
 
 The `mandates` collection lists every mandate, by power, with its
 grantee, cap, scope, issuer and whether it stands on the verdict date.
@@ -886,7 +894,7 @@ is revoked or expired, and since when, and its chain, read by
 mandate, each link with its grantee, its issuer, its cap and its
 scope, and how it narrows the one above: a smaller cap, a narrower
 scope, a later start or an earlier end; each link's own page names
-the motion that adopted its policy. Under it, what was issued under it (`circle.under`),
+the motion that adopted its policy, as circle-policy gives it. Under it, what was issued under it (`circle.under`),
 each linking to its own page, which its revocation would revoke the
 same day. The chain is the structure's, read by whoever reads the
 structure ([who reads it](#who-reads-the-structure)), and a link the
@@ -909,6 +917,9 @@ Change… and Revoke….
 
 Every feat and graft reads core's circles; those that extend them:
 
+- `circle-policy`, core's graft joining them to the register: a
+  mandate, a right, open books' values and the publication as a policy
+  is adopted and ends, and a mandate's page's sentence and motion.
 - the membership feat: whether a seat counts on a day, and so who may
   use a power, `may`, `over` and `entitled`, the authority every read
   asks; a circle's seats on its page, and a person's on theirs, with

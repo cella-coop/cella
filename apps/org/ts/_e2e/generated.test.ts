@@ -49,7 +49,7 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
 
 const adopted = async () => (await one<{ version: string }>(`SELECT version FROM document.adopted WHERE document = 'statutes'`)).version
 const linesOf = async (v: string) => (await one<{ plain: string }>('SELECT plain FROM document.version WHERE id = $1', [v])).plain.split('\n')
-const says = async (policy: string) => (await one<{ s: string }>('SELECT policy.says($1) AS s', [policy])).s
+const says = async (policy: string) => (await one<{ s: string }>('SELECT circle_policy.says($1) AS s', [policy])).s
 const cites = (version: string) =>
   all<{ motion: string; day: string }>(`SELECT motion, to_char(day, 'YYYY-MM-DD') AS day FROM document.generation WHERE version = $1 ORDER BY motion`, [version])
 

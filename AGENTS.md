@@ -47,8 +47,13 @@ site hold no feat and write no SQL. Read
   those of the feats it joins, those of its lower-order grafts and
   `circle.*`. It creates and grants only in its own.
 - **Circles, roles, tenures and mandates are core**, as groups are in
-  standard RBAC: `apps/org/core/circle`, never a feat, and no graft joins
-  a circle ([circles are core](_corpus/doc/architecture.md#circles-are-core)).
+  standard RBAC: `apps/org/core/circle`, a core feat, never one of
+  `feats/`, and no feat's graft joins a circle
+  ([circles are core](_corpus/doc/architecture.md#circles-are-core)).
+- **A core feat uses no other core feat.** Core feats that use one
+  another are joined by a core graft in `core/grafts/`, as
+  `circle-policy` joins the circles to the policy register
+  ([core grafts](_corpus/doc/architecture.md#core-grafts)).
 - **Architecture rules are enforced by tooling** wherever a tool can see
   them: `cella check feats` checks packages, imports, ops and every `sql/`
   file. A rule a tool cannot check says so in its doc.

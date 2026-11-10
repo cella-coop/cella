@@ -36,16 +36,20 @@ A node is a directory with a `feat.toml`. It holds:
 
 - `core/` — what the feat is, and the libraries its children and grafts
   build on, one package each (`core/<lib>/rs`, `core/<lib>/ts`). The app's
-  core is its shared library layer: `actions` (labels, permissions,
-  outcomes), `circle` (the circles, their roles, tenures, seats and
-  mandates, [circles are core](#circles-are-core)), `crypto`, `log`,
-  `keystore`, `guards` (the pure guard primitives), `notary`
-  (the `cella` Postgres extension over them), `db` (an action's transaction),
-  `sign` (a device's signature on an action), `vat` (a document's lines,
-  their amounts and VAT, which invoices and bills share), `analytics`
-  (the port reports are read through), `policy` (the register of the
-  policies circles adopt by motion, [policies](#policies)), `ui` (the shell's tokens and
-  components) and later `auth`. A leaf feat's core is all of it.
+  core is its shared layer, of two kinds. Its **libraries** own no schema:
+  `actions` (labels, permissions, outcomes), `crypto`, `log`, `keystore`,
+  `guards` (the pure guard primitives), `notary` (the `cella` Postgres
+  extension over them), `db` (an action's transaction), `sign` (a device's
+  signature on an action), `vat` (a document's lines, their amounts and
+  VAT, which invoices and bills share), `pdf`, `ui` (the shell's tokens
+  and components) and later `auth`. Its **core feats** each own a schema,
+  as a feat does: `circle` (the circles, their roles, tenures, seats and
+  mandates, [circles are core](#circles-are-core)), `policy` (the
+  register of the policies circles adopt by motion,
+  [policies](#policies)) and `analytics` (the port reports are read
+  through). Core feats that use one another are joined by **core
+  grafts**, in `core/grafts/` ([core grafts](#core-grafts)). A leaf
+  feat's core is all of it.
 - `feats/` — its child feats, the same shape.
 - `grafts/` — the joins between the feats below it, at any depth, that no
   child of it holds all of ([grafts](#grafts)).
@@ -102,9 +106,9 @@ one.
 ### Circles are core
 
 Circles, roles, tenures and mandates are core, as groups are in standard
-RBAC: every feat builds on them, so none is a feat. `apps/org/core/circle`
-is a library of org's core with SQL, a shell slice and actions of its
-own: the circles and their roles, the grantees, mandates and rights, and
+RBAC: every feat builds on them, so none is a feat of `feats/`.
+`apps/org/core/circle` is a core feat of org's core, with SQL, a shell
+slice and actions of its own: the circles and their roles, the grantees, mandates and rights, and
 the members of each circle and the tenures of each role, with the seats
 read from them. Its tables are in the `circle` schema, which every feat's
 and graft's SQL may reference as it references `cella.*`; its actions,
@@ -117,7 +121,15 @@ a day is the membership feat's to say, so who may use a power,
 A feat that reads circles reads core, as the motion feat reads a
 motion's circle and the meeting feat a meeting's, and a graft that
 joined the circles to a feat dissolved into that feat or into the graft
-of the feats it joined: no graft joins `circle`.
+of the feats it joined: no feat's graft joins `circle`. What joins the
+circles to another core feat is a core graft, as `circle-policy` joins
+them to the register ([core grafts](#core-grafts)).
+
+Circles know no policy. A mandate, a right, open books' disclosure
+values and the publication are each copied from a policy as it is
+adopted, and the circles keep them in their own tables by the policy's
+id; what reads the policy is the core graft joining the circles to the
+register, `circle-policy` ([core grafts](#core-grafts)).
 
 The notary is not a feat but a layer under every feat: the `cella`
 Postgres extension, a package of org's core (`apps/org/core/notary/rs`),
@@ -125,6 +137,35 @@ which every feat's SQL calls and every write passes through. It holds no
 collection and has no writes of its own. Moving a scope's notary is moving
 its database to another host, which arrives at rung 6
 ([ratchet](ratchet.md)).
+
+### Core grafts
+
+A core feat uses only its core's libraries and its ancestors' cores,
+never another core feat: core feats sit side by side, as a node's feats
+do, and what joins two of them is a **core graft**, in its core's
+`grafts/` (`apps/org/core/grafts/<graft>/sql`, `…/ts`). It is named by
+the core feats it joins, hyphenated in alphabetical order, and owns the
+schema named for it, as any graft does. It reads, in code and in SQL,
+the core feats it joins and its core's libraries; it writes only its own
+schema, and changes a core feat by calling that feat's published write.
+Since it is core, every feat and graft below may build on it as on
+core's feats. Core migrates its libraries and feats first, then its
+grafts.
+
+Org's core holds one, `circle-policy`
+([its doc](../../apps/org/core/grafts/circle-policy/index.md)), joining
+the circles to the register. It reads a policy's values from the
+register and issues them by the circles' writes as the policy is
+adopted (`circle.issue`, `circle.give`, `circle.disclose`,
+`circle.publish`) and as it ends or is replaced (`circle.withdraw`), and
+folds them; judges a policy's values sound for its kind
+(`circle_policy.mandate_flaw` and the rest); holds the guards the motion
+feat attaches to a policy's adoption and end (`circle_policy.grants`,
+`circle_policy.revokes`, `circle_policy.sovereign`); puts the register's
+tables under the circles' row-level policies, which the register,
+knowing no circle, cannot; quotes a policy's wording to whoever may read
+it (`circle_policy.says`); and gives a mandate's page its policy's
+sentence and the motion that adopted it.
 
 ## What may depend on what
 
@@ -514,9 +555,9 @@ motion. Custom feats are how cella is extended.
 
 | SQL in | may reference |
 |---|---|
-| a node's core | `cella.*`; the notary's `vault.*`; the catalog; a core library's own schema, named for it (`analytics`, `policy`, `circle`), and those of the core libraries its package depends on (`circle` reads `policy`) |
-| a feat's schema | its own schema; the schemas of the feats it nests in; `cella.*`; core's circles, `circle.*`; the policy register but its wording; the catalog |
-| a graft's schema | its own schema; the schemas of the feats it joins and of the feats they nest in; the schemas of its lower-order grafts, at or below its node; `cella.*`; core's circles, `circle.*`; the policy register but its wording; the catalog |
+| a node's core | `cella.*`; the notary's `vault.*`; the catalog; a core feat's own schema, named for it (`analytics`, `policy`, `circle`); a core graft's own, named for it (`circle_policy`), and those of the core feats it joins |
+| a feat's schema | its own schema; the schemas of the feats it nests in; `cella.*`; core's circles, `circle.*`; the policy register but its wording; core's grafts, `circle_policy.*`; the catalog |
+| a graft's schema | its own schema; the schemas of the feats it joins and of the feats they nest in; the schemas of its lower-order grafts, at or below its node; `cella.*`; core's circles, `circle.*`; the policy register but its wording; core's grafts, `circle_policy.*`; the catalog |
 
 Every record names its **owning circle**: each table of a feat or a graft
 has a `circle` column, text, never null, a foreign key into core's
@@ -574,12 +615,11 @@ table outside its own schema; and writes `cella.*` only to register, by
 a literal row, its guards, its powers, its personal columns or who
 reads. `cella check feats` refuses each by name, the core library's as
 a slice's (`tools/sql-check.mjs`, its negative tests in
-`tools/_tests/core.test.mjs` and `tools/_tests/writes.test.mjs`). Until the core
-libraries that use one another are joined by core grafts, a core
-library acts in the schema of one its package depends on as in its
-own: core's circles put the register's tables under their row-level
-policies and make `policy.says`, which quotes a policy's wording to a
-guard's reason. The notary's SQL (`core/notary/sql`) is the one
+`tools/_tests/core.test.mjs` and `tools/_tests/writes.test.mjs`). A core
+graft is held to the same in its own schema, and puts the core feats it
+joins under the circles' row-level policies, which those feats, knowing
+no circle, cannot: `circle-policy` puts the register's tables under
+them, and nothing else of its SQL acts in another schema. The notary's SQL (`core/notary/sql`) is the one
 exemption, as the layer under every slice that writes the log: it
 writes the log and makes `cella.*` and the vault, the pure functions every slice calls
 beside its own among them, a document's line arithmetic
@@ -1375,7 +1415,7 @@ motion only under a collective mandate of its own, as every circle
 does, and always keeps one for `adopt-policy` in force, with no
 `until`, which no write ends, so it may grant itself again any power it
 ended; one that applies only from a later day keeps nothing until then
-(`circle.sovereign`). `circle.narrows`
+(`circle_policy.sovereign`). `circle.narrows`
 refuses a grant its issuer holds nothing to issue under, or one wider
 than its parent, and an end that leaves a mandate issued under one
 that no longer stands
@@ -1388,7 +1428,7 @@ circle and every role is a grantee, `circle.grantee`, the supertype in
 circle's core that a mandate's `grantee` references, so circles and
 roles share one namespace of ids. A person never holds a mandate
 directly: they hold a role by a tenure, and the role holds the mandate, so
-`circle.mandate_flaw` refuses a mandate policy that names a person
+`circle_policy.mandate_flaw` refuses a mandate policy that names a person
 ([circle](../../apps/org/core/circle/index.md#entities)). A procedure's
 parties, the roles that vote and veto and the circle it consults, are
 grantees by the same key, `motion.party`
@@ -1544,8 +1584,8 @@ nothing but the entry and what its slice's SQL may read. It takes every
 id, day and figure from the entry, never from a sequence, which a write
 rolled back leaves a gap in, nor from the clock: `cella.verdict_date()`
 reads the entry's date while it folds.
-Where it runs its handler's SQL, as core's circles run
-`circle.mandate_from` for a mandate policy adopted and the motion feat
+Where it runs its handler's SQL, as core's `circle-policy` runs
+`circle_policy.mandate_from` for a mandate policy adopted and the motion feat
 `policy.adopt`, it pins the ids the entry names and refuses a result
 other than the entry's, naming both; the triggers the handler's writes
 fire fire again. What a handler changes its entry carries, a value its
@@ -1696,8 +1736,9 @@ policy; its tables are state tables, so the notary's trigger refuses a
 row outside a write. A slice's SQL may read the register's
 policies and values, never `policy.wording`, which `cella check feats`
 refuses and the guards role is granted nothing on. A guard may quote a
-policy in the reason it refuses, by `policy.says(id)`, the sentence as it
-reads, and decides by its own columns alone.
+policy in the reason it refuses, by `circle_policy.says(id)`, the
+sentence as it reads to whoever may read it, and decides by its own
+columns alone.
 
 **Adoption** is an action a motion carries, `policy` in `motion.carries`,
 which the motion feat registers itself, since a policy is a sentence a

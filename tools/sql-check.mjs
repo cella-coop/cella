@@ -3,17 +3,20 @@
 //
 //   SQL in            may reference
 //   a node's core     cella.*; the notary's vault; the catalog; a core
-//                     library's own schema, named for it, in its SQL
+//                     feat's own schema, named for it, in its SQL
 //                     (analytics, the port's; policy, the register's;
 //                     circle, the circles'), and the schemas of the core
-//                     libraries its package depends on
+//                     libraries its package depends on; a core graft's own
+//                     schema, named for it (circle_policy), and those of
+//                     the core feats it joins
 //   a feat            its own schema; those of the feats it nests in;
 //                     cella.*; core's circles; the policy register; the
-//                     catalog
+//                     grafts of its ancestors' cores; the catalog
 //   a graft           its own schema; the schemas of the feats it joins and
 //                     of the feats they nest in; the schemas of the grafts
 //                     at or below its node that join a proper subset of its
 //                     feats; cella.*; core's circles; the policy register;
+//                     the grafts of its node's and its ancestors' cores;
 //                     the catalog
 //
 // A slice reads the policy register's policies and values, never their
@@ -21,10 +24,14 @@
 // columns, copied there at adoption, and never parses the sentence.
 //
 // A core library's SQL keeps the own-schema, clock and wording rules below
-// as a slice's does, acting as in its own in the schemas of the core
-// libraries its package depends on (`sideways`), and writes and triggers
-// on no table outside its own schema, as a slice's, nor in cella.* but to
-// register; the notary's SQL alone is exempt (`privileged`). No SQL drops
+// as a slice's does, and writes and triggers on no table outside its own
+// schema, as a slice's, nor in cella.* but to register; the notary's SQL
+// alone is exempt (`privileged`). A core graft, in its core's grafts/,
+// keeps them in its own schema too, and puts the core feats it joins
+// under the circles' row-level policies, which those feats, knowing no
+// circle, cannot (`secures`): it enables and forces row-level security on
+// their tables and makes and alters policies on them, and nothing else
+// outside its own schema. No SQL drops
 // the cella extension, the notary's own neither: it changes by its upgrade.
 //
 // Beyond the references, a feat's or a graft's SQL:
@@ -126,9 +133,12 @@ export function owners(repo, apps) {
   const out = []
   const list = (dir) => (existsSync(join(repo, dir)) ? readdirSync(join(repo, dir)) : [])
   // An app's core SQL is the core's; a feat's core SQL is the feat's own.
-  const visit = (node, feat, lineage, nests) => {
+  // `cored`, the schemas of the grafts of the cores on the way down.
+  const visit = (node, feat, lineage, nests, cored) => {
     const core = join(node, 'core')
-    const owner = feat ? { kind: 'feat', node: dirname(dirname(node)), name: feat, lineage } : { kind: 'core', node }
+    const joins = list(join(core, 'grafts')).filter((g) => existsSync(join(repo, core, 'grafts', g, 'sql')))
+    cored = [...cored, ...joins.map(schemaOf)]
+    const owner = feat ? { kind: 'feat', node: dirname(dirname(node)), name: feat, lineage, cored } : { kind: 'core', node }
     if (existsSync(join(repo, core, 'sql'))) {
       out.push({ dir: join(core, 'sql'), ...owner })
     }
@@ -137,19 +147,22 @@ export function owners(repo, apps) {
         out.push({ dir: join(core, lib, 'sql'), ...owner, ...(feat ? {} : { lib, uses: uses(repo, core, lib) }) })
       }
     }
+    for (const g of feat ? [] : joins) {
+      out.push({ dir: join(core, 'grafts', g, 'sql'), kind: 'core', node, lib: g, uses: [], joins: g.split('-') })
+    }
     const inner = feat ? [...lineage, feat] : []
     for (const f of list(join(node, 'feats'))) {
       nests.set(f, inner)
-      visit(join(node, 'feats', f), f, inner, nests)
+      visit(join(node, 'feats', f), f, inner, nests, cored)
     }
     const under = (n) => [...list(join(n, 'grafts')), ...list(join(n, 'feats')).flatMap((f) => under(join(n, 'feats', f)))]
     for (const g of list(join(node, 'grafts'))) {
       if (existsSync(join(repo, node, 'grafts', g, 'sql'))) {
-        out.push({ dir: join(node, 'grafts', g, 'sql'), kind: 'graft', node, name: g, grafts: under(node), nests })
+        out.push({ dir: join(node, 'grafts', g, 'sql'), kind: 'graft', node, name: g, grafts: under(node), nests, cored })
       }
     }
   }
-  apps.forEach((app) => visit(app, null, [], new Map()))
+  apps.forEach((app) => visit(app, null, [], new Map(), []))
   return out
 }
 
@@ -165,15 +178,18 @@ function uses(repo, core, lib) {
 
 // The schemas an owner's SQL may reference, and its own.
 function scope(o) {
+  if (o.kind === 'core' && o.joins) {
+    // A core graft's own schema is named for it; it reads the core feats it
+    // joins, and secures those the circles do not own.
+    const secures = new Set(o.joins.includes(CIRCLES) ? o.joins.filter((j) => j !== CIRCLES).map(schemaOf) : [])
+    return { own: schemaOf(o.lib), secures, allowed: new Set(['cella', ...catalog, schemaOf(o.lib), ...o.joins.map(schemaOf)]), feats: [], ops: [] }
+  }
   if (o.kind === 'core') {
-    // A core library's own schema is named for it. Until core's feats that
-    // use one another are joined by core grafts, it acts in the schemas of
-    // the core libraries its package depends on as in its own (`sideways`):
-    // `circle` puts `policy`'s register under its row-level policies.
-    return { own: o.lib ? schemaOf(o.lib) : null, sideways: new Set(o.lib ? o.uses.map(schemaOf) : []), allowed: new Set(['cella', 'vault', ...catalog, ...(o.lib ? [o.lib, ...o.uses] : [])]), feats: [], ops: [] }
+    // A core library's own schema is named for it.
+    return { own: o.lib ? schemaOf(o.lib) : null, allowed: new Set(['cella', 'vault', ...catalog, ...(o.lib ? [o.lib, ...o.uses] : [])]), feats: [], ops: [] }
   }
   if (o.kind === 'feat') {
-    return { own: o.name, allowed: new Set([o.name, ...o.lineage, 'cella', CIRCLES, REGISTER, ...catalog]), feats: [o.name], ops: [o.name, CIRCLES] }
+    return { own: o.name, allowed: new Set([o.name, ...o.lineage, 'cella', CIRCLES, REGISTER, ...(o.cored ?? []), ...catalog]), feats: [o.name], ops: [o.name, CIRCLES] }
   }
   const feats = o.name.split('-')
   const outer = feats.flatMap((f) => o.nests.get(f) ?? [])
@@ -181,7 +197,7 @@ function scope(o) {
     const parts = g.split('-')
     return parts.length < feats.length && parts.every((p) => feats.includes(p))
   })
-  return { own: schemaOf(o.name), allowed: new Set([schemaOf(o.name), ...feats, ...outer, ...lower.map(schemaOf), 'cella', CIRCLES, REGISTER, ...catalog]), feats, ops: [o.name, ...feats, ...lower, CIRCLES] }
+  return { own: schemaOf(o.name), allowed: new Set([schemaOf(o.name), ...feats, ...outer, ...lower.map(schemaOf), 'cella', CIRCLES, REGISTER, ...(o.cored ?? []), ...catalog]), feats, ops: [o.name, ...feats, ...lower, CIRCLES] }
 }
 
 // The notary, the `cella` extension in org's core: the layer under every
@@ -221,8 +237,10 @@ function inspect(tree, o, s, known, fail, found) {
       fail(`${what}: ${schema} is outside ${[...s.allowed].filter((x) => !catalog.has(x)).join(', ')}`)
     }
   }
-  const owned = (schema, what) => {
-    if (!privileged(o) && schema !== s.own && !s.sideways?.has(schema)) {
+  // `secure`: the statement only puts a table under row-level policies,
+  // as a core graft may on the core feats it joins.
+  const owned = (schema, what, secure = false) => {
+    if (!privileged(o) && schema !== s.own && !(secure && s.secures?.has(schema))) {
       fail(`${what}: ${o.kind} ${o.name ?? o.lib} creates and grants only in its own schema, ${s.own}`)
     }
   }
@@ -230,7 +248,10 @@ function inspect(tree, o, s, known, fail, found) {
   walk(tree, (key, n) => {
     if (n.relname !== undefined) {
       ref(n.schemaname, `reads ${named(n)}`)
-      if (n.schemaname === REGISTER && n.relname === 'wording' && !privileged(o) && s.own !== REGISTER && !s.sideways?.has(REGISTER)) {
+      // A core graft securing the register names its wording's table as
+      // it puts it under row-level policies, which reads nothing.
+      const securing = (key === 'table' || key === 'relation') && s.secures?.has(REGISTER)
+      if (n.schemaname === REGISTER && n.relname === 'wording' && !privileged(o) && s.own !== REGISTER && !securing) {
         fail(`reads ${named(n)}: a guard reads a policy's values from its own columns, never its wording`)
       }
     }
@@ -931,7 +952,8 @@ function statement(type, b, o, s, fail, owned, named, found) {
     }
     case 'IndexStmt':
     case 'AlterTableStmt':
-      owned(b.relation.schemaname, `${type === 'IndexStmt' ? 'indexes' : 'alters'} ${named(b.relation)}`)
+      owned(b.relation.schemaname, `${type === 'IndexStmt' ? 'indexes' : 'alters'} ${named(b.relation)}`,
+        type === 'AlterTableStmt' && (b.cmds ?? []).length > 0 && b.cmds.every((c) => ['AT_EnableRowSecurity', 'AT_ForceRowSecurity'].includes(c.AlterTableCmd?.subtype)))
       if (type === 'AlterTableStmt' && (b.cmds ?? []).some((c) => c.AlterTableCmd?.subtype === 'AT_EnableRowSecurity')) {
         found.secured.add(named(b.relation))
       }
@@ -1011,7 +1033,7 @@ function statement(type, b, o, s, fail, owned, named, found) {
       break
     }
     case 'CreatePolicyStmt':
-      owned(b.table.schemaname, `creates the policy ${b.policy_name} on ${named(b.table)}`)
+      owned(b.table.schemaname, `creates the policy ${b.policy_name} on ${named(b.table)}`, true)
       if (o.kind !== 'core') {
         policy(b, s, found)
       }
@@ -1026,7 +1048,7 @@ function statement(type, b, o, s, fail, owned, named, found) {
       })
       break
     case 'AlterPolicyStmt':
-      owned(b.table.schemaname, `alters the policy ${b.policy_name} on ${named(b.table)}`)
+      owned(b.table.schemaname, `alters the policy ${b.policy_name} on ${named(b.table)}`, true)
       if (o.kind !== 'core' && b.qual) {
         const p = found.policies?.get(named(b.table))?.get(b.policy_name)
         if (p) {

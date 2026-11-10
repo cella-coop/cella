@@ -58,9 +58,6 @@ importers:
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../db/ts
-      '@cella/org-policy':
-        specifier: workspace:*
-        version: link:../../policy/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../ui/ts
@@ -76,6 +73,21 @@ importers:
       '@cella/org-sign':
         specifier: workspace:*
         version: link:../../sign/ts
+
+  apps/org/core/grafts/circle-policy/ts:
+    dependencies:
+      '@cella/org-circle':
+        specifier: workspace:*
+        version: link:../../../circle/ts
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../db/ts
+      '@cella/org-policy':
+        specifier: workspace:*
+        version: link:../../../policy/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../ui/ts
 
   apps/org/core/log/ts:
     dependencies:
@@ -306,6 +318,9 @@ importers:
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
+      '@cella/org-graft-circle-policy':
+        specifier: workspace:*
+        version: link:../../../../core/grafts/circle-policy/ts
       '@cella/org-policy':
         specifier: workspace:*
         version: link:../../../../core/policy/ts
@@ -1423,6 +1438,9 @@ importers:
       '@cella/org-graft-bill-transaction':
         specifier: workspace:*
         version: link:../grafts/bill-transaction/ts
+      '@cella/org-graft-circle-policy':
+        specifier: workspace:*
+        version: link:../core/grafts/circle-policy/ts
       '@cella/org-graft-contact-invoice':
         specifier: workspace:*
         version: link:../grafts/contact-invoice/ts

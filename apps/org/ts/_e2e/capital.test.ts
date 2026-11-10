@@ -425,8 +425,8 @@ test('an own withdrawal settled after later terms were adopted draws its repayme
 const linesOf = async (v: string) => (await one<{ plain: string }>('SELECT plain FROM document.version WHERE id = $1', [v])).plain.split('\n')
 
 test('the statutes are generated anew with the new terms where the founding ones read, adopted under the same motion, and the version before still reads', async () => {
-  const founding = (await one<{ s: string }>(`SELECT policy.says('m-2021-001/43') AS s`)).s
-  const adopted = (await one<{ s: string }>('SELECT policy.says($1) AS s', [newTerms])).s
+  const founding = (await one<{ s: string }>(`SELECT circle_policy.says('m-2021-001/43') AS s`)).s
+  const adopted = (await one<{ s: string }>('SELECT circle_policy.says($1) AS s', [newTerms])).s
   assert.equal((await one<{ version: string }>(`SELECT version FROM document.adopted WHERE document = 'statutes'`)).version, 'statutes@3')
   const before = await linesOf('statutes@2')
   const after = await linesOf('statutes@3')
@@ -478,7 +478,7 @@ test('Nadia\'s admission with 8 shares is refused when it is proposed, its reaso
   settled(await invite({ address: nadia, name: 'Nadia Benali', link: await sha256(secret) }, as(thomas)))
   settled(await accept({ member: nadia, secret, key: (await fixture(nadia, 'laptop')).key, label: 'laptop' }, as(nadia)))
   const fewer = await put({ kind: 'admit', args: { member: nadia, shares: 8 }, deadline: '2026-12-22', body: '' }, as(camille))
-  const sentence = (await one<{ s: string }>('SELECT policy.says($1) AS s', [newTerms])).s
+  const sentence = (await one<{ s: string }>('SELECT circle_policy.says($1) AS s', [newTerms])).s
   assert.equal(reason(fewer), `8 shares are fewer than the 10 the capital's terms ask, by ${newTerms} ("${sentence}"): ask at least 10 shares`)
   assert.match(sentence, /Each associate subscribes at least 10 shares/)
   assert.equal((await one<{ n: string }>(`SELECT count(*) AS n FROM motion.action WHERE kind = 'admit' AND args ->> 'member' = $1`, [nadia])).n, '0', 'no motion is put')
@@ -521,7 +521,7 @@ test('the close judges the terms again: Nadia, put sound with 10 shares while th
   assert.deepEqual([then.length, admission.op, admission.state, admission.forgone], [1, 'membership:member:admit', 'refused', true])
   const [refused] = admission.then
   assert.deepEqual([refused.op, refused.state, refused.forgone], ['account:capital:subscribe', 'refused', true])
-  const sentence = (await one<{ s: string }>('SELECT policy.says($1) AS s', [raised])).s
+  const sentence = (await one<{ s: string }>('SELECT circle_policy.says($1) AS s', [raised])).s
   assert.equal(refused.reason, `10 shares are fewer than the 12 the capital's terms ask, by ${raised} ("${sentence}"): ask at least 12 shares`)
   assert.equal(admission.reason, `membership:member:admit is forgone with account:capital:subscribe, which it requires: ${refused.reason}`)
   // The close, then the admission and the subscription, each forgone

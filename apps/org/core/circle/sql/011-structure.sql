@@ -1,6 +1,7 @@
 -- Who reads the structure: core's circles, roles and grantees, the
--- mandates, rights and open books' values, the members and the tenures,
--- and the register of policies are the members of the scope's. A member
+-- mandates, rights and open books' values, the members and the tenures
+-- are the members of the scope's, and so is the register of policies,
+-- which core's graft `circle-policy` puts under the same test. A member
 -- reads every row; anyone else signed in, their own seats, the
 -- circles and roles they name, the mandates on those roles and the
 -- parts the co-op publishes by motion; no one
@@ -131,41 +132,3 @@ ALTER TABLE circle.publication ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURI
 CREATE POLICY structure ON circle.publication TO cella_app
   USING ((SELECT circle.whole()) OR (SELECT circle.inside())) WITH CHECK (true);
 CREATE POLICY structure_guards ON circle.publication FOR SELECT TO cella_guards USING (true);
-
-ALTER TABLE policy.policy ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
-CREATE POLICY structure ON policy.policy TO cella_app
-  USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR (SELECT circle.published('register'))) WITH CHECK (true);
-CREATE POLICY structure_guards ON policy.policy FOR SELECT TO cella_guards USING (true);
-
-ALTER TABLE policy.wording ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
-CREATE POLICY structure ON policy.wording TO cella_app
-  USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR (SELECT circle.published('register'))) WITH CHECK (true);
-CREATE POLICY structure_guards ON policy.wording FOR SELECT TO cella_guards USING (true);
-
-ALTER TABLE policy.value ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
-CREATE POLICY structure ON policy.value TO cella_app
-  USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR (SELECT circle.published('register'))) WITH CHECK (true);
-CREATE POLICY structure_guards ON policy.value FOR SELECT TO cella_guards USING (true);
-
--- A legal form and its defaults are the same in every scope: registries
--- every reader reads.
-ALTER TABLE policy.form ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
-ALTER TABLE policy.default ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
-CREATE POLICY registry ON policy.form TO cella_app USING (true) WITH CHECK (true);
-CREATE POLICY registry_guards ON policy.form FOR SELECT TO cella_guards USING (true);
-CREATE POLICY registry ON policy.default TO cella_app USING (true) WITH CHECK (true);
-CREATE POLICY registry_guards ON policy.default FOR SELECT TO cella_guards USING (true);
-
--- A policy's legal wording as it reads, quoted by `policy.says` to a
--- guard in the reason it refuses, and to whoever reads the register: it
--- runs as its owner, since the guards role reads no wording, so it asks
--- the structure's test itself, which the register knows no circle to
--- ask. A write's transaction, where every guard runs, a member of the
--- scope, and anyone signed in while the co-op publishes its register
--- read it; anyone else, null.
-CREATE OR REPLACE FUNCTION policy.says(ref text) RETURNS text
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp
-RETURN (
-  SELECT policy.sentence(w.legal) FROM policy.wording w
-  WHERE w.policy = says.ref AND ((SELECT circle.whole()) OR (SELECT circle.inside()) OR (SELECT circle.published('register')))
-);

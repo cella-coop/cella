@@ -150,7 +150,7 @@ test('a motion admitting fewer shares than the statutes ask, or into a closed mo
       await db.query('ROLLBACK')
     }
   }
-  const { says } = (await db.query<{ says: string }>(`SELECT policy.says('m-1/1') AS says`)).rows[0]
+  const { says } = (await db.query<{ says: string }>(`SELECT circle_policy.says('m-1/1') AS says`)).rows[0]
   const fewer = await judged('2026-11-20', 10)
   assert.equal(fewer, `10 shares are fewer than the 20 the capital's terms ask, by m-1/1 ("${says}"): ask at least 20 shares`)
   assert.doesNotMatch(fewer ?? '', /@/, 'the reason names no person')

@@ -222,7 +222,7 @@ test('a publication or a disclosure rule proposed replaces the one standing on d
       'one after the other',
     )
     const standing = (await adopt(publishes('circles'), 9)).rows[0].id
-    await db.query('SELECT circle.mandate_from($1)', [standing])
+    await db.query('SELECT circle_policy.mandate_from($1)', [standing])
     assert.match(
       (await asks({ kind: 'rule', wording: publishes('roles') })) ?? '',
       new RegExp(`^${standing} publishes parts of the structure from 2026-11-21: one publication stands at a time, so one on days that meet its replaces ${standing}$`),

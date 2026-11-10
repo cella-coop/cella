@@ -68,7 +68,7 @@ export const app: App = {
       page: {
         eyebrow: 'Mandate',
         title: (m: Provenance) => `${power(m.power)}, to ${m.granteeName}`,
-        subtitle: (m: Provenance) => m.sentence,
+
         properties: (m: Provenance) => [
           { label: 'State', value: m.state, kind: 'badge', tone: tones[m.state] },
           { label: 'Since', value: m.since, kind: 'date' },
@@ -84,7 +84,6 @@ export const app: App = {
           ...(m.until ? [{ label: 'Until', value: m.until, kind: 'date' as const }] : []),
           ...(m.procedure ? [{ label: 'Decided by', value: m.procedure, kind: 'badge' as const }] : []),
           { label: 'Issued by', value: m.issuerName, href: `/circles/${m.issuer}` },
-          ...(m.motion ? [{ label: 'Adopted by', value: m.motion, kind: 'mono' as const, href: `/motions/${m.motion}` }] : []),
         ],
         blocks: [Chain],
       },

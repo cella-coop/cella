@@ -1,12 +1,12 @@
-// Mandates and rights, alone, on a database holding only the app's core
-// and this feat: a mandate is a policy granted to one grantee, a circle or
-// a role, whose values this feat holds sound, copies into `circle.mandate`
-// as it is adopted and revokes as it ends, and a right one of its own
-// kind, copied into `circle.right`, and a publication of the assembly its
-// parts, copied into `circle.publication`, which a person who is no
-// member reads by while it stands; its
-// guards refuse a mandate policy adopted without its mandate, and an end
-// that leaves it standing. Run by `cella test slice circle`.
+// Mandates and rights, alone, on a database holding only the app's core:
+// a mandate is a policy granted to one grantee, a circle or a role, whose
+// values this graft holds sound, copies into `circle.mandate` as it is
+// adopted and revokes as it ends, and a right one of its own kind, copied
+// into `circle.right`, and a publication of the assembly its parts,
+// copied into `circle.publication`, which a person who is no member reads
+// by while it stands; its guards refuse a mandate policy adopted without
+// its mandate, and an end that leaves it standing. Run by `cella test
+// slice circle-policy`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -15,8 +15,8 @@ import pg from 'pg'
 const db = new pg.Client()
 
 const pays = (cap: string) => `The {role: finance} role holds {power: pay-supplier}, to pay suppliers, up to {limit: ${cap}} a write`
-const flaw = async (marked: object) => (await db.query<{ r: string | null }>('SELECT circle.mandate_flaw($1) AS r', [marked])).rows[0].r
-const guard = async (fn: string, policy: string) => (await db.query<{ r: string | null }>(`SELECT circle.${fn}($1) AS r`, [{ policy }])).rows[0].r
+const flaw = async (marked: object) => (await db.query<{ r: string | null }>('SELECT circle_policy.mandate_flaw($1) AS r', [marked])).rows[0].r
+const guard = async (fn: string, policy: string) => (await db.query<{ r: string | null }>(`SELECT circle_policy.${fn}($1) AS r`, [{ policy }])).rows[0].r
 const adopt = async (kind: string, wording: string, motion: string, n: number, replaces: string | null = null) =>
   (
     await db.query<{ id: string }>(`SELECT policy.adopt('ag', $1, $2, NULL, $3, $4, cella.verdict_date(), NULL, $5) AS id`, [
@@ -90,19 +90,19 @@ test('adopting a mandate policy copies its values into its mandate, and one repl
   try {
     const first = await adopt('mandate', pays('3 000 €'), 'm-2026-020', 1)
     assert.match((await guard('grants', first)) ?? '', /m-2026-020\/1 grants no mandate: its values are copied as it is adopted/)
-    await db.query('SELECT circle.mandate_from($1)', [first])
+    await db.query('SELECT circle_policy.mandate_from($1)', [first])
     assert.equal(await guard('grants', first), null)
     assert.deepEqual(await mandate(first), { grantee: 'finance', power: 'pay-supplier', limit: 300000, from: '2026-11-21', revoked: null })
 
     const second = await adopt('mandate', pays('4 000 €'), 'm-2026-020', 2, first)
-    await db.query('SELECT circle.mandate_from($1)', [second])
+    await db.query('SELECT circle_policy.mandate_from($1)', [second])
     assert.equal(await guard('grants', second), null)
     assert.equal((await mandate(second)).limit, 400000)
     assert.equal((await mandate(first)).revoked, '2026-11-21')
 
     // A rule grants no mandate.
     const rule = await adopt('rule', 'Refused clients are named in the internal rules', 'm-2026-020', 3)
-    assert.equal(await db.query('SELECT mandate AS m FROM circle.mandate_from($1)', [rule]).then((r) => r.rows[0].m), null)
+    assert.equal(await db.query('SELECT mandate AS m FROM circle_policy.mandate_from($1)', [rule]).then((r) => r.rows[0].m), null)
     assert.equal(await guard('grants', rule), null)
   } finally {
     await db.query('ROLLBACK')
@@ -113,10 +113,10 @@ test('ending a mandate policy revokes its mandate on the day it ends', async () 
   await staged()
   try {
     const policy = await adopt('mandate', pays('3 000 €'), 'm-2026-020', 1)
-    await db.query('SELECT circle.mandate_from($1)', [policy])
+    await db.query('SELECT circle_policy.mandate_from($1)', [policy])
     await db.query(`SELECT policy.end($1, 'm-2026-021', 1)`, [policy])
     assert.match((await guard('revokes', policy)) ?? '', /is not revoked the day it ends/)
-    await db.query('SELECT circle.mandate_ended($1)', [policy])
+    await db.query('SELECT circle_policy.mandate_ended($1)', [policy])
     assert.equal(await guard('revokes', policy), null)
     assert.equal((await mandate(policy)).revoked, '2026-11-21')
   } finally {
@@ -129,7 +129,7 @@ test('a policy whose values grant no mandate is refused as it is copied', async 
   try {
     const policy = await adopt('mandate', 'The {role: printer} role holds {power: pay-supplier}', 'm-2026-020', 1)
     await db.query('SAVEPOINT copy')
-    await assert.rejects(db.query('SELECT circle.mandate_from($1)', [policy]), (e: Error & { code?: string }) => {
+    await assert.rejects(db.query('SELECT circle_policy.mandate_from($1)', [policy]), (e: Error & { code?: string }) => {
       assert.equal(e.code, '09000', e.message)
       assert.match(e.message, /no role printer/)
       return true
@@ -147,7 +147,7 @@ test('a collective mandate is on a circle, and the circle holds it itself, not t
       (await db.query<{ h: boolean }>(`SELECT circle.holds($1, $2, cella.verdict_date()) AS h`, [circle, power])).rows[0].h
     assert.equal(await holds('operations', 'admit-member'), false)
     const policy = await adopt('mandate', 'The {circle: operations} circle holds {power: admit-member}, to admit members, by motion', 'm-2026-020', 1)
-    await db.query('SELECT circle.mandate_from($1)', [policy])
+    await db.query('SELECT circle_policy.mandate_from($1)', [policy])
     assert.equal(await guard('grants', policy), null)
     assert.deepEqual(
       (await db.query(`SELECT m.grantee, g.kind, m.power FROM circle.mandate m JOIN circle.grantee g ON g.id = m.grantee WHERE m.policy = $1`, [policy])).rows,
@@ -157,7 +157,7 @@ test('a collective mandate is on a circle, and the circle holds it itself, not t
     assert.equal(await holds('ag', 'admit-member'), false)
     assert.equal(await holds('operations', 'suspend-member'), false)
     await db.query(`SELECT policy.end($1, 'm-2026-021', 1)`, [policy])
-    await db.query('SELECT circle.mandate_ended($1)', [policy])
+    await db.query('SELECT circle_policy.mandate_ended($1)', [policy])
     assert.equal(await holds('operations', 'admit-member'), false)
     // A grantee is a circle or a role, never a person.
     await db.query('SAVEPOINT holder')
@@ -199,7 +199,7 @@ test('every circle and every role is a grantee, and a circle and a role never sh
 test('a right is a policy of its own kind, copied into circle.right with no grantee, and ending it revokes it', async () => {
   await staged()
   try {
-    const right = async (marked: object) => (await db.query<{ r: string | null }>('SELECT circle.right_flaw($1) AS r', [marked])).rows[0].r
+    const right = async (marked: object) => (await db.query<{ r: string | null }>('SELECT circle_policy.right_flaw($1) AS r', [marked])).rows[0].r
     assert.equal(await right({ right: 'employee', power: 'claim-expense' }), null)
     assert.match((await right({ power: 'claim-expense' })) ?? '', /names who it is given to/)
     assert.match((await right({ right: 'visitor', power: 'keep-profile' })) ?? '', /every person, member or employee, as {right: member}, not visitor/)
@@ -207,7 +207,7 @@ test('a right is a policy of its own kind, copied into circle.right with no gran
 
     const policy = await adopt('right', 'Every {right: employee} holds {power: log-time}, to log, correct and submit their own time', 'm-2026-020', 1)
     assert.match((await guard('grants', policy)) ?? '', /gives no right: its values are copied as it is adopted/)
-    assert.equal(await db.query('SELECT mandate AS m FROM circle.mandate_from($1)', [policy]).then((r) => r.rows[0].m), null, 'a right is no mandate')
+    assert.equal(await db.query('SELECT mandate AS m FROM circle_policy.mandate_from($1)', [policy]).then((r) => r.rows[0].m), null, 'a right is no mandate')
     assert.equal(await guard('grants', policy), null)
     assert.deepEqual(
       (await db.query(`SELECT "right", power, to_char(revoked, 'YYYY-MM-DD') AS revoked FROM circle.right WHERE policy = $1`, [policy])).rows,
@@ -217,7 +217,7 @@ test('a right is a policy of its own kind, copied into circle.right with no gran
 
     await db.query(`SELECT policy.end($1, 'm-2026-021', 1)`, [policy])
     assert.match((await guard('revokes', policy)) ?? '', /right \d+ of m-2026-020\/1 is not revoked the day it ends/)
-    await db.query('SELECT circle.mandate_ended($1)', [policy])
+    await db.query('SELECT circle_policy.mandate_ended($1)', [policy])
     assert.equal(await guard('revokes', policy), null)
   } finally {
     await db.query('ROLLBACK')
@@ -234,7 +234,7 @@ const marks = (wording: string) =>
     )
     .then((r) => r.rows[0].m)
 const unsound = async (wording: string, issuer = 'ag') =>
-  (await db.query<{ r: string | null }>('SELECT circle.disclosure_flaw($1, $2) AS r', [await marks(wording), issuer])).rows[0].r
+  (await db.query<{ r: string | null }>('SELECT circle_policy.disclosure_flaw($1, $2) AS r', [await marks(wording), issuer])).rows[0].r
 
 test('open books\' disclosure rule is the assembly\'s, marks its three values soundly, and is copied as it is adopted and revoked as it is replaced', async () => {
   await staged()
@@ -251,20 +251,20 @@ test('open books\' disclosure rule is the assembly\'s, marks its three values so
 
     const first = await adopt('rule', books('5'), 'm-2026-020', 1)
     assert.match((await guard('grants', first)) ?? '', /sets no disclosure values open books reads/)
-    await db.query('SELECT circle.mandate_from($1)', [first])
+    await db.query('SELECT circle_policy.mandate_from($1)', [first])
     assert.equal(await guard('grants', first), null)
     const disclosed = async () =>
       (await db.query('SELECT policy, contributors, largest::int AS largest, two::int AS two FROM circle.disclosed(cella.verdict_date())')).rows
     assert.deepEqual(await disclosed(), [{ policy: first, contributors: 5, largest: 50, two: 80 }])
 
     const second = await adopt('rule', books('7', '40 %', '60 %'), 'm-2026-020', 2, first)
-    await db.query('SELECT circle.mandate_from($1)', [second])
+    await db.query('SELECT circle_policy.mandate_from($1)', [second])
     assert.equal(await guard('grants', second), null)
     assert.deepEqual(await disclosed(), [{ policy: second, contributors: 7, largest: 40, two: 60 }])
 
     await db.query(`SELECT policy.end($1, 'm-2026-021', 1)`, [second])
     assert.match((await guard('revokes', second)) ?? '', /the disclosure values of .* are not revoked the day it ends/)
-    await db.query('SELECT circle.mandate_ended($1)', [second])
+    await db.query('SELECT circle_policy.mandate_ended($1)', [second])
     assert.equal(await guard('revokes', second), null)
     assert.deepEqual(await disclosed(), [], 'with no rule standing, open books shares nothing')
   } finally {
@@ -312,7 +312,7 @@ test('a publication is the assembly\'s, names the parts it publishes, and a pers
 
     const ruled = await adopt('rule', publishes('circles and roles'), 'm-2026-030', 1)
     assert.match((await guard('grants', ruled)) ?? '', /publishes nothing the structure's policies read/)
-    await db.query('SELECT circle.mandate_from($1)', [ruled])
+    await db.query('SELECT circle_policy.mandate_from($1)', [ruled])
     assert.equal(await guard('grants', ruled), null)
     const whole = (await db.query<{ circles: number; roles: number; grantees: number }>(
       `SELECT (SELECT count(*) FROM circle.circle)::int AS circles, (SELECT count(*) FROM circle.role)::int AS roles,
@@ -323,7 +323,7 @@ test('a publication is the assembly\'s, names the parts it publishes, and a pers
 
     await db.query(`SELECT policy.end($1, 'm-2026-031', 1)`, [ruled])
     assert.match((await guard('revokes', ruled)) ?? '', /the publication of .* is not revoked the day it ends/)
-    await db.query('SELECT circle.mandate_ended($1)', [ruled])
+    await db.query('SELECT circle_policy.mandate_ended($1)', [ruled])
     assert.equal(await guard('revokes', ruled), null)
     assert.deepEqual(await reads(), nothing, 'ended, it publishes nothing')
   } finally {
@@ -336,7 +336,7 @@ test('a publication is the assembly\'s, names the parts it publishes, and a pers
 const refused = async (policy: string) => {
   await db.query('SAVEPOINT adopting')
   try {
-    await db.query('SELECT circle.mandate_from($1)', [policy])
+    await db.query('SELECT circle_policy.mandate_from($1)', [policy])
     await db.query('RELEASE SAVEPOINT adopting')
     return null
   } catch (e) {
@@ -372,7 +372,7 @@ test('one publication and one disclosure rule stand at a time, so ending one rev
     assert.equal(await refused(next), null, 'a publication replacing the one in force stands')
     assert.deepEqual(await published(), ['circles', 'roles'])
     await db.query(`SELECT policy.end($1, 'm-2026-044', 1)`, [next])
-    await db.query('SELECT circle.mandate_ended($1)', [next])
+    await db.query('SELECT circle_policy.mandate_ended($1)', [next])
     assert.deepEqual(await published(), [], 'ending the later publication publishes nothing the earlier did')
 
     const disclosed = async () => (await db.query('SELECT policy FROM circle.disclosed(cella.verdict_date())')).rows
@@ -384,7 +384,7 @@ test('one publication and one disclosure rule stand at a time, so ending one rev
     const stricter = await adopt('rule', books('7', '40 %', '60 %'), 'm-2026-048', 1, rule)
     assert.equal(await refused(stricter), null)
     await db.query(`SELECT policy.end($1, 'm-2026-049', 1)`, [stricter])
-    await db.query('SELECT circle.mandate_ended($1)', [stricter])
+    await db.query('SELECT circle_policy.mandate_ended($1)', [stricter])
     assert.deepEqual(await disclosed(), [], 'ending the later rule leaves none standing')
   } finally {
     await db.query('ROLLBACK')

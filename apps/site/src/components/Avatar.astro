@@ -1,0 +1,113 @@
+---
+// An avatar (index.md, figures): a photo's engraving cut into a few of the
+// brand's cells round its focus, and beside them, in the same diagram,
+// one large cell of the panel's colour holding its words, its slot
+// (lib/avatar.ts). The panel stands on `side` while the avatar is wide,
+// and under the photo where it is narrow, by its own width, so it fits
+// any column. The engraving is the figure's unless `src` names another,
+// as a post's cover on the blog's index does.
+import type { Status } from '../schemas'
+import { avatarOf, inset, type Side } from '../lib/avatar'
+import { engravingUrl } from '../lib/engrave'
+
+interface Props {
+  photo: string
+  ink: Status
+  seed: number
+  side?: Side
+  id: string
+  label?: string
+  src?: string
+}
+
+const { photo, ink, seed, side = 'right', id, label, src = engravingUrl(photo) } = Astro.props
+const { beside, below } = await avatarOf(photo, seed, side)
+const fits = [
+  ['beside', beside],
+  ['below', below],
+] as const
+const style = { '--ink': `var(--print-${ink}-deep)`, '--beside': inset(beside.words), '--below': inset(below.words) }
+---
+
+<div class="avatar" style={style}>
+  {
+    fits.map(([fit, s]) => (
+      <svg class="shape" data-fit={fit} viewBox={`0 0 ${s.w} ${s.h}`} role="img" aria-label={label}>
+        <defs>
+          <clipPath id={`${id}-${fit}-c`}>
+            {s.cells.map((d) => (
+              <path d={d} />
+            ))}
+          </clipPath>
+          <mask id={`${id}-${fit}-m`} maskUnits="userSpaceOnUse" x={s.photo.x} y={s.photo.y} width={s.photo.w} height={s.photo.h}>
+            <image href={src} x={s.photo.x} y={s.photo.y} width={s.photo.w} height={s.photo.h} preserveAspectRatio="xMidYMid slice" />
+          </mask>
+        </defs>
+        <g clip-path={`url(#${id}-${fit}-c)`}>
+          <rect class="paper" x={s.photo.x} y={s.photo.y} width={s.photo.w} height={s.photo.h} />
+          <rect class="ink" x={s.photo.x} y={s.photo.y} width={s.photo.w} height={s.photo.h} mask={`url(#${id}-${fit}-m)`} />
+        </g>
+        <path class="panel" d={s.panel} />
+      </svg>
+    ))
+  }
+  <div class="words"><slot /></div>
+</div>
+
+<style>
+  .avatar {
+    position: relative;
+    container-type: inline-size;
+  }
+
+  .shape {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  [data-fit='below'] {
+    display: none;
+  }
+
+  /* the print's paper takes a wash of its ink, as a figure's does */
+  .paper {
+    fill: color-mix(in oklch, var(--ink) 16%, var(--print-paper));
+  }
+
+  .ink {
+    fill: var(--ink);
+  }
+
+  /* the panel, a raised surface washed with the photo's ink, so it reads
+     on the ground in either theme and belongs to the cells beside it */
+  .panel {
+    fill: color-mix(in oklch, var(--ink) 14%, var(--raised));
+  }
+
+  /* the words over the panel, clear of its rounded corners and the seam */
+  .words {
+    position: absolute;
+    inset: var(--beside);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: clamp(1.25rem, 4.5cqi, 3rem);
+  }
+
+  @container (width < 34rem) {
+    [data-fit='beside'] {
+      display: none;
+    }
+
+    [data-fit='below'] {
+      display: block;
+    }
+
+    .words {
+      inset: var(--below);
+      justify-content: start;
+    }
+  }
+</style>

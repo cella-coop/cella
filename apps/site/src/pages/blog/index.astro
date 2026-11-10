@@ -1,46 +1,24 @@
 ---
 // The blog's index: what the blog page's file places, its hero first,
-// then every post newest first as a card with no frame: its cover where it
-// names one, the photo engraved small and cut into the brand's cells round
-// its focus, and tight under it, at its left edge, its date, title and
-// summary, so cover and words read as one. The cards stand two to a row,
-// one on a narrow screen; a whole card is its link. A cover wears the
+// then every post newest first, one to a row, each an avatar where it
+// names a cover: its photo engraved small and cut into a few of the
+// brand's cells round its focus, and beside them, in the same diagram, a
+// panel holding its date, title and summary, the panel on the right and
+// the left in turn, under the photo on a narrow screen. A post with no
+// cover is its words alone. A whole card is its link. A cover wears the
 // post's own ink, the same here and on the post (postInk).
-import { cluster } from '@cella/brand'
-import Cut from '../../components/Cut.astro'
+import Avatar from '../../components/Avatar.astro'
 import { figures } from '../../components/figures'
 import Page from '../../layouts/Page.astro'
 import { coverUrl } from '../../lib/engrave'
-import { focusIn } from '../../lib/focus'
 import { postInk, seedOf } from '../../lib/place'
 import { dated, page, posts, siteData } from '../../lib/text'
 
 const { Content, ...p } = await page('blog')
 const site = await siteData()
 const all = await posts()
-
-// a cover's cut: three wide to two tall, its cells a little larger than a
-// figure's, cut from the small engraving so its lines hold at a card's
-// size, its box trimmed to the cells all round
-const [W, H] = [1000, 667]
-const bounds = (paths: string[]) => {
-  const nums = paths.flatMap((d) => (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number))
-  const xs = nums.filter((_, k) => k % 2 === 0)
-  const ys = nums.filter((_, k) => k % 2 === 1)
-  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)]
-  return { left: Math.floor(x0), wide: Math.ceil(x1 - x0), top: Math.floor(y0), tall: Math.ceil(y1 - y0) }
-}
-const covers = await Promise.all(
-  all.map(async (post) => {
-    const photo = post.data.photo
-    if (!photo) {
-      return undefined
-    }
-    const seed = seedOf(`blog/${post.id}`)
-    const cells = cluster(W, H, { pitch: 135, gutter: 13, round: 18, seed, drop: 0.08, focus: await focusIn(photo, W, H) })
-    return { photo, cells, box: bounds(cells), ink: await postInk(post.id), alt: post.data.alt ?? post.data.caption ?? post.data.title }
-  }),
-)
+const inks = await Promise.all(all.map((post) => postInk(post.id)))
+const sides = ['right', 'left'] as const
 ---
 
 <Page {...p}>
@@ -51,17 +29,22 @@ const covers = await Promise.all(
         <p class="empty" data-drafted={site.drafted('blog.empty')}>{site.blog.empty}</p>
       ) : (
         <ol class="cards" role="list">
-          {all.map((p, i) => (
+          {all.map((post, i) => (
             <li>
-              <a class="card" href={`/blog/${p.id}/`}>
-                {covers[i] && (
-                  <div class="cover">
-                    <Cut photo={covers[i].photo} ink={covers[i].ink} cells={covers[i].cells} w={W} h={H} {...covers[i].box} src={coverUrl(covers[i].photo)} id={`cover-${p.id}`} label={covers[i].alt} />
+              <a class="card" href={`/blog/${post.id}/`}>
+                {post.data.photo ? (
+                  <Avatar photo={post.data.photo} ink={inks[i]} seed={seedOf(`blog/${post.id}`)} side={sides[i % 2]} src={coverUrl(post.data.photo)} id={`cover-${post.id}`} label={post.data.alt ?? post.data.caption ?? post.data.title}>
+                    <time class="label" datetime={post.data.date.toISOString()}>{dated(post.data.date)}</time>
+                    <h2>{post.data.title}</h2>
+                    <p>{post.data.description}</p>
+                  </Avatar>
+                ) : (
+                  <div class="bare">
+                    <time class="label" datetime={post.data.date.toISOString()}>{dated(post.data.date)}</time>
+                    <h2>{post.data.title}</h2>
+                    <p>{post.data.description}</p>
                   </div>
                 )}
-                <time class="label" datetime={p.data.date.toISOString()}>{dated(p.data.date)}</time>
-                <h2>{p.data.title}</h2>
-                <p>{p.data.description}</p>
               </a>
             </li>
           ))}
@@ -76,34 +59,23 @@ const covers = await Promise.all(
     padding-block: 4rem 6rem;
   }
 
-  /* the cards, two to a row, each a cover over its words */
   .cards {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 4rem clamp(2rem, 5vw, 4.5rem);
+    gap: clamp(2.5rem, 5vw, 4rem);
+    max-width: 60rem;
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
   .card {
-    display: grid;
-    gap: 0.55rem;
-    align-content: start;
-    text-decoration: none;
-  }
-
-  /* every cover the same proportion, its cut set in it whole, so a row's
-     words start level */
-  .cover {
-    aspect-ratio: 3 / 2;
-    margin-bottom: 0.9rem;
-  }
-
-  .cover :global(svg) {
     display: block;
-    width: 100%;
-    height: 100%;
+    text-decoration: none;
+    transition: transform 160ms var(--ease);
+  }
+
+  .card:hover {
+    transform: translateY(-0.2rem);
   }
 
   .card:hover h2 {
@@ -112,16 +84,12 @@ const covers = await Promise.all(
     text-underline-offset: 0.18em;
   }
 
-  .card:hover .cover {
-    transform: translateY(-0.2rem);
+  .bare {
+    display: grid;
+    gap: 0.55rem;
   }
 
-  .cover {
-    transition: transform 160ms var(--ease);
-  }
-
-  /* the words read as the cover's caption, a short measure under it, not
-     a line its full width */
+  /* the words read as the cover's caption, a short measure */
   h2 {
     max-width: 22ch;
     margin: 0;
@@ -135,12 +103,5 @@ const covers = await Promise.all(
     margin: 0;
     color: var(--text-muted);
     text-wrap: pretty;
-  }
-
-  @media (max-width: 44rem) {
-    .cards {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 3rem;
-    }
   }
 </style>

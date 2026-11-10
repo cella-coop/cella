@@ -47,10 +47,55 @@ const REACH = 1.5
 const REACH_SIDES = 14
 
 /** A cluster's cells, as SVG paths, in a box w by h. */
-export function cluster(w: number, h: number, { pitch, gutter, round, seed, drop = 0, bleed = null, silhouette = 'blob', focus = [], loose = 1 }: ClusterOptions): string[] {
+export function cluster(w: number, h: number, options: ClusterOptions): string[] {
+  return diagram(w, h, options).cells
+}
+
+/** An avatar's layout: a picture's cells and, beside them, one large
+ * cell, its panel, for words. The panel's seed is a disk far larger than
+ * the box is tall, centred past its right edge, so the panel fills the
+ * box's right side whole, cut flat by the box above, below and at the
+ * right, and its left side a shallow arc the picture's cells meet with
+ * the same gutter as each other. */
+export type AvatarOptions = Omit<ClusterOptions, 'bleed' | 'silhouette'> & {
+  /** Where the arc stands at the box's middle, a share of its width. */
+  seam?: number
+}
+
+/** Where an avatar's picture and words fall, in its box: the picture
+ * from the left edge across `photo`, enough to fill the cells the arc
+ * leaves, and the words from `words` to the right edge, where the panel
+ * runs full height. */
+export function avatarFrame(w: number, h: number, { seam = 0.5, pitch, gutter }: Pick<AvatarOptions, 'seam' | 'pitch' | 'gutter'>) {
+  const r = h * ARC
+  const x = w * seam + r
+  const corner = x - Math.sqrt(r * r - (h / 2) ** 2)
+  return { panel: { x, y: h / 2, r }, photo: Math.min(w, corner + pitch), words: corner + gutter }
+}
+
+/** How wide an avatar's arc is, in the box's heights: wide enough that
+ * the arc is shallow, its corners near where it stands at the middle,
+ * so the picture's cells meet it all along, never leaving a wedge. */
+const ARC = 3
+
+/** An avatar's cells and its panel, as SVG paths, the panel always on the
+ * right: a page that wants it elsewhere mirrors or turns the paths, never
+ * the picture. The picture's cells fill its side whole, smaller toward
+ * the box's edges, larger toward its focus. */
+export function avatar(w: number, h: number, options: AvatarOptions): { cells: string[]; panel: string } {
+  const { panel } = avatarFrame(w, h, options)
+  // the box whole, its cells full grown most of a pitch in from its edge
+  const field = (x: number, y: number) => Math.max(-x, x - w, -y, y - h)
+  const { cells, panel: path } = diagram(w, h, { ...options, silhouette: { field, depth: options.pitch * 0.6 } }, panel)
+  return { cells, panel: path ?? '' }
+}
+
+/** A cluster's cells, and, given a panel's disk, that panel's cell. */
+function diagram(w: number, h: number, { pitch, gutter, round, seed, drop = 0, bleed = null, silhouette = 'blob', focus = [], loose = 1 }: ClusterOptions, panel?: Focus): { cells: string[]; panel?: string } {
   const [rmin, rmax, alpha] = [pitch * 0.2, pitch * 1.3, 1.5]
   const sep = gutter * 0.4
-  const foci = seat(focus, { w, h, gutter, sep, rmin, rmax, bleed })
+  // a focus stays left of a panel, its disk clear of the panel's
+  const foci = seat(focus, { w: panel ? panel.x - panel.r - gutter : w, h, gutter, sep, rmin, rmax, bleed })
 
   // The outline: a blob whose radius wobbles with the angle, and a lobe,
   // its tail. Bleeding off one side, its middle leans toward that edge and
@@ -114,7 +159,15 @@ export function cluster(w: number, h: number, { pitch, gutter, round, seed, drop
     const k = key(Math.floor(d.x / span), Math.floor(d.y / span))
     buckets.set(k, [...(buckets.get(k) ?? []), d])
   }
+  // a panel's disk, far larger than any other, is checked on its own, so
+  // the buckets keep their size
+  if (panel) {
+    disks.push(panel)
+  }
   const free = (x: number, y: number, r: number) => {
+    if (panel && Math.hypot(panel.x - x, panel.y - y) < panel.r + r + sep) {
+      return false
+    }
     const [i, j] = [Math.floor(x / span), Math.floor(y / span)]
     for (let di = -1; di <= 1; di++) {
       for (let dj = -1; dj <= 1; dj++) {
@@ -143,20 +196,29 @@ export function cluster(w: number, h: number, { pitch, gutter, round, seed, drop
   }
 
   const box: Point[] = [[-margin * 2, -margin * 2], [w + margin * 2, -margin * 2], [w + margin * 2, h + margin * 2], [-margin * 2, h + margin * 2]]
+  // a seed's polygon cut by another's power bisector: where the two
+  // weighted distances meet, nearer the lighter seed, less half the
+  // gutter, one width throughout
+  const bisect = (poly: Point[], s: Focus, t: Focus) => {
+    const d = Math.hypot(t.x - s.x, t.y - s.y)
+    const [nx, ny] = [(t.x - s.x) / d, (t.y - s.y) / d]
+    const at = (d * d + s.r * s.r - t.r * t.r) / (2 * d) - gutter / 2
+    return clipHalf(poly, s.x + nx * at, s.y + ny * at, nx, ny)
+  }
   const paths: string[] = []
+  const kept: number[] = []
+  // the panel's own cell is cut after the rest, by those kept
+  const own = panel ? foci.length : -1
   disks.forEach((s, i) => {
+    if (i === own) {
+      return
+    }
     let poly = box
     for (let j = 0; j < disks.length && poly.length >= 3; j++) {
       const t = disks[j]
-      const d = Math.hypot(t.x - s.x, t.y - s.y)
-      if (i === j || d > (s.r + t.r) * REACH * 2) {
-        continue
+      if (i !== j && Math.hypot(t.x - s.x, t.y - s.y) <= (s.r + t.r) * REACH * 2) {
+        poly = bisect(poly, s, t)
       }
-      const [nx, ny] = [(t.x - s.x) / d, (t.y - s.y) / d]
-      // the power bisector: where the two weighted distances meet, nearer
-      // the lighter seed, less half the gutter, one width throughout
-      const at = (d * d + s.r * s.r - t.r * t.r) / (2 * d) - gutter / 2
-      poly = clipHalf(poly, s.x + nx * at, s.y + ny * at, nx, ny)
     }
     // and no further from its seed than a reach of its disk, so a cell on
     // the rim, with no neighbour beyond it, rounds off instead of running
@@ -174,6 +236,7 @@ export function cluster(w: number, h: number, { pitch, gutter, round, seed, drop
       }
       if (poly.length >= 3) {
         paths.push(roundedPath(poly, Math.min(round, 0.3 * s.r), f))
+        kept.push(i)
       }
       return
     }
@@ -190,8 +253,23 @@ export function cluster(w: number, h: number, { pitch, gutter, round, seed, drop
       return
     }
     paths.push(roundedPath(poly, Math.min(round, 0.3 * s.r), f))
+    kept.push(i)
   })
-  return paths
+  if (!panel) {
+    return { cells: paths }
+  }
+  // the panel, cut only by the cells kept, so it reaches into a gap a
+  // dropped one leaves and meets each cell across one gutter, though no
+  // further toward the picture than half a pitch past its disk; cut by
+  // the box all round and rounded as a cell is
+  let poly = clipHalf(box, panel.x - panel.r - pitch / 2, 0, -1, 0)
+  for (const j of kept) {
+    poly = poly.length >= 3 ? bisect(poly, panel, disks[j]) : poly
+  }
+  for (const [px, py, nx, ny] of [[2, 0, -1, 0], [w - 2, 0, 1, 0], [0, 2, 0, -1], [0, h - 2, 0, 1]]) {
+    poly = poly.length >= 3 ? clipHalf(poly, px, py, nx, ny) : poly
+  }
+  return { cells: paths, panel: poly.length >= 3 ? roundedPath(poly, round, f) : undefined }
 }
 
 /** How far from a focus, in pitches, the cells have shrunk to the rest. */

@@ -79,6 +79,16 @@ from the explorer:
   signed distance in the box's units, negative inside, its cells full
   grown `depth` in (two pitches unless given); and `loose`, how many of
   the stray cells past the rim it keeps against the default;
+  and `avatar`, a picture's cells and, beside them in the same diagram,
+  one large cell, its panel, for words: the panel's seed a disk three
+  times the box's height, centred past its right edge, so the panel
+  fills the right side whole, cut flat by the box and rounded as a cell
+  is, its left side a shallow arc at `seam` of the width; it is cut
+  only by the cells kept, so it reaches into a gap a dropped one leaves
+  and meets each across one gutter; the cells fill the rest whole, full
+  grown most of a pitch in from the box's edge, a focus kept clear of
+  the panel. `avatarFrame` says where its picture and its words fall.
+  The panel is always on the right: a page mirrors or turns the paths;
 - `silhouette.ts`, the shapes a cluster fills, pure and seeded:
   `organic(kind, seed, limbs?)` for `ORGANIC`'s `amoeba`, a wobbling
   body putting out pseudopods, `branch`, a core whose limbs fork once,

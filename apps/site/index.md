@@ -24,7 +24,7 @@ under `pages/` in the text, and one for each post of the blog.
 |---|---|---|
 | `/` | `src/pages/index.astro` | the `home` page: whatever its file places |
 | `/<name>` | `src/pages/[page].astro` | every other page but `blog`: whatever its file places |
-| `/blog/` | `src/pages/blog/index.astro` | what the `blog` page's file places, then the posts newest first, each a card with no frame, two to a row and one on a narrow screen, the whole card its link: its cover where it names one, its photo engraved small (`/cover/<name>-600.png`, its lines drawn for a card's size, as a portrait's are, so they never beat into moiré) and cut into the brand's cells round its focus, in a box three wide to two tall so a row's words start level, and tight under it, at its left edge, its date, title and summary, so cover and words read as one. A post's ink is its own `ink`, or else its place in the order the posts were published, oldest first, in the five inks' turn (`postInk` in `src/lib/place.ts`), so it never changes as posts follow it, no two posts in a row share one, and the post's own page wears the same |
+| `/blog/` | `src/pages/blog/index.astro` | what the `blog` page's file places, then the posts newest first, one to a row, the whole card its link: where it names a cover, an avatar ([figures](#figures)) of its photo engraved small (`/cover/<name>-600.png`, its lines drawn for a card's size, as a portrait's are, so they never beat into moiré), its panel holding its date, title and summary, on the right and the left in turn, under the photo on a narrow screen; else its words alone. A post's ink is its own `ink`, or else its place in the order the posts were published, oldest first, in the five inks' turn (`postInk` in `src/lib/place.ts`), so it never changes as posts follow it, no two posts in a row share one, and the post's own page wears the same |
 | `/blog/<name>/` | `src/pages/blog/[post].astro` | one post: its title as the hero, its date over it and its summary under it, its authors, its body |
 
 Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:
@@ -293,6 +293,18 @@ its caption in the display face over the
 credit Unsplash asks for, a small spaced label: the `site` entry's photo
 credit, the photographer's name linked to their profile and "Unsplash"
 to the photo's page.
+
+An **avatar** (`src/components/Avatar.astro`, `src/lib/avatar.ts`) is a
+photo and its words as one figure: the engraving cut into a few of the
+brand's cells round its focus, and beside them, in the same diagram
+(the brand's `avatar`), one large cell, a raised surface washed with the
+photo's ink, holding its slot's words, so the panel meets the cells
+across the same gutter as they meet each other. Its panel stands on
+`side`, `right` unset, while the avatar is at least 34rem wide, and
+under the photo where it is narrower, by its own width, so it fits any
+column: the brand lays the panel on the right, and the avatar mirrors
+or turns the cells, never the photo. It is seeded by `seed`, so it is
+the same on every build.
 
 ## The forms
 

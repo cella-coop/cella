@@ -12,7 +12,7 @@ const key = 'cella-views'
 export class ViewsState {
   list: Custom[] = $state([])
   tallies: Record<string, number> = $state({})
-  // The View card's save form: open, and the name and icon it holds.
+  // The View panel's save form: open, and the name and icon it holds.
   naming = $state(false)
   name = $state('')
   icon = $state('bookmark')

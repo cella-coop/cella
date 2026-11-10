@@ -135,7 +135,11 @@ The theme is light, dark or the system's, a cookie the server writes into
   `models/place.ts` where a browser lacks it; as a menu it focuses its
   checked or first item and moves with the arrows, Home and End. Its
   trigger is named by what it shows, so a voice naming it reaches it,
-  and its `label`, which names the popover, describes the trigger. The ui
+  and its `label`, which names the popover, describes the trigger. Its
+  trigger fills its row, as in the sidebar, or reads as a quiet button
+  (`button`) or a chip (`chip`), as a condition on a collection's rows;
+  `open` opens it once drawn, as a condition just added opens to pick
+  its values. The ui
   check refuses a layer floated by hand (`position: absolute` with a
   `z-index`) anywhere else.
 - `Frame` (`PageFrame.svelte`): the one page frame, its header one
@@ -157,14 +161,24 @@ The theme is light, dark or the system's, a cookie the server writes into
   choice, so the server renders it. One tab per panel, the open one
   marked even when alone: a collection's View, an item's Details.
 - `Collection`: the one collection component, the same header, view bar
-  and rows for every collection, and a drawer holding one card, View
-  (`Viewing`): the text filter, the conditions on the rows (an
-  enumeration's values as chips, a date's month or year), the layout
-  (list · feed · table · gallery · board · calendar · dashboard, icon-only so
-  it fits) and, in a table, its columns, in a gallery or on a board, its
-  cards' fields and the board's grouping, in a calendar, the date it
-  places the items by, month or week, and its cards' fields, in a
-  dashboard, its widgets; and saving what is shown as a view. Its rows
+  and rows for every collection, and a drawer holding one panel, View
+  (`Viewing`), of one shape for every collection, as Linear's display
+  menu. At its top the layout, a segmented control of icons (list · feed ·
+  table · gallery · board · calendar · dashboard, those the
+  collection's fields allow), then the text filter, then the same rows
+  in the same order everywhere, each a label and a dropdown: Group by
+  (a board's columns, an enumeration; a calendar's date, and month or
+  week), Order by (the orders the collection's read offers, each a field
+  and its direction, most offering only their own) and Filter (a field to add
+  a condition on, the conditions under it as chips); then Display, a
+  row that opens a popover of what is shown (in a table, its columns, in
+  a gallery or on a board, its cards' fields, in a calendar, its cards'
+  fields, in a dashboard, its widgets); and last, saving what is shown
+  as a view. A row the layout has no use for is shown disabled, never
+  dropped, so the rows never move. What a collection offers lives only
+  inside the dropdowns and popovers: its fields are a dropdown's
+  options, and a condition's values (an enumeration's, a date's month
+  or year) are picked in a popover opened from its chip. Its rows
   are the server's, kept, filtered, ordered and paged in SQL, and only
   the lensed circle's where the member has a lens: a collection whose
   rows name no owning circle says under its header that the lens
@@ -430,7 +444,8 @@ and down arrow buttons that move things. The primitives:
 - `sortable(drag, { list, axis, label, onmove })`, an attachment on the
   list: its items carry `data-drag-item` and `data-drag-index`, each
   item's handle `data-drag-handle`. The pointer (mouse, touch, pen) lifts
-  past a few pixels, drags a floating preview, scrolls the list's
+  past a few pixels, drags a floating preview (inside a popover, in its
+  top layer, so it shows above it), scrolls the list's
   scroller near its edges and drops on release; Escape cancels. On a
   focused handle the keyboard lifts with Space (or Enter on a button),
   moves with the arrows, drops with Space or Enter, cancels with Escape,
@@ -439,7 +454,7 @@ and down arrow buttons that move things. The primitives:
 - `DragHandle` (a labelled grip) and `DropIndicator`, the one line where
   an item will land, from the tokens.
 
-Dashboard widgets, a table's columns in the View card, the viewer's own
+Dashboard widgets, a table's columns in the View panel's Display popover, the viewer's own
 view tabs, a document's blocks and a meeting's agenda reorder this way;
 `Popover`, `DragHandle`, `Ordered`, `sortable` and `useDrag` are
 exported for slices to compose.
@@ -464,7 +479,7 @@ rest as SQL aggregates over the collection's rows (`measures` in
 `Dashboard` draws, a line through every month from the first. `Dashboard` draws the results: figures as text, bars with their
 values beside them, a line with its months and values in a table for
 assistive technology and each month's tooltip. `Widgets`, in the View
-card, adds, edits, reorders and removes them.
+panel's Display popover, adds, edits, reorders and removes them.
 
 ## Accessibility
 

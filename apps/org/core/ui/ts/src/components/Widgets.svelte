@@ -12,7 +12,7 @@
   import DropIndicator from './DropIndicator.svelte'
   import Icon from './Icon.svelte'
 
-  // The dashboard's part of the View card: its widgets in order, each
+  // The dashboard's part of the View panel, its Display popover: its widgets in order, each
   // dragged into place, edited or removed, and a new one to add. A change
   // hands the whole list on, which the collection puts in the address;
   // null goes back to the defaults.

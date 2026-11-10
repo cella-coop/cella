@@ -57,6 +57,9 @@
 //   - never reads the clock or randomness, since guards read
 //     cella.verdict_date(), and has no DO block, which this check cannot
 //     see into;
+//   - never reads the role a session runs as, current_user and the rest,
+//     but reads whom it reads for by cella.reader(); core's circles alone
+//     read it, beside the notary;
 //   - writes and triggers on no table outside its own schema and cella.*:
 //     each such write or trigger its migrations leave standing is
 //     collected (`found.foreign`) and refused (writes.mjs).
@@ -209,10 +212,12 @@ function scope(o) {
 const NOTARY = 'notary'
 const privileged = (o) => o.kind === 'core' && o.lib === NOTARY
 
-// Core's circles, org's core library `circle`:the circles, roles,
+// Core's circles, org's core library `circle`: the circles, roles,
 // tenures, seats and mandates, which every feat and graft builds on and
-// whose ops each may guard, as groups are in standard RBAC.
+// whose ops each may guard, as groups are in standard RBAC. Beside the
+// notary, their SQL alone reads the role a session runs as.
 const CIRCLES = 'circle'
+const circles = (o) => o.kind === 'core' && !o.joins && o.lib === CIRCLES
 
 // The policy register, org's core library `policy`, which every slice
 // reads: its policies and their values, never their wording.
@@ -296,14 +301,16 @@ function inspect(tree, o, s, known, fail, found) {
       registersBy(n.FuncCall, o, fail, found)
     }
     // current_date, localtimestamp and the rest are the clock; current_user,
-    // session_user and the rest the role, which a slice never reads, and
-    // core's circles read to let a superuser's session past row-level
-    // security (circle.whole).
+    // session_user and the rest the role, which no slice and no other core
+    // library reads, and core's circles alone, beside the notary, read to
+    // let a superuser's session past row-level security (circle.whole).
     const svf = n.SQLValueFunction?.op.replace('SVFOP_', '').toLowerCase()
-    if (svf && /^(current_(date|time|timestamp)|local(time|timestamp))/.test(svf) && !privileged(o)) {
-      fail(`reads ${svf}: guards read cella.verdict_date(), never the clock`)
-    } else if (svf && o.kind !== 'core') {
-      fail(`reads ${svf}: a slice reads whom it reads for by cella.reader(), never the role`)
+    if (svf && /^(current_(date|time|timestamp)|local(time|timestamp))/.test(svf)) {
+      if (!privileged(o)) {
+        fail(`reads ${svf}: guards read cella.verdict_date(), never the clock`)
+      }
+    } else if (svf && !privileged(o) && !circles(o)) {
+      fail(`reads ${svf}: only core's circles read the role; a slice reads whom it reads for by cella.reader()`)
     }
     if (n.TypeCast && regtypes.has(strings(n.TypeCast.typeName?.names).at(-1))) {
       const name = n.TypeCast.arg?.A_Const?.sval?.sval ?? ''

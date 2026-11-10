@@ -1,6 +1,7 @@
 // The SQL check holds a core library's SQL to the rules a slice's keeps:
 // it creates and grants only in its own schema, named for it, never
-// reads the clock in a guard and never a policy's wording. The notary's
+// reads the clock in a guard and never a policy's wording, and only
+// core's circles read the role a session runs as. The notary's
 // SQL, which makes cella.* and the vault and stamps what it notarises,
 // is the one exemption. A core graft, joining core's feats, keeps the
 // same in its own schema, and puts the core feats it joins under the
@@ -18,9 +19,10 @@ CREATE TABLE policy.policy (id text PRIMARY KEY, kind text);
 CREATE TABLE policy.wording (policy text PRIMARY KEY REFERENCES policy.policy, legal text);`
 
 // Org's core with the register, the notary's SQL and one core library,
-// `ledger`, its package depending on the libraries named; or, given
-// `graft`, the SQL of core's graft joining the circles to the register.
-async function check(sql, { notary = '', uses = [], graft = '' } = {}) {
+// `ledger`, its package depending on the libraries named; given
+// `graft`, the SQL of core's graft joining the circles to the register;
+// given `circle`, the circles' SQL; and given `slice`, a feat's.
+async function check(sql, { notary = '', uses = [], graft = '', circle = '', slice = '' } = {}) {
   const repo = mkdtempSync(join(tmpdir(), 'cella-core-'))
   try {
     const write = (dir, file, text) => {
@@ -35,11 +37,17 @@ async function check(sql, { notary = '', uses = [], graft = '' } = {}) {
     write('apps/org/core/ledger/sql', '001.sql', `CREATE SCHEMA ledger;\n${sql}`)
     const dependencies = Object.fromEntries(uses.map((u) => [`@cella/org-${u}`, 'workspace:*']))
     write('apps/org/core/ledger/ts', 'package.json', JSON.stringify({ name: '@cella/org-ledger', dependencies }))
+    if (graft || circle) {
+      write('apps/org/core/circle/sql', '001.sql', `CREATE SCHEMA circle;\nCREATE FUNCTION circle.inside() RETURNS boolean LANGUAGE sql STABLE RETURN true;\n${circle}`)
+    }
+    if (slice) {
+      write('apps/org/feats/pricing', 'feat.toml', 'name = "pricing"\n')
+      write('apps/org/feats/pricing/core/sql', '001.sql', `CREATE SCHEMA pricing;\n${slice}`)
+    }
     if (graft) {
-      write('apps/org/core/circle/sql', '001.sql', 'CREATE SCHEMA circle;\nCREATE FUNCTION circle.inside() RETURNS boolean LANGUAGE sql STABLE RETURN true;')
       write('apps/org/core/grafts/circle-policy/sql', '001.sql', `CREATE SCHEMA circle_policy;\n${graft}`)
     }
-    return (await checkSql(repo, ['apps/org'], new Set(['cella', 'policy', 'ledger', 'circle', 'circle_policy']))).join('\n')
+    return (await checkSql(repo, ['apps/org'], new Set(['cella', 'policy', 'ledger', 'circle', 'circle_policy', 'pricing']))).join('\n')
   } finally {
     rmSync(repo, { recursive: true, force: true })
   }
@@ -76,6 +84,38 @@ test('a core library reading the clock in a guard is refused', async () => {
 LANGUAGE sql STABLE RETURN CASE WHEN day < ${expr} THEN 'past its day' END;`
   assert.match(await check(guard('now()::date')), /calls now\(\): guards read cella\.verdict_date\(\), never the clock/)
   assert.match(await check(guard('current_date')), /reads current_date: guards read cella\.verdict_date\(\), never the clock/)
+})
+
+// A function that lets a superuser's session past row-level security,
+// as circle.whole does, reading the role the session runs as.
+const whole = (schema, role = 'session_user') => `CREATE FUNCTION ${schema}.whole() RETURNS boolean
+LANGUAGE sql STABLE RETURN EXISTS (SELECT FROM pg_catalog.pg_roles r WHERE r.rolsuper AND r.rolname = ${role});`
+
+test('core\'s circles read the role a session runs as', async () => {
+  assert.equal(await check('', { circle: whole('circle') }), '')
+  assert.equal(await check('', { circle: whole('circle', 'current_user') }), '')
+})
+
+test('a core library other than the circles reading the role is refused', async () => {
+  assert.match(await check(whole('ledger')), /reads session_user: only core's circles read the role; a slice reads whom it reads for by cella\.reader\(\)/)
+  assert.match(await check(whole('ledger', 'current_user')), /reads current_user: only core's circles read the role/)
+})
+
+test('a core graft reading the role is refused', async () => {
+  assert.match(await check('', { graft: whole('circle_policy') }), /reads session_user: only core's circles read the role/)
+})
+
+test('a slice reading the role is refused', async () => {
+  assert.match(await check('', { slice: whole('pricing', 'current_role') }), /reads current_role: only core's circles read the role; a slice reads whom it reads for by cella\.reader\(\)/)
+})
+
+test('core\'s circles reading the clock in a guard are refused, as any slice is', async () => {
+  const guard = (expr) => `CREATE FUNCTION circle.lapsed(day date) RETURNS text
+LANGUAGE sql STABLE RETURN CASE WHEN day < ${expr} THEN 'the tenure has lapsed' END;`
+  assert.match(await check('', { circle: guard('now()::date') }), /calls now\(\): guards read cella\.verdict_date\(\), never the clock/)
+  const errors = await check('', { circle: guard('current_date') })
+  assert.match(errors, /reads current_date: guards read cella\.verdict_date\(\), never the clock/)
+  assert.doesNotMatch(errors, /only core's circles read the role/)
 })
 
 test('a core library reading a policy\'s wording is refused', async () => {
@@ -136,12 +176,12 @@ test('the register makes and reads its own wording', async () => {
   assert.equal(await check(''), '')
 })
 
-test('the notary\'s SQL creates in cella.* and the vault and reads the clock', async () => {
+test('the notary\'s SQL creates in cella.* and the vault and reads the clock and the role', async () => {
   const errors = await check('', {
     notary: `CREATE FUNCTION cella.line_amount(quantity numeric, price bigint) RETURNS bigint
 LANGUAGE sql IMMUTABLE RETURN round(quantity * price)::bigint;
 GRANT EXECUTE ON FUNCTION cella.line_amount(numeric, bigint) TO cella_app;
-CREATE TABLE vault.swept (day date DEFAULT current_date, at timestamptz DEFAULT now());`,
+CREATE TABLE vault.swept (day date DEFAULT current_date, at timestamptz DEFAULT now(), by text DEFAULT session_user);`,
   })
   assert.equal(errors, '')
 })

@@ -35,8 +35,14 @@ export const PORTRAIT = 480
 const PORTRAIT_BASE = 500
 const FACE = { clahe: 48, gamma: 1.8, light: 0.28 }
 
-type Kind = 'photo' | 'person'
-const DIRS: Record<Kind, string> = { photo: 'src/photos', person: 'src/people' }
+// A cover, a post's photo shown as a hint on the blog's index, is a
+// photo engraved small: its lines drawn for its own size, as a portrait's
+// are, so they stay lines at a thumbnail's size and never beat into moiré
+export const COVER = 600
+const COVER_BASE = 560
+
+type Kind = 'photo' | 'person' | 'cover'
+const DIRS: Record<Kind, string> = { photo: 'src/photos', person: 'src/people', cover: 'src/photos' }
 
 // A photo whose subject lives in its mid-tones, as an aerial forest or an
 // abstract does, engraves as even stripes; its sidecar may ask for a
@@ -65,6 +71,7 @@ const file = (name: string, kind: Kind = 'photo') => {
 // the version in the address, so a browser never shows a stale cut
 export const engravingUrl = (name: string) => `/engraving/${name}-${WIDTH}.png?v=${VERSION}`
 export const portraitUrl = (name: string) => `/portrait/${name}-${PORTRAIT}.png?v=${VERSION}`
+export const coverUrl = (name: string) => `/cover/${name}-${COVER}.png?v=${VERSION}`
 
 export const engravingKeys = () => photoNames().map((name) => ({ name, width: WIDTH }))
 
@@ -94,7 +101,7 @@ export async function engrave(name: string, width: number, kind: Kind = 'photo')
     return readFileSync(cached)
   }
   const face = kind === 'person'
-  const s = width / (face ? PORTRAIT_BASE : BASE)
+  const s = width / (face ? PORTRAIT_BASE : kind === 'cover' ? COVER_BASE : BASE)
   const pitch = PITCH * s
   let picture = sharp(readFileSync(file(name, kind)))
     .resize(face ? { width, height: width, fit: 'cover', position: 'attention' } : { width })

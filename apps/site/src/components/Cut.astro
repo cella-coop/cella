@@ -17,20 +17,22 @@ interface Props {
   tall?: number
   left?: number
   wide?: number
+  // the engraving to cut, the figure's unset (a cover's is engraved small)
+  src?: string
   id: string
   label?: string
   // which layout shows it, where a figure is cut twice (Engraving.astro)
   fit?: 'wide' | 'narrow'
 }
 
-const { photo, ink, cells, w, h, top = 0, tall = h, left = 0, wide = w, id, label, fit } = Astro.props
+const { photo, ink, cells, w, h, top = 0, tall = h, left = 0, wide = w, id, label, fit, src = engravingUrl(photo) } = Astro.props
 ---
 
 <svg class="cut" data-fit={fit} viewBox={`${left} ${top} ${wide} ${tall}`} role="img" aria-label={label} style={{ '--ink': `var(--print-${ink}-deep)` }}>
   <defs>
     <clipPath id={`${id}-c`}>{cells.map((d) => <path d={d} />)}</clipPath>
     <mask id={`${id}-m`} maskUnits="userSpaceOnUse" x="0" y="0" width={w} height={h}>
-      <image href={engravingUrl(photo)} width={w} height={h} preserveAspectRatio="xMidYMid slice" />
+      <image href={src} width={w} height={h} preserveAspectRatio="xMidYMid slice" />
     </mask>
   </defs>
   <g clip-path={`url(#${id}-c)`}>

@@ -1,13 +1,15 @@
 ---
 // The blog's index: what the blog page's file places, its hero first,
 // then every post newest first, its date, title and summary, and beside
-// them its cover where it names one: the photo engraved and cut into a
-// few large cells round its focus, a hint of the post at a glance, in the
-// post's own ink, the same here and on the post (postInk).
-import { cluster } from '@cella/brand'
+// them its cover where it names one: the photo engraved in one large cell,
+// as a person's portrait is, set over what the photo is about, so the
+// subject stays whole at the size of a hint, in the post's own ink, the
+// same here and on the post (postInk).
+import { cell } from '@cella/brand'
 import Cut from '../../components/Cut.astro'
 import { figures } from '../../components/figures'
 import Page from '../../layouts/Page.astro'
+import { coverUrl } from '../../lib/engrave'
 import { focusIn } from '../../lib/focus'
 import { postInk, seedOf } from '../../lib/place'
 import { dated, page, posts, siteData } from '../../lib/text'
@@ -16,15 +18,16 @@ const { Content, ...p } = await page('blog')
 const site = await siteData()
 const all = await posts()
 
-// a cover's cut: wider than tall, its cells larger than a figure's, so
-// they read at the size of a hint, its box trimmed to the cells all round
+// a cover's cell: the brand's, in its 100 units, as tall as the photo and
+// centred across it on the photo's leading region, kept inside the box,
+// the box then trimmed to the cell
 const [W, H] = [1000, 720]
-const bounds = (paths: string[]) => {
-  const nums = paths.flatMap((d) => (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number))
-  const xs = nums.filter((_, k) => k % 2 === 0)
-  const ys = nums.filter((_, k) => k % 2 === 1)
-  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)]
-  return { left: Math.floor(x0), wide: Math.ceil(x1 - x0), top: Math.floor(y0), tall: Math.ceil(y1 - y0) }
+const placed = (shape: string, cx: number, cy: number, size: number) => {
+  const x0 = Math.min(Math.max(cx - size / 2, 0), W - size)
+  const y0 = Math.min(Math.max(cy - size / 2, 0), H - size)
+  let k = 0
+  const d = shape.replace(/-?\d+(?:\.\d+)?/g, (n) => (((k++ % 2 ? y0 : x0) + (Number(n) * size) / 100)).toFixed(1))
+  return { d, box: { left: Math.floor(x0 + size * 0.1), wide: Math.ceil(size * 0.8), top: Math.floor(y0 + size * 0.1), tall: Math.ceil(size * 0.8) } }
 }
 const covers = await Promise.all(
   all.map(async (post) => {
@@ -33,8 +36,11 @@ const covers = await Promise.all(
       return undefined
     }
     const seed = seedOf(`blog/${post.id}`)
-    const cells = cluster(W, H, { pitch: 150, gutter: 16, round: 22, seed, drop: 0.12, focus: await focusIn(photo, W, H) })
-    return { photo, cells, box: bounds(cells), ink: await postInk(post.id), alt: post.data.alt ?? post.data.caption ?? post.data.title }
+    const lead = (await focusIn(photo, W, H)).sort((a, b) => b.r - a.r)[0] ?? { x: W / 2, y: H / 2, r: H / 4 }
+    // the photo's whole height, so its subject keeps its setting
+    const size = H
+    const { d, box } = placed(cell(seed), lead.x, lead.y, size)
+    return { photo, cells: [d], box, ink: await postInk(post.id), alt: post.data.alt ?? post.data.caption ?? post.data.title }
   }),
 )
 ---
@@ -57,7 +63,7 @@ const covers = await Promise.all(
                 </div>
                 {covers[i] && (
                   <div class="cover">
-                    <Cut photo={covers[i].photo} ink={covers[i].ink} cells={covers[i].cells} w={W} h={H} {...covers[i].box} id={`cover-${p.id}`} label={covers[i].alt} />
+                    <Cut photo={covers[i].photo} ink={covers[i].ink} cells={covers[i].cells} w={W} h={H} {...covers[i].box} src={coverUrl(covers[i].photo)} id={`cover-${p.id}`} label={covers[i].alt} />
                   </div>
                 )}
               </a>

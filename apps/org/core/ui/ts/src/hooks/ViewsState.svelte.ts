@@ -1,3 +1,4 @@
+import { onMount } from 'svelte'
 import { saved, type Custom, type Saved, type Spec } from '../models/query.ts'
 import { reorder } from '../models/drag.ts'
 
@@ -19,10 +20,11 @@ export class ViewsState {
   readonly #collection: () => string
 
   // `rows` is anything that changes when the rows do, such as how many
-  // the view keeps.
+  // the view keeps. Another collection is another component, and so
+  // another state, so the views are read once, as it mounts.
   constructor(collection: () => string, rows: () => unknown = () => null) {
     this.#collection = collection
-    $effect(() => {
+    onMount(() => {
       this.list = this.#read().views[this.#collection()] ?? []
     })
     $effect(() => {

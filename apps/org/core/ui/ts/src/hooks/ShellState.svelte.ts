@@ -1,3 +1,4 @@
+import { afterNavigate } from '$app/navigation'
 import type { Outcome } from '../models/outcome.ts'
 
 // The circle a member lenses the co-op on, from the co-op selector.
@@ -38,9 +39,10 @@ export class ShellState {
   }
 
   // Keeps `left` on the page the viewer is on while it is not a page of
-  // settings; called once, as the shell starts.
+  // settings, each time the viewer arrives on one; called once, as the
+  // shell starts.
   follow(path: () => string, away: () => boolean) {
-    $effect(() => {
+    afterNavigate(() => {
       if (!away()) {
         this.left = path()
       }

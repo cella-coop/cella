@@ -1,11 +1,14 @@
+import { onMount } from 'svelte'
+
 // What a comment quotes: the text last selected in the draft, inside one
 // block, as a quote's anchor is; the comment box's Quoting takes it, and
-// the member may still write over it.
+// the member may still write over it. The selection is the browser's, so
+// it is followed from the draft's mount.
 export class QuoteState {
   text = $state('')
 
   constructor() {
-    $effect(() => {
+    onMount(() => {
       const seen = () => {
         const s = document.getSelection()
         if (!s || s.isCollapsed || !s.anchorNode || !s.focusNode) {

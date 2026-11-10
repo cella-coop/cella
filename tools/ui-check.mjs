@@ -13,7 +13,11 @@
 //   module under `app/`, `hooks/` or `components/` imports a package's
 //   `api`, its `drivers`, `handlers` or `interfaces`, `@cella/*-db` or `pg`.
 // - Effects live in hooks too: `$effect` only in a hook's state class; a
-//   component derives, attaches or handles an event instead.
+//   component derives, attaches or handles an event instead. An effect
+//   writes no `$state` field of its class, which a `$derived` holds
+//   instead, or, where only the browser holds it, `onMount` or
+//   `afterNavigate` sets; the check sees the writes in the effect's own
+//   body, not those of a method it calls.
 // - Focus keeps its ring: no rule in a stylesheet or a <style> block sets
 //   `outline: none` without drawing `--focus` as its box-shadow, so
 //   whatever the keyboard reaches shows where it is.
@@ -43,7 +47,8 @@ const scripts = [
   [/\bcreateEventDispatcher\b/, 'createEventDispatcher', 'a callback prop'],
 ]
 const anywhere = [
-  [/\b(setContext|getContext|hasContext)\s*\(/, 'setContext and getContext', 'createContext in a hook'],
+  [/(?<![.\w$])(setContext|getContext|hasContext)\s*\(|import\s*\{[^}]*\b(setContext|getContext|hasContext)\b[^}]*\}\s*from\s*['"]svelte['"]/, 'setContext, getContext or hasContext', 'createContext in a hook'],
+  [/['"]svelte\/store['"]/, 'svelte/store', "$state in a hook's state class"],
   [/['"]\$app\/stores['"]/, '$app/stores', '$app/state'],
   [/['"]\$lib[/'"]/, '$lib', '#lib with the file extension'],
   [/['"]\$env\//, '$env', '$app/env, declared in src/env.ts'],
@@ -67,6 +72,28 @@ const legacy = (path, text) => {
   }
   found(anywhere, text)
   return out
+}
+
+// The `$state` fields of a state class that an `$effect` writes in its own
+// body, its teardown with it: `this.x = …`, `this.#x ??= …`, `this.x++`.
+const effected = (text) => {
+  const fields = new Set([...text.matchAll(/^\s*(#?[\w$]+)\s*(?::[^=\n]+)?=\s*\$state(?:\.raw)?\s*[(<]/gm)].map((m) => m[1]))
+  const written = new Set()
+  for (const m of text.matchAll(/\$effect(?:\.pre)?\s*\(/g)) {
+    let depth = 1
+    let end = m.index + m[0].length
+    for (; end < text.length && depth > 0; end++) {
+      depth += text[end] === '(' ? 1 : text[end] === ')' ? -1 : 0
+    }
+    const body = text.slice(m.index + m[0].length, end)
+    const writes = [...body.matchAll(/\bthis\.(#?[\w$]+)\s*(?:(?:[-+*/%&|^]|\*\*|<<|>>>?|&&|\|\||\?\?)?=(?!=)|\+\+|--)/g), ...body.matchAll(/(?:\+\+|--)\s*this\.(#?[\w$]+)/g)]
+    for (const [, name] of writes) {
+      if (fields.has(name)) {
+        written.add(name)
+      }
+    }
+  }
+  return [...written]
 }
 
 const imports = (text) => [...text.matchAll(/(?:from|import)\s*\(?\s*['"]([^'"]+)['"]/g)].map((m) => m[1])
@@ -124,6 +151,9 @@ export function problems(path, text, ui) {
   }
   if (/\$effect(\.pre)?\s*\(/.test(text) && !(path.endsWith('.svelte.ts') && /(^|\/)hooks\//.test(path))) {
     out.push(`${path}: runs an $effect; an effect lives in a hook's state class, and a component derives, attaches or handles an event`)
+  }
+  for (const field of effected(text)) {
+    out.push(`${path}: writes the $state field ${field} in an $effect; derive it with $derived, or set what only the browser holds in onMount or afterNavigate`)
   }
   out.push(...legacy(path, text))
   for (const selector of ringless(path, text)) {

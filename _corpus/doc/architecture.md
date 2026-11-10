@@ -1029,13 +1029,20 @@ top-level `let` or `var`; no `.svelte` file or module under `app/`,
 `hooks/` or `components/` imports a server layer: a package's `api`,
 `drivers`, `handlers` or `interfaces`, `@cella/*-db` or `pg`; `$effect`
 appears only in a state class, so a component derives, attaches
-(`{@attach}`) or handles an event instead; no source uses a legacy
+(`{@attach}`) or handles an event instead, and it writes no `$state`
+field, which a `$derived` holds instead, or `onMount` or `afterNavigate`
+sets where only the browser holds it, its storage or a live document
+(the check sees the effect's own body, not a method it calls); no
+source uses a legacy
 Svelte or SvelteKit form: `on:event`, `<slot>`, `use:`, `{@const}`,
-`$$props`, `export let`, `$:`, `createEventDispatcher`, string-keyed
-`setContext`/`getContext`, `$app/stores`, `$lib`, `$env` or
-`invalidateAll`, nor `{@html}`; and no rule of a stylesheet or a
-`<style>` sets `outline: none` without drawing `--focus` as its
-box-shadow.
+`$$props`, `export let`, `$:`, `createEventDispatcher`, `svelte/store`,
+`setContext`, `getContext` or `hasContext` with any key, context being
+made by `createContext` alone and reached through a `use<Name>` hook,
+`$app/stores`, `$lib`, `$env` or `invalidateAll`, nor `{@html}`; and no
+rule of a stylesheet or a `<style>` sets `outline: none` without drawing
+`--focus` as its box-shadow. Each refusal has a negative test in
+`tools/_tests/ui.test.mjs`, a source that holds the form and is refused
+by name.
 
 ## The shell
 

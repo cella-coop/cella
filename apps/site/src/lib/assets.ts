@@ -6,7 +6,7 @@ import sharp from 'sharp'
 
 export const PARTS = [
   { name: 'photos', icon: 'images' },
-  { name: 'clusters', icon: 'hexagon' },
+  { name: 'cutouts', icon: 'scissors' },
   { name: 'interest', icon: 'crosshair' },
   { name: 'diagrams', icon: 'flow-arrow' },
   { name: 'icons', icon: 'shapes' },

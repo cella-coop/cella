@@ -1,0 +1,94 @@
+---
+// Every photo of the library cut as the site cuts it (Engraving.astro):
+// its cells placed round its focus, as a section beside its words wears
+// it, 1.2 wide to 1 tall, and as a stacked figure on a narrow screen
+// wears it, 1.9 to 1, both bleeding right, in the five inks in turn. A
+// photo's seed is its name's, so a tile is the same on every reload.
+import { cluster } from '@cella/brand'
+import { photoNames } from '../../lib/assets'
+import { focusIn } from '../../lib/focus'
+import { seedOf } from '../../lib/place'
+import { STATUSES } from '../../schemas'
+import Cut from '../Cut.astro'
+
+const W = 1000
+const CUTS = [
+  { name: 'section', aspect: 1.2 },
+  { name: 'phone', aspect: 1.9 },
+]
+
+const photos = await Promise.all(
+  photoNames().map(async (photo, i) => {
+    const seed = seedOf(photo)
+    const cuts = await Promise.all(
+      CUTS.map(async (c) => {
+        const h = Math.round(W / c.aspect)
+        const focus = await focusIn(photo, W, h)
+        return { ...c, h, cells: cluster(W, h, { pitch: 115, gutter: 12, round: 16, seed, drop: 0.25, bleed: 'r', focus }) }
+      }),
+    )
+    return { photo, ink: STATUSES[i % STATUSES.length], cuts }
+  }),
+)
+---
+
+<ul class="photos" role="list">
+  {
+    photos.map(({ photo, ink, cuts }) => (
+      <li class="photo">
+        <h2>
+          <code>{photo}</code>
+        </h2>
+        <div class="cuts">
+          {cuts.map((c) => (
+            <figure class:list={['cut', c.name]}>
+              <Cut photo={photo} ink={ink} cells={c.cells} w={W} h={c.h} id={`co-${photo}-${c.name}`} label={photo} />
+              <figcaption>
+                <code>{c.name}</code>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .photos {
+    display: grid;
+    gap: 3rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  h2 {
+    margin: 0 0 1rem;
+    font-size: var(--t-lg);
+    font-weight: normal;
+  }
+
+  .cuts {
+    display: grid;
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    gap: 2rem;
+    align-items: end;
+  }
+
+  .cut {
+    margin: 0;
+  }
+
+  figcaption {
+    margin-top: 0.25rem;
+    color: var(--text-muted);
+    font-size: var(--t-sm);
+  }
+
+  @media (max-width: 40rem) {
+    .cuts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

@@ -9,6 +9,10 @@ import { createRequire } from 'node:module'
 const requireBrand = createRequire(new URL('../packages/brand/package.json', import.meta.url))
 const license = 'https://unsplash.com/license'
 const licence = 'Unsplash License'
+/** The widest a vendored photo is, in pixels: the width a figure's
+ * engraving is cut at, so no build reads more than it prints. */
+export const MAX_WIDTH = 1600
+const sharp = (input) => requireBrand('sharp')(input)
 
 export function photoUrl(input) {
   const url = new URL(input)
@@ -18,7 +22,7 @@ export function photoUrl(input) {
   return { page: `https://unsplash.com/photos/${parts[1]}`, id: parts[1] }
 }
 
-export function checkPhotos(dir) {
+export async function checkPhotos(dir) {
   if (!existsSync(dir)) return
   const files = readdirSync(dir)
   for (const file of files) {
@@ -32,7 +36,11 @@ export function checkPhotos(dir) {
     checkFocus(name, meta.focus)
     const profile = new URL(meta.photographerUrl)
     if (profile.protocol !== 'https:' || !['unsplash.com', 'www.unsplash.com'].includes(profile.hostname) || !/^\/\@[^/]+\/?$/.test(profile.pathname)) throw new Error(`${name}: invalid photographer profile`)
-    if (!readFileSync(join(dir, `${name}.jpg`)).length) throw new Error(`${name}: empty image`)
+    if (file.endsWith('.json')) continue
+    const image = readFileSync(join(dir, file))
+    if (!image.length) throw new Error(`${name}: empty image`)
+    const { width } = await sharp(image).metadata()
+    if (width > MAX_WIDTH) throw new Error(`${file} is ${width} px wide, above ${MAX_WIDTH}: vendor it again with \`cella site photo add\`, which bounds it`)
   }
 }
 
@@ -127,7 +135,7 @@ export async function add(input, site, named, { request = fetch, ask } = {}) {
   // Check credit before writing either file.
   if (!photographer || !/^https:\/\/(www\.)?unsplash\.com\/\@[^/]+\/?$/.test(profile)) throw new Error('name and Unsplash profile URL required')
   const data = Buffer.from(await (await get(request, image)).arrayBuffer())
-  const jpeg = await requireBrand('sharp')(data).jpeg({ quality: 88 }).toBuffer()
+  const jpeg = await sharp(data).resize({ width: MAX_WIDTH, withoutEnlargement: true }).jpeg({ quality: 88 }).toBuffer()
   mkdirSync(dir, { recursive: true })
   writeFileSync(join(dir, `${name}.jpg`), jpeg, { flag: 'wx' })
   writeFileSync(join(dir, `${name}.json`), JSON.stringify(meta, null, 2) + '\n', { flag: 'wx' })
@@ -138,7 +146,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const args = process.argv.slice(2)
   const usage = 'usage: site-photo.mjs [--check SITE | --site SITE [--name NAME] URL...]'
   try {
-    if (args[0] === '--check' && args[1]) checkPhotos(join(args[1], 'src/photos'))
+    if (args[0] === '--check' && args[1]) await checkPhotos(join(args[1], 'src/photos'))
     else if (args[0] === '--site' && args[1]) {
       const named = args[2] === '--name' ? args[3] : undefined
       const urls = args.slice(named ? 4 : 2)

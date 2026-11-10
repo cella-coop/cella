@@ -7,7 +7,7 @@ import { siteData } from '../lib/text'
 interface Props { name: string; alt: string; print?: PrintStyleName | 'none'; layout?: 'over' | 'beside' }
 const { name, alt, print = 'house', layout } = Astro.props
 if (layout && layout !== 'over' && layout !== 'beside') throw new Error(layout)
-const { meta, printed, masks, ratio, original } = await loadPhoto(name, print)
+const { meta, printed, plain, masks, ratio } = await loadPhoto(name, print)
 const site = await siteData()
 const { beforeName, between, afterUnsplash } = creditParts(site.photo.credit)
 const referral = (url: string) => { const u = new URL(url); u.searchParams.set('utm_source', 'cella'); u.searchParams.set('utm_medium', 'referral'); return u.href }
@@ -15,7 +15,7 @@ const referral = (url: string) => { const u = new URL(url); u.searchParams.set('
 
 <figure class="photo" data-layout={layout}>
   <div class="visual">
-    <div class="image">{printed ? <div class="cella-print" role="img" aria-label={alt} data-over={printed.over} style={ratio} set:html={masks} /> : <img src={original} alt={alt} loading="lazy" />}</div>
+    <div class="image">{printed ? <div class="cella-print" role="img" aria-label={alt} data-over={printed.over} style={ratio} set:html={masks} /> : <img src={plain!.src} alt={alt} width={plain!.width} height={plain!.height} loading="lazy" />}</div>
     {Astro.slots.has('default') && <div class="icons"><slot /></div>}
   </div>
   <figcaption>{beforeName}<a href={referral(meta.photographerUrl)}>{meta.photographer}</a>{between}<a href={referral(meta.photoUrl)}>{site.photo.unsplash}</a>{afterUnsplash}</figcaption>

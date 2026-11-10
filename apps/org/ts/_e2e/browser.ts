@@ -18,10 +18,17 @@ const entry = new URL('../build/index.js', import.meta.url).pathname
 // processes with chroot, and a turn on the box has a read-only home and a
 // syscall filter that refuses chroot. So it gets a home of its own under
 // the temporary directory, dropped when it closes, and no content sandbox,
-// as Playwright runs Chromium without its own.
+// as Playwright runs Chromium without its own. Its contexts share one
+// profile's form history, so what one scenario's person typed would be
+// offered under another's fields, and the open list takes the next click
+// to close itself; it keeps none, so each context starts as a fresh
+// browser does.
 async function firefoxLaunch(): Promise<Browser> {
   const home = mkdtempSync(join(tmpdir(), 'cella-firefox-'))
-  const browser = await firefox.launch({ env: { ...process.env, HOME: home, MOZ_DISABLE_CONTENT_SANDBOX: '1' } })
+  const browser = await firefox.launch({
+    env: { ...process.env, HOME: home, MOZ_DISABLE_CONTENT_SANDBOX: '1' },
+    firefoxUserPrefs: { 'browser.formfill.enable': false },
+  })
   browser.once('disconnected', () => rmSync(home, { recursive: true, force: true }))
   return browser
 }

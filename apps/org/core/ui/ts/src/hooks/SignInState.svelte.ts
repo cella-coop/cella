@@ -7,11 +7,13 @@ import { keep, kept, type Kept } from './kept.svelte.ts'
 // on the dev server, a fixture member's TEST-ONLY key derived here and
 // kept as this browser's own; and a key made here for a person to enrol
 // from a device they already hold. Signed in, the page loads afresh where
-// it was going, under the new session.
+// it was going, under the new session. Until this browser runs the page's
+// script, its buttons do nothing, so the page the server sends reads as
+// busy and a click waits for them.
 export class SignInState {
   devices = $state<Kept[]>([])
   problem = $state<string | null>(null)
-  busy = $state(false)
+  busy = $state(!browser)
   // The person and the device a key is made for, and the key once made,
   // for its person to enrol elsewhere.
   address = $state('')

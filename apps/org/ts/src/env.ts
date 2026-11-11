@@ -14,7 +14,7 @@ function whole(v: string, name: string): number {
 export const variables = defineEnvVars({
   CELLA_DEV: {
     description:
-      'Dev mode: "1" lets the sign-in page offer the fixture members, whose TEST-ONLY device keys the browser derives. `cella serve` sets it; `cella serve --prod` and nothing else must not.',
+      'Dev mode: "1" lets the sign-in page offer the fixture members, whose TEST-ONLY device keys the browser derives. `cella serve` and `cella preview serve` set it; `cella serve --prod` and nothing else must not.',
     schema: (v) => v === '1',
   },
   CELLA_SESSION_KEY_FILE: {

@@ -48,7 +48,8 @@ export function browsers(): [string, () => Promise<Browser>][] {
   return Object.entries(engines).filter(([name]) => wanted.includes(name))
 }
 
-const free = () =>
+// A port free on localhost now.
+export const free = () =>
   new Promise<number>((resolve) => {
     const s = createServer()
     s.listen(0, '127.0.0.1', () => {

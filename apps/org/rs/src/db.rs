@@ -134,6 +134,12 @@ impl<'a> Dev<'a> {
 
     pub fn start(&self, steps: &Steps) -> Result {
         let dir = ext_build(self.repo, steps)?;
+        self.load(steps, &dir)
+    }
+
+    /// Starts the cluster, or restarts it, on the extension packaged in
+    /// `dir`, as [`start`](Self::start) does once it has built it.
+    pub fn load(&self, steps: &Steps, dir: &Path) -> Result {
         let pg = self.pg();
         let data = self.repo.data();
         if !pg.exists() {
@@ -162,11 +168,8 @@ impl<'a> Dev<'a> {
         // TCP alone: every client connects to 127.0.0.1, and a socket in a deep
         // checkout's .data would pass the 107 bytes a socket's path may hold.
         let config = pg_config();
-        let share = staged(&dir, &Steps::read(Command::new(&config).arg("--sharedir"))?);
-        let lib = staged(
-            &dir,
-            &Steps::read(Command::new(&config).arg("--pkglibdir"))?,
-        );
+        let share = staged(dir, &Steps::read(Command::new(&config).arg("--sharedir"))?);
+        let lib = staged(dir, &Steps::read(Command::new(&config).arg("--pkglibdir"))?);
         let conf = format!(
             "port = {port}\n\
              listen_addresses = '127.0.0.1'\n\
@@ -264,7 +267,7 @@ pub fn run(repo: &Repo, steps: &Steps, command: Db) -> Result {
 /// its own install script. The directory is emptied
 /// first, so nothing an earlier build staged stays.
 pub fn ext_build(repo: &Repo, steps: &Steps) -> Result<PathBuf> {
-    let dir = repo.data().join("ext");
+    let dir = ext_dir(repo);
     if dir.exists() {
         fs::remove_dir_all(&dir).map_err(io(&dir))?;
     }
@@ -287,6 +290,11 @@ pub fn ext_build(repo: &Repo, steps: &Steps) -> Result<PathBuf> {
         }
     }
     Ok(dir)
+}
+
+/// Where `cella ext build` packages the extension and the dev cluster loads it.
+pub fn ext_dir(repo: &Repo) -> PathBuf {
+    repo.data().join("ext")
 }
 
 /// The `pg_config` pgrx builds against: the devshell's, else the one on PATH.

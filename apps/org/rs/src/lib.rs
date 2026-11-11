@@ -78,6 +78,7 @@ pub fn dispatch(command: Command, verbose: bool) -> Result {
             shell::serve(&Repo::find()?, &steps, port, prod, url.as_deref())
         }
         Command::Build => shell::build(&Repo::find()?, &steps),
+        Command::Preview { command } => shell::preview(&Repo::find()?, &steps, command),
         Command::Brand => check::brand(&Repo::find()?, &steps),
         Command::Site { command } => site::run(&Repo::find()?, &steps, command),
         Command::Test { only } => test::run(&Repo::find()?, &steps, only),

@@ -132,6 +132,12 @@ pub enum Command {
     /// Build the shell for production into apps/org/ts/build
     Build,
 
+    /// A preview of main for a host to serve behind a gate of its own: its build apart, served in dev mode on a fresh Lanterne
+    Preview {
+        #[command(subcommand)]
+        command: Preview,
+    },
+
     /// Write the brand's tokens, fonts, mark, wordmark and icons from packages/brand/house.json
     Brand,
 
@@ -397,5 +403,25 @@ pub enum Key {
         /// A vault key, 32 random bytes apart from the notary's, as cella.vault_key_file reads it
         #[arg(long)]
         vault: bool,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum Preview {
+    /// Build the extension and the shell, then copy the shell's build whole to a directory of its own, apart from a preview that runs
+    Build {
+        /// Where the copy goes, .data/preview/build unset
+        #[arg(long, value_name = "DIR")]
+        out: Option<PathBuf>,
+    },
+    /// Start or restart the cluster on the extension built, reset cella_preview to a fresh Lanterne, then serve the build on it in dev mode, its sign-in offering the fixture members, until stopped
+    Serve {
+        /// The port it listens on, on 127.0.0.1
+        #[arg(long, default_value_t = 4173)]
+        port: u16,
+
+        /// The directory `preview build` wrote, .data/preview/build unset
+        #[arg(long, value_name = "DIR")]
+        from: Option<PathBuf>,
     },
 }

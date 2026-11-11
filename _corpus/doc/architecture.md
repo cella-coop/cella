@@ -645,9 +645,12 @@ exemption, as the layer under every slice that writes the log: it
 writes the log and makes `cella.*` and the vault, the pure functions every slice calls
 beside its own among them, a document's line arithmetic
 (`cella.line_amount`, `cella.line_vat`), and stamps what it notarises
-from the clock. Core's circles read the role a session runs as, which
-a slice never does, to let a superuser's session past row-level
-security (`circle.whole`).
+from the clock. Beside the notary, only core's circles read the role a
+session runs as (`current_user`, `session_user` and the rest), to let a
+superuser's session past row-level security (`circle.whole`): `cella
+check feats` refuses that read in a slice's SQL and in every other core
+library's, and refuses the clock in the circles' as in any, each by a
+negative test in `tools/_tests/core.test.mjs`.
 
 Reading follows the mandates. Every record table is under row-level
 security for the app role, forced, by its owning circle

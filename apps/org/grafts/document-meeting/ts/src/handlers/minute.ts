@@ -1,7 +1,7 @@
 import type { Refused, Settled } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
 import { creating } from '@cella/org-document/api'
-import type { Fragment } from '@cella/org-document/models'
+import type { Fragment } from '@cella/org-body/models'
 import { meeting as read, minuting } from '@cella/org-meeting/api'
 import type { Minute, Minuted } from '../models/minutes.ts'
 

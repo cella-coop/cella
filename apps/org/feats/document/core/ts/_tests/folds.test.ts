@@ -9,8 +9,7 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { createDoc } from '../src/models/blocks.ts'
-import { paste } from '../src/models/edits.ts'
+import { createDoc, edits } from '@cella/org-body/models'
 
 const db = new pg.Client()
 const camille = 'camille@folded.example'
@@ -31,11 +30,11 @@ const refused = async (run: () => Promise<unknown>, reason: RegExp) => {
 // A draft of one paragraph, then a second, as two Loro updates, and a
 // snapshot of the whole, with the hash the database gives it.
 const doc = createDoc()
-paste(doc, undefined, 0, [{ type: 'paragraph', runs: [{ text: 'The co-op keeps its books open.' }], children: [] }])
+edits.paste(doc, undefined, 0, [{ type: 'paragraph', runs: [{ text: 'The co-op keeps its books open.' }], children: [] }])
 doc.commit()
 const opening = doc.export({ mode: 'update' })
 const from = doc.version()
-paste(doc, undefined, 1, [{ type: 'paragraph', runs: [{ text: 'Every member reads them.' }], children: [] }])
+edits.paste(doc, undefined, 1, [{ type: 'paragraph', runs: [{ text: 'Every member reads them.' }], children: [] }])
 doc.commit()
 const edit = doc.export({ mode: 'update', from })
 const snapshot = doc.export({ mode: 'snapshot' })

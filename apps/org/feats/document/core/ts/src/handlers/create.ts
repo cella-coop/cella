@@ -1,9 +1,7 @@
 import type { Outcome } from '@cella/org-actions'
 import { write, type Deps, type Write } from '@cella/org-db'
+import { canonical, createDoc, edits } from '@cella/org-body/models'
 import type { actions } from '../models/actions.ts'
-import { createDoc } from '../models/blocks.ts'
-import { canonical } from '../models/canonical.ts'
-import { paste } from '../models/edits.ts'
 import type { Create, Created } from '../models/document.ts'
 
 const op = 'document:document:create' satisfies keyof typeof actions
@@ -51,7 +49,7 @@ export const creating = (input: Create, author: string): Write<Created> => {
         return { document: id, receipt: null, digest: null }
       }
       const doc = createDoc()
-      paste(doc, undefined, 0, input.blocks)
+      edits.paste(doc, undefined, 0, input.blocks)
       doc.commit()
       canonical(doc)
       const { rows } = await tx.query<{ receipt: string; digest: string; n: string; update: string }>(

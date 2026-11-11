@@ -2,7 +2,7 @@
   import type { LoroDoc } from 'loro-crdt'
   import { Blocks, sortable, type Embeds } from '@cella/org-ui'
   import { useEditor } from '../hooks/useEditor.ts'
-  import type { Anchor } from '../models/document.ts'
+  import type { Anchor } from '../models/body.ts'
   import type { TreeID } from '../models/blocks.ts'
   import { atomic } from '../models/blocks.ts'
   import Block from './Block.svelte'

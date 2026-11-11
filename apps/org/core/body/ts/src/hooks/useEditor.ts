@@ -1,7 +1,7 @@
 import { createContext } from 'svelte'
 import type { LoroDoc } from 'loro-crdt'
 import { useDrag, type Embeds } from '@cella/org-ui'
-import type { Anchor } from '../models/document.ts'
+import type { Anchor } from '../models/body.ts'
 import { EditorState } from './EditorState.svelte.ts'
 
 const [get, set, has] = createContext<EditorState>()

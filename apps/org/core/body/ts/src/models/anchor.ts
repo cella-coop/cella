@@ -1,6 +1,6 @@
 import type { LoroDoc } from 'loro-crdt'
 import { atomic, kind, order, text } from './blocks.ts'
-import { b64, type Anchor } from './document.ts'
+import { b64, type Anchor } from './body.ts'
 
 // Where a quote sits in a document: the first block in reading order
 // whose text holds it, and Loro cursors at its two ends, which name the

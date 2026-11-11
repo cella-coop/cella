@@ -1,6 +1,5 @@
-import { VersionVector } from 'loro-crdt'
 import type { Stream } from '@cella/org-db'
-import { b64, type Relayed } from '../models/document.ts'
+import { b64, since, type Relayed } from '@cella/org-body/models'
 import { merged } from '../handlers/loro.ts'
 
 // The live relay: each settled edit is published to the streams open on
@@ -61,10 +60,8 @@ export const live: Stream = ({ using, id, url, signal }) => {
           // the client closed it already
         }
       })
-      const vv = url.searchParams.get('vv')
       const doc = await using((db) => merged(db, id))
-      const from = vv ? VersionVector.decode(b64.decode(vv)) : undefined
-      const update = doc.export({ mode: 'update', from })
+      const update = since(doc, url.searchParams.get('vv'))
       c.enqueue(event({ receipt: 0, update: b64.encode(update) }))
     },
     cancel() {

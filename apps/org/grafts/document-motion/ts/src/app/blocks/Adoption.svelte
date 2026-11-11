@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Properties, Section, short, type Embed } from '@cella/org-ui'
-  import { Reader } from '@cella/org-document/app'
+  import { Reader } from '@cella/org-body/app'
   import type { OnMotion } from '../../models/adoption.ts'
   import { Card } from '@cella/org-motion/app'
 

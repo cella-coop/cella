@@ -1,5 +1,5 @@
 import type { Summary } from '@cella/org-motion/models'
-import type { Canon } from '@cella/org-document/models'
+import type { Canon } from '@cella/org-body/models'
 
 // A document a motion asks to adopt, named by its canonical hash, the
 // version the proposer read it in, and the day it was adopted, once it

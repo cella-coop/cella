@@ -1,8 +1,7 @@
 import { onMount, untrack } from 'svelte'
-import type { LoroDoc } from 'loro-crdt'
-import { createDoc } from '../models/blocks.ts'
-import { b64, type Page } from '../models/document.ts'
-import { SyncState } from './SyncState.svelte.ts'
+import { b64, createDoc, type LoroDoc } from '@cella/org-body/models'
+import { SyncState } from '@cella/org-body/app'
+import type { Page } from '../models/document.ts'
 
 // A document's draft in the browser: a Loro document made from the page's
 // snapshot as the draft mounts, kept live by its sync until it unmounts.
@@ -20,7 +19,8 @@ export class DraftState {
     onMount(() => {
       const doc = createDoc()
       doc.import(b64.decode(this.#page().snapshot))
-      const sync = new SyncState(doc, () => `/documents/${encodeURIComponent(this.#page().id)}`)
+      const at = () => `/documents/${encodeURIComponent(this.#page().id)}`
+      const sync = new SyncState(doc, { live: () => `${at()}/live`, edit: () => `${at()}?/edit` })
       const stop = sync.start()
       this.doc = doc
       this.sync = sync

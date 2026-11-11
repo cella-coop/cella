@@ -36,8 +36,10 @@ A node is a directory with a `feat.toml`. It holds:
   build on, one package each (`core/<lib>/rs`, `core/<lib>/ts`). The app's
   core is its shared layer, of two kinds. Its **libraries** own no schema:
   `actions` (labels, permissions, outcomes), `crypto`, `log`, `keystore`,
-  `guards` (the pure guard primitives), `notary` (the `cella` Postgres
-  extension over them), `db` (an action's transaction), `sign` (a device's
+  `guards` (the pure guard primitives), `body` (a record's free-form
+  content as a Loro tree of blocks, and the block editor,
+  [body](../../apps/org/core/body/index.md)), `notary` (the `cella`
+  Postgres extension over them), `db` (an action's transaction), `sign` (a device's
   signature on an action), `vat` (a document's lines, their amounts and
   VAT, which invoices and bills share), `pdf`, `ui` (the shell's tokens
   and components) and later `auth`. Its **core feats** each own a schema,

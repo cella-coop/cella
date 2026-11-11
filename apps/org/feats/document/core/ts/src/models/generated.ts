@@ -1,4 +1,4 @@
-import type { Fragment } from './edits.ts'
+import type { Fragment } from '@cella/org-body/models'
 
 // A policy as a generated document reads it: its kind, and its legal
 // wording as it reads.

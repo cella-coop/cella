@@ -1,9 +1,8 @@
 import type { Outcome } from '@cella/org-actions'
 import { write, type Deps, type Write } from '@cella/org-db'
 import { departures, inOrder } from '@cella/org-policy'
+import { edits, type Fragment } from '@cella/org-body/models'
 import type { actions } from '../models/actions.ts'
-import type { Fragment } from '../models/edits.ts'
-import { patch } from '../models/edits.ts'
 import { fill } from '../models/generated.ts'
 import type { Frontier, Generate, Generated } from '../models/document.ts'
 import { merged, snapshot } from './loro.ts'
@@ -49,7 +48,7 @@ export const generating = (input: Generate, author: string): Write<Generated> =>
       const policies = await inOrder(tx, g.circle, day)
       const doc = await merged(tx, input.document)
       const from = doc.version()
-      patch(doc, undefined, fill(g.template, policies, await departures(tx, g.circle, day)))
+      edits.patch(doc, undefined, fill(g.template, policies, await departures(tx, g.circle, day)))
       doc.commit()
       const update = doc.export({ mode: 'update', from })
       let appended: { n: string; update: string } | undefined

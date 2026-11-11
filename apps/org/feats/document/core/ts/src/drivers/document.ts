@@ -1,8 +1,7 @@
 import type { Db, Read } from '@cella/org-db'
-import { b64, type Listed, type Note, type Page, type Shown, type Update, type Version } from '../models/document.ts'
-import type { Canon } from '../models/canonical.ts'
+import { b64, canonical, hash, type Canon } from '@cella/org-body/models'
+import type { Listed, Note, Page, Shown, Update, Version } from '../models/document.ts'
 import { merged } from '../handlers/loro.ts'
-import { canonical, hash } from '../models/canonical.ts'
 
 const listed = (adopted: string) => `SELECT d.id, d.title, d.circle, (SELECT count(*)::int FROM document.version v WHERE v.document = d.id) AS versions,
   ${adopted} AS adopted, (SELECT to_char(max(at), 'YYYY-MM-DD') FROM document.update u WHERE u.document = d.id) AS edited

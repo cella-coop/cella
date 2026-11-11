@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Button, Form, Note, Section, type Embeds } from '@cella/org-ui'
-  import { Reader } from '@cella/org-document/app'
+  import { Reader } from '@cella/org-body/app'
   import type { OnMeeting } from '../../models/minutes.ts'
 
   // A meeting's minutes, a document written in the block editor: read

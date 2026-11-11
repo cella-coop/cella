@@ -7,6 +7,7 @@
     "./app": "./src/app/index.ts"
   },
   "dependencies": {
+    "@cella/org-body": "workspace:*",
     "@cella/org-db": "workspace:*",
     "@cella/org-actions": "workspace:*",
     "@cella/org-ui": "workspace:*",

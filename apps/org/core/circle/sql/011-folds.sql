@@ -99,18 +99,8 @@ BEGIN
 END
 $$;
 
--- circle:circle:message has no handler, so no entry of it can be logged:
--- one that is folds by refusing, never by changing nothing.
-CREATE FUNCTION circle.fold_message(entry jsonb) RETURNS void
-LANGUAGE plpgsql AS $$
-BEGIN
-  RAISE EXCEPTION 'circle: entry % is a message, which no handler writes, so no fold applies it', entry ->> 'n';
-END
-$$;
-
 SELECT cella.lets_fold('circle:circle:create', 1, 'circle.fold_create(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:circle:amend', 1, 'circle.fold_amend(jsonb)', 'circle');
-SELECT cella.lets_fold('circle:circle:message', 1, 'circle.fold_message(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:seat:add', 1, 'circle.fold_seat_add(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:seat:remove', 1, 'circle.fold_seat_remove(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:role:seat', 1, 'circle.fold_role_seat(jsonb)', 'circle');

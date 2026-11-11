@@ -1,6 +1,6 @@
 +++
 title = "Membership"
-updated = 2026-11-09
+updated = 2026-11-10
 +++
 
 A person's membership, from invited to exited, with the shares they hold.
@@ -277,9 +277,6 @@ the shell, `membership/seats`, is `api/seats.ts` and `app/seats.ts`.
   `motion.cites`, a collective mandate's, gets no such guard. No slice
   checks a scope again: a project's, a month's and a meeting's circle
   are read here, from the payload their writes name.
-- `membership.sits`, on `circle:circle:message` (`011-sits.sql`): the
-  actor holds a seat that counts in the circle on the verdict date,
-  where the participant's `discuss` is held.
 
 Lanterne: Camille holds the manager role by a tenure from 20 June 2024
 until 20 June 2028, and acts alone under its mandates while it runs.

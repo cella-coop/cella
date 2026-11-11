@@ -1,4 +1,4 @@
-import { confluent, ordered, type Actions } from '@cella/org-actions'
+import { ordered, type Actions } from '@cella/org-actions'
 
 // A mandate has no action of its own: it is granted and revoked as its
 // policy is adopted and ended, the motion feat's actions, which the motion
@@ -12,8 +12,6 @@ export const actions = {
   // ordered, since the procedure it sets decides the motions put to the
   // circle after it
   'circle:circle:amend': ordered({ power: 'amend-circle' }),
-  // the circle's channel, for those seated in it
-  'circle:circle:message': confluent({ power: 'discuss' }),
   // who holds which role; a seat is given by the motion it cites, such
   // as the admission that seats a new member in the assembly
   'circle:seat:add': ordered({ power: 'seat-member' }),

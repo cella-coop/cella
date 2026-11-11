@@ -14,8 +14,8 @@ use cella_guards::sign::{self, Request};
 use pgrx::prelude::*;
 use pgrx::spi::SpiClient;
 use pgrx::{
-    JsonB, PgSubXactCallbackEvent, PgXactCallbackEvent, register_subxact_callback,
-    register_xact_callback,
+    JsonB, PgMemoryContexts, PgSubXactCallbackEvent, PgXactCallbackEvent,
+    register_subxact_callback, register_xact_callback,
 };
 use serde_json::{Value, json};
 use std::cell::RefCell;
@@ -1098,9 +1098,9 @@ fn signers(c: &SpiClient<'_>) -> Vec<Signer> {
 }
 
 /// How many entries `verify_log` reads at a time. Each page is read in an
-/// SPI connection of its own, which frees what it read before the next, so
-/// a verification holds one page and the chain's last write, whatever the
-/// log's length.
+/// SPI connection of its own, its rows in a child of SPI's context, which
+/// frees what it read before the next, so a verification holds one page
+/// and the chain's last write, whatever the log's length.
 const PAGE: i64 = 10_000;
 
 pub fn verify_log() -> bool {
@@ -1167,6 +1167,17 @@ pub fn verify_after(after: i64) -> bool {
                 None,
                 &[at.into(), PAGE.into()],
             ));
+            // pgrx copies each value a row gives into the parent of the
+            // context it is read in. Read in SPI's own, that parent is the
+            // transaction's, which keeps every page's values until the call
+            // ends; read in a child of SPI's, it is SPI's, which frees them
+            // with the page.
+            let mut page = PgMemoryContexts::new("cella verify_log page");
+            // SAFETY: the page's context is a child of SPI's, made current
+            // until it drops at the end of this closure, on every path out of
+            // it, which makes SPI's current again before it frees the page:
+            // nothing read in it outlives its row, each value copied into Rust.
+            unsafe { page.set_as_current() };
             let mut count = 0;
             for row in rows {
                 count += 1;

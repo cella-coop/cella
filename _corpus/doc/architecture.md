@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-11-10
+updated = 2026-11-11
 +++
 
 # Architecture
@@ -425,8 +425,15 @@ notary's, since a slice and a core library register there from their
 migrations alone, and so is a call of `cella.begin`, `cella.submit` or
 `cella.follow` in every package but `@cella/org-db`, read from the
 literal's parse tree, or its tokens where it does not parse whole, so
-the name in prose or a message is no call. The check refuses every
-such write, trigger and call; there are no exceptions, the last of those
+the name in prose or a message is no call. The shell's TypeScript,
+`@cella/org`'s `src`, is read the same way: the shell owns no schema
+and writes no SQL, so every write and trigger found there is refused,
+of a slice's table or of `cella.*`, and so is every call of the
+notary's functions; its tests aside, as every package's are, and its
+`_e2e` scenarios, which write as a superuser to prove a refusal. A
+negative test in `tools/_tests/writes.test.mjs` puts a `cella.submit`
+and an `INSERT INTO cella.entry` in the shell's `src` and sees each
+refused. The check refuses every such write, trigger and call; there are no exceptions, the last of those
 that predated the rule having moved to their owners' registers and
 published writes. A write no tool can see is left to review: SQL built
 at run time (`EXECUTE`, or a statement whose verb or table is itself
@@ -1707,8 +1714,8 @@ superuser's ([trust](trust.md#one-server)). `write` in `@cella/org-db`
 begins, writes and submits, and a handler writes through it alone:
 `cella check feats` refuses a call of `cella.begin`, `cella.submit` or
 `cella.follow` in the TypeScript of any package but `@cella/org-db`,
-and a write of `cella.*` in any but the notary's
-([writes stay home](#writes-stay-home)).
+and a write of `cella.*` in any but the notary's, the shell's among
+them ([writes stay home](#writes-stay-home)).
 
 ### Folds
 

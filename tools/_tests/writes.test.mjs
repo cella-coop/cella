@@ -409,3 +409,17 @@ test('a handler that calls cella.begin, cella.submit or cella.follow itself is r
   const db = await scanned('apps/org/core/db/ts', 'db', 'db', lines, { writer: true })
   assert.deepEqual(db.what, [])
 })
+
+test('the shell\'s TypeScript that writes a table or calls the notary is refused: it owns no schema', async () => {
+  const lines = [
+    'await db.query(\'SELECT verdict FROM cella.submit($1, $2, $3, $4)\', [op, payload, actor, signed])',
+    'await db.query(`INSERT INTO cella.entry (n) VALUES ($1)`)',
+    'await db.query(`UPDATE invoice.invoice SET due = $1`)',
+    'const reason = "a handler writes through write, which calls cella.submit"',
+  ]
+  const shell = await scanned('apps/org/ts', '@cella/org', null, lines)
+  assert.deepEqual(shell.what, ['src/handler.ts calls cella.submit', 'src/handler.ts writes cella.entry', 'src/handler.ts writes invoice.invoice'])
+  assert.match(shell.refused[1], /@cella\/org src\/handler\.ts writes cella\.entry, the notary's: only the notary writes cella\.\*/)
+  assert.match(shell.refused[2], /@cella\/org src\/handler\.ts writes invoice\.invoice: the shell owns no schema and writes no SQL/)
+  assert.match(shell.refused[0], /@cella\/org src\/handler\.ts calls cella\.submit, which only write in @cella\/org-db calls/)
+})

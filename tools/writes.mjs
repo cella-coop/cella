@@ -187,11 +187,12 @@ const sources = (dir) => {
   return out
 }
 
-// Each foreign write or trigger in the TypeScript of a slice's or a core
-// library's package, and each call of the notary's write functions: `own`
-// is its schema. Only the notary writes `cella.*` (`notary`), and only
-// `@cella/org-db`, whose `write` is the one path a handler writes by,
-// calls `cella.begin`, `cella.submit` or `cella.follow` (`writer`).
+// Each foreign write or trigger in the TypeScript of a slice's, a core
+// library's or the shell's package, and each call of the notary's write
+// functions: `own` is its schema, null for the shell's, which owns none.
+// Only the notary writes `cella.*` (`notary`), and only `@cella/org-db`,
+// whose `write` is the one path a handler writes by, calls `cella.begin`,
+// `cella.submit` or `cella.follow` (`writer`).
 export async function scanTs(repo, dir, owner, own, { notary = false, writer = false } = {}) {
   await pg.loadModule?.()
   const out = []
@@ -214,7 +215,7 @@ export async function scanTs(repo, dir, owner, own, { notary = false, writer = f
         if (schema === 'cella' && !notary) {
           out.push({ owner, what: `${where} ${verb} cella.${relation.relname}`, path: at, rule: 'log' })
         } else if (schema && schema !== own && schema !== 'cella') {
-          out.push({ owner, what: `${where} ${verb} ${schema}.${relation.relname}`, path: at })
+          out.push({ owner, what: `${where} ${verb} ${schema}.${relation.relname}`, path: at, rule: own ? undefined : 'shell' })
         }
       }
       for (const fn of writer ? [] : calls(tree, sql)) {
@@ -268,5 +269,7 @@ export function refuse(found) {
       ? `${f.path}: ${f.owner} ${f.what}, the notary's: only the notary writes cella.*, and a slice or a core library registers there from its migrations alone`
       : f.rule === 'write'
         ? `${f.path}: ${f.owner} ${f.what}, which only write in @cella/org-db calls: a handler writes through write`
-        : `${f.path}: ${f.owner} ${f.what}, a table it does not own: a slice writes only its own schema, and changes a feat only by calling that feat's published write`)
+        : f.rule === 'shell'
+          ? `${f.path}: ${f.owner} ${f.what}: the shell owns no schema and writes no SQL; it changes a feat by calling that feat's published write`
+          : `${f.path}: ${f.owner} ${f.what}, a table it does not own: a slice writes only its own schema, and changes a feat only by calling that feat's published write`)
 }

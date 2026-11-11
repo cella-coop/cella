@@ -410,10 +410,10 @@ if (sql) {
   }
   const found = { powers: [], guards: [], cites: [], stances: [], personal: [], impersonal: [], columns: [], foreign: [], follows: [] }
   errors.push(...placed(repo, apps), ...await checkSql(repo, apps, known, found), ...undeclared(found), ...unowned(found), ...unread(found), ...definers(found), ...unshared(found))
-  // What a feat's, a graft's or a core library's TypeScript writes
-  // outside its own schema, refused with what its SQL does there; what it
-  // writes in cella.*, but the notary's; and a call of the notary's write
-  // functions, but @cella/org-db's.
+  // What a feat's, a graft's, a core library's or the shell's TypeScript
+  // writes outside its own schema, refused with what its SQL does there;
+  // what it writes in cella.*, but the notary's; and a call of the
+  // notary's write functions, but @cella/org-db's.
   for (const [name, dir] of byName) {
     const p = place(dir)
     const writer = name === '@cella/org-db'
@@ -424,6 +424,10 @@ if (sql) {
     } else if (p?.kind === 'core') {
       const lib = basename(dirname(dir)) === 'core' ? basename(p.node) : basename(dirname(dir))
       found.foreign.push(...await scanTs(repo, dir, lib, schemaName(lib), { notary: lib === 'notary', writer }))
+    } else if (p?.kind === 'root') {
+      // The shell owns no schema and writes no SQL: every write in its
+      // src is refused, of a slice's table or of cella.*.
+      found.foreign.push(...await scanTs(repo, dir, name, null))
     }
   }
   errors.push(...refuse(found.foreign))

@@ -97,11 +97,11 @@ test('every worker has a contract, the members who work and Inès, who is employ
 test('Inès, seated in Web and no member, logs her own time and books it to a Web project, none before her hire; the assembly seats no one who is no member', async () => {
   assert.deepEqual(await all('SELECT circle, role FROM circle.seat WHERE member = $1 AND until IS NULL', [ines]), [{ circle: 'web', role: null }])
   const counts = await all<{ circle: string; counts: boolean }>(
-    `SELECT c.id AS circle, membership.counts($1, c.id, '2026-10-24') AS counts FROM circle.circle c WHERE c.id IN ('ag', 'web') ORDER BY c.id`,
+    `SELECT c.id AS circle, circle_person.counts($1, c.id, '2026-10-24') AS counts FROM circle.circle c WHERE c.id IN ('ag', 'web') ORDER BY c.id`,
     [ines],
   )
   assert.deepEqual(counts, [{ circle: 'ag', counts: false }, { circle: 'web', counts: true }], 'her seat counts in Web; one in the assembly would not')
-  assert.equal((await one<{ may: boolean }>(`SELECT membership.may($1, 'discuss', NULL, NULL, '2026-10-24') AS may`, [ines])).may, true, 'she holds Web\'s participant mandates')
+  assert.equal((await one<{ may: boolean }>(`SELECT circle_person.may($1, 'discuss', NULL, NULL, '2026-10-24') AS may`, [ines])).may, true, 'she holds Web\'s participant mandates')
   const logged = settled(await log({ member: ines, day: '2026-10-24', minutes: 120, billable: false, note: 'Release notes' }, as(ines)))
   assert.equal(logged.minutes, 120)
   const booked = settled(await book({ member: ines, day: '2026-10-24', minutes: 60, billable: true, project: 'halles-shop' }, as(ines)))
@@ -144,10 +144,10 @@ test('Inès, employed and no member, keeps her profile and devices, logs her tim
   for (const [out, op] of [[enrolled, 'person:device:enrol'], [logged, 'timesheet:entry:log'], [submitted, 'expense:expense:submit']] as const) {
     const entry = await by((out as { entry: number }).entry)
     assert.equal(entry.op, op)
-    assert.ok(entry.owners.includes('membership'), `${op} is judged by the rights' guard`)
+    assert.ok(entry.owners.includes('circle-person'), `${op} is judged by the rights' guard`)
   }
   // A member's right is not hers until she is admitted.
-  assert.equal((await one<{ may: boolean }>(`SELECT membership.entitled($1, 'draw-account', NULL, '2026-10-24') AS may`, [ines])).may, false)
+  assert.equal((await one<{ may: boolean }>(`SELECT circle_person.entitled($1, 'draw-account', NULL, '2026-10-24') AS may`, [ines])).may, false)
   // Paul left on 30 November 2025: he is still a person, but no longer an
   // employee, so the laptop he kept logs no time of his.
   const paul = 'paul@lanterne.example'
@@ -160,7 +160,7 @@ test('Inès, employed and no member, keeps her profile and devices, logs her tim
   assert.equal(late.state, 'refused')
   assert.match(reason(late), /the actor holds no mandate for log-time/)
   const held = await all<{ day: string; may: boolean }>(
-    `SELECT d::text AS day, membership.entitled($1, 'log-time', NULL, d) AS may FROM unnest(ARRAY['2025-11-28', '2025-12-01']::date[]) d ORDER BY d`,
+    `SELECT d::text AS day, circle_person.entitled($1, 'log-time', NULL, d) AS may FROM unnest(ARRAY['2025-11-28', '2025-12-01']::date[]) d ORDER BY d`,
     [paul],
   )
   assert.deepEqual(held, [{ day: '2025-11-28', may: true }, { day: '2025-12-01', may: false }])
@@ -208,9 +208,9 @@ test('a hire needs the manager\'s power and carries a first device; Camille hire
   })
   const ahead = await log({ member: bastien, day: '2026-10-24', minutes: 60, billable: false }, as(bastien))
   // An employee's right is held from the first day of the contract; the
-  // first guard by owner to refuse speaks, employment-timesheet's before the
-  // membership feat's.
-  assert.match(reason(ahead), /bastien@lanterne\.example is not employed on 2026-10-24/)
+  // first guard by owner to refuse speaks, core's guard on every power,
+  // owned by circle-person, before employment-timesheet's.
+  assert.match(reason(ahead), /the actor holds no mandate for log-time/)
 })
 
 test('Inès\'s member page lists what joining asks of her and reads back what she would own and decide', async () => {
@@ -257,8 +257,8 @@ test('a member\'s page lists every mandate may grants them: Inès\'s the partici
   // For every person and power, may answers on the day exactly where
   // holds lists a mandate for the power.
   const asked = await all<{ address: string; power: string; may: boolean; holds: boolean }>(
-    `SELECT p.address, w.power, membership.may(p.address, w.power, NULL, NULL, '2026-10-24') AS may,
-       EXISTS (SELECT FROM membership.holds(p.address, '2026-10-24') h JOIN circle.mandate m ON m.id = h.mandate WHERE m.power = w.power) AS holds
+    `SELECT p.address, w.power, circle_person.may(p.address, w.power, NULL, NULL, '2026-10-24') AS may,
+       EXISTS (SELECT FROM circle_person.holds(p.address, '2026-10-24') h JOIN circle.mandate m ON m.id = h.mandate WHERE m.power = w.power) AS holds
      FROM person.person p CROSS JOIN (SELECT DISTINCT power FROM circle.mandate) w`,
   )
   assert.deepEqual(asked.filter((a) => a.may !== a.holds), [])
@@ -371,7 +371,7 @@ test('a year on, Bastien applies by his right: his candidacy opens, and the moti
     [bastien],
   )
   assert.deepEqual({ ...motion, id: undefined }, { id: undefined, circle: 'ag', title: 'Admit Bastien Roux as a member', ballot: 'secret', deadline: '2027-11-16', shares: 20 })
-  const roll = await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion.id])
+  const roll = await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [motion.id])
   assert.ok(roll.length > 0 && !roll.some((r) => r.member === bastien), 'its roll is the assembly\'s seats, and not his')
   const entry = await one<{ op: string; actor: string }>(`SELECT op, actor FROM cella.log WHERE n = $1`, [applied.entry])
   assert.deepEqual(entry, { op: 'membership:member:apply', actor: bastien }, 'one write of his own, no motion proposed by anyone else')

@@ -1,6 +1,6 @@
 +++
 title = "Motion"
-updated = 2026-11-10
+updated = 2026-11-11
 +++
 
 How a circle acts as a whole: motions, proposed, voted on and closed, each carrying the actions it decides beyond its text, or none. A passed motion is a decision in plain speech; the code keeps no row and no name called decision. An outcome is computed from the signed votes, never claimed; each member's latest vote counts once. Each action a passed motion carries is an effect in the close's transaction, citing it, its actor whoever closed it, judged by its own guards, and what follows it, such as the capital a departure moves, is the reaction of the graft that knows it ([trust](../../../../_corpus/doc/trust.md#three-kinds-of-action)). A motion may adopt a policy, a sentence its circle binds itself by, which the register in org's core keeps ([policies](../../../../_corpus/doc/architecture.md#policies)).
@@ -16,7 +16,7 @@ How a circle acts as a whole: motions, proposed, voted on and closed, each carry
 | `POST /api/motion/adopt` | ordered | a policy its motion carries binds from its verdict |
 | `POST /api/motion/end` | ordered | a policy its motion ends binds no longer from its verdict |
 
-**adopt** and **end** need the motion they cite to have passed and to carry the policy or its end, a protected policy they replace or end to be changed by a motion decided by the procedure it names or a stricter one ([protected policies](#protected-policies)), and the motion's circle to hold a collective mandate for `adopt-policy` or `end-policy`, the powers this feat registers with them by `motion.register_cite`, to which `membership-motion` attaches its guard `carried` and this feat its guard `mandated` ([circles](#circles)). **propose** and **close** need the participant's power `propose`, and **post** its `discuss`, each held in the motion's circle: every circle has a participant role, which every seat in it holds there ([circle](../../core/circle/index.md#the-participant-role)); this feat registers the two in `cella.power`. **vote** needs `vote`, the power a motion's procedure gives the seats on its roll and no mandate grants, which this feat registers in `motion.stance_power`, and the stance being the actor's own. Seats and rolls are `membership-motion`'s, which registers the guards: `membership_motion.sits` on propose, close and post, holding the power to the motion's circle, `on_roll` on vote. Lanterne's assembly motions are put and closed by any of its ten members, by the participant's mandates the founding motion grants; coordination's by its five.
+**adopt** and **end** need the motion they cite to have passed and to carry the policy or its end, a protected policy they replace or end to be changed by a motion decided by the procedure it names or a stricter one ([protected policies](#protected-policies)), and the motion's circle to hold a collective mandate for `adopt-policy` or `end-policy`, the powers this feat registers with them by `motion.register_cite`, to which this feat attaches its guards `carried` and `mandated` ([circles](#circles)). **propose** and **close** need the participant's power `propose`, and **post** its `discuss`, each held in the motion's circle: every circle has a participant role, which every seat in it holds there ([circle](../../core/circle/index.md#the-participant-role)); this feat registers the two in `cella.power`. **vote** needs `vote`, the power a motion's procedure gives the seats on its roll and no mandate grants, which this feat registers in `motion.stance_power`, and the stance being the actor's own. Seats are core's and the roll this feat's, whose guards hold them: `motion.sits` on propose, close and post, holding the power to the motion's circle, `motion.on_roll` on vote ([the roll](#the-roll)). Lanterne's assembly motions are put and closed by any of its ten members, by the participant's mandates the founding motion grants; coordination's by its five.
 
 ## Schema
 
@@ -33,7 +33,7 @@ How a circle acts as a whole: motions, proposed, voted on and closed, each carry
 
 Triggers keep a closed motion closed and refuse stances on it, and refuse an action once a stance is given or the motion closed, so no one consents to one thing and is counted for another, raising SQLSTATE `09000`. The app role may select, insert and update motions, select and insert votes as the policy on secret stances lets it, and select and insert actions; the guards role, `cella_guards`, may select them all.
 
-Who may vote on a motion, its roll, is what its procedure says ([procedures](#procedures)), and fixing it is the `membership-motion` graft's: by default the people seated in its circle on the day it was proposed, never an agent or a service. A seat above carries no vote below.
+Who may vote on a motion, its roll, is what its procedure says ([procedures](#procedures)), and fixing it is this feat's, from core's seats and whether each counts ([the roll](#the-roll)): by default the people seated in its circle on the day it was proposed, never an agent or a service. A seat above carries no vote below.
 
 - `motion.stance_power`: the power a stance needs, `vote`, on `motion:motion:vote`, which a procedure gives the seats on a motion's roll rather than a mandate; the feat's own row, as `cella.power` and `motion.cites` hold theirs, and what `cella check feats` reads the label against. The app role and the guards role may select it.
 
@@ -62,7 +62,7 @@ By the {label: extraordinary assembly}'s procedure, {procedure: extraordinary}, 
 - `consult`, where any: the circle a motion decided by it consults, by
   id (`{consult: coordination}`). It closes only once someone seated in
   that circle has said something on its deliberation, which they may
-  ([consultation](../../grafts/membership-motion/index.md#guards)).
+  ([the roll](#the-roll)).
 - `label`, where not its name in words: how the New form and a motion's
   page call it, its first letter capitalised.
 
@@ -199,41 +199,95 @@ registries and name none.
 
 ## Guards
 
-- `motion.proposes`, on `motion:motion:propose`: the write proposed the motion on the verdict date, open until a later deadline, with as many actions as its payload names. `motion.balloted`, on the same action: its ballot is the one the payload names. That each action applies is the guard of the graft registering its kind; that the actor sits in the circle, `membership-motion`'s.
+- `motion.proposes`, on `motion:motion:propose`: the write proposed the motion on the verdict date, open until a later deadline, with as many actions as its payload names. `motion.balloted`, on the same action: its ballot is the one the payload names. That each action applies is the guard of the graft registering its kind; that the actor sits in the circle, and that the proposal fixed its roll, this feat's own (`motion.sits`, `motion.fixed`, [the roll](#the-roll)).
 - `motion.closes`, on `motion:motion:close`: the write closed the motion on the verdict date, and not before its deadline. A motion closes only at or after its deadline; closing early once every member has spoken needs to know who the members are, which is a graft's, and is not built.
 - `motion.posts`, on `motion:message:post`: the message is the actor's own and names the motion, the message it answers, the mentions and the links its payload does, which are its text's, since the table generates them. That each mention names one member is `membership-motion`'s guard, that each link names a document `document-motion`'s.
-- `motion.own_stance`, on `motion:motion:vote`: the stance is the actor's own (`cella.actor()`); no member votes for another. `motion.seals`, on the same action: a stance on a secret ballot is logged by its commitment alone, one on an open ballot as given. That the actor holds `vote`, on the motion's roll with a seat that counts, is `membership-motion`'s guard on the same action.
+- `motion.own_stance`, on `motion:motion:vote`: the stance is the actor's own (`cella.actor()`); no member votes for another. `motion.seals`, on the same action: a stance on a secret ballot is logged by its commitment alone, one on an open ballot as given. That the actor holds `vote`, on the motion's roll with a seat that counts, is `motion.on_roll` on the same action ([the roll](#the-roll)).
 - `motion.asks`, on `motion:motion:propose`: each policy the motion would end is one of its circle in force on the verdict date, and each it would replace one of its circle and kind in force on the day the new one would apply were the motion closed at its deadline, its `from` or else the deadline, and replaced by no other policy, so a policy that one still to apply replaces already is refused, the reason naming that one and the day it applies, the one to replace instead; each is not protected from the motion (`motion.protection_flaw`, [protected policies](#protected-policies)); each policy the motion would adopt is a mandate, a right, a rule or a procedure, worded soundly for its kind (`policy.flaw`: each value marked once, with a value, and no stray brace, saying which way is stricter as `more is stricter` or `less is stricter` if at all, and only if it is an amount, a share, a day or a number; each such value of a rule saying it; a friendly wording marking none), its days written YYYY-MM-DD, applying no earlier than the motion's deadline and ending after the day it would apply were the motion closed at its deadline, its `from` or else the deadline, so an `until` on that day is refused as one before it is; protected, if it names a procedure, by one in force no looser than the motion's own; taking, if it names a default, one it is worded and protected as (`policy.takes_flaw`, [default policies](#default-policies)); and a procedure policy marks sound terms and names a procedure no policy has made, as `motion.procedure_flaw` reads them ([procedures](#procedures)).
 - `motion.authored`, on `motion:motion:propose`: the motion's author is the one its payload names, and is its own circle or a role its proposer holds by a tenure on the verdict date (`circle.tenure`, read on `cella.verdict_date()`). A proposal as another circle, or as a role no tenure of its proposer's runs that day, is refused naming the role, the day and what would fix it, as `the clerk role is held by no tenure of the proposer's on 2026-11-07: propose as ag, or as a role held that day`, and never the person. Who votes on a motion a role authors is its procedure's parties, as on any other ([procedures](#procedures)).
 - `motion.decides_by`, on `motion:motion:propose`: the procedure the motion is put to is built in, or its policy is in force on the verdict date.
 - `motion.adopts`, on `motion:policy:adopt`: the policy the register keeps is the one the cited motion's action carries: named by that action, of the motion's circle and the action's kind, its wordings hashing as the action holds them (`policy.hash`; a guard reads no wording back), adopted on the verdict date and applying from the day the action names or the verdict date, whichever is later, until the day it names, which is after that: a motion closed so late that its `until` falls on or before the day the policy would apply adopts nothing, and its action is refused with that reason, as a guard refuses any carried action, while the close stands; the policy it replaces is in force that day and replaced by no other, since another motion may have replaced it while this one was open, or the action is refused the same way, the reason naming the policy that replaces it and the day it applies, never broken by the register's unique `replaces` or by `policy.adopt`'s exception; it ends that day and is not protected from the motion; it is protected as the action names (`protected`) and takes the default it names (`takes`), worded as that default reads; the entry commits to its hash; and a procedure policy has made the procedure its values say, which names it in `motion.procedure`.
 - `motion.ends`, on `motion:policy:end`: the policy the cited motion's action names ended on the verdict date, by that action, was the motion's circle's, and is not protected from the motion. That a mandate policy's mandate is copied or revoked with it is core's circles' guard on both actions, which this feat attaches ([circles](#circles)).
 
-The outcome itself is not this feat's to fix: it is folded from the votes by `cella.consent`, `cella.majority` or `cella.share` over the roll, by the motion's procedure, its quorum and its vetoes, as the `membership-motion` graft does.
+The outcome is folded from the votes by `cella.consent`, `cella.majority` or `cella.share` over the roll, by the motion's procedure, its quorum and its vetoes (`motion.passes`, [the roll](#the-roll)).
+
+## The roll
+
+Who may vote on a motion and whether it passes, from core's seats and
+whether each counts ([who may
+act](../../core/grafts/circle-person/index.md#who-may-act)), and this
+feat's procedures; no graft computes it, so a scope without membership
+still votes by its seats. Its SQL is `sql/013-roll.sql`.
+
+- `motion.roll`: who may vote on a motion, fixed as it is proposed:
+  `motion.called` gives those its procedure calls, the people seated in
+  its circle on the day it is proposed (`circle.seat`), every seat, or
+  where its parties name roles that vote the seats in them
+  (`motion.calls`, `participant` every seat), and the seats in a role
+  that vetoes marked so. Only the motion's own circle's seats are read,
+  so a seat above carries no vote below; seats are people's, so no agent
+  and no service is ever called. `motion.fix` writes it inside
+  `proposing`, and `motion.fixed`, on `motion:motion:propose`, refuses a
+  proposal that did not: its roll is exactly those its procedure calls.
+- `motion.counted`: who was counted at the close, the people of the
+  roll whose seat counts in its circle on the verdict date
+  (`circle_person.counts`), fixed by `motion.count` inside `closing`, so
+  a later suspension or exit cannot change the outcome;
+  `motion.counted_roll`, on `motion:motion:close`, refuses a close that
+  did not count it.
+- `motion.electorate`: who counts, once closed those counted, while open
+  the roll's people whose seat counts now; `motion.stances`, the stances
+  that count, the electorate's, received before the cutoff, but a
+  redacted one; `motion.turnout`, how many count, how many gave a
+  stance and whether that meets the procedure's quorum;
+  `motion.passes`, whether it passes, its quorum met, by its method, and
+  no veto, no one on the roll who may veto it giving, as their latest
+  stance that counts, one against or an objection; and `motion.tally`,
+  what a reader of the motion reads of it, sealed on a secret ballot
+  until its close, run as its owner.
+- `motion.on_roll`, on `motion:motion:vote`: the member is on the roll,
+  and their seat counts in its circle on the verdict date, so a worker
+  who is no member votes in their working circle and not in the
+  assembly.
+- `motion.sits`, on `motion:motion:propose`, `motion:motion:close` and
+  `motion:message:post`: the actor holds a seat that counts in the
+  motion's circle on the verdict date (`circle_person.sits_in`), the
+  participant's `propose` and `discuss` being found on any seat; or, to
+  post, one in the circle its procedure consults. `motion.consulted`,
+  on `motion:motion:close`: a motion whose procedure consults a circle
+  closes only once someone whose seat there counted on the day they
+  posted has said something on its deliberation.
+- `motion.carried`, on every action in `motion.cites`, registered by
+  `motion.register_cite_guard`: the cited motion closed and passes on
+  its roll.
+
+`membership-motion` reads the roll to draw it, and its application,
+which puts a motion in its own write, fixes the roll as a proposal does
+and is judged by `motion.fixed` among a proposal's guards.
 
 ## Folds
 
-Every action that writes the feat's schema says how its entry applies to the state before it (`sql/013-folds.sql`,
+Every action that writes the feat's schema says how its entry applies to the state before it (`sql/014-folds.sql`,
 [folds](../../../../_corpus/doc/architecture.md#folds)), at version 1: a stance inserts the
 stance by the receipt its entry carries, on the entry's day, as its
 commitment where the ballot is secret; a close sets the closed day to
-the entry's and the cutoff to the receipt it carries; an adoption runs
+the entry's and the cutoff to the receipt it carries, and counts its roll (`motion.count`); an adoption runs
 `policy.adopt` on the action's terms as the folded motion holds them,
 from the day the entry says it applies, and the procedure it makes, and
 refuses a policy or a hash other than the entry's; an end runs
 `policy.end` and refuses a day other than the entry's. A proposal inserts the motion its
 payload names by its procedure, on the entry's day, its proposer the
 entry's actor, its title and text as their commitments, and its actions
-in the order listed (`motion.fold_proposal`, which membership-motion's
+in the order listed, then fixes its roll (`motion.fold_proposal`, by `motion.fix`, which membership-motion's
 application folds by too); a message inserts the message by the receipt
 its entry carries, on its day, its text as its commitment.
 
 ## Handlers
 
 - `vote` (confluent): the member's own stance, with the write's receipt, `cella.receipt()`, which the notary signs; logged as a single-entry batch, the stance marked personal on a secret ballot. A stance for another member, off the roll or on a closed motion returns `Refused`, as the guards and the trigger judge it; the handler throws for none of them.
-- `propose` (confluent): inserts the motion as its author, the role the proposal names (`author`) or else its circle, by the procedure the write gives it, consent where it gives none, its method the procedure's and its ballot the one the proposal names or else the procedure's, numbered the year's next (`m-2026-013`, three digits or more, so `m-2026-1000` follows `m-2026-999`, in every list too, which orders ids by their number, never as text) under a lock on the numbering, proposed on the verdict date, and its actions; membership-motion's `propose` replaces it in the shell, gives it the procedure its requirements fix and fixes the roll in the same write, by `proposing`, the write this one makes. Submits `{ motion, circle, author, procedure, ballot, deadline, title, body, actions }`, the title and the text marked personal, the proposer's words, so the log keeps their commitments.
+- `propose` (confluent): inserts the motion as its author, the role the proposal names (`author`) or else its circle, by the procedure the write gives it, consent where it gives none, its method the procedure's and its ballot the one the proposal names or else the procedure's, numbered the year's next (`m-2026-013`, three digits or more, so `m-2026-1000` follows `m-2026-999`, in every list too, which orders ids by their number, never as text) under a lock on the numbering, proposed on the verdict date, and its actions; Its write, `proposing`, fixes the motion's roll in the same transaction (`motion.fix`, [the roll](#the-roll)); membership-motion's `propose` replaces it in the shell and gives it the procedure its requirements fix, by `proposing`. Submits `{ motion, circle, author, procedure, ballot, deadline, title, body, actions }`, the title and the text marked personal, the proposer's words, so the log keeps their commitments.
 - `post` (confluent): the acting member's message, with the write's receipt, perhaps answering another. It inserts the text, the row answers the handles it mentions and the documents it links, and it submits `{ motion, member, message, reply, body, mentions, links }`, those the row's, the text marked personal, so the log keeps its commitment. It signs the request's fields it reads, its motion, member, reply and text, so a request naming mentions or links of its own names nothing.
-- `close` (ordered), and `closing`, the same as a write a graft extends in its transaction: sets the closed date to `cella.verdict_date()` and the cutoff to the close's own receipt, then submits `{ motion, closed, cutoff }`. `membership-motion` replaces it in the shell with a close that counts the roll and carries what the motion passed as its effects, in the same transaction; where that graft is mounted, this close alone counts no roll and its guard `counts` refuses it.
+- `close` (ordered), and `closing`, the same as a write a graft extends in its transaction: sets the closed date to `cella.verdict_date()` and the cutoff to the close's own receipt, then submits `{ motion, closed, cutoff }`. Its write, `closing`, counts the motion's roll in the same transaction (`motion.count`, [the roll](#the-roll)); `membership-motion` replaces it in the shell with a close that carries what the motion passed as its effects, in the same transaction.
 - `adopt` (ordered): adopts the policy a passed motion carries as its action `n`, through the register's `policy.adopt` (`adopting` in `@cella/org-policy`), in the motion's circle, from the day the action names or the verdict date, whichever is later, protected by the procedure the action names, if any, taking the default it names, if any, and copies a procedure policy's values into the procedure they make (`motion.procedure_from`). It first asks `motion.replacement_flaw`, the SQL `motion.adopts` judges by, whether the policy the action replaces is still its to replace; where another motion replaced it while this one was open, it writes nothing to the register, and the guard refuses the action with that reason. Submits `{ policy, motion, n, applies, hash }`, the hash of its wordings in hex. `membership-motion` runs it for each policy a passing motion carries, as it carries out the motion's other actions. `adopting`, the same as a write a graft extends in its transaction, is what this feat's circles' `adopt` extends with core's copy of a mandate.
 - `end` (ordered), and `ending`, the same as a write a graft extends: ends the policy a passed motion's action `n` names on the verdict date, through the register's `policy.end` (`ending` in `@cella/org-policy`). Submits `{ policy, motion, n, ends }`. `membership-motion` runs the circles' `end`, which extends it, for each policy a passing motion ends.
 
@@ -334,8 +388,8 @@ so is a right. It reads as its reader, so it shows the actions of the motions it
   motion's circle holds, on the verdict date, a collective mandate for
   the power `motion.cites` lists for the action, so a mandate revoked
   between the proposal and the close carries nothing. This feat
-  registers it by `motion.register_cite_guard`, beside
-  `membership-motion`'s `carried`. An admission settles inside
+  registers it by `motion.register_cite_guard`, beside its own
+  `carried`, that the motion passed on its roll. An admission settles inside
   the close, under the close's guards, so `empowers` checks it at the
   proposal alone.
 - `motion.required(circle, actions, day)`: the procedure a motion
@@ -421,8 +475,8 @@ a trigger on core's table
   put on another circle's page, or put where no rule stands is refused
   before anything is proposed, by `motion.withhold_flaw`, its reason
   naming the rule in force to name instead. It writes nothing: the circle
-  page's `put` is `membership-motion`'s, which proposes it and
-  fixes its roll in one write, as only the graft holding the roll can.
+  page's `put` is `membership-motion`'s, which proposes it,
+  its roll fixed in the same write by `proposing`.
   The writes that carry a passing motion out are
   `membership-motion`'s reaction to its close.
 
@@ -483,7 +537,7 @@ page shows Open books.
 
 ## Grafts
 
-- `membership-motion`, which this feat declares: a motion's roll, from the seats in its circle its procedure names, and whether it passes on it.
+- `membership-motion`, which this feat declares: what a motion decides of a membership, the seats and circles a motion gives, ends and makes, and the founding; it draws the roll this feat fixes.
 
 ## Shell
 
@@ -514,7 +568,7 @@ over the subscription, forgone with its own reason, the statutes'
 minimum and the shares asked. The outcome the close's post returns
 holds the same; the page reads them from the log, so they stand once
 the outcome is dismissed, for every later reader.
-Its roll, its outcome and the stance form are `membership-motion`'s;
+Its roll and its outcome are this feat's ([the roll](#the-roll)), drawn with the stance form by `membership-motion`;
 the stance it posts is this feat's `vote`, for the acting member.
 
 A mandate is granted, changed and revoked from where it is read, by a
@@ -564,7 +618,7 @@ its own page and its chain.
 
 A motion's state is open, passed or rejected: open until its close,
 then passed or rejected by the outcome of the stances the close froze.
-The outcome is the graft's, so the state is too: `membership-motion`
+The outcome is this feat's (`motion.tally`), and `membership-motion`
 reads it in SQL and gives the collection its State column and its board.
 Of its outcome, this feat reads only whether and when a motion closed.
 

@@ -1,19 +1,3 @@
--- motion:motion:vote — the member is on the motion's roll, and
--- active: a suspended or exited member gives no stance, as their stance
--- would not be counted.
-CREATE OR REPLACE FUNCTION membership_motion.on_roll(payload jsonb) RETURNS text
-LANGUAGE sql STABLE
-BEGIN ATOMIC
-  SELECT CASE
-    WHEN NOT EXISTS (
-      SELECT FROM membership_motion.roll r WHERE r.motion = p.motion AND r.member = p.member
-    ) THEN coalesce(p.member, 'no one') || ' is not on the roll of ' || coalesce(p.motion, 'no motion')
-    WHEN NOT EXISTS (SELECT FROM membership.member m WHERE m.address = p.member AND m.status = 'active')
-      THEN p.member || ' is not an active member'
-  END
-  FROM (SELECT payload ->> 'motion' AS motion, payload ->> 'member' AS member) p;
-END;
-
 -- motion:motion:propose — who decides what of seats: a seat is the
 -- motion of a circle that may decide about its circle, never its own
 -- but for the assembly's (`motion.decides`), and names an
@@ -53,11 +37,14 @@ END;
 -- the close's transaction, seats the member it admits in the motion's
 -- circle as `member`, as `seats` judges a seat of its own. That the
 -- motion asks it, with its shares, is `admits`; that the write admitted
--- them, `membership.admitted`.
+-- them, `membership.admitted`. An admission no passed close carries is
+-- the motion feat's to refuse (`motion.carried`), so this one says nothing
+-- of it, and that reason comes first.
 CREATE FUNCTION membership_motion.closes(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
+    WHEN membership_motion.uncarried(payload ->> 'motion') THEN NULL
     WHEN s.id IS NULL OR s.member IS DISTINCT FROM payload ->> 'member'
       THEN coalesce(payload ->> 'motion', 'no motion') || ' admits a member this write seats nowhere: an admission seats its member in the motion''s circle'
     ELSE membership_motion.seats(jsonb_build_object('seat', s.id, 'motion', payload ->> 'motion'))

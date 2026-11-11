@@ -2,7 +2,7 @@
 // holding only the app's core and this feat: its holder, and whoever holds
 // a power that reads capital; every other account, whoever holds `read`
 // over its circle, here every reader signed in. The authority
-// is a stub here, as the membership feat registers the real one. Run by
+// is a stub here, in place of core's, which reads seats this test does not make. Run by
 // `cella test slice account`.
 
 import { after, before, test } from 'node:test'
@@ -41,7 +41,7 @@ before(async () => {
     `CREATE FUNCTION mandate.covered(actor text, power text, day date) RETURNS text[]
      LANGUAGE sql STABLE RETURN CASE WHEN power = 'read' OR mandate.may(actor, power, NULL, NULL, day) THEN ARRAY(SELECT id FROM circle.circle) ELSE '{}' END`,
   )
-  await su.query(`INSERT INTO cella.authority (fn, covered, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'mandate.covered(text, text, date)', 'test')`)
+  await su.query(`INSERT INTO cella.authority (fn, covered, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'mandate.covered(text, text, date)', 'test') ON CONFLICT (one) DO UPDATE SET fn = excluded.fn, covered = excluded.covered, owner = excluded.owner`)
 })
 
 after(async () => {

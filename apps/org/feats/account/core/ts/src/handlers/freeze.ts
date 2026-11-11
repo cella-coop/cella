@@ -31,7 +31,7 @@ function frozen<O extends Op>(op: O, input: Freeze, deps: Deps): Promise<Outcome
 
 // The freeze citing the motion that excluded the holder, which a passed
 // motion carries after the exclusion; that the motion passed is
-// membership-motion's guard.
+// the motion feat's guard, `motion.carried`.
 export function freeze(input: Freeze, deps: Deps): Promise<Outcome<(typeof actions)['account:account:freeze'], Frozen>> {
   return frozen('account:account:freeze', input, deps)
 }

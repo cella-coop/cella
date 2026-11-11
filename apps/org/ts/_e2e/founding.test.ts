@@ -121,7 +121,7 @@ test('a fresh scope is founded as a SCOP SARL in France by three founders, as th
   // with a device, and gave the founding motion a stance.
   for (const f of founders) {
     const sat = await one<{ sits: boolean; devices: string }>(
-      `SELECT membership.sits_in($1, 'ag', cella.verdict_date()) AS sits,
+      `SELECT circle_person.sits_in($1, 'ag', cella.verdict_date()) AS sits,
               (SELECT count(*) FROM person.device d WHERE d.address = $1 AND d.revoked IS NULL) AS devices`,
       [f.address],
     )

@@ -1,9 +1,9 @@
 // Rights, on a database holding the app's core, its circles, and the person and membership
-// feats: `membership.entitled` finds a right, no
+// feats: `circle_person.entitled` finds a right, no
 // mandate, with no seat, held by whoever core's person says is one of the people
 // it names that day: every person, every active member. A right no feat
 // registered, every employee's here, where employment is not migrated,
-// is held by no one; and `membership.rights` lists a right exactly
+// is held by no one; and `circle_person.rights` lists a right exactly
 // where `entitled` grants it, and, read as the app's reader, answers a
 // person for themselves and a member for anyone. Run by `cella test slice
 // membership`.
@@ -18,7 +18,7 @@ const ines = 'ines@rights'
 const paul = 'paul@rights'
 
 const holds = async (actor: string, power: string, day = '2026-10-24') =>
-  (await db.query<{ m: boolean }>('SELECT membership.may($1, $2, NULL, NULL, $3) OR membership.entitled($1, $2, NULL, $3) AS m', [actor, power, day])).rows[0].m
+  (await db.query<{ m: boolean }>('SELECT circle_person.may($1, $2, NULL, NULL, $3) OR circle_person.entitled($1, $2, NULL, $3) AS m', [actor, power, day])).rows[0].m
 
 before(async () => {
   await db.connect()
@@ -80,19 +80,19 @@ test('a right nobody registered is held by no one, and a right grants only its p
 })
 
 test('a right is never the authority reads ask: it lets each act on their own, and opens no one else\'s rows', async () => {
-  assert.equal((await db.query(`SELECT membership.entitled($1, 'keep-profile', NULL, '2026-10-24') AS m`, [amina])).rows[0].m, true)
-  assert.equal((await db.query(`SELECT membership.may($1, 'keep-profile', NULL, NULL, '2026-10-24') AS m`, [amina])).rows[0].m, false)
+  assert.equal((await db.query(`SELECT circle_person.entitled($1, 'keep-profile', NULL, '2026-10-24') AS m`, [amina])).rows[0].m, true)
+  assert.equal((await db.query(`SELECT circle_person.may($1, 'keep-profile', NULL, NULL, '2026-10-24') AS m`, [amina])).rows[0].m, false)
 })
 
 test('rights lists a right exactly where entitled grants its power, as a person\'s page reads it', async () => {
   for (const [who, day] of [[amina, '2026-10-24'], [ines, '2026-10-24'], [paul, '2026-10-24'], [paul, '2025-06-01'], ['nobody@x', '2026-10-24']]) {
     const { rows } = await db.query<{ power: string }>(
-      `SELECT power FROM membership.rights($1, $2) ORDER BY power`,
+      `SELECT power FROM circle_person.rights($1, $2) ORDER BY power`,
       [who, day],
     )
     const listed = rows.map((r) => r.power)
     for (const power of ['keep-profile', 'draw-account', 'log-time']) {
-      const { rows: e } = await db.query<{ m: boolean }>(`SELECT membership.entitled($1, $2, NULL, $3) AS m`, [who, power, day])
+      const { rows: e } = await db.query<{ m: boolean }>(`SELECT circle_person.entitled($1, $2, NULL, $3) AS m`, [who, power, day])
       assert.equal(listed.includes(power), e[0].m, `${who} ${power} on ${day}`)
     }
   }
@@ -104,7 +104,7 @@ test('read as the app\'s reader, rights answers a person for themselves, a membe
   const read = async (reader: string, person: string) => {
     await app.query(`SELECT set_config('cella.actor', $1, false)`, [reader])
     return (await app.query<{ power: string }>(
-      `SELECT power FROM membership.rights($1, '2026-10-24') ORDER BY power`,
+      `SELECT power FROM circle_person.rights($1, '2026-10-24') ORDER BY power`,
       [person],
     )).rows.map((r) => r.power)
   }
@@ -120,7 +120,7 @@ test('read as the app\'s reader, rights answers a person for themselves, a membe
     // What the slice's other tests register beside these rights, each
     // holds too: a reader reads exactly what the whole does, or nothing.
     const whole = async (person: string) =>
-      (await db.query<{ power: string }>(`SELECT power FROM membership.rights($1, '2026-10-24') ORDER BY power`, [person])).rows.map((r) => r.power)
+      (await db.query<{ power: string }>(`SELECT power FROM circle_person.rights($1, '2026-10-24') ORDER BY power`, [person])).rows.map((r) => r.power)
     assert.ok((await whole(ines)).includes('keep-profile') && !(await whole(ines)).includes('draw-account'))
     assert.ok((await whole(amina)).includes('draw-account'))
     assert.deepEqual(await read(ines, ines), await whole(ines), 'Inès reads her own rights, her person\'s among them')

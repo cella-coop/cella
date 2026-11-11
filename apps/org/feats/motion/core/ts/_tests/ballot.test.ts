@@ -31,14 +31,14 @@ async function reads(member: string): Promise<{ motion: string; member: string }
 before(async () => {
   await db.connect()
   // A stub authority: every member reads the assembly's records by `read`,
-  // as Lanterne's participants do; the membership feat registers the real one.
+  // as Lanterne's participants do, in place of core's, which reads seats.
   await db.query(`CREATE SCHEMA mandate`)
   await db.query(`CREATE FUNCTION mandate.may(actor text, power text, cents bigint, about text, day date) RETURNS boolean LANGUAGE sql STABLE RETURN false`)
   await db.query(
     `CREATE FUNCTION mandate.covered(actor text, power text, day date) RETURNS text[]
      LANGUAGE sql STABLE RETURN CASE WHEN power = 'read' THEN ARRAY(SELECT id FROM circle.circle) ELSE '{}' END`,
   )
-  await db.query(`INSERT INTO cella.authority (fn, covered, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'mandate.covered(text, text, date)', 'test')`)
+  await db.query(`INSERT INTO cella.authority (fn, covered, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'mandate.covered(text, text, date)', 'test') ON CONFLICT (one) DO UPDATE SET fn = excluded.fn, covered = excluded.covered, owner = excluded.owner`)
   await db.query(
     `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, ballot, proposed, deadline) VALUES
        ('m-2026-301', 'ag', 'camille@lanterne.example', 'An action', 'majority', 'majority', 'open', '2026-10-20', '2026-11-03'),

@@ -43,7 +43,7 @@ export async function appointing(db: Db, circle: string): Promise<Appointing | n
     return null
   }
   const members = await db.query<{ id: string; name: string }>(
-    `SELECT p.address AS id, p.name FROM person.person p WHERE membership.counts(p.address, $1, cella.verdict_date()) ORDER BY p.name`,
+    `SELECT p.address AS id, p.name FROM person.person p WHERE circle_person.counts(p.address, $1, cella.verdict_date()) ORDER BY p.name`,
     [circle],
   )
   const roles = await db.query<{ id: string; name: string }>(

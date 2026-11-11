@@ -148,7 +148,7 @@ test('m-2026-012 admits Inès, and the subscription that follows, an effect of t
   )
   const logged = await one<{ op: string; actor: string; guards: { owner: string }[] }>('SELECT op, actor, guards FROM cella.log WHERE n = $1', [then[0].then[0].entry])
   assert.deepEqual({ op: logged.op, actor: logged.actor }, { op: 'account:capital:subscribe', actor: camille })
-  assert.deepEqual([...new Set(logged.guards.map((g) => g.owner))].sort(), ['account-membership-transaction', 'account-motion', 'membership-motion', 'motion'])
+  assert.deepEqual([...new Set(logged.guards.map((g) => g.owner))].sort(), ['account-membership-transaction', 'account-motion', 'motion'])
   const s = await one<{ account: string; entry: string }>('SELECT account, entry FROM account_membership_transaction.subscription WHERE member = $1', [ines])
   assert.equal(s.account, '101312')
   assert.deepEqual(await lines(s.entry), [
@@ -249,7 +249,7 @@ async function passed(kind: 'admit' | 'exclude', args: Record<string, string | n
   await on(from)
   const proposed = settled(await put({ kind, args, deadline: until, body: '' }, as(camille))) as { motion: string }
   const roll = await all<{ member: string }>(
-    `SELECT r.member FROM membership_motion.roll r JOIN membership.member m ON m.address = r.member
+    `SELECT r.member FROM motion.roll r JOIN membership.member m ON m.address = r.member
      WHERE r.motion = $1 AND m.status = 'active'`,
     [proposed.motion],
   )
@@ -370,7 +370,7 @@ test('the assembly adopts capital terms of at least ten shares at 25 €, a rule
 
   const motion = settled(await rule({ wording: wording('10 | more is stricter'), replaces: founding })).motion
   const roll = await all<{ member: string }>(
-    `SELECT r.member FROM membership_motion.roll r JOIN membership.member m ON m.address = r.member
+    `SELECT r.member FROM motion.roll r JOIN membership.member m ON m.address = r.member
      WHERE r.motion = $1 AND m.status = 'active'`,
     [motion],
   )
@@ -449,7 +449,7 @@ test('the statutes are generated anew with the new terms where the founding ones
   doc.import(new Uint8Array(v.snapshot))
   assert.equal(hash(doc), v.hash, 'anyone holding the version computes its hash')
   const guards = await one<{ owners: string[] }>(`SELECT array(SELECT g ->> 'owner' FROM jsonb_array_elements(guards) g ORDER BY 1) AS owners FROM cella.log WHERE n = $1`, [generatedAt])
-  assert.deepEqual(guards.owners, ['document', 'document', 'membership-motion', 'motion'])
+  assert.deepEqual(guards.owners, ['document', 'document', 'motion', 'motion'])
 
   const earlier = await one<{ hash: string; again: string }>(
     `SELECT encode(hash, 'hex') AS hash, encode(cella.document_hash(snapshot), 'hex') AS again FROM document.version WHERE id = 'statutes@2'`,
@@ -487,7 +487,7 @@ test('Nadia\'s admission with 8 shares is refused when it is proposed, its reaso
 test('the close judges the terms again: Nadia, put sound with 10 shares while the assembly raises the minimum to 12, is refused her subscription, which forgoes her admission and seat with it, the close standing', async () => {
   const consented = async (motion: string) => {
     const roll = await all<{ member: string }>(
-      `SELECT r.member FROM membership_motion.roll r JOIN membership.member m ON m.address = r.member
+      `SELECT r.member FROM motion.roll r JOIN membership.member m ON m.address = r.member
        WHERE r.motion = $1 AND m.status = 'active'`,
       [motion],
     )

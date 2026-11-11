@@ -1,6 +1,6 @@
 +++
 title = "Trust"
-updated = 2026-11-08
+updated = 2026-11-11
 +++
 
 # Trust
@@ -268,8 +268,8 @@ sequenceDiagram
   ([ratchet](ratchet.md#moving-a-notary)).
 - **Circles, roles, tenures and mandates are core**, as groups are in
   standard RBAC: every feat builds on them, and the notary knows none of
-  them. Whether a seat counts on a day is the membership feat's to say,
-  so the guard on every power is that feat's
+  them. Whether a seat counts on a day, and who may use a power, are core's,
+  read by its graft joining the circles to the people, as each kind of person says what bars a seat
   ([architecture](architecture.md#circles-are-core)).
 - **Who may write is checked by a guard like any other.** Each op that needs a power
   names it in `cella.power`, registered by its feat or by core's circles;
@@ -293,7 +293,7 @@ sequenceDiagram
   on the circle itself granting the power, as it checked when the
   motion was proposed. A stance needs `vote`, the power a motion's
   procedure gives the seats on its roll, in `motion.stance_power`:
-  `membership-motion`'s guard holds it to someone on the roll
+  the motion feat's guard `motion.on_roll` holds it to someone on the roll
   whose seat counts on the verdict date. The one write with no power is
   the log's first entry, the founding, since no policy is adopted
   before it: its label declares the check `first` and a guard
@@ -319,7 +319,7 @@ sequenceDiagram
   its rows in `cella.reading`, as its actions name theirs in
   `cella.power`; the membership feat, as `cella.authority`, says which
   circles a power's mandates cover for a person on the verdict date,
-  on seats that count (`membership.covered`). Ownership grants nothing,
+  on seats that count (`circle_person.covered`). Ownership grants nothing,
   and a seat in a circle nothing without a mandate: Lanterne's
   participants hold `read` on their own circle and on the assembly, so
   Inès, in Web and no member, reads Web's expenses and the assembly's,
@@ -371,8 +371,8 @@ guards crate, which also compiles to WASM for browsers, devices and auditors:
 - the action being judged: `cella.action()`, its id, `cella.actor()` and
   `cella.device()`;
   whether the actor may use a power is not a primitive but the
-  membership feat's composed guard, `membership.may(actor, power,
-  cents, about, day)`, since only that feat sees both mandates and
+  composed guard of core's `circle-person`, `circle_person.may(actor, power,
+  cents, about, day)`, since only that graft sees both mandates and
   whether a seat counts, over a record of the circle `about`;
 - trigger functions that feats and grafts attach: entries balance, periods
   are open;

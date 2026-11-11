@@ -10,7 +10,7 @@ CREATE TABLE motion_patronage.approval (
 
 -- patronage:distribution:approve — the cited motion is the one that
 -- approves this distribution. That it closed and passed on its roll is
--- membership-motion's guard, attached through motion.cites.
+-- the motion feat's guard, motion.carried, attached through motion.cites.
 CREATE FUNCTION motion_patronage.approves(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC

@@ -2,8 +2,8 @@
 // on a database holding only the app's core and this feat: the worker,
 // and whoever distributes the surplus; the distribution itself, whoever
 // reads its circle.
-// The authority is a stub here, as the membership feat registers the real
-// one. Run by `cella test slice patronage`.
+// The authority is a stub here, in place of core's, which reads seats this
+// test does not make. Run by `cella test slice patronage`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -44,7 +44,7 @@ before(async () => {
     `CREATE FUNCTION mandate.covered(actor text, power text, day date) RETURNS text[]
      LANGUAGE sql STABLE RETURN CASE WHEN power = 'read' OR mandate.may(actor, power, NULL, NULL, day) THEN ARRAY(SELECT id FROM circle.circle) ELSE '{}' END`,
   )
-  await su.query(`INSERT INTO cella.authority (fn, covered, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'mandate.covered(text, text, date)', 'test')`)
+  await su.query(`INSERT INTO cella.authority (fn, covered, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'mandate.covered(text, text, date)', 'test') ON CONFLICT (one) DO UPDATE SET fn = excluded.fn, covered = excluded.covered, owner = excluded.owner`)
 })
 
 after(async () => {

@@ -42,7 +42,7 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
   assert.equal(out.state, 'settled', reason(out))
   return out.value as T
 }
-const passes = async (d: string) => (await one<{ p: boolean }>('SELECT membership_motion.passes($1) AS p', [d])).p
+const passes = async (d: string) => (await one<{ p: boolean }>('SELECT motion.passes($1) AS p', [d])).p
 
 before(async () => {
   await su.connect()

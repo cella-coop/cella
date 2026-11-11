@@ -123,7 +123,7 @@ test('Nadia and Yara take up their invitations, and the assembly passes four mot
     { kind: 'suspend', args: { member: sofia } },
   ])
   for (const motion of Object.values(motions)) {
-    for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
+    for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [motion])) {
       settled(await vote({ motion, member, stance: 'consent' }, as(member)))
     }
   }

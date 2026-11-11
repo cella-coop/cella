@@ -115,10 +115,15 @@ read from them. Its tables are in the `circle` schema, which every feat's
 and graft's SQL may reference as it references `cella.*`; its actions,
 `circle:circle:create`, `circle:seat:add` and `circle:seat:remove` among them, are
 named for it and declared in its `models/actions.ts` as a feat's are,
-and any slice may guard them. It knows no feat: whether a seat counts on
-a day is the membership feat's to say, so who may use a power,
-`membership.may`, and the authority every read asks are that feat's
-([membership](../../apps/org/feats/membership/index.md#seats)).
+and any slice may guard them. It knows no feat, nor the people: who may
+use a power, `circle_person.may`, and the authority every read asks
+read the seats and the people both, so they are core's graft
+`circle-person`'s, which joins them ([who may
+act](../../apps/org/core/grafts/circle-person/index.md#who-may-act)).
+Whether a seat counts on a day is core's too, asking what each kind of
+person registers bars one: membership, that the assembly's seats are
+its active members'. So no feat outside core holds the authority, and
+removing one changes no other slice's authorization.
 A feat that reads circles reads core, as the motion feat reads a
 motion's circle and the meeting feat a meeting's, and a graft that
 joined the circles to a feat dissolved into that feat or into the graft
@@ -208,9 +213,16 @@ the circles to the people: it binds each person's and each device's
 `circle` to its owning circle, a foreign key into `circle.circle` and
 the assembly by default, and puts the people's tables under the
 circles' row-level policies, which the people, knowing no circle,
-cannot. A core graft joining the circles alters a table of a core feat
-it joins only so, and `tools/sql-check.mjs` refuses any other alteration
-(`tools/_tests/core.test.mjs`).
+cannot. And it holds **who may act**: whether a seat counts on a day
+(`circle_person.counts`, asking what each kind of person registers by
+`circle_person.register_standing`), the mandates a person holds by
+their seats and the rights they hold as a person (`circle_person.holds`,
+`circle_person.rights`), the authority every read asks
+(`circle_person.may`, `circle_person.covered`, registered in
+`cella.authority`), and the guard on every op with a power
+(`circle_person.empowered`). A core graft joining the circles alters a
+table of a core feat it joins only so, and `tools/sql-check.mjs`
+refuses any other alteration (`tools/_tests/core.test.mjs`).
 
 ## What may depend on what
 
@@ -307,8 +319,9 @@ graft at a nested node is in before the graft above that reads it.
 
 A relationship that needs another graft's data therefore lives in the
 graft that joins all the feats involved. A motion's roll needs seats
-(core's, counting by membership) and the motion, so it is `membership-motion`'s,
-and so is everything that counts the roll. A lower graft that needs what a
+and whether each counts, both core's, and the motion, so it is the
+motion feat's, and so is everything that counts the roll: no graft
+computes it. A lower graft that needs what a
 higher one decides declares it through a feat they share: a graft that
 cites a motion lists its action in `motion.cites`, and the graft that
 counts the roll attaches its guard to every action listed, so neither reads the
@@ -387,9 +400,9 @@ that covers every action listed is registered by
 `motion.register_cite_guard`, which attaches it to every action listed
 so far, and `motion.register_cite` attaches each guard so registered to
 the action it lists, whichever migrated first, so no graft puts a
-trigger on the register: `membership-motion`'s, that the motion
-passed on its roll, and the motion feat's own, that the motion's circle
-holds a collective mandate for the action's power. The journal's line
+trigger on the register: the motion feat's own, that the motion
+passed on its roll and that the motion's circle holds a collective
+mandate for the action's power. The journal's line
 checks are registered the same way: `account-transaction` registers
 that a line's account exists and its period is open by
 `transaction.register_line_check`, and the transaction feat's own
@@ -1470,7 +1483,7 @@ what it needs, and the payload field its
 amount is in when a mandate's limit caps it:
 `confluent({ power: 'pay-supplier', amount: 'amount' })`. The source of
 truth is the row the feat's SQL registers in `cella.power`, which the
-membership feat's guard reads, or for an action a motion
+guard of core's `circle-person` reads, or for an action a motion
 carries the row in `motion.cites`, or for a stance the row in
 `motion.stance_power`; the label mirrors it for the
 TypeScript, and `cella check feats` refuses any difference, and any
@@ -1486,10 +1499,10 @@ An action's payload names the owning circle of the record it concerns,
 a project's writes name the project's, a month's approval the month's,
 a meeting's the meeting's, and a share or an attendance record the
 circle of the project or meeting it is of. One naming none concerns the
-root's, the assembly's. The membership feat's guard on every power reads
+root's, the assembly's. Core's guard on every power reads
 it, the one guard that reads a permission's scope: the actor holds the
 power by a mandate whose scope covers that circle, or by a right, which
-reaches the whole co-op (`membership.may`, its scope below). No slice
+reaches the whole co-op (`circle_person.may`, its scope below). No slice
 checks a scope again; a slice's own guard still checks what is its own,
 as that an approver is not the month's member.
 
@@ -1501,7 +1514,7 @@ role in another. The participant's mandates cover proposing and discussing:
 `discuss`, to post on a motion's deliberation
 and on its meetings' agendas. They are mandates like any other, policies
 the assembly adopts, since `participant` is a role every circle has
-(`*`). `membership.may` finds them on any seat the actor holds,
+(`*`). `circle_person.may` finds them on any seat the actor holds,
 and the guard of the slice that knows which circle the action concerns
 narrows them to a seat in that circle
 ([circle](../../apps/org/core/circle/index.md#the-participant-role)).
@@ -1538,15 +1551,15 @@ covers, never a place in a tree. A mandate policy may mark it, a circle
 (`{scope: web}`, Web's projects, meetings and time) or the circle its
 holder holds the role in (`{scope: own}`), and one that marks none
 covers the whole co-op; it is copied into `circle.mandate.scope` with
-the rest. One guard reads it on every action, the membership feat's
-`membership.empowered`, by `membership.may(actor, power, cents, about,
+the rest. One guard reads it on every action, core's
+`circle_person.empowered`, by `circle_person.may(actor, power, cents, about,
 day)` against the record's owning circle, `about`, which the write's
 payload names, and core's `circle.covers`: Web's lead, whose mandates
 are on their own circle, runs Web's projects and approves Web's time
 and is refused Brand's, and the manager's, on the whole co-op, cover
 every circle's records. Ownership grants nothing by itself, and a seat
 in a circle nothing over its records without a mandate
-([membership](../../apps/org/feats/membership/index.md#seats)).
+([who may act](../../apps/org/core/grafts/circle-person/index.md#who-may-act)).
 Reading reads the same scope: a mandate for `read`, the read group's
 power, which no action needs, lets its holder read every record its
 scope covers, and one for a power a feat names as reading its rows
@@ -1601,11 +1614,11 @@ day)` asks the function each kind registers by `person.register_right`,
 `person` itself the known people, `membership` the active members by
 `membership.active`, `employment` those employed by
 `employment.employed`, so core's person knows none of those feats by
-name. The membership feat's guard on every op with a power takes a
-right, found by `membership.entitled`, as it takes a mandate on
+name. Core's guard on every op with a power takes a
+right, found by `circle_person.entitled`, as it takes a mandate on
 the actor's seats, so a person with no seat holds their rights all the
 same. A right lets each act on what is their own, and so is never the
-authority a read asks (`membership.may`): holding `keep-profile`
+authority a read asks (`circle_person.may`): holding `keep-profile`
 opens no one else's profile, nor `log-time` another's time. A right is
 adopted with the statutes and reaches the whole co-op: no mandate is
 issued under it.
@@ -1638,15 +1651,18 @@ the new holder and ends no mandate
 
 **Any person may hold a seat.** A seat is a person's place in a circle,
 member of the co-op or not, and only the assembly's seats ask an active membership:
-`membership.counts(person, circle, day)` says whether a seat
-counts on a day, in the assembly where membership says the person is
-active, in any other circle unless membership has suspended them or let
-them go. A worker who is no member sits in their working circle, by a
+`circle_person.counts(person, circle, day)`, core's, says whether a
+seat counts on a day: the person is one the co-op knows, and no kind of
+person bars the seat by what it registers (`circle_person.standing`),
+membership the assembly's but where it says the person is active, and
+any other circle's where it has suspended them or let them go. A scope
+without membership bars no seat of a person it knows. A worker who is
+no member sits in their working circle, by a
 motion of a circle holding `seat-member` as any seat is given, and holds that
 circle's mandates there, its participant's among them. A seat is how
 someone takes part in a circle; what is their own is still a right's,
 so a worker logs their time by their employment wherever they sit
-([membership](../../apps/org/feats/membership/index.md#seats)).
+([who may act](../../apps/org/core/grafts/circle-person/index.md#who-may-act)).
 
 **Who may vote or veto is the procedure's.** A motion's roll is what
 its procedure says: by default the people seated in its circle on the
@@ -1657,15 +1673,15 @@ the roles whose seats vote (`{voters: lead}`) and those that may veto
 the seats of the motion's own circle alone. A stance needs `vote`, the
 power a procedure gives the seats on the roll and no mandate grants: the
 motion feat registers it in `motion.stance_power`, and
-`membership-motion`'s guard `on_roll` judges it, the actor on the
+the motion feat's guard `motion.on_roll` judges it, the actor on the
 roll and their seat counting on the verdict date
-(`membership.counts`), so a worker who is no member votes in
+(`circle_person.counts`), so a worker who is no member votes in
 their working circle and not in the assembly. A stance against, or an
 objection, by someone on the roll in a veto role is a veto, and the
 motion does not pass whatever the count. Delegates, people chosen to
 vote for others at a higher level, are part of a procedure's
 configuration and not built
-([membership-motion](../../apps/org/grafts/membership-motion/index.md)).
+([the roll](../../apps/org/feats/motion/index.md#the-roll)).
 
 No action is allowed by omission: every action declares the power it
 needs. The one that cannot is the log's first entry, the founding
@@ -1687,8 +1703,8 @@ collective mandates grant, and `cella check feats` refuses `check:
 'decided'`. A power is backed by SQL: an individual mandate's or a
 right's by a row in `cella.power`; a collective mandate's by a row in
 `motion.cites`, to which `motion.register_cite` attaches
-`membership-motion`'s guard, that the motion passed on its roll,
-and the motion feat's, that its circle holds the power; and the voting
+the motion feat's guards, that the motion passed on its roll
+and that its circle holds the power; and the voting
 power by a row in `motion.stance_power`.
 
 `cella check feats` refuses, each with a negative test in
@@ -1972,7 +1988,7 @@ A procedure may consult a circle (`{consult: coordination}`): a motion
 decided by it closes only once someone seated in that circle has said
 something on its deliberation, where the consulted circle's seats speak
 as its own do
-([membership-motion](../../apps/org/grafts/membership-motion/index.md#guards)).
+([the roll](../../apps/org/feats/motion/index.md#the-roll)).
 
 **A legal form supplies default policies** ([legal forms](forms.md)). A
 form, a SCOP SARL in France first, is a set of ready-made policies the
@@ -2008,9 +2024,9 @@ procedures a scope starts with, consent, majority, two thirds and
 election, are built in, and name the policy that adopts them once their
 scope's root does. A mandate policy's grantee, a role or a circle, power, limit
 or budget and procedure are copied by core into `circle.mandate`, which
-`membership.may` reads for a role's and the motion feat for a
+`circle_person.may` reads for a role's and the motion feat for a
 circle's, and a right policy's right, power and limit into
-`circle.right`, which `membership.entitled` reads, through the motion feat, whose adoption
+`circle.right`, which `circle_person.entitled` reads, through the motion feat, whose adoption
 and ending of a policy are the motion feat's with core's copy
 in the same write
 ([mandates](../../apps/org/core/circle/index.md#mandates)). A new

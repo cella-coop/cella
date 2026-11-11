@@ -1,5 +1,5 @@
 // What a mandate covers, on a database holding the app's core,
-// its circles, and the person and membership feats: `membership.may`
+// its circles, and the person and membership feats: `circle_person.may`
 // reads a mandate's scope against the owning circle of the record a write
 // concerns (`circle.covers`), never where a circle sits, since circles
 // never nest: one on `own` covers the circle its seat is in, one on a
@@ -18,7 +18,7 @@ const julien = 'julien@lanterne.example'
 const thomas = 'thomas@lanterne.example'
 
 const may = async (actor: string, power: string, about: string | null, day = '2026-10-24') =>
-  (await db.query<{ m: boolean }>('SELECT membership.may($1, $2, NULL, $3, $4) AS m', [actor, power, about, day])).rows[0].m
+  (await db.query<{ m: boolean }>('SELECT circle_person.may($1, $2, NULL, $3, $4) AS m', [actor, power, about, day])).rows[0].m
 
 before(async () => {
   await db.connect()

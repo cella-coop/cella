@@ -46,7 +46,7 @@ type Action = { kind: string; args: Record<string, string> }
 async function consented(circle: string, title: string, actions: Action[], by: string, from: string, deadline: string) {
   await on(from)
   const { motion } = settled(await propose({ circle, title, procedure: 'consent', deadline, body: '', actions }, as(by)))
-  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
   return motion

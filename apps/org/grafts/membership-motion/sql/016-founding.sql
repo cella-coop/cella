@@ -7,7 +7,7 @@ CREATE FUNCTION membership_motion.founders(ref text) RETURNS TABLE (member text,
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT b.address,
-    membership.sits_in(b.address, d.circle, d.closed) AND EXISTS (
+    circle_person.sits_in(b.address, d.circle, d.closed) AND EXISTS (
       SELECT FROM circle.seat s
       JOIN motion.procedure p ON p.id = d.procedure
       WHERE s.circle = d.circle AND s.member = b.address
@@ -63,7 +63,7 @@ BEGIN ATOMIC
       THEN x.motion || ' is a motion of ' || m.circle || ', not of ' || r.id || ': a co-op is founded by a motion of its root'
     WHEN m.closed IS NULL
       THEN m.id || ' is not closed: a co-op is founded by a motion its founders closed'
-    WHEN NOT coalesce(membership_motion.passes(m.id), false)
+    WHEN NOT coalesce(motion.passes(m.id), false)
       THEN m.id || ' is not carried by ' || m.procedure || ' as its roll counts it: a co-op is founded by a motion its founders carried'
     WHEN EXISTS (SELECT FROM policy.policy p WHERE p.takes IS NOT NULL AND p.motion <> m.id)
       THEN (SELECT p.id || ' takes ' || p.takes || ' but was adopted by ' || p.motion || ', not ' || m.id
@@ -82,7 +82,7 @@ BEGIN ATOMIC
            || ': its founders decide their founding motion, each with a stance before it closes'
     WHEN NOT EXISTS (SELECT FROM membership_motion.founders(m.id) o WHERE o.member = cella.actor())
       THEN 'the founding''s signer is none of its founders: a founder, a member by ' || to_char(m.closed, 'YYYY-MM-DD') || ', signs it'
-    WHEN NOT membership.sits_in(cella.actor(), r.id, cella.verdict_date())
+    WHEN NOT circle_person.sits_in(cella.actor(), r.id, cella.verdict_date())
       THEN 'the founding''s signer does not sit in ' || r.id || ': a founder seated there signs it'
     WHEN NOT EXISTS (
       SELECT FROM circle.seat s

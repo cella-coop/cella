@@ -22,7 +22,7 @@ INSERT INTO file_membership.opener (class, power) VALUES
 CREATE FUNCTION file_membership.opens(id text, actor text) RETURNS boolean
 LANGUAGE sql STABLE
 BEGIN ATOMIC
-  SELECT coalesce(bool_or(membership.may(opens.actor, o.power, NULL, NULL, cella.verdict_date())), false)
+  SELECT coalesce(bool_or(circle_person.may(opens.actor, o.power, NULL, NULL, cella.verdict_date())), false)
   FROM file.file f
   JOIN file_membership.opener o ON o.class = f.class
   WHERE f.id = opens.id;

@@ -39,7 +39,7 @@ const as = (actor: string): Deps => reacting({ db: reader(app, actor), actor, si
 const one = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows[0] as R
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
-const passes = async (d: string) => (await one<{ p: boolean }>('SELECT membership_motion.passes($1) AS p', [d])).p
+const passes = async (d: string) => (await one<{ p: boolean }>('SELECT motion.passes($1) AS p', [d])).p
 const status = async (m: string) => one<{ status: string; since: string | null; shares: number }>(
   `SELECT status, to_char(since, 'YYYY-MM-DD') AS since, shares FROM membership.member WHERE address = $1`,
   [m],
@@ -127,7 +127,7 @@ test('m-2026-012 closes on 31 October and, in the same transaction, admits Inès
 
   const entry = await one<{ op: string; guards: { owner: string }[] }>('SELECT op, guards FROM cella.log WHERE n = 4')
   assert.equal(entry.op, 'motion:motion:close')
-  assert.deepEqual([...new Set(entry.guards.map((r) => r.owner))].sort(), ['membership', 'membership-motion', 'motion'])
+  assert.deepEqual([...new Set(entry.guards.map((r) => r.owner))].sort(), ['circle-person', 'motion'])
 
   const late = await vote({ motion: 'm-2026-012', member: hugo, stance: 'object' }, as(hugo))
   assert.equal(late.state, 'refused', 'a confluent write may be refused at rung 1')

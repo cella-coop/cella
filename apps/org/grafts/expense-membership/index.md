@@ -1,12 +1,12 @@
 +++
 title = "expense-membership"
-updated = 2026-11-09
+updated = 2026-11-11
 +++
 
 Whose an expense is, by name. The expense feat holds the claimant's
 address, as a timesheet entry does; this graft names them, member or
 not. Who may claim is every employee's right, `claim-expense`, which
-the membership feat's guard checks, and that the claim is the actor's
+core's guard on every power checks, and that the claim is the actor's
 own `expense.captures`'s, so this graft refuses no claim; it holds an
 approval to its mandate's budget ([circles](#circles)). Declared by
 `expense`.
@@ -29,7 +29,7 @@ expenses the member decided, so it lives here.
   holds `approve-expense` on the verdict date through a mandate with no
   budget, or through one whose budget their approvals over its period,
   this one included, stay within. That they hold the power at all, and
-  within its limit for the one expense, is the membership feat's guard.
+  within its limit for the one expense, is core's guard on every power.
 
 A budget is spent per holder of the mandate: each lead has their own
 1 000 € a month. The guard runs under the log's head lock, so two

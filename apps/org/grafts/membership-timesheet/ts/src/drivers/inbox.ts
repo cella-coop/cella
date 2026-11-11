@@ -13,6 +13,6 @@ export const approvals: Read = {
         FROM timesheet.period p
         JOIN circle.circle c ON c.id = p.circle
         WHERE p.submitted IS NOT NULL AND p.approved IS NULL AND p.member <> cella.reader()
-          AND membership.may(cella.reader(), 'approve-time', NULL, p.circle, cella.verdict_date())`,
+          AND circle_person.may(cella.reader(), 'approve-time', NULL, p.circle, cella.verdict_date())`,
   order: 'month, member, circle',
 }

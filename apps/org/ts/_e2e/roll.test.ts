@@ -42,8 +42,8 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
   assert.equal(out.state, 'settled', reason(out))
   return out.value as T
 }
-const passes = async (d: string) => (await one<{ p: boolean }>('SELECT membership_motion.passes($1) AS p', [d])).p
-const roll = (d: string) => all<{ member: string; veto: boolean }>('SELECT member, veto FROM membership_motion.roll WHERE motion = $1 ORDER BY member', [d])
+const passes = async (d: string) => (await one<{ p: boolean }>('SELECT motion.passes($1) AS p', [d])).p
+const roll = (d: string) => all<{ member: string; veto: boolean }>('SELECT member, veto FROM motion.roll WHERE motion = $1 ORDER BY member', [d])
 
 // A motion of a circle's text alone acts under no mandate, so the circle's
 // procedure decides it: the host stages that procedure, as only a

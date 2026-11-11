@@ -16,7 +16,7 @@ const paul = 'paul@counts'
 let root = ''
 
 const counts = async (person: string, circle: string, day = '2026-10-24') =>
-  (await db.query<{ c: boolean }>('SELECT membership.counts($1, $2, $3) AS c', [person, circle, day])).rows[0].c
+  (await db.query<{ c: boolean }>('SELECT circle_person.counts($1, $2, $3) AS c', [person, circle, day])).rows[0].c
 
 before(async () => {
   await db.connect()

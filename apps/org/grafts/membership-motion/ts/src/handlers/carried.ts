@@ -86,7 +86,7 @@ const writes: Record<string, { op: Permission; run: (a: Args, motion: string, de
 export async function carried(motion: string, deps: Deps): Promise<Done[]> {
   const { rows } = await deps.db.query<{ n: number; kind: string; args: Args; circle: string }>(
     `SELECT m.n, m.kind, m.args, d.circle FROM motion.action m JOIN motion.motion d ON d.id = m.motion
-     WHERE m.motion = $1 AND d.closed IS NOT NULL AND coalesce((membership_motion.tally(d.id)).passes, false)
+     WHERE m.motion = $1 AND d.closed IS NOT NULL AND coalesce((motion.tally(d.id)).passes, false)
      ORDER BY m.n`,
     [motion],
   )

@@ -74,7 +74,7 @@ const mandate = (grantee: string, power: string) =>
 // as the shell puts it, every member on its roll consenting; its id.
 async function put(m: circleMotions.Put, by: string) {
   const { motion } = settled(await propose(await circles.putting(m, as(by).db), as(by))) as { motion: string }
-  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
   return motion
@@ -318,7 +318,7 @@ unseeded('the grant, the change and m-2026-013 close, Sofia may record and appro
     assert.deepEqual((await carried(motion, as(by))).map((d) => [d.op, d.state]), [['motion:policy:adopt', 'settled']], motion)
   }
   const may = async (power: string, amount: number | null) =>
-    (await one<{ may: boolean }>(`SELECT membership.may($1, $2, $3::bigint, 'brand', '2026-10-31') AS may`, [sofia, power, amount])).may
+    (await one<{ may: boolean }>(`SELECT circle_person.may($1, $2, $3::bigint, 'brand', '2026-10-31') AS may`, [sofia, power, amount])).may
   assert.deepEqual([await may('record-bill', null), await may('approve-bill', 1440_00)], [true, true])
   const changed = await mandate('print-buyer', 'approve-bill')
   assert.equal(changed.limit, 150000)

@@ -9,7 +9,8 @@
 -- its procedure, whose method it keeps, and its ballot, proposed on the
 -- entry's day by the entry's actor, open until its deadline, its title
 -- and its text as their commitments, its proposer their subject, and the
--- actions it decides in the order listed. Published for a slice whose
+-- actions it decides in the order listed, and its roll fixed as
+-- `proposing` fixes it (`motion.fix`). Published for a slice whose
 -- own write proposes a motion by `proposing`, as membership-motion's
 -- application does, to fold from its entry.
 CREATE FUNCTION motion.fold_proposal(n bigint, actor text, day date, p jsonb) RETURNS void
@@ -26,6 +27,7 @@ BEGIN
   INSERT INTO motion.action (motion, n, kind, args)
   SELECT p ->> 'motion', a.i, a.x ->> 'kind', coalesce(a.x -> 'args', '{}')
   FROM jsonb_array_elements(coalesce(p -> 'actions', '[]')) WITH ORDINALITY AS a (x, i);
+  PERFORM motion.fix(p ->> 'motion');
 END
 $$;
 
@@ -70,13 +72,15 @@ END
 $$;
 
 -- motion:motion:close: the motion closed on the entry's day, its cutoff
--- the close's receipt, as the entry carries them.
+-- the close's receipt, as the entry carries them, and its roll counted
+-- as `closing` counts it (`motion.count`).
 CREATE FUNCTION motion.fold_close(entry jsonb) RETURNS void
 LANGUAGE plpgsql AS $$
 DECLARE
   p jsonb := entry -> 'payload';
 BEGIN
   UPDATE motion.motion SET closed = (entry ->> 'date')::date, cutoff = (p ->> 'cutoff')::bigint WHERE id = p ->> 'motion';
+  PERFORM motion.count(p ->> 'motion');
 END
 $$;
 

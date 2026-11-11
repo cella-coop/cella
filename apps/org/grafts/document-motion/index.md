@@ -1,6 +1,6 @@
 +++
 title = "document-motion"
-updated = 2026-11-08
+updated = 2026-11-11
 +++
 
 Adoption by motion: what content of which document a motion asks to
@@ -42,10 +42,10 @@ assembly's, unless the write that makes it names another.
   (`document_motion.linked`).
 
 An adoption cites its motion: this graft registers
-`document:document:adopt` by `motion.register_cite`, with its power, `adopt-document`, a collective mandate of the motion's circle, and `membership-motion`,
-which counts the roll, attaches its guard that the motion closed and
-passed. This graft joins two feats and so cannot read the roll, a
-three-way graft's; it never needs to. That the version is the document's
+`document:document:adopt` by `motion.register_cite`, with its power, `adopt-document`, a collective mandate of the motion's circle, and the motion feat,
+which counts the roll, attaches its guard `motion.carried`, that the motion closed and
+passed. This graft reads no roll:
+it never needs to. That the version is the document's
 and its base has not moved is the document feat's guard (`base: 'adopted'`).
 
 Adopting rate-card-2027@2 under m-2026-011 so passes four guards, each at
@@ -54,7 +54,7 @@ motion's content, the roll's outcome, and coordination's collective
 `adopt-document`.
 
 It registers `document:document:generate` by `motion.register_cite` too, with `adopt-policy`, since the statutes are generated as their policies are adopted
-(`sql/005-generate.sql`), so `membership-motion`'s guard holds the
+(`sql/005-generate.sql`), so the motion feat's guard `motion.carried` holds the
 statutes' generation to a motion that closed and passed; that the motion
 adopted or ended a policy of the document's circle that day, and that
 the version reads its policies, are the document feat's guard.

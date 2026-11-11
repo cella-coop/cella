@@ -17,6 +17,14 @@ SELECT m.motion, m.n, m.kind, m.args ->> 'member' AS member,
 FROM motion.action m
 WHERE m.kind IN ('admit', 'suspend', 'exclude');
 
+-- Whether a cited motion has not yet carried what it asks: it is no
+-- motion, or it has not closed and passed. That is the motion feat's to
+-- refuse (`motion.carried`), so a guard of this graft on a cited write
+-- says nothing of such a motion, and that reason comes first.
+CREATE FUNCTION membership_motion.uncarried(ref text) RETURNS boolean
+LANGUAGE sql STABLE
+RETURN NOT coalesce((SELECT d.closed IS NOT NULL AND motion.passes(d.id) FROM motion.motion d WHERE d.id = ref), false);
+
 -- motion:motion:propose — each action of this graft's kinds names a
 -- member it can apply to: someone invited, with shares, to admit; an
 -- active member to suspend; an active or suspended one to exclude.
@@ -41,9 +49,8 @@ BEGIN ATOMIC
 END;
 
 -- membership:member:admit — the cited motion asks to admit this member,
--- with these shares. That it closed and passed on its roll is
--- membership-motion's guard, which this graft cannot read: an
--- admission cites a motion.
+-- with these shares. That it closed and passed on its roll is the
+-- motion feat's guard, `motion.carried`: an admission cites a motion.
 CREATE FUNCTION membership_motion.admits(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -64,6 +71,7 @@ CREATE FUNCTION membership_motion.ends(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
+    WHEN membership_motion.uncarried(payload ->> 'motion') THEN NULL
     WHEN d.id IS NULL THEN 'no motion ' || coalesce(p.motion, 'is cited')
     WHEN NOT EXISTS (
       SELECT FROM membership_motion.action m

@@ -30,8 +30,14 @@ and the graft joining them is the app's (`apps/org/grafts/employment-membership`
 A person's roles are derived. They are a member if they hold a
 membership and a worker if they hold an employment, and a person may hold
 both, either or, as a contact, neither. Core knows no feat: what a
-membership or an employment is, and who holds a right by them, is
-registered by those feats.
+membership or an employment is, who holds a right by them, and what
+bars a seat of theirs, is registered by those feats. Who may act is
+core's, beside the seats, the tenures and the people: whether a seat
+counts, the authority every read asks and the guard on every power are
+core's graft joining the people to the circles
+([who may act](../grafts/circle-person/index.md#who-may-act)), and a
+motion's roll is counted by it, so membership keeps the shares, the
+capital, the joining and the leaving, and no authority.
 
 ```mermaid
 flowchart BT
@@ -141,7 +147,7 @@ it. A worker who was never a member is not erased yet.
 `003-powers.sql` registers each action's power, so none is allowed by
 omission: the four a person takes on what is their own need a power
 every person's right grants ([rights](../circle/index.md#rights)),
-checked by the membership feat's guard, and this core's guards check
+checked by core's guard on every power (`circle_person.empowered`), and this core's guards check
 what they keep is theirs.
 
 ## Schema

@@ -47,7 +47,7 @@ export function taking(r: Roll): string {
 }
 
 // A motion's electorate and its outcome, computed by
-// `membership_motion.passes` from the stances on its roll; null while
+// `motion.passes` from the stances on its roll; null while
 // no stance counts.
 export interface Roll {
   method: 'consent' | 'majority'

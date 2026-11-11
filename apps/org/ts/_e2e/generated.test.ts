@@ -63,7 +63,7 @@ const closes = new Map<string, Done[]>()
 async function motioned(title: string, actions: Action[], deadline: string, carry = true): Promise<string> {
   const motion = settled(await propose({ circle: 'ag', title, procedure: 'consent', deadline, body: '', actions }, as(camille))).motion
   for (const { member } of await all<{ member: string }>(
-    `SELECT r.member FROM membership_motion.roll r JOIN membership.member m ON m.address = r.member WHERE r.motion = $1 AND m.status = 'active'`,
+    `SELECT r.member FROM motion.roll r JOIN membership.member m ON m.address = r.member WHERE r.motion = $1 AND m.status = 'active'`,
     [motion],
   )) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))

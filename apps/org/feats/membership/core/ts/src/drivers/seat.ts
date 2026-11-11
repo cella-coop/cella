@@ -22,13 +22,13 @@ export async function seats(db: Db, by: { circle?: string; member?: string }): P
   return rows
 }
 
-// The mandates a member holds on the verdict date, as `membership.holds`
-// gives them: what `membership.may` grants them, before any limit is
+// The mandates a member holds on the verdict date, as `circle_person.holds`
+// gives them: what `circle_person.may` grants them, before any limit is
 // spent, the participant's once for each circle they sit in.
 export async function held(db: Db, member: string): Promise<Held[]> {
   const { rows } = await db.query<Omit<Held, 'sentence'>>(
     `SELECT md.id || '@' || h.circle AS id, md.power, md.policy, cella.cents(md."limit") AS "limit", md.grantee AS role, h.circle, c.name AS "circleName"
-     FROM membership.holds($1, cella.verdict_date()) h
+     FROM circle_person.holds($1, cella.verdict_date()) h
      JOIN circle.mandate md ON md.id = h.mandate
      JOIN circle.circle c ON c.id = h.circle
      ORDER BY md.power, c.name, md.id`,
@@ -40,10 +40,10 @@ export async function held(db: Db, member: string): Promise<Held[]> {
 }
 
 // Every power a person holds on the verdict date and what through, as
-// `membership.may` and `membership.entitled` grant it: each mandate
-// `membership.holds` gives, in the circle of its seat, with the tenure
+// `circle_person.may` and `circle_person.entitled` grant it: each mandate
+// `circle_person.holds` gives, in the circle of its seat, with the tenure
 // that holds its role there, none for the participant's, and its caps and
-// scope; and each right `membership.rights` gives, with its power and
+// scope; and each right `circle_person.rights` gives, with its power and
 // limit, which it reads as its owner and answers the reader for
 // themselves, or for anyone where they are a member: never by joining
 // `circle.right`, which a non-member reads no row of. A power held twice
@@ -54,7 +54,7 @@ export async function powers(db: Db, member: string): Promise<Power[]> {
        h.circle, c.name AS "circleName", t.role, r.name AS "roleName", t.id::text AS tenure,
        to_char(t.since, 'YYYY-MM-DD') AS since, to_char(t.until, 'YYYY-MM-DD') AS until,
        cella.cents(md."limit") AS "limit", cella.cents(md.budget) AS budget, md.per, md.scope, sc.name AS "scopeName", NULL::text AS "right"
-     FROM membership.holds($1, cella.verdict_date()) h
+     FROM circle_person.holds($1, cella.verdict_date()) h
      JOIN circle.mandate md ON md.id = h.mandate
      JOIN circle.circle c ON c.id = h.circle
      LEFT JOIN circle.tenure t ON t.holder = $1 AND t.role = md.grantee AND t.circle = h.circle
@@ -64,7 +64,7 @@ export async function powers(db: Db, member: string): Promise<Power[]> {
      UNION ALL
      SELECT 'r' || g.id, g.power, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
        cella.cents(g."limit"), NULL, NULL, NULL, NULL, g."right"
-     FROM membership.rights($1, cella.verdict_date()) g
+     FROM circle_person.rights($1, cella.verdict_date()) g
      ORDER BY power, "right" NULLS FIRST, "circleName", tenure NULLS LAST, mandate`,
     [member],
   )

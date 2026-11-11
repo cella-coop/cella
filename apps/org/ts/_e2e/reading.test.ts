@@ -210,7 +210,7 @@ test('a function reading as its owner keeps its rows to whoever reads them: Inè
   assert.equal(pay.length, 10, 'Julien, who distributes the surplus, reads every worker\'s part by pay')
 
   // A motion's count, of Coordination's open motion on the rate card.
-  const tally = `SELECT passes, counted, given, quorate FROM membership_motion.tally('m-2026-011')`
+  const tally = `SELECT passes, counted, given, quorate FROM motion.tally('m-2026-011')`
   for (const member of [ines, paul]) {
     assert.deepEqual(await reading(member, tally), [{ passes: null, counted: null, given: null, quorate: null }], `${member} reads no count of Coordination's motion`)
     assert.deepEqual(await reading(member, `SELECT id FROM motion.motion WHERE id = 'm-2026-011'`), [], 'as they read no motion of it')

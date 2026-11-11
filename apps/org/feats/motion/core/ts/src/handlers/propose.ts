@@ -13,12 +13,13 @@ const op = 'motion:motion:propose' satisfies keyof typeof actions
 // for. Its procedure is the one the
 // write gives it, which the graft knowing its requirements fixes, or
 // consent; its method is its procedure's, which a foreign key keeps, and
-// its ballot the one the proposal names or else the procedure's;
-// `motion.proposes` checks the write made it, the
+// its ballot the one the proposal names or else the procedure's; and its
+// roll is fixed in the same write, those its procedure calls (`motion.fix`,
+// which `motion.fixed` checks); `motion.proposes` checks the write made it, the
 // graft registering each action's kind checks the action, and the actor
-// must sit in the circle. A graft that fixes more in the same write, as
-// membership-motion fixes the roll, runs this state inside its
-// own. The title and the text are the proposer's words: the log commits
+// must sit in the circle (`motion.sits`). A graft that does more in the
+// same write, as membership-motion fixes the procedure, runs this state
+// inside its own. The title and the text are the proposer's words: the log commits
 // to them and the vault keeps them.
 export function proposing(input: Propose): Write<Proposed> {
   const procedure = input.procedure ?? 'consent'
@@ -49,6 +50,7 @@ export function proposing(input: Propose): Write<Proposed> {
       for (const [i, m] of input.actions.entries()) {
         await tx.query('INSERT INTO motion.action (motion, n, kind, args) VALUES ($1, $2, $3, $4)', [proposed.motion, i + 1, m.kind, m.args])
       }
+      await tx.query('SELECT motion.fix($1)', [proposed.motion])
       return proposed
     },
     payload: (v) => ({

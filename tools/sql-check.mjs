@@ -5,10 +5,11 @@
 //   a node's core     cella.*; the notary's vault; the catalog; a core
 //                     feat's own schema, named for it, in its SQL
 //                     (analytics, the port's; policy, the register's;
-//                     circle, the circles'), and the schemas of the core
-//                     libraries its package depends on; a core graft's own
-//                     schema, named for it (circle_policy), and those of
-//                     the core feats it joins
+//                     circle, the circles'), and never another core
+//                     feat's, whatever its package depends on; a core
+//                     graft's own schema, named for it (circle_policy),
+//                     and those of the core feats it joins, never one it
+//                     does not join
 //   a feat            its own schema; those of the feats it nests in;
 //                     cella.*; core's circles; the policy register; the
 //                     grafts of its ancestors' cores; the catalog
@@ -144,11 +145,11 @@ export function owners(repo, apps) {
     }
     for (const lib of existsSync(join(repo, core)) ? readdirSync(join(repo, core)) : []) {
       if (existsSync(join(repo, core, lib, 'sql'))) {
-        out.push({ dir: join(core, lib, 'sql'), ...owner, ...(feat ? {} : { lib, uses: uses(repo, core, lib) }) })
+        out.push({ dir: join(core, lib, 'sql'), ...owner, ...(feat ? {} : { lib, peers: lib === NOTARY ? [] : peers(repo, core).filter((f) => f !== lib) }) })
       }
     }
     for (const g of feat ? [] : joins) {
-      out.push({ dir: join(core, 'grafts', g, 'sql'), kind: 'core', node, lib: g, uses: [], joins: g.split('-') })
+      out.push({ dir: join(core, 'grafts', g, 'sql'), kind: 'core', node, lib: g, peers: peers(repo, core).filter((f) => !g.split('-').includes(f)), joins: g.split('-') })
     }
     const inner = feat ? [...lineage, feat] : []
     for (const f of list(join(node, 'feats'))) {
@@ -166,14 +167,12 @@ export function owners(repo, apps) {
   return out
 }
 
-// The core libraries with SQL of their own that a core library's package
-// depends on, by name: its SQL may reference their schemas.
-function uses(repo, core, lib) {
-  const pkg = join(repo, core, lib, 'ts', 'package.json')
-  const deps = existsSync(pkg) ? Object.keys(JSON.parse(readFileSync(pkg, 'utf8')).dependencies ?? {}) : []
-  return deps
-    .map((d) => d.match(/^@cella\/[a-z]+-([a-z]+)$/)?.[1])
-    .filter((d) => d && d !== lib && existsSync(join(repo, core, d, 'sql')))
+// A core's feats, by name: each core package with SQL of its own, the
+// notary's aside. None reads another; a core graft joins them.
+function peers(repo, core) {
+  return existsSync(join(repo, core))
+    ? readdirSync(join(repo, core)).filter((d) => d !== NOTARY && d !== 'grafts' && existsSync(join(repo, core, d, 'sql')))
+    : []
 }
 
 // The schemas an owner's SQL may reference, and its own.
@@ -182,11 +181,12 @@ function scope(o) {
     // A core graft's own schema is named for it; it reads the core feats it
     // joins, and secures those the circles do not own.
     const secures = new Set(o.joins.includes(CIRCLES) ? o.joins.filter((j) => j !== CIRCLES).map(schemaOf) : [])
-    return { own: schemaOf(o.lib), secures, allowed: new Set(['cella', ...catalog, schemaOf(o.lib), ...o.joins.map(schemaOf)]), feats: [], ops: [] }
+    return { own: schemaOf(o.lib), secures, peers: new Set(o.peers.map(schemaOf)), allowed: new Set(['cella', ...catalog, schemaOf(o.lib), ...o.joins.map(schemaOf)]), feats: [], ops: [] }
   }
   if (o.kind === 'core') {
-    // A core library's own schema is named for it.
-    return { own: o.lib ? schemaOf(o.lib) : null, allowed: new Set(['cella', 'vault', ...catalog, ...(o.lib ? [o.lib, ...o.uses] : [])]), feats: [], ops: [] }
+    // A core library's own schema is named for it; it reads no other core
+    // feat's.
+    return { own: o.lib ? schemaOf(o.lib) : null, peers: new Set((o.peers ?? []).map(schemaOf)), allowed: new Set(['cella', 'vault', ...catalog, ...(o.lib ? [o.lib] : [])]), feats: [], ops: [] }
   }
   if (o.kind === 'feat') {
     return { own: o.name, allowed: new Set([o.name, ...o.lineage, 'cella', CIRCLES, REGISTER, ...(o.cored ?? []), ...catalog]), feats: [o.name], ops: [o.name, CIRCLES] }
@@ -233,7 +233,11 @@ const walk = (node, visit, key = null) => {
 // reference check.
 function inspect(tree, o, s, known, fail, found) {
   const ref = (schema, what) => {
-    if (schema && !s.allowed.has(schema)) {
+    if (s.peers?.has(schema)) {
+      fail(o.joins
+        ? `${what}: core ${o.lib} joins no ${schema}; a core graft names only the core feats it joins`
+        : `${what}: core ${o.lib} names no other core feat's schema, ${schema}; a core graft joins core feats (architecture.md, "Core grafts")`)
+    } else if (schema && !s.allowed.has(schema)) {
       fail(`${what}: ${schema} is outside ${[...s.allowed].filter((x) => !catalog.has(x)).join(', ')}`)
     }
   }

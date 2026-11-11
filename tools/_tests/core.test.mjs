@@ -65,9 +65,9 @@ GRANT EXECUTE ON FUNCTION cella.line_amount(numeric, bigint) TO cella_app;`)
   assert.match(errors, /grants on cella: core ledger creates and grants only in its own schema, ledger/)
 })
 
-test('a core library creating in a core library it does not depend on is refused', async () => {
+test('a core feat acting in another core feat is refused', async () => {
   const errors = await check('ALTER TABLE policy.policy ENABLE ROW LEVEL SECURITY;')
-  assert.match(errors, /reads policy\.policy: policy is outside/)
+  assert.match(errors, /reads policy\.policy: core ledger names no other core feat's schema, policy; a core graft joins core feats/)
   assert.match(errors, /alters policy\.policy: core ledger creates and grants only in its own schema, ledger/)
 })
 
@@ -84,7 +84,13 @@ LANGUAGE sql STABLE RETURN EXISTS (SELECT FROM policy.wording w WHERE w.policy =
   assert.match(errors, /reads policy\.wording: a guard reads a policy's values from its own columns, never its wording/)
 })
 
-test('a core library acts in no other core library\'s schema, its package depending on it or not: a core graft joins them', async () => {
+test('a core feat reads no other core feat\'s schema, its package depending on it or not: a core graft joins them', async () => {
+  const errors = await check(`CREATE FUNCTION ledger.kind(ref text) RETURNS text
+LANGUAGE sql STABLE RETURN (SELECT p.kind FROM policy.policy p WHERE p.id = ref);`, { uses: ['policy'] })
+  assert.match(errors, /reads policy\.policy: core ledger names no other core feat's schema, policy; a core graft joins core feats/)
+})
+
+test('a core feat acts in no other core feat\'s schema, its package depending on it or not', async () => {
   const errors = await check(`ALTER TABLE policy.wording ENABLE ROW LEVEL SECURITY;
 CREATE FUNCTION policy.says(ref text) RETURNS text
 LANGUAGE sql STABLE RETURN (SELECT p.kind FROM policy.policy p WHERE p.id = ref);`, { uses: ['policy'] })
@@ -123,7 +129,7 @@ LANGUAGE sql STABLE RETURN (SELECT w.legal FROM policy.wording w WHERE w.policy 
 CREATE FUNCTION circle_policy.booked() RETURNS boolean LANGUAGE sql STABLE RETURN ledger.booked();`,
   })
   assert.match(errors, /reads policy\.wording: a guard reads a policy's values from its own columns, never its wording/)
-  assert.match(errors, /names ledger\.booked: ledger is outside/)
+  assert.match(errors, /names ledger\.booked: core circle-policy joins no ledger; a core graft names only the core feats it joins/)
 })
 
 test('the register makes and reads its own wording', async () => {

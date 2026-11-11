@@ -178,8 +178,9 @@ for (const s of slices) {
 
 // A graft extends only the collections of the feats it joins and of the
 // feats they nest in, and a nested feat those of the feats it nests in;
-// any slice those of core, which every feat builds on; the root may join
-// any. A slice in parts names each `<slice>/<part>`, and each part
+// any slice those of core, which every feat builds on, but a core feat
+// those of another core feat, which only a core graft joining both
+// extends; the root may join any. A slice in parts names each `<slice>/<part>`, and each part
 // reaches what its slice does.
 const within = new Map(slices.flatMap((s) => (s.within ? [[s.name, s.within] as const] : [])))
 const outer = (feat: string): string[] => {
@@ -193,6 +194,9 @@ for (const s of slices) {
       throw new Error(`${s.name} extends ${name}, which no slice owns`)
     }
     const reach = s.name.split('/')[0].split('-').flatMap((f) => [f, ...outer(f)])
+    if (s.core && mounted.owner.core && mounted.owner !== s) {
+      throw new Error(`${s.name} extends ${name}, ${mounted.owner.name}'s: no core feat extends another's collections, a core graft joining both does`)
+    }
     if (s !== root && !mounted.owner.core && !reach.includes(mounted.owner.name)) {
       throw new Error(`${s.name} extends ${name}, ${mounted.owner.name}'s, which it does not join`)
     }

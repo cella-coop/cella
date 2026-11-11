@@ -1,7 +1,8 @@
 // migrate: applies each node's SQL down the feat tree — a node's core
-// (core/sql/, then core/<lib>/sql/, the notary's first and each library
-// after those its package depends on), then its feats, recursively, then its
-// grafts, lowest order first — each directory's NNN-*.sql files in order.
+// (core/sql/, the notary's, then its core feats' by name, which read no
+// other and so take no order among themselves, then its core grafts',
+// lowest order first), then its feats, recursively, then its grafts,
+// lowest order first — each directory's NNN-*.sql files in order.
 // Applied files are recorded by their stable id (`migrations.mjs`)
 // with their hash in migration.applied. Until launch a migration is
 // rewritten in place and every database rebuilt, so a database that
@@ -71,27 +72,15 @@ const isNode = (dir) => existsSync(join(dir, 'feat.toml'))
 const order = (g) => g.split('-').length
 const byOrder = (grafts) => grafts.sort((a, b) => order(a) - order(b) || a.localeCompare(b))
 
-// A core library's SQL calls the notary's, and the SQL of the libraries
-// its package depends on. Core's grafts, which join its feats, run after
-// every library and feat of the core, lowest order first.
-const uses = (node, lib) => {
-  const pkg = join(node, 'core', lib, 'ts', 'package.json')
-  const deps = existsSync(pkg) ? Object.keys(JSON.parse(readFileSync(pkg, 'utf8')).dependencies ?? {}) : []
-  return deps.map((d) => d.match(/^@cella\/[a-z]+-([a-z]+)$/)?.[1]).filter((d) => d && d !== lib)
-}
+// A core feat's SQL calls the notary's and reads no other core feat's, so
+// core's feats follow the notary by name, in no order of their own; core's
+// grafts, which join its feats, run after every one, lowest order first.
 const core = (node) => {
-  const libs = sorted(join(node, 'core')).filter((lib) => lib !== 'grafts' && isDir(join(node, 'core', lib)))
-  const out = []
-  const visit = (lib) => {
-    if (!out.includes(lib)) {
-      uses(node, lib).filter((d) => libs.includes(d)).forEach(visit)
-      out.push(lib)
-    }
-  }
-  ;[...libs.filter((lib) => lib === 'notary'), ...libs].forEach(visit)
+  const feats = sorted(join(node, 'core')).filter((lib) => lib !== 'grafts' && lib !== 'notary' && isDir(join(node, 'core', lib, 'sql')))
   return [
     join(node, 'core', 'sql'),
-    ...out.map((lib) => join(node, 'core', lib, 'sql')),
+    join(node, 'core', 'notary', 'sql'),
+    ...feats.map((lib) => join(node, 'core', lib, 'sql')),
     ...byOrder(sorted(join(node, 'core', 'grafts'))).map((g) => join(node, 'core', 'grafts', g, 'sql')),
   ]
 }

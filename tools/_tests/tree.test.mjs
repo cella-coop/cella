@@ -2,7 +2,9 @@
 // parent's and never the other way; a graft sits at the lowest node that
 // holds every feat it joins, reads the cores those feats nest in and the
 // lower grafts at or below its node, and never joins a feat with one
-// nested in it; a feat's name is unique in its app.
+// nested in it; a feat's name is unique in its app. In a node's core, no
+// core feat builds on another, nor a core library on one: a core graft
+// joins them.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -94,6 +96,40 @@ test('a graft reads no core of a feat it does not join, nor a graft above its no
   })
   assert.match(errors, /graft employment-membership .* may not depend on core apps\/org\/feats\/motion/)
   assert.match(errors, /graft employment-membership .* may not depend on graft membership-motion/)
+})
+
+// Org's core: the library `db`, the core feats `circle`, `policy` and
+// `ledger`, each with SQL of its own, and the notary, with SQL and no
+// feat; each package depending on those `deps` names, and core's graft
+// joining the circles to the register on `graft`'s.
+function core(deps = {}, graft = ['circle', 'policy', 'db']) {
+  const pkg = (dir, name) => ({ [`${dir}/package.json`]: JSON.stringify({ name: `@t/${name}`, dependencies: Object.fromEntries((deps[name] ?? []).map((d) => [`@t/${d}`, 'workspace:*'])) }) })
+  const files = { ...pkg('apps/org/core/db/ts', 'db'), ...pkg('apps/org/core/notary/ts', 'notary'), 'apps/org/core/notary/sql/001.sql': '' }
+  for (const f of ['circle', 'policy', 'ledger']) {
+    Object.assign(files, pkg(`apps/org/core/${f}/ts`, f), { [`apps/org/core/${f}/sql/001.sql`]: '' })
+  }
+  deps['circle-policy'] = graft
+  Object.assign(files, pkg('apps/org/core/grafts/circle-policy/ts', 'circle-policy'))
+  return tree({ files })
+}
+
+test('a core feat builds on its core\'s libraries and the notary, and a core graft on the core feats it joins', () => {
+  assert.equal(core({ circle: ['db', 'notary'], policy: ['db'], db: ['notary'] }), '')
+})
+
+test('a core feat never builds on another core feat, its package depending on it', () => {
+  const errors = core({ circle: ['policy'] })
+  assert.match(errors, /apps\/org\/core\/circle\/ts: depends on apps\/org\/core\/policy\/ts, the core feat policy; no core feat nor core library builds on another core feat: a core graft joins them/)
+})
+
+test('a core library builds on no core feat, so none routes one core feat to another', () => {
+  const errors = core({ circle: ['db'], db: ['policy'] })
+  assert.match(errors, /apps\/org\/core\/db\/ts: depends on apps\/org\/core\/policy\/ts, the core feat policy; no core feat nor core library builds on another core feat/)
+})
+
+test('a core graft builds on no core feat it does not join', () => {
+  const errors = core({}, ['circle', 'policy', 'ledger'])
+  assert.match(errors, /apps\/org\/core\/grafts\/circle-policy\/ts: depends on apps\/org\/core\/ledger\/ts, the core feat ledger; core graft circle-policy joins no ledger/)
 })
 
 test('any package may depend on one outside the tree, the brand, which depends on none of the tree', () => {

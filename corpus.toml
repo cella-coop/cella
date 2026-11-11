@@ -3,6 +3,12 @@
 [drift]
 uncited = "warn"
 
+# The site, the brand and the diagrams are decoupled (apps/org/rs/index.md,
+# Gates): a release counts a change's gates past main moving only in them,
+# where the change touches none of them.
+[review]
+decoupled = ["apps/site/**", "packages/brand/**", "packages/diagrams/**"]
+
 # The gates (apps/org/rs/index.md, Gates): `cella check`, then `cella
 # test`, each in the devshell (`nix develop -c`), which carries the
 # toolchain, the C compiler cargo links with and pgrx's settings, so they

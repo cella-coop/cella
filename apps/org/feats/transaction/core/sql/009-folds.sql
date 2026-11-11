@@ -12,8 +12,10 @@ END;
 -- An entry and its lines as the log keeps them, `{date, label, lines}`,
 -- posted again under the id `id` the entry names, in the write of entry
 -- `n`: what `record` wrote, so a write that posts, this feat's or a
--- graft's, folds its entry by calling it from its fold. The journal's
--- trigger numbers it and refuses an id that is not its next.
+-- graft's, folds its entry by calling it from its fold. A person's line
+-- keeps its amount as its commitment, which the line takes as a folded
+-- scope does, with no amount (`cella.commits`). The journal's trigger
+-- numbers it and refuses an id that is not its next.
 CREATE FUNCTION transaction.fold_record(n bigint, id text, posting jsonb, corrects text DEFAULT NULL) RETURNS void
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -22,10 +24,12 @@ BEGIN
   END IF;
   INSERT INTO transaction.entry (id, date, label, corrects, receipt)
   VALUES (id, (posting ->> 'date')::date, posting ->> 'label', corrects, transaction.receipt_of(n));
-  INSERT INTO transaction.line (entry, n, account, side, amount)
-  SELECT id, x.n, x.account, x.side, cella.amount(x.cents)
-  FROM ROWS FROM (jsonb_to_recordset(posting -> 'lines') AS (account text, side text, cents bigint))
-    WITH ORDINALITY AS x (account, side, cents, n);
+  INSERT INTO transaction.line (entry, n, account, side, amount, person)
+  SELECT id, x.n, x.l ->> 'account', x.l ->> 'side',
+         CASE WHEN x.l ->> 'person' IS NULL THEN cella.amount((x.l ->> 'cents')::bigint)
+              WHEN cella.commits('transaction.line.amount', x.l ->> 'person', fold_record.n, x.l -> 'cents') IS NOT NULL THEN NULL::cella.amount END,
+         x.l ->> 'person'
+  FROM jsonb_array_elements(posting -> 'lines') WITH ORDINALITY AS x (l, n);
 END
 $$;
 

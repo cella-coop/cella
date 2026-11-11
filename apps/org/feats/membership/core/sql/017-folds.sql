@@ -97,12 +97,14 @@ $$;
 
 -- What `crediting` wrote, in the write of an extender that credits
 -- shares, as account-membership-patronage-transaction's employing a
--- part of the work share does: the shares the entry credits, added to
--- what the member holds, as its handler adds them while they are active.
-CREATE FUNCTION membership.fold_credit(member text, shares integer) RETURNS void
+-- part of the work share does: what the member holds once it credits
+-- them, the register's figure the entry keeps, while they are active, as
+-- its handler credits them, since the shares it credits are theirs and
+-- logged as their commitment.
+CREATE FUNCTION membership.fold_credit(member text, holds integer) RETURNS void
 LANGUAGE sql
 BEGIN ATOMIC
-  UPDATE membership.member SET shares = membership.member.shares + fold_credit.shares
+  UPDATE membership.member SET shares = fold_credit.holds
   WHERE address = fold_credit.member AND membership.active(address, cella.verdict_date());
 END;
 

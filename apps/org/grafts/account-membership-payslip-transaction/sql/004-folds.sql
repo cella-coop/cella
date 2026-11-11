@@ -18,22 +18,28 @@ END
 $$;
 
 -- payslip:run:pay: each instalment the payment withheld, as `keeps`
--- kept it once payslip-transaction's fold has posted the payment: the
--- lines its entry keeps that credit an associate's capital account under
--- 1013, which are this graft's alone, each withheld from its holder and
--- paid in through their pay.
+-- kept it once payslip-transaction's fold has posted the payment: what
+-- it withheld from each associate and what it paid in through their pay,
+-- as the commitments its payload keeps of them.
 CREATE FUNCTION account_membership_payslip_transaction.fold_pay(entry jsonb) RETURNS void
 LANGUAGE plpgsql AS $$
 DECLARE
   p jsonb := entry -> 'payload';
+  n bigint := (entry ->> 'n')::bigint;
+  k record;
 BEGIN
-  INSERT INTO account_membership_payslip_transaction.withheld (month, member, amount, entry)
-  SELECT p ->> 'month', a.holder, cella.amount(l.cents), p ->> 'entry'
-  FROM jsonb_to_recordset(p -> 'posting' -> 'lines') AS l (account text, side text, cents bigint)
-  JOIN account.account a ON a.code = l.account AND a.parent = '1013' AND a.holder IS NOT NULL
-  WHERE l.side = 'credit';
-  PERFORM account_membership_transaction.pay_in(w.entry, w.member, w.amount, 'pay')
-  FROM account_membership_payslip_transaction.withheld w WHERE w.month = p ->> 'month';
+  FOR k IN SELECT x.field, x.subject, x.cents
+           FROM jsonb_to_recordset(coalesce(p -> 'kept', '[]')) AS x (field text, subject text, cents jsonb)
+           WHERE x.field IN ('account_membership_payslip_transaction.withheld.amount', 'account_membership_transaction.paid.amount')
+           ORDER BY x.field DESC, x.subject LOOP
+    PERFORM cella.commits(k.field, k.subject, n, k.cents);
+    IF k.field = 'account_membership_payslip_transaction.withheld.amount' THEN
+      INSERT INTO account_membership_payslip_transaction.withheld (month, member, amount, entry)
+      VALUES (p ->> 'month', k.subject, NULL, p ->> 'entry');
+    ELSE
+      PERFORM account_membership_transaction.pay_in(p ->> 'entry', k.subject, NULL, 'pay');
+    END IF;
+  END LOOP;
 END
 $$;
 

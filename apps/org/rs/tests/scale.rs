@@ -697,10 +697,10 @@ impl Scope {
                         continue;
                     }
                     self.timesheet += 1;
-                    let (note, minutes) = (self.commit(), self.commit());
+                    let minutes = self.commit();
                     let entry = self.timesheet.to_string();
                     self.decide("timesheet:entry:log", &worker.address, &date, |_, _| {
-                        json!({ "day": date, "note": note, "entry": entry, "circle": worker.circle,
+                        json!({ "day": date, "note": "Studio work", "entry": entry, "circle": worker.circle,
                                 "member": worker.address, "minutes": minutes, "billable": j % 3 != 0 })
                     });
                 }

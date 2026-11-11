@@ -1,4 +1,4 @@
-import { done, write, type Deps, type Done, type Write } from '@cella/org-db'
+import { done, personal, write, type Deps, type Done, type Write } from '@cella/org-db'
 import type { actions } from '@cella/org-patronage/models'
 import { crediting } from '@cella/org-membership/api'
 import { logged, record } from '@cella/org-transaction/api'
@@ -48,8 +48,8 @@ export function employing(input: Employ): Write<Credited> {
         date: p.day,
         label: `Work share ${p.year} employed in shares, ${p.account}`,
         lines: [
-          { account: '424', side: 'debit', cents },
-          { account: p.account, side: 'credit', cents },
+          { account: '424', side: 'debit', cents, person: input.member },
+          { account: p.account, side: 'credit', cents, person: input.member },
         ],
       }
       const { entry } = await record(tx, posting)
@@ -61,15 +61,19 @@ export function employing(input: Employ): Write<Credited> {
       const holds = await crediting(tx, input.member, p.shares)
       return { ...input, account: p.account, shares: p.shares, amount: cents, until: p.until, entry, holds }
     },
+    // The shares and their amount are the member's: the log keeps their
+    // commitments, and the entry's lines as theirs (`logged`); what they
+    // hold after it is the register's, every member's.
     payload: (v) => ({
       distribution: v.distribution,
       member: v.member,
       entry: v.entry,
       motion: v.motion,
       account: v.account,
-      shares: v.shares,
-      amount: v.amount,
+      shares: personal('account_membership_patronage_transaction.credit.shares', v.member, v.shares),
+      amount: personal('account_membership_patronage_transaction.credit.amount', v.member, v.amount),
       until: v.until,
+      holds: v.holds,
       ...(posting ? { posting: logged(posting) } : {}),
     }),
   }

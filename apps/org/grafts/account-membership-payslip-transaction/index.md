@@ -1,6 +1,6 @@
 +++
 title = "account-membership-payslip-transaction"
-updated = 2026-11-09
+updated = 2026-11-11
 +++
 
 An associate's subscription paid in monthly instalments withheld from
@@ -37,12 +37,15 @@ and on `payslip-transaction`, whose payment it adds lines to. Declared by
   payment's own entry, since a write posts one, as a payment in through
   the bank, `512` debited and `4562` credited, which nets what the bank
   pays the associate, and `1012` debited and their capital account
-  credited. Once the entry is posted the pay write calls `keeps`, which
-  records each in `withheld`, this graft's own, and as paid in through
-  their pay by `account-membership-transaction`'s published `pay_in`,
-  its own code writing its own `paid`; this graft writes no journal line
-  and no row of a lower-order graft itself, and puts no trigger on
-  `payslip_transaction.posting`.
+  credited, each line naming the associate, since the instalment is
+  their figure. Once the entry is posted the pay write calls `keeps`,
+  which records each in `withheld`, this graft's own, and as paid in
+  through their pay by `account-membership-transaction`'s published
+  `pay_in`, its own code writing its own `paid`, and answers each, what
+  it withheld and what it paid in, as the personal figure it is, which
+  the payment's payload commits to (`sql/003-salted.sql`); this graft
+  writes no journal line and no row of a lower-order graft itself, and
+  puts no trigger on `payslip_transaction.posting`.
 
 The app role may select, insert and update a plan, and insert what is
 withheld; the guards role may select.
@@ -83,9 +86,9 @@ A spread folds by `sql/004-folds.sql` ([folds](../../../../_corpus/doc/architect
 the member's plan from its entry's day, each instalment as its
 commitment, counting the instalments their pay withheld before it. A
 run's payment folds, once payslip-transaction's fold has posted it, into
-what it withheld: each line its entry keeps that credits an associate's
-capital account under 1013, which are this graft's alone, withheld from
-its holder and paid in through their pay, as `keeps` kept it.
+what it withheld: each instalment its payload keeps of this graft's,
+withheld from its associate and paid in through their pay as `keeps`
+kept it, each figure as its commitment.
 
 ## Tests
 

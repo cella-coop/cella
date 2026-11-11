@@ -567,21 +567,34 @@ erased until their legal clock runs out.
   ballot it takes, and a proposal may name the other
   ([ballots](../../apps/org/feats/motion/index.md#ballots)).
 - **Pay, time and capital.** A time entry's minutes, as it is logged and
-  as it is corrected, and its note; each payslip's figures and minutes, in
-  the payload of the run that prepares them; each worker's part of a
-  year's work share, in the payload that approves it; and the amount of
-  a capital payment in and of a draw, and a spread's instalment, are
-  logged as commitments, their member the subject. So an entry's digest
+  as it is corrected; each payslip's figures and minutes, in the payload
+  of the run that prepares them; each worker's part of a year's work
+  share, in the payload that approves it, and the shares it buys them
+  and their amount, in the payload that employs it; and the amount of a
+  capital payment in, a capital withdrawal and a draw, and a spread's
+  instalment, in its spread and in the pay that withholds it, are logged
+  as commitments, their member the subject, and nowhere else in the
+  entry: a write that posts one keeps each of its lines in its payload,
+  a personal line's amount as its commitment, so its fold posts the
+  commitment and the vault holds the figure. So an entry's digest
   confirms no guess at a colleague's pay, time or capital, and the vault
-  opens the figure to whoever `cella.disclosed` lets read it. A guard reads such a figure from
-  the row its write made, since the commitment is all the payload gives
-  it; that the two hold the same figure is the handler's to keep, and
-  the vault shows it to an audit. The books stay every member's: the
-  journal still shows a payment's amount on the bank's line, and the
-  write that posts it keeps the entry's lines in its payload, as the
-  journal shows them, so its fold posts it again; and the register of
-  members who holds how many shares
+  opens the figure to whoever `cella.disclosed` lets read it. A guard
+  reads such a figure from the row its write made, since the commitment
+  is all the payload gives it; that the two hold the same figure is the
+  handler's to keep, and the vault shows it to an audit. A time entry's
+  note says what the time was spent on, a work record, and is logged as
+  written. The register of members who holds how many shares stays
+  every member's, so the write that employs a part keeps what its member
+  holds after it, and a repayment's amount is logged as given, so the
+  withdrawal that draws repayments up keeps them as given too
   ([current limits](#current-limits)).
+- **A figure that is both a person's and the co-op's is personal, an
+  open question.** A draw, a pay, a capital payment in or withdrawn and
+  a patronage part are a member's and also a line of the co-op's books,
+  which every member reads. They are kept personal, in the vault behind
+  their commitments, and the log carries no plain figure of them; whether
+  some of them are the co-op's to log plain is open, and keeping them
+  personal is the choice that is easier to undo.
 - **The keys.** A vault key is 32 random bytes per subject, class and
   year, sealed (XChaCha20-Poly1305) under a wrap key derived from the
   vault's own key file, kept apart from the notary's seed, so the
@@ -769,11 +782,16 @@ What the build does not yet do, and what lifts each:
   capital are committed to with a salt the vault keeps, so their digests
   confirm no guess; a payload with no value marked personal, such as an
   invoice's or a period's close, is confirmed by guessing it against its
-  digest, and the journal's receipt still names who drew an amount. A
-  write that posts keeps its entry's lines in its payload, as the journal
-  shows them, so its fold posts them again: a draw's or a payment in's
-  bank line shows its amount in the log as in the books, whatever the
-  commitment beside it. The log read by role lifts this.
+  digest, and the journal's receipt still names who drew an amount,
+  though never how much. The log read by role lifts this.
+- **A member's capital shows through what every member reads.** The
+  shares a part of the work share buys are logged as their commitment,
+  but the write that employs it keeps what the member holds after it, as
+  the register every member reads shows it, so the shares follow from
+  what they held before; and the repayments a withdrawal draws up are
+  logged as given, as each repayment is, so what it owes them is their
+  sum. The open question on a figure that is both a person's and the
+  co-op's ([personal data](#personal-data)) decides these with the rest.
 - **A write's run lives in one server process.** It waits for each
   signature up to a minute (`CELLA_PATIENCE`), holding no database
   connection while it waits, and goes with the process; sessions outlive

@@ -1,15 +1,16 @@
 // The journal alone, on a database holding only the app's core and this
 // feat: entries balance, ids are gapless, nothing posted changes, a payment
 // is exactly one, a correction names its base, and the journal lists its
-// latest entry first by its number; and each write's payload folds into
-// the journal it wrote (`sql/009-folds.sql`). Run by `cella test slice
-// transaction`.
+// latest entry first by its number; each write's payload folds into the
+// journal it wrote (`sql/009-folds.sql`); and a person's line is logged as
+// its commitment and folds with no amount, which no write but a fold
+// leaves it. Run by `cella test slice transaction`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { ordered, type Write } from '@cella/org-db'
-import { adjusting, journal as listed, paying, posting, slice } from '@cella/org-transaction/api'
+import { adjusting, journal as listed, logged, paying, posting, slice } from '@cella/org-transaction/api'
 
 const db = new pg.Client()
 
@@ -261,6 +262,37 @@ test('a post, a payment to a supplier and a correction fold into the journal eac
     db.query('SELECT transaction.fold_post($1)', [{ n: 4, op: 'transaction:transaction:post', actor: 'julien@lanterne.example', date: '2026-10-24', cause: null, payload: { entry: 'je-9999', date: '2026-10-24', lines: [] } }]),
     /entry 4 keeps no label and lines for je-9999/,
   )
+})
+
+test('a person\'s line is logged as its commitment, folds with no amount, and has one outside a fold', async () => {
+  const sacha = 'sacha@lanterne.example'
+  const drawn = { date: '2026-10-24', label: 'Draw', lines: [{ account: '455', side: 'debit' as const, cents: 300_00, person: sacha }, { account: '512', side: 'credit' as const, cents: 300_00, person: sacha }] }
+  assert.deepEqual(
+    logged(drawn).lines.map((l) => l.cents),
+    [300_00, 300_00].map((value) => ({ $personal: { field: 'transaction.line.amount', subject: sacha, value } })),
+    'the payload keeps no figure of hers in plain',
+  )
+  await db.query('BEGIN')
+  try {
+    const { id } = (await db.query<{ id: string }>(`SELECT 'je-' || lpad((last + 1)::text, 4, '0') AS id FROM transaction.journal`)).rows[0]
+    await db.query(`SELECT set_config('cella.folding', 'on', true)`)
+    const commitment = (b: string) => ({ $commit: b.repeat(64) })
+    await db.query('SELECT transaction.fold_record(7, $1, $2)', [id, { ...drawn, lines: drawn.lines.map((l, i) => ({ ...l, cents: commitment('ab'[i]) })) }])
+    await db.query('SET CONSTRAINTS ALL IMMEDIATE')
+    assert.deepEqual((await db.query('SELECT account, amount, person FROM transaction.line WHERE entry = $1 ORDER BY n', [id])).rows, [
+      { account: '455', amount: null, person: sacha },
+      { account: '512', amount: null, person: sacha },
+    ])
+    assert.deepEqual(
+      (await db.query(`SELECT n, encode(commitment, 'hex') AS c FROM cella.commitment WHERE field = 'transaction.line.amount' AND subject = $1 ORDER BY c`, [sacha])).rows,
+      [{ n: '7', c: 'a'.repeat(64) }, { n: '7', c: 'b'.repeat(64) }],
+    )
+  } finally {
+    await db.query('ROLLBACK')
+  }
+  const withheld = null as unknown as number
+  const { refused } = await post([{ account: '455', side: 'debit', cents: withheld }, { account: '512', side: 'credit', cents: withheld }])
+  assert.match(refused ?? '', /posts 2 lines with no amount: only a fold leaves a person's line without its figure/)
 })
 
 test('the journal numbers on past four digits: je-10000 follows je-9999, and neither collides', async () => {

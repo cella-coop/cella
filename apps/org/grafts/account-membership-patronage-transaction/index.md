@@ -1,6 +1,6 @@
 +++
 title = "account-membership-patronage-transaction"
-updated = 2026-11-09
+updated = 2026-11-11
 +++
 
 The work share employed in the associates' capital: once a year's
@@ -81,9 +81,14 @@ A part employed in shares folds by
 `account_membership_patronage_transaction.fold_employ`
 (`sql/005-folds.sql`, [folds](../../../../_corpus/doc/architecture.md#folds)): the entry
 by `transaction.fold_record`, the credit as its entry keeps it, and
-the shares it buys added to what the member holds by
-`membership.fold_credit`, as its handler calls `record` and
-`crediting`. Its payload keeps the credit and the entry for it.
+what the member holds once it credits them by `membership.fold_credit`,
+as its handler calls `record` and `crediting`. Its payload keeps the
+credit and the entry for it, the shares and the amount of the credit as
+their commitments, their member the subject (`sql/006-personal.sql`),
+and the entry's lines as theirs, so no entry shows a member's part in
+plain; and what the member holds after it, as the register every member
+reads shows it, from which the shares it bought follow, an open question
+([trust](../../../../_corpus/doc/trust.md#personal-data)).
 
 ## Tests
 

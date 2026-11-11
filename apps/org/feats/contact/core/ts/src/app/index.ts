@@ -34,7 +34,12 @@ export const app: App = {
           { label: 'Phone', value: c.phone },
           { label: 'Tags', value: c.tags.join(', ') || null },
         ],
-        related: (c: Contact) => (c.parent ? [{ label: c.parent, sub: 'part of', href: `/contacts/${c.parent}` }] : []),
+        // A person contact is a core person, whose entry in People holds
+        // their name, email and phone.
+        related: (c: Contact) => [
+          ...(c.parent ? [{ label: c.parent, sub: 'part of', href: `/contacts/${c.parent}` }] : []),
+          ...(c.person ? [{ label: c.name, sub: 'person', href: `/people/${c.person}` }] : []),
+        ],
         tabs: [{ id: 'overview', label: 'Overview' }],
         blocks: [Client, Note],
       },

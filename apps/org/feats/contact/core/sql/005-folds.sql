@@ -10,6 +10,7 @@ LANGUAGE plpgsql AS $$
 BEGIN
   UPDATE contact.contact c SET
     kind = CASE WHEN fields ? 'kind' THEN vals ->> 'kind' ELSE c.kind END,
+    person = CASE WHEN fields ? 'person' THEN vals ->> 'person' ELSE c.person END,
     name = CASE WHEN fields ? 'name' THEN cella.commits('contact.contact.name', c.id, n, vals -> 'name') ELSE c.name END,
     form = CASE WHEN fields ? 'form' THEN vals ->> 'form' ELSE c.form END,
     email = CASE WHEN fields ? 'email' THEN cella.commits('contact.contact.email', c.id, n, vals -> 'email') ELSE c.email END,
@@ -28,14 +29,18 @@ END
 $$;
 
 -- contact:contact:add: the contact under the id the entry names, with
--- the fields it names, its name among them.
+-- the fields it names: a company's name among them, or a person's
+-- address, whom core person's fold enters after it where the entry
+-- brought them in.
 CREATE FUNCTION contact.fold_add(entry jsonb) RETURNS void
 LANGUAGE plpgsql AS $$
 DECLARE
   p jsonb := entry -> 'payload';
   n bigint := (entry ->> 'n')::bigint;
 BEGIN
-  INSERT INTO contact.contact (id, name) VALUES (p ->> 'contact', cella.commits('contact.contact.name', p ->> 'contact', n, p -> 'values' -> 'name'));
+  INSERT INTO contact.contact (id, kind, person, name)
+  VALUES (p ->> 'contact', coalesce(p -> 'values' ->> 'kind', 'company'), p -> 'values' ->> 'person',
+          cella.commits('contact.contact.name', p ->> 'contact', n, p -> 'values' -> 'name'));
   PERFORM contact.fold_set(n, p ->> 'contact', p -> 'fields', p -> 'values');
 END
 $$;
@@ -49,8 +54,9 @@ BEGIN ATOMIC
                           fold_update.entry -> 'payload' -> 'fields', fold_update.entry -> 'payload' -> 'values');
 END;
 
--- contact:contact:erase: the person, archived; their contact data is
--- erased by the erasure the entry keeps, which `cella.fold_log` folds
+-- contact:contact:erase: the person, archived; their contact data, the
+-- contact's and their core person's, is erased by the erasures the
+-- entry keeps, which `cella.fold_log` folds
 -- after this fold, as the notary carried it out once the write's state was
 -- in.
 CREATE FUNCTION contact.fold_erase(entry jsonb) RETURNS void

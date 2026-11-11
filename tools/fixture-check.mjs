@@ -127,6 +127,19 @@ const check = (name) => {
       fail(`device: ${d.address} is no person`)
     }
   }
+  // A person contact is a core person, whose name, email and phone are
+  // core's; a company keeps its own name and names no person.
+  for (const c of contact.contact ?? []) {
+    if ((c.kind ?? 'company') === 'person') {
+      if (!everyone.has(c.person)) {
+        fail(`contact ${c.id}: ${c.person ?? 'no address'} is no person`)
+      } else if (c.name || c.email || c.phone) {
+        fail(`contact ${c.id}: a person's name, email and phone are person.toml's`)
+      }
+    } else if (c.person || !c.name) {
+      fail(`contact ${c.id}: a company names no person and has a name of its own`)
+    }
+  }
 
   const motions = ids(motion.motion)
   for (const d of motion.motion ?? []) {

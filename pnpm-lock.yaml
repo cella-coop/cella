@@ -206,6 +206,9 @@ importers:
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
+      '@cella/org-person':
+        specifier: workspace:*
+        version: link:../../../../core/person/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts

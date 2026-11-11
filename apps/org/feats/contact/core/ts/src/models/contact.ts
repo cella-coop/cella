@@ -14,10 +14,13 @@ export interface Address {
 }
 
 // A contact as the feat reads it. `client` is the client role's stage,
-// null for a contact the co-op does not bill.
+// null for a contact the co-op does not bill. A person contact's
+// `person` is the address core person knows them by, and their name,
+// email and phone are core's; a company's are its own.
 export interface Contact {
   id: string
   kind: Kind
+  person: string | null
   name: string
   form: string | null
   email: string | null
@@ -45,9 +48,13 @@ export interface Fields {
   archived?: boolean
 }
 
+// A company, by its own name, or a person, by the address `person`
+// names: one the co-op knows keeps their name, email and phone, and one
+// new to it is brought in with those given here.
 export interface Add extends Fields {
   id: string
   name: string
+  person?: string
 }
 
 export interface Update {
@@ -69,4 +76,11 @@ export interface Erase {
 export interface Changed {
   contact: string
   fields: string[]
+}
+
+// A person contact erased, and the core person whose contact details
+// were erased with them.
+export interface Erased {
+  contact: string
+  person: string | null
 }

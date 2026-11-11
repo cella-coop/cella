@@ -1,6 +1,8 @@
-# Everyone Lanterne knows, by the address they sign with: its members and
-# its workers, each once, whatever they hold. Whether they are a member is
-# membership.toml's, whether they work here employment.toml's.
+# Everyone Lanterne knows, by the address they sign with: its members, its
+# workers and the people among its contacts, each once, whatever they
+# hold. Whether they are a member is membership.toml's, whether they work
+# here employment.toml's, and what Lanterne knows of a contact
+# contact.toml's.
 
 [[person]]
 address = "camille@lanterne.example"
@@ -49,6 +51,14 @@ name = "Paul Garnier"
 [[person]]
 address = "ines@lanterne.example"
 name = "Inès Haddad"
+
+# A person Lanterne deals with and holds nothing: Les Halles' contact for
+# its shop (contact.toml), with no account, so no device.
+[[person]]
+address = "margaux.roux@halles-paysannes.example"
+name = "Margaux Roux"
+email = "margaux.roux@halles-paysannes.example"
+phone = "+33 6 41 27 90 12"
 
 # Each worker's and member's devices. The seed enrols each with a TEST-ONLY
 # key derived from its address and label, which anyone can compute: fixture

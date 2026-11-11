@@ -11,8 +11,9 @@ core](../../../../_corpus/doc/architecture.md#people-are-core)):
 `apps/org/core/person` is a core feat of org's core with SQL, a shell
 slice and actions of its own, and every feat and graft may reference
 its schema, `person`, as it references `circle`. What a person holds is
-the feats': a membership is `membership`'s and an employment is
-`employment`'s, each a feat whose rows name a core person, as a feat's rows name a circle. Nothing
+the feats': a membership is `membership`'s, an employment is
+`employment`'s and a contact the co-op keeps is `contact`'s, each a feat
+whose rows name a core person, as a feat's rows name a circle. Nothing
 can be signed without a person, and no feat is needed for one.
 
 ## Why core
@@ -37,9 +38,11 @@ flowchart BT
   person["core/person: people, devices, the keyring, the inbox"]
   membership["feats/membership"]
   employment["feats/employment"]
+  contact["feats/contact"]
   graft["grafts/employment-membership"]
   membership --> person
   employment --> person
+  contact --> person
   graft --> membership
   graft --> employment
 ```
@@ -53,11 +56,13 @@ flowchart BT
 | guardian | `address`, `guardian`, `share_commitment` | who holds a share of the person's recovery secret; not built |
 | recovery | `address`, `new_key`, `shares[]`, `opened` | a recovery in progress; not built |
 
-A person comes in through a child's write: an invitation
-(`membership`) or a hire (`employment`) names them by address and makes
-them a person if no one holds it yet (`entering`, in the child's own
-transaction). Someone already known keeps their name, so a worker invited
-to join is the same person, not a second one.
+A person comes in through a feat's write: an invitation
+(`membership`), a hire (`employment`) or a person contact (`contact`)
+names them by address and makes them a person if no one holds it yet
+(`entering`, in the feat's own transaction), a contact with the email
+and phone it gives. Someone already known keeps their name and details,
+so a worker invited to join, or a member who is a client's contact, is
+the same person, not a second one.
 
 Device keys are Ed25519, generated on the device with WebCrypto; the
 private key never leaves it. The devices are the keyring that checks every
@@ -168,7 +173,9 @@ what they keep is theirs.
 
 Every feat's and graft's SQL may read this schema, as it reads `circle`:
 membership enrols the device an invitation's acceptance makes, and employment
-the one a hire carries.
+the one a hire carries; a person contact's `person` is a foreign key into
+`person.person`, and the contact feat's `contact.named` reads a person's
+name, email and phone from it.
 
 Every record names its owning circle, `circle`, a foreign key into
 core's circles ([owning
@@ -189,7 +196,9 @@ The address itself is the pseudonym every entry names the person by,
 commented not personal, and so is a device's. A write carrying any of them
 marks it, so the log commits to it and the vault keeps it. The register of
 the staff keeps a copy of a worker's name, of class `payroll`, which is
-employment's.
+employment's. Erasing a person contact (`contact:contact:erase`) erases
+their person's class `contact` with the contact's own data, and leaves
+their name, of class `profile`.
 
 ## Guards
 
@@ -226,6 +235,11 @@ the state before it (`sql/007-folds.sql`, [folds](../../../../_corpus/doc/archit
   (`person.fold_entering`, `person.fold_hire`) enter a person new to the
   scope by their name's commitment, an invitation's `name` or a hire's
   `entered`; one the scope knew already is left as they were.
+- `contact:contact:add` (`person.fold_contact`) enters a person contact
+  new to the scope, at the address its `values` name, by the
+  commitments to their name, email and phone its `entered` carries; a
+  company, or a person the scope knew already, carries none and enters
+  no one.
 - `membership:member:accept` and `employment:worker:hire`
   (`person.fold_enrolling`) enrol a first device by its key and its
   label's commitment, an acceptance's `device` or a hire's `label`, on
@@ -242,9 +256,10 @@ the state before it (`sql/007-folds.sql`, [folds](../../../../_corpus/doc/archit
   the device that signed the write; submits `{ address, key, label, by,
   enrolled }`, the label as its commitment and `by` the signing device.
 - `revoke` (ordered): sets the device's `revoked` to the verdict date.
-- `entering`, no write of its own: what an invitation or a hire runs in
-  its transaction to bring a person in, telling the child whether the
-  person is new, so its payload commits to their name only then.
+- `entering`, no write of its own: what an invitation, a hire or a
+  person contact runs in its transaction to bring a person in, with the
+  email and phone a contact gives, telling the feat whether the person
+  is new, so its payload commits to what it gave only then.
 - `enrolling`, no write of its own: what a hire or an invitation taken up
   runs in its transaction to enrol the person's first device, on the
   verdict date and by no device, refusing a key enrolled already. A
@@ -308,8 +323,9 @@ nothing of it is stored.
 
 ## Lanterne
 
-- Twelve people: ten members, Paul, who left, and Inès, employed and
-  invited, not yet a member (`person.toml`).
+- Thirteen people: ten members, Paul, who left, Inès, employed and
+  invited, not yet a member, and Margaux Roux, Les Halles' contact, who
+  holds nothing and has no device (`person.toml`).
 - Fifteen live devices: four people have a laptop and a phone. Their keys
   are TEST-ONLY, derived from each device's address and label, so the seed
   and the tests hold the same keys.

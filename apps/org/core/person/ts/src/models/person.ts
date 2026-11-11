@@ -9,11 +9,14 @@ export interface Person {
   phone: string | null
 }
 
-// Someone a child's write brings in, by the address they sign with: an
-// invitation, or a hire. A person already known keeps their name.
+// Someone a feat's write brings in, by the address they sign with: an
+// invitation, a hire or a person contact, which may give their email
+// and phone. A person already known keeps their name and details.
 export interface Enter {
   address: string
   name: string
+  email?: string | null
+  phone?: string | null
 }
 
 // A person's own fields; only those given change. Email and phone are

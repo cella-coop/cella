@@ -1,0 +1,6 @@
+# The fold's scale tier each night (apps/org/rs/index.md, Gates): the
+# forge's server runs it over main's head every 24 hours, at a million
+# entries, and records the run as its own. Its full size, ten million
+# entries and about 45 GB, runs by hand where a host has the disk.
+on = ["every 24h"]
+goals = ["cella-scale"]

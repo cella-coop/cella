@@ -354,6 +354,25 @@ broken address, and its `mailto:` link is written from the address
 encoded once the page runs. A page that places `<Email />` with no
 address in `site.toml` fails the build.
 
+## The card
+
+Every page a build keeps has a **card**, the picture a link to it shows
+where it is shared, 1200 by 630 (`src/lib/card.ts`, served at
+`/og/<page>.png` and `/og/blog/<post>.png`): on the dark ground, the
+lockup, and under it the page's hero as it opens, its eyebrow, its
+heading, its thin parts thin, and its summary, the page's
+`description` or the site's; beside them its photo engraved small and
+cut into the brand's cells round its focus, bleeding off the right
+edge, in the hero's ink, or the mark where it has none. A post's card
+is its date, title, summary and cover, in its own ink. The words are
+the brand's faces set as outlines (fontkit, from the brand's variable
+WOFF2s, decompressed one at a time since wawoff2 garbles two at once),
+so a card is drawn the same whatever fonts the machine has. The head
+of every page names its card in Open Graph's tags and Twitter's
+(`src/lib/meta.ts`), its addresses absolute under `https://cella.coop`;
+a page with no card of its own, as the asset library's, names the home
+page's. A draft page has no card, as it has no page.
+
 ## The assets
 
 `/assets`, `src/pages/assets/[...path].astro`, is the asset library,

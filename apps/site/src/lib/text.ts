@@ -7,6 +7,7 @@
 // any remains.
 import { getCollection, render } from 'astro:content'
 import { site as siteSchema } from '../schemas'
+import { cardOf } from './meta'
 
 type Json = Record<string, unknown>
 const plain = (v: unknown): v is Json => !!v && typeof v === 'object' && !Array.isArray(v) && !(v instanceof Date)
@@ -76,7 +77,7 @@ export async function page(name: string) {
   const drafted = !own
   record(`pages/${name}.mdx`, new Set(drafted ? ['the whole page'] : []))
   const { Content } = await render(entry)
-  return { ...entry.data, drafted, Content }
+  return { ...entry.data, drafted, Content, card: cardOf(name) }
 }
 
 /** Every page's entry: the operator's, or a draft of one they have not

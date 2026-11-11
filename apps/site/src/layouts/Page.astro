@@ -17,9 +17,11 @@ interface Props {
   description?: string
   unlisted?: boolean
   drafted?: boolean
+  // its card, where it is shared (lib/meta.ts)
+  card?: string
 }
 
-const { title, description, unlisted: hidden = false, drafted = false } = Astro.props
+const { title, description, unlisted: hidden = false, drafted = false, card } = Astro.props
 const site = await siteData()
 const full = title === site.title ? title : site.titled.replace('{page}', title).replace('{site}', site.title)
 
@@ -34,7 +36,7 @@ const out = await held()
 const nav = site.nav.filter((l) => !out.includes(linkedPage(l.href)))
 ---
 
-<Base title={full} description={description ?? site.description} noindex={hidden}>
+<Base title={full} description={description ?? site.description} noindex={hidden} card={card} name={site.title}>
   <Header title={site.title} nav={nav} toggle={site.theme.toggle} menu={site.menu} />
   <main class="flow" data-drafted={drafted || undefined}>
     <slot />

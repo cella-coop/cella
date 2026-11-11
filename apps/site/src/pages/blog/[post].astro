@@ -9,6 +9,7 @@ import { render } from 'astro:content'
 import { figures } from '../../components/figures'
 import Hero from '../../components/Hero.astro'
 import Page from '../../layouts/Page.astro'
+import { cardOf } from '../../lib/meta'
 import { postInk } from '../../lib/place'
 import { dated, held, posts, siteData } from '../../lib/text'
 
@@ -27,7 +28,7 @@ const ink = await postInk(post.id)
 const blog = 'blog'
 ---
 
-<Page title={post.data.title} description={post.data.description}>
+<Page title={post.data.title} description={post.data.description} card={cardOf(blog, post.id)}>
   <Hero heading={post.data.title} eyebrow={dated(post.data.date)} page={blog} photo={post.data.photo} caption={post.data.caption} alt={post.data.alt} ink={ink}>
     <p>{post.data.description}</p>
   </Hero>

@@ -8,6 +8,7 @@ import '@cella/brand/fonts.css'
 import '@cella/brand/tokens.css'
 import '@cella/brand/print.css'
 import favicon from '@cella/brand/favicon.svg?url'
+import { cardMeta, cardOf } from '../lib/meta'
 import { NOINDEX } from '../lib/refuse'
 
 const dev = import.meta.env.DEV
@@ -17,9 +18,14 @@ interface Props {
   description: string
   // kept from search engines, for an unlisted page
   noindex?: boolean
+  // the picture a link to the page shows where it is shared (lib/card.ts),
+  // the home page's unset, and the site's name beside it
+  card?: string
+  name?: string
 }
 
-const { title, description, noindex = false } = Astro.props
+const { title, description, noindex = false, card = cardOf(), name = title } = Astro.props
+const shared = cardMeta({ title, description, card, path: Astro.url.pathname, name })
 ---
 
 <!doctype html>
@@ -29,6 +35,7 @@ const { title, description, noindex = false } = Astro.props
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content={NOINDEX} />}
+    {shared.map((m) => <meta {...m} />)}
     <link rel="icon" type="image/svg+xml" href={favicon} />
     <title>{title}</title>
     <script is:inline>

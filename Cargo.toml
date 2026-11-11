@@ -58,3 +58,9 @@ opt-level = 3
 
 [profile.dev.package.sha2]
 opt-level = 3
+
+# So are the guard primitives, the multiset hash among them, which the
+# fold sums for every row it writes: unoptimised, a sum of two hashes
+# takes some eighty microseconds, a fold of millions of entries hours.
+[profile.dev.package.cella-guards]
+opt-level = 3

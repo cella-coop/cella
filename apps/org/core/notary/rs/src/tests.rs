@@ -536,7 +536,7 @@ $f$;
     /// Each earlier version the notary ships, which `cella test notary`
     /// stages beside the current one, and the function its guards read the
     /// action through: `cella.op()` before 0.6.0.
-    const EARLIER: [(&str, &str); 10] = [
+    const EARLIER: [(&str, &str); 11] = [
         ("0.1.0-alpha", "op"),
         ("0.2.0", "op"),
         ("0.3.0", "op"),
@@ -547,6 +547,7 @@ $f$;
         ("0.8.0", "action"),
         ("0.9.0", "action"),
         ("0.10.0", "action"),
+        ("0.11.0", "action"),
     ];
 
     fn version() -> Option<String> {
@@ -590,6 +591,15 @@ ALTER EXTENSION cella UPDATE;"
                 effects.expect("the effects"),
                 Some(true),
                 "{earlier} upgrades to a log that takes effects"
+            );
+            let multisets = Spi::get_one::<bool>(
+                "SELECT cella.lthash_sum(h) = cella.lthash_add(cella.lthash('a'), cella.lthash('b'))
+                 FROM (VALUES (cella.lthash('b')), (cella.lthash('a'))) v(h)",
+            );
+            assert_eq!(
+                multisets.expect("the multiset hash"),
+                Some(true),
+                "{earlier} upgrades to the multiset hash"
             );
             scope();
             Spi::run(

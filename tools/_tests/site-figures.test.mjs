@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import { strict as assert } from 'node:assert'
-import { judge, badIcon } from '../site-figures.mjs'
+import { judge, inlined, badIcon } from '../site-figures.mjs'
 
 test('the fixture must build as it is and fail on an icon Phosphor lacks, naming it', () => {
   const ok = { status: 0, stdout: '', stderr: '' }
@@ -11,4 +11,9 @@ test('the fixture must build as it is and fail on an icon Phosphor lacks, naming
   assert.match(judge(true, ok), /built with the icon/)
   assert.match(judge(true, unnamed), /without naming/)
   assert.match(judge(false, unnamed), /does not build/)
+})
+
+test('the fixture\'s HTML inlines no unprinted photo', () => {
+  assert.equal(inlined('<img src="/_astro/fixture.hash.jpg" loading="lazy" width="800" height="450">'), null)
+  assert.match(inlined('<img src="data:image/jpeg;base64,/9j/4AAQ">'), /inlines an unprinted photo/)
 })

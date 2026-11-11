@@ -1,6 +1,6 @@
 +++
 title = "Site"
-updated = 2026-11-10
+updated = 2026-11-11
 +++
 
 `apps/site` (`@cella/site`) is cella's landing site: an
@@ -468,7 +468,10 @@ renderer hands it:
   from `src/photos/` through the brand's print at build time
   (`printFile`, [the print](../../packages/brand/index.md#the-print)):
   `print` names any of `PRINT_STYLES`, `house` the five-ink halftone
-  unset, or `none` for the photo as it is. `alt` is the operator's
+  unset, or `none` for the photo as it is: an image file the build
+  emits, `/photo/<name>-800.jpg`, at the print's width, 800 pixels, made
+  by the static endpoint `src/pages/photo/[key].jpg.ts` and never
+  inlined into the page's HTML, so it loads lazily. `alt` is the operator's
   description in the post's text, used by both the print and the
   unprinted image. Under it, the credit Unsplash asks for. The credit is
   always printed; no prop removes it.
@@ -488,9 +491,10 @@ renderer hands it:
   places them, and the photo's credit once under the whole. A figure
   holds exactly one photo and any number of icons; it works in both
   themes. The build-only fixture under `test/` exercises both layouts
-  in both themes: `cella check site` builds it, and fails where it does
-  not build or where it builds with an icon name Phosphor lacks, so
-  every gate rejects an unknown icon; `cella site screenshots` takes its
+  in both themes, and an unprinted photo: `cella check site` builds it,
+  and fails where it does not build, where it builds with an icon name
+  Phosphor lacks, so every gate rejects an unknown icon, or where its
+  HTML inlines a photo; `cella site screenshots` takes its
   four screenshots, over and beside, light and dark, which show the
   figure without adding any text or publishing a fixture photo.
 
@@ -510,7 +514,8 @@ engraving is.
 ## Photos
 
 A photo is vendored, never linked: `cella site photo add <unsplash
-url>... [--name NAME]` downloads each into `src/photos/<name>.jpg`, its
+url>... [--name NAME]` downloads each into `src/photos/<name>.jpg`, at
+most 1600 pixels wide, the width a figure's engraving is cut at, its
 name the first three words of the page's slug unset, numbered where one
 is taken, `--name` naming a single one, with a sidecar `src/photos/<name>.json`
 holding what its credit needs: the photographer's name and their
@@ -535,7 +540,8 @@ width, which replaces what is found in it ([figures](#figures)); it is
 the operator's to set where what is found is wrong, and
 `/assets/interest` shows both. `cella check site` refuses a photo without its
 sidecar, a sidecar missing any field or with a focus not a list of such
-regions, and a `<Photo name>` naming none.
+regions, an image wider than 1600 pixels, and a `<Photo name>` naming
+none.
 
 ## Whose words
 

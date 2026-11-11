@@ -1,6 +1,7 @@
 // `cella check site`: build the figure fixture under apps/site/test twice,
 // once as it is and once with an icon name Phosphor lacks; the first must
-// build and the second must fail naming that icon.
+// build, its HTML inlining no photo, and the second must fail naming that
+// icon.
 // `cella site screenshots`: build it once and take its four screenshots.
 // The fixture photo is made from the brand's print fixture for the build
 // alone, so no invented credit is ever committed as a vendored photo.
@@ -21,6 +22,11 @@ export function judge(bad, { status, stdout, stderr }) {
   if (bad && !stderr.includes(badIcon)) return `the fixture failed without naming the icon ${badIcon}:\n${stdout}\n${stderr}`
   if (!bad && status !== 0) return `the fixture does not build:\n${stdout}\n${stderr}`
   return null
+}
+
+// What the fixture's HTML says, or null where it inlines no photo.
+export function inlined(html) {
+  return html.includes('data:image/jpeg') ? 'the fixture inlines an unprinted photo as a data URL' : null
 }
 
 function build(site, out, bad) {
@@ -52,8 +58,10 @@ export async function check(site, out) {
       const fault = judge(bad, build(site, out, bad))
       if (fault) throw new Error(fault)
     }
+    const fault = inlined(readFileSync(join(out, 'test/figures/index.html'), 'utf8'))
+    if (fault) throw new Error(fault)
   })
-  console.log('the figure fixture builds, and refuses an unknown icon')
+  console.log('the figure fixture builds, inlines no photo, and refuses an unknown icon')
 }
 
 export async function screenshots(site, out) {

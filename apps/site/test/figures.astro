@@ -2,12 +2,14 @@
 import '@cella/brand/tokens.css'
 import Figure from '../src/components/Figure.astro'
 import Icon from '../src/components/Icon.astro'
+import Photo from '../src/components/Photo.astro'
 const name = process.env.FIGURE_TEST_BAD_ICON ? 'not-a-phosphor-icon' : 'heart'
 ---
 <html><head><meta name="viewport" content="width=device-width" /></head><body>
   <main data-theme="light">
     <Figure photo="fixture" alt="Fixture photograph" layout="over"><Icon name={name} role="success" /><Icon name="star" role="accent" /></Figure>
     <Figure photo="fixture" alt="Fixture photograph" layout="beside"><Icon name="heart" role="help" /><Icon name="star" role="warning" /></Figure>
+    <Photo name="fixture" alt="Fixture photograph" print="none" />
   </main>
   <main data-theme="dark">
     <Figure photo="fixture" alt="Fixture photograph" layout="over"><Icon name="heart" role="success" /><Icon name="star" role="accent" /></Figure>

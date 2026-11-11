@@ -1,6 +1,10 @@
 import type { Jump } from '../models/view.ts'
 
-// The command menu: what is typed, the items it searches, fetched on the
+// What the command menu searches, read by the shell's query of every
+// collection's index.
+export type Search = () => Promise<Jump[]>
+
+// The command menu: what is typed, the items it searches, read on the
 // first open, and the one the keyboard is on.
 export class CommandState {
   query = $state('')
@@ -9,10 +13,10 @@ export class CommandState {
   dialog: HTMLDialogElement | undefined = $state()
 
   readonly #collections: () => Jump[]
-  readonly #source: () => string
+  readonly #source: () => Search
   #loaded = false
 
-  constructor(collections: () => Jump[], source: () => string) {
+  constructor(collections: () => Jump[], source: () => Search) {
     this.#collections = collections
     this.#source = source
   }
@@ -33,15 +37,11 @@ export class CommandState {
     if (this.#loaded) {
       return
     }
-    // Loaded once; a failed fetch leaves the collections to jump to and is
+    // Loaded once; a failed read leaves the collections to jump to and is
     // tried again on the next open.
     this.#loaded = true
     try {
-      const res = await fetch(this.#source())
-      if (!res.ok) {
-        throw new Error(`${this.#source()}: ${res.status}`)
-      }
-      this.items = await res.json()
+      this.items = await this.#source()()
     } catch {
       this.#loaded = false
     }

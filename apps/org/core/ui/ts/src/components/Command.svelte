@@ -4,12 +4,13 @@
   import type { Jump } from '../models/view.ts'
   import { nearest } from '../models/keys.ts'
   import { useCommand } from '../hooks/useCommand.ts'
+  import type { Search } from '../hooks/CommandState.svelte.ts'
   import Icon from './Icon.svelte'
 
   // The command menu, Cmd/Ctrl-K: jump to any collection or item. The
-  // collections are known; the items are fetched from `source` on first
-  // open.
-  let { collections, source }: { collections: Jump[]; source: string } = $props()
+  // collections are known; the items are read by `source`, the shell's
+  // query, on first open.
+  let { collections, source }: { collections: Jump[]; source: Search } = $props()
 
   const state = useCommand(() => collections, () => source)
   const results = $props.id()

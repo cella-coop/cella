@@ -112,7 +112,7 @@ test('the forms that replace them pass, and prose that names them does not trip 
 
 test('a collection page renders the Collection alone', () => {
   const path = 'apps/org/ts/src/routes/[collection]/+page.svelte'
-  const only = component("  import { Collection } from '@cella/org-ui'", '{#if mounted}\n  <!-- one view -->\n  {#key data.name}\n    <Collection title="x" status={[a].filter((s) => s !== undefined)} />\n  {/key}\n{/if}')
+  const only = component("  import { Collection } from '@cella/org-ui'", '{#snippet loading()}<Skeleton title="x" />{/snippet}\n<svelte:boundary pending={loading}>\n  {#snippet failed(e)}<Failed error={e} />{/snippet}\n  {#if mounted}\n  <!-- one view -->\n  {#key data.name}\n    <Collection title="x" status={[a].filter((s) => s !== undefined)} />\n  {/key}\n  {/if}\n</svelte:boundary>')
   assert.deepEqual(problems(path, only, false), [])
   const beside = component("  import { Collection, Stats } from '@cella/org-ui'", '<Stats items={[]} />\n<Collection title="x" />\n<div>totals</div>')
   const found = problems(path, beside, false)
@@ -123,7 +123,7 @@ test('a collection page renders the Collection alone', () => {
 
 test('an item page renders the Detail and its slices\' blocks alone', () => {
   const path = 'apps/org/ts/src/routes/[collection]/[id]/+page.svelte'
-  const only = component("  import { Detail } from '@cella/org-ui'", '{#snippet header()}\n  <w.block data={d} />\n{/snippet}\n{#if page}\n  <Detail title="x">\n    {#each blocks as b}<b.block data={d} />{/each}\n  </Detail>\n{/if}')
+  const only = component("  import { Detail } from '@cella/org-ui'", '<svelte:boundary>\n  {#snippet failed(e)}<Failed error={e} />{/snippet}\n{#snippet header()}\n  <w.block data={d} />\n{/snippet}\n{#if page}\n  <Detail title="x">\n    {#each blocks as b}<b.block data={d} />{/each}\n  </Detail>\n{/if}\n</svelte:boundary>')
   assert.deepEqual(problems(path, only, false), [])
   const framed = component("  import { Frame, Properties } from '@cella/org-ui'", '<Frame title="x">\n  <Properties items={[]} />\n  <b.block data={d} />\n</Frame>')
   const found = problems(path, framed, false)

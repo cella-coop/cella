@@ -75,9 +75,12 @@ for (const [name, launch] of browsers()) {
         await page.screenshot({ path: `${shots}/tasks-condition-${name}-${scheme}.png` })
         await menu.getByRole('menuitemcheckbox').first().click()
         await page.waitForURL(/[?&]where=/)
+        // The rows follow the address once its query answers.
+        await view.locator('.chips', { hasText: `: ${value}` }).waitFor()
         assert.match((await view.locator('.chips').textContent()) ?? '', new RegExp(`: ${value}`), `${at}: the chip names what it keeps`)
         await menu.getByRole('menuitem', { name: 'Remove' }).click()
         await page.waitForURL((u) => !u.searchParams.has('where'))
+        await view.locator('.chips').waitFor({ state: 'detached' })
         assert.equal(await view.locator('.chips').count(), 0, `${at}: Remove takes the condition away`)
 
         await view.getByRole('button', { name: /card fields$/ }).click()

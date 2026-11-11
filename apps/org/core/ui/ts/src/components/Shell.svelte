@@ -11,6 +11,7 @@
   import type { Jump, Nav, Person, Theme } from '../models/view.ts'
   import type { Outcome as Done } from '../models/outcome.ts'
   import { useShell } from '../hooks/useShell.ts'
+  import type { Search } from '../hooks/CommandState.svelte.ts'
   import Command from './Command.svelte'
   import Icon from './Icon.svelte'
   import Outcome from './Outcome.svelte'
@@ -46,7 +47,8 @@
     dev: boolean
     theme: Theme
     outcome: Done | null
-    source: string
+    // What the command menu searches, read by the shell's query.
+    source: Search
     drawer: boolean
     // The names of the people the co-op knows, by address.
     people: Record<string, string>

@@ -6,8 +6,8 @@ import { PAGE, result, type Field, type Result, type Spec, type Widget, type Whe
 const MOST = 5000
 
 // How many rows the address asks to draw.
-export const drawn = (url: URL): number => {
-  const n = Number(url.searchParams.get('n'))
+export const drawn = (query: URLSearchParams): number => {
+  const n = Number(query.get('n'))
   return Number.isInteger(n) && n > PAGE ? Math.min(n, MOST) : PAGE
 }
 

@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { tick, type Component } from 'svelte'
+  import { onMount, tick, type Component } from 'svelte'
   import { applyAction } from '$app/forms'
-  import { goto, refreshAll, snapshot } from '$app/navigation'
+  import { goto, refreshAll } from '$app/navigation'
   import { page } from '$app/state'
   import SlidersHorizontal from 'phosphor-svelte/lib/SlidersHorizontal'
   import Plus from 'phosphor-svelte/lib/Plus'
@@ -29,6 +29,7 @@
   import { post } from '../post.ts'
   import { useCollection } from '../hooks/useCollection.ts'
   import { useDrag } from '../hooks/useDrag.ts'
+  import { useRow } from '../hooks/useRow.ts'
   import { useShell } from '../hooks/useShell.ts'
   import { useViews } from '../hooks/useViews.ts'
   import Board from './Board.svelte'
@@ -147,8 +148,14 @@
     },
   )
   // The keyboard's row, kept as the page is left and focused again when
-  // history comes back to it.
-  snapshot({ id: 'collection-row', capture: () => state.active, restore: (i) => (state.active = i) })
+  // history comes back to it, once the rows are drawn.
+  const row = useRow()
+  onMount(() =>
+    row.follow(
+      () => state.active,
+      (i) => (state.active = i),
+    ),
+  )
   const shell = useShell()
   const saved = useViews(
     () => name,

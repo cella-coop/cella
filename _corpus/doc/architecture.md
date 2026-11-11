@@ -1038,11 +1038,81 @@ its own beyond its props and what it derives from them. State lives in a
 hook, `hooks/use<Name>.ts`: `useName(…)` returns the instance in context
 (`createContext`'s `has` and `get`), or creates it, sets it and returns
 it. The first component to call it creates it; its descendants share it.
-A state class starts from the page's data, handed in as getters, so the
-server and the browser render the same state and it follows the page
-when a write refreshes it; nothing loads data from a component. Writes go
-through form actions. No client module keeps mutable state at module
-level, which the server would share between requests.
+A state class starts from the queries it is handed, each awaited where
+it is read ([remote functions](#remote-functions)), so the server and
+the browser render the same state and it follows a query when a write
+refreshes it; nothing reads data from a component but through a query.
+Writes go through form actions. No client module keeps mutable state at
+module level, which the server would share between requests.
+
+### Remote functions
+
+The shell reads through SvelteKit's remote functions and renders with
+async Svelte: `vite.config.ts` turns on `experimental.remoteFunctions`
+for the kit and `compilerOptions.experimental.async` for Svelte
+(SvelteKit 3 reads no `svelte.config.js`). Both are experimental, so
+`svelte` and `@sveltejs/kit` are pinned to exact versions in the
+shell's `package.json`, and a bump of either is a change of its own that
+runs the browser e2e in all three browsers.
+
+A slice's api is its calls, and the shells own the transports. A call
+is a query, which reads, or a command, which writes and which the
+notary logs with its power and its fold; it is framework-free, a
+function over the slice's own layers that imports no SvelteKit, and
+its argument is validated by the Standard Schema the call declares, so
+nothing reaches a slice unvalidated. A query may be written in SQL, as
+a view the slice's api publishes. The web shell derives its remote
+functions and its REST routes from the calls through the slice
+registry (`#lib/server/slices.ts`), so no call is written twice and
+the shell writes no SQL: the calls over a collection's reads, the
+collection, the item and the search's index, are composed once in
+`#lib/server/calls.ts`, each with its argument's schema (`texts` in
+`@cella/org-db`), and `/search` serves the index's call as JSON too;
+the cli shell serves the same calls as commands, and the analytics
+shell reads the queries written in SQL.
+Only a shell imports a slice's `./app`.
+
+The web shell's remote functions are one module a route family,
+`src/lib/remote/<family>.remote.ts` (`collection`, `item`, `settings`,
+`session`), each serving the calls of the slices its routes mount. A
+query is served as a `query`: a collection's rows a page at a time
+with its counts and its values, its `about`, the search's index;
+`query.batch` where a page asks for one row per thing it lists, so n
+of them are one statement; and `query.live` where a page shows what
+changes while it is open. Each remote function validates its argument
+by its call's schema, and a query runs as the session's person through
+`using`, as every read does (`served` in `#lib/remote/serve.ts`), what
+is missing or not the reader's thrown as a 404.
+
+A component reads a query by awaiting it, in its markup or in a
+`$derived` of a state class, never in an `$effect`; awaits that do not
+depend on each other are started together, so they run in parallel and
+never one after the other. Each page's content sits in a
+`<svelte:boundary>` whose `failed` snippet, the UI core's `Failed`,
+draws the error a query throws, so an error reaches the nearest
+boundary and never the whole shell, its status the response's, a 404
+for what is not the reader's. The server renders the content with its
+queries awaited, so the page it sends holds what it shows: the
+`pending` snippet, the UI core's `Skeleton`, static and drawing no
+data, is handed to the boundary in the browser alone, where it draws
+the page's skeleton while a page it opens reads the first time; a query
+the browser holds answers at once. A navigation changes the address as
+it starts, before the next page's queries answer, so a page draws its
+collection's view and slices as its data names them, never as the
+address does. After the first load, a page reading
+again, after a write or for another address on its route, keeps the
+content it has, its frame busy while a navigation runs (kit's
+`navigating`); `settled()` or `tick()` is awaited where a test or a
+focus needs the DOM ready. Three bugs of the experimental features are
+open and worked around: a cached query's refresh flashes its pending
+snippet (sveltejs/kit#17561), so the browser e2e checks that a page
+reading again for a new address keeps its content and draws none; `$effect.pending()` read inside a boundary breaks a
+keyed `{#each}` when a refreshed query lands (Svelte 5.57.2), so no page
+reads it; and a pending snippet
+remounts its children (sveltejs/svelte#19107), so a pending snippet
+holds no component with state. The browser e2e covers each page's
+boundary, its pending skeleton, its content and its failed snippet, in
+all three browsers.
 
 `cella check feats` enforces what it can see (`tools/ui-check.mjs`): of the
 tree's packages only the UI core holds CSS, the tokens it wears coming from
@@ -1111,8 +1181,9 @@ two halves of one **slice**, matched by name:
 
 The root lists the slices, server and client, and mounts them on
 routes that are the same for every collection: `/[collection]`, the one collection
-component, and `/[collection]/[id]`, the one detail view, each with the
-form actions of the collection's slices; `/search` for the command menu;
+component, and `/[collection]/[id]`, the one detail view, each reading
+through the `collection` and `item` queries and writing through the form
+actions of the collection's slices; `/search` for the command menu;
 `/[collection]/[id]/[stream]`, an item's live stream as server-sent
 events, which the collection's owner names (`streams`, such as a
 document's edits as they settle); `/[collection]/[id]/content`, an item's

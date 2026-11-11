@@ -256,6 +256,8 @@ unseeded('before any close: the chain, Sofia\'s powers and refusals, Brand\'s Pr
     await w.open('/circles/brand?tab=roles')
     await Promise.all([w.page().waitForURL(`${w.base}/mandates/${chain}`), w.page().locator(`a[href="/mandates/${chain}"]`).first().click()])
     await w.page().waitForLoadState('networkidle')
+    // A page is drawn once its query answers, after the address.
+    await section(w.page(), 'Chain').getByText('this one').first().waitFor()
     assert.match((await section(w.page(), 'Chain').textContent()) ?? '', /this one/, `${w.at}: the chain is drawn`)
     await w.shot('1-chain')
 

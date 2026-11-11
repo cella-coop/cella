@@ -34,3 +34,9 @@ the notary takes one receipt for a transaction, so each write has its
 own and each line is judged on the co-op as it stands. `csv(text)`
 reads a CSV's records by its header's names, its separator the comma,
 semicolon, tab or bar its header holds most of.
+
+`src/schema.ts` is a call's argument as a Standard Schema (version 1),
+which every transport validates by before the call runs, as SvelteKit's
+remote functions take it: `texts(keys, most?)`, an object of exactly
+those texts, each at most `most` characters, 4096 unless it says, its
+issues naming each key that is missing, too long or not asked for.

@@ -162,6 +162,13 @@ The theme is light, dark or the system's, a cookie the server writes into
   hides the drawer on every page at once; a cookie keeps the viewer's
   choice, so the server renders it. One tab per panel, the open one
   marked even when alone: a collection's View, an item's Details.
+  While a navigation runs (SvelteKit's `navigating`), its content stays,
+  dimmed and `aria-busy`, until the next page's queries answer.
+- `Skeleton` and `Failed`: what a page's boundary draws while its
+  queries load the first time, its frame named by what the shell knows
+  without them and quiet lines where its content goes, static and
+  holding no component with state; and when a query throws, not found
+  or broken, with the error's status and message, inside the shell.
 - `Collection`: the one collection component, the same header, view bar
   and rows for every collection, and a drawer holding one panel, View
   (`Viewing`), of one shape for every collection, as Linear's display
@@ -250,10 +257,12 @@ The theme is light, dark or the system's, a cookie the server writes into
   so a screen reader reads it and the ring shows where the keyboard is;
   Tab leaves the rows from it and comes back to it, moving past the last
   drawn row focuses the next page's first once it is drawn, and coming
-  back from the item it opened focuses it again (a navigation
-  `snapshot`). A table's column the rows are ordered by says so by
-  `aria-sort` on its header, ascending or descending, and the others
-  carry none: the field the collection's read orders by first
+  back from the item it opened focuses it again: the page, which mounts
+  with its route, keeps the row by a navigation `snapshot` in a
+  `RowState` (`useRow`), which the Collection, mounting once its query
+  answers, follows and takes the row from. A table's column the rows
+  are ordered by says so by `aria-sort` on its header, ascending or
+  descending, and the others carry none: the field the collection's read orders by first
   (`ordered`), where one select reads its rows and its order leads with
   a field by name; the view orders no rows of its own.
 - `Detail`: the one record page, the same for every collection, as
@@ -324,7 +333,9 @@ The theme is light, dark or the system's, a cookie the server writes into
   until dismissed: each write with its verdict and reason; a write of
   several stopped part-way says that those it wrote first stand and only
   the rest is left to send; and a post with no answer reads as unknown,
-  since it may have been written), `Command`.
+  since it may have been written), `Command` (Cmd/Ctrl-K, its items
+  read on its first open by the `source` the shell hands it, the shell's
+  query of every collection's index).
 - `Floating`: what floats at a point rather than from a trigger, a menu at
   the caret or a toolbar over a selection: in the top layer, opened
   manually, kept in the viewport by its own measured size, and drawn above

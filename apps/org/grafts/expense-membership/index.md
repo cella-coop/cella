@@ -14,8 +14,7 @@ approval to its mandate's budget ([circles](#circles)). Declared by
 ## Schema
 
 `expense_membership` (`sql/`): `claim`, each expense with its claimant's
-and decider's names, read from person's core, which membership nests
-in. The graft writes nothing of the expense feat's. It reads as its reader, so it shows the claims on the expenses its reader reads.
+and decider's names, read from core's person. The graft writes nothing of the expense feat's. It reads as its reader, so it shows the claims on the expenses its reader reads.
 
 ## Circles
 

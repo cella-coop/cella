@@ -13,7 +13,9 @@ test("a migration's id is its app, its owner and its file", () => {
   assert.equal(idOf('apps/org/feats/account/core/sql/001-account.sql'), 'org:account/001-account.sql')
   assert.equal(idOf('apps/org/feats/account/core/books/sql/001-books.sql'), 'org:account/books/001-books.sql')
   assert.equal(idOf('apps/org/grafts/account-transaction/sql/002-reach.sql'), 'org:account-transaction/002-reach.sql')
-  assert.equal(idOf('apps/org/feats/person/grafts/employment-membership/sql/001-x.sql'), 'org:employment-membership/001-x.sql')
+  assert.equal(idOf('apps/org/feats/party/grafts/employment-membership/sql/001-x.sql'), 'org:employment-membership/001-x.sql')
+  assert.equal(idOf('apps/org/core/person/sql/001-person.sql'), 'org:core/person/001-person.sql')
+  assert.equal(idOf('apps/org/core/grafts/circle-person/sql/001-circle-person.sql'), 'org:circle-person/001-circle-person.sql')
 })
 
 test('a feat that moves in the tree keeps its ids', () => {

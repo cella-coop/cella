@@ -128,7 +128,7 @@ whether a seat counts is the membership feat's.
 Each write with a power on a meeting, its schedule, hold, cancel and
 minutes, names the meeting's circle in its payload, which the membership
 feat's guard reads a mandate's scope against
-([membership](../person/feats/membership/index.md#seats)).
+([membership](../membership/index.md#seats)).
 
 - `meeting.setting`, by circle: its `quorum`, the share of its seats a
   meeting needs present, in percent, and `adopts`, whether its minutes

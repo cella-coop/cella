@@ -26,7 +26,8 @@
 //
 // A graft sits at the lowest node whose feats, at any depth, hold every
 // feat it joins, and never joins a feat with one nested in it: a child
-// inherits its parent's core. A feat's name is unique in its app, since it
+// inherits its parent's core. Nor does it join a core feat, the circles
+// or the people, which every slice reads already. A feat's name is unique in its app, since it
 // names its schema and the grafts that join it.
 //
 // It also checks that grafts are named and declared, that a package's
@@ -112,6 +113,11 @@ const place = (dir) => {
 // A core feat: a core package whose directory holds SQL of its own, the
 // notary's aside, which is the layer under every slice and no feat.
 const coreFeat = (p) => p.kind === 'core' && p.lib && p.lib !== 'notary' && existsSync(join(repo, p.node, 'core', p.lib, 'sql'))
+// A node's core feats, by name.
+const coreFeats = (node) => {
+  const dir = join(repo, node, 'core')
+  return existsSync(dir) ? readdirSync(dir).filter((l) => l !== 'grafts' && l !== 'notary' && existsSync(join(dir, l, 'sql'))) : []
+}
 
 const describe = (p, dir) => (p ? `${p.kind} ${p.name ?? p.node ?? ''}`.trim() : 'unplaced') + ` (${dir})`
 
@@ -250,7 +256,11 @@ for (const node of nodes) {
       fail(`${node}/grafts/${g}: a graft is named by two or more distinct feats, in alphabetical order`)
     }
     const joined = parts.map((part) => named(node, part))
-    parts.filter((_, i) => !joined[i]).forEach((part) => fail(`${node}/grafts/${g}: joins ${part}, which is not a feat below ${node}`))
+    // A core feat, the circles or the people, is every slice's to read:
+    // no graft joins one.
+    const cores = new Set([node, ...ancestors(node)].flatMap((n) => coreFeats(n)))
+    parts.filter((part, i) => !joined[i] && cores.has(part)).forEach((part) => fail(`${node}/grafts/${g}: joins ${part}, a core feat, which every feat and graft reads already; no graft joins core (architecture.md, "People are core")`))
+    parts.filter((part, i) => !joined[i] && !cores.has(part)).forEach((part) => fail(`${node}/grafts/${g}: joins ${part}, which is not a feat below ${node}`))
     const found = joined.filter(Boolean)
     for (const a of found) {
       for (const b of found.filter((b) => b !== a && below(b, a))) {

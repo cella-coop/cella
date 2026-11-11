@@ -300,6 +300,19 @@ test('every table of a feat or a graft names its owning circle, keyed into core\
   assert.deepEqual(party.errors, [], 'a grantee is the other key out of a schema')
 })
 
+test('a feat and a graft name a core person as they name a circle, and reach no further into the people', async () => {
+  const people = 'CREATE SCHEMA person; CREATE TABLE person.person (address text PRIMARY KEY); CREATE TABLE person.device (key bytea PRIMARY KEY);'
+  const core = { 'core/circle': 'CREATE SCHEMA circle; CREATE TABLE circle.circle (id text PRIMARY KEY);', 'core/person': people }
+  const named = await check({ ...core,
+    invoice: 'CREATE TABLE invoice.invoice (circle text NOT NULL REFERENCES circle.circle, id text PRIMARY KEY, author text REFERENCES person.person);\nCREATE FUNCTION invoice.named(who text) RETURNS boolean LANGUAGE sql STABLE RETURN EXISTS (SELECT FROM person.person p WHERE p.address = who);',
+    'invoice-member': 'CREATE SCHEMA invoice_member; CREATE TABLE invoice_member.payer (circle text NOT NULL REFERENCES circle.circle, invoice text, payer text REFERENCES person.person);' })
+  assert.deepEqual(named.errors, [])
+  const device = await check({ ...core, invoice: 'CREATE TABLE invoice.invoice (circle text NOT NULL REFERENCES circle.circle, key bytea REFERENCES person.device);' })
+  assert.match(device.errors.join('\n'), /holds a foreign key into person.device: no foreign key crosses a feat/)
+  const outside = await check({ ...core, invoice: 'CREATE FUNCTION invoice.voted() RETURNS boolean LANGUAGE sql STABLE RETURN EXISTS (SELECT FROM motion.motion);' })
+  assert.match(outside.errors.join('\n'), /reads motion.motion: motion is outside/)
+})
+
 test('an action with no fold is refused, and one a graft folds is not', async () => {
   const ops = [op('invoice:invoice:issue', 'issue-invoice'), op('invoice:invoice:send')]
   const { found } = await check({

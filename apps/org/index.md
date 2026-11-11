@@ -119,16 +119,21 @@ roles, the seats read from their members and the tenures of each role,
 and the mandates and rights, and their page in the sidebar
 ([circle](core/circle/index.md)).
 
-Org's feats sit under `feats/`; `person` holds two of its own, `membership`
-and `employment`, under `person/feats/`, which inherit its core: a person
-is a member if they hold a membership and a worker if they hold an
-employment, and the grafts that join a person's role name the child.
+People are core too: `core/person` holds everyone the co-op knows, by
+the address they sign with, their devices and the keyring, the rights
+registry, and the Inbox, what waits on the acting person
+([person](core/person/index.md)). Every feat's rows may name a core
+person, as they name a circle.
+
+Org's feats sit under `feats/`, every one top-level: a person is a
+member if they hold a membership and a worker if they hold an
+employment, each a feat whose rows name a core person, and the grafts
+that join a person's role name the feat.
 
 | Feat | Group | Rung | What |
 |---|---|---|---|
-| `person` | governance | 1 | everyone the co-op knows, by the address they sign with, and their devices; its feats below |
-| `person/membership` | governance | 1 | a person's membership, invited to exited; whether a seat counts, and so who may use a power |
-| `person/employment` | work | 1 | a person's employment, member or not, and their contract |
+| `membership` | governance | 1 | a person's membership, invited to exited; whether a seat counts, and so who may use a power |
+| `employment` | work | 1 | a person's employment, member or not, and their contract |
 | `motion` | governance | 1 | proposals, votes, computed outcomes; mandates granted and revoked by motion, and whom a circle's motion decides about |
 | `document` | governance | 1 | drafts, versions and adoption |
 | `account` | finance | 1 | the chart of accounts, capital accounts, reserves and funds, their periods and balances, the statutes' capital terms, the statements' rubrics and the spans they are drawn for |
@@ -145,8 +150,7 @@ employment, and the grafts that join a person's role name the child.
 | `meeting` | governance | 1 | circles' meetings, their agendas, held or cancelled; how a circle meets |
 | `file` | platform | 1 | the files the co-op keeps, named by their BLAKE3 |
 | `import` | platform | 1 | files brought in from other tools, and what each line came to |
-| `person/contact` | governance | later | someone the co-op deals with who is neither a member nor a worker |
-| `person/agent` | platform | later | agents acting for members, with narrower grants |
+| `agent` | platform | later | agents acting for members, with narrower grants |
 
 Seedling's co-op economics that rung 1 still leaves out: a work share
 divided by revenue, which French law does not offer a SCOP; paying out
@@ -186,6 +190,7 @@ and admit a member by vote (ordered).
 | `document-meeting` | a meeting's minutes, written as a document |
 | `document-membership` | who has read the co-op's adopted texts |
 | `employment-file` | a worker's employment records, filed by whoever hires |
+| `employment-membership` | a worker's candidacy and probation, and each person's path from hired to member |
 | `employment-payslip` | whose a salary and a payslip are: a worker's, member or not |
 | `employment-project-timesheet` | a worker's time booked to a project by their employment, and the week they enter it in |
 | `employment-timesheet` | whose time an entry is, a worker's within their employment, and logging it by that employment |
@@ -204,8 +209,3 @@ and admit a member by vote (ordered).
 | `project-task` | which project and milestone a task is in |
 | `project-timesheet` | time against a project, what it spent of the budget and cost the co-op, and its spend at completion |
 
-At `person`, joining its own feats, the lowest node that holds both:
-
-| Graft | What it joins |
-|---|---|
-| `employment-membership` | a worker's candidacy and probation, and each person's path from hired to member |

@@ -20,9 +20,10 @@ CREATE TABLE policy.wording (policy text PRIMARY KEY REFERENCES policy.policy, l
 
 // Org's core with the register, the notary's SQL and one core library,
 // `ledger`, its package depending on the libraries named; given
-// `graft`, the SQL of core's graft joining the circles to the register;
-// given `circle`, the circles' SQL; and given `slice`, a feat's.
-async function check(sql, { notary = '', uses = [], graft = '', circle = '', slice = '' } = {}) {
+// `graft`, the SQL of core's graft joining the circles to the register,
+// or to another core feat named by `joins`; given `circle`, the circles'
+// SQL; and given `slice`, a feat's.
+async function check(sql, { notary = '', uses = [], graft = '', joins = 'circle-policy', circle = '', slice = '' } = {}) {
   const repo = mkdtempSync(join(tmpdir(), 'cella-core-'))
   try {
     const write = (dir, file, text) => {
@@ -45,9 +46,9 @@ async function check(sql, { notary = '', uses = [], graft = '', circle = '', sli
       write('apps/org/feats/pricing/core/sql', '001.sql', `CREATE SCHEMA pricing;\n${slice}`)
     }
     if (graft) {
-      write('apps/org/core/grafts/circle-policy/sql', '001.sql', `CREATE SCHEMA circle_policy;\n${graft}`)
+      write(`apps/org/core/grafts/${joins}/sql`, '001.sql', `CREATE SCHEMA ${joins.replace('-', '_')};\n${graft}`)
     }
-    return (await checkSql(repo, ['apps/org'], new Set(['cella', 'policy', 'ledger', 'circle', 'circle_policy', 'pricing']))).join('\n')
+    return (await checkSql(repo, ['apps/org'], new Set(['cella', 'policy', 'ledger', 'circle', 'circle_policy', 'circle_ledger', 'pricing']))).join('\n')
   } finally {
     rmSync(repo, { recursive: true, force: true })
   }
@@ -160,6 +161,26 @@ GRANT SELECT ON policy.wording TO cella_app;`,
   assert.match(errors, /creates policy\.says: core circle-policy creates and grants only in its own schema, circle_policy/)
   assert.match(errors, /alters policy\.policy: core circle-policy creates and grants only in its own schema, circle_policy/)
   assert.match(errors, /grants on policy: core circle-policy creates and grants only in its own schema, circle_policy/)
+})
+
+test('a core graft binds the owning circle of a core feat it joins, and alters nothing else of it', async () => {
+  const bound = await check('CREATE TABLE ledger.line (circle text NOT NULL, id text PRIMARY KEY);', {
+    joins: 'circle-ledger',
+    graft: `ALTER TABLE ledger.line ALTER COLUMN circle SET DEFAULT circle.assembly(), ADD FOREIGN KEY (circle) REFERENCES circle.circle;
+ALTER TABLE ledger.line ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
+CREATE POLICY circle ON ledger.line TO cella_app USING ((SELECT circle.inside()));`,
+  })
+  assert.equal(bound, '')
+  const astray = await check('CREATE TABLE ledger.line (circle text NOT NULL, id text PRIMARY KEY, day date);', {
+    joins: 'circle-ledger',
+    graft: `ALTER TABLE ledger.line ALTER COLUMN day SET DEFAULT '2026-01-01', ADD FOREIGN KEY (id) REFERENCES circle.circle;
+ALTER TABLE ledger.line ALTER COLUMN circle SET DEFAULT circle.inside()::text;`,
+  })
+  assert.equal(astray.match(/alters ledger\.line: core circle-ledger creates and grants only in its own schema, circle_ledger/g)?.length, 2)
+  const unjoined = await check('CREATE TABLE ledger.line (circle text NOT NULL);', {
+    graft: 'ALTER TABLE ledger.line ADD FOREIGN KEY (circle) REFERENCES circle.circle;',
+  })
+  assert.match(unjoined, /core circle-policy joins no ledger/)
 })
 
 test('a core graft reads no core feat it does not join, nor a policy\'s wording', async () => {

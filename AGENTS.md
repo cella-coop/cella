@@ -43,13 +43,18 @@ site hold no feat and write no SQL. Read
   that needs another graft's data lives in the graft joining all its feats.
 - **Each feat and each graft owns a Postgres schema**, its SQL in a `sql/`
   directory beside its core package. A feat's SQL references only its own
-  schema, `cella.*` and core's circles, `circle.*`; a graft's, its own,
-  those of the feats it joins, those of its lower-order grafts and
-  `circle.*`. It creates and grants only in its own.
+  schema, `cella.*`, core's circles, `circle.*`, and core's people,
+  `person.*`; a graft's, its own,
+  those of the feats it joins, those of its lower-order grafts, `circle.*`
+  and `person.*`. It creates and grants only in its own.
 - **Circles, roles, tenures and mandates are core**, as groups are in
   standard RBAC: `apps/org/core/circle`, a core feat, never one of
   `feats/`, and no feat's graft joins a circle
   ([circles are core](_corpus/doc/architecture.md#circles-are-core)).
+  **People are core** too: `apps/org/core/person`, a core feat, never
+  one of `feats/`; a membership, an employment or a comment names a core
+  person as a feat's row names a circle ([people are
+  core](_corpus/doc/architecture.md#people-are-core)).
 - **A core feat uses no other core feat.** Core feats that use one
   another are joined by a core graft in `core/grafts/`, as
   `circle-policy` joins the circles to the policy register

@@ -44,8 +44,9 @@ before(async () => {
   await db.connect()
   await db.query(`SET cella.clock = '2026-10-24'`)
   await db.query(`SET cella.scope = '${scope}'`)
-  // Any device signs for anyone: this slice has no keyring of its own.
+  // Any device signs for anyone, in place of core person's keyring.
   await db.query(`CREATE FUNCTION public.anyone(actor text, device bytea) RETURNS text LANGUAGE sql STABLE RETURN NULL`)
+  await db.query('DELETE FROM cella.keyring')
   await db.query(`INSERT INTO cella.keyring (fn, owner) VALUES ('public.anyone(text, bytea)', 'test')`)
 })
 

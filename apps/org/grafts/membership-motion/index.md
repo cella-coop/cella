@@ -52,7 +52,7 @@ closed and passed; that each admission seats its member is the roll's
 too ([circles](#circles)). A member's
 withdrawal, and their erasure once they have left, are their own rights,
 no motion's, so neither is this
-graft's ([membership](../../feats/person/feats/membership/index.md)).
+graft's ([membership](../../feats/membership/index.md)).
 
 ## Folds
 

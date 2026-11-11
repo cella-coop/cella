@@ -30,7 +30,7 @@ time is worked for: a member's month is one per circle, holding only
 that circle's entries
 ([timesheet](../../feats/timesheet/index.md#schema)), and the
 membership feat's one guard reads it, as it reads every record's
-([membership](../../feats/person/feats/membership/index.md#seats)): a
+([membership](../../feats/membership/index.md#seats)): a
 lead approves the months of their own circle by a mandate on `own`, is
 refused a month of another circle the same member worked for, and no
 slice checks a worker's seats again.

@@ -67,7 +67,7 @@ of those seated in their circle is `membership-timesheet`'s.
 `log-time` is every employee's right, held with no seat from the first
 day of their contract to its last, member or not: what a worker logs is
 their own, and a right opens no one else's time to read, as a seat's
-mandate would ([rights](../circle/index.md#rights)). Whose time an entry
+mandate would ([rights](../../core/circle/index.md#rights)). Whose time an entry
 is on its day, within the worker's employment and no suspended or former
 member's, is `employment-timesheet`'s and `membership-timesheet`'s.
 
@@ -118,7 +118,7 @@ approval, names the month's circle in its request and its payload,
 which the membership feat's guard reads a mandate's scope against: a
 lead approves their own circle's months and is refused another's, the
 refusal naming the circle
-([membership](../person/feats/membership/index.md#seats)).
+([membership](../membership/index.md#seats)).
 
 ## Folds
 

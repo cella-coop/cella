@@ -11,14 +11,15 @@
 //                     and those of the core feats it joins, never one it
 //                     does not join
 //   a feat            its own schema; those of the feats it nests in;
-//                     cella.*; core's circles; the policy register; the
-//                     grafts of its ancestors' cores; the catalog
+//                     cella.*; core's circles; core's people; the policy
+//                     register; the grafts of its ancestors' cores; the
+//                     catalog
 //   a graft           its own schema; the schemas of the feats it joins and
 //                     of the feats they nest in; the schemas of the grafts
 //                     at or below its node that join a proper subset of its
-//                     feats; cella.*; core's circles; the policy register;
-//                     the grafts of its node's and its ancestors' cores;
-//                     the catalog
+//                     feats; cella.*; core's circles; core's people; the
+//                     policy register; the grafts of its node's and its
+//                     ancestors' cores; the catalog
 //
 // A slice reads the policy register's policies and values, never their
 // wording, policy.wording: a guard reads a policy's values from its own
@@ -31,14 +32,17 @@
 // keeps them in its own schema too, and puts the core feats it joins
 // under the circles' row-level policies, which those feats, knowing no
 // circle, cannot (`secures`): it enables and forces row-level security on
-// their tables and makes and alters policies on them, and nothing else
-// outside its own schema. No SQL drops
+// their tables and makes and alters policies on them, and binds a
+// table's `circle` to its owning circle, a foreign key into circle.circle
+// and the assembly by default, as `circle-person` binds the people's, and
+// nothing else outside its own schema. No SQL drops
 // the cella extension, the notary's own neither: it changes by its upgrade.
 //
 // Beyond the references, a feat's or a graft's SQL:
 //   - creates, alters, drops, indexes and grants only in its own schema;
 //   - holds no foreign key out of its own schema, but its owning circle's
-//     into core's circle table and a grantee's into core's grantees;
+//     into core's circle table, a grantee's into core's grantees and a
+//     person's into core's people, person.person;
 //   - names its owning circle in every table, `circle`, text, never null,
 //     a foreign key into circle.circle, unless the table is a registry
 //     its migrations fill, commented 'registry: why' (`unowned`);
@@ -113,7 +117,7 @@
 // cella migrate reads each view as it, or by review.
 // No core publishes a contract but the analytics port, org's core library
 // `analytics`, whose views stay in its schema: the log's head; and core's
-// circles, `circle`, whose views stay in theirs.
+// circles, `circle`, and people, `person`, whose views stay in theirs.
 // PL/pgSQL bodies are parsed statement by statement; LANGUAGE sql bodies,
 // atomic or quoted, are parsed whole.
 
@@ -192,7 +196,7 @@ function scope(o) {
     return { own: o.lib ? schemaOf(o.lib) : null, peers: new Set((o.peers ?? []).map(schemaOf)), allowed: new Set(['cella', 'vault', ...catalog, ...(o.lib ? [o.lib] : [])]), feats: [], ops: [] }
   }
   if (o.kind === 'feat') {
-    return { own: o.name, allowed: new Set([o.name, ...o.lineage, 'cella', CIRCLES, REGISTER, ...(o.cored ?? []), ...catalog]), feats: [o.name], ops: [o.name, CIRCLES] }
+    return { own: o.name, allowed: new Set([o.name, ...o.lineage, 'cella', CIRCLES, PEOPLE, REGISTER, ...(o.cored ?? []), ...catalog]), feats: [o.name], ops: [o.name, CIRCLES] }
   }
   const feats = o.name.split('-')
   const outer = feats.flatMap((f) => o.nests.get(f) ?? [])
@@ -200,7 +204,7 @@ function scope(o) {
     const parts = g.split('-')
     return parts.length < feats.length && parts.every((p) => feats.includes(p))
   })
-  return { own: schemaOf(o.name), allowed: new Set([schemaOf(o.name), ...feats, ...outer, ...lower.map(schemaOf), 'cella', CIRCLES, REGISTER, ...(o.cored ?? []), ...catalog]), feats, ops: [o.name, ...feats, ...lower, CIRCLES] }
+  return { own: schemaOf(o.name), allowed: new Set([schemaOf(o.name), ...feats, ...outer, ...lower.map(schemaOf), 'cella', CIRCLES, PEOPLE, REGISTER, ...(o.cored ?? []), ...catalog]), feats, ops: [o.name, ...feats, ...lower, CIRCLES] }
 }
 
 // The notary, the `cella` extension in org's core: the layer under every
@@ -222,6 +226,11 @@ const circles = (o) => o.kind === 'core' && !o.joins && o.lib === CIRCLES
 // The policy register, org's core library `policy`, which every slice
 // reads: its policies and their values, never their wording.
 const REGISTER = 'policy'
+
+// Core's people, org's core feat `person`: everyone the co-op knows,
+// their devices and the rights, which every feat and graft may name, as
+// a comment's author or a task's assignee, as it names a circle.
+const PEOPLE = 'person'
 
 const walk = (node, visit, key = null) => {
   if (Array.isArray(node)) {
@@ -361,6 +370,18 @@ const circleTable = (rv) => rv?.schemaname === 'circle' && rv?.relname === 'circ
 // or a motion's author is keyed into: the other key a feat's or a
 // graft's table may hold out of its schema.
 const granteeTable = (rv) => rv?.schemaname === 'circle' && rv?.relname === 'grantee'
+
+// Core's people, which a feat's or a graft's table may hold a foreign key
+// into for the person a row names.
+const personTable = (rv) => rv?.schemaname === PEOPLE && rv?.relname === 'person'
+
+// An ALTER TABLE command that binds a table's `circle` to its owning
+// circle: a foreign key into core's circle table, or the assembly by
+// default. A core graft joining the circles binds the tables of the core
+// feats it joins so, which those feats, knowing no circle, cannot.
+const binds = (c) =>
+  (c?.subtype === 'AT_AddConstraint' && c.def?.Constraint?.contype === 'CONSTR_FOREIGN' && circleTable(c.def.Constraint.pktable) && strings(c.def.Constraint.fk_attrs).join() === 'circle') ||
+  (c?.subtype === 'AT_ColumnDefault' && c.name === 'circle' && strings(c.def?.FuncCall?.funcname).join('.') === 'circle.assembly' && !(c.def.FuncCall.args ?? []).length)
 
 // Whether a table's columns name its owning circle: `circle`, text, never
 // null, a foreign key into core's circle table, by the column or by a
@@ -922,7 +943,7 @@ function statement(type, b, o, s, fail, owned, named, found) {
       }
       walk(b, (_, n) => {
         const into = n.Constraint?.pktable
-        if (n.Constraint?.contype === 'CONSTR_FOREIGN' && into?.schemaname !== b.relation.schemaname && !circleTable(into) && !granteeTable(into)) {
+        if (n.Constraint?.contype === 'CONSTR_FOREIGN' && into?.schemaname !== b.relation.schemaname && !circleTable(into) && !granteeTable(into) && !personTable(into)) {
           fail(`${named(b.relation)} holds a foreign key into ${named(n.Constraint.pktable)}: no foreign key crosses a feat`)
         }
       })
@@ -964,9 +985,18 @@ function statement(type, b, o, s, fail, owned, named, found) {
     case 'IndexStmt':
     case 'AlterTableStmt':
       owned(b.relation.schemaname, `${type === 'IndexStmt' ? 'indexes' : 'alters'} ${named(b.relation)}`,
-        type === 'AlterTableStmt' && (b.cmds ?? []).length > 0 && b.cmds.every((c) => ['AT_EnableRowSecurity', 'AT_ForceRowSecurity'].includes(c.AlterTableCmd?.subtype)))
-      if (type === 'AlterTableStmt' && (b.cmds ?? []).some((c) => c.AlterTableCmd?.subtype === 'AT_EnableRowSecurity')) {
+        type === 'AlterTableStmt' && (b.cmds ?? []).length > 0 && b.cmds.every((c) => ['AT_EnableRowSecurity', 'AT_ForceRowSecurity'].includes(c.AlterTableCmd?.subtype) || binds(c.AlterTableCmd)))
+      // A core feat's table a core graft has bound to its owning circle is
+      // secured as the circles secure a slice's table as it is made, read
+      // by its circle: a contract shows its rows as it shows a slice's.
+      if (type === 'AlterTableStmt' && (b.cmds ?? []).some((c) => c.AlterTableCmd?.subtype === 'AT_EnableRowSecurity') && !(s.secures?.has(b.relation.schemaname) && found.owned.has(named(b.relation)))) {
         found.secured.add(named(b.relation))
+      }
+      // A core feat's table a core graft binds to its owning circle holds
+      // a circle's records, as one that names it as it is made.
+      if (type === 'AlterTableStmt' && s.secures?.has(b.relation.schemaname) && (b.cmds ?? []).some((c) => c.AlterTableCmd?.subtype === 'AT_AddConstraint' && binds(c.AlterTableCmd))) {
+        found.owned.add(named(b.relation))
+        found.circles.add(`${named(b.relation)}.circle`)
       }
       if (type === 'AlterTableStmt' && o.kind !== 'core') {
         for (const c of (b.cmds ?? []).map((x) => x.AlterTableCmd?.subtype).filter((x) => ['AT_DisableRowSecurity', 'AT_NoForceRowSecurity'].includes(x))) {
@@ -1435,11 +1465,11 @@ function audience(comment) {
 
 function contract(tree, o, fail, found) {
   if (o.kind === 'core') {
-    if (!PORT.test(o.dir) && o.lib !== CIRCLES) {
-      fail('an analytical contract is a feat\'s or a graft\'s, never a core\'s but the analytics port\'s and the circles\'')
+    if (!PORT.test(o.dir) && o.lib !== CIRCLES && o.lib !== PEOPLE) {
+      fail('an analytical contract is a feat\'s or a graft\'s, never a core\'s but the analytics port\'s, the circles\' and the people\'s')
       return
     }
-    const own = PORT.test(o.dir) ? 'analytics' : CIRCLES
+    const own = PORT.test(o.dir) ? 'analytics' : o.lib
     for (const { stmt } of tree.stmts ?? []) {
       if (stmt.ViewStmt && stmt.ViewStmt.view?.schemaname !== own) {
         fail(`${stmt.ViewStmt.view?.relname}: a core library publishes only in its own schema, ${own}`)
@@ -1662,6 +1692,53 @@ export async function checkSql(repo, apps, known, found = { powers: [], guards: 
   found.owned ??= new Set()
   found.circles ??= new Set()
   found.summed ??= new Map()
+  // One file of an owner's SQL, read with what the files before it left.
+  const one = (o, s, file, foreign) => {
+    const path = join(o.dir, file)
+    const fail = (msg) => errors.push(`${path}: ${msg}`)
+    const sql = readFileSync(join(repo, path), 'utf8')
+    let tree
+    try {
+      tree = lib.parseSync(sql)
+    } catch (e) {
+      fail(`does not parse: ${e.message}`)
+      return
+    }
+    found.at = path
+    inspect(tree, o, s, known, fail, found)
+    if (file === CONTRACT) {
+      contract(tree, o, fail, found)
+    }
+    // Locations are byte offsets.
+    const bytes = Buffer.from(sql)
+    const bodies = []
+    for (const { stmt, stmt_location: at = 0, stmt_len: len = 0 } of tree.stmts) {
+      const fn = stmt.CreateFunctionStmt
+      if (!fn) {
+        continue
+      }
+      const opt = (k) => fn.options?.find((x) => x.DefElem.defname === k)?.DefElem.arg
+      const lang = opt('language')?.String?.sval
+      const as = strings(opt('as')?.List?.items)[0]
+      if (lang === 'sql' && as) {
+        bodies.push(lib.parseSync(as))
+      } else if (lang === 'plpgsql') {
+        bodies.push(...plpgsql(lib, bytes.subarray(at, len ? at + len : undefined).toString()))
+      } else if (lang !== 'sql') {
+        fail(`${strings(fn.funcname).join('.')} is LANGUAGE ${lang}; a feat's SQL is sql or plpgsql`)
+      }
+    }
+    for (const body of bodies) {
+      inspect(body, o, s, known, fail, found)
+    }
+    if (!privileged(o)) {
+      foreignIn(lib, tree, bytes, file, path, o, s, foreign)
+    }
+  }
+  // The analytical contracts, read after every migration, as `cella
+  // migrate` applies them: what a later migration binds, as a core
+  // graft binds a core feat's owning circle, holds for a contract.
+  const contracts = []
   for (const o of owners(repo, apps)) {
     const s = scope(o)
     // What the owner's migrations leave writing or triggering on a table
@@ -1670,47 +1747,13 @@ export async function checkSql(repo, apps, known, found = { powers: [], guards: 
     const foreign = new Map()
     s.triggers = new Set()
     for (const file of readdirSync(join(repo, o.dir)).filter((f) => f.endsWith('.sql')).sort()) {
-      const path = join(o.dir, file)
-      const fail = (msg) => errors.push(`${path}: ${msg}`)
-      const sql = readFileSync(join(repo, path), 'utf8')
-      let tree
-      try {
-        tree = lib.parseSync(sql)
-      } catch (e) {
-        fail(`does not parse: ${e.message}`)
-        continue
-      }
-      found.at = path
-      inspect(tree, o, s, known, fail, found)
-      if (file === CONTRACT) {
-        contract(tree, o, fail, found)
-      }
-      // Locations are byte offsets.
-      const bytes = Buffer.from(sql)
-      const bodies = []
-      for (const { stmt, stmt_location: at = 0, stmt_len: len = 0 } of tree.stmts) {
-        const fn = stmt.CreateFunctionStmt
-        if (!fn) {
-          continue
-        }
-        const opt = (k) => fn.options?.find((x) => x.DefElem.defname === k)?.DefElem.arg
-        const lang = opt('language')?.String?.sval
-        const as = strings(opt('as')?.List?.items)[0]
-        if (lang === 'sql' && as) {
-          bodies.push(lib.parseSync(as))
-        } else if (lang === 'plpgsql') {
-          bodies.push(...plpgsql(lib, bytes.subarray(at, len ? at + len : undefined).toString()))
-        } else if (lang !== 'sql') {
-          fail(`${strings(fn.funcname).join('.')} is LANGUAGE ${lang}; a feat's SQL is sql or plpgsql`)
-        }
-      }
-      for (const body of bodies) {
-        inspect(body, o, s, known, fail, found)
-      }
-      if (!privileged(o)) {
-        foreignIn(lib, tree, bytes, file, path, o, s, foreign)
-      }
+      file === CONTRACT ? contracts.push({ o, s }) : one(o, s, file, foreign)
     }
+    found.foreign.push(...foreign.values())
+  }
+  for (const { o, s } of contracts) {
+    const foreign = new Map()
+    one(o, s, CONTRACT, foreign)
     found.foreign.push(...foreign.values())
   }
   return errors

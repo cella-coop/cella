@@ -141,7 +141,7 @@ pub enum Command {
     /// Write the brand's tokens, fonts, mark, wordmark and icons from packages/brand/house.json
     Brand,
 
-    /// The landing site in apps/site: its dev server, or its static build
+    /// The landing site in apps/site: its dev server, its static build, or its release to cella.coop
     Site {
         #[command(subcommand)]
         command: Site,
@@ -304,6 +304,12 @@ pub enum Site {
         /// Refuse any text a draft still supplies: the site's every word the operator's
         #[arg(long)]
         release: bool,
+    },
+    /// Put the site main holds live at cella.coop: its release build, sent to the production host
+    Release {
+        /// Where it goes: an ssh host, whose forced command takes it, or an absolute path, a directory standing in for the host
+        #[arg(long, default_value = "production")]
+        to: String,
     },
     /// Build the figure fixture and take its four screenshots into apps/site/test
     Screenshots,

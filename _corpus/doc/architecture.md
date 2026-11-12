@@ -1156,26 +1156,23 @@ is a query, which reads, or a command, which writes and which the
 notary logs with its power and its fold; it is framework-free, a
 function over the slice's own layers that imports no SvelteKit, and
 its argument is validated by the Standard Schema the call declares, so
-nothing reaches a slice unvalidated. A query may be written in SQL, as
-a view the slice's api publishes. The web shell derives its remote
-functions and its REST routes from the calls through the slice
-registry (`#lib/server/slices.ts`), so no call is written twice and
+nothing reaches a slice unvalidated. The web shell derives its remote
+functions from the calls through the slice registry
+(`#lib/server/slices.ts`), so no call is written twice and
 the shell writes no SQL: the calls over a collection's reads, the
 collection, the item and the search's index, are composed once in
 `#lib/server/calls.ts`, each with its argument's schema (`texts` in
-`@cella/org-db`), and `/search` serves the index's call as JSON too;
-the cli shell serves the same calls as commands, and the analytics
-shell reads the queries written in SQL.
+`@cella/org-db`), and `/search` serves the index's call as JSON too.
 Only a shell imports a slice's `./app`.
 
 The web shell's remote functions are one module a route family,
-`src/lib/remote/<family>.remote.ts` (`collection`, `item`, `settings`,
-`session`), each serving the calls of the slices its routes mount. A
+`src/lib/remote/<family>.remote.ts` (`collection` and `item`), each
+serving the calls of the slices its routes mount. A
 query is served as a `query`: a collection's rows a page at a time
-with its counts and its values, its `about`, the search's index;
-`query.batch` where a page asks for one row per thing it lists, so n
-of them are one statement; and `query.live` where a page shows what
-changes while it is open. Each remote function validates its argument
+with its counts and its values, its `about`, the search's index. No
+page asks for one row per thing it lists or shows what changes while
+it is open, so none is served by `query.batch` or `query.live`. Each
+remote function validates its argument
 by its call's schema, and a query runs as the session's person through
 `using`, as every read does (`served` in `#lib/remote/serve.ts`), what
 is missing or not the reader's thrown as a 404.

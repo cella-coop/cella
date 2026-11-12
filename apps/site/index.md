@@ -1,6 +1,6 @@
 +++
 title = "Site"
-updated = 2026-11-11
+updated = 2026-11-12
 +++
 
 `apps/site` (`@cella/site`) is cella's landing site: an
@@ -12,8 +12,9 @@ brand and its diagrams, `@cella/diagrams`
 ([diagrams](../../packages/diagrams/index.md)), which `cella check
 feats` enforces.
 
-It is deployed nowhere. No domain serves it and no host builds it;
-nothing of it goes public until the operator says so.
+It is served at `https://cella.coop` by the workshop's production
+host, from a release build of what cella's main holds, and of nothing
+else ([how it lands](#how-it-lands)).
 
 ## The pages
 
@@ -610,6 +611,30 @@ refuses only what is still drafted.
 No gate refuses a version that touches the text, since the forge does
 not yet record who pushed a version: what it keeps is the pushed
 head's committer, which any agent sets.
+
+## How it lands
+
+The site's work lands as every stream's does, through the kept stream
+`site`, which the operator owns and whose merge leaves it standing.
+The site session works on it and never pushes main: each of its
+commits is one change, carrying its `Change-Id:` trailer, so the
+integrator's queue takes the stream's newest version. A version of
+`site` is gated by the `gates` flow at its tip, as any version is, and
+where main moved before it lands it rebases and gates again, as every
+change does. Its paths are decoupled, so main moving only in them
+holds back no change that touches none of them
+([gates](../org/rs/index.md#gates)).
+
+It lands once the operator approves it. Their push of a version is
+that approval, said by record on the version, in their words, by the
+session that pushed it for them (`corpus change review <id>@<n>`),
+since the forge does not yet record who pushed
+([whose words](#whose-words)). The landing pass then merges it into
+main, and `site` stands on the merge for the next piece of work.
+
+A site change a build lane lands, structure, a component or a
+diagram, comes through its own stream as any change does, and touches
+no file of the text.
 
 ## Running it
 

@@ -43,6 +43,40 @@ BEGIN
 END
 $$;
 
+-- circle:role:make: the role its entry names, in its circle, with its
+-- name, duty and cap, none uncapped.
+CREATE FUNCTION circle.fold_role_make(entry jsonb) RETURNS void
+LANGUAGE plpgsql AS $$
+DECLARE
+  p jsonb := entry -> 'payload';
+BEGIN
+  INSERT INTO circle.role (id, circle, name, duty, holders)
+  VALUES (p ->> 'role', p ->> 'circle', p ->> 'name', coalesce(p ->> 'duty', ''), (p ->> 'holders')::int);
+END
+$$;
+
+-- circle:role:amend: the role its entry names, its name, duty or cap
+-- changed to the values it carries, each from what the entry says it was.
+CREATE FUNCTION circle.fold_role_amend(entry jsonb) RETURNS void
+LANGUAGE plpgsql AS $$
+DECLARE
+  p jsonb := entry -> 'payload';
+  was jsonb;
+BEGIN
+  SELECT jsonb_build_object('name', r.name, 'duty', r.duty, 'holders', r.holders) INTO was
+  FROM circle.role r WHERE r.id = p ->> 'role';
+  IF was IS NULL THEN
+    RAISE EXCEPTION 'circle: entry % amends the % role, which the fold has none of', entry ->> 'n', p ->> 'role';
+  END IF;
+  IF EXISTS (SELECT FROM jsonb_each(p -> 'was') w WHERE was -> w.key IS DISTINCT FROM w.value) THEN
+    RAISE EXCEPTION 'circle: entry % says the % role was %, where the fold has %', entry ->> 'n', p ->> 'role', p -> 'was', was;
+  END IF;
+  UPDATE circle.role
+  SET name = coalesce(p ->> 'name', name), duty = coalesce(p ->> 'duty', duty), holders = coalesce((p ->> 'holders')::int, holders)
+  WHERE id = p ->> 'role';
+END
+$$;
+
 -- circle:seat:add: the seat its entry names, by its id, from the entry's
 -- day: a tenure of the role it names, or a membership of the circle where
 -- it names none.
@@ -101,6 +135,8 @@ $$;
 
 SELECT cella.lets_fold('circle:circle:create', 1, 'circle.fold_create(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:circle:amend', 1, 'circle.fold_amend(jsonb)', 'circle');
+SELECT cella.lets_fold('circle:role:make', 1, 'circle.fold_role_make(jsonb)', 'circle');
+SELECT cella.lets_fold('circle:role:amend', 1, 'circle.fold_role_amend(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:seat:add', 1, 'circle.fold_seat_add(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:seat:remove', 1, 'circle.fold_seat_remove(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:role:seat', 1, 'circle.fold_role_seat(jsonb)', 'circle');

@@ -33,3 +33,11 @@ GRANT INSERT (id, name, purpose) ON circle.circle TO cella_app;
 -- purpose or its procedure, from the verdict date, its id never, so
 -- every record, mandate and seat it owns stays its own.
 GRANT UPDATE (name, purpose, procedure) ON circle.circle TO cella_app;
+
+-- A role is made by motion, `circle:role:make`, in a circle or in every
+-- working circle (`*`), with its id, name, duty and cap; and amended by
+-- motion, `circle:role:amend`, its name, duty or cap, from the verdict
+-- date, its id and circle never, so its tenures and mandates stay its own.
+-- The app makes a role's grantee with it, through the trigger.
+GRANT INSERT (id, circle, name, duty, holders) ON circle.role TO cella_app;
+GRANT UPDATE (name, duty, holders) ON circle.role TO cella_app;

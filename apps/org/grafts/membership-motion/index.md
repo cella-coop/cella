@@ -1,6 +1,6 @@
 +++
 title = "membership-motion"
-updated = 2026-11-11
+updated = 2026-11-12
 +++
 
 What a motion decides of a membership: admitting someone invited,
@@ -166,7 +166,7 @@ as entry 1.
 - `membership_motion.seating`: the seats motions give and end: an
   admission's, in the motion's circle as `member`, and those the
   `seat` and `unseat` actions name, kinds this graft registers by
-  `motion.register_carries` (`circle`, `member`, `role`, none for a plain seat), carried out by `circle:seat:add` and `:remove`, which it registers by `motion.register_cite` with their power, `seat-member`. The `seat-role` and `unseat-role` actions, which it registers too (`circle`, `role`), seat a role in another circle, so whoever holds it sits there, and end that seat, carried out by core's `circle:role:seat` and `:unseat` with the same power; they are no row of `seating`, which is people's seats. The `circle` action, which this graft registers too (`id`, `name`, `purpose`), creates a circle, carried out by core's `circle:circle:create` with its power, `create-circle`; a later `seat` of the same motion may name it. The `amend-circle` action, which it registers too (`circle`, and any of `name`, `purpose` and `procedure`), changes a circle, carried out by core's `circle:circle:amend` with its power, `amend-circle`, its guard judging it at the proposal and again as it is written ([circle](../../core/circle/index.md#powers)).
+  `motion.register_carries` (`circle`, `member`, `role`, none for a plain seat), carried out by `circle:seat:add` and `:remove`, which it registers by `motion.register_cite` with their power, `seat-member`. The `seat-role` and `unseat-role` actions, which it registers too (`circle`, `role`), seat a role in another circle, so whoever holds it sits there, and end that seat, carried out by core's `circle:role:seat` and `:unseat` with the same power; they are no row of `seating`, which is people's seats. The `circle` action, which this graft registers too (`id`, `name`, `purpose`), creates a circle, carried out by core's `circle:circle:create` with its power, `create-circle`; a later `seat` of the same motion may name it. The `amend-circle` action, which it registers too (`circle`, and any of `name`, `purpose` and `procedure`), changes a circle, carried out by core's `circle:circle:amend` with its power, `amend-circle`, its guard judging it at the proposal and again as it is written ([circle](../../core/circle/index.md#powers)). The `role` and `amend-role` actions, which it registers too (`circle`, `id`, `name`, `duty`, `holders`; and `role` with any of `name`, `duty` and `holders`), make and change a role, carried out by core's `circle:role:make` and `:amend` with the same power; a later `seat` of the same motion may name a role an earlier `role` action makes.
 
 A roll fixed at the proposal is closer to a ballot list than one read at
 the close, and a member seated or admitted later does not vote on it.
@@ -350,6 +350,9 @@ the motion feat's Propose…, whose write this graft serves; and its
 Settings tab ([circle](../../core/circle/index.md#shell)), the
 circle's terms read with the procedures in force on the day
 (`membership_motion.procedures`) and the circle that decides an
-amendment, its dialog posting to `propose` as the New form does. On a
+amendment, and its roles, each with the circle that decides about it,
+and on the assembly's those every working circle has but `participant`,
+each dialog posting to `propose` as the New form does; a new role's id
+is its name typed in lower case, which the dialog may change. On a
 mandate's page, the motion feat's Change… and Revoke…, whose write,
 `put`, it serves too.

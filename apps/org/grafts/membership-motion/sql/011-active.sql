@@ -33,8 +33,9 @@ BEGIN ATOMIC
 END;
 
 -- A seat names a circle there is, or one an earlier `circle` action of
--- the same motion creates; a circle created names an id in lower case
--- that no circle or role has, and a name.
+-- the same motion creates, and a role there is in it, or one an earlier
+-- `role` action of the same motion makes there; a circle created names an
+-- id in lower case that no circle or role has, and a name.
 CREATE OR REPLACE FUNCTION membership_motion.circle_asks(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -44,7 +45,7 @@ BEGIN ATOMIC
       WHEN g.kind = 'seat' AND NOT circle_person.counts(g.member, g.circle, cella.verdict_date())
         THEN coalesce(g.member, 'no one') || ' may not sit in ' || g.circle || ': '
           || circle_person.unseated(g.member, g.circle, cella.verdict_date())
-      WHEN g.kind = 'seat' AND g.role IS NOT NULL
+      WHEN g.kind = 'seat' AND g.role IS NOT NULL AND NOT g.role_made
         AND NOT EXISTS (SELECT FROM circle.role x WHERE x.id = g.role AND x.circle IN (g.circle, '*'))
         THEN 'no role ' || g.role || ' in ' || g.circle
       WHEN g.kind = 'unseat' AND NOT EXISTS (
@@ -59,7 +60,12 @@ BEGIN ATOMIC
              EXISTS (
                SELECT FROM motion.action o
                WHERE o.motion = m.motion AND o.n < m.n AND o.kind = 'circle' AND o.args ->> 'id' = m.args ->> 'circle'
-             ) AS made
+             ) AS made,
+             EXISTS (
+               SELECT FROM motion.action o
+               WHERE o.motion = m.motion AND o.n < m.n AND o.kind = 'role' AND o.args ->> 'id' = m.args ->> 'role'
+                 AND o.args ->> 'circle' IN (m.args ->> 'circle', '*')
+             ) AS role_made
       FROM motion.action m
       WHERE m.motion = payload ->> 'motion' AND m.kind IN ('seat', 'unseat')
     ) g

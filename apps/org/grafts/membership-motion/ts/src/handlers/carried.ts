@@ -1,7 +1,8 @@
+const count = (v: unknown) => (v === undefined || v === null || v === '' ? null : Number(v))
 import { done, write, type Deps, type Done } from '@cella/org-db'
 import type { Pending, Permission, Refused, Settled } from '@cella/org-actions'
 import { admitting, exclude, suspend } from '@cella/org-membership/api'
-import { add, amend, create, remove, seatRole, seating, unseatRole } from '@cella/org-circle/api'
+import { add, amend, create, make, remake, remove, seatRole, seating, unseatRole } from '@cella/org-circle/api'
 import { circles } from '@cella/org-motion/api'
 
 type Args = Record<string, string | number | undefined>
@@ -55,6 +56,15 @@ const writes: Record<string, { op: Permission; run: (a: Args, motion: string, de
   'amend-circle': {
     op: 'circle:circle:amend',
     run: (a, motion, deps) => amend({ circle: String(a.circle), name: text(a.name), purpose: text(a.purpose), procedure: text(a.procedure), motion }, deps),
+  },
+  role: {
+    op: 'circle:role:make',
+    run: (a, motion, deps) =>
+      make({ id: String(a.id), circle: String(a.circle), name: String(a.name), duty: text(a.duty) ?? '', holders: count(a.holders), motion }, deps),
+  },
+  'amend-role': {
+    op: 'circle:role:amend',
+    run: (a, motion, deps) => remake({ role: String(a.role), name: text(a.name), duty: text(a.duty), holders: count(a.holders), motion }, deps),
   },
   seat: {
     op: 'circle:seat:add',

@@ -54,14 +54,29 @@ export interface Applying {
 
 // On a circle's Settings tab: its name, purpose and procedure in force,
 // the procedures in force it may take, the circle that decides its
-// amendment and the deadline asked, two weeks on, and why no write of the
-// reader's changes them.
+// amendment and the deadline asked, two weeks on, why no write of the
+// reader's changes them or makes a role, and the roles below them.
 export interface Amending {
   circle: string
   name: string
   purpose: string
   procedure: string
   procedures: { value: string; label: string }[]
+  decider: { circle: string; name: string; deadline: string }
+  refused: string
+  making: string
+  roles: Duty[]
+}
+
+// A role on a circle's Settings tab: its circle, `*` for every working
+// circle, its name, duty and cap, none an empty one; the circle that
+// decides its amendment, and why no write of the reader's changes it.
+export interface Duty {
+  role: string
+  circle: string
+  name: string
+  duty: string
+  holders: string
   decider: { circle: string; name: string; deadline: string }
   refused: string
 }

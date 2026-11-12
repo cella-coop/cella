@@ -105,7 +105,8 @@ export interface Amended {
 }
 
 // What a role may be changed in, by the motion that amends it: its name,
-// its duty and its cap, each left as it is where none is given.
+// its duty and its cap, each left as it is where none is given; a cap
+// given as null is none, which lifts the role's.
 export interface Duties {
   name?: string | null
   duty?: string | null

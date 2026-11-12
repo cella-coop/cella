@@ -15,14 +15,20 @@
   const labels: Record<Term, string> = { name: 'Name', duty: 'Duty', holders: 'Cap' }
   const shape = (name: Term, s: Declared): Declared => (name === 'holders' ? { ...s, type: 'number' } : name === 'duty' ? { ...s, rows: 2 } : s)
 
-  // A term of a role, which the motion carries by its own name.
+  // A term of a role, which the motion carries by its own name; a cap
+  // emptied is given as none, which lifts it.
   const term = (r: Duty, name: Term, says: (value: string, was: string) => string): Declared =>
     shape(name, {
       name,
       label: labels[name],
       value: r[name],
       refused: r.refused,
-      motion: { kind: 'amend-role', args: (value) => ({ role: r.role, [name]: value }), labels: { [name]: `New ${labels[name].toLowerCase()}` }, says },
+      motion: {
+        kind: 'amend-role',
+        args: (value) => ({ role: r.role, [name]: name === 'holders' && !value.trim() ? 'none' : value }),
+        labels: { [name]: `New ${labels[name].toLowerCase()}` },
+        says,
+      },
     })
 
   // A new role's id, from the name typed: in lower case, as `editor`.

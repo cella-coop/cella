@@ -147,10 +147,10 @@ export interface Kind {
 }
 
 // What a motion decides: an action of a registered kind, its arguments
-// as the kind names them.
+// as the kind names them, a number given as none null.
 export interface Carried {
   kind: string
-  args: Record<string, string | number>
+  args: Record<string, string | number | null>
 }
 
 export interface Labelled extends Carried {

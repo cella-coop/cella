@@ -5,18 +5,22 @@
 // case, an id a circle or a role holds, one an earlier action of the
 // motion makes, no name, a name another role of the circle has, a cap
 // that is no whole count above none, a cap below the role's holders on
-// the day, `participant`, a change that changes nothing, Web making its
-// own role, and coordination making a role of every working circle. The
-// assembly makes an Editor role in Web and seats Léa in it by the same
-// motion, then changes its duty and cap, each entry saying what it
-// carried and what it was. Then in every browser, light and dark,
-// through the dev server: Camille opens Web's Settings tab, types a new
-// role's name in its New role row and Saves, and the dialog offers the
-// assembly's motion making it, its id from the name, which she proposes;
-// then on the assembly's Settings tab she lowers the Member role's cap
-// below its holders, and the dialog shows the guard's refusal before
-// anything is proposed. `SHOTS` names where its screenshots go. Run by
-// `cella test e2e roles`.
+// the day, `participant`, a change that changes nothing, lifting the cap
+// of a role with none among them, Web making its own role, and
+// coordination making a role of every working circle. The assembly makes
+// an Editor role in Web and seats Léa in it by the same motion, then
+// changes its duty and cap, each entry saying what it carried and what it
+// was. Then in every browser, light and dark, through the dev server:
+// Camille opens Web's Settings tab, types a new role's name in its New
+// role row and Saves, and the dialog offers the assembly's motion making
+// it, its id from the name, which she proposes; she empties the Editor
+// role's cap and Saves, and proposes the motion the dialog offers lifting
+// it, its cap given as none; then on the assembly's Settings tab she
+// lowers the Member role's cap below its holders, and the dialog shows the
+// guard's refusal before anything is proposed. Last, the first motion
+// lifting the Editor's cap carries, and the role reads uncapped, its entry
+// carrying the cap as none. `SHOTS` names where its screenshots go. Run
+// by `cella test e2e roles`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -54,7 +58,7 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
 }
 const states = (out: Done[]) => out.map((d) => [d.op, d.state, d.reason ?? ''])
 
-type Action = { kind: string; args: Record<string, string | number> }
+type Action = { kind: string; args: Record<string, string | number | null> }
 
 // A motion of `circle` carrying `actions`, proposed by Camille, or its
 // refusal.
@@ -97,7 +101,7 @@ after(async () => {
 test('a role made or changed is refused at its proposal, naming the role, the value read and the fix', async () => {
   const refused = async (actions: Action[], circle?: string) => reason(await moving(actions, circle))
   const make = (args: Record<string, string | number>) => ({ kind: 'role', args: { circle: 'web', id: 'editor', name: 'Editor', ...args } })
-  const change = (args: Record<string, string | number>) => ({ kind: 'amend-role', args })
+  const change = (args: Record<string, string | number | null>) => ({ kind: 'amend-role', args })
   assert.match(await refused([make({ circle: 'nowhere' })]), /no circle nowhere: a role is made in a circle there is, by its id, or in every working circle, \*/)
   assert.match(await refused([make({ circle: 'web', seats: 2 })]), /a role is made with its circle, id, name, duty and cap, not its seats/)
   assert.match(await refused([make({ id: 'Editor' })]), /a role is made with an id in lower case, as editor, not Editor/)
@@ -131,6 +135,11 @@ test('a role made or changed is refused at its proposal, naming the role, the va
     await refused([change({ role: 'lead', name: 'Circle lead', holders: 1 })]),
     /the amendment of the lead role changes nothing: it is named Circle lead, capped at 1, with the duty it has already; give a term it does not have/,
   )
+  assert.match(
+    await refused([change({ role: 'member', holders: null })]),
+    /the amendment of the member role changes nothing: it is named Member, capped at no count, with the duty it has already; give a term it does not have/,
+  )
+  assert.match(await refused([change({ role: 'lead', holders: '' })]), / is no cap: give the lead role a whole count of holders above none, or no cap/)
   assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM motion.action WHERE kind IN ('role', 'amend-role')`)).n, 0, 'nothing was proposed')
 })
 
@@ -210,6 +219,20 @@ for (const [name, launch] of browsers()) {
             `${at}: the assembly's motion makes the role in Web`,
           )
 
+          await editor.getByLabel('Cap').fill('')
+          await editor.getByRole('button', { name: 'Save' }).click()
+          await dialog.waitFor()
+          assert.equal(await dialog.getByLabel('Title').inputValue(), 'Lift the Editor role\'s cap of 2', `${at}: its title says the cap is lifted`)
+          assert.equal(await dialog.getByLabel('New cap').inputValue(), 'none', `${at}: it gives the cap as none`)
+          const lifting = await all(`SELECT motion FROM motion.action WHERE kind = 'amend-role' AND args = '{"role": "editor", "holders": null}'`)
+          await dialog.getByRole('button', { name: 'Propose' }).click()
+          await dialog.waitFor({ state: 'hidden' })
+          assert.equal(
+            (await all(`SELECT motion FROM motion.action WHERE kind = 'amend-role' AND args = '{"role": "editor", "holders": null}'`)).length,
+            lifting.length + 1,
+            `${at}: the assembly's motion lifts the Editor role's cap`,
+          )
+
           await page.goto(`${dev.base}/circles/ag?tab=settings`)
           await page.waitForLoadState('networkidle')
           const member = page.locator('section.section', { has: page.getByRole('heading', { name: 'Member', exact: true }) })
@@ -240,3 +263,22 @@ for (const [name, launch] of browsers()) {
     }
   })
 }
+
+test('the motion the Settings tab proposed carries and lifts the Editor role\'s cap, its entry carrying the cap as none', async () => {
+  const lifting = await one<{ motion: string } | undefined>(
+    `SELECT a.motion FROM motion.action a JOIN motion.motion d ON d.id = a.motion
+     WHERE a.kind = 'amend-role' AND a.args = '{"role": "editor", "holders": null}' AND d.closed IS NULL
+     ORDER BY a.motion LIMIT 1`,
+  )
+  assert.ok(lifting, 'the Settings tab proposed lifting the Editor role\'s cap')
+  const out = await decided(lifting.motion)
+  assert.deepEqual(states(out), [['circle:role:amend', 'settled', '']])
+  assert.deepEqual(await one(`SELECT name, holders FROM circle.role WHERE id = 'editor'`), { name: 'Editor', holders: null }, 'the Editor role reads uncapped')
+  const entry = await one<{ p: Record<string, unknown> }>(`SELECT cella.opened($1) AS p`, [out[0].entry])
+  assert.ok('holders' in entry.p && entry.p.holders === null, 'its entry carries the cap as none')
+  assert.deepEqual(entry.p.was, { holders: 2 }, 'its entry says what the cap was')
+  assert.match(
+    reason(await moving([{ kind: 'amend-role', args: { role: 'editor', holders: null } }])),
+    /the amendment of the editor role changes nothing: it is named Editor, capped at no count/,
+  )
+})

@@ -5,7 +5,9 @@
 // rounded fills of the text's ink over the paper, as the sign-up's
 // field. Its words are the site's (`[contact]` in site.toml) and its ink its
 // section's, so a page places it bare, `<ContactForm />`. It posts to
-// `PUBLIC_CONTACT_URL`.
+// `PUBLIC_CONTACT_URL`, with the seconds it was open (lib/send.ts) and a
+// trap, a field hidden from people and from tabbing that a bot fills, so
+// the endpoint can turn a bot away.
 import { nowhere, worded } from '../lib/refuse'
 import { siteData } from '../lib/text'
 import Actions from './Actions.astro'
@@ -19,7 +21,10 @@ nowhere('contact', endpoint)
 const d = (k: string) => drafted(`contact.${k}`)
 ---
 
-<form class="contact" action={endpoint || undefined} method="post" data-form data-endpoint={endpoint}>
+<form class="contact" action={endpoint || undefined} method="post" data-form data-held data-endpoint={endpoint}>
+  <div class="trap" aria-hidden="true">
+    <input type="text" name="website" tabindex="-1" autocomplete="off" />
+  </div>
   <div class="pair">
     <label class="field">
       <span class="label" data-drafted={d('name')}>{text.name}</span>
@@ -66,6 +71,16 @@ const d = (k: string) => drafted(`contact.${k}`)
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
+  }
+
+  /* the trap, off the page rather than display: none, which some bots
+     read as a sign to leave a field empty */
+  .trap {
+    position: absolute;
+    left: -100vw;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
   }
 
   .field {

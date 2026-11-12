@@ -1,4 +1,4 @@
-import { post } from '@cella/org-ui'
+import { took, type Answer } from '@cella/org-ui'
 import { VersionVector, type LoroDoc } from 'loro-crdt'
 import { hash } from '../models/canonical.ts'
 import { b64, type Relayed } from '../models/body.ts'
@@ -7,16 +7,16 @@ const pause = 250
 const retry = 2000
 
 // Where a draft lives, as the slice that mounts it says: the URL of its
-// live stream, and of the form action that takes an edit, its update in
-// the `update` field.
+// live stream, and the write that takes an edit, its update in the
+// `update` field, sent by the page's `send` and signed as any write is.
 export interface Where {
   live: () => string
-  edit: () => string
+  edit: (fields: [string, string][]) => Promise<Answer>
 }
 
 // A draft kept live with the server. This peer's own edits are sent as
 // one Loro update every quarter second while it types, through the edit
-// action the mounting slice names, signed as the acting member; everyone
+// write the mounting slice names, signed as the acting member; everyone
 // else's arrive on the live stream it names as they settle, and are
 // imported. Offline, edits wait and go when the network returns; the
 // stream reopens with this peer's version vector, so it misses nothing.
@@ -131,17 +131,14 @@ export class SyncState {
       vv.delete(this.#doc.peerIdStr)
     }
     const update = this.#doc.export({ mode: 'update', from: VersionVector.parseJSON(vv) })
-    const form = new FormData()
-    form.set('update', b64.encode(update))
     this.#sending = true
     try {
-      const out = await post(this.#at.edit(), form)
-      if (out.type === 'success') {
+      const out = await this.#at.edit([['update', b64.encode(update)]])
+      if (took(out)) {
         this.#sent = upto
         this.problem = null
-      } else if (out.type === 'failure') {
-        const done = (out.data as { done?: { reason?: string } } | undefined)?.done
-        this.problem = done?.reason ?? `the edit was refused (${out.status})`
+      } else if ('done' in out) {
+        this.problem = out.done?.reason ?? `the edit was refused (${out.status})`
       } else {
         throw new Error('not taken')
       }

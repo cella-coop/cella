@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Form } from '@cella/org-ui'
+  import { Form, Hidden } from '@cella/org-ui'
   import type { Period } from '../../models/account.ts'
   import type { OpenPeriod } from '../../models/period.ts'
 
@@ -10,5 +10,5 @@
 </script>
 
 <Form action="open" submit="Open {about.month}">
-  <input type="hidden" name="month" value={about.month} />
+  <Hidden name="month" value={about.month} />
 </Form>

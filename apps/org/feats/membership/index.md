@@ -1,6 +1,6 @@
 +++
 title = "Membership"
-updated = 2026-11-11
+updated = 2026-11-12
 +++
 
 A person's membership, from invited to exited, with the shares they hold.

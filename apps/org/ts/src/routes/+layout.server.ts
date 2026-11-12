@@ -8,8 +8,10 @@ import { source } from '#lib/server/slices.ts'
 import { counted } from '#lib/slices.ts'
 import type { LayoutServerLoad } from './$types'
 
-export const load: LayoutServerLoad = async ({ locals, cookies }) =>
-  using(locals.actor, async (db) => {
+export const load: LayoutServerLoad = async ({ locals, cookies, depends }) => {
+  // Read again after a settled write, as its counts may have moved.
+  depends('cella:shell')
+  return using(locals.actor, async (db) => {
     const s = await named(db)
     const someone = locals.actor ? await person(db, locals.actor) : null
     // The circles the co-op selector offers, and the one the member lensed
@@ -45,3 +47,4 @@ export const load: LayoutServerLoad = async ({ locals, cookies }) =>
       drawer: cookies.get('cella-drawer') !== 'closed',
     }
   })
+}

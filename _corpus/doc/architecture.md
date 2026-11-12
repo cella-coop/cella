@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-11-11
+updated = 2026-11-12
 +++
 
 # Architecture
@@ -1138,7 +1138,7 @@ A state class starts from the queries it is handed, each awaited where
 it is read ([remote functions](#remote-functions)), so the server and
 the browser render the same state and it follows a query when a write
 refreshes it; nothing reads data from a component but through a query.
-Writes go through form actions. No client module keeps mutable state at
+Writes go through `form` remote functions. No client module keeps mutable state at
 module level, which the server would share between requests.
 
 ### Remote functions
@@ -1207,6 +1207,37 @@ holds no component with state. The browser e2e covers each page's
 boundary, its pending skeleton, its content and its failed snippet, in
 all three browsers.
 
+A write is served as a `form`, `write`, in `collection.remote.ts` for a
+collection's pages and its items' and in `settings.remote.ts` for the
+settings pages: each form on a page binds an instance of its own, keyed
+by the page's address, the write and the form (`write.for(key)`), and
+each of its fields is bound to it by name, as SvelteKit's remote forms
+ask, the field's own name spelled in the letters a bound name takes,
+under `f`, each a list (`bound` in `@cella/org-ui/models`, which `Field`,
+`Grid` and `Hidden` name through). The form is unchecked by SvelteKit,
+since a write's fields are its own: the write's reader takes them, and
+refuses what it cannot, as a handler's input is read. It runs the
+handler as the relay does ([the shell](#the-shell)) and answers with
+what to sign or its outcome, Settled, Refused or Pending, with the
+guard's reason when refused, and the status a plain HTTP answer would
+carry. Posted without JavaScript it is answered at once, failed, since
+only the page's script signs. SvelteKit's `command` serves what no form
+fits, each with its argument's schema: the proof the browser posts back
+to a run that asked for a signature (`prove`, in `session.remote.ts`);
+a write a page's script posts, a dropped card's move, an agenda's, a
+document's edit, a settings page's saves and the motion it offers
+(`send`, beside each `write`); and an invitation's acceptance, started
+and proved by the link's holder (`accept`). The page's route names them
+to the UI core (`#lib/writes.ts`, `useWrites` in `@cella/org-ui`). A
+write's proof asks for the queries the page reads, the collection's rows
+and counts, the item and its cards, the search's index, and the answer
+that carries its outcome brings them back refreshed, in the same flight
+(`requested(…).refreshAll()` in `#lib/remote/write.ts`), so a page asks
+for none of them again after it writes; the shell's counts and theme, which its
+load reads, are read again after a write that took or reached a verdict
+(`cella:shell`), and a page whose write was refused before any signature
+reads again, so what a drop moved goes back.
+
 `cella check feats` enforces what it can see (`tools/ui-check.mjs`): of the
 tree's packages only the UI core holds CSS, the tokens it wears coming from
 the brand outside the tree, no other `.svelte` file has a `<style>` or a
@@ -1241,8 +1272,8 @@ two halves of one **slice**, matched by name:
   collections it owns, each with its reads (`list`, a SQL select of its
   rows as the acting member sees them, `item`, given the page's address
   as a report is given its span, `index` for the command
-  menu, `about` for the collection's header) and its writes as form
-  actions, each a handler over a form; what it adds to the collections
+  menu, `about` for the collection's header), each a query, and its
+  commands, each a handler whose argument its schema validates; what it adds to the collections
   of the feats it joins and of the feats they nest in, and a nested feat
   to its parent's (`extends`, with `within` naming the parent): fields
   on each row (`list`, a select of each row's id and its fields), rows
@@ -1281,8 +1312,8 @@ root above core, which the pruned build empties ([removing a
 feat](#removing-a-feat)). No other file of the shell imports a feat. It
 mounts them on routes that are the same for every collection: `/[collection]`, the one collection
 component, and `/[collection]/[id]`, the one detail view, each reading
-through the `collection` and `item` queries and writing through the form
-actions of the collection's slices; `/search` for the command menu;
+through the `collection` and `item` queries and writing through the
+`write` form of the collection's slices; `/search` for the command menu;
 `/[collection]/[id]/[stream]`, an item's live stream as server-sent
 events, which the collection's owner names (`streams`, such as a
 document's edits as they settle); `/[collection]/[id]/content`, an item's
@@ -1310,7 +1341,7 @@ named `<slice>/<part>` and reaching what its slice does, as a feat a
 graft of the circles dissolved into keeps what that graft added beside
 its own: `motion/circles`, exported as `circles` beside `slice` and
 `app`. A form posts its files with its fields, and an
-action reads them whole (`Form.file`). The registry refuses a
+write reads them whole (`Form.file`). The registry refuses a
 collection owned twice, an extension of a feat a slice neither joins nor
 nests in, and two extensions replacing one write. An extension's write replaces the
 owner's of the same name: `invoice-transaction`'s issue, which posts the
@@ -1341,9 +1372,10 @@ row-level policies, not the shell, decide what a page shows
 ([trust](trust.md#one-server)): a collection lists the records of the
 circles its reader reads in, by their mandates ([SQL](#sql)), and an
 item of another circle's is none to them, a 404. A write is signed in the browser by the session's device: the
-action runs as a relay (`lib/server/relay.ts`), and each time a handler
+write runs as a relay (`lib/server/relay.ts`), and each time a handler
 signs, the post is answered with what to sign; the browser signs it
-(`post` in `@cella/org-ui`) and posts the proof back to the run, which
+(`post` in `@cella/org-ui`) and posts the proof back to the run by
+`prove`, which
 goes on to its outcome, the decision and its effects committed together:
 a reaction asks for no signature
 ([trust](trust.md#keys-and-addresses)). A run holds no connection while
@@ -1365,7 +1397,7 @@ shortly, as any failed write is, and a run frees its place as it
 settles, fails or gives up. The server holds no member's key,
 in dev mode or not; dev mode (`cella serve`) only offers the fixture
 members on the sign-in page, whose TEST-ONLY keys the browser derives.
-Until `POST /api/<feat>/<verb>` is served, these form actions are the
+Until `POST /api/<feat>/<verb>` is served, these remote functions are the
 writes' only HTTP path.
 
 ### Reading at scale

@@ -1,21 +1,19 @@
 <script lang="ts">
-  import { applyAction } from '$app/forms'
-  import { refreshAll } from '$app/navigation'
-  import { page } from '$app/state'
-  import { target } from '../models/target.ts'
   import { useSettings } from '../hooks/useSettings.ts'
-  import { lost, post } from '../post.ts'
+  import { useWrites } from '../hooks/useWrites.ts'
+  import { took } from '../post.ts'
   import Button from './Button.svelte'
   import Field from './Field.svelte'
 
   // The motion a Save offers instead of a write the reader may not make:
   // a dialog in the top layer saying why, in the guard's own words, and
   // the motions' New form, prefilled, which the reader may change before
-  // it posts to the page's `action`. Closing it keeps what was typed in
-  // the settings, marked not saved.
+  // it posts to the page's `action`, by the page's `send`. Closing it
+  // keeps what was typed in the settings, marked not saved.
   let { action }: { action: string } = $props()
 
   const state = useSettings()
+  const writes = useWrites()
   const id = $props.id()
 
   async function onsubmit(e: SubmitEvent) {
@@ -26,13 +24,10 @@
     let proposed = false
     let reason: string | undefined
     try {
-      const result = await post(target(action, page.url.searchParams), new FormData(e.currentTarget as HTMLFormElement)).catch(lost)
-      proposed = result.type === 'success'
-      reason = result.type === 'failure' ? (result.data?.done as { reason?: string } | undefined)?.reason : undefined
-      if (proposed) {
-        await refreshAll()
-      }
-      await applyAction(result)
+      const fields = [...new FormData(e.currentTarget as HTMLFormElement)].flatMap(([k, v]): [string, string][] => (typeof v === 'string' ? [[k, v]] : []))
+      const result = await writes.shown(writes.send(action, fields))
+      proposed = took(result)
+      reason = !proposed && 'done' in result ? result.done?.reason : undefined
     } finally {
       state.answered(proposed, reason)
     }

@@ -12,38 +12,32 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
-import { stringify } from 'devalue'
+import { parse, stringify } from 'devalue'
 import type { Page } from 'playwright-core'
 import { browsers, serve, signIn } from './browser.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-settings-shots'
 const refusal = 'camille@lanterne.example holds no amend-circle in coordination: only a motion of General assembly renames it'
 
-// Answers the specimen's posts as an action would, each settled with a
-// log entry of its own, and keeps what each carried, by action.
+// Answers the specimen's sends as a settings page's would, each settled
+// with a log entry of its own, and keeps what each carried, by write.
 function answer(page: Page) {
   const posted: { action: string; fields: Record<string, string> }[] = []
   let entry = 900
   return {
     posted,
-    ready: page.route(/\/specimens\/settings\?\//, async (route) => {
-      const action = new URL(route.request().url()).search.slice(2).split('&')[0]
-      const fields = await multipart(route.request().postDataBuffer(), route.request().headers()['content-type'])
-      posted.push({ action, fields })
-      const op = action === 'propose' ? 'motion:motion:propose' : 'person:person:profile'
+    ready: page.route('**/_app/remote/*/send', async (route) => {
+      const { payload } = JSON.parse(route.request().postData() ?? '{}') as { payload: string }
+      const sent = parse(Buffer.from(payload, 'base64url').toString()) as { write: string; fields: [string, string][] }
+      posted.push({ action: sent.write, fields: Object.fromEntries(sent.fields) })
+      const op = sent.write === 'propose' ? 'motion:motion:propose' : 'person:person:profile'
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ type: 'success', status: 200, data: stringify({ done: { op, state: 'settled', entry: ++entry, then: [] } }) }),
+        body: JSON.stringify({ type: 'result', data: stringify({ _: { done: { op, state: 'settled', entry: ++entry, then: [] }, status: 200 } }) }),
       })
     }),
   }
-}
-
-// A multipart body's text fields, by name.
-async function multipart(body: Buffer | null, type: string | undefined): Promise<Record<string, string>> {
-  const form = await new Response(body ? new Uint8Array(body) : null, { headers: { 'content-type': type ?? '' } }).formData()
-  return Object.fromEntries([...form].map(([k, v]) => [k, String(v)]))
 }
 
 for (const [name, launch] of browsers()) {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Field, Form, Mention, Message, Note, Section, type Embeds } from '@cella/org-ui'
+  import { Button, Field, Form, Hidden, Mention, Message, Note, Section, type Embeds } from '@cella/org-ui'
   import type { Detail } from '../../models/motion.ts'
   import { parts, threaded } from '../../models/thread.ts'
   import { useThread } from '../../hooks/useThread.ts'
@@ -40,7 +40,7 @@
       <Button onclick={() => thread.drop()}>Not a reply</Button>
     {/if}
     <Form action="post" submit={thread.answering ? 'Reply' : 'Post'}>
-      <input type="hidden" name="reply" value={thread.reply ?? ''} />
+      <Hidden name="reply" value={thread.reply ?? ''} />
       <Field label="Message" name="body" rows={3} placeholder="Say why; @name mentions a member, [[document]] links one" required wide />
     </Form>
   {:else}

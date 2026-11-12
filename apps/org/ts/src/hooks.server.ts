@@ -5,8 +5,11 @@ import { read } from '#lib/server/session.ts'
 const themes = ['light', 'dark', 'system'] as const
 
 // What a person reaches before signing in: the sign-in page and its
-// session, an invitation's link, and the theme.
-const open = (path: string) => path === '/sign-in' || path === '/session' || path === '/theme' || path.startsWith('/join/')
+// session, an invitation's link and the one remote function called there,
+// its acceptance (`accept` in `#lib/remote/session.remote.ts`), which the
+// link's holder signs, and the theme.
+const open = (path: string) =>
+  path === '/sign-in' || path === '/session' || path === '/theme' || path.startsWith('/join/') || /^\/_app\/remote\/[0-9a-z]+\/accept$/.test(path)
 
 // Who is signed in, from the session's cookie, read on a connection kept
 // for reading sessions (`reading`), and the theme, from its own; the

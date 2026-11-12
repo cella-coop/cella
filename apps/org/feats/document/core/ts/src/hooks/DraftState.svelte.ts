@@ -1,6 +1,7 @@
 import { onMount, untrack } from 'svelte'
 import { b64, createDoc, type LoroDoc } from '@cella/org-body/models'
 import { SyncState } from '@cella/org-body/app'
+import { useWrites } from '@cella/org-ui'
 import type { Page } from '../models/document.ts'
 
 // A document's draft in the browser: a Loro document made from the page's
@@ -16,11 +17,13 @@ export class DraftState {
 
   constructor(page: () => Page) {
     this.#page = page
+    // Its edits are the document's `edit` write, sent for its item.
+    const writes = useWrites()
     onMount(() => {
       const doc = createDoc()
       doc.import(b64.decode(this.#page().snapshot))
       const at = () => `/documents/${encodeURIComponent(this.#page().id)}`
-      const sync = new SyncState(doc, { live: () => `${at()}/live`, edit: () => `${at()}?/edit` })
+      const sync = new SyncState(doc, { live: () => `${at()}/live`, edit: (fields) => writes.send('edit', fields, this.#page().id, 'documents') })
       const stop = sync.start()
       this.doc = doc
       this.sync = sync

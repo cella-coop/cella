@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Field, Form, Note } from '@cella/org-ui'
+  import { Field, Form, Hidden, Note } from '@cella/org-ui'
   import { useLink } from '../../hooks/useLink.ts'
 
   // Someone invited to join, and the link they take it up by: drawn in
@@ -14,7 +14,7 @@
 <Form action="invite" submit="Invite" ready={link.digest !== ''}>
   <Field label="Name" name="name" required />
   <Field label="Address" name="address" type="email" placeholder="name@lanterne.example" required />
-  <input type="hidden" name="link" value={link.digest} />
+  <Hidden name="link" value={link.digest} />
 </Form>
 {#if link.made}
   <Note text="Their link, to pass on; it is shown once, and taken up once: {link.made}" />

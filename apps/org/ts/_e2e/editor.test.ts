@@ -868,13 +868,13 @@ for (const [name, launch] of browsers()) {
       it("cuts and copies a comment's text as its own while blocks are chosen, and a press outside ends the choice", async () => {
         await fresher()
         await a.getByRole('button', { name: 'Save version' }).click()
-        await a.locator('input[name=quote]').waitFor()
+        await a.locator('input[name^="f.quote["]').waitFor()
         await editable(0).click()
         await a.keyboard.press('Control+Home')
         await a.keyboard.press('Shift+End')
         await settle()
-        assert.equal(await a.locator('input[name=quote]').inputValue(), 'Rate card 2027')
-        await a.locator('textarea[name=text]').fill('The year is right.')
+        assert.equal(await a.locator('input[name^="f.quote["]').inputValue(), 'Rate card 2027')
+        await a.locator('textarea[name^="f.text["]').fill('The year is right.')
         await a.getByRole('button', { name: 'Comment', exact: true }).click()
         await a.locator('[data-editor] [data-block] mark').first().waitFor({ timeout: 10000 })
         const said = a.getByText('The year is right.', { exact: true }).first()
@@ -920,13 +920,13 @@ for (const [name, launch] of browsers()) {
       it('quotes the selection in a comment, highlighted once posted', async () => {
         await fresher()
         await a.getByRole('button', { name: 'Save version' }).click()
-        await a.locator('input[name=quote]').waitFor()
+        await a.locator('input[name^="f.quote["]').waitFor()
         await editable(0).click()
         await a.keyboard.press('Control+Home')
         await a.keyboard.press('Shift+End')
         await settle()
-        assert.equal(await a.locator('input[name=quote]').inputValue(), 'Rate card 2027')
-        await a.locator('textarea[name=text]').fill('The year is right.')
+        assert.equal(await a.locator('input[name^="f.quote["]').inputValue(), 'Rate card 2027')
+        await a.locator('textarea[name^="f.text["]').fill('The year is right.')
         await a.getByRole('button', { name: 'Comment', exact: true }).click()
         await a.locator('[data-editor] [data-block] mark').first().waitFor({ timeout: 10000 })
         assert.equal(await editable(0).locator('mark').textContent(), 'Rate card 2027')
@@ -986,7 +986,7 @@ for (const [name, launch] of browsers()) {
         await page.goto(`${base}/motions`)
         await page.waitForLoadState('networkidle')
         await page.keyboard.press('c')
-        const form = page.locator('form[action$="propose"]')
+        const form = page.locator('form[data-write="propose"]')
         await form.waitFor()
         // The ring a field draws: its box-shadow, or for a select its
         // outline, which WebKit's native menu list keeps where it drops a
@@ -1006,9 +1006,9 @@ for (const [name, launch] of browsers()) {
           const expected = await ring()
           assert.notEqual(expected.shadow, 'none')
           for (const [field, at] of [
-            ['text field', form.locator('input[name=title]')],
-            ['select', form.locator('select[name=circle]')],
-            ['textarea', form.locator('textarea[name=body]')],
+            ['text field', form.locator('input[name^="f.title["]')],
+            ['select', form.locator('select[name^="f.circle["]')],
+            ['textarea', form.locator('textarea[name^="f.body["]')],
           ] as const) {
             // Reached by Tab from the control before it, as a person does.
             await at.focus()

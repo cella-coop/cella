@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Explained, Field, Form, Note, Section } from '@cella/org-ui'
+  import { Explained, Field, Form, Hidden, Note, Section } from '@cella/org-ui'
   import type { Proposing } from '../../models/circles.ts'
   import { useDisclosure } from '../../hooks/useDisclosure.ts'
 
@@ -24,7 +24,7 @@
     />
     <Explained items={state.items} />
     <Form action="put" submit="Propose these values" reset={false}>
-      <input type="hidden" name="kind" value="disclose" />
+      <Hidden name="kind" value="disclose" />
       <Field label="Fewest people in a total" name="arg.contributors" type="number" step="1" bind:value={state.contributors} required />
       <Field label="Most one person may put in, %" name="arg.largest" type="number" step="any" bind:value={state.largest} required />
       <Field label="Most two people may put in, %" name="arg.two" type="number" step="any" bind:value={state.two} required />
@@ -34,8 +34,8 @@
     {#if disclosure.policy}
       <Note text="Or propose sharing none: every member then reads only the totals their own rights open." />
       <Form action="put" submit="Propose sharing none" tone="quiet">
-        <input type="hidden" name="kind" value="withhold" />
-        <input type="hidden" name="arg.policy" value={disclosure.policy} />
+        <Hidden name="kind" value="withhold" />
+        <Hidden name="arg.policy" value={disclosure.policy} />
         <Field label="Deadline" name="deadline" type="date" required />
       </Form>
     {/if}

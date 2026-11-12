@@ -10,7 +10,7 @@
 
   const agenda = useAgenda(
     () => data.agenda,
-    () => `/meetings/${encodeURIComponent(id)}`,
+    () => id,
   )
   const open = $derived(data.status === 'scheduled')
   const columns: Column<Item>[] = [

@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
+  import { useForm } from '../hooks/useForm.ts'
 
   // A grid of figures to type into, as a week of time: a row per thing,
   // a column per day, each cell showing what it holds and taking what is
@@ -33,6 +34,8 @@
     unit?: string
   } = $props()
 
+  // The form it sits in, which its cells are named through.
+  const form = useForm()
   const shown = (n: number) => (n ? `${Math.round(n * 100) / 100}` : '')
   const across = (row: string) => columns.reduce((s, c) => s + held(row, c.key), 0)
   const down = (column: string) => rows.reduce((s, r) => s + held(r.key, column), 0)
@@ -84,7 +87,7 @@
         {#if pick}
           <td class="pick">
             {#if pick.options(r.key).length}
-              <select name={pick.name(r.key)} aria-label="{r.label}: {pick.label}">
+              <select name={form.name(pick.name(r.key))} aria-label="{r.label}: {pick.label}">
                 {#each pick.options(r.key) as o (o.value)}<option value={o.value}>{o.label}</option>{/each}
               </select>
             {/if}
@@ -94,7 +97,7 @@
           <td class:closed={!c.open}>
             <span class="held" aria-hidden="true">{shown(held(r.key, c.key))}</span>
             <input
-              name={name(r.key, c.key)}
+              name={form.name(name(r.key, c.key))}
               inputmode="decimal"
               autocomplete="off"
               placeholder={c.open ? '+' : ''}

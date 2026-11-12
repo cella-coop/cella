@@ -1,20 +1,17 @@
 <script lang="ts">
-  import { applyAction } from '$app/forms'
-  import { refreshAll } from '$app/navigation'
-  import { page } from '$app/state'
   import type { Decider, Setting as Declared } from '../models/settings.ts'
-  import { target } from '../models/target.ts'
   import { useSettings } from '../hooks/useSettings.ts'
-  import { lost, post, type Result } from '../post.ts'
+  import { useWrites } from '../hooks/useWrites.ts'
+  import { took, type Answer } from '../post.ts'
   import Button from './Button.svelte'
   import ProposeInstead from './ProposeInstead.svelte'
   import Setting from './Setting.svelte'
 
   // A settings page's form: one setting a row, each its value in force
   // and what changes it. Save posts the fields changed that the reader's
-  // own writes save, each write once with its fields, and offers the
-  // motion that changes the rest, proposed through the page's `propose`
-  // action, in the dialog it opens (`ProposeInstead`).
+  // own writes save, each write once with its fields, by the page's
+  // `send`, and offers the motion that changes the rest, proposed through
+  // the page's `propose` write, in the dialog it opens (`ProposeInstead`).
   let {
     settings,
     decider = null,
@@ -29,9 +26,12 @@
   } = $props()
 
   const state = useSettings(() => settings, () => decider)
+  const writes = useWrites()
 
   // One Save at a time; the writes go one after the other, and stop at
-  // the first that does not settle, whose outcome the page shows.
+  // the first that does not settle, whose outcome the page shows; the
+  // last that names one shows otherwise, as a theme kept in a cookie
+  // names none.
   async function onsubmit(e: SubmitEvent) {
     e.preventDefault()
     const p = state.start()
@@ -40,28 +40,12 @@
     }
     const settled: string[] = []
     try {
-      // The outcome the page shows: the last write's that names one, as
-      // a theme kept in a cookie names none, or the one that did not settle.
-      let last: Result | null = null
       for (const s of p.saves) {
-        const body = new FormData()
-        for (const [name, value] of Object.entries(s.fields)) {
-          body.set(name, value)
-        }
-        const r = await post(target(s.write, page.url.searchParams), body).catch(lost)
-        if (!last || r.type !== 'success' || r.data?.done) {
-          last = r
-        }
-        if (r.type !== 'success') {
+        const r: Answer = await writes.shown(writes.send(s.write, Object.entries(s.fields)))
+        if (!took(r)) {
           break
         }
         settled.push(s.write)
-      }
-      if (settled.length) {
-        await refreshAll()
-      }
-      if (last) {
-        await applyAction(last)
       }
     } finally {
       state.saved(p, settled)

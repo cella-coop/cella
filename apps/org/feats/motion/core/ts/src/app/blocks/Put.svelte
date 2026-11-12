@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Field, Form, Note, Popover } from '@cella/org-ui'
+  import { Field, Form, Hidden, Note, Popover } from '@cella/org-ui'
   import { kinds, type Proposing } from '../../models/circles.ts'
   import { usePut } from '../../hooks/usePut.ts'
   import Granted from './Granted.svelte'
@@ -45,7 +45,7 @@
         {#if state.kind === 'grant'}
           <Field label="Grantee" name="arg.grantee" options={grantees(data)} placeholder="Choose…" required bind:value={state.grantee} />
         {:else}
-          <input type="hidden" name="arg.grantee" value={state.grantee} />
+          <Hidden name="arg.grantee" value={state.grantee} />
         {/if}
         <Granted circles={data.circles} />
         {#if state.kind === 'grant'}

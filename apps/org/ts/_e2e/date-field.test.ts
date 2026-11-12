@@ -24,7 +24,8 @@ for (const [name, launch] of browsers()) {
       await form.evaluate((el) => el.addEventListener('submit', (event) => {
         event.preventDefault()
         event.stopImmediatePropagation()
-        ;(el as HTMLFormElement).dataset.posted = String(new FormData(el as HTMLFormElement).get('due'))
+        // The field is bound to the form's `write` by name, `f.due[]/<form>`.
+        ;(el as HTMLFormElement).dataset.posted = String([...new FormData(el as HTMLFormElement)].find(([k]) => k.startsWith('f.due['))?.[1] ?? null)
       }, { capture: true }))
       const submit = form.getByRole('button', { name: 'Start project' })
       const posted = () => form.getAttribute('data-posted')

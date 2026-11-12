@@ -1,18 +1,17 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
-  import { applyAction } from '$app/forms'
-  import { refreshAll } from '$app/navigation'
-  import { page } from '$app/state'
   import { useForm } from '../hooks/useForm.ts'
-  import { lost, post, type Result } from '../post.ts'
-  import { target } from '../models/target.ts'
+  import { useWrites } from '../hooks/useWrites.ts'
+  import { formOf } from '../models/bound.ts'
+  import { took, type Answer } from '../post.ts'
   import Button from './Button.svelte'
 
-  // A write: the fields post to the page's named action, files and all,
-  // and this browser's device signs what the server asks (`post`); the
-  // outcome comes back as the page's form data. `reset` false keeps what
-  // was typed after a settled write, for a field whose value follows the
-  // page's data.
+  // A write: the fields post to the route's `write` form for the named
+  // write, files and all, each bound to it by name, and this browser's
+  // device signs what the server asks (`post`); the outcome comes back
+  // with what the page reads refreshed, and the shell shows it. `reset`
+  // false keeps what was typed after a settled write, for a field whose
+  // value follows the page's data.
   let {
     action,
     submit,
@@ -33,51 +32,56 @@
   } = $props()
 
   const form = useForm()
+  const writes = useWrites()
+  // Each form on a page binds a `write` instance of its own.
+  const n = $props.id()
+  const remote = $derived(writes.route.form(action, n))
+  form.bind(() => formOf(remote.action))
 
   // The fields a refused write names as already written.
-  const spent = (data: Record<string, unknown> | undefined): string[] => {
-    const done = data?.done as { spent?: unknown } | undefined
+  const spent = (a: Answer): string[] => {
+    const done = 'done' in a ? a.done : undefined
     return Array.isArray(done?.spent) ? done.spent.filter((n): n is string => typeof n === 'string') : []
   }
 
   // One post at a time: a press while one is under way is dropped, since
-  // each post signs a write of its own.
-  async function onsubmit(e: SubmitEvent) {
-    e.preventDefault()
-    const el = e.currentTarget as HTMLFormElement
-    if (!form.start()) {
-      return
-    }
-    try {
-      // A post with no answer may have written all the same: its outcome
-      // is unknown, and what was typed stays.
-      const result: Result = await post(el.action, new FormData(el, e.submitter)).catch(lost)
-      if (result.type === 'success') {
-        if (reset) {
-          el.reset()
-        }
-        await refreshAll()
-      } else if (result.type === 'failure' && spent(result.data).length) {
-        // A write of several that stopped part-way: what it wrote
-        // stands, so its fields are emptied and the page shows it.
-        for (const name of spent(result.data)) {
-          const field = el.elements.namedItem(name)
-          if (field instanceof HTMLInputElement) {
-            field.value = ''
+  // each post signs a write of its own. A post with no answer may have
+  // written all the same: its outcome is unknown, and what was typed
+  // stays.
+  const enhanced = $derived(
+    remote.enhance(async (f) => {
+      if (!form.start()) {
+        return
+      }
+      try {
+        const answer = await writes.shown(
+          writes.post(async () => {
+            await f.submit().updates()
+            return f.result as Answer
+          }),
+        )
+        if (took(answer)) {
+          if (reset) {
+            f.element.reset()
+          }
+        } else {
+          // A write of several that stopped part-way: what it wrote
+          // stands, so its fields are emptied and the page shows it.
+          for (const name of spent(answer)) {
+            const field = f.element.elements.namedItem(form.name(name))
+            if (field instanceof HTMLInputElement) {
+              field.value = ''
+            }
           }
         }
-        await refreshAll()
+      } finally {
+        form.done()
       }
-      await applyAction(result)
-    } finally {
-      form.done()
-    }
-  }
-
-  const to = $derived(target(action, page.url.searchParams))
+    }),
+  )
 </script>
 
-<form method="post" enctype="multipart/form-data" action={to} class="form" class:inline {onsubmit}>
+<form {...enhanced} enctype="multipart/form-data" class="form" class:inline data-write={action}>
   {#if children}
     <div class="fields">{@render children()}</div>
   {/if}

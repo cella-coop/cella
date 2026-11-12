@@ -1,5 +1,5 @@
 import { browser } from '$app/env'
-import { page } from '$app/state'
+import { useWrites } from '@cella/org-ui'
 import { untrack } from 'svelte'
 import { random, sha256 } from '@cella/org-sign'
 
@@ -18,7 +18,8 @@ export class LinkState {
     if (browser) {
       void this.draw()
     }
-    $effect(() => this.see(page.form?.done))
+    const writes = useWrites()
+    $effect(() => this.see(writes.done ?? undefined))
   }
 
   async draw() {

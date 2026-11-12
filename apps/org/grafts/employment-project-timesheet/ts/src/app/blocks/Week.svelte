@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Form, Grid, Note, date } from '@cella/org-ui'
+  import { Button, Form, Hidden, Grid, Note, date } from '@cella/org-ui'
   import { cell, circle, hours, type Week } from '../../models/week.ts'
   import { useWeek } from '../../hooks/useWeek.ts'
 
@@ -19,8 +19,8 @@
 
 {#if w}
   <Form action="week" submit="Log the week">
-    {#each w.rows as r (r.project)}<input type="hidden" name="row" value={r.project || '_'} />{/each}
-    {#each w.days as d (d.day)}<input type="hidden" name="day" value={d.day} />{/each}
+    {#each w.rows as r (r.project)}<Hidden name="row" value={r.project || '_'} />{/each}
+    {#each w.days as d (d.day)}<Hidden name="day" value={d.day} />{/each}
     <Grid
       caption="Hours of the week of {date(w.monday)}"
       columns={w.days.map((d) => ({ key: d.day, label: weekday(d.day), sub: d.day.slice(8), open: d.open }))}

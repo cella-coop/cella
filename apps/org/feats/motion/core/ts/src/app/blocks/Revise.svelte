@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Form, Field, Note, Popover } from '@cella/org-ui'
+  import { Form, Hidden, Field, Note, Popover } from '@cella/org-ui'
   import type { Revising } from '../../models/circles.ts'
   import { usePut } from '../../hooks/usePut.ts'
   import Granted from './Granted.svelte'
@@ -19,9 +19,9 @@
   <Popover label="Propose a motion changing this mandate" menu={false} wide button>
     {#snippet trigger()}Change…{/snippet}
     <Form action="put" submit="Propose">
-      <input type="hidden" name="kind" value="change" />
-      <input type="hidden" name="arg.policy" value={data.held.policy} />
-      <input type="hidden" name="arg.grantee" value={state.grantee} />
+      <Hidden name="kind" value="change" />
+      <Hidden name="arg.policy" value={data.held.policy} />
+      <Hidden name="arg.grantee" value={state.grantee} />
       <Granted circles={data.circles} />
       <Note text="Put to {data.held.issuer}, which issued it; replacing it revokes every mandate issued under it the same day." />
       <Field label="Deadline" name="deadline" type="date" required />
@@ -31,8 +31,8 @@
   <Popover label="Propose a motion revoking this mandate" menu={false} wide button>
     {#snippet trigger()}Revoke…{/snippet}
     <Form action="put" submit="Propose">
-      <input type="hidden" name="kind" value="revoke" />
-      <input type="hidden" name="arg.policy" value={data.held.policy} />
+      <Hidden name="kind" value="revoke" />
+      <Hidden name="arg.policy" value={data.held.policy} />
       <Note text="Put to {data.held.issuer}, which issued it; ending it revokes every mandate issued under it the same day." />
       <Field label="Deadline" name="deadline" type="date" required />
       <Field label="Why" name="body" rows={3} wide />

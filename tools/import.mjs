@@ -13,7 +13,7 @@
 import { readFileSync } from 'node:fs'
 import { basename } from 'node:path'
 import pg from 'pg'
-import { kinds, imported } from '../apps/org/ts/src/lib/server/import.ts'
+import { kinds, imported } from '../apps/org/ts/src/lib/server/feats/import.ts'
 import { signing } from '../apps/org/ts/src/lib/server/fixture.ts'
 
 const [kind, file, actor] = process.argv.slice(2)

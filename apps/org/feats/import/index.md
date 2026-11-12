@@ -1,6 +1,6 @@
 +++
 title = "Import"
-updated = 2026-11-09
+updated = 2026-11-11
 +++
 
 What a co-op brings in from the tools it leaves, the five to eight a small
@@ -24,7 +24,7 @@ owns a write is the one that knows its fields:
 | `projects` | `project` | a project created | CSV: title, circle, summary, due |
 | `tasks` | `project-task` | a task, in the project it names | CSV, or Asana's task export |
 
-The root runs an import across them (`apps/org/ts/src/lib/server/import.ts`):
+The root runs an import across them (`apps/org/ts/src/lib/server/feats/import.ts`):
 it reads the file as the kind's slice says, makes each record's write as
 the importing member, in the file's order, signed and judged by the guards
 like any write, and records the run here. A line the slice cannot read is

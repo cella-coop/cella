@@ -11,6 +11,7 @@ mod data;
 mod db;
 pub mod fold;
 mod key;
+mod pruned;
 mod repo;
 pub mod run;
 mod secret;

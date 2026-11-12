@@ -1,7 +1,7 @@
 import { done as made, importing, type Action, type Deps, type Done, type Importer, type Line } from '@cella/org-db'
 import { record } from '@cella/org-import/api'
 import type { Kind } from '@cella/org-import/models'
-import { slices } from './slices.ts'
+import { slices } from '../slices.ts'
 
 // Importing a file from another tool, across the slices: each slice reads
 // the kinds of file whose records are its writes, and the root runs them

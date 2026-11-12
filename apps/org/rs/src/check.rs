@@ -1,4 +1,5 @@
 use crate::cli::Part;
+use crate::pruned;
 use crate::repo::Repo;
 use crate::run::{Result, Steps, last_line, quiet};
 use crate::site;
@@ -12,6 +13,7 @@ pub fn run(repo: &Repo, steps: &Steps, part: Option<Part>, no_sql: bool) -> Resu
                 Part::Fixtures,
                 Part::Types,
                 Part::Shell,
+                Part::Pruned,
                 Part::Brand,
                 Part::Site,
                 Part::Rust,
@@ -56,6 +58,9 @@ pub fn run(repo: &Repo, steps: &Steps, part: Option<Part>, no_sql: bool) -> Resu
                     "machine",
                 ]);
                 steps.run("shell", &mut [sync, check], last_line)?;
+            }
+            Part::Pruned => {
+                pruned::build(repo, steps)?;
             }
             Part::Brand => {
                 let mut cmd = repo.node("brand.mjs");

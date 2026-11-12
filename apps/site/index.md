@@ -1,6 +1,6 @@
 +++
 title = "Site"
-updated = 2026-11-12
+updated = 2026-11-13
 +++
 
 `apps/site` (`@cella/site`) is cella's landing site: an
@@ -332,7 +332,12 @@ A section's body places a form by its name, `<Signup />` or
   plain rounded fills of the text's ink over the paper. It posts to
   `PUBLIC_CONTACT_URL` (`/message`), the production host's contact
   endpoint, which keeps the message, mails it to the inbox and
-  subscribes its sender to the lists its boxes tick. A form sends its
+  subscribes its sender to the lists its boxes tick. It carries a
+  trap, `website`, a field set off the page and out of the tab order,
+  so no person fills it and a bot does, and sends with its fields
+  `held`, the seconds the page was open: the endpoint drops a message
+  that fills the trap and holds one sent unstamped or within a few
+  seconds, answering a bot as it answers a person. A form sends its
   fields URL-encoded, as an HTML form does.
 
 A tick box is `Check.astro`: a rounded square outlined in ink, filled

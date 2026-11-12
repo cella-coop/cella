@@ -632,6 +632,16 @@ since the forge does not yet record who pushed
 ([whose words](#whose-words)). The landing pass then merges it into
 main, and `site` stands on the merge for the next piece of work.
 
+A release is `cella site release`, run on bacillus, and only it puts
+the site live. It builds main's head as the forge holds it, never a
+working tree or another branch, with `--release`, so it refuses any
+text a draft still supplies; it syncs the build into a new directory
+under the production host's `/var/www/cella.coop/`, named by its
+commit, and swaps the `current` link to it. It writes nothing where
+what `current` serves holds the same site, brand and diagrams, and it
+keeps the last three builds, so a release is undone by swapping the
+link back to the one before.
+
 A site change a build lane lands, structure, a component or a
 diagram, comes through its own stream as any change does, and touches
 no file of the text.
@@ -642,6 +652,7 @@ no file of the text.
 |---|---|
 | `cella site dev [--port PORT]` | Astro's dev server on `http://localhost:4321` by default, reloading on every change to the site and to the brand's generated files; a change to the brand's model, `packages/brand/src/`, as its clusters, takes a restart, since Vite keeps the package's modules it loaded |
 | `cella site build [--release]` | the static site into `apps/site/dist`, its pages, its styles, its engravings and the brand's fonts and images, ready for any static host; `--release` refuses any text a draft still supplies |
+| `cella site release` | the release build of main's head live at `https://cella.coop`, in a directory of its own with the `current` link swapped to it, or nothing where cella.coop serves the same site already ([how it lands](#how-it-lands)) |
 | `cella check site` | the copy check (`tools/site-copy.mjs`, each page, layout and component read by Astro's parser), the diagram registry and metadata check (`tools/site-diagrams.mjs`, also checking every diagram the text or its drafts name, and the diagrams' vendored glyphs against Phosphor's), `astro check`, the type check of its `.astro` files and scripts, then its build into a temporary directory; a part of `cella check` |
 
 `dist/` and Astro's `.astro/` are ignored by git.

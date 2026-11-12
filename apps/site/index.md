@@ -642,6 +642,15 @@ what `current` serves holds the same site, brand and diagrams, and it
 keeps the last three builds, so a release is undone by swapping the
 link back to the one before.
 
+It reaches the host by ssh, as `production`, which bacillus's ssh
+config names for the forge's user alone, `git`. The host takes that
+user's release key as its user `site` for two requests and nothing
+else, no shell, no terminal and no forward: `served`, which answers the
+commit `current` names, and `release <commit>`, which unpacks the build
+sent on its input and swaps the link. The key, made by hand at deploy
+and never committed, can do no more than put a site live (the
+workshop's `hosts/prod/production/index.md`, The site).
+
 A site change a build lane lands, structure, a component or a
 diagram, comes through its own stream as any change does, and touches
 no file of the text.

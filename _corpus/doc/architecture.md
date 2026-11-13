@@ -1113,8 +1113,11 @@ Each feat and each graft owns a Postgres schema and the SQL in it: tables,
 row-level policies, triggers and composed guards, which are plain
 `LANGUAGE sql` functions over the `cella.*` primitives. The SQL sits in a
 `sql/` directory beside the core package: `feats/<feat>/core/sql/`,
-`grafts/<graft>/sql/`. A schema takes its owner's name; a graft's hyphens
-become underscores, so `contact-invoice` owns the schema `contact_invoice`.
+`grafts/<graft>/sql/`. `feat-check` refuses a `sql/` directory anywhere
+else, but an extension's beside its control file, and a `.sql` file
+outside one, which no check would read. A schema takes its owner's name;
+a graft's hyphens become underscores, so `contact-invoice` owns the schema
+`contact_invoice`.
 
 A co-op's customisations are custom feats: a feat of its own, with its own
 schema, SQL and grafts, built on the same primitives and enabled by

@@ -727,7 +727,9 @@ not own, with no exceptions ([writes stay
 home](#writes-stay-home)). It places a node's core packages too, and
 refuses a core feat's depending on another core feat
 ([core grafts](#core-grafts)).
-`cella test tools` holds their negative tests.
+`cella test tools` holds their negative tests. [Enforcement](enforcement.md)
+lists every rule with the check that refuses it and its negative test,
+or says that no tool can see it, as the section stating it says too.
 
 ### Removing a feat
 
@@ -1061,6 +1063,9 @@ the reader ([trust](trust.md#current-limits)).
 A guard lives at the lowest level that owns it: in a feat if it concerns
 only that feat's collection, in a graft if it concerns a relationship, and
 in a node's core only if it spans everything below that node.
+`cella check feats` refuses a graft's guard on an op of a feat it does
+not join; whether a guard sits at the lowest level that owns it no tool
+can see, and review holds it.
 
 - A payment beyond an invoice's total leaves a credit owed to the client,
   rather than being refused: the invoice feat's guard, since the payments
@@ -1098,6 +1103,9 @@ and tells them how to mitigate it:
   fix it, with the values it read: the statutes' minimum and the shares
   asked, or the closed month and the first open one; never only that
   the write was refused. A reason the log keeps names no person.
+
+No tool can see whether a guard runs as early as its terms are known,
+says what would fix it or names a person; review holds all three.
 
 ## SQL
 
@@ -1256,7 +1264,8 @@ for those who read the motion ([reading](#reading)).
 
 SQL is the source of truth for guards. TypeScript calls them and never
 re-implements one; the browser may preview a guard through the primitives
-compiled to WASM.
+compiled to WASM. No tool can see a guard's logic copied into TypeScript;
+review holds it.
 
 ### Migrations
 
@@ -1568,6 +1577,9 @@ write begun, is refused, nothing committed and no number used.
 ## Inside a package
 
 Seedling's layers, innermost first; imports point inward only.
+`tools/ui-check.mjs` refuses a client layer's import of a server layer
+([client state](#client-state)); no tool sees an import from one server
+layer to another, or one client layer to another, and review holds it.
 
 - Server: `models` (types, schemas, invariants, `permissions`, `actions.ts`) →
   `interfaces` (repository contracts) → `handlers` (`(input, deps) → Result`,
@@ -1848,11 +1860,15 @@ its own: `motion/circles`, exported as `circles` beside `slice` and
 `app`. A form posts its files with its fields, and an
 write reads them whole (`Form.file`). The registry refuses a
 collection owned twice, an extension of a feat a slice neither joins nor
-nests in, and two extensions replacing one write. An extension's write replaces the
+nests in, and two extensions replacing one write, as the shell loads
+(`lib/server/slices.ts`); no check sees them before it runs. An extension's write replaces the
 owner's of the same name: `invoice-transaction`'s issue, which posts the
 invoice in the same transaction, replaces the invoice feat's.
 
-The shell writes no SQL and re-implements no guard: it reads through each
+The shell writes no SQL and re-implements no guard: `tools/writes.mjs`
+refuses a write of a table and a call of the notary in its TypeScript,
+while a read in SQL or a guard copied there no tool can see, and review
+holds them. It reads through each
 slice's reads and writes through its handlers, which sign, submit and
 return Settled, Refused or Pending. Its pages show each outcome, with
 the guard's reason when refused. Every route but the sign-in, its session

@@ -1753,6 +1753,23 @@ credential for a client with no device is built. The slice registry
 refuses two permissions served at one address, so `<feat>/<verb>` names
 one command whichever collection's form runs it.
 
+Every collection and every item is read over HTTP too, at `GET
+/api/<collection>` and `GET /api/<collection>/<id>`, the same queries
+the `collection` and `item` remote functions serve, as JSON
+(`src/routes/api/[collection]/+server.ts`, and the item's beside the
+command's at `src/routes/api/[feat]/[verb]/+server.ts`, since the two
+addresses share a shape and differ by method): a collection's rows a
+page at a time with its counts, its values and its about, and an item
+with each extension's data on it, its cards' data. Each runs as the
+session's person through `using`, as a page's read does, so the
+row-level policies decide what a client reads as they decide what a page
+shows; a request with no session is answered 401 by the server hook. The
+query string takes what the page's address takes, the view, the filter
+and the page, and the argument is validated by the query's own schema
+before it runs (`fetched` in `#lib/server/api.ts`), a 400 naming what is
+wrong; a collection that is not, or an item that is missing or of another
+circle's, is a 404, as on a page.
+
 `cella check feats` enforces what it can see (`tools/ui-check.mjs`): of the
 tree's packages only the UI core holds CSS, the tokens it wears coming from
 the brand outside the tree, no other `.svelte` file has a `<style>` or a

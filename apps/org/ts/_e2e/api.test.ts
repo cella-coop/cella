@@ -7,7 +7,11 @@
 // an ordered one, which settles at once at rung 1, and is refused
 // another circle's, with the guard's reason. What is no command, no JSON,
 // no session, or a permission several forms serve with none named, is
-// refused before anything runs. Run by `cella test e2e api`.
+// refused before anything runs. Every collection and item is read over
+// HTTP as JSON at `GET /api/<collection>` and `/api/<collection>/<id>`:
+// Chloé and Yusuf, of two circles, each read their own payslips alone,
+// and the other's is a 404; the query string takes the page's address's
+// layout and filter. Run by `cella test e2e api`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -19,6 +23,7 @@ const shell = new Shell(su)
 
 const thomas = 'thomas@lanterne.example'
 const yusuf = 'yusuf@lanterne.example'
+const chloe = 'chloe@lanterne.example'
 
 const one = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows[0] as R
 
@@ -81,4 +86,46 @@ test('what is no command, no JSON, no session’s or names no form is refused be
   assert.equal(anyone.status, 401, 'no session, no command')
   const count = await one<{ n: number }>(`SELECT count(*)::int AS n FROM task.task WHERE title = 'x'`)
   assert.equal(count.n, 0, 'none of them wrote')
+})
+
+// A read over HTTP, signed in as `actor`, or with no session: the status
+// and the JSON it answers.
+const get = async (path: string, actor?: string) => {
+  const headers: Record<string, string> = { accept: 'application/json', ...(actor ? { cookie: await shell.signIn(actor) } : {}) }
+  const res = await fetch(`${shell.base}${path}`, { headers })
+  return { status: res.status, body: (await res.json()) as Record<string, unknown> }
+}
+
+test('Chloé and Yusuf, of Marketing and Web, each read the payslips collection and an item over HTTP, their own rows only, and the other’s is a 404', async () => {
+  const ids = (body: Record<string, unknown>) => (body.rows as { id: string }[]).map((r) => r.id)
+  for (const [actor, other] of [[chloe, yusuf], [yusuf, chloe]] as const) {
+    const listed = await get('/api/payslips', actor)
+    assert.equal(listed.status, 200, `${actor}: ${JSON.stringify(listed.body)}`)
+    assert.ok(ids(listed.body).includes(`2026-09~${actor}`), `${actor} reads their September payslip`)
+    assert.ok(ids(listed.body).every((id) => id.endsWith(`~${actor}`)), `${actor} reads no one else’s: ${ids(listed.body)}`)
+    assert.equal(listed.body.kept, ids(listed.body).length, 'and the count is of their rows alone')
+    const own = await get(`/api/payslips/${encodeURIComponent(`2026-09~${actor}`)}`, actor)
+    assert.equal(own.status, 200)
+    assert.deepEqual([own.body.name, own.body.id], ['payslips', `2026-09~${actor}`], 'the item the page reads, as JSON')
+    const theirs = await get(`/api/payslips/${encodeURIComponent(`2026-09~${other}`)}`, actor)
+    assert.equal(theirs.status, 404, `${other}’s payslip is none to ${actor}`)
+  }
+})
+
+test('a collection’s query string takes what its page’s address takes, and what is no collection, no session’s or too long is refused', async () => {
+  const all = await get('/api/expenses', chloe)
+  assert.equal(all.status, 200)
+  const viewed = await get('/api/expenses?view=table', chloe)
+  assert.equal(viewed.status, 200)
+  assert.equal((viewed.body.spec as { layout: string }).layout, 'table', 'the layout the address names')
+  assert.notEqual((all.body.spec as { layout: string }).layout, 'table', 'not the collection’s own')
+  const filtered = await get('/api/expenses?q=ex-0003', chloe)
+  assert.deepEqual((filtered.body.rows as { id: string }[]).map((r) => r.id), ['ex-0003'], 'the rows the text filter holds')
+  const nowhere = await get('/api/nowhere', chloe)
+  assert.equal(nowhere.status, 404)
+  assert.match(String(nowhere.body.reason), /There is no collection nowhere/)
+  assert.equal((await fetch(`${shell.base}/api/expenses`, { headers: { accept: 'application/json' } })).status, 401, 'no session, no read')
+  const long = await get(`/api/expenses?q=${'x'.repeat(5000)}`, chloe)
+  assert.equal(long.status, 400)
+  assert.match(String(long.body.reason), /search is at most 4096 characters/)
 })

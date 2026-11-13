@@ -1,5 +1,8 @@
-import type { Schema } from '@cella/org-db'
+import type { Cookies } from '@sveltejs/kit'
+import type { Db, Schema } from '@cella/org-db'
 import type { Proof } from '@cella/org-sign'
+import { Missing, type Reader } from './calls.ts'
+import { using } from './db.ts'
 import type { Answer, Fields } from './write.ts'
 
 // What a client posts to `POST /api/<feat>/<verb>`: a command, its fields
@@ -62,4 +65,30 @@ export function reply(a: Answer): Response {
     return Response.json({ sign: a.sign }, { status: 202 })
   }
   return Response.json({ done: a.done }, { status: a.done?.state === 'pending' ? 202 : a.status })
+}
+
+// A query over HTTP, for a client with no page: its argument validated by
+// the query's own schema, a 400 naming what is wrong, then run as the
+// session's person through `using`, as a page's read is, so the row-level
+// policies decide what it reads; what is missing or not the reader's is a
+// 404, as on a page. The answer is the query's, as JSON.
+export async function fetched<A>(
+  call: { schema: Schema<A>; run(db: Db, arg: A, who: Reader): Promise<unknown> },
+  arg: unknown,
+  locals: App.Locals,
+  cookies: Cookies,
+): Promise<Response> {
+  const checked = call.schema['~standard'].validate(arg)
+  if ('issues' in checked) {
+    return Response.json({ reason: checked.issues.map((i) => i.message).join('; ') }, { status: 400 })
+  }
+  try {
+    const read = await using(locals.actor, (db) => call.run(db, checked.value, { actor: locals.actor, session: locals.session, cookies }))
+    return Response.json(read)
+  } catch (e) {
+    if (e instanceof Missing) {
+      return Response.json({ reason: e.message }, { status: 404 })
+    }
+    throw e
+  }
 }

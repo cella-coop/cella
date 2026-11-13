@@ -622,20 +622,23 @@ head's committer, which any agent sets.
 The site's work lands as every stream's does, through the kept stream
 `site`, which the operator owns and whose merge leaves it standing.
 The site session works on it and never pushes main: each of its
-commits is one change, carrying its `Change-Id:` trailer, so the
-integrator's queue takes the stream's newest version. A version of
-`site` is gated by the `gates` flow at its tip, as any version is, and
-where main moved before it lands it rebases and gates again, as every
-change does. Its paths are decoupled, so main moving only in them
-holds back no change that touches none of them
+commits is one change, carrying its `Change-Id:` trailer, so the queue
+hands each out, in the stack's order, once it is built and approved. A
+build lane takes it as it takes any built change: it gates the change
+by the `gates` flow at its commit, rebases and gates again where main
+moved before it lands, as every change does, and lands it by its
+release, `corpus change release --merged`, one change a turn. Cella has
+no landing pass of the integrator's: a lane's release lands every
+change of it, the site's with them. Its paths are decoupled, so main
+moving only in them holds back no change that touches none of them
 ([gates](../org/rs/index.md#gates)).
 
 It lands once the operator approves it. Their push of a version is
 that approval, said by record on the version, in their words, by the
 session that pushed it for them (`corpus change review <id>@<n>`),
 since the forge does not yet record who pushed
-([whose words](#whose-words)). The landing pass then merges it into
-main, and `site` stands on the merge for the next piece of work.
+([whose words](#whose-words)). The build lane's release then merges it
+into main, and `site` stands on the merge for the next piece of work.
 
 A release is `cella site release`, run on bacillus, and only it puts
 the site live. It builds main's head as the forge holds it, never a

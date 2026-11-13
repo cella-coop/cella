@@ -387,11 +387,11 @@ test('Malik revokes his phone from his laptop on his own page; the device signin
   const laptop = await fixture(malik, 'laptop')
   const phone = await fixture(malik, 'phone')
   await shell.signIn(malik, laptop)
-  const own = await tab(malik, 'overview', malik)
+  const own = await tab(malik, 'devices', malik)
   assert.match(own, /laptop, this device/)
   assert.match(own, /Revoke phone/)
   assert.doesNotMatch(own, /Revoke laptop/)
-  assert.doesNotMatch(await tab(camille, 'overview', malik), /Revoke/, 'nothing to revoke on someone else\'s page')
+  assert.doesNotMatch(await tab(camille, 'devices', malik), /Revoke/, 'nothing to revoke on someone else\'s page')
   const itself = await shell.act(`/people/${malik}`, 'revoke', { key: laptop.key }, malik)
   assert.notEqual(itself.state, 'settled', 'a device never revokes itself')
   const theirs = await shell.act(`/people/${camille}`, 'revoke', { key: (await fixture(camille, 'phone')).key }, malik)
@@ -402,7 +402,7 @@ test('Malik revokes his phone from his laptop on his own page; the device signin
     await all(`SELECT label, revoked IS NOT NULL AS revoked FROM person.device WHERE address = $1 ORDER BY label`, [malik]),
     [{ label: 'laptop', revoked: false }, { label: 'phone', revoked: true }],
   )
-  const after = await tab(malik, 'overview', malik)
+  const after = await tab(malik, 'devices', malik)
   assert.doesNotMatch(after, /Revoke/)
   assert.match(after, /This is your only current device/)
 })

@@ -54,8 +54,11 @@ export const app: App = {
         title: (p: Person) => p.name,
         subtitle: (p: Person) => p.address,
         properties: (p: Person) => [{ label: 'Address', value: p.address }],
-        tabs: [{ id: 'overview', label: 'Overview' }],
-        blocks: [Devices],
+        tabs: [
+          { id: 'overview', label: 'Overview' },
+          { id: 'devices', label: 'Devices' },
+        ],
+        blocks: [{ tab: 'devices', block: Devices }],
         actions: Profile,
       },
     },

@@ -272,7 +272,6 @@
 
     <div class="foot">
     <Command {collections} {source} />
-    <div class="who">
     <div class="account">
       <Popover label="Account: {actor?.name ?? 'no one signed in'}" side="top" wide>
         {#snippet trigger()}
@@ -282,8 +281,18 @@
           </span>
           <Icon icon={CaretUpDown} size="0.9em" />
         {/snippet}
+        <!-- The menu's head: who is signed in, and the theme as one button
+             that cycles system, light and dark. -->
+        <div class="head-row">
+          <p class="label">{actor ? 'Signed in' : 'Theme'}</p>
+          <form method="post" action="/theme" class="theme">
+            <input type="hidden" name="back" value={back} />
+            <button name="theme" value={next} title="Theme: {theme}. Switch to {next}" aria-label="Theme: {theme}. Switch to {next}">
+              <Icon icon={marks[theme]} />
+            </button>
+          </form>
+        </div>
         {#if actor}
-          <p class="label">Signed in</p>
           <p class="hint">{actor.address}, on this device</p>
           <div class="list">
             {#if personal}<a class="item" role="menuitem" href={personal}>Settings</a>{/if}
@@ -293,13 +302,6 @@
           </div>
         {/if}
       </Popover>
-    </div>
-    <form method="post" action="/theme" class="theme">
-      <input type="hidden" name="back" value={back} />
-      <button name="theme" value={next} title="Theme: {theme}. Switch to {next}" aria-label="Theme: {theme}. Switch to {next}">
-        <Icon icon={marks[theme]} />
-      </button>
-    </form>
     </div>
     </div>
   </nav>
@@ -544,14 +546,11 @@
     margin-inline-start: auto;
     color: var(--accent-text);
   }
-  .who {
+  .head-row {
     display: flex;
     align-items: center;
-    gap: var(--space-1);
-  }
-  .who .account {
-    flex: 1;
-    min-width: 0;
+    justify-content: space-between;
+    gap: var(--space-2);
   }
   .theme button {
     display: grid;

@@ -206,7 +206,9 @@ draws.
   a gallery or on a board, its cards' fields, in a calendar, its cards'
   fields, in a dashboard, its widgets); and last, saving what is shown
   as a view. A row the layout has no use for is shown disabled, never
-  dropped, so the rows never move. What a collection offers lives only
+  dropped, so the rows never move; a control that offers no choice
+  reads as its value, not as a control: a disabled field is muted, and
+  a disabled select drops its field and chevron. What a collection offers lives only
   inside the dropdowns and popovers: its fields are a dropdown's
   options, and a condition's values (an enumeration's, a date's month
   or year) are picked in a popover opened from its chip. Its rows

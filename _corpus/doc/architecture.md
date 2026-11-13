@@ -1166,10 +1166,18 @@ collection, the item and the search's index, are composed once in
 Only a shell imports a slice's `./app`.
 
 The web shell's remote functions are one module a route family,
-`src/lib/remote/<family>.remote.ts` (`collection` and `item`), each
+`src/lib/remote/<family>.remote.ts` (`collection`, `item`, `settings`,
+`session`), each
 serving the calls of the slices its routes mount. A
 query is served as a `query`: a collection's rows a page at a time
-with its counts and its values, its `about`, the search's index. No
+with its counts and its values, its `about`, the search's index; what
+the shell around every page reads, the scope, who is signed in, the
+people's names, the circles and the lens, and the counted collections'
+counts (`shell`, in `session.remote.ts`, the scope alone before a
+person signs in); what the sign-in page offers (`signing`) and whom an
+invitation's link invites (`invited`), which the server hook opens to a
+person not yet signed in with `accept`; and a settings page as its
+slice reads it (`page`, in `settings.remote.ts`). No
 page asks for one row per thing it lists or shows what changes while
 it is open, so none is served by `query.batch` or `query.live`. Each
 remote function validates its argument
@@ -1177,8 +1185,10 @@ by its call's schema, and a query runs as the session's person through
 `using`, as every read does (`served` in `#lib/remote/serve.ts`), what
 is missing or not the reader's thrown as a 404.
 
-A component reads a query by awaiting it, in its markup or in a
-`$derived` of a state class, never in an `$effect`; awaits that do not
+A component reads a query by awaiting it, in its markup, in a
+`$derived` of its script, as the root layout awaits the shell's so its
+`<svelte:head>` has it, or in a `$derived` of a state class, never in
+an `$effect`; awaits that do not
 depend on each other are started together, so they run in parallel and
 never one after the other. Each page's content sits in a
 `<svelte:boundary>` whose `failed` snippet, the UI core's `Failed`,
@@ -1230,12 +1240,15 @@ document's edit, a settings page's saves and the motion it offers
 and proved by the link's holder (`accept`). The page's route names them
 to the UI core (`#lib/writes.ts`, `useWrites` in `@cella/org-ui`). A
 write's proof asks for the queries the page reads, the collection's rows
-and counts, the item and its cards, the search's index, and the answer
+and counts, the item and its cards, the search's index and the shell's
+counts and theme (`shell`), and the answer
 that carries its outcome brings them back refreshed, in the same flight
 (`requested(…).refreshAll()` in `#lib/remote/write.ts`), so a page asks
-for none of them again after it writes; the shell's counts and theme, which its
-load reads, are read again after a write that took or reached a verdict
-(`cella:shell`), and a page whose write was refused before any signature
+for none of them again after it writes, since the shell's query
+refreshed apart, once the proof's have landed, throws inside Svelte's
+flush (Svelte 5.57.2); a settings page reads `shell` and its `page`
+again after a save that took or reached a verdict, as a theme's save
+is no proof, and a page whose write was refused before any signature
 reads again, so what a drop moved goes back.
 
 `cella check feats` enforces what it can see (`tools/ui-check.mjs`): of the
@@ -1258,7 +1271,12 @@ Svelte or SvelteKit form: `on:event`, `<slot>`, `use:`, `{@const}`,
 made by `createContext` alone and reached through a `use<Name>` hook,
 `$app/stores`, `$lib`, `$env` or `invalidateAll`, nor `{@html}`; and no
 rule of a stylesheet or a `<style>` sets `outline: none` without drawing
-`--focus` as its box-shadow. Each refusal has a negative test in
+`--focus` as its box-shadow. No route of the shell has a
+`+page.server.ts` or a `+layout.server.ts`, nor a `load` in a
+`+page.ts` or `+layout.ts`: a page reads through queries and writes
+through forms, a redirect is the server hook's, and what stays on the
+server of a route is a `+server.ts` endpoint (an item's stream and
+content, the session's challenge, the search, the theme). Each refusal has a negative test in
 `tools/_tests/ui.test.mjs`, a source that holds the form and is refused
 by name.
 

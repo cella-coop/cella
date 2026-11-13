@@ -99,7 +99,7 @@ test('legacy Svelte and SvelteKit forms are refused, wherever they are written',
     assert.equal(found.length, 1, `${text}: ${found}`)
     assert.match(found[0], message)
   }
-  assert.match(problems('apps/org/ts/src/routes/+layout.server.ts', "import { invalidateAll } from '$app/navigation'\n", false)[0], /uses invalidateAll; use refreshAll/)
+  assert.match(problems('apps/org/ts/src/routes/theme/+server.ts', "import { invalidateAll } from '$app/navigation'\n", false)[0], /uses invalidateAll; use refreshAll/)
 })
 
 test('the forms that replace them pass, and prose that names them does not trip the check', () => {
@@ -169,4 +169,21 @@ test('a rule that sets outline: none without the focus ring is refused, in a sty
   assert.match(problems(sheet, '@media (hover: hover) {\n  .x { outline: 0 }\n}\n', true)[0], /\.x sets outline: none/)
   assert.match(problems('apps/org/core/ui/ts/src/components/Grid.svelte', component('', '<input />\n<style>\n  input:focus {\n    outline: none;\n  }\n</style>'), true)[0], /input:focus sets outline: none/)
   assert.deepEqual(problems(sheet, ':focus-visible {\n  outline: none;\n  box-shadow: var(--focus);\n}\n.drop {\n  outline: 2px dashed transparent;\n}\n/* outline: none */\n', true), [], 'the ring, or an outline drawn, passes')
+})
+
+test('a route\'s server load or actions, or a universal load, is refused; an endpoint passes', () => {
+  for (const file of ['+page.server.ts', '+layout.server.ts', 'sign-in/+page.server.ts', '[collection]/[id]/+layout.server.ts']) {
+    const path = `apps/org/ts/src/routes/${file}`
+    const found = problems(path, 'export const load = () => ({})\n', false)
+    assert.equal(found.length, 1, `${found}`)
+    assert.match(found[0], /is a route's server load or actions; read through a query/)
+    assert.match(problems(path, 'export const actions = { default: () => {} }\n', false)[0], /server load or actions/)
+  }
+  for (const text of ['export const load = () => ({})\n', 'export async function load() {\n  return {}\n}\n', 'const load = () => ({})\nexport { load }\n']) {
+    assert.match(problems('apps/org/ts/src/routes/settings/[page]/+page.ts', text, false)[0], /exports a load; read through a query/)
+    assert.match(problems('apps/org/ts/src/routes/+layout.ts', text, false)[0], /exports a load/)
+  }
+  assert.deepEqual(problems('apps/org/ts/src/routes/+layout.ts', 'export const ssr = true\n', false), [], 'a route option is no load')
+  assert.deepEqual(problems('apps/org/ts/src/routes/search/+server.ts', "export const GET = () => new Response('[]')\n", false), [])
+  assert.deepEqual(problems('apps/org/ts/src/lib/server/load.ts', 'export const load = () => ({})\n', false), [], 'only a route file is a route')
 })

@@ -1,9 +1,42 @@
-import { command, form, getRequestEvent } from '$app/server'
+import { error } from '@sveltejs/kit'
+import { command, form, getRequestEvent, query } from '$app/server'
+import { texts } from '@cella/org-db'
+import { dev } from '#lib/server/device.ts'
 import { setting } from '#lib/server/slices.ts'
 import { wear } from '#lib/server/theme.ts'
 import { failed, type Answer, type Fields } from '#lib/server/write.ts'
 import { sent } from './sent.ts'
+import { served } from './serve.ts'
 import { answer, keyed, pairs, posted, written } from './write.ts'
+
+// A settings page: what its slice reads for the signed-in person, who
+// looks, and the theme they wear, read again after a save that took or
+// reached a verdict.
+export const page = query(texts(['page']), async ({ page: name }) => {
+  const found = setting(name)
+  if (!found) {
+    error(404, `There is no settings page ${name}`)
+  }
+  const { locals } = getRequestEvent()
+  const s = locals.session
+  if (!s) {
+    error(401, 'Sign in first')
+  }
+  const data = await served((db) => found.read(db, s.actor))
+  if (data === null) {
+    error(404, `There is no settings page ${name} for ${s.actor}`)
+  }
+  return { name, data, viewer: { actor: s.actor, device: s.device }, theme: locals.theme }
+})
+
+// DEV ONLY. The settings form's specimen, a page of the design system
+// that the dev server alone serves, and which reads nothing.
+export const specimen = query(() => {
+  if (!dev) {
+    error(404, 'There is no page specimens/settings')
+  }
+  return true
+})
 
 // A settings page's write, by the name its slice saves by, or the theme,
 // kept in its cookie as the user menu's `/theme` keeps it; the theme is no

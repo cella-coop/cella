@@ -24,6 +24,10 @@
 // - Svelte 5 and SvelteKit 3 only: none of the legacy forms below, which
 //   still compile but are what code written from older knowledge reaches
 //   for, and no `{@html}`, which would render text as markup.
+// - No route loads or acts: no `+page.server.ts` or `+layout.server.ts`
+//   under a package's `src/routes/`, and no `load` in a `+page.ts` or
+//   `+layout.ts`; a page reads through queries and writes through forms,
+//   and what stays on a route's server is a `+server.ts` endpoint.
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
@@ -139,6 +143,10 @@ const bounded = new Set(['svelte:boundary', 'Skeleton', 'Failed'])
 const tags = (text) =>
   [...text.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<!--[\s\S]*?-->/g, '').matchAll(/<([A-Za-z][\w.:-]*)/g)].map((m) => m[1])
 
+// A route's server load or actions, and a universal load.
+const routed = /(^|\/)src\/routes\/(.*\/)?\+(page|layout)(\.server)?\.ts$/
+const loads = /^\s*export\s+(const|let|var|(async\s+)?function)\s+load\b|^\s*export\s*\{[^}]*\bload\b[^}]*\}/m
+
 // The problems of one source file. `path` is relative to the repository;
 // `ui` says whether it sits in the UI core.
 export function problems(path, text, ui) {
@@ -161,6 +169,12 @@ export function problems(path, text, ui) {
     out.push(`${path}: writes the $state field ${field} in an $effect; derive it with $derived, or set what only the browser holds in onMount or afterNavigate`)
   }
   out.push(...legacy(path, text))
+  const route = path.match(routed)
+  if (route && route[4]) {
+    out.push(`${path}: is a route's server load or actions; read through a query and write through a form in src/lib/remote, redirect in the server hook, or serve a +server.ts endpoint`)
+  } else if (route && loads.test(text)) {
+    out.push(`${path}: exports a load; read through a query in src/lib/remote, awaited under a boundary`)
+  }
   for (const selector of ringless(path, text)) {
     out.push(`${path}: ${selector} sets outline: none and draws no ring; draw box-shadow: var(--focus) with it, or leave focus to :focus-visible`)
   }

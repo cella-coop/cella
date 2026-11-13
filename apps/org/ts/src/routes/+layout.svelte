@@ -2,19 +2,23 @@
   import { afterNavigate } from '$app/navigation'
   import { Gate, Shell, useWrites } from '@cella/org-ui'
   import { index } from '#lib/remote/collection.remote.ts'
+  import { shell } from '#lib/remote/session.remote.ts'
   import { nav } from '#lib/slices.ts'
-  import type { LayoutProps } from './$types'
 
-  let { data, children }: LayoutProps = $props()
+  let { children } = $props()
 
   // The last write's outcome, from whichever write the page posted, until
-  // the next page.
+  // the next page; its context is set before the script awaits.
   const writes = useWrites()
   afterNavigate(({ type }) => {
     if (type !== 'enter') {
       writes.dismiss()
     }
   })
+
+  // What the shell reads, awaited before it draws, so the server renders
+  // it whole; a write that took or reached a verdict refreshes it.
+  const data = $derived(await shell())
 </script>
 
 <svelte:head>

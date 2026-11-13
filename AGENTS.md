@@ -1,6 +1,6 @@
 # Agents
 
-Cella is a cooperative workspace built as a strict tree of feats. This
+Cella is a cooperative workspace built as a tree of nodes. This
 repository works on the org app, `apps/org/`, and on the brand it
 wears, `packages/brand/` (`@cella/brand`): the house style as one
 framework-agnostic package, its tokens, fonts, mark and wordmark
@@ -16,91 +16,261 @@ Read
 
 ## Rules
 
-- **A feat imports no other feat.** What feats share goes through a graft
-  in their parent's `grafts/`, declared by the feat that extends.
-  `cella check feats` must pass; never route around it with a re-export.
-- **Every action has a label and a permission** in its feat's
-  `models/actions.ts`. A new action without one is incomplete.
-- **Every action declares the power it needs**, its SQL registers it,
-  and a mandate, collective mandate or right that Lanterne adopts grants
-  it; `cella check feats` refuses one that does not. Only the log's
-  first entry declares a check, `first`, instead. An action not yet
-  built is not declared ([actions](_corpus/doc/architecture.md#actions)).
-- **Every action folds.** Its slice's SQL registers how its entry applies
-  to the state before it, by `cella.lets_fold`, and its entry carries all
-  it changed, a personal value as its commitment; `cella check feats`
-  refuses an action with no fold, and every e2e scenario's log folds into
-  a fresh database that matches it row for row, but one whose file says
-  why it cannot (`// unfolded:`) ([folds](_corpus/doc/architecture.md#folds)).
-- **The notary is the only path that appends to the log.** It is a layer,
-  the `cella` extension in org's core, not a feat, and has no actions of its
-  own. Only the extension's functions write the log; a handler writes
-  through `write`, which opens its transaction with `cella.begin` and calls
-  `cella.submit` inside it, and never writes the log or settles an ordered
-  action itself. Every table a feat or a graft makes refuses a row written
-  outside such a transaction.
-- **Grafts compose upward.** A graft joining N feats may read, in code and
-  in SQL, the feats it joins and the grafts of its node that join a proper
-  subset of them; never a graft of equal or higher order. A relationship
-  that needs another graft's data lives in the graft joining all its feats.
-- **Each feat and each graft owns a Postgres schema**, its SQL in a `sql/`
-  directory beside its core package. A feat's SQL references only its own
-  schema, `cella.*`, core's circles, `circle.*`, and core's people,
-  `person.*`; a graft's, its own,
-  those of the feats it joins, those of its lower-order grafts, `circle.*`
-  and `person.*`. It creates and grants only in its own.
-- **Circles, roles, tenures and mandates are core**, as groups are in
-  standard RBAC: `apps/org/core/circle`, a core feat, never one of
-  `feats/`, and no feat's graft joins a circle
+The org app is built by the Graft Architecture: six axioms, Nesting,
+Ancestry, Grafting, Ownership, Layering and Modularity, with their
+corollaries and the definitions they use, as
+[architecture](_corpus/doc/architecture.md#the-axioms) states them.
+Each rule below sits under its axiom with the label architecture gives
+it ([labels](_corpus/doc/architecture.md#labels)): *enforced*, naming
+the check that refuses a violation; *convention*, which review holds;
+*accepted*, ruled and not yet built; *proposed*, not yet ruled.
+`cella check feats` must pass; never route around a check with a
+re-export. A rule a tool cannot see says so in its doc;
+[enforcement](_corpus/doc/enforcement.md) lists every rule with the
+check that refuses it and its negative test, or says no tool can see
+it.
+
+A **command** is a call that writes; the code still calls it an
+**action** (`models/actions.ts`, `cella:<feat>:<verb>`) until the
+layout stream renames it. The paths below are today's;
+[the target tree](_corpus/doc/architecture.md#the-target-tree) maps
+each to where the axioms put it.
+
+### 1. Nesting
+
+**An app is a tree of nodes. A graft sits in a node holding all its
+feats.**
+
+- *enforced* (`feat-check`): apps hold feats, feats hold feats, to any
+  depth; a node's core is inherited by its descendants. A feat's name
+  is unique in its app and unhyphenated, and its schema is its name.
+- *enforced* (`feat-check`'s edges): the brand, the diagrams and the
+  site sit outside the tree: the brand depends on no package of the
+  repository, the diagrams on the brand alone, the site on the brand
+  and the diagrams.
+- *proposed*: core holds `libs/`, `feats/` and `grafts/`; a leaf
+  feat's folders are its layers.
+
+### 2. Ancestry
+
+**A slice or a lib depends only on the cores of its lineage.**
+
+- *enforced* (`feat-check`, `sql-check`, the shell's registry): **A
+  feat imports no other feat.** Imports, SQL references and UI
+  extensions reach only the cores of the lineage, or from a graft to
+  what it joins. A feat's SQL references only its own schema,
+  `cella.*`, core's circles, `circle.*`, and core's people, `person.*`;
+  a graft's, its own, those of the feats it joins, those of its
+  lower-order grafts, `circle.*` and `person.*`.
+- *enforced* (`sql-check`): **No foreign key crosses a feat.** The keys
+  out of a slice's schema are its record's owning circle, a grantee and
+  core's people; the graft's schema holds the junction.
+- *enforced* (`feat-check`, `sql-check`, the shell's registry): **A
+  core feat uses no other core feat.** It uses its core's libs and its
+  ancestors' cores; core feats that use one another are joined by a
+  core graft in `core/grafts/`, as `circle-policy` joins the circles to
+  the policy register
+  ([core grafts](_corpus/doc/architecture.md#core-grafts)).
+
+### 3. Grafting
+
+**A graft also depends on the feats it joins and on the grafts joining
+a proper subset of them.**
+
+- *enforced* (`feat-check`, `sql-check`): **Grafts compose upward.** A
+  graft joining N feats may read, in code and in SQL, the feats it
+  joins and the grafts of its node that join a proper subset of them;
+  never a graft of equal or higher order. A relationship that needs
+  another graft's data lives in the graft joining all its feats.
+- *proposed*: a nested node's core feats can be joined by a graft from
+  above; today `feat-check` refuses a feat's graft that joins `circle`
+  or `person`.
+
+#### 3.1 Placement
+
+**A graft sits in the lowest node holding all its feats.**
+
+- *enforced* (`feat-check`): it is named by its feats in alphabetical
+  order and declared in the `feat.toml` of the feat that extends.
+- *convention*: prefer pairs; three or more feats only when a concept
+  needs them all.
+
+#### 3.2 Migration
+
+**Migrations run in tree order: core, feats, then grafts by the number
+of feats they join.**
+
+- *enforced* (`cella migrate`): **Until launch, migrations are
+  rewritten in place.** No scope is live: a change edits the migration
+  that makes what it changes, and every database is rebuilt with
+  `cella db reset`; `cella migrate` refuses one that applied a file
+  since edited or gone.
+- *accepted*: at launch they are squashed into one initial migration
+  each and become append-only, locked by an app's `migrations.lock`
+  ([migrations](_corpus/doc/architecture.md#migrations)).
+
+#### 3.3 Removal
+
+**Removing a feat outside core removes only its subtree and the grafts
+that join it.**
+
+- *enforced* (`cella check pruned`): no core package depends on a
+  non-core slice, checked by building, migrating and signing in with
+  every optional slice pruned.
+- *convention*: who may act is core. **Circles, roles, tenures and
+  mandates are core**, as groups are in standard RBAC:
+  `apps/org/core/circle`, a core feat, never one of `feats/`
   ([circles are core](_corpus/doc/architecture.md#circles-are-core)).
   **People are core** too: `apps/org/core/person`, a core feat, never
-  one of `feats/`; a membership, an employment or a comment names a core
-  person as a feat's row names a circle ([people are
+  one of `feats/`; a membership, an employment or a comment names a
+  core person as a feat's row names a circle ([people are
   core](_corpus/doc/architecture.md#people-are-core)).
-- **A core feat uses no other core feat.** Core feats that use one
-  another are joined by a core graft in `core/grafts/`, as
-  `circle-policy` joins the circles to the policy register
-  ([core grafts](_corpus/doc/architecture.md#core-grafts)).
-- **Architecture rules are enforced by tooling** wherever a tool can see
-  them: `cella check feats` checks packages, imports, ops and every `sql/`
-  file. A rule a tool cannot check says so in its doc.
-- **No foreign key crosses a feat.** The graft's schema holds the junction.
-- **Writes stay home.** A feat's rows change only through its own code. A
-  graft writes only its own schema: it changes a feat by calling that
-  feat's published write from its handler, reacts through `on` and
-  refuses through a guard, and never inserts, updates, deletes or puts a
-  trigger on a feat's or a lower-order graft's table. A nested feat
-  writes its parent the same way; a feat its extenders fill publishes a
-  register they call. `cella check feats` refuses every such write, with
-  no list of exceptions ([writes stay
-  home](_corpus/doc/architecture.md#writes-stay-home)).
-- **Until launch, migrations are rewritten in place.** No scope is live:
-  a change edits the migration that makes what it changes, and every
-  database is rebuilt with `cella db reset`; `cella migrate` refuses one
-  that applied a file since edited or gone. At launch they are squashed
-  into one initial migration each and become append-only, locked again
-  ([architecture](_corpus/doc/architecture.md#migrations)). The notary
-  changes by a new version's upgrade script and a migration that updates
-  the extension, never by dropping it
+- *convention*: nest only for a removable subtree; an unlinked record
+  is valid.
+
+### 4. Ownership
+
+**A slice owns its schema: who reads its rows, and every write to them.
+Every write is a command; only migrations and erasure bypass the
+notary.**
+
+- *enforced* (`sql-check`): **Each feat and each graft owns a Postgres
+  schema**, its SQL in a `sql/` directory beside its core package. It
+  creates, alters, indexes, drops and grants only in its own.
+- *enforced* (`writes`, `sql-check`): **Writes stay home.** A feat's
+  rows change only through its own code. A graft writes only its own
+  schema: it changes a feat by calling that feat's published write from
+  its handler, reacts through `on` and refuses through a guard, and
+  never inserts, updates, deletes or puts a trigger on a feat's or a
+  lower-order graft's table. A nested feat writes its parent the same
+  way; a feat its extenders fill publishes a register they call. The
+  checks refuse every such write, with no list of exceptions ([writes
+  stay home](_corpus/doc/architecture.md#writes-stay-home)).
+- *enforced* (`writes`; the notary at run time): **The notary is the
+  only path that appends to the log.** It is a layer, the `cella`
+  extension in org's core, not a feat, and has no commands of its own.
+  Only the extension's functions write the log; a handler writes
+  through `write`, which opens its transaction with `cella.begin` and
+  calls `cella.submit` inside it, and never writes the log or settles
+  an ordered command itself. Every table a feat or a graft makes
+  refuses a row written outside such a transaction. The notary changes
+  by a new version's upgrade script and a migration that updates the
+  extension, never by dropping it, which `sql-check` refuses
   ([operations](_corpus/doc/operations.md#upgrades)).
-- **SQL is the source of truth for guards.** Never re-implement a guard in
-  TypeScript; never call `now()` in a guard, read `cella.verdict_date()`.
-- **A guard refuses as early as it can and says what would fix it.**
-  Where a write's terms are known before it is made, as a motion's at
-  its proposal, the same SQL judges them then and again when it is
-  made; a refusal names what is wrong and what would fix it, with the
-  values it read, and never a person in a reason the log keeps
-  ([early and actionable](_corpus/doc/architecture.md#early-and-actionable)).
-- **A guard reads a policy's values from the reading feat's columns,
-  never parses its wording.** A policy is a sentence a circle adopted by
-  motion, its values marked in it once; the feat that reads a kind of
-  policy copies them into its own typed rows at adoption. `cella check
-  feats` refuses a slice's SQL that reads `policy.wording`
-  ([policies](_corpus/doc/architecture.md#policies)). Row-level policies
-  are always called that, and are not policies.
-- **A guard lives at the lowest level that owns it**: a feat, a graft, or a
-  node's core only when it spans everything below.
-- **Personal data never enters the log.** Commit to it; keep it in the vault.
+- *enforced* (`powers`): **Every command has a label, a permission, a
+  power and a fold.** Its label and permission are in its feat's
+  `models/actions.ts`; the power it needs its SQL registers, and a
+  mandate, collective mandate or right that Lanterne adopts grants it.
+  Only the log's first entry declares a check, `first`, instead. A
+  command not yet built is not declared
+  ([actions](_corpus/doc/architecture.md#actions)). Its slice's SQL
+  registers how its entry applies to the state before it, by
+  `cella.lets_fold`, and its entry carries all it changed, a personal
+  value as its commitment; every e2e scenario's log folds into a fresh
+  database that matches it row for row, but one whose file says why it
+  cannot (`// unfolded:`) ([folds](_corpus/doc/architecture.md#folds)).
+- *enforced* (`sql-check`, `cella migrate`, `cella test e2e denial`):
+  who may read a row is held by row-level security, every table's
+  enabled and forced ([reading](_corpus/doc/architecture.md#reading)).
+- *accepted*: migrations change schemas outside the notary, and are not
+  entries; erasure removes a personal value from the vault by the
+  person's right, and the entry stays.
+
+#### 4.1 Guards
+
+**A guard lives in the SQL of the slice that owns what it guards, or of
+the graft joining the slices it spans**: the lowest level that owns it,
+a node's core only when it spans everything below.
+
+- *enforced* (`sql-check`): **SQL is the source of truth for guards.**
+  Never call `now()` in a guard, read `cella.verdict_date()`; a guard
+  reads no randomness. **A guard reads a policy's values from the
+  reading feat's columns, never parses its wording.** A policy is a
+  sentence a circle adopted by motion, its values marked in it once;
+  the feat that reads a kind of policy copies them into its own typed
+  rows at adoption, and `sql-check` refuses a slice's SQL that reads
+  `policy.wording` ([policies](_corpus/doc/architecture.md#policies)).
+  Row-level policies are always called that, and are not policies.
+- *convention*: the handler checks the permission; never re-implement a
+  guard in TypeScript.
+- *convention*: **A guard refuses as early as it can and says what
+  would fix it.** Where a write's terms are known before it is made, as
+  a motion's at its proposal, the same SQL judges them then and again
+  when it is made; a refusal names what is wrong and what would fix it,
+  with the values it read, and never a person in a reason the log keeps
+  ([early and
+  actionable](_corpus/doc/architecture.md#early-and-actionable)).
+
+### 5. Layering
+
+**A slice's layers import only inward. Other slices use only its
+contract; only shells import its app.**
+
+- *enforced* (`feat-check`'s exports): a slice's package exports only
+  `./models`, `./api`, `./bindings` and `./app`, a core lib's `.`.
+- *enforced* (`ui-check`, the shell's registry): **A slice's UI is its
+  own.** A feat mounts its collections in the shell through its `./api`
+  and `./app` slices; a graft extends only the collections of the feats
+  it joins. Blocks compose `@cella/org-ui` and style nothing; state
+  lives in a hook's state class; client code imports no server layer
+  and keeps no module-level mutable state. The shell writes no SQL,
+  which `writes` refuses in its TypeScript. See
+  [the shell](_corpus/doc/architecture.md#the-shell).
+- *accepted*: a slice's api is its calls, each a query or a command,
+  framework-free and validated by a Standard Schema; a query may be
+  written in SQL, as a view. Built for every read the web shell makes,
+  which `ui-check` holds by refusing a route's `load`.
+- *proposed*: a slice declares sockets in its bindings, which a graft
+  or another module fills with a plug from its own app; a slice's
+  folders are its layers, its SQL following them.
+
+#### 5.1 Composition
+
+**Only shells compose: they serve every slice's calls and match every
+plug to its socket.**
+
+- *accepted*: the web shell serves calls as remote functions and REST,
+  the cli shell as commands, the analytics shell reads the SQL queries;
+  a new transport touches one shell.
+
+#### 5.2 Evolution
+
+**A change keeps a slice's contract, adds to it, or removes what nothing
+uses, never changing it in place; so a contract changes by expand,
+migrate, contract, and its dependents change in parallel.**
+
+- *proposed*: the checker fingerprints every contract and refuses a
+  change that alters or removes a member a dependent still uses; a
+  contract change is planned as an expand, one migration per dependent,
+  each its own lane, and a contract once all have landed.
+- *convention*: a core's contract is the costliest to change, since its
+  whole subtree depends on it; keep core small.
+- *accepted*: after launch, data changes the same way: add, backfill,
+  drop.
+
+### 6. Modularity
+
+**Each co-op chooses the modules its tree is composed of.**
+
+- *accepted*: a module is a manifest and its contributions, named in
+  reverse-DNS by its publisher's domain; its tables are private to it,
+  reached from outside only through its calls and published keys; it is
+  installed by motion and upgraded by a policy adopted by motion; two
+  installed feats sharing a name are aliased at install.
+
+#### 6.1 Retirement
+
+**A module is retired, never erased; the log keeps replaying its
+entries.**
+
+- *accepted*: retiring is refused while a hard requirement depends on
+  it; folds are versioned per release; a retired module's queries stay
+  readable and its commands are refused; it may be reinstated by motion.
+
+### Beyond the axioms
+
+- **Personal data never enters the log.** Commit to it; keep it in the
+  vault ([trust](_corpus/doc/trust.md)).
 - **The site's text is the operator's.** No agent writes
   `apps/site/src/content/**`, by an edit, a script, a move or a rename:
   the operator writes every word of it by hand. An agent may draft text
@@ -112,12 +282,6 @@ Read
   ([diagrams](packages/diagrams/index.md)); `.claude/settings.json`
   refuses an agent's edit of the text early
   ([whose words](apps/site/index.md#whose-words)).
-- **A slice's UI is its own.** A feat mounts its collections in the shell
-  through its `./api` and `./app` slices; a graft extends only the
-  collections of the feats it joins. Blocks compose `@cella/org-ui` and
-  style nothing; state lives in a hook's state class; client code imports
-  no server layer and keeps no module-level mutable state. The shell
-  writes no SQL. See [the shell](_corpus/doc/architecture.md#the-shell).
 - **Docs are present-tense** and say what the thing is. A feat's doc is its
   `index.md`; when you change a feat, update its doc and its `updated`.
   No tool sees a doc's tense or its `updated`; review holds both.

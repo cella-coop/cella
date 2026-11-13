@@ -1,6 +1,6 @@
 +++
 title = "Glossary"
-updated = 2026-11-11
+updated = 2026-11-13
 +++
 
 # Glossary
@@ -9,23 +9,33 @@ updated = 2026-11-11
 
 | Term | Meaning |
 |---|---|
-| **app** | a root feat of the repository; `org` is the cooperative workspace |
+| **app** | the root node of a tree; `org` is the cooperative workspace |
 | **cooperative workspace** | what cella is: the one place a member-governed organisation keeps its books, its work, its decisions and its members, on a server of its own (single-tenant) that federates with other scopes' servers by signed events; never called an ERP |
-| **feat** | a collection of things and the code that keeps it, named for the collection: `person`, `invoice`; imports no other feat; a feat may hold feats of its own, which inherit its core (**nested feat**) |
-| **graft** | a relationship between feats: its junction, model and handlers, named by the feats it joins in alphabetical order (`contact-invoice`), at the lowest node that holds them all |
-| **slice** | a feat or a graft, either one |
+| **axioms** | the six the architecture is built by, Nesting, Ancestry, Grafting, Ownership, Layering and Modularity, with their corollaries; every clause is labelled enforced, convention, accepted or proposed ([architecture](architecture.md#the-axioms)) |
+| **node** | a core, with the feats and grafts on it; an app is the root node. A feat that is no node is a **leaf** |
+| **lineage** | of a slice or a lib: its node and that node's ancestors; a slice or a lib depends only on the cores of its lineage |
+| **lib** | shared code with no data, in a core: `crypto`, `db`, `ui` |
+| **feat** | one domain, a collection of things and the code that keeps it, named for the collection: `person`, `invoice`; imports no other feat; a feat may itself be a node, its feats inheriting its core (**nested feat**) |
+| **graft** | the relationship between the feats it joins: its junction, model and handlers, named by those feats in alphabetical order (`contact-invoice`), in the lowest node that holds them all |
+| **slice** | a feat or a graft, in core or not; each owns a schema |
+| **call** | a query or a command a slice offers |
+| **query** | a call that reads; it may be written in SQL, as a view |
+| **command** | a call that writes; the notary logs it, with a power and a fold. The code still calls it an **action** |
+| **api** | a slice's calls |
+| **contract** | what other slices may use of a slice: its models, its calls, its bindings and its published keys; it changes by expand, migrate, contract, never in place |
+| **module** | a manifest and the nodes, feats and grafts it ships; each co-op chooses the modules its tree is composed of |
 | **slice test** | a test of exactly one slice, in its package's `_tests/`, run by `cella test slice` on a database holding only that slice's part of the tree |
 | **e2e test** | a scenario across slices, in an app root's `_e2e/`, run by `cella test e2e` on a seeded mock co-op |
 | **analytical contract** | a slice's `sql/analytics.sql`: the views it agrees to share with the analytics shell, which reads them as `cella_analytics`, the role granted those views and nothing else |
 | **analytics shell** | the DuckDB 2.0 server per scope that attaches its database read-only as `cella_analytics`, serves it on localhost behind a token, and runs every report; `cella analytics` runs it |
 | **analytics port** | `core/analytics`: a report definition checked against the views the slices publish, and the shell's implementation of it, which runs each report on one snapshot stamped with the log's head |
 | **increment** | a chunk of build work; never a slice |
-| **shell** | the org app's SvelteKit root, `apps/org/ts`, which mounts every slice's collections and pages; it holds the routes and no feature of its own |
+| **shell** | an entry point outside the tree that imports every slice and serves its calls: the web shell, the org app's SvelteKit root, `apps/org/ts`, which mounts every slice's collections and pages and holds the routes and no feature of its own; the cli shell; the analytics shell |
 | **inbox** | what waits on the acting person, each ask linking to where it is done: stances, approvals, an invitation, meetings to answer, mentions |
 | **home** | the sidebar's group above the sections, the Inbox and Activity; `/` lands on the Inbox, and the co-op's dashboard of pinned widgets is retired |
 | **collection** | what a feat holds, as the shell lists it, one route each (`/invoices`); a graft extends the collections of the feats it joins |
 | **state class** | a client's state, `hooks/<Name>State.svelte.ts`, reached through its `use<Name>` hook from context; components hold none of their own |
-| **core** | a node's shared libraries, inherited by its feats and grafts; org's core holds `actions`, `circle` (the circles, roles, tenures, seats and mandates every feat builds on), `person` (the people, their devices, the keyring, the rights and the inbox, which every feat may name), `crypto`, `log`, `keystore`, `db`, `sign`, `guards`, `ui`, the policy register and the notary |
+| **core** | a node's libs, core feats and core grafts, inherited by its feats and grafts and never removed; no core feat uses another, and a **core graft** joins those that meet (`circle-policy`); org's core holds `actions`, `circle` (the circles, roles, tenures, seats and mandates every feat builds on), `person` (the people, their devices, the keyring, the rights and the inbox, which every feat may name), `crypto`, `log`, `keystore`, `db`, `sign`, `guards`, `ui`, the policy register and the notary |
 | **custom feat** | a co-op's own feat with its own schema, enabled by motion: how cella is extended |
 | **subsidiarity** | a guard lives at the lowest level that owns it: a feat, a graft, or a core |
 | **scope** | the unit of ownership: a co-op, a joint circle of co-ops or a federation, with its own server, database, log and notary |
@@ -41,7 +51,7 @@ updated = 2026-11-11
 | **client** | a contact the co-op bills: a role the contact holds, at a stage of its lifecycle (lead, active, inactive), never a collection or a kind of its own; only a client is linked to an invoice or a project ([contact](../../apps/org/feats/contact/index.md#the-client-role)) |
 | **notary** | the scope's office every attempt passes through: it runs the guards and alone writes the log; software with no legal force; the `cella` Postgres extension, a layer of org's core under every feat, not a feat |
 | **guard** | a check the notary runs on an attempt before it takes effect: does the actor hold a mandate, does it follow the rules, was the motion that carries it decided properly, is it sound in itself (a closed month, not one's own approval); SQL in its owner's schema, registered in `cella.guard`, run as `cella_guards` |
-| **action** | one change to the records, voting and closing included: an actor signs an attempt, or a passed motion carries it, signed by whoever closed it, and every attempt passes the guards before it takes effect; declared by its id, `<feat>:<entity>:<verb>`, with its label and what it needs in its feat's `models/actions.ts` |
+| **action** | the code's name for a command, kept until the layout stream renames it: one change to the records, voting and closing included: an actor signs an attempt, or a passed motion carries it, signed by whoever closed it, and every attempt passes the guards before it takes effect; declared by its id, `<feat>:<entity>:<verb>`, with its label and what it needs in its feat's `models/actions.ts` |
 | **attempt** | an action as signed and sent, before its guards rule on it |
 | **actor** | whoever signs: a person, an agent or a service, by their address; only people hold rights, and by default only people vote |
 | **agent** | an AI as an actor; named and not built: it holds only limited, termed mandates a motion can revoke, someone is answerable for it, and its seat brings no participant role unless a procedure says so |

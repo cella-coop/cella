@@ -16,8 +16,8 @@ import type { Look, Preset, Shift, Widget } from './query.ts'
 export type Group = 'home' | 'governance' | 'office' | 'work' | 'payments' | 'ledger' | 'equity' | 'platform'
 
 // A `person` is an address, shown as the person's chip: their name, the
-// address on hover.
-export type Kind = 'text' | 'title' | 'mono' | 'money' | 'date' | 'number' | 'badge' | 'person'
+// address on hover; a `circle` is a circle's id, shown as its name.
+export type Kind = 'text' | 'title' | 'mono' | 'money' | 'date' | 'number' | 'badge' | 'person' | 'circle'
 
 export type Tone = 'neutral' | 'accent' | 'positive' | 'negative' | 'warning'
 

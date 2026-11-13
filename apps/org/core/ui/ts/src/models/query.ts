@@ -8,7 +8,9 @@ import { spans, type Span } from './calendar.ts'
 // known operations. Plain JSON, so a configuration can move from a
 // viewer's address bar into a member's or a circle's preferences.
 
-export type Type = 'number' | 'money' | 'date' | 'enum' | 'text'
+// A person's field holds their address and a circle's its id, each a type
+// of its own, never text, so a view filters by who or which circle.
+export type Type = 'number' | 'money' | 'date' | 'enum' | 'person' | 'circle' | 'text'
 
 export interface Field {
   key: string
@@ -17,7 +19,7 @@ export interface Field {
   value: (row: any) => unknown
 }
 
-const types: Partial<Record<Kind, Type>> = { money: 'money', number: 'number', date: 'date', badge: 'enum' }
+const types: Partial<Record<Kind, Type>> = { money: 'money', number: 'number', date: 'date', badge: 'enum', person: 'person', circle: 'circle' }
 
 export const fields = (columns: Column[]): Field[] =>
   columns.map((c) => ({ key: c.key, label: c.label, type: (c.kind && types[c.kind]) ?? 'text', value: c.value }))
@@ -33,9 +35,10 @@ export interface Measure {
   field?: string
 }
 
-// A condition on a row: an enumeration among some of its values, or a date
-// within the month or the year of the scope's day; the server tests it in
-// SQL, on the value the row holds under the field's key.
+// A condition on a row: a field among some of its values, whatever its
+// type, or a date within the month or the year of the scope's day; the
+// server tests it in SQL, on the value the row holds under the field's
+// key.
 export type Where = { field: string; is: string[] } | { field: string; within: 'month' | 'year' }
 
 export interface Kpi {
@@ -78,21 +81,24 @@ export function where(x: unknown, fs: Field[]): Where {
     throw new Error('a condition is an object')
   }
   const f = field(fs, x.field, 'a condition')
-  if (f.type === 'enum') {
-    const is = x.is
-    if (!Array.isArray(is) || is.length === 0 || is.length > limits.values || !is.every((v) => typeof v === 'string' && v.length <= limits.value)) {
-      throw new Error(`a condition on ${f.key} lists the values it keeps`)
-    }
-    return { field: f.key, is: [...is] }
-  }
   if (f.type === 'date') {
     if (x.within !== 'month' && x.within !== 'year') {
       throw new Error(`a condition on ${f.key} keeps the current month or year`)
     }
     return { field: f.key, within: x.within }
   }
-  throw new Error(`${f.key} is ${f.type}: a condition is on an enumeration or a date`)
+  const is = x.is
+  if (!Array.isArray(is) || is.length === 0 || is.length > limits.values || !is.every((v) => typeof v === 'string' && v.length <= limits.value)) {
+    throw new Error(`a condition on ${f.key} lists the values it keeps`)
+  }
+  return { field: f.key, is: [...is] }
 }
+
+// Whether a view's Filter offers a field: a date, or a field holding more
+// than one value and at most `limits.values` across the collection's rows,
+// `held` its values as the server read them, none where it holds more.
+export const filtering = (f: Field, held: string[] | undefined) =>
+  f.type === 'date' || ((held?.length ?? 0) > 1 && (held?.length ?? 0) <= limits.values)
 
 export const wheres = (x: unknown, fs: Field[]): Where[] => {
   if (x === undefined) {

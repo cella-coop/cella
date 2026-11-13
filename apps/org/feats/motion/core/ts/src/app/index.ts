@@ -21,7 +21,7 @@ export const app: App = {
         columns: [
           { key: 'title', label: 'Motion', kind: 'title', role: 'title', value: (d: Motion) => d.title },
           { key: 'id', label: 'Id', kind: 'mono', role: 'sub', value: (d: Motion) => d.id },
-          { key: 'circleName', label: 'Circle', role: 'meta', value: (d: Motion) => d.circleName },
+          { key: 'circle', label: 'Circle', kind: 'circle', role: 'meta', value: (d: Motion) => d.circle },
           { key: 'method', label: 'Method', role: 'hidden', value: (d: Motion) => d.method },
           { key: 'procedure', label: 'Procedure', kind: 'badge', role: 'hidden', value: (d: Motion) => d.procedure },
           { key: 'deadline', label: 'Deadline', kind: 'date', role: 'meta', value: (d: Motion) => d.deadline },

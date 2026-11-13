@@ -1,6 +1,6 @@
 +++
 title = "Circle"
-updated = 2026-11-13
+updated = 2026-11-14
 +++
 
 Core's circles: the co-op's structure and the authority that flows
@@ -981,7 +981,9 @@ it and whether it stands, each linking to its mandate's page, which
 reads its policy's sentence, circle-policy's to give.
 
 The `mandates` collection lists every mandate, by power, with its
-grantee, cap, scope, issuer and whether it stands on the verdict date.
+grantee, cap, scope, issuer and whether it stands on the verdict date;
+its issuer is a column of the `circle` kind, the circle's id drawn as
+its name, so a view filters the mandates by the circle that issued them.
 Every page that shows a mandate says it in the same words: a role, a
 circle, an issuer and the circle a scope covers by name, never by id; a
 cap as `cap` in `bindings/words.ts` says it, "up to 1 200,00 € a write" or

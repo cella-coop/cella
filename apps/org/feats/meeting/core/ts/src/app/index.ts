@@ -25,7 +25,7 @@ export const app: App = {
         create: Create,
         columns: [
           { key: 'title', label: 'Meeting', kind: 'title', role: 'title', value: (m: Meeting) => m.title },
-          { key: 'circle', label: 'Circle', kind: 'badge', role: 'sub', value: (m: Meeting) => m.circle },
+          { key: 'circle', label: 'Circle', kind: 'circle', role: 'sub', value: (m: Meeting) => m.circle },
           { key: 'at', label: 'When', kind: 'date', role: 'meta', value: (m: Meeting) => m.at },
           { key: 'place', label: 'Place', role: 'hidden', value: (m: Meeting) => m.place },
           { key: 'items', label: 'Items', kind: 'number', role: 'hidden', value: (m: Meeting) => m.items },

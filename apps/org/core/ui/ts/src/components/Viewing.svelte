@@ -11,18 +11,21 @@
   import SortDescending from 'phosphor-svelte/lib/SortDescending'
   import type { Column } from '../models/view.ts'
   import { spans } from '../models/calendar.ts'
-  import { arranged, type Custom, type Field, type Layout, type Result, type Spec, type Where, type Widget } from '../models/query.ts'
+  import { show } from '../models/format.ts'
+  import { arranged, filtering, type Custom, type Field, type Layout, type Result, type Spec, type Where, type Widget } from '../models/query.ts'
   import { reorder } from '../models/drag.ts'
   import { marks } from '../marks.ts'
   import { sortable } from '../attachments/sortable.ts'
   import { useCollection } from '../hooks/useCollection.ts'
   import { useDrag } from '../hooks/useDrag.ts'
+  import { useShell } from '../hooks/useShell.ts'
   import { useViews } from '../hooks/useViews.ts'
   import Button from './Button.svelte'
   import Card from './Card.svelte'
   import DragHandle from './DragHandle.svelte'
   import DropIndicator from './DropIndicator.svelte'
   import Icon from './Icon.svelte'
+  import Person from './Person.svelte'
   import Popover from './Popover.svelte'
   import Widgets from './Widgets.svelte'
 
@@ -59,6 +62,8 @@
     fields: Field[]
     columns: Column[]
     titled: Column
+    // Each field's values over the rows, an enumeration's all of them and
+    // another's where it holds a handful, what Filter offers.
     values: Record<string, string[]>
     dashboard: { custom: boolean; widgets: Widget[]; results: Result[]; errors: string[] } | null
     // The fields a gallery's or a board's cards show, and the board's
@@ -80,6 +85,7 @@
   const id = $props.id()
   const state = useCollection()
   const views = useViews(() => name)
+  const shell = useShell()
 
   const groups = $derived(fields.filter((f) => f.type === 'enum'))
   const dates = $derived(fields.filter((f) => f.type === 'date'))
@@ -115,10 +121,11 @@
   })
   const descending = $derived(spec.sort?.dir === 'desc')
 
-  // What a condition may be put on: an enumeration with a choice of
-  // values, or a date; each once.
+  // What a condition may be put on: a date, or any field with a handful
+  // of values to choose from, a person's and a circle's among them; each
+  // once.
   const conditioned = $derived([...spec.where.map((w) => w.field), ...(state.adding && !spec.where.some((w) => w.field === state.adding) ? [state.adding] : [])])
-  const offered = $derived(fields.filter((f) => (f.type === 'date' || (f.type === 'enum' && (values[f.key]?.length ?? 0) > 1)) && !conditioned.includes(f.key)))
+  const offered = $derived(fields.filter((f) => filtering(f, values[f.key]) && !conditioned.includes(f.key)))
   const typed = (key: string) => fields.find((f) => f.key === key)
   const conditions = $derived(conditioned.map(typed).filter((f) => f !== undefined))
 
@@ -145,9 +152,15 @@
     const w = on(key)
     return w && 'within' in w ? w.within : ''
   }
+  // A value as a condition names it: a person and a circle by name, an
+  // amount of money in euros, a date as a day, else as the row holds it.
+  const named = (key: string, v: string) => {
+    const t = typed(key)?.type
+    return t === 'person' ? (shell.name(v) ?? v) : t === 'circle' ? (shell.circle(v) ?? v) : show(v, t)
+  }
   const said = (key: string) => {
     const w = on(key)
-    return !w ? 'any' : 'is' in w ? w.is.join(', ') : w.within === 'month' ? 'this month' : 'this year'
+    return !w ? 'any' : 'is' in w ? w.is.map((v) => named(key, v)).join(', ') : w.within === 'month' ? 'this month' : 'this year'
   }
 
   // A condition added keeps its chip while the address catches up; one
@@ -166,8 +179,8 @@
     where(key, next.length ? { field: key, is: next } : undefined)
   }
 
-  // A field chosen to filter on: a date keeps this month at once, an
-  // enumeration opens its chip's popover to pick what it keeps.
+  // A field chosen to filter on: a date keeps this month at once, any
+  // other opens its chip's popover to pick the values it keeps.
   function add(key: string) {
     if (typed(key)?.type === 'date') {
       where(key, { field: key, within: 'month' })
@@ -307,8 +320,8 @@
               {/each}
             {:else}
               {#each values[f.key] ?? [] as v (v)}
-                <button role="menuitemcheckbox" class="item" aria-checked={kept(f.key, v)} onclick={() => toggle(f.key, v)}>
-                  <span class="said">{v}</span>{#if kept(f.key, v)}<Icon icon={Check} />{/if}
+                <button role="menuitemcheckbox" class="item" aria-checked={kept(f.key, v)} data-value={v} onclick={() => toggle(f.key, v)}>
+                  {#if f.type === 'person'}<Person address={v} />{:else}<span class="said">{named(f.key, v)}</span>{/if}{#if kept(f.key, v)}<Icon icon={Check} />{/if}
                 </button>
               {/each}
             {/if}

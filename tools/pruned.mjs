@@ -38,7 +38,7 @@ await db.connect()
 await db.query(`ALTER DATABASE ${db.escapeIdentifier(db.database)} SET cella.scope = ${db.escapeLiteral(scope)}`)
 await db.query('BEGIN')
 await db.query('SET LOCAL cella.unbound = on')
-await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'General assembly', true)`)
+await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'Assembly', true)`)
 await db.query('INSERT INTO person.person (circle, address, name) VALUES ($1, $2, $3)', ['ag', person.address, person.name])
 await db.query(`INSERT INTO person.device (circle, key, address, label, enrolled) VALUES ('ag', decode($1, 'hex'), $2, $3, current_date)`, [
   device.key,

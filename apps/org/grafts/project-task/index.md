@@ -1,6 +1,6 @@
 +++
 title = "project-task"
-updated = 2026-11-09
+updated = 2026-11-13
 +++
 
 Which project a task is in, and which of its milestones. A task in no
@@ -15,6 +15,12 @@ project stands alone, which is not invalid. Declared by `task`.
   refuses a task or a project that does not exist, a project that is
   archived, or a milestone the project does not have (SQLSTATE `09000`).
 - `project_task.count`: each project's tasks and how many are done. It reads as its reader.
+- `project_task.tasks`, a query ([queries in
+  SQL](../../../../_corpus/doc/architecture.md#queries-in-sql)): each
+  filed task with its project, title, status, priority, due day, its
+  milestone's title and `n`, its place in its project's list, open ones
+  first, then by priority, due day and id. It reads as its reader, so a
+  reader reads only the tasks whose circle they read.
 
 The app role may select, insert and update; the guards role may select.
 
@@ -51,8 +57,9 @@ the task's. A creation that names no project writes nothing here.
 Adds to each task its project's title, a field the tasks' board shows on
 its cards and may group by; to a task's page, its project and milestone
 and the form that files it. On a project's page it adds the Tasks tab:
-the project's tasks, open ones first, and a new task already in the
-project, under one of its open milestones if chosen.
+the project's tasks, open ones first, read through the query `tasks` as
+the shell serves it, and a new task already in the project, under one of
+its open milestones if chosen.
 
 ## Import
 

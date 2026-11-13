@@ -6,6 +6,7 @@ export * from './slice.ts'
 export * from './import.ts'
 export * from './read.ts'
 export * from './schema.ts'
+export * from './query.ts'
 
 // The one thing a handler needs of a connection; a `pg` Client or pool
 // client fits it.

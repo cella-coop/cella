@@ -16,7 +16,9 @@
 // seven are; through the reads the shell composes, Inès, who sees the
 // assembly's motion to adopt Coordination's rate card and not the card,
 // reads neither the version's id nor its hash, and no claim on an
-// expense she may not read nor its claimant's name; a saved report reads for
+// expense she may not read nor its claimant's name; a query a slice
+// writes in SQL reads as its reader, so she reads the tasks of Web's
+// project and none of Marketing's through it; a saved report reads for
 // whoever runs it, through the analytics shell;
 // and a server logging in as the superuser reads as the app role all the
 // same. Run by `cella test e2e reading`.
@@ -33,6 +35,8 @@ import { claim, claims } from '@cella/org-graft-expense-membership/api'
 import { reading as opened, type Reading } from './port.ts'
 import { Shell } from './serve.ts'
 import { reader, sign } from './lanterne.ts'
+import { ask, Unfit } from '@cella/org-db'
+import { queried, slices } from '../src/lib/server/slices.ts'
 
 const su = new pg.Client()
 const shell = new Shell(su)
@@ -259,7 +263,7 @@ test('a view the app reads reads as its reader: Inès, in Web and no member, and
     'employment_membership_motion.admission', 'expense_membership.claim', 'invoice.standing', 'invoice.taxed',
     'meeting_membership.quorum', 'meeting_membership.roll', 'membership_motion.action', 'membership_motion.mention',
     'membership_motion.seating', 'membership_project.pot', 'motion.circle_action', 'motion_patronage.approval',
-    'project.progress', 'project_task.count',
+    'project.progress', 'project_task.count', 'project_task.tasks',
   ]
   for (const view of views) {
     assert.deepEqual(await reading(paul, `SELECT * FROM ${view}`), [], `Paul reads nothing through ${view}`)
@@ -291,6 +295,45 @@ test('every view the app role may read reads as its reader, or is declared share
     ],
     'the statements\' spans, a project\'s spend, invoicing and burn, a member\'s capital and a worker\'s two shares of the surplus',
   )
+})
+
+test('a query written in SQL reads as its reader: Inès reads the tasks of Web\'s project and none of Marketing\'s, Chloé both by open books, in the order the project\'s page lists them, and Paul nothing through any query', async () => {
+  const tasks = queried('project-task', 'tasks')
+  assert.ok(tasks, 'the graft declares a project\'s tasks as a query')
+  const through = async (actor: string, project: string) => {
+    await app.query(`SELECT set_config('cella.actor', $1, false)`, [actor])
+    return (await ask(app, tasks, { project })).map((t) => (t as { id: string }).id)
+  }
+  // What each project's page listed before the query, read whole.
+  const listed = async (project: string, circles: string[] | null = null) =>
+    (
+      await su.query<{ id: string }>(
+        `SELECT t.id FROM project_task.filing f JOIN task.task t ON t.id = f.task
+         WHERE f.project = $1 AND ($2::text[] IS NULL OR t.circle = ANY ($2))
+         ORDER BY t.status = 'done', array_position(ARRAY['urgent', 'high', 'normal', 'low'], t.priority), t.due NULLS LAST, t.id`,
+        [project, circles],
+      )
+    ).rows.map((r) => r.id)
+
+  const web = await through(ines, 'halles-shop')
+  assert.ok(web.includes('t-6'), 'Inès, in Web, reads the tasks of Web\'s shop')
+  assert.deepEqual(web, await listed('halles-shop', ['web', 'ag']), 'those of her circle and the assembly\'s, in the page\'s order')
+  assert.ok((await listed('nuvola-retainer')).length > 0, 'Marketing\'s retainer has tasks')
+  assert.deepEqual(await through(ines, 'nuvola-retainer'), [], 'and she reads none of Marketing\'s, through the query as on the tasks\' page')
+  for (const project of ['halles-shop', 'nuvola-retainer']) {
+    assert.deepEqual(await through(chloe, project), await listed(project), `Chloé, a member in Marketing, reads every task of ${project} by open books, in the page's order`)
+  }
+
+  // Every query a slice declares, read whole as Paul, who left.
+  const declared = slices.flatMap((s) => Object.values(s.queries ?? {}))
+  assert.ok(declared.length > 0)
+  for (const q of declared) {
+    await app.query(`SELECT set_config('cella.actor', $1, false)`, [paul])
+    assert.deepEqual((await app.query(`SELECT ${q.columns.join(', ')} FROM ${q.view}`)).rows, [], `Paul reads nothing through ${q.view}`)
+  }
+  await assert.rejects(ask(app, tasks, {}), Unfit, 'an argument naming no project is refused before it reads')
+  await assert.rejects(ask(app, tasks, { project: 'halles-shop', circle: 'web' }), Unfit, 'and one naming what the query does not take')
+  await app.query(`SELECT set_config('cella.actor', '', false)`)
 })
 
 test('through the reads the shell composes, a reader who sees a motion but not the version it adopts reads neither its id nor its hash, and one who may not read an expense reads neither it nor whose it is', async () => {

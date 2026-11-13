@@ -1,4 +1,4 @@
-import type { Action, Collection, Deps, Done, Extension, Joining, Reaction, SettingsPage, Slice, Source } from '@cella/org-db'
+import { malformed, type Action, type Collection, type Deps, type Done, type Extension, type Joining, type Query, type Reaction, type SettingsPage, type Slice, type Source } from '@cella/org-db'
 import type { Permission } from '@cella/org-actions'
 import { slice as log } from '@cella/org-log/api'
 import { slice as person } from '@cella/org-person/api'
@@ -177,3 +177,19 @@ if (joins.length > 1) {
   throw new Error(`${joins.map((s) => s.name).join(' and ')} both serve invitations`)
 }
 export const joining: Joining | undefined = joins[0]?.joins
+
+// The queries the slices write in SQL, by slice and name, each a view of
+// its slice's own schema, its names plain (`malformed`), refused as the
+// shell starts otherwise.
+const queries = new Map<string, Query>()
+for (const s of slices) {
+  for (const [name, q] of Object.entries(s.queries ?? {})) {
+    const wrong = malformed(q, s.name.split('/')[0].replaceAll('-', '_'))
+    if (wrong) {
+      throw new Error(`${s.name}'s query ${name}: ${wrong}`)
+    }
+    queries.set(`${s.name}/${name}`, q)
+  }
+}
+
+export const queried = (slice: string, name: string) => queries.get(`${slice}/${name}`)

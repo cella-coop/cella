@@ -1,10 +1,10 @@
-import { counts, ordered, read, texts, today, type Db, type Source } from '@cella/org-db'
+import { ask as asking, counts, ordered, read, texts, today, type Db, type Source } from '@cella/org-db'
 import { anchor, defaults, fields, period, resolve, wheres, widgets, type Field, type Spec } from '@cella/org-ui/models'
 import { named } from '@cella/org-log/api'
 import { people, person } from '@cella/org-person/api'
 import { lensed, lensing } from '#lib/server/lens.ts'
 import { drawn, keeping, run } from '#lib/server/reads.ts'
-import { mounted, slices, source } from '#lib/server/slices.ts'
+import { mounted, queried, slices, source } from '#lib/server/slices.ts'
 import { columns, counted, dashboard, look, views } from '#lib/slices.ts'
 
 // The shell's queries over the slices' reads, as the slice registry
@@ -179,5 +179,20 @@ export const shell = {
       circles: lensed.circles,
       lens: lensed.lens,
     }
+  },
+}
+
+// A query a slice writes in SQL, by the slice and its name, its own
+// argument given as an address's query string (`search`), which the
+// query's schema validates: its rows as the reader reads them through its
+// view. One no slice declares is none.
+export const ask = {
+  schema: texts(['slice', 'name', 'search']),
+  async run(db: Db, { slice, name, search }: { slice: string; name: string; search: string }) {
+    const q = queried(slice, name)
+    if (!q) {
+      throw new Missing(`${slice} has no query ${name}`)
+    }
+    return asking(db, q, Object.fromEntries(new URLSearchParams(search)))
   },
 }

@@ -1,6 +1,6 @@
 +++
 title = "Db"
-updated = 2026-11-11
+updated = 2026-11-13
 +++
 
 The shape every write handler takes (`@cella/org-db`). `write` runs one write in one transaction. First the actor's device signs the write's request, the handler's input made plain (`@cella/org-sign`), as the member's device does before sending, with no connection held, since a signature may wait on a person; then, on a connection borrowed for the transaction alone (`Deps.borrow`), in the transaction, the actor set as its reader and the transaction marked a write's (`cella.actor`, `cella.writing`, both local to it, so the row-level policies let the state change read the whole state, as the guards do), the handler's state change, its deferred constraint triggers made immediate (`SET CONSTRAINTS ALL IMMEDIATE`, so an unbalanced entry refuses before the verdict, not at commit), then `cella.submit(op, payload, actor, { request, device, salt, nonce, sig })`, then its effects, then commit, and the connection goes back. Its effects are the reactions to it (`Deps.react`, the shell's, which runs every slice's `on`): each write a reaction makes under `Deps.effect` is an effect rather than a decision, signed by no one, in a savepoint of the decision's transaction, its state then `cella.follow(op, payload, cause)` citing the entry it follows, then the reactions to it in turn, five deep at most ([effects](../notary/index.md#effects)). A refused effect rolls back to its savepoint and is recorded forgone by `cella.forgo`, its outcome `Refused` marked forgone; an effect it requires (`cella.follows`) refused forgoes it with every effect after it, and refuses a decision whole. The decision and its effects commit together or not at all. A payload marks each personal value it carries with `personal(field, subject, value)` and an erasure with `erasure(subject, classes?)`, which the notary turns into commitments and carries out ([the vault](../notary/index.md#the-vault)); it never carries a personal value unmarked. A null value is no personal data and stays null, as a founding carries one, so a field a write clears folds as null, never as a commitment to null. A refusal, SQLSTATE `09000` from the notary's signature check, a guard or a feat's trigger, rolls the transaction back and returns `Refused`, numbered by the last verdict it was judged after; any other error rolls back and is thrown. It is the one package whose TypeScript calls `cella.begin`, `cella.submit` and `cella.follow`, and `cella check feats` refuses a call of them in any other ([writes stay home](../../../../_corpus/doc/architecture.md#writes-stay-home)). Every write takes this path, whatever its label: until rung 2 a confluent or bounded write still meets the server's guards and triggers, so it too may return `Refused` (`Outcome` in `@cella/org-actions`); only an ordered write may also be `Pending`.
@@ -42,3 +42,15 @@ which every transport validates by before the call runs, as SvelteKit's
 remote functions take it: `texts(keys, most?)`, an object of exactly
 those texts, each at most `most` characters, 4096 unless it says, its
 issues naming each key that is missing, too long or not asked for.
+
+`src/query.ts` runs a query a slice writes in SQL, a view of its own
+schema that reads as its reader ([queries in
+SQL](../../../../_corpus/doc/architecture.md#queries-in-sql)). A `Query`
+names its view, the columns its argument holds (`by`), each a text
+matched by equality, the columns of its rows and those they are ordered
+by; a slice declares its own in `Slice.queries`. `ask(db, query, arg)`
+validates the argument by `texts` of `by`, throwing `Unfit` with its
+issues where it fails, and reads `SELECT <columns> FROM <view> WHERE …
+ORDER BY …` on `db`, as its reader. `malformed(query, schema)` says what
+is wrong with its names, a view outside `schema` or a column that is not
+a plain name, which the shell's registry refuses as it starts.

@@ -296,10 +296,13 @@ contract; only shells import its app.**
   slice's UI is its own, mounted through `./api` and `./app`; client
   code imports no server layer.
 - *accepted*: a slice's api is its calls. A call is a query or a
-  command, framework-free and validated by a Standard Schema; a query
-  may be written in SQL, as a view. Built for every read the web shell
-  makes, which `ui-check` holds by refusing a route's `load`
-  (`ui.test.mjs`; [remote functions](#remote-functions)).
+  command, framework-free and validated by a Standard Schema. Built for
+  every read the web shell makes, which `ui-check` holds by refusing a
+  route's `load` (`ui.test.mjs`; [remote functions](#remote-functions)).
+- *enforced* (`sql-check`, `views.test.mjs`; the shell's registry): a
+  query may be written in SQL, as a view in its slice's own schema that
+  reads as its reader; the slice declares it as a call, and the web
+  shell serves it as any query ([queries in SQL](#queries-in-sql)).
 - *proposed*: a slice declares sockets, named and typed slots, in its
   bindings; a graft or another module fills one with a plug from its own
   app. A graft shows itself only so, never with pages of its own.
@@ -1641,7 +1644,8 @@ Only a shell imports a slice's `./app`.
 The web shell's remote functions are one module a route family,
 `src/lib/remote/<family>.remote.ts` (`collection`, `item`, `settings`,
 `session`), each
-serving the calls of the slices its routes mount. A
+serving the calls of the slices its routes mount, and `query`, serving
+every query a slice writes in SQL ([queries in SQL](#queries-in-sql)). A
 query is served as a `query`: a collection's rows a page at a time
 with its counts and its values, its `about`, the search's index; what
 the shell around every page reads, the scope, who is signed in, the
@@ -1798,6 +1802,53 @@ server of a route is a `+server.ts` endpoint (an item's stream and
 content, the session's challenge, the search, the theme). Each refusal has a negative test in
 `tools/_tests/ui.test.mjs`, a source that holds the form and is refused
 by name.
+
+### Queries in SQL
+
+A query may be written in SQL, as a view. It is a view in its slice's
+own schema, made by the slice's migrations in its `sql/` directory, that
+reads only what the slice's SQL may read ([SQL](#sql)) and reads as its
+reader, `WITH (security_invoker = true)`, so the row-level policies of
+every table it reads decide its rows as they decide a page's; its
+comment says it is one, `'query: <what it reads>'`, and the app role is
+granted SELECT on it. The slice declares it among its calls, in its
+server slice's `queries` (`Query` in `@cella/org-db`): its name, the
+view, the columns its argument names, each a text matched by equality,
+the columns of its rows, and those they are ordered by. `ask` in
+`@cella/org-db` runs one, framework-free: it validates the argument by
+the query's schema, `texts` of the columns it names, and reads `SELECT
+<columns> FROM <view> WHERE <column> = $1 … ORDER BY <order>` on the
+connection it is lent, so a slice's own read, as a graft's data on an
+item, asks it as the shell does.
+
+The web shell serves every declared query as the `query` remote
+function `ask`, in `src/lib/remote/query.remote.ts`: its argument names
+the slice, the query and the query's own argument, validated first by
+the call's schema and then by the query's, and it runs as the session's
+person through `using`, as every read does (`ask` in
+`#lib/server/calls.ts`); a slice or a query no slice declares is a 404,
+and an argument the query's schema refuses a 400.
+
+A project's tasks are read so: `project_task.tasks` joins the graft's
+filings to the task feat's tasks and the project feat's milestones, each
+task with its milestone's title and its place in its project's list,
+open ones first, and the graft's query `tasks` reads it by `project`;
+the project's page reads it through `ask`, in the graft's data on the
+item ([project-task](../../apps/org/grafts/project-task/index.md#shell)).
+A reader reads only the tasks whose circle they read, as on the tasks'
+own page.
+
+`cella check feats` refuses what it can see: `tools/sql-check.mjs`
+refuses a view commented as a query that reads as its owner, whatever
+else it declares (`unshared`), and a query's view that reads past its
+slice's reach, as it refuses any of the slice's SQL, each by a negative
+test in `tools/_tests/views.test.mjs`. The shell's registry refuses, as
+it starts, a query whose view is outside its slice's own schema, or
+whose columns are not plain names. That the view a query names is
+commented a query, and has the columns it declares, no tool sees before
+it is read: `ask` names each column, so one the view lacks fails the
+read, and the reading e2e reads every declared query as a person who
+left, who reads no row through any.
 
 ## The shell
 

@@ -5,7 +5,8 @@
 // is, or keeps its rows by its reader's test. Its options are read through
 // a later ALTER VIEW or CREATE OR REPLACE, its comment through both; a
 // contract's views, read as their owner by design, are the contract
-// rule's.
+// rule's. A query, a view commented 'query: …', reads as its reader
+// whatever else its comment says, and reads only what its slice may.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -126,4 +127,22 @@ test('a view core\'s migrations make keeps the same rule, since the app role rea
   } finally {
     rmSync(repo, { recursive: true, force: true })
   }
+})
+
+test('a query written in SQL reads as its reader, and reads only what its slice may', async () => {
+  const query = (options = ' WITH (security_invoker = true)', from = 'ledger.line l') =>
+    `CREATE VIEW ledger.lines${options} AS SELECT l.member, l.account, l.amount FROM ${from};\nCOMMENT ON VIEW ledger.lines IS 'query: each line, for its reader';`
+  assert.equal(await check(query()), '')
+  assert.match(await check(query('')), /ledger.lines is a query and reads as its owner, past every row-level policy: a query reads as its reader/)
+  assert.match(
+    await check(`${query()}\nALTER VIEW ledger.lines RESET (security_invoker);`),
+    /ledger.lines is a query and reads as its owner/,
+    'a query whose option is reset reads as its owner',
+  )
+  assert.match(
+    await check(`${query('')}\nCOMMENT ON VIEW ledger.lines IS 'query: audience: shared by account: the totals';`),
+    /ledger.lines is a query and reads as its owner/,
+    'a query that also names an audience is still a query',
+  )
+  assert.match(await check(query(undefined, 'bill.bill l')), /reads bill.bill: bill is outside/, 'a query past its slice\'s reach is refused as any of its SQL')
 })

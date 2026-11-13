@@ -155,6 +155,25 @@ export function unfolded(ops, folds) {
     .map((o) => `${o.file}: ${o.op} has no fold: register how its entry applies to the state before it, by cella.lets_fold in its slice's sql/`)
 }
 
+// Where a slice reacts to an op (`on`) that no row of `cella.follows` its
+// own SQL registers lets an effect follow: the notary refuses every
+// effect no row lets follow its cause. `sources` holds each of the
+// slice's files, `{ file, owner, text }`; `follows` the rows its SQL
+// registers by `cella.lets_follow`, as `found.follows`.
+export function unfollowed(sources, follows) {
+  const out = []
+  for (const { file, owner, text } of sources) {
+    for (const [, body] of text.matchAll(/\bon:\s*\{([^}]*)/g)) {
+      for (const [, cause] of body.matchAll(/'([a-z-]+:[a-z-]+:[a-z-]+)'\s*:/g)) {
+        if (!follows.some((f) => f.owner === owner && f.cause === cause)) {
+          out.push(`${file}: reacts to ${cause}, which no cella.lets_follow of ${owner}'s lets an effect follow`)
+        }
+      }
+    }
+  }
+  return out
+}
+
 // The powers a fixture's co-op grants: every mandate and right among the
 // policies its closed motions adopt, as the seed adopts them, to a role,
 // to a circle or to the people a right names, by the power its sentence

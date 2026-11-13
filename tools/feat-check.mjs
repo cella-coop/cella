@@ -50,7 +50,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve } from 'node:path'
 import { checkSql, placed, schemaName, undeclared, unowned, unread, definers, unshared } from './sql-check.mjs'
-import { agree, covered, declared, granted, mandates, unfolded } from './powers.mjs'
+import { agree, covered, declared, granted, mandates, unfolded, unfollowed } from './powers.mjs'
 import { checkUi } from './ui-check.mjs'
 import { refuse, scanTs } from './writes.mjs'
 
@@ -243,11 +243,6 @@ for (const [a, b] of edges) {
 const nodes = [...new Set(dirs.map(place).filter((p) => p && p.node).map((p) => p.node))]
 for (const node of nodes) {
   const kids = childrenOf(node)
-  for (const kid of kids) {
-    if (basename(kid).includes('-')) {
-      fail(`${kid}: a feat's name has no hyphen; hyphens join feats in a graft's name`)
-    }
-  }
   const gdir = join(repo, node, 'grafts')
   const present = existsSync(gdir) ? readdirSync(gdir) : []
   for (const g of present) {
@@ -282,12 +277,15 @@ for (const node of nodes) {
   }
 }
 
-// Each app: a feat's name is unique in it, at any depth, and every graft a
-// feat declares sits at some node of it.
+// Each app: a feat's name is unique in it, at any depth, and has no
+// hyphen, and every graft a feat declares sits at some node of it.
 const apps = existsSync(join(repo, 'apps')) ? readdirSync(join(repo, 'apps')).map((a) => join('apps', a)).filter(isNode) : []
 for (const app of apps) {
   const seen = new Map()
   for (const d of descendants(app)) {
+    if (basename(d).includes('-')) {
+      fail(`${d}: a feat's name has no hyphen; hyphens join feats in a graft's name`)
+    }
     seen.has(basename(d))
       ? fail(`${d}: a feat's name is unique in its app, and ${seen.get(basename(d))} holds it already`)
       : seen.set(basename(d), d)
@@ -458,21 +456,16 @@ if (sql) {
   }
   errors.push(...granted(ops, grants, found.stances))
   // Each op a slice reacts to (`on`) is one a row of `cella.follows` its
-  // own SQL registers lets an effect follow: the notary refuses every
-  // effect no row lets follow its cause.
+  // own SQL registers lets an effect follow.
+  const reacting = []
   for (const dir of byName.values()) {
     const p = place(dir)
     const owner = p?.kind === 'graft' ? p.name : p?.kind === 'core' ? basename(p.node) : null
     for (const file of owner ? sources(dir) : []) {
-      for (const [, body] of readFileSync(join(repo, file), 'utf8').matchAll(/\bon:\s*\{([^}]*)/g)) {
-        for (const [, cause] of body.matchAll(/'([a-z-]+:[a-z-]+:[a-z-]+)'\s*:/g)) {
-          if (!found.follows.some((f) => f.owner === owner && f.cause === cause)) {
-            fail(`${file}: reacts to ${cause}, which no cella.lets_follow of ${owner}'s lets an effect follow`)
-          }
-        }
-      }
+      reacting.push({ file, owner, text: readFileSync(join(repo, file), 'utf8') })
     }
   }
+  errors.push(...unfollowed(reacting, found.follows))
 }
 
 if (errors.length) {

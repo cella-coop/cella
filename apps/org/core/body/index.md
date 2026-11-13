@@ -1,6 +1,6 @@
 +++
 title = "Body"
-updated = 2026-11-12
+updated = 2026-11-14
 +++
 
 Core's body: free-form content as a Loro tree of blocks, its
@@ -108,7 +108,10 @@ again from Loro. Its parts:
   paragraph after the embed, made where there is none;
 - `Clipboard`: blocks as fragments, text as runs, both as plain text;
 - `SyncState`: the live sync of the draft the slice hands it, and the
-  draft's hash.
+  draft's hash;
+- `LiveState`: a record's body kept live over its session and saved by
+  this browser through the save write the slice hands it (`Live`, the
+  same without Svelte, on a clock of its own), and the body's hash.
 
 Blocks reorder by their grips with the UI core's `sortable`, by pointer
 or keyboard; where the slice anchors comments to quotes, the quotes are
@@ -125,21 +128,28 @@ listens on, and the editor knows nothing of where the bytes are kept.
 
 A record's body is edited live: the server joins each open body as one
 more Loro peer, in memory, merges what every editor sends and relays it
-to the others, and saves the merged document as a snapshot. The session
-is core body's (`./api`, `Session`), and it knows no feat: a feat that
-keeps bodies hands it, when its `./api` mounts, its kind (the collection
-its records are served under), how to read a record's circle and its
-saved body as the reader sees them, and its save action; the shell,
-which starts it, hands it its connections, membership's `may` and the
-scope's own deps a save is signed with. The session calls what it was
-handed and imports nothing.
+to the others; each editor's browser saves the merged document as a
+snapshot, signed by its device as every write is. The session is core
+body's (`./api`, `Session`), and it knows no feat: a feat that keeps
+bodies hands it, when its `./api` mounts, its kind (the collection its
+records are served under), how to read a record's circle and its saved
+body as the reader sees them, and the name of its save action; the
+shell, which starts it, hands it its connections and membership's
+`may`. The session calls what it was handed and imports nothing, and
+saves nothing itself, since the server signs with none
+([signatures](../../../../_corpus/doc/signatures.md)).
 
 - **Joining.** An editor opens `/<collection>/<record>/body/live`, a
   stream of server-sent events: `joined`, whether this peer may edit,
-  then an `update` holding all it lacks by the Loro version vector it
-  sends (`vv`), then each update merged, from any peer, its own too,
-  which Loro imports once. The first to open a body starts the session
-  from the saved snapshot, the next ones join it. Joining needs
+  its address, the name of the save action, the session's version
+  vector, the last save's and who contributed since; then an `update`
+  holding all it lacks by the Loro version vector it sends (`vv`), then
+  each update merged, from any peer, its own too, which Loro imports
+  once, with who contributed since the last save. The browser names its
+  Loro peer (`peer`), and the session names its person for that peer's
+  edits from then on; the first to claim a Loro peer keeps it. The first
+  to open a body starts the session from the saved snapshot, the next
+  ones join it, and the last to leave closes it. Joining needs
   `discuss` in the record's circle, asked of the membership feat's
   `may` as every power is; one who may read the record and not discuss
   it gets the body read-only, and one who reads no such record nothing.
@@ -154,25 +164,36 @@ handed and imports nothing.
   they sent while they held it stands, and the next save names them
   among its contributors. At a save, a writable peer that may no longer
   discuss the body is dropped, and any peer that no longer reads it.
-- **Saving.** The session saves through the feat's action: after a pause
-  of 3 seconds in the edits, every 30 seconds while editing goes on, and
-  when the last editor leaves. Each save is one entry the scope makes, as
-  the notary signs its receipts, never a member's device: it carries the
-  snapshot and the addresses of who contributed since the last save, and the
-  feat's fold sets the record's `body` column to it. A save with nothing
-  new is not made.
-- **A crash.** The updates since the last save are kept in a small
-  buffer beside the scope's state, a file a body, its first line the
-  snapshot they build on and then one line an update, its author and its
-  bytes, appended and flushed as each merges and cleared at each save; a
-  line a crash cut short is left out. A server that restarts replays it
-  into the session and saves at once (`recover`), so a crash loses at
-  most the update in flight. A save refused, or one that fails, keeps
-  its updates in the buffer and in the session, says why, and is tried
-  again after the next pause; a body whose recovery was refused carries
-  them into the session of the next to open it.
+- **Saving.** An editor's browser saves through the feat's save action,
+  signed by its device as a document's edits are: after a pause of 3
+  seconds in its edits, and when it leaves the body, the page's
+  unmounting or the tab's hiding. It posts its own edits to the session
+  first; the save carries the snapshot of the merged document as the
+  browser holds it, in its `snapshot` field, and the addresses
+  of who contributed since the last save, one `contributor` field each,
+  which the session tells each editor with the updates it relays, its
+  own person among them where it edited; the feat's fold sets the
+  record's `body` column to it. Then the browser posts `saved` to the
+  live address: the session reads the snapshot the record holds now, as
+  that editor reads it, counts from it who contributed since, and tells
+  every editor (`saved`), whose browser saves at its next pause where it
+  holds an edit the record does not. A save with nothing new since the
+  last save is not made, so of editors pausing together the first saves
+  and the rest find nothing new. A save refused, or one that fails,
+  keeps the edits in the session and in the browser, says why, and is
+  tried again after the browser's next pause.
+- **A crash.** The server keeps no buffer: what was merged since the
+  last save is held in the session and in each open editor's browser. A
+  server that restarts starts a body's session again from its saved
+  snapshot when the first editor rejoins; an editor's browser rejoins
+  with its version vector, posts the updates the session lacks, and
+  saves them at its next pause, so a crash of the server loses nothing
+  an open browser holds. A browser closed with edits no save carried
+  loses them, but where another editor's browser holds them.
 
-A slice mounts the editor over the session's stream: the editor knows
+A slice mounts the editor over the session's stream, handing `LiveState`
+the Loro document, the session's address and the feat's save write,
+sent by the page's `send`: the editor knows
 nothing of where the bytes are kept.
 
 ## Tests
@@ -185,11 +206,13 @@ nothing of where the bytes are kept.
 - The live session's slice tests (`_tests/session.test.ts`), on a
   clock of their own: two peers editing through a session over a save
   of the test's own, converging, and a late joiner catching up; the
-  saves the pauses, the editing going on and the leaving make, and a
-  refused save kept for the next; a peer dropped when its answer turns
-  no, at an update and at a save, a reader who may not discuss and one
-  who reads nothing; a restart that replays the buffer, in memory and
-  on file, and saves; and the live route's events and posts.
+  saves a browser's pauses and its leaving make, each signed by its
+  device and naming who contributed, a save with nothing new not made,
+  and a refused save kept for the next; a peer dropped when its answer
+  turns no, at an update and at a save, a reader who may not discuss
+  and one who reads nothing; a restart in which a peer rejoins, posts
+  what the session lacks and saves it; and the live route's events and
+  posts.
 - The editor's browser walk stays the document feat's
   (`_e2e/editor.test.ts`), since a document's page is where it is
   driven; a record's page drives the same editor.

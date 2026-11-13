@@ -1,4 +1,4 @@
-import { b64, type Relayed } from '../models/body.ts'
+import { b64, type Joined, type Kept, type Merged } from '../models/body.ts'
 import type { Heard, Session } from './session.ts'
 
 // Where a request for a body comes from: its collection, its record, the
@@ -25,12 +25,16 @@ const answer = (status: number, reason?: string) =>
 
 // GET `/<collection>/<record>/body/live`: the body's session, as
 // server-sent events. It opens with `joined`, whether this peer may
-// edit, and an `update` holding everything it lacks by the Loro version
-// vector it sends (`vv`); then each update merged, from any peer, its
-// receipt 0, since it has none until a save; and `dropped`, why, when
-// the session drops it, which closes the stream. A comment line every
-// 20 seconds keeps proxies from closing a quiet stream; the peer leaves
-// when the stream closes.
+// edit, its address, the save action its browser saves through, the
+// session's version vector, the last save's and who contributed since
+// (`Joined`), and an `update` holding everything it lacks by the Loro
+// version vector it sends (`vv`); its browser's Loro peer is `peer`.
+// Then each update merged, from any peer, its receipt 0, since it has
+// none until a save, with who contributed since the last save
+// (`Merged`); `saved`, each save the session learns of (`Kept`); and
+// `dropped`, why, when the session drops it, which closes the stream. A
+// comment line every 20 seconds keeps proxies from closing a quiet
+// stream; the peer leaves when the stream closes.
 export async function open(session: Session, at: At): Promise<Response> {
   if (!session.keeps(at.kind)) {
     return new Response(`${at.kind} keeps no body`, { status: 404 })
@@ -38,11 +42,13 @@ export async function open(session: Session, at: At): Promise<Response> {
   if (!at.actor) {
     return new Response('sign in first', { status: 401 })
   }
-  const joined = await session.join(at.kind, at.record, at.actor, new URL(at.request.url).searchParams.get('vv'))
+  const actor = at.actor
+  const params = new URL(at.request.url).searchParams
+  const joined = await session.join(at.kind, at.record, actor, params.get('vv'), params.get('peer'))
   if (!joined) {
     return new Response(`${at.kind} has no ${at.record} you read`, { status: 404 })
   }
-  const { peer, update } = joined
+  const { peer } = joined
   let stop = () => {}
   const body = new ReadableStream<Uint8Array>({
     start(c) {
@@ -56,17 +62,28 @@ export async function open(session: Session, at: At): Promise<Response> {
       }
       stop = () => {
         clearInterval(beat)
-        void peer.leave()
+        peer.leave()
       }
       at.request.signal.addEventListener('abort', () => {
         stop()
         close()
       })
-      c.enqueue(event('joined', { writable: peer.writable }))
-      c.enqueue(event('update', { receipt: 0, update: b64.encode(update) } satisfies Relayed))
+      c.enqueue(
+        event('joined', {
+          writable: peer.writable,
+          actor,
+          save: joined.save,
+          version: b64.encode(joined.version),
+          saved: b64.encode(joined.saved),
+          contributors: joined.contributors,
+        } satisfies Joined),
+      )
+      c.enqueue(event('update', { receipt: 0, update: b64.encode(joined.update), contributors: joined.contributors } satisfies Merged))
       peer.listen((h: Heard) => {
         if (h.type === 'update') {
-          c.enqueue(event('update', { receipt: 0, update: b64.encode(h.update) } satisfies Relayed))
+          c.enqueue(event('update', { receipt: 0, update: b64.encode(h.update), contributors: h.contributors } satisfies Merged))
+        } else if (h.type === 'saved') {
+          c.enqueue(event('saved', { saved: b64.encode(h.saved), contributors: h.contributors } satisfies Kept))
         } else {
           c.enqueue(event('dropped', { reason: h.reason }))
           clearInterval(beat)
@@ -81,8 +98,9 @@ export async function open(session: Session, at: At): Promise<Response> {
   return new Response(body, { headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', connection: 'keep-alive' } })
 }
 
-// POST `/<collection>/<record>/body/live`: a Loro update, in base64, in
-// the form's `update` field, from a peer that has the body open.
+// POST `/<collection>/<record>/body/live`, from a peer that has the body
+// open: a Loro update, in base64, in the form's `update` field; or
+// `saved`, that its browser saved the body through the feat's action.
 export async function post(session: Session, at: At): Promise<Response> {
   if (!session.keeps(at.kind)) {
     return answer(404, `${at.kind} keeps no body`)
@@ -90,10 +108,15 @@ export async function post(session: Session, at: At): Promise<Response> {
   if (!at.actor) {
     return answer(401, 'sign in first')
   }
-  const update = (await at.request.formData()).get('update')
+  const form = await at.request.formData()
+  if (form.has('saved')) {
+    const out = await session.saved(at.kind, at.record, at.actor)
+    return out.state === 'refused' ? answer(403, out.reason) : answer(200)
+  }
+  const update = form.get('update')
   if (typeof update !== 'string' || !update) {
     return answer(400, 'the post carries no update')
   }
   const out = await session.post(at.kind, at.record, at.actor, b64.decode(update))
-  return out.state === 'merged' ? answer(200) : answer(403, out.reason)
+  return out.state === 'refused' ? answer(403, out.reason) : answer(200)
 }

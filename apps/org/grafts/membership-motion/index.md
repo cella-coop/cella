@@ -362,11 +362,12 @@ It serves Settings' Organization page, `/settings/organization`
 in force, read from core's row (`circle.particulars()`) with the
 procedure protecting the policy they are; the assembly, which alone
 adopts them; and the scope's address and timezone, which a host sets.
-No write of anyone's saves a particular, so Save opens the dialog
-proposing a motion of the assembly, each value changed its own field
-(New seat, New VAT number), posted to the page's `propose`. It words
-the particulars again as the founding words them, the values typed in
-place of those in force and the rest as they stand, and proposes a
+No write of anyone's saves a particular, so a value's edit, as it
+commits, opens the dialog proposing a motion of the assembly, the
+value its own field (New seat, New VAT number), posted to the page's
+`propose`. It words the particulars again as the founding words them,
+the value typed in place of the one in force and the rest as they
+stand, and proposes a
 motion carrying one `policy` action: a `rule` replacing the
 particulars in force, with the protection they had. The guard judges
 it as it judges any proposal, so a SIREN that is not nine digits is

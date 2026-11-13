@@ -4,9 +4,10 @@
 
   // A circle's Settings tab: its name, its purpose and its procedure, from
   // those in force. None saves directly, since only a motion amends a
-  // circle: Save opens the dialog proposing an `amend-circle` motion of
-  // the circle that decides about it, prefilled with what was typed. Its
-  // features are a page of their own in Settings, which it links to.
+  // circle: an edit, as it commits, opens the dialog proposing an
+  // `amend-circle` motion of the circle that decides about it, prefilled
+  // with what was typed. Its features are a page of their own in Settings,
+  // which it links to.
   let { data }: { data: OnCircle | null; id: string } = $props()
 
   const amending = $derived(data?.amending)

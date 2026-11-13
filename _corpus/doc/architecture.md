@@ -1540,8 +1540,9 @@ purchases and sales, the payroll and the books' months. The tier folds
 it with a checkpoint every ten thousand entries, then re-folds from
 its latest checkpoint, ten thousand entries before the head. It says
 the entries folded a second, a checkpoint's time from the kept hashes
-and the state's hashed from scratch, the fold's peak memory beside the
-shared buffers, a tenth of the way and at the end, the re-fold's time
+and the state's hashed from scratch, the peak memory of the fold's
+sessions beside the shared buffers, a tenth of the way and at the end,
+the session that verifies the whole log among them, the re-fold's time
 and the log's bytes an entry with its receipt; and it fails where the
 peak at the end is more than 64 MB over the peak a tenth of the way,
 where the re-fold takes more than thirty seconds, where the hashes the

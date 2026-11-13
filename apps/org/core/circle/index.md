@@ -1037,7 +1037,11 @@ has among them, each with its duty and the circle it is of, and the
 mandates granted to them in the Mandates collection's columns: its
 power, the role it is granted to, its cap, what it covers, who issued
 it and whether it stands, each linking to its mandate's page, which
-reads its policy's sentence, circle-policy's to give.
+reads its policy's sentence, circle-policy's to give. Its header offers "View as this
+circle", which sets the member's lens to it and returns to the home page,
+and "Stop viewing as this circle" where it is the lens already; the co-op
+selector lists the circles the member sits in, and the lens's own, so any
+other circle is lensed from its page here.
 
 The `mandates` collection lists every mandate, by power, with its
 grantee, cap, scope, issuer and whether it stands on the verdict date;

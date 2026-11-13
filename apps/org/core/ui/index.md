@@ -197,8 +197,10 @@ draws.
   table · gallery · board · calendar · dashboard, those the
   collection's fields allow), then the text filter, then the same rows
   in the same order everywhere, each a label and a dropdown: Group by
-  (a board's columns, an enumeration; a calendar's date, and month or
-  week), Order by (any of the collection's fields, and a toggle beside
+  (any enumeration, person or circle field, or None: a board's columns,
+  and in a list, a feed, a table and a gallery a header over each
+  group's rows, naming its value and its count as a board's column
+  does; a calendar's date, and month or week), Order by (any of the collection's fields, and a toggle beside
   it for ascending or descending; none chosen, the collection's own
   order) and Filter (a field to add a condition on: a date, or any field
   with a handful of values, at most `limits.values` across the rows the
@@ -230,15 +232,20 @@ draws.
   next hundred (`n`) and how many of the rows are drawn; the keyboard
   moving past the last drawn row asks for the next page, and the text
   filter goes into the address once the typing pauses, which draws the
-  first page again. A board and a calendar place every row the view
-  keeps. The feed draws each row as one line of who did what and when,
+  first page again. A grouped list, feed, table or gallery reads its
+  rows group by group, the groups in the order a board's columns take
+  (`lanes`), a row with no value for the field in a last group, None,
+  and the view's order within each; so a page of a hundred continues
+  the group the last one ended in, under its header again, and each
+  header's count is the group's whole, read with the page. A board and
+  a calendar place every row the view keeps. The feed draws each row as one line of who did what and when,
   as a record's Activity reads: its first person column as their chip,
   then its title, linked, then its first date, and the time links to
   the row's own page where the view links its title elsewhere; it is
   offered only where a column is a person and one a date. `Gallery`
   lays the items out as cards (`Tile`); `Board` puts them in a column
-  per value of an enumeration, each with its count, the board offered
-  only where a field enumerates; `Calendar` puts them on the days of a
+  per value of an enumeration, a person or a circle, each with its
+  count, the board offered only where a field is one of them; `Calendar` puts them on the days of a
   month, in whole weeks from Monday, or of a week, by a date field, in
   the order of their time where the date holds one
   (`YYYY-MM-DDTHH:MM`), or in the view's order where it sorts them,

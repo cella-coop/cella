@@ -1,8 +1,9 @@
 // The reads scenario: a collection read in SQL, a page at a time. The
-// composer over rows of its own, sorted, and through a lens; every
+// composer over rows of its own, sorted, grouped, and through a lens; every
 // collection's read composed and run on a seeded Lanterne, each badge
 // and date column's key holding what it shows, each field sorting either
-// way; and the built shell paging fifty thousand time entries, sorted,
+// way; and the built shell paging fifty thousand time entries, sorted
+// and grouped,
 // its text filter, its counts and the viewer's own views' tallies,
 // outside dev mode. Run by `cella test e2e reads`.
 
@@ -10,7 +11,7 @@ import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { register } from 'node:module'
 import pg from 'pg'
-import { counts, measures, page, read, today, values, type Sort, type Source } from '@cella/org-db'
+import { counts, measures, page, read, today, values, type Keep, type Sort, type Source } from '@cella/org-db'
 import { fields } from '@cella/org-ui/models'
 import { slices, source } from '#lib/server/slices.ts'
 import { Shell } from './serve.ts'
@@ -99,6 +100,24 @@ test('a sort orders the rows a keep keeps by any field either way, a number as a
   assert.deepEqual(await ids({ field: 'nothing', dir: 'asc' }), ['c', 'b', 'a'], 'a field no row holds leaves the collection\'s order')
 })
 
+test('a group orders the rows by its field\'s value, the given values first, a row with none last, before the sort and the page, and counts each group whole', async () => {
+  const db = await as(hugo)
+  const ids = async (keep: Keep, limit?: number, offset = 0) => (await page(db, invoices, keep, limit, offset)).map((r) => r.id)
+  assert.deepEqual(await ids({ where: [], group: { field: 'state', values: ['overdue', 'unpaid'] } }), ['b', 'a', 'c'], 'the given values in their order, any other after them')
+  assert.deepEqual(await ids({ where: [], group: { field: 'client', values: [] } }), ['c', 'a', 'b'], 'by value, a row with none last')
+  assert.deepEqual(await ids({ where: [], group: { field: 'client', values: ['Nuvola Énergie'] } }), ['a', 'c', 'b'])
+  assert.deepEqual(
+    await ids({ where: [], group: { field: 'state', values: ['paid'] }, sort: { field: 'total', dir: 'desc' } }),
+    ['c', 'b', 'a'],
+    'the group before the sort',
+  )
+  assert.deepEqual(await ids({ where: [], group: { field: 'state', values: ['overdue', 'unpaid'] } }, 1, 1), ['a'], 'the page is cut from the grouped rows')
+  const { groups } = await read(db, invoices, { keep: { where: [], group: { field: 'client', values: [] } }, limit: 1 })
+  assert.deepEqual(groups, { 'Les Halles': 1, 'Nuvola Énergie': 1, '': 1 }, 'each group counted across every page, none under the empty value')
+  const kept = await read(db, invoices, { keep: { where: [{ field: 'state', is: ['unpaid', 'overdue'] }], group: { field: 'client', values: [] } } })
+  assert.deepEqual(kept.groups, { 'Nuvola Énergie': 1, '': 1 }, 'over the rows the keep keeps')
+})
+
 test('the composer counts, gives each enumeration\'s values, and runs the widgets as aggregates, the month the scope\'s', async () => {
   const db = await as(hugo)
   assert.equal(await today(db), '2026-10-24', 'today is the verdict date')
@@ -110,7 +129,7 @@ test('the composer counts, gives each enumeration\'s values, and runs the widget
   assert.deepEqual(await values(db, invoices, ['state', 'client']), { state: ['overdue', 'paid', 'unpaid'], client: ['Les Halles', 'Nuvola Énergie'] })
   assert.deepEqual(
     await read(db, invoices, { keep: { where: [{ field: 'state', is: ['paid'] }] }, counts: [{ where: [] }], values: ['state', 'nothing'] }),
-    { rows: [{ id: 'c', state: 'paid', issued: '2026-10-20', total: 200, owed: 0, client: 'Les Halles' }], counts: [3], values: { state: ['overdue', 'paid', 'unpaid'], nothing: [] }, whole: false },
+    { rows: [{ id: 'c', state: 'paid', issued: '2026-10-20', total: 200, owed: 0, client: 'Les Halles' }], counts: [3], values: { state: ['overdue', 'paid', 'unpaid'], nothing: [] }, groups: {}, whole: false },
     'a page\'s rows, counts and values in one statement',
   )
   const [owed, month, average, byMonth, byClient] = await measures(db, invoices, [
@@ -247,6 +266,20 @@ test('a page of fifty thousand time entries is read in SQL: a hundred rows drawn
     const ends = [held(one[0]), held(one.at(-1)), held(two[0])]
     assert.ok(sort.dir === 'desc' ? ends[0] >= ends[1] && ends[1] >= ends[2] : ends[0] <= ends[1] && ends[1] <= ends[2], `${sort.field}, ${sort.dir}: ${ends.join(', ')}`)
   }
+  // Grouped, all fifty thousand are read group by group before the page
+  // is cut: the second hundred continue the first's group, under its
+  // header once, and each group's count is its whole.
+  const group = { field: 'billable', values: ['internal'] }
+  const grouped = await read(db, entries, { keep: { where: [], group }, limit: 100, offset: 100 })
+  assert.ok(
+    grouped.rows.every((r) => (r as Record<string, unknown>).billable === 'internal'),
+    'the given value first, across the page boundary',
+  )
+  assert.ok((grouped.groups.internal ?? 0) >= 16666 && (grouped.groups.billable ?? 0) >= 33333, `each group counted whole: ${JSON.stringify(grouped.groups)}`)
+  const byKind = await shell.page('/timesheets?by=billable', julien)
+  assert.equal((byKind.text.match(/<tr class="group/g) ?? []).length, 1, 'a page within one group heads it once')
+  assert.match(byKind.text, new RegExp(`>${grouped.groups.billable}</span>`), 'its header counts the whole group')
+
   const sorted = await shell.page('/timesheets?sort=-day', julien)
   assert.match(sorted.text, /aria-sort="descending"[^>]*>(?:(?!<\/th>)[\s\S])*Day/, 'the Day header says the rows are sorted by it, descending')
   assert.equal(rows(sorted.text), 100, 'a sorted view draws a page')

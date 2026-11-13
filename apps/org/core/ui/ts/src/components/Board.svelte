@@ -3,12 +3,14 @@
   import { shift, type Shift } from '../models/query.ts'
   import { transfer } from '../attachments/transfer.ts'
   import { useDrag } from '../hooks/useDrag.ts'
+  import Cell from './Cell.svelte'
   import Tile from './Tile.svelte'
 
-  // The one board: a column per value of the enumeration it groups by, in
-  // the declared order, each with its count and its cards. A card drags
-  // only into a column the collection's moves make a write, which
-  // `onshift` runs; every other column takes no drop.
+  // The one board: a column per value of the enumeration, the person or
+  // the circle it groups by, a person's under their chip and a circle's
+  // under its name, in the declared order, each with its count and its
+  // cards. A card drags only into a column the collection's moves make a
+  // write, which `onshift` runs; every other column takes no drop.
   let {
     rows,
     by,
@@ -54,7 +56,10 @@
     {const cards = $derived(rows.filter((r) => lane(r) === l))}
     {const open = $derived(!!drag.carry.group && takes(drag.carry.origin, l))}
     <section class="lane" class:open class:aimed={drag.aimed('board', l)} data-drop-list={l} aria-label="{by.label}: {l}, {cards.length}">
-      <h3><span>{l}</span><span class="count">{cards.length}</span></h3>
+      <h3>
+        {#if by.kind === 'person' || by.kind === 'circle'}<Cell value={l} kind={by.kind} />{:else}<span>{l}</span>{/if}
+        <span class="count">{cards.length}</span>
+      </h3>
       <div class="cards">
         {#each cards as row (row.id)}
           <Tile {row} {titled} {shown} href={href?.(row)} group="board" from={l} dragging={drag.carrying('board', row.id)} />

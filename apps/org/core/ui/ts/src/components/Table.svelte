@@ -1,10 +1,12 @@
 <script lang="ts">
   import type { Column } from '../models/view.ts'
+  import { opens, under } from '../models/query.ts'
   import { focused, scroller } from '../models/keys.ts'
   import { useSection } from '../hooks/useSection.ts'
   import SortAscending from 'phosphor-svelte/lib/SortAscending'
   import SortDescending from 'phosphor-svelte/lib/SortDescending'
   import Cell from './Cell.svelte'
+  import Group from './Group.svelte'
   import Icon from './Icon.svelte'
 
   // A table of rows; with none, one quiet line in their place, named for
@@ -13,7 +15,9 @@
   // order, the keyboard's row (`active`) takes the focus and a row
   // focused otherwise is reported (`onfocusrow`); `sorted` is the column
   // the rows are ordered by, which its header says; with `onsort`, a
-  // header is a button that asks to order by its column.
+  // header is a button that asks to order by its column. Where the rows
+  // are grouped (`group`), a row heads each group's rows with its value
+  // and how many rows it holds, `counts`, by value.
   let {
     columns,
     rows,
@@ -24,6 +28,7 @@
     sorted = null,
     onsort,
     empty,
+    group,
   }: {
     columns: Column[]
     rows: any[]
@@ -34,6 +39,7 @@
     sorted?: { key: string; dir: 'ascending' | 'descending' } | null
     onsort?: (key: string) => void
     empty?: string
+    group?: { by: Column; counts: Record<string, number> }
   } = $props()
 
   const section = useSection()
@@ -64,6 +70,12 @@
       <tbody>
         {#each rows as row, i (row.id)}
           {const link = $derived(href?.(row))}
+          {#if group && opens(rows, i, group.by.key)}
+            {const value = $derived(under(row, group.by.key))}
+            <tr class="group">
+              <th colspan={columns.length} scope="colgroup"><Group by={group.by} {row} empty={value === ''} count={group.counts[value] ?? 0} /></th>
+            </tr>
+          {/if}
           <tr
             class:active={i === active}
             class:linked={link}
@@ -140,9 +152,13 @@
   tbody tr {
     border-radius: var(--radius-control);
   }
-  tbody tr:hover,
+  tbody tr:not(.group):hover,
   tr.active {
     background: var(--hover);
+  }
+  /* A group's header, a quiet line over its rows with room above it. */
+  tr.group th {
+    padding: var(--space-3) var(--space-3) var(--space-1);
   }
   /* A row draws the ring as an outline inside it, since WebKit draws no
      shadow on a table row. */

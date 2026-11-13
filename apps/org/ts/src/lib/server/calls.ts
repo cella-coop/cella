@@ -1,6 +1,6 @@
 import { ask as asking, counts, ordered, read, texts, today, type Db, type Source } from '@cella/org-db'
 import { scoped } from '@cella/org-analytics'
-import { anchor, defaults, fields, limits, period, resolve, wheres, widgets, type Field, type Spec } from '@cella/org-ui/models'
+import { anchor, defaults, fields, grouping, limits, period, resolve, wheres, widgets, type Field, type Spec } from '@cella/org-ui/models'
 import { named } from '@cella/org-log/api'
 import { people, person } from '@cella/org-person/api'
 import { lensed, lensing } from '#lib/server/lens.ts'
@@ -31,9 +31,11 @@ export class Missing extends Error {}
 // A collection: the rows the view in the address keeps, its owner's and
 // those its extensions add, as the acting member sees them, with the
 // fields its extensions add to each, read in SQL a page at a time (`n`
-// rows, in the view's sort, else the collection's order), in one statement with how many it
+// rows, group by group where the view groups them, in its sort, else the
+// collection's order), in one statement with how many it
 // keeps, how many of those hold the text filter, its tabs' counts and
-// each enumeration's values, and those of every other field but a date
+// each enumeration's values (and those of the field the rows are grouped
+// by), and those of every other field but a date
 // where it holds at most `limits.values`, what Filter offers; the field
 // its rows are ordered by first;
 // what its header says about it; and, in the dashboard layout, its
@@ -61,11 +63,18 @@ export const collection = {
     const from = source(name, await lensed(db, who.cookies, who.actor)) ?? named
     const day = await today(db)
     const paged = spec.layout === 'list' || spec.layout === 'feed' || spec.layout === 'table' || spec.layout === 'gallery'
-    const { rows, counts, values, whole } = await read(db, from, {
-      ...(spec.layout === 'dashboard' ? {} : { keep: placing(spec, fs, url, day) ?? keeps, ...(paged ? { limit } : {}) }),
+    // The field a list, a feed, a table or a gallery groups its rows by,
+    // read group by group in its board's order, and the one a board's
+    // columns are; each answered with all its values, as a board's
+    // columns are drawn from them.
+    const by = grouping(spec, fs, looks)
+    const group = paged && by ? { field: by.key, values: looks.lanes?.[by.key] ?? [] } : undefined
+    const full = (f: Field) => f.type === 'enum' || (f === by && (paged || spec.layout === 'board'))
+    const { rows, counts, values, groups, whole } = await read(db, from, {
+      ...(spec.layout === 'dashboard' ? {} : { keep: placing(spec, fs, url, day) ?? { ...keeps, ...(group ? { group } : {}) }, ...(paged ? { limit } : {}) }),
       counts: [{ where: spec.where }, keeps, ...tabs.map((p) => ({ where: wheres(p.where, fs) }))],
-      values: fs.filter((f) => f.type === 'enum').map((f) => f.key),
-      few: { keys: fs.filter((f) => f.type !== 'enum' && f.type !== 'date').map((f) => f.key), most: limits.values },
+      values: fs.filter(full).map((f) => f.key),
+      few: { keys: fs.filter((f) => !full(f) && f.type !== 'date').map((f) => f.key), most: limits.values },
     })
     const [kept = 0, matched = 0, ...tallies] = counts
     const abouts = (await Promise.all(m.extensions.map((e) => e.extension.about?.(db, who.actor)))).filter((a) => a !== undefined)
@@ -77,6 +86,9 @@ export const collection = {
       matched,
       about: abouts.length ? Object.assign({}, own, ...abouts) : own,
       values,
+      // How many rows each value of the field the rows are grouped by
+      // holds, across every page, a group's header's count.
+      groups,
       today: day,
       views: tabs.map((p, i) => ({ ...p, count: tallies[i] ?? 0 })),
       view: id,

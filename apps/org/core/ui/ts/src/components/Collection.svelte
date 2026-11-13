@@ -10,7 +10,9 @@
     alike,
     arranged,
     fields,
+    grouping,
     lanes,
+    opens,
     PAGE,
     spec as preset,
     type Custom,
@@ -20,6 +22,7 @@
     type Shift,
     type Spec,
     type Widget,
+    under,
   } from '../models/query.ts'
   import { anchor, period } from '../models/calendar.ts'
   import { control, focused, typing } from '../models/keys.ts'
@@ -36,6 +39,7 @@
   import Calendar from './Calendar.svelte'
   import Card from './Card.svelte'
   import Gallery from './Gallery.svelte'
+  import Group from './Group.svelte'
   import Pill from './Pill.svelte'
   import Cell from './Cell.svelte'
   import Person from './Person.svelte'
@@ -72,6 +76,7 @@
     empty = 'Nothing here yet.',
     caption,
     values = {},
+    groups = {},
     views,
     view,
     spec,
@@ -106,6 +111,9 @@
     empty?: string
     // Each enumeration's values over the rows, for the editors' choices.
     values?: Record<string, string[]>
+    // How many rows each value of the field they are grouped by holds,
+    // across every page.
+    groups?: Record<string, number>
     // The preset views, each with how many rows it keeps.
     views: (Preset & { count: number })[]
     // The active view's id, and what it shows, as the server read them.
@@ -192,9 +200,17 @@
 
   // The gallery's and the board's cards: the view's fields, or the
   // collection's lines under a title and its trailing meta; and the
-  // board's enumeration, the first when the view names none.
-  const enums = $derived(columns.filter((c) => c.kind === 'badge'))
-  const grouped = $derived(columns.find((c) => c.key === spec.by) ?? enums[0])
+  // board's enumeration, person or circle, when the view names none the
+  // one the collection's look names, else its first enumeration.
+  const grouped = $derived(columns.find((c) => c.key === grouping({ layout: 'board', by: spec.by }, typed, look)?.key))
+  // The field a list, a feed, a table or a gallery groups its rows by,
+  // where the view names one: a header over each group's rows, with its
+  // value and how many rows it holds across every page.
+  const group = $derived.by(() => {
+    const by = ['list', 'feed', 'table', 'gallery'].includes(spec.layout) && spec.by ? columns.find((c) => c.key === grouping(spec, typed)?.key) : undefined
+    return by && { by, counts: groups }
+  })
+  const opening = (i: number) => !!group && opens(state.shown, i, group.by.key)
   const shown = $derived(
     spec.cards.length ? arranged(columns, spec.cards).filter((c) => spec.cards.includes(c.key)) : [...subs, ...metas].filter((c) => c !== grouped),
   )
@@ -299,6 +315,14 @@
 </script>
 
 <svelte:window {onkeydown} />
+
+<!-- A group's header in a list or a feed, over the first of its rows. -->
+{#snippet head(row: any)}
+  {#if group}
+    {const value = $derived(under(row, group.by.key))}
+    <li class="group"><Group by={group.by} {row} empty={value === ''} count={group.counts[value] ?? 0} /></li>
+  {/if}
+{/snippet}
 
 {#snippet viewing()}
   <Viewing
@@ -414,9 +438,10 @@
         onfocusrow={(i) => (state.active = i)}
         {sorted}
         onsort={(key) => change({ ...spec, q: state.filter, sort: { field: key, dir: sorted?.key === key && sorted.dir === 'ascending' ? 'desc' : 'asc' } })}
+        {group}
       />
     {:else if spec.layout === 'gallery'}
-      <Gallery rows={state.shown} {titled} {shown} {href} />
+      <Gallery rows={state.shown} {titled} {shown} {href} {group} />
     {:else if spec.layout === 'board' && grouped}
       <Board
         rows={state.shown}
@@ -435,6 +460,7 @@
         {#each state.shown as row, i (row.id)}
           {const to = $derived(href?.(row))}
           {const self = $derived(own?.(row))}
+          {#if opening(i)}{@render head(row)}{/if}
           <!-- svelte-ignore a11y_no_noninteractive_tabindex: the keyboard roves the rows, one in the tab order, so a screen reader reads the row it is on -->
           <li
             class:active={i === state.active}
@@ -463,6 +489,7 @@
       <ul class="list">
         {#each state.shown as row, i (row.id)}
           {const to = $derived(href?.(row))}
+          {#if opening(i)}{@render head(row)}{/if}
           <!-- svelte-ignore a11y_no_noninteractive_tabindex: the keyboard roves the rows, one in the tab order, so a screen reader reads the row it is on -->
           <li
             class:active={i === state.active}
@@ -556,9 +583,14 @@
     border-radius: var(--radius-control);
     font-size: var(--text-sm);
   }
-  .list li:hover,
+  .list li:not(.group):hover,
   .list li.active {
     background: var(--hover);
+  }
+  /* A group's header: a quiet line over its rows, with room above it. */
+  .list li.group {
+    min-height: 0;
+    padding: var(--space-3) var(--space-3) var(--space-1);
   }
   /* The title's link covers its row, so the whole row opens the item. */
   .stretched::after {

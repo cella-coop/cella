@@ -4,6 +4,7 @@ import { accept, erase, invite, link, withdraw } from '../handlers/index.ts'
 import { first, invitation, links, member, memberships } from '../drivers/member.ts'
 import { inbox } from '../drivers/inbox.ts'
 import { members as importing } from './imports.ts'
+import { contract } from './contract.ts'
 
 // The feat's server side as the shell mounts it, on core's
 // collections: on each person the membership they hold, an invitation
@@ -18,6 +19,7 @@ import { members as importing } from './imports.ts'
 // another tool's list, each invited, to be given a link from their page.
 export const slice: Slice = {
   name: 'membership',
+  queries: contract,
   imports: { members: importing },
   joins: { op: 'membership:member:accept', invited: invitation, accept },
   extends: {

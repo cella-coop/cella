@@ -1,6 +1,6 @@
 +++
 title = "membership-project"
-updated = 2026-11-11
+updated = 2026-11-13
 +++
 
 Shares of a project's budget: a right granted to a member to spend up to
@@ -100,4 +100,4 @@ the whole co-op, any project. Its tests are the membership feat's of
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `membership_project.shares` to the analytics shell: the shares of each project's pot granted to members. It is scoped by `circle`, the circle that owns each row.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `membership_project.shares` to the analytics shell: the shares of each project's pot granted to members. It is scoped by `circle`, the circle that owns each row. Its view is declared a published query, in `ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

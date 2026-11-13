@@ -48,9 +48,15 @@ schema that reads as its reader ([queries in
 SQL](../../../../_corpus/doc/architecture.md#queries-in-sql)). A `Query`
 names its view, the columns its argument holds (`by`), each a text
 matched by equality, the columns of its rows and those they are ordered
-by; a slice declares its own in `Slice.queries`. `ask(db, query, arg)`
-validates the argument by `texts` of `by`, throwing `Unfit` with its
-issues where it fails, and reads `SELECT <columns> FROM <view> WHERE …
-ORDER BY …` on `db`, as its reader. `malformed(query, schema)` says what
+by; a slice declares its own in `Slice.queries`. A query a slice
+publishes in its analytical contract is `published`, and names the
+columns its contract comments personal (`personal`)
+([analytical contracts](../../../../_corpus/doc/architecture.md#analytical-contracts)).
+`argued(query, arg)` validates the argument by `texts` of `by`, throwing
+`Unfit` with its issues where it fails. `ask(db, query, arg)` validates
+it so and reads `SELECT <columns> FROM <view> WHERE … ORDER BY …` on
+`db`, as its reader; it refuses a published query, whose view reads as
+its owner and is read only through the analytics port, as the web
+shell's `ask` reads it. `malformed(query, schema)` says what
 is wrong with its names, a view outside `schema` or a column that is not
 a plain name, which the shell's registry refuses as it starts.

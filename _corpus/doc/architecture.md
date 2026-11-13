@@ -1335,6 +1335,24 @@ and day, which every statement sums. No core publishes one but the
 analytics port's, `analytics.head`, the log's head each run of the shell
 is stamped with ([the analytics shell](#the-analytics-shell)).
 
+A slice's analytical contract is its SQL queries. Each view it publishes
+is one of its calls, declared once in its server slice's `queries`, in
+`ts/src/api/contract.ts`, as a query written in SQL is ([queries in
+SQL](#queries-in-sql)), and marked published: `{ view:
+'<schema>.<view>', published: true, … }`, with every column the view
+shares, those of them its contract comments personal, and those its rows
+are ordered by. The analytics shell reads the view, and the web shell
+serves the same declaration as any query, through the port: a published
+view reads as its owner, so neither shell reads it on the reader's
+connection. `ask` in `@cella/org-db` refuses a published query, and the
+web shell's `ask` runs it as a report of the one view for the session's
+reader (`scoped`), its fields the query's columns, its filters the
+argument's, its personal columns declared, so a scoped view reads only
+the rows of the circles they read it in and their own, and a counted view
+only the cells open books shares with them, as on a report's page, at
+most `MAX_ROWS` rows. A contributions view, which only the port reads,
+is declared by no query, nor is the port's head; nor is a share a
+slice's migrations make, which only the app reads.
 
 A contract is no migration: `cella migrate` applies every contract after
 the migrations, whenever one ran or a contract changed. It drops the
@@ -1419,7 +1437,9 @@ says is the operator's to rule.
 
 `cella check feats` enforces this: `tools/sql-check.mjs` refuses in a
 contract anything but views in the slice's own schema and comments on
-them, a `security_invoker` view, a view that declares no audience or
+them, a view, but a contributions view, that no `{ view:
+'<schema>.<view>', published: true` in its slice's `ts/src/api/`
+declares, a `security_invoker` view, a view that declares no audience or
 names a column it does not show, a scoped view that sums or whose
 circle column is no record's owning circle, a scoped view that shows a
 column saying whose a row is and does not name it, a shared view that
@@ -1441,7 +1461,11 @@ not as the view's owner, so one that reads a table fails the role and
 one that asks who reads sees no one: a contract reads tables and plain
 views, never a `security_invoker` view or a function over them, and
 `cella migrate`'s read as the role, and the e2e scenario on Lanterne,
-catch what the SQL check cannot see.
+catch what the SQL check cannot see. That a declaration's columns are
+its view's, it cannot see either: the e2e scenario `analytics-shell`
+holds the catalog's views, but the contributions, to exactly the
+published queries the shell's slices declare, each with the columns and
+the personal columns it declares.
 
 ### Tests
 
@@ -1827,7 +1851,13 @@ the slice, the query and the query's own argument, validated first by
 the call's schema and then by the query's, and it runs as the session's
 person through `using`, as every read does (`ask` in
 `#lib/server/calls.ts`); a slice or a query no slice declares is a 404,
-and an argument the query's schema refuses a 400.
+and an argument the query's schema refuses a 400. A query a slice
+publishes in its analytical contract is declared the same way, marked
+`published`, and its view reads as its owner, not as its reader: `ask`
+in `@cella/org-db` refuses it, and the web shell's `ask` runs it through
+the analytics port as a report for the session's reader, so the web
+shell and the analytics shell read the same views
+([analytical contracts](#analytical-contracts)).
 
 A project's tasks are read so: `project_task.tasks` joins the graft's
 filings to the task feat's tasks and the project feat's milestones, each
@@ -1847,8 +1877,8 @@ it starts, a query whose view is outside its slice's own schema, or
 whose columns are not plain names. That the view a query names is
 commented a query, and has the columns it declares, no tool sees before
 it is read: `ask` names each column, so one the view lacks fails the
-read, and the reading e2e reads every declared query as a person who
-left, who reads no row through any.
+read, and the reading e2e reads every declared query but the published
+ones as a person who left, who reads no row through any.
 
 ## The shell
 

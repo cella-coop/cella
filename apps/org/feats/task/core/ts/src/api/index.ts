@@ -5,6 +5,7 @@ import { action, type Slice } from '@cella/org-db'
 import { complete, create, move } from '../handlers/index.ts'
 import { listing, task, tasks } from '../drivers/task.ts'
 import * as forms from './forms.ts'
+import { contract } from './contract.ts'
 
 export { complete, create, creating, move } from '../handlers/index.ts'
 export { task, tasks } from '../drivers/task.ts'
@@ -12,6 +13,7 @@ export * as forms from './forms.ts'
 
 export const slice: Slice = {
   name: 'task',
+  queries: contract,
   collections: {
     tasks: {
       list: listing,

@@ -4,6 +4,7 @@ import { action, type Slice } from '@cella/org-db'
 import { forms } from '@cella/org-timesheet/api'
 import { book } from '../handlers/book.ts'
 import { burns, projectOf, time } from '../drivers/booking.ts'
+import { contract } from './contract.ts'
 
 export { book, booking, type Booked } from '../handlers/book.ts'
 export { burns, projectOf, time } from '../drivers/booking.ts'
@@ -12,6 +13,7 @@ export { burns, projectOf, time } from '../drivers/booking.ts'
 // budget, and logging time against it from its page.
 export const slice: Slice = {
   name: 'project-timesheet',
+  queries: contract,
   extends: {
     timesheets: {
       list: projectOf,

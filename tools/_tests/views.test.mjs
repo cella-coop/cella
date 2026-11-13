@@ -33,6 +33,11 @@ async function check(sql, more = {}) {
     for (const [file, text] of Object.entries(more)) {
       writeFileSync(join(dir, file), text)
     }
+    // A contract's views, each declared a published query, as a slice
+    // declares them.
+    const published = [...(more['analytics.sql'] ?? '').matchAll(/CREATE VIEW ([a-z_]+\.[a-z_]+)/g)].map((m) => `{ view: '${m[1]}', published: true }`)
+    mkdirSync(join(dir, '../ts/src/api'), { recursive: true })
+    writeFileSync(join(dir, '../ts/src/api/contract.ts'), `export const contract = [${published.join(', ')}]\n`)
     const found = { powers: [], guards: [], cites: [], stances: [], personal: [], impersonal: [], columns: [], foreign: [] }
     const errors = await checkSql(repo, ['apps/org'], new Set(['cella', 'ledger', 'circle']), found)
     return [...errors, ...unshared(found)].join('\n')

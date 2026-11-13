@@ -1,6 +1,6 @@
 +++
 title = "Analytics"
-updated = 2026-11-08
+updated = 2026-11-13
 +++
 
 The analytics port (`@cella/org-analytics`): what a report asks of the
@@ -13,6 +13,12 @@ the log's head it read. A report that reads a scoped view names its
 reader, and reads only the rows they may; one that reads a counted view
 reads only the cells open books shares with them, and those they may
 read whole.
+
+The views it reads are the slices' published queries: each view a
+contract publishes, but a contributions view, is declared by its slice
+as a query, which the web shell serves as a report of that one view
+through the port, for its reader
+([analytical contracts](../../../../_corpus/doc/architecture.md#analytical-contracts)).
 
 ## A report
 
@@ -175,8 +181,12 @@ log itself it never reads. No report reads the head as a view.
 The e2e scenario `analytics-shell` starts a shell on the test database
 with `cella analytics start`, then checks that it reads only as
 `cella_analytics`, refusing a write, a file, another attach, a setting and
-an unpublished table; that the catalog is the views granted to the role;
-that a report reconciles with the books to the cent and with the
+an unpublished table; that the catalog is the views granted to the role,
+and, but the contributions, the published queries the shell's slices
+declare, each with the columns and personal columns it declares; that
+the web shell's `ask` serves a published query through the port, as its
+reader reads it there and no more, and that `ask` on a connection
+refuses one; that a report reconciles with the books to the cent and with the
 projects' time, and is stamped with the head; that a write landing in a
 run's transaction moves neither its rows nor its head; and that the port
 refuses each kind of report above with its reason, before the shell sees

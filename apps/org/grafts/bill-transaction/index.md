@@ -1,6 +1,6 @@
 +++
 title = "bill-transaction"
-updated = 2026-11-09
+updated = 2026-11-13
 +++
 
 A bill's approval and its payment post balanced entries, in the same
@@ -64,4 +64,4 @@ postings, line by line, to its page in a Postings tab.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `bill_transaction.postings` to the analytics shell: which entry posted which bill, and on what event. It is scoped by `circle`, the circle that owns each row.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `bill_transaction.postings` to the analytics shell: which entry posted which bill, and on what event. It is scoped by `circle`, the circle that owns each row. Its view is declared a published query, in `ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

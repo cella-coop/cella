@@ -4,12 +4,14 @@
 import { action, type Slice } from '@cella/org-db'
 import { rebill } from '../handlers/rebill.ts'
 import { filed, projects, spent } from '../drivers/rebill.ts'
+import { contract } from './contract.ts'
 
 export { rebill } from '../handlers/rebill.ts'
 export { filed, projects, spent } from '../drivers/rebill.ts'
 
 export const slice: Slice = {
   name: 'expense-project',
+  queries: contract,
   extends: {
     expenses: {
       list: projects,

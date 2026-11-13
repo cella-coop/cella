@@ -224,6 +224,12 @@ contract; only shells import its app.**
   in SQL, as a view in its slice's own schema that reads as its reader,
   which the slice declares as a call and the web shell serves as any
   query ([queries in SQL](_corpus/doc/architecture.md#queries-in-sql)).
+- *enforced* (`sql-check`; `cella test e2e analytics-shell`): **A
+  slice's analytical contract is its SQL queries.** Each view it
+  publishes, but a contributions view, is declared once as a published
+  query, which the analytics shell reads and the web shell serves through
+  the port ([analytical
+  contracts](_corpus/doc/architecture.md#analytical-contracts)).
 - *proposed*: a slice declares sockets in its bindings, which a graft
   or another module fills with a plug from its own app; a slice's
   folders are its layers, its SQL following them.

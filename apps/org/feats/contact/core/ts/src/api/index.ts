@@ -5,6 +5,7 @@ import { update } from '../handlers/index.ts'
 import { contact, contacts, listing } from '../drivers/contact.ts'
 import { stages, type Stage } from '../models/contact.ts'
 import { contacts as imported } from './imports.ts'
+import { contract } from './contract.ts'
 
 export { add, archive, erase, update } from '../handlers/index.ts'
 export { contact, contacts } from '../drivers/contact.ts'
@@ -23,6 +24,7 @@ function stage(typed: string): Stage | null {
 
 export const slice: Slice = {
   name: 'contact',
+  queries: contract,
   imports: { contacts: imported },
   collections: {
     contacts: {

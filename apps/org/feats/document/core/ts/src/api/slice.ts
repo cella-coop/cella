@@ -4,6 +4,7 @@ import { comment, create, edit, version } from '../handlers/index.ts'
 import { document, documents, listing } from '../drivers/document.ts'
 import type { Edit } from '../models/document.ts'
 import { live, publish } from './live.ts'
+import { contract } from './contract.ts'
 
 // An edit, and once it settles, its update relayed to everyone with the
 // document open.
@@ -20,6 +21,7 @@ async function relayed(input: Edit, deps: Deps) {
 // a version, a comment on one, and the live stream of a document's edits.
 export const slice: Slice = {
   name: 'document',
+  queries: contract,
   collections: {
     documents: {
       list: listing,

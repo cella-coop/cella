@@ -5,6 +5,7 @@ import { action, today, type Slice } from '@cella/org-db'
 import { capture, refuse, submit } from '../handlers/index.ts'
 import { expense, expenses, listing } from '../drivers/expense.ts'
 import * as forms from './forms.ts'
+import { contract } from './contract.ts'
 
 export { approve, approving, capture, capturing, refuse, reimburse, reimbursing, submit } from '../handlers/index.ts'
 export { expense, expenses } from '../drivers/expense.ts'
@@ -15,6 +16,7 @@ export * as forms from './forms.ts'
 // so their writes are the expense-transaction graft's.
 export const slice: Slice = {
   name: 'expense',
+  queries: contract,
   collections: {
     expenses: {
       list: listing,

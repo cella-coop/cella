@@ -12,6 +12,7 @@ import { subscribed } from '../handlers/subscribe.ts'
 import { withdrawn, withdrawnOwn } from '../handlers/withdraw.ts'
 import { account } from '../drivers/draw.ts'
 import { called } from '../drivers/capital.ts'
+import { contract } from './contract.ts'
 
 export { draw } from '../handlers/draw.ts'
 export { pay } from '../handlers/pay.ts'
@@ -49,6 +50,7 @@ async function item(db: Db, member: string, actor: string | null) {
 
 export const slice: Slice = {
   name: 'account-membership-transaction',
+  queries: contract,
   extends: {
     people: {
       item,

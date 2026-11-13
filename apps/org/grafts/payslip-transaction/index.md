@@ -1,6 +1,6 @@
 +++
 title = "payslip-transaction"
-updated = 2026-11-11
+updated = 2026-11-13
 +++
 
 A pay run's approval and its payment post balanced entries, in the same
@@ -87,4 +87,4 @@ the 105,60 € reimbursement of `ex-0005` on 15 October.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `payslip_transaction.postings` to the analytics shell: which entry posted which month's payroll, and on what event. It is scoped by `circle`, the circle that owns each row.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `payslip_transaction.postings` to the analytics shell: which entry posted which month's payroll, and on what event. It is scoped by `circle`, the circle that owns each row. Its view is declared a published query, in `ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

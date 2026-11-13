@@ -1,6 +1,6 @@
 +++
 title = "document-meeting"
-updated = 2026-11-08
+updated = 2026-11-13
 +++
 
 A meeting's minutes, written as a document in the block editor.
@@ -73,4 +73,4 @@ Slice tests: the junction's sides, and the guard.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `document_meeting.minuted` to the analytics shell: which document holds each meeting's minutes. It is scoped by `circle`, the circle that owns each row.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `document_meeting.minuted` to the analytics shell: which document holds each meeting's minutes. It is scoped by `circle`, the circle that owns each row. Its view is declared a published query, in `ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

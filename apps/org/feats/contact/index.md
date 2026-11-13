@@ -1,6 +1,6 @@
 +++
 title = "Contact"
-updated = 2026-11-11
+updated = 2026-11-13
 +++
 
 The organisations and people the co-op deals with: its CRM. Companies
@@ -222,4 +222,4 @@ contact's form matters to the rate card.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `contact.contacts` to the analytics shell: each contact, by kind, client stage and whether it is archived. A company's name is shared; a person contact is shared by the address core person knows them by, whose name is core's, and no contact details are shared. It is scoped by `circle`, the circle that owns the contact.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `contact.contacts` to the analytics shell: each contact, by kind, client stage and whether it is archived. A company's name is shared; a person contact is shared by the address core person knows them by, whose name is core's, and no contact details are shared. It is scoped by `circle`, the circle that owns the contact. Its view is declared a published query, in `core/ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

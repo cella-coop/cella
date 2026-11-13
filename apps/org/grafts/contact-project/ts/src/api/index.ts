@@ -3,6 +3,7 @@
 import { action, type Slice } from '@cella/org-db'
 import { link } from '../handlers/link.ts'
 import { contactOf, commissioned, commissioner } from '../drivers/commission.ts'
+import { contract } from './contract.ts'
 
 export { link } from '../handlers/link.ts'
 export { contactOf, commissioned, commissioner } from '../drivers/commission.ts'
@@ -11,6 +12,7 @@ export { contactOf, commissioned, commissioner } from '../drivers/commission.ts'
 // commissioned.
 export const slice: Slice = {
   name: 'contact-project',
+  queries: contract,
   extends: {
     projects: {
       list: contactOf,

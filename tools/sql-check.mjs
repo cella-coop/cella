@@ -117,6 +117,9 @@
 // over a table that names its owning circle is owned in turn. What a
 // view reads through a function runs as the role, and is caught when
 // cella migrate reads each view as it, or by review.
+// Each view of a contract, but a contributions view and the port's head,
+// is declared by its slice as a published query, `{ view: '<schema>.<view>',
+// published: true, … }` in its `ts/src/api/` (`undeclared`).
 // No core publishes a contract but the analytics port, org's core library
 // `analytics`, whose views stay in its schema: the log's head; and core's
 // circles, `circle`, and people, `person`, whose views stay in theirs.
@@ -1271,6 +1274,22 @@ function registers(b, o, s, fail, found) {
   }
 }
 
+// The views a slice declares as published queries, each `view:
+// '<schema>.<view>', published: true` in a source of its server slice,
+// `ts/src/api/`, beside its sql/ directory: its analytical contract is its
+// SQL queries (architecture.md, "Analytical contracts").
+const DECLARED = /\bview: '([a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*)',\s*published: true\b/g
+function published(repo, o) {
+  const api = join(repo, dirname(o.dir), 'ts/src/api')
+  const views = new Set()
+  for (const f of existsSync(api) ? readdirSync(api).filter((f) => f.endsWith('.ts')) : []) {
+    for (const m of readFileSync(join(api, f), 'utf8').matchAll(DECLARED)) {
+      views.add(m[1])
+    }
+  }
+  return views
+}
+
 // A slice's analytical contract: views in its own schema, read as their
 // owner, and comments on them; personal columns shown only where
 // declared, and a secured table's rows only as sums.
@@ -1469,7 +1488,7 @@ function audience(comment) {
   return m[1] === 'scoped' ? { scoped: true, by, circle: by[0], whose: by[1], extra: by.slice(2) } : { scoped: false, by }
 }
 
-function contract(tree, o, fail, found) {
+function contract(tree, o, fail, found, queries) {
   if (o.kind === 'core') {
     if (!PORT.test(o.dir) && o.lib !== CIRCLES && o.lib !== PEOPLE) {
       fail('an analytical contract is a feat\'s or a graft\'s, never a core\'s but the analytics port\'s, the circles\' and the people\'s')
@@ -1514,6 +1533,9 @@ function contract(tree, o, fail, found) {
       fail(`${view} is security_invoker: a contract's view reads as its owner, so cella_analytics needs no grant on a table`)
     }
     const aud = audiences.get(view)
+    if (!aud?.contributions && !PORT.test(o.dir) && !queries.has(view)) {
+      fail(`${view} is declared by no query: a slice's analytical contract is its SQL queries, so declare it in its server slice's queries, ts/src/api/contract.ts, as { view: '${view}', published: true, … } (architecture.md, "Analytical contracts")`)
+    }
     if (!aud) {
       fail(`${view} declares no audience: comment it 'audience: scoped by <circle column>' or 'audience: shared by <columns>'`)
     } else {
@@ -1713,7 +1735,7 @@ export async function checkSql(repo, apps, known, found = { powers: [], guards: 
     found.at = path
     inspect(tree, o, s, known, fail, found)
     if (file === CONTRACT) {
-      contract(tree, o, fail, found)
+      contract(tree, o, fail, found, published(repo, o))
     }
     // Locations are byte offsets.
     const bytes = Buffer.from(sql)

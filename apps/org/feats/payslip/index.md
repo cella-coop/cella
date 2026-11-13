@@ -1,6 +1,6 @@
 +++
 title = "Payslip"
-updated = 2026-11-09
+updated = 2026-11-13
 +++
 
 Pay: each worker's salary, member or not, and a pay run each month, one
@@ -139,4 +139,4 @@ run's, so October's run holds eleven payslips, 28 200 € gross.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `payslip.months` to the analytics shell: each month's payroll summed over every payslip, and its run's days. A payslip is its member's, so no row is one member's pay. It is shared by `month`. Each month is counted: `payslip.months_contributions` holds each person's gross pay in it, which only the port reads, to withhold a month from a reader where open books does not share it ([what is withheld](../../core/analytics/index.md#what-is-withheld)).
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `payslip.months` to the analytics shell: each month's payroll summed over every payslip, and its run's days. A payslip is its member's, so no row is one member's pay. It is shared by `month`. Each month is counted: `payslip.months_contributions` holds each person's gross pay in it, which only the port reads, to withhold a month from a reader where open books does not share it ([what is withheld](../../core/analytics/index.md#what-is-withheld)). Each of its views but the contributions is declared a published query, in `core/ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

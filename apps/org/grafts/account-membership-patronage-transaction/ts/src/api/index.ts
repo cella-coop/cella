@@ -7,6 +7,7 @@
 import type { Slice } from '@cella/org-db'
 import { employed, figures, owed } from '../drivers/patronage.ts'
 import { credited } from '../handlers/employ.ts'
+import { contract } from './contract.ts'
 
 export { employed, figures, owed } from '../drivers/patronage.ts'
 export { credited, employ, employing } from '../handlers/employ.ts'
@@ -14,6 +15,7 @@ export type { Credited, Employ, Employed, Figure, Movement, Owed } from '../mode
 
 export const slice: Slice = {
   name: 'account-membership-patronage-transaction',
+  queries: contract,
   extends: {
     statements: { item: employed },
     distributions: { item: figures },

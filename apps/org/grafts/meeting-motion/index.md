@@ -1,6 +1,6 @@
 +++
 title = "meeting-motion"
-updated = 2026-11-09
+updated = 2026-11-13
 +++
 
 Motions on an agenda: an item that tables a motion, and where the
@@ -67,4 +67,4 @@ Slice tests: the trigger's two sides.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `meeting_motion.tablings` to the analytics shell: which motion each meeting's agenda item tables. It is scoped by `circle`, the circle that owns each row.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `meeting_motion.tablings` to the analytics shell: which motion each meeting's agenda item tables. It is scoped by `circle`, the circle that owns each row. Its view is declared a published query, in `ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

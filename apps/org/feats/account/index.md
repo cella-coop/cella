@@ -1,6 +1,6 @@
 +++
 title = "Account"
-updated = 2026-11-12
+updated = 2026-11-13
 +++
 
 The co-op's accounts and what its members own: the chart of accounts,
@@ -362,4 +362,4 @@ motion that adopted a terms' rule, `account-motion`'s.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes the chart, its periods, the statements' rubrics and the capital terms to the analytics shell, as `account.chart`, `account.periods`, `account.rubrics` and `account.capital_terms`. A capital account is a member's, so the chart shows only the accounts no one holds; what the held ones sum to is account-transaction's. For the statements it publishes three more: `account.spans`, each span of the books with its days and the span before it; `account.placements`, the line each account no one holds is presented in on each sheet, by the longest prefix of its code as `rubric_of` places it; and `account.totals`, each total of a sheet expanded down to its lines, each line with the sign it is added with. `account.chart`, `account.periods`, `account.capital_terms` and `account.placements` are scoped by `circle`, the circle that owns each row; `account.rubrics`, by `id`, and `account.totals`, by `sheet`, `total` and `line`, are shared, as the legal form's, and `account.spans` is shared by `kind` and `since`, each span summed over the periods it holds.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes the chart, its periods, the statements' rubrics and the capital terms to the analytics shell, as `account.chart`, `account.periods`, `account.rubrics` and `account.capital_terms`. A capital account is a member's, so the chart shows only the accounts no one holds; what the held ones sum to is account-transaction's. For the statements it publishes three more: `account.spans`, each span of the books with its days and the span before it; `account.placements`, the line each account no one holds is presented in on each sheet, by the longest prefix of its code as `rubric_of` places it; and `account.totals`, each total of a sheet expanded down to its lines, each line with the sign it is added with. `account.chart`, `account.periods`, `account.capital_terms` and `account.placements` are scoped by `circle`, the circle that owns each row; `account.rubrics`, by `id`, and `account.totals`, by `sheet`, `total` and `line`, are shared, as the legal form's, and `account.spans` is shared by `kind` and `since`, each span summed over the periods it holds. Each of its views is declared a published query, in `core/ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

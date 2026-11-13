@@ -5,6 +5,7 @@ import { action, today, type Slice } from '@cella/org-db'
 import { approve, correct, log, submit } from '../handlers/index.ts'
 import { entries, entry } from '../drivers/timesheet.ts'
 import * as forms from './forms.ts'
+import { contract } from './contract.ts'
 
 export { approve, correct, correcting, log, logging, submit, submitting } from '../handlers/index.ts'
 export { entries, entry, sheet, sheets } from '../drivers/timesheet.ts'
@@ -14,6 +15,7 @@ export * as forms from './forms.ts'
 // correcting it, and submitting or approving its member's month.
 export const slice: Slice = {
   name: 'timesheet',
+  queries: contract,
   collections: {
     timesheets: {
       list: entries,

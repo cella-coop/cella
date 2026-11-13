@@ -3,6 +3,7 @@
 // own write's transaction. Its reads, and its slice, which the shell mounts.
 import type { Slice } from '@cella/org-db'
 import { entry, journal, listing } from '../drivers/journal.ts'
+import { contract } from './contract.ts'
 
 export { adjust, adjusting, logged, pay, paying, post, posting, record } from '../handlers/index.ts'
 export { entry, journal } from '../drivers/journal.ts'
@@ -12,6 +13,7 @@ export { entry, journal } from '../drivers/journal.ts'
 // invoice-transaction graft.
 export const slice: Slice = {
   name: 'transaction',
+  queries: contract,
   collections: {
     transactions: {
       list: listing,

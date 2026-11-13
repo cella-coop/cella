@@ -1,6 +1,6 @@
 +++
 title = "account-transaction"
-updated = 2026-11-09
+updated = 2026-11-13
 +++
 
 A transaction's lines post to accounts. The graft resolves each line's
@@ -137,4 +137,4 @@ with the 2025 result of 61 400 € still to distribute.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `account_transaction.movements` to the analytics shell: the journal by account and day, what every statement and the trial balance sum. Each line is resolved to its account; a member's capital account is summed into its parent's code, so no row is one member's. It is shared by `code` and `day`.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `account_transaction.movements` to the analytics shell: the journal by account and day, what every statement and the trial balance sum. Each line is resolved to its account; a member's capital account is summed into its parent's code, so no row is one member's. It is shared by `code` and `day`. Its view is declared a published query, in `ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

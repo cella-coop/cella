@@ -293,4 +293,4 @@ not verified.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `invoice.invoices`, `invoice.taxes` and `invoice.payments` to the analytics shell: each invoice with its figures and standing, its VAT by rate, and its payments. Whom it is billed to is contact-invoice's. All three are scoped by `circle`, the circle that owns the invoice or the payment.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `invoice.invoices`, `invoice.taxes` and `invoice.payments` to the analytics shell: each invoice with its figures and standing, its VAT by rate, and its payments. Whom it is billed to is contact-invoice's. All three are scoped by `circle`, the circle that owns the invoice or the payment. Each of its views is declared a published query, in `core/ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

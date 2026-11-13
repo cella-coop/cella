@@ -324,8 +324,10 @@ test('a query written in SQL reads as its reader: Inès reads the tasks of Web\'
     assert.deepEqual(await through(chloe, project), await listed(project), `Chloé, a member in Marketing, reads every task of ${project} by open books, in the page's order`)
   }
 
-  // Every query a slice declares, read whole as Paul, who left.
-  const declared = slices.flatMap((s) => Object.values(s.queries ?? {}))
+  // Every query a slice declares, read whole as Paul, who left, but those
+  // its analytical contract publishes, which read as their owner and only
+  // through the port (analytics-shell.test.ts).
+  const declared = slices.flatMap((s) => Object.values(s.queries ?? {})).filter((q) => !q.published)
   assert.ok(declared.length > 0)
   for (const q of declared) {
     await app.query(`SELECT set_config('cella.actor', $1, false)`, [paul])

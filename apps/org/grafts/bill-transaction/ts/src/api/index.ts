@@ -4,6 +4,7 @@ import { action, type Slice } from '@cella/org-db'
 import { forms } from '@cella/org-bill/api'
 import { approve, pay } from '../handlers/post.ts'
 import { postings } from '../drivers/posting.ts'
+import { contract } from './contract.ts'
 
 export { approve, pay } from '../handlers/post.ts'
 export { postings } from '../drivers/posting.ts'
@@ -12,6 +13,7 @@ export { postings } from '../drivers/posting.ts'
 // the writes that post them to the books in the same verdict.
 export const slice: Slice = {
   name: 'bill-transaction',
+  queries: contract,
   extends: {
     bills: {
       item: postings,

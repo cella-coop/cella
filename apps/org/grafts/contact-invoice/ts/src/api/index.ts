@@ -3,6 +3,7 @@
 import { action, type Slice } from '@cella/org-db'
 import { link } from '../handlers/link.ts'
 import { billed, bills, contactOf, standing } from '../drivers/billing.ts'
+import { contract } from './contract.ts'
 
 export { link } from '../handlers/link.ts'
 export { billed, bills, contactOf, standing } from '../drivers/billing.ts'
@@ -11,6 +12,7 @@ export { billed, bills, contactOf, standing } from '../drivers/billing.ts'
 // contact owes, and the invoices that bill it.
 export const slice: Slice = {
   name: 'contact-invoice',
+  queries: contract,
   extends: {
     invoices: {
       list: contactOf,

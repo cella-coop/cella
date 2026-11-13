@@ -1,6 +1,6 @@
 +++
 title = "Patronage"
-updated = 2026-11-09
+updated = 2026-11-13
 +++
 
 The year-end cycle of a worker co-op's surplus: the statutes' terms for
@@ -316,4 +316,4 @@ document.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `patronage.distributions`, `patronage.shares`, `patronage.terms_adopted` and `patronage.parts` to the analytics shell: each distribution and its split, the terms adopted, and each distribution's parts summed by basis. A worker's part is theirs, so no row is one worker's. `patronage.distributions`, `patronage.shares` and `patronage.terms_adopted` are scoped by `circle`, the circle that owns each row, and `patronage.parts` is shared by `distribution` and `basis`. `patronage.parts` is counted: `patronage.parts_contributions` holds each worker's part by basis, which only the port reads, to withhold a basis from a reader where open books does not share it ([what is withheld](../../core/analytics/index.md#what-is-withheld)).
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `patronage.distributions`, `patronage.shares`, `patronage.terms_adopted` and `patronage.parts` to the analytics shell: each distribution and its split, the terms adopted, and each distribution's parts summed by basis. A worker's part is theirs, so no row is one worker's. `patronage.distributions`, `patronage.shares` and `patronage.terms_adopted` are scoped by `circle`, the circle that owns each row, and `patronage.parts` is shared by `distribution` and `basis`. `patronage.parts` is counted: `patronage.parts_contributions` holds each worker's part by basis, which only the port reads, to withhold a basis from a reader where open books does not share it ([what is withheld](../../core/analytics/index.md#what-is-withheld)). Each of its views but the contributions is declared a published query, in `core/ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

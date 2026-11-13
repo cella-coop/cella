@@ -5,6 +5,7 @@ import { action, type Slice } from '@cella/org-db'
 import { approve, pay, record } from '../handlers/index.ts'
 import { bill, bills, listing, offered } from '../drivers/bill.ts'
 import * as forms from './forms.ts'
+import { contract } from './contract.ts'
 
 export { approve, approving, pay, paying, record, recording } from '../handlers/index.ts'
 export { bill, bills } from '../drivers/bill.ts'
@@ -15,6 +16,7 @@ export * as forms from './forms.ts'
 // its own, which run these in the same transaction.
 export const slice: Slice = {
   name: 'bill',
+  queries: contract,
   collections: {
     bills: {
       list: listing,

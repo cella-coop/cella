@@ -4,6 +4,7 @@ import { action, type Slice } from '@cella/org-db'
 import { upload } from '../handlers/index.ts'
 import { content, file, files, listing } from '../drivers/file.ts'
 import * as forms from './forms.ts'
+import { contract } from './contract.ts'
 
 export { committed, request, storing, upload, uploading } from '../handlers/index.ts'
 export { content, file, files } from '../drivers/file.ts'
@@ -13,6 +14,7 @@ export * as forms from './forms.ts'
 // and a file of the co-op's own uploaded from the collection's page.
 export const slice: Slice = {
   name: 'file',
+  queries: contract,
   collections: {
     files: {
       list: listing,

@@ -1,6 +1,6 @@
 +++
 title = "Employment"
-updated = 2026-11-11
+updated = 2026-11-13
 +++
 
 A person's employment, member or not: the job, the contract, the days it
@@ -158,4 +158,4 @@ and not yet a member.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `employment.workers` to the analytics shell: each worker's job, contract and days, by address; their name is core's person's. It is scoped by `circle`, the circle that owns the worker's row, and by `address`, whose row it is.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `employment.workers` to the analytics shell: each worker's job, contract and days, by address; their name is core's person's. It is scoped by `circle`, the circle that owns the worker's row, and by `address`, whose row it is. Its view is declared a published query, in `core/ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

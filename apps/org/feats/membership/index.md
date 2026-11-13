@@ -266,6 +266,12 @@ power. `powers` (`cella test e2e powers`) reads the Powers tab of
 every Lanterne person against `may` and `entitled`, power by power,
 each signed in as the person whose page it is, Inès as herself, and a
 non-member reading another's tab finds no right on it.
+The slice's files run at once on one database. `invitation.test.ts`
+commits what it writes, as each of its writes is a transaction of its
+own, the notary's; `counts`, `holds`, `may` and `why-not` write inside a
+transaction each rolls back; and `rights.test.ts`, whose read as the
+app's reader is another connection's, commits its rows and reads only
+the rights it registers, never the invitation's.
 
 ## Shell
 

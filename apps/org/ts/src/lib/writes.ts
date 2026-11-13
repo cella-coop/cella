@@ -54,7 +54,10 @@ export const onSettings = (page: () => string, own = true): Route =>
 
 // An invitation's link, whose one write is its acceptance, sent and proved
 // by the `accept` command for the link's holder, as no session is open
-// yet.
+// yet. Once it settles it reads nothing again: the invitee's own page
+// loads afresh under the new session, and the shell refreshed here first
+// would turn the gate into the signed-in shell and remount this page to
+// ask for a link now spent, before the browser leaves it.
 export const onJoin = (secret: () => string): Route =>
   ({
     form: () => {
@@ -67,4 +70,5 @@ export const onJoin = (secret: () => string): Route =>
     prove: (run: string, proof: string) => accept({ secret: secret(), key: '', label: '', run, proof }),
     touched: [],
     ...reading,
+    after: async () => {},
   }) as unknown as Route

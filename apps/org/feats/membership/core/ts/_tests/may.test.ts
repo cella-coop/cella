@@ -22,6 +22,8 @@ const may = async (actor: string, power: string, about: string | null, day = '20
 
 before(async () => {
   await db.connect()
+  // The slice's tests share one database: what this one makes, it undoes.
+  await db.query('BEGIN')
   await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'ag', true) ON CONFLICT DO NOTHING`)
   for (const id of ['coordination', 'brand', 'web', 'operations']) {
     await db.query('INSERT INTO circle.circle (id, name) VALUES ($1, $1)', [id])
@@ -48,6 +50,7 @@ before(async () => {
 })
 
 after(async () => {
+  await db.query('ROLLBACK')
   await db.end()
 })
 

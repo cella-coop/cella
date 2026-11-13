@@ -1750,7 +1750,11 @@ refreshed apart, once the proof's have landed, throws inside Svelte's
 flush (Svelte 5.57.2); a settings page reads `shell` and its `page`
 again after a save that took or reached a verdict, as a theme's save
 is no proof, and a page whose write was refused before any signature
-reads again, so what a drop moved goes back.
+reads again, so what a drop moved goes back. An invitation's acceptance
+reads nothing again once it settles: the invitee's own page loads
+afresh under the new session, so the link's page is never drawn inside
+the signed-in shell, whose refresh would remount it to ask for a link
+now spent before the browser leaves it.
 
 Every command is served over HTTP too, at `POST /api/<feat>/<verb>`, the
 address of its permission `<feat>:<entity>:<verb>` ([actions](#actions)),

@@ -17,6 +17,11 @@ const amina = 'amina@rights'
 const ines = 'ines@rights'
 const paul = 'paul@rights'
 
+// The powers this file registers rights for: the slice's other tests
+// commit rights of their own, such as every person's to take up an
+// invitation, so a list this file compares reads only these.
+const ours = ['keep-profile', 'draw-account', 'log-time']
+
 const holds = async (actor: string, power: string, day = '2026-10-24') =>
   (await db.query<{ m: boolean }>('SELECT circle_person.may($1, $2, NULL, NULL, $3) OR circle_person.entitled($1, $2, NULL, $3) AS m', [actor, power, day])).rows[0].m
 
@@ -91,7 +96,7 @@ test('rights lists a right exactly where entitled grants its power, as a person\
       [who, day],
     )
     const listed = rows.map((r) => r.power)
-    for (const power of ['keep-profile', 'draw-account', 'log-time']) {
+    for (const power of ours) {
       const { rows: e } = await db.query<{ m: boolean }>(`SELECT circle_person.entitled($1, $2, NULL, $3) AS m`, [who, power, day])
       assert.equal(listed.includes(power), e[0].m, `${who} ${power} on ${day}`)
     }
@@ -104,8 +109,8 @@ test('read as the app\'s reader, rights answers a person for themselves, a membe
   const read = async (reader: string, person: string) => {
     await app.query(`SELECT set_config('cella.actor', $1, false)`, [reader])
     return (await app.query<{ power: string }>(
-      `SELECT power FROM circle_person.rights($1, '2026-10-24') ORDER BY power`,
-      [person],
+      `SELECT power FROM circle_person.rights($1, '2026-10-24') WHERE power = ANY($2) ORDER BY power`,
+      [person, ours],
     )).rows.map((r) => r.power)
   }
   // Amina sits in the assembly as a member; Inès, invited, is none, and
@@ -117,10 +122,10 @@ test('read as the app\'s reader, rights answers a person for themselves, a membe
   try {
     await app.query(`SELECT set_config('cella.actor', $1, false)`, [ines])
     assert.deepEqual((await app.query('SELECT id FROM circle.right')).rows, [], 'Inès reads no row of circle.right')
-    // What the slice's other tests register beside these rights, each
-    // holds too: a reader reads exactly what the whole does, or nothing.
+    // A reader reads exactly what the whole does of this file's rights, or
+    // nothing.
     const whole = async (person: string) =>
-      (await db.query<{ power: string }>(`SELECT power FROM circle_person.rights($1, '2026-10-24') ORDER BY power`, [person])).rows.map((r) => r.power)
+      (await db.query<{ power: string }>(`SELECT power FROM circle_person.rights($1, '2026-10-24') WHERE power = ANY($2) ORDER BY power`, [person, ours])).rows.map((r) => r.power)
     assert.ok((await whole(ines)).includes('keep-profile') && !(await whole(ines)).includes('draw-account'))
     assert.ok((await whole(amina)).includes('draw-account'))
     assert.deepEqual(await read(ines, ines), await whole(ines), 'Inès reads her own rights, her person\'s among them')

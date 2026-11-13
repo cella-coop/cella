@@ -127,7 +127,8 @@ The theme is light, dark or the system's, a cookie the server writes into
   challenge, the fixture members on the dev server, and a key made here
   for its person to enrol from a device they hold; and `Join`, an
   invitation's link opened, whose one button makes the invitee's first
-  device in this browser and takes the invitation up with it. Until the
+  device in this browser and takes the invitation up with it, then
+  loads the invitee's own page afresh, reading nothing again first. Until the
   browser runs the page's script, their buttons read as busy, since a
   click before it would do nothing.
 - `Popover`: the one popover and menu, opened from its trigger in the

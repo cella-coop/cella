@@ -199,10 +199,10 @@ eachBrowser((name, launch) => {
           await page.goto(`${dev.base}/circles/web`)
           await page.waitForLoadState('networkidle')
           assert.equal(await page.locator('h1.record').textContent().then((t) => t?.trim()), renamed, `${at}: the circle's page names it so`)
-          await page.locator('.coop button.trigger').click()
-          const circles = page.getByRole('group', { name: 'Circles' })
-          await circles.waitFor()
-          assert.ok((await circles.getByRole('menuitemradio').allTextContents()).map((t) => t.trim()).includes(renamed), `${at}: the co-op selector names it so`)
+          // Seen through it, the selector names the circle as it is now.
+          await page.getByRole('button', { name: 'View as this circle' }).click()
+          await page.waitForLoadState('networkidle')
+          assert.equal(await page.locator('.coop .name').textContent().then((t) => t?.trim()), renamed, `${at}: the co-op selector names it so`)
           await page.screenshot({ path: `${shots}/amended-${name}-${scheme}.png` })
           assert.deepEqual(errors, [], `${at}: the page threw nothing`)
         } finally {

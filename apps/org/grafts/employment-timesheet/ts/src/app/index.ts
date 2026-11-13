@@ -8,7 +8,7 @@ export const app: App = {
   name: 'employment-timesheet',
   extends: {
     timesheets: {
-      columns: [{ key: 'who', label: 'Worker', kind: 'badge', role: 'sub', value: (r: { who?: string }) => r.who }],
+      columns: [{ key: 'who', label: 'Worker', kind: 'badge', role: 'sub', record: 'people', value: (r: { who?: string }) => r.who }],
       dashboard: [{ kind: 'chart', title: 'Hours by worker', measure: { op: 'sum', field: 'hours' }, by: 'who' }],
     },
     people: {

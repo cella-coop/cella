@@ -10,7 +10,7 @@ export const app: App = {
   name: 'project-timesheet',
   extends: {
     timesheets: {
-      columns: [{ key: 'project', label: 'Project', kind: 'badge', role: 'meta', value: (r: { project?: string }) => r.project }],
+      columns: [{ key: 'project', label: 'Project', kind: 'badge', role: 'meta', record: 'projects', value: (r: { project?: string }) => r.project }],
       dashboard: [{ kind: 'chart', title: 'Hours by project', measure: { op: 'sum', field: 'hours' }, by: 'project' }],
     },
     projects: {

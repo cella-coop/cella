@@ -11,7 +11,7 @@ export const app: App = {
   name: 'project-task',
   extends: {
     tasks: {
-      columns: [{ key: 'project', label: 'Project', kind: 'badge', role: 'hidden', value: (r: { project?: string }) => r.project }],
+      columns: [{ key: 'project', label: 'Project', kind: 'badge', role: 'hidden', record: 'projects', value: (r: { project?: string }) => r.project }],
       page: {
         properties: (f: Filed) => [
           { label: 'Project', value: f.place?.title ?? 'none', href: f.place ? `/projects/${f.place.project}` : undefined },

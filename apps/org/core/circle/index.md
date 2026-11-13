@@ -79,8 +79,8 @@ its id: the copy is core's graft joining them to the register,
 `circle_policy.mandate_from(policy)` and
 `circle_policy.mandate_ended(policy)`, which read the register's values
 and never its wording, and write through the circles' own writes,
-`circle.issue`, `circle.give`, `circle.disclose`, `circle.publish` and
-`circle.withdraw`; the write that calls them is the motion feat's
+`circle.issue`, `circle.give`, `circle.disclose`, `circle.publish`,
+`circle.particularise` and `circle.withdraw`; the write that calls them is the motion feat's
 adoption and ending of a policy. What a mandate's values may be is
 circle-policy's too, `circle_policy.mandate_flaw(marked)`: one grantee, a role it has
 or a circle it has, a power named in lower case, at most a limit or a
@@ -406,6 +406,63 @@ person signed in reads a part published whole, as a member does, and
 nothing of a part that is not; `circle.publication` itself is the
 members'. Lanterne publishes nothing.
 
+### The co-op's particulars
+
+What the co-op is called, and the mentions its invoices print, are the
+assembly's by motion, never a setting a host makes: a rule of the
+assembly marking the co-op's particulars, each a text, as Lanterne's
+founding motion adopts them:
+
+```text
+The co-op is called {particulars_name: Lanterne}, its legal name {particulars_legal_name: Lanterne Worker Co-operative Limited Company}, a {particulars_form: Worker co-operative limited company with variable capital}, whose seat is {particulars_seat: 14 rue des Graviers, 93100 Montreuil, France}, registered under SIREN {particulars_siren: 000000000} at the trade register of {particulars_rcs: Bobigny}, with the VAT number {particulars_vat: FR00000000000}
+```
+
+- `particulars_name`: what the shell calls the co-op by;
+- `particulars_legal_name`: its name in law, which its invoices print
+  as their seller's;
+- `particulars_form`: its legal form as its papers print it, "with
+  variable capital" where its capital varies;
+- `particulars_capital`: its capital as its papers print it, for a
+  fixed capital only, such as `7 500 €`;
+- `particulars_seat`: its registered office;
+- `particulars_siren`: its SIREN, nine digits;
+- `particulars_rcs`: the town of the trade register it is registered at;
+- `particulars_vat`: its VAT number.
+
+A rule marking any of them is the particulars: it marks
+`particulars_name` and no value but these eight, its SIREN, if it marks
+one, is nine digits, spaces aside, and only the assembly adopts it; one
+that does not is refused as its motion is proposed and again as it is
+adopted, saying what is wrong (`circle.particulars_flaw`). Each value
+is text, the SIREN and the capital as the register types them by their
+name ([policy](../policy/index.md#sql)), so the rule says no way is
+stricter. One particulars rule stands at a time, as one publication
+does: a rule marking them whose days meet those of particulars not
+revoked is refused unless it replaces those (`circle.overlap_flaw`). A
+statute protects it, as Lanterne's founding protects its own by the
+extraordinary assembly's procedure, so only a motion by that procedure
+replaces it ([protected policies](../../feats/motion/index.md#protected-policies)).
+Circle-policy copies the values into `circle.particulars` in the write
+that adopts the rule, as it copies a publication's parts, and ends them
+with it: `circle_policy.particulars_from`, which
+`circle_policy.mandate_from` calls, and `circle.withdraw`, which
+`circle_policy.mandate_ended` calls.
+
+`circle.particulars()` reads the particulars in force on the verdict
+date, none where no rule stands: it runs as its owner, so every reader
+reads them, signed in or not, since a co-op's name and its mentions are
+what its every paper prints. The invoice feat keeps them with an invoice
+as its seller as it issues (`invoice.seller()`), so a motion replacing
+the particulars changes the invoices issued once it applies and never
+one issued before ([invoice](../../feats/invoice/index.md#the-pdf)); and
+the shell calls the co-op by its name (`named` in `@cella/org-log`).
+The scope's address and its timezone are no particulars: the notary
+signs by the one and dates by the other, so a host sets them
+([the notary](../notary/index.md#settings)). Circle-policy's
+`_tests/particulars.test.ts` tests the rule alone, and the e2e scenario
+`particulars` a motion of Lanterne's assembly moving its seat, the
+invoices issued before it and after.
+
 ## Open books
 
 What a co-op shares with every member of the totals of members' own
@@ -469,7 +526,8 @@ words ([the circles in the shell](../../feats/motion/index.md#the-circles-in-the
 `circle.grantee`, `circle.mandate` and `circle.right`, as in the
 entities above, `circle.disclosure`, open books' values by the rule
 that marks them, and `circle.publication`, the parts of the structure
-the publication publishes, each on its rule's days until it is revoked; a role's `holders` is a positive count or none. Every circle and every role is a grantee, its row made
+the publication publishes, and `circle.particulars`, the co-op's
+particulars, each on its rule's days until it is revoked; a role's `holders` is a positive count or none. Every circle and every role is a grantee, its row made
 by a trigger as the circle or the role is, so a circle and a role never
 share an id and a mandate's `grantee` is one foreign key, as its
 `issuer` is; its `parent` is a mandate, so the mandates form a forest
@@ -496,10 +554,10 @@ once the policies `ending` end
 and the mandates `adopting` are granted ([authority](#authority)), and
 `circle.bundle(day)` names the default bundle on a day: every mandate
 in force then on a role every circle has (`*`), by id. A mandate, a
-right, open books' values and a publication are written by the circles'
-own writes alone, which circle-policy calls as a policy is adopted and
-ends: `circle.issue`, `circle.give`, `circle.disclose` and
-`circle.publish` each make one by the policy's id and the values it
+right, open books' values, a publication and the particulars are written
+by the circles' own writes alone, which circle-policy calls as a policy
+is adopted and ends: `circle.issue`, `circle.give`, `circle.disclose`,
+`circle.publish` and `circle.particularise` each make one by the policy's id and the values it
 marks, and `circle.withdraw(policy, day)` revokes what a policy granted
 on a day, its mandate with every mandate issued under it.
 
@@ -789,11 +847,12 @@ know no policy ([its doc](../grafts/circle-policy/index.md#guards)):
   every mandate issued under it (`circle.outlives`, the first still
   standing, as a reason); and no policy of another kind has one; a
   disclosure rule has its values in `circle.disclosure`, and a
-  publication its parts in `circle.publication`, and those of the rule
-  it replaces are revoked the day it applies.
+  publication its parts in `circle.publication`, and the particulars
+  their values in `circle.particulars`, and those of the rule it
+  replaces are revoked the day it applies.
 - `circle_policy.revokes`, which the motion feat attaches to `motion:policy:end`:
-  the mandate, the right, the disclosure values or the publication of a
-  policy the write ended are revoked by the verdict date, and with the mandate every
+  the mandate, the right, the disclosure values, the publication or the
+  particulars of a policy the write ended are revoked by the verdict date, and with the mandate every
   mandate issued under it, down its provenance tree (`circle.outlives`).
 
 The circles' own:

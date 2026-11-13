@@ -1,6 +1,6 @@
 +++
 title = "Log"
-updated = 2026-11-08
+updated = 2026-11-13
 +++
 
 A signed, hash-chained log in CBOR, with an envelope every entry extends. It becomes the notary's log: receipts, verdicts and signed batches of confluent writes, checked by their hashes and signatures and never replayed to rebuild the state, which a scope restores from its backup ([trust](../../../../_corpus/doc/trust.md#one-server)).
@@ -15,7 +15,7 @@ deciding guards' owners; an entry with its receipt, hashes and signatures
 and each guard's text from `cella.guard_text`; whether `cella.verify_log()`
 passes, which the collection's header shows as its status, and the head
 and the scope's key; and the scope's address, and its name and legal
-name (`named`, from `cella.scope_name` and `cella.scope_legal_name`). Its slice
+name (`named`, from the co-op's particulars in force, `circle.particulars()`). Its slice
 mounts the `log` collection, the one a core library owns; it has no
 writes, since only the notary appends.
 

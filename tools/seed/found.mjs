@@ -40,30 +40,56 @@ import { files } from './file.mjs'
 const day = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null)
 const receipt = `nextval('cella.receipt_seq')`
 
+// The co-op's particulars as a rule of its assembly, worded from
+// scope.toml: what it is called, and its legal name, form, capital, seat,
+// SIREN, registry and VAT number where it names them, each marked once
+// ([the co-op's particulars](../../apps/org/core/circle/index.md#the-co-ops-particulars)).
+// The founding motion adopts it as its last action, protected by the
+// procedure that amends the statutes where the motion adopts one
+// (`{procedure: extraordinary}`), as Lanterne's does. Answers the
+// motions, the founding's with it; a scope that names no co-op adopts
+// none.
+export function particulars(scope, motions) {
+  if (!scope.name) {
+    return motions
+  }
+  const mark = (name, value) => `{particulars_${name}: ${value}}`
+  const wording = [
+    `The co-op is called ${mark('name', scope.name)}`,
+    scope.legal_name ? `, its legal name ${mark('legal_name', scope.legal_name)}` : '',
+    scope.form ? `, a ${mark('form', scope.form)}` : '',
+    scope.capital ? ` with a capital of ${mark('capital', scope.capital)}` : '',
+    scope.seat ? `, whose seat is ${mark('seat', scope.seat)}` : '',
+    scope.siren ? `, registered under SIREN ${mark('siren', scope.siren)}` : '',
+    scope.rcs ? `${scope.siren ? '' : ', registered'} at the trade register of ${mark('rcs', scope.rcs)}` : '',
+    scope.vat ? `, with the VAT number ${mark('vat', scope.vat)}` : '',
+  ].join('')
+  return motions.map((d) => {
+    if (d.id !== scope.founding) {
+      return d
+    }
+    const amends = (d.action ?? []).some(
+      (a) => a.kind === 'policy' && a.args?.kind === 'procedure' && /\{\s*procedure\s*:\s*extraordinary\s*\}/.test(a.args.wording),
+    )
+    const args = { kind: 'rule', wording, ...(amends ? { protected: 'extraordinary' } : {}) }
+    return { ...d, action: [...(d.action ?? []), { kind: 'policy', args }] }
+  })
+}
+
 // Founds the fixture `read` reads on `db`, an empty log, named `from`;
 // answers the founding's outcome and what it wrote, in words.
 export async function seed(db, read, { from, dir }) {
   // Every write signature names the scope; a new connection reads it. Its
-  // name and legal name ride beside it, for the shell to call the co-op by,
-  // and the mentions its invoices print: its form, SIREN, registry, VAT
-  // number, seat and, for a fixed capital, its amount; and its timezone,
-  // whose day the notary dates every verdict by.
+  // timezone rides beside it, whose day the notary dates every verdict
+  // by. What the co-op is called and what its papers print are no
+  // setting: they are its particulars, which its founding motion adopts.
   const scope = read('scope')
   const settings = {
     'cella.scope': scope.address,
-    'cella.scope_name': scope.name,
-    'cella.scope_legal_name': scope.legal_name,
-    'cella.scope_form': scope.form,
-    'cella.scope_siren': scope.siren,
-    'cella.scope_rcs': scope.rcs,
-    'cella.scope_vat': scope.vat,
-    'cella.scope_seat': scope.seat,
-    'cella.scope_capital': scope.capital,
     'cella.timezone': scope.timezone,
   }
   // The seed's own connection reads them too, so the founding names the
-  // scope, and each invoice it issues keeps the seller its mentions name
-  // (`invoice.seller`).
+  // scope and dates its verdicts by its day.
   for (const [setting, value] of Object.entries(settings)) {
     if (value) {
       await db.query(`ALTER DATABASE ${db.escapeIdentifier(db.database)} SET ${setting} = ${db.escapeLiteral(value)}`)
@@ -175,7 +201,8 @@ export async function seed(db, read, { from, dir }) {
     }
     const seats = [...(sitting.member ?? []), ...(sitting.tenure ?? [])]
 
-    const motions = read('motion').motion ?? []
+    // The motions, the founding's adopting the co-op's particulars last.
+    const motions = particulars(scope, read('motion').motion ?? [])
     let votes = 0
     let moved = 0
     let policies = 0

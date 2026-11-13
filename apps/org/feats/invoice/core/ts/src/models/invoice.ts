@@ -124,8 +124,8 @@ export interface Voided {
 }
 
 // The seller as an invoice names it (code de commerce, art. R123-237):
-// the scope's settings, `cella.scope_legal_name` and beside it, kept with
-// the invoice when it issues (`invoice.seller`); a setting not made is
+// the co-op's particulars, its legal name and beside it, kept with the
+// invoice when it issues (`invoice.seller`); a value they mark none of is
 // null and not printed, and `invoice.identified` issues no invoice
 // without any but the capital, and the VAT number where no line carries
 // VAT.

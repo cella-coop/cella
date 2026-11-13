@@ -1,7 +1,7 @@
 // A protected policy changes only by the stricter procedure it names, end
 // to end on a seeded Lanterne, through the handlers: its rights, and the
-// collective mandates that hand out mandates, are protected by the
-// extraordinary assembly's procedure; a motion ending the members' right
+// collective mandates that hand out mandates, and its particulars, are
+// protected by the extraordinary assembly's procedure; a motion ending the members' right
 // to draw on their account is decided by it whatever its proposal names,
 // and passed by it ends the right, which is revoked; and a policy naming a
 // procedure looser than its own motion's is refused. Run by `cella test
@@ -52,17 +52,18 @@ after(async () => {
   await su.end()
 })
 
-test('Lanterne\'s rights and the mandates that hand out mandates are protected by the extraordinary assembly', async () => {
+test('Lanterne\'s rights, the mandates that hand out mandates and its particulars are protected by the extraordinary assembly', async () => {
   const protectedBy = await all<{ id: string; protected: string; held: string }>(
-    `SELECT r.id, r.protected, coalesce('right ' || g."right", m.grantee || ' ' || m.power) AS held
+    `SELECT r.id, r.protected, coalesce('right ' || g."right", m.grantee || ' ' || m.power, 'particulars ' || x.name) AS held
      FROM policy.policy r LEFT JOIN circle.mandate m ON m.policy = r.id LEFT JOIN circle.right g ON g.policy = r.id
+     LEFT JOIN circle.particulars x ON x.policy = r.id
      WHERE r.protected IS NOT NULL ORDER BY r.n`,
   )
-  assert.equal(protectedBy.length, 22)
+  assert.equal(protectedBy.length, 23)
   assert.ok(protectedBy.every((p) => p.protected === 'extraordinary'))
   assert.deepEqual(
     protectedBy.filter((p) => !p.held.startsWith('right ')).map((p) => p.held),
-    ['ag adopt-policy', 'ag end-policy', 'ag seat-member', 'coordination adopt-policy', 'coordination end-policy', 'coordination seat-member'],
+    ['ag adopt-policy', 'ag end-policy', 'ag seat-member', 'coordination adopt-policy', 'coordination end-policy', 'coordination seat-member', 'particulars Lanterne'],
   )
   assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM circle.right`)).n, 16)
 })

@@ -1,6 +1,6 @@
 +++
 title = "Operations"
-updated = 2026-11-06
+updated = 2026-11-13
 +++
 
 # Operations
@@ -26,16 +26,16 @@ extension installed and preloaded. Its `postgresql.conf` sets:
 
 Both key files are readable by the server's user alone. The database
 carries `cella.scope`, the scope's address every signature names, and the
-co-op's names, `cella.scope_name` and `cella.scope_legal_name`, and the
-mentions its invoices print: `cella.scope_form` (with "à capital variable"
-where the capital varies), `cella.scope_capital` (the amount, for a fixed
-capital only), `cella.scope_siren`, `cella.scope_rcs` (the town of its
-registry), `cella.scope_vat` and `cella.scope_seat`, and the scope's
-timezone, `cella.timezone` (an IANA zone such as `Europe/Paris`, whose
-day the notary dates every verdict by; UTC when unset), all set with
-`ALTER DATABASE … SET`. An invoice keeps the mentions as they stand when it
-issues, so a seat that moves changes the invoices issued after the move
-and never the PDF of one issued before
+scope's timezone, `cella.timezone` (an IANA zone such as `Europe/Paris`,
+whose day the notary dates every verdict by; UTC when unset), both set
+with `ALTER DATABASE … SET`. Nothing else of the co-op is a host's: its
+name, its legal name and the mentions its invoices print are its
+particulars, a policy its assembly adopts by motion, which `cella seed`
+carries in by the founding motion from the fixture's `scope.toml`
+([the co-op's particulars](../../apps/org/core/circle/index.md#the-co-ops-particulars)).
+An invoice keeps the mentions as they stand when it issues, so a seat
+that moves changes the invoices issued after the move and never the PDF
+of one issued before
 ([invoice](../../apps/org/feats/invoice/index.md#the-pdf)). `cella migrate --url` makes
 the roles `cella_app`, `cella_guards` and `cella_analytics` and every
 schema, and grants the analytics role the views the slices' analytical

@@ -1,9 +1,10 @@
 -- circle-policy, core's graft joining the circles to the policy register:
--- a mandate, a right, open books' disclosure values and the publication
--- are each a policy's, a sentence a circle adopted by motion. Their
+-- a mandate, a right, open books' disclosure values, the publication and
+-- the co-op's particulars are each a policy's, a sentence a circle adopted by motion. Their
 -- values are read here from the register, by its values, never its
 -- wording, and issued by the circles' writes as the policy is adopted
--- (`circle.issue`, `circle.give`, `circle.disclose`, `circle.publish`),
+-- (`circle.issue`, `circle.give`, `circle.disclose`, `circle.publish`,
+-- `circle.particularise`),
 -- and revoked as it ends or is replaced (`circle.withdraw`), in the same
 -- write. Neither feat knows the other; this schema holds what reads both.
 
@@ -246,13 +247,62 @@ BEGIN
 END
 $$;
 
+-- The particulars as their rule marks them, each as written, and its
+-- days; no row for a policy that marks none of them.
+CREATE FUNCTION circle_policy.particulars_of(ref text) RETURNS TABLE (name text, legal_name text, form text, capital text, siren text,
+                                                                     rcs text, vat text, seat text, "from" date, until date)
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT max(v.literal) FILTER (WHERE v.name = 'particulars_name'),
+         max(v.literal) FILTER (WHERE v.name = 'particulars_legal_name'),
+         max(v.literal) FILTER (WHERE v.name = 'particulars_form'),
+         max(v.literal) FILTER (WHERE v.name = 'particulars_capital'),
+         max(v.literal) FILTER (WHERE v.name = 'particulars_siren'),
+         max(v.literal) FILTER (WHERE v.name = 'particulars_rcs'),
+         max(v.literal) FILTER (WHERE v.name = 'particulars_vat'),
+         max(v.literal) FILTER (WHERE v.name = 'particulars_seat'),
+         p.applies, p.ends
+  FROM policy.policy p
+  JOIN policy.value v ON v.policy = p.id
+  WHERE p.id = particulars_of.ref AND p.kind = 'rule'
+  GROUP BY p.id, p.applies, p.ends
+  HAVING bool_or(v.name = ANY (circle.particular_names()));
+END;
+
+-- Copies the co-op's particulars into `circle.particulars` in the write
+-- that adopts their rule (`circle.particularise`). Returns the row it
+-- made, or null for a policy that marks none of them; particulars that
+-- are unsound, or whose days meet another's they do not replace
+-- (`circle.overlap_flaw`), are refused (SQLSTATE 09000).
+CREATE FUNCTION circle_policy.particulars_from(ref text) RETURNS bigint
+LANGUAGE plpgsql AS $$
+DECLARE
+  wrong text;
+  made bigint;
+BEGIN
+  IF NOT EXISTS (SELECT FROM circle_policy.particulars_of(ref)) THEN
+    RETURN NULL;
+  END IF;
+  wrong := coalesce(
+    circle.particulars_flaw(circle_policy.marks_of(ref), (SELECT p.circle FROM policy.policy p WHERE p.id = ref)),
+    (SELECT circle.overlap_flaw('particulars', p.applies, p.ends, p.replaces, p.id) FROM policy.policy p WHERE p.id = ref));
+  IF wrong IS NOT NULL THEN
+    RAISE EXCEPTION '%', wrong USING ERRCODE = 'triggered_action_exception';
+  END IF;
+  SELECT circle.particularise(ref, o.name, o.legal_name, o.form, o.capital, o.siren, o.rcs, o.vat, o.seat, o."from", o.until) INTO made
+  FROM circle_policy.particulars_of(ref) o;
+  RETURN made;
+END
+$$;
+
 -- Revokes what the policy it replaces granted, the day it applies,
 -- whatever it is (`circle.withdraw`), with every mandate issued under
 -- that one's mandate; then copies a mandate policy's values into the
 -- mandate they grant, with its issuer and the mandate it is issued under
 -- (`circle.issue`), or a right policy's into the right (`circle.give`),
--- a disclosure rule's into open books (`circle_policy.disclosure_from`) and a
--- publication's into its parts (`circle_policy.publication_from`), in the write
+-- a disclosure rule's into open books (`circle_policy.disclosure_from`), a
+-- publication's into its parts (`circle_policy.publication_from`) and the
+-- particulars' into theirs (`circle_policy.particulars_from`), in the write
 -- that adopts it. Returns the mandate, or null for a right or a policy of
 -- another kind, and the mandates it revoked; values that grant nothing
 -- are refused (SQLSTATE 09000).
@@ -272,6 +322,7 @@ BEGIN
   gone := coalesce(gone, '{}');
   PERFORM circle_policy.disclosure_from(ref);
   PERFORM circle_policy.publication_from(ref);
+  PERFORM circle_policy.particulars_from(ref);
   SELECT p.kind INTO k FROM policy.policy p WHERE p.id = ref AND p.kind IN ('mandate', 'right');
   IF k IS NULL THEN
     RETURN QUERY SELECT NULL::bigint, gone;
@@ -295,8 +346,8 @@ BEGIN
 END
 $$;
 
--- Revokes the mandate, the right, the disclosure values or the
--- publication of a policy that ended, on the day it ended, in the write
+-- Revokes the mandate, the right, the disclosure values, the
+-- publication or the particulars of a policy that ended, on the day it ended, in the write
 -- that ends it, and with the mandate every mandate issued under it
 -- (`circle.withdraw`). Returns the mandate, or null, and the mandates it
 -- revoked, the policy's first.
@@ -357,10 +408,19 @@ BEGIN ATOMIC
     ) THEN r.id || ' publishes nothing the structure''s policies read: its parts are copied as it is adopted'
     WHEN EXISTS (SELECT FROM circle.publication s WHERE s.policy = r.id) AND NOT EXISTS (SELECT FROM circle_policy.publication_of(r.id))
       THEN r.id || ' marks no publish, and publishes some'
+    WHEN r.kind = 'rule' AND EXISTS (SELECT FROM circle_policy.particulars_of(r.id)) AND NOT EXISTS (
+      SELECT FROM circle_policy.particulars_of(r.id) v
+      JOIN circle.particulars s ON s.policy = r.id
+      WHERE (s.name, s.legal_name, s.form, s.capital, s.siren, s.rcs, s.vat, s.seat, s."from", s.until)
+        IS NOT DISTINCT FROM (v.name, v.legal_name, v.form, v.capital, v.siren, v.rcs, v.vat, v.seat, v."from", v.until)
+    ) THEN r.id || ' sets no particulars the co-op''s papers read: its values are copied as it is adopted'
+    WHEN EXISTS (SELECT FROM circle.particulars s WHERE s.policy = r.id) AND NOT EXISTS (SELECT FROM circle_policy.particulars_of(r.id))
+      THEN r.id || ' marks no particulars, and sets some'
     WHEN EXISTS (SELECT FROM circle.mandate o WHERE o.policy = r.replaces AND (o.revoked IS NULL OR o.revoked > r.applies))
       OR EXISTS (SELECT FROM circle.right o WHERE o.policy = r.replaces AND o.revoked IS DISTINCT FROM r.applies)
       OR EXISTS (SELECT FROM circle.disclosure o WHERE o.policy = r.replaces AND o.revoked IS DISTINCT FROM r.applies)
       OR EXISTS (SELECT FROM circle.publication o WHERE o.policy = r.replaces AND o.revoked IS DISTINCT FROM r.applies)
+      OR EXISTS (SELECT FROM circle.particulars o WHERE o.policy = r.replaces AND o.revoked IS DISTINCT FROM r.applies)
       THEN 'what ' || r.replaces || ' granted is not revoked the day ' || r.id || ' applies'
     ELSE (SELECT circle.outlives(o.id, r.applies) FROM circle.mandate o WHERE o.policy = r.replaces)
   END
@@ -385,7 +445,9 @@ BEGIN ATOMIC
     (SELECT 'the disclosure values of ' || r.id || ' are not revoked the day it ends'
      FROM circle.disclosure s WHERE s.policy = r.id AND s.revoked IS DISTINCT FROM r.ends),
     (SELECT 'the publication of ' || r.id || ' is not revoked the day it ends'
-     FROM circle.publication s WHERE s.policy = r.id AND s.revoked IS DISTINCT FROM r.ends)
+     FROM circle.publication s WHERE s.policy = r.id AND s.revoked IS DISTINCT FROM r.ends),
+    (SELECT 'the particulars of ' || r.id || ' are not revoked the day it ends'
+     FROM circle.particulars s WHERE s.policy = r.id AND s.revoked IS DISTINCT FROM r.ends)
   )
   FROM policy.policy r
   WHERE r.id = payload ->> 'policy';

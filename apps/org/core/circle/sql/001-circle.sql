@@ -145,6 +145,28 @@ CREATE TABLE circle.publication (
   CHECK (until IS NULL OR "from" < until)
 );
 
+-- The co-op's particulars: what it is called and the mentions its papers
+-- print, copied from the assembly's rule that marks them as it is
+-- adopted (`circle.particularise`), on its policy's days, each a text as
+-- written, a value it marks not being null; `revoked`, the day its rule
+-- ended or was replaced.
+CREATE TABLE circle.particulars (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  policy text NOT NULL UNIQUE,
+  name text NOT NULL CHECK (name ~ '\S'),
+  legal_name text,
+  form text,
+  capital text,
+  siren text,
+  rcs text,
+  vat text,
+  seat text,
+  "from" date NOT NULL,
+  until date,
+  revoked date,
+  CHECK (until IS NULL OR "from" < until)
+);
+
 GRANT USAGE ON SCHEMA circle TO cella_app, cella_guards;
 GRANT SELECT ON ALL TABLES IN SCHEMA circle TO cella_app, cella_guards;
 

@@ -365,9 +365,10 @@ so is a right. It reads as its reader, so it shows the actions of the motions it
   is on; and the end of a mandate's policy is put to a circle on its
   chain as an issuer (`circle.chain`), the one that issued it or one
   that issued a mandate it is issued under, the assembly on every chain.
-  A rule marking open books' disclosure values, or the parts of the
-  structure it publishes, is the assembly's and marks them soundly
-  (`circle_policy.disclosure_flaw`, `circle.publication_flaw`), and, since one
+  A rule marking open books' disclosure values, the parts of the
+  structure it publishes or the co-op's particulars is the assembly's and
+  marks them soundly (`circle_policy.disclosure_flaw`,
+  `circle.publication_flaw`, `circle.particulars_flaw`), and, since one
   of each stands at a time, replaces the one in force on days its own
   meet, which the refusal names, and is the motion's only one of its
   kind on those days (`circle.overlap_flaw`, `motion.standing_rules`).

@@ -589,7 +589,7 @@ circles to another core feat is a core graft, as `circle-policy` joins
 them to the register ([core grafts](#core-grafts)).
 
 Circles know no policy. A mandate, a right, open books' disclosure
-values and the publication are each copied from a policy as it is
+values, the publication and the co-op's particulars are each copied from a policy as it is
 adopted, and the circles keep them in their own tables by the policy's
 id; what reads the policy is the core graft joining the circles to the
 register, `circle-policy` ([core grafts](#core-grafts)).

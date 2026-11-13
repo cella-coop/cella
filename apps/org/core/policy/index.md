@@ -1,6 +1,6 @@
 +++
 title = "Policy"
-updated = 2026-11-10
+updated = 2026-11-13
 +++
 
 The register of policies (`@cella/org-policy`): every binding sentence a
@@ -54,7 +54,10 @@ Its functions:
 
 - `policy.marks(legal)` and `policy.typed(name, literal)`: the values a
   wording marks, which way each says is stricter, and each one's type and
-  value from how it is written.
+  value from how it is written: a role or a power by its name, and the
+  co-op's SIREN and capital (`particulars_siren`, `particulars_capital`)
+  text by theirs, as its papers print them, digits or an amount though
+  they are ([the co-op's particulars](../circle/index.md#the-co-ops-particulars)).
 - `policy.flaw(legal, friendly)`: what is wrong with the wordings, or
   null: a legal wording says something, marks each value once and with a
   value, holds no brace that is not a mark, and says which way is

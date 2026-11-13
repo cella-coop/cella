@@ -767,7 +767,7 @@ mod tests {
                 (String::new(), "cella.scope=lanterne.example".into()),
                 (
                     String::new(),
-                    "cella.scope_legal_name=Lanterne SCOP SARL".into(),
+                    "cella.timezone=Europe/Paris".into(),
                 ),
                 ("cella_app".into(), "cella.clock=2026-10-24".into()),
             ],

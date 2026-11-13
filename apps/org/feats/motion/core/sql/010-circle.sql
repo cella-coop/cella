@@ -253,15 +253,17 @@ BEGIN ATOMIC
   LEFT JOIN circle.disclosed(withhold_flaw.day) d ON true;
 END;
 
--- The rules a motion would adopt that set open books' disclosure values
--- or publish parts of the structure, each with the days it would apply
+-- The rules a motion would adopt that set open books' disclosure values,
+-- publish parts of the structure or set the co-op's particulars, each with the days it would apply
 -- were the motion closed at its deadline and the policy it replaces, as
 -- `circle.overlap_flaw` judges them; none whose days are not written
 -- YYYY-MM-DD, which `motion.asks` refuses.
 CREATE FUNCTION motion.standing_rules(motion text) RETURNS TABLE (n integer, what text, day date, until date, replaces text)
 LANGUAGE sql STABLE
 BEGIN ATOMIC
-  SELECT m.n, CASE WHEN k.marked ? 'publish' THEN 'publication' ELSE 'disclosure' END,
+  SELECT m.n, CASE WHEN k.marked ? 'publish' THEN 'publication'
+                   WHEN EXISTS (SELECT FROM jsonb_object_keys(k.marked) x WHERE x = ANY (circle.particular_names())) THEN 'particulars'
+                   ELSE 'disclosure' END,
          coalesce((m.args ->> 'from')::date, d.deadline), (m.args ->> 'until')::date, nullif(m.args ->> 'replaces', '')
   FROM motion.action m
   JOIN motion.motion d ON d.id = m.motion
@@ -269,7 +271,7 @@ BEGIN ATOMIC
   WHERE m.motion = standing_rules.motion AND m.kind = 'policy' AND m.args ->> 'kind' = 'rule'
     AND coalesce(m.args ->> 'from', '') ~ '^([0-9]{4}-[0-9]{2}-[0-9]{2})?$'
     AND coalesce(m.args ->> 'until', '') ~ '^([0-9]{4}-[0-9]{2}-[0-9]{2})?$'
-    AND (k.marked ? 'publish' OR EXISTS (SELECT FROM jsonb_object_keys(k.marked) x WHERE x LIKE 'disclosure\_%'));
+    AND (k.marked ? 'publish' OR EXISTS (SELECT FROM jsonb_object_keys(k.marked) x WHERE x LIKE 'disclosure\_%' OR x = ANY (circle.particular_names())));
 END;
 
 -- motion:motion:propose — each action of these kinds names what it
@@ -287,9 +289,10 @@ END;
 -- keeping one in force on the verdict date (`circle.sovereignty`):
 -- another adopted earlier in the motion with no `from` and no `until`,
 -- or one in force it holds that the motion does not end.
--- A rule marking open books' disclosure values, or the parts of the
--- structure it publishes, is the assembly's and marks them soundly
--- (`circle_policy.disclosure_flaw`, `circle.publication_flaw`); one of each
+-- A rule marking open books' disclosure values, the parts of the
+-- structure it publishes or the co-op's particulars is the assembly's and
+-- marks them soundly (`circle_policy.disclosure_flaw`,
+-- `circle.publication_flaw`, `circle.particulars_flaw`); one of each
 -- stands at a time, so such a rule replaces the one its days meet
 -- (`circle.overlap_flaw`), and a motion adopts no two of a kind whose
 -- days meet.
@@ -356,10 +359,19 @@ BEGIN ATOMIC
     ) k
     WHERE m.motion = payload ->> 'motion' AND m.kind = 'policy' AND m.args ->> 'kind' = 'rule'
     UNION ALL
+    SELECT circle.particulars_flaw(k.marks, d.circle)
+    FROM motion.action m
+    JOIN motion.motion d ON d.id = m.motion
+    CROSS JOIN LATERAL (
+      SELECT jsonb_object_agg(p.name, jsonb_build_object('literal', p.literal, 'stricter', p.stricter)) AS marks
+      FROM policy.marks(m.args ->> 'wording') p
+    ) k
+    WHERE m.motion = payload ->> 'motion' AND m.kind = 'policy' AND m.args ->> 'kind' = 'rule'
+    UNION ALL
     SELECT coalesce(
       circle.overlap_flaw(s.what, s.day, s.until, s.replaces, NULL),
       (SELECT 'actions ' || o.n || ' and ' || s.n || ' of ' || (payload ->> 'motion') || ' are both '
-         || CASE s.what WHEN 'disclosure' THEN 'a disclosure rule' ELSE 'a publication' END
+         || CASE s.what WHEN 'disclosure' THEN 'a disclosure rule' WHEN 'particulars' THEN 'the co-op''s particulars' ELSE 'a publication' END
          || ' on days that meet: one stands at a time, so a motion adopts one'
        FROM motion.standing_rules(payload ->> 'motion') o
        WHERE o.what = s.what AND o.n < s.n

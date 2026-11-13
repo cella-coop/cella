@@ -1,6 +1,6 @@
 +++
 title = "Lanterne"
-updated = 2026-11-09
+updated = 2026-11-13
 +++
 
 # Lanterne
@@ -220,6 +220,13 @@ assembly, and no one opens a candidacy for another.
   coordination's collective mandates and its capital and work share terms
   are its own. It has left none of the defaults, so its statutes say they
   leave none.
+- **Particulars.** Its name, legal name, form, seat, SIREN, registry
+  and VAT number are `scope.toml`'s, which `cella seed` words as its
+  particulars, a rule of the assembly the founding motion adopts as its
+  last action, protected by the extraordinary assembly's procedure
+  ([the co-op's particulars](../../core/circle/index.md#the-co-ops-particulars)):
+  its invoices print them, and the shell calls it Lanterne. Its capital
+  varies, so it marks none; its address and timezone stay settings.
 - **Statutes (generated).** The statutes are the assembly's policies in
   order, generated around the fixed text of a worker co-operative limited
   company with variable capital (`document.toml`), and after them the

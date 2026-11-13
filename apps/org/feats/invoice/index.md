@@ -1,6 +1,6 @@
 +++
 title = "Invoice"
-updated = 2026-11-09
+updated = 2026-11-13
 +++
 
 What the co-op bills: issue an invoice, send it, record what is paid
@@ -121,11 +121,13 @@ arrives at rung 3.
 - `invoice.line`: description, quantity (exact decimal), unit price,
   amount (quantity × unit price, rounded to the cent) and VAT rate, a
   percent with two decimals (5,50).
-- `invoice.seller()`: the seller as the scope's settings name it now
-  (`cella.scope_legal_name`, `_form`, `_capital`, `_siren`, `_rcs`,
-  `_vat`, `_seat`), each null where it is not set; `seller`'s default,
-  so an invoice keeps what the settings said the moment it issued. An
-  invoice issued before it was kept took the settings at that upgrade.
+- `invoice.seller()`: the seller as the co-op's particulars in force on
+  the verdict date name it (`circle.particulars()`: its legal name, form,
+  capital, SIREN, registry, VAT number and seat), each null where they
+  mark none; `seller`'s default, so an invoice keeps what the
+  particulars said the moment it issued, and a motion replacing them
+  changes the invoices issued once it applies and no invoice issued
+  before ([the co-op's particulars](../../core/circle/index.md#the-co-ops-particulars)).
 - `invoice.payment`: received `at`, amount, method and the bank's
   reference, with a receipt; unique by invoice and reference.
 - `invoice.spend(series)`: the bounded write's spend. It takes the next
@@ -159,9 +161,10 @@ assembly's, unless the write that makes it names another.
 - `invoice.identified`, on `invoice:invoice:issue`: the invoice issued
   names whom it bills and their address, and its seller's legal name,
   form, seat, SIREN and registry, and its VAT number where a line
-  carries VAT, none of them blank. A scope whose settings lack one
-  issues no invoice until a host sets it, and the refusal names what is
-  missing; an issued invoice is corrected only by a void, so a missing
+  carries VAT, none of them blank. A co-op whose particulars lack one
+  issues no invoice until a motion of its assembly adopts particulars
+  marking it, and the refusal names what is missing and the value that
+  marks it; an issued invoice is corrected only by a void, so a missing
   mention is kept out here or not at all.
 - `invoice.voids`, on `invoice:invoice:void`: the write voided the invoice
   on the verdict date, and no payment exists; a paid invoice is not voided,
@@ -240,9 +243,9 @@ R123-237).
 
 | Mention | Printed from | Law |
 |---|---|---|
-| seller's legal name, form, seat; capital where it is fixed | `seller`, from `cella.scope_legal_name`, `_form`, `_seat`, `_capital` | L441-9; R123-237; "with variable capital" for a capital that varies |
-| SIREN, the trade register ("RCS") and its town | `seller`, from `cella.scope_siren`, `_rcs` | R123-237; 242 nonies A, I, 2° |
-| seller's VAT number | `seller`, from `cella.scope_vat` | 242 nonies A, I, 2° |
+| seller's legal name, form, seat; capital where it is fixed | `seller`, from the particulars' `particulars_legal_name`, `_form`, `_seat`, `_capital` | L441-9; R123-237; "with variable capital" for a capital that varies |
+| SIREN, the trade register ("RCS") and its town | `seller`, from `particulars_siren`, `_rcs` | R123-237; 242 nonies A, I, 2° |
+| seller's VAT number | `seller`, from `particulars_vat` | 242 nonies A, I, 2° |
 | buyer's name and address | `bill_to`, `bill_address` | L441-9; 242 nonies A, I, 1° |
 | number, in one gapless series, and date of issue | `id`, `issued` | 242 nonies A, I, 6° and 7° |
 | each line's quantity, description, unit price before tax and VAT rate | `invoice.line` | 242 nonies A, I, 8° bis |

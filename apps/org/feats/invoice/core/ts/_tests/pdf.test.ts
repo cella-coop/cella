@@ -1,6 +1,6 @@
 // An issued invoice's PDF, on a database holding only the app's core and
-// this feat: it prints the seller's mentions as the scope's settings named
-// them when it issued, a decimal VAT rate,
+// this feat: it prints the seller's mentions as the co-op's particulars
+// named them when it issued, a decimal VAT rate,
 // the address billed as issued, each line, the VAT by rate adding up to
 // the invoice's, and the terms of payment; it is a well-formed PDF, the
 // same bytes each time, breaking onto pages with the mentions on each;
@@ -21,14 +21,31 @@ const scope = 'test.example'
 const julien = 'julien@test.example'
 const as: Deps = { db, actor: julien, sign: signer(scope, julien, fixture(julien, 'laptop')) }
 
-const settings = {
-  scope: scope,
-  scope_legal_name: 'Lanterne Worker Co-operative',
-  scope_form: 'worker co-operative limited company with variable capital',
-  scope_siren: '123456789',
-  scope_rcs: 'Bobigny',
-  scope_vat: 'FR12123456789',
-  scope_seat: '14 rue des Graviers, 93100 Montreuil, France',
+// The co-op's particulars, as its assembly's rule sets them: core's
+// `circle.particulars`, in force from the clock's day, which the test
+// writes itself, since it holds no motion feat to adopt a rule.
+const particulars = {
+  name: 'Lanterne',
+  legal_name: 'Lanterne Worker Co-operative',
+  form: 'worker co-operative limited company with variable capital',
+  siren: '123456789',
+  rcs: 'Bobigny',
+  vat: 'FR12123456789',
+  seat: '14 rue des Graviers, 93100 Montreuil, France',
+}
+type Particulars = { [K in keyof typeof particulars]: string | null }
+
+// Replaces the particulars in force with `values` from the clock's day, as
+// a motion replacing their rule does: the one before is revoked that day.
+let rules = 0
+async function particularise(values: Particulars) {
+  await db.query(`UPDATE circle.particulars SET revoked = '2026-10-24' WHERE revoked IS NULL`)
+  rules++
+  await db.query(
+    `INSERT INTO circle.particulars (policy, name, legal_name, form, siren, rcs, vat, seat, "from")
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, '2026-10-24')`,
+    [`m-2026-${String(rules).padStart(3, '0')}/1`, values.name, values.legal_name, values.form, values.siren, values.rcs, values.vat, values.seat],
+  )
 }
 
 // The text a PDF's pages print, as its WinAnsi bytes read.
@@ -55,9 +72,8 @@ before(async () => {
   // which reads seats and mandates this test does not make.
   await db.query(`DELETE FROM cella.guard WHERE fn = 'circle_person.empowered(jsonb)'::regprocedure`)
   await db.query(`SET cella.clock = '2026-10-24'`)
-  for (const [k, v] of Object.entries(settings)) {
-    await db.query(`SET cella.${k} = ${db.escapeLiteral(v)}`)
-  }
+  await db.query(`SET cella.scope = ${db.escapeLiteral(scope)}`)
+  await particularise(particulars)
   // Any device signs for anyone, in place of core person's keyring.
   await db.query(`CREATE FUNCTION public.anyone(actor text, device bytea) RETURNS text LANGUAGE sql STABLE RETURN NULL`)
   await db.query('DELETE FROM cella.keyring')
@@ -188,22 +204,23 @@ test('the address billed is issued with the invoice and never changes', async ()
   )
 })
 
-test('the seller is kept as issued: a seat that moves later never alters an issued invoice', async () => {
-  await db.query(`SET cella.scope_seat = '3 avenue Gambetta, 75020 Paris, France'`)
+test('the seller is kept as issued: particulars replaced later never alter an issued invoice', async () => {
+  const moved = '3 avenue Gambetta, 75020 Paris, France'
+  await particularise({ ...particulars, seat: moved })
   try {
     const before = await printed(db, 'F-2026-0001')
     assert.ok(before)
-    assert.equal(before.seller.seat, settings.scope_seat)
-    assert.ok(text(pdf(before)).includes(`Registered office: ${settings.scope_seat}`))
+    assert.equal(before.seller.seat, particulars.seat)
+    assert.ok(text(pdf(before)).includes(`Registered office: ${particulars.seat}`))
     const id = await issued(draft([{ description: 'Upkeep', quantity: '1', unit_price: 300_00, vat_rate: 2000 }]))
-    const moved = await printed(db, id)
-    assert.equal(moved?.seller.seat, '3 avenue Gambetta, 75020 Paris, France', 'an invoice issued after the move names the new seat')
+    const after = await printed(db, id)
+    assert.equal(after?.seller.seat, moved, 'an invoice issued once the particulars are replaced names the new seat')
     await assert.rejects(
       db.query(`UPDATE invoice.invoice SET seller = invoice.seller() WHERE id = 'F-2026-0001'`),
       /is issued and never changes/,
     )
   } finally {
-    await db.query(`SET cella.scope_seat = ${db.escapeLiteral(settings.scope_seat)}`)
+    await particularise(particulars)
   }
 })
 
@@ -261,14 +278,14 @@ async function refused(input: Issue): Promise<string> {
   return out.state === 'refused' ? out.reason : ''
 }
 
-// Unsets one of the seller's settings around `run`, as a scope whose host
-// had not made it.
-async function without(setting: string, run: () => Promise<void>) {
-  await db.query(`SET cella.${setting} = ''`)
+// Leaves one of the particulars unmarked around `run`, as a co-op whose
+// rule marks none.
+async function without(value: keyof typeof particulars, run: () => Promise<void>) {
+  await particularise({ ...particulars, [value]: null })
   try {
     await run()
   } finally {
-    await db.query(`SET cella.${setting} = ${db.escapeLiteral(settings[setting as keyof typeof settings])}`)
+    await particularise(particulars)
   }
 }
 
@@ -281,25 +298,25 @@ test('an invoice whose address billed is blank is refused at issue, and spends n
   assert.match(await refused({ ...one, bill_to: ' ' }), /does not issue without the name it bills/)
 })
 
-test('an invoice whose seller lacks its legal name, form, seat, SIREN or registry is refused, naming the setting', async () => {
+test('an invoice whose seller lacks its legal name, form, seat, SIREN or registry is refused, naming the value that marks it', async () => {
   const named = {
-    scope_legal_name: 'legal name',
-    scope_form: 'legal form',
-    scope_seat: 'seat',
-    scope_siren: 'SIREN',
-    scope_rcs: 'registry',
-  }
-  for (const [setting, what] of Object.entries(named)) {
-    await without(setting, async () => {
+    legal_name: 'legal name',
+    form: 'legal form',
+    seat: 'seat',
+    siren: 'SIREN',
+    rcs: 'registry',
+  } as const
+  for (const [value, what] of Object.entries(named)) {
+    await without(value as keyof typeof named, async () => {
       const reason = await refused(one)
-      assert.ok(reason.includes(`the seller's ${what} (cella.${setting})`), reason)
+      assert.ok(reason.includes(`the seller's ${what} (particulars_${value})`), reason)
     })
   }
 })
 
 test('the seller\'s VAT number is required where a line carries VAT, and not on an invoice without VAT', async () => {
-  await without('scope_vat', async () => {
-    assert.match(await refused(one), /the seller's VAT number \(cella\.scope_vat\), as a line carries VAT/)
+  await without('vat', async () => {
+    assert.match(await refused(one), /the seller's VAT number \(particulars_vat\), as a line carries VAT/)
     const id = await issued(draft([{ description: 'Training, exempt', quantity: '1', unit_price: 900_00, vat_rate: 0 }]))
     const p = await printed(db, id)
     assert.ok(p)

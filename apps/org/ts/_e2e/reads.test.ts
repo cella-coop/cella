@@ -2,18 +2,21 @@
 // composer over rows of its own, sorted, grouped, and through a lens; every
 // collection's read composed and run on a seeded Lanterne, each badge
 // and date column's key holding what it shows, each field sorting either
-// way; and the built shell paging fifty thousand time entries, sorted
-// and grouped,
-// its text filter, its counts and the viewer's own views' tallies,
-// outside dev mode. Run by `cella test e2e reads`.
+// way; every row's created, updated and their actors from the log, and
+// none of them to a reader hidden the row; and the built shell paging
+// fifty thousand time entries, sorted and grouped, its text filter, its
+// counts and the viewer's own views' tallies, outside dev mode. Run by
+// `cella test e2e reads`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { register } from 'node:module'
 import pg from 'pg'
-import { counts, measures, page, read, today, values, type Keep, type Sort, type Source } from '@cella/org-db'
+import { counts, measures, page, read, today, values, type Deps, type Keep, type Sort, type Source } from '@cella/org-db'
+import { add, update } from '@cella/org-contact/api'
 import { fields } from '@cella/org-ui/models'
 import { slices, source } from '#lib/server/slices.ts'
+import { reader, sign } from './lanterne.ts'
 import { Shell } from './serve.ts'
 
 // The client sides' columns, with their components stubbed: what the
@@ -232,6 +235,46 @@ test('every collection orders by each of its fields either way in SQL, money and
     }
   }
   assert.ok(checked > 1000, `${checked} pairs checked`)
+})
+
+test('every row carries when and by whom it was created and last updated, from the log, and a reader hidden a row is shown none of it', async () => {
+  // Camille adds a contact on the 24th and Julien updates it on the 25th.
+  const on = async (date: string) => {
+    await su.query(`ALTER ROLE cella_app IN DATABASE ${su.escapeIdentifier(su.database ?? '')} SET cella.clock = '${date}'`)
+    await app.end()
+    app = new pg.Client({ user: 'cella_app' })
+    await app.connect()
+  }
+  const writing = (actor: string): Deps => ({ db: reader(app, actor), actor, sign: sign(actor) })
+  const settled = (out: { state: string; reason?: string }) => assert.equal(out.state, 'settled', out.reason)
+  settled(await add({ id: 'dated-atelier', kind: 'company', name: 'Atelier Daté' }, writing(camille)))
+  await on('2026-10-25')
+  settled(await update({ id: 'dated-atelier', fields: { note: 'met at the fair' } }, writing(julien)))
+  await on('2026-10-24')
+
+  const contacts = source('contacts') as Source
+  const db = await as(julien)
+  const [row] = (await page(db, contacts, { where: [], q: { text: 'Atelier Daté', keys: ['name'] } })) as Record<string, unknown>[]
+  assert.equal(row?.id, 'dated-atelier')
+  assert.deepEqual(
+    { created: row.created, created_by: row.created_by, updated: row.updated, updated_by: row.updated_by },
+    { created: '2026-10-24', created_by: camille, updated: '2026-10-25', updated_by: julien },
+    'the first entry about the row and the latest, their dates and actors',
+  )
+  assert.deepEqual((await page(db, contacts, { where: [{ field: 'created_by', is: [camille] }, { field: 'updated', from: '2026-10-25', to: '2026-10-25' }] })).map((r) => r.id), ['dated-atelier'], 'a condition reads them as any field')
+  assert.ok((await values(db, contacts, ['updated_by'])).updated_by.includes(julien), 'and so do the values')
+  assert.equal((await page(db, contacts, { where: [], sort: { field: 'updated', dir: 'desc' } }))[0]?.id, 'dated-atelier', 'and a sort, the rows no entry names last')
+  const seeded = (await page(db, contacts, { where: [] })).find((r) => r.id !== 'dated-atelier') as Record<string, unknown>
+  assert.deepEqual([seeded.created, seeded.created_by, seeded.updated, seeded.updated_by], [undefined, undefined, undefined, undefined], 'a row the founding carried, which no entry names, has none of them')
+
+  const tasks = await page(db, source('tasks') as Source, { where: [] })
+  assert.ok(tasks.length && tasks.every((t) => typeof (t as Record<string, unknown>).created === 'string'), 'a task\'s own created is its own')
+
+  // Someone with no mandate reads no contact, and so no date of one.
+  const nobody = await as('nobody@reads.example')
+  assert.deepEqual(await page(nobody, contacts, { where: [] }), [], 'no row')
+  assert.deepEqual(await values(nobody, contacts, ['created', 'created_by', 'updated', 'updated_by']), { created: [], created_by: [], updated: [], updated_by: [] }, 'no date and no actor')
+  assert.deepEqual(await counts(nobody, contacts, [{ where: [{ field: 'created_by', is: [camille] }] }]), [0])
 })
 
 test('a page of fifty thousand time entries is read in SQL: a hundred rows drawn, more in the address, the filter and the counts on the server', async () => {

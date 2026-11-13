@@ -27,6 +27,7 @@
 //! | `cella.signed(n, request)` | function, the owner's | `sign::request_digest`: whether a request is what receipt `n`'s member signed, under the salt it keeps |
 //! | `cella.notary_key()` | function | the scope's public key, from `cella.key_file` |
 //! | `cella.head`, `cella.log`, `cella.receipt`, `cella.receipt_seq` | tables, sequence | the log and its signed receipts |
+//! | `cella.about(op, form)`, `log_about` | function, index | the ids of the records an entry is about, as text, and the log's index of them |
 //! | `cella.signer` | table | every key the notary has signed with, by id, and the first entry each signed |
 //! | `cella.guard`, `cella.guard_text`, `cella.keyring`, `cella.power`, `cella.follows`, `cella.lets_follow(cause, op, owner, required)` | tables, function | the registries: guards per op, the keyring, the power each op needs, which op may follow which as its effect and whether its cause requires it |
 //! | `cella.state`, `cella.notarise(tab)`, `cella.notarised()` | table, function, trigger | the registered state tables, each refusing a row no begun transaction writes |
@@ -672,6 +673,26 @@ REVOKE EXECUTE ON FUNCTION cella.lets_follow(text, text, text, boolean) FROM PUB
 SELECT pg_catalog.pg_extension_config_dump('cella.follows', '');
 ",
     name = "follows",
+    requires = ["notary_tables"],
+);
+
+// The ids of the records an entry is about, as text, by the rule
+// `cella.records` names them by: every plain text or number of its form
+// under its op's thing or a slice its op names. A function of the entry
+// alone, so the log keeps an index of them, which finds the entries about
+// a record without reading the log, as org core's `cella.made` reads them.
+extension_sql!(
+    r"
+CREATE FUNCTION cella.about(op text, form jsonb) RETURNS text[]
+LANGUAGE sql IMMUTABLE PARALLEL SAFE
+RETURN ARRAY(
+  SELECT form ->> k
+  FROM unnest(array_prepend(split_part(op, ':', 2), string_to_array(split_part(op, ':', 1), '-'))) k
+  WHERE jsonb_typeof(form -> k) IN ('string', 'number')
+);
+CREATE INDEX log_about ON cella.log USING gin (cella.about(op, form));
+",
+    name = "log_about",
     requires = ["notary_tables"],
 );
 

@@ -15,7 +15,8 @@ import type { Look, Preset, Shift, Widget } from './query.ts'
 export type Group = 'home' | 'platform'
 
 // A `person` is an address, shown as the person's chip: their name, the
-// address on hover; a `circle` is a circle's id, shown as its name.
+// address on hover, after the icon of the collection of people; a `circle`
+// is a circle's id, shown as its name.
 export type Kind = 'text' | 'title' | 'mono' | 'money' | 'date' | 'number' | 'badge' | 'person' | 'circle'
 
 export type Tone = 'neutral' | 'accent' | 'positive' | 'negative' | 'warning'
@@ -29,9 +30,13 @@ export interface Column<R = any> {
   value: (row: R) => unknown
   tone?: (row: R) => Tone
   role?: 'title' | 'sub' | 'meta' | 'hidden'
+  // The collection whose record the value names, as a task's assignee
+  // names one of `people`: the value wears that collection's icon.
+  record?: string
 }
 
-// A label and value row in the drawer's Details.
+// A label and value row in the drawer's Details; one whose `href` is a
+// record's, `/<collection>/<id>`, wears that collection's icon.
 export interface Prop {
   label: string
   value: unknown

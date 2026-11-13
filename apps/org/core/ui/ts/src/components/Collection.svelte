@@ -551,12 +551,12 @@
                 <span class="title">{titled.value(row)}</span>
               {/if}
               {#each lines as c (c.key)}
-                <span class="sub"><Cell value={c.value(row)} kind={c.kind === 'badge' ? 'text' : c.kind} /></span>
+                <span class="sub"><Cell value={c.value(row)} kind={c.kind === 'badge' ? 'text' : c.kind} record={c.record} /></span>
               {/each}
             </span>
             <span class="meta">
               {#each after as c (c.key)}
-                <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} />
+                <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} />
               {/each}
             </span>
           </li>

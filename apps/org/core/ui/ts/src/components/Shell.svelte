@@ -69,7 +69,7 @@
     children: Snippet
   } = $props()
 
-  const state = useShell(() => outcome, () => drawer, () => people, () => lens, () => circles)
+  const state = useShell(() => outcome, () => drawer, () => people, () => lens, () => circles, () => nav)
   const favorites = useFavorites()
 
   function onkeydown(e: KeyboardEvent) {

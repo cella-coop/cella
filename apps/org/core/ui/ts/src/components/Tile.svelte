@@ -32,7 +32,7 @@
       {#each shown as c (c.key)}
         <div>
           <dt>{c.label}</dt>
-          <dd><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} /></dd>
+          <dd><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} /></dd>
         </div>
       {/each}
     </dl>

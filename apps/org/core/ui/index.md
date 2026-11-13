@@ -480,6 +480,20 @@ by default can be put in a list's meta. A look's cards' fields are its
 cards', not a list's or a feed's: either shows its own default until
 the view chooses otherwise.
 
+A value that names a record wears its collection's icon before it,
+wherever `Cell` draws it: in a card's field, a list's or a table's
+cell and the drawer's Properties. A column names the collection its
+value is a record of by `record`, as a task's assignee names `people`
+and its project `projects`; a property, by an `href` that is a record's
+own, `/<collection>/<id>`; a `person` is always one of `people`. The
+icon is the one that collection's view declares, which `Cell` reads
+from the sidebar's navigation the shell hands `useShell`, so no slice
+imports another's to find it. It stands at the value's size, quieter
+than its text, and is hidden from assistive technology, since the text
+names the record. A collection that declares no icon, or that the shell
+does not mount, leaves the value bare; an enumeration, as a task's
+priority, names no record and wears none.
+
 ## Settings
 
 A settings page is a plain form, `Settings`, one `Setting` a row: its

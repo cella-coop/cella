@@ -98,7 +98,7 @@
               {/if}
               {#if period.span === 'week'}
                 {#each shown as c (c.key)}
-                  <span class="field"><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} /></span>
+                  <span class="field"><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} /></span>
                 {/each}
               {/if}
             </li>

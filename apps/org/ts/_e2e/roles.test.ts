@@ -11,12 +11,12 @@
 // an Editor role in Web and seats Léa in it by the same motion, then
 // changes its duty and cap, each entry saying what it carried and what it
 // was. Then in every browser, light and dark, through the dev server:
-// Camille opens Web's Settings tab, types a new role's name in its New
-// role row and presses Enter, and the dialog offers the assembly's motion
-// making it, its id from the name, which she proposes; she empties the
-// Editor role's cap and presses Enter, and proposes the motion the dialog
-// offers lifting
-// it, its cap given as none; then on the assembly's Settings tab she
+// Camille opens Web's Settings tab, presses Add a role…, and in the
+// dialog types a new role's name, its id following it, its duty and its
+// cap, and proposes it to the assembly: one motion making the role with
+// all of them; she empties the Editor role's cap and presses Enter, and
+// proposes the motion the dialog offers lifting it, its cap given as
+// none; then on the assembly's Settings tab she
 // lowers the Member role's cap below its holders, and the dialog shows the
 // guard's refusal before anything is proposed. Last, the first motion
 // lifting the Editor's cap carries, and the role reads uncapped, its entry
@@ -200,26 +200,27 @@ eachBrowser((name, launch) => {
           const editor = page.locator('section.section', { has: page.getByRole('heading', { name: 'Editor', exact: true }) })
           assert.equal(await editor.getByLabel('Cap').inputValue(), '2', `${at}: the Editor role's cap in force`)
           assert.equal(await editor.getByText('Assembly changes it by motion').count(), 3, `${at}: each term is the assembly's motion's to change`)
-          const fresh = page.locator('section.section', { has: page.getByRole('heading', { name: 'New role', exact: true }) })
-          await fresh.getByLabel('Name').fill(role)
-          await page.screenshot({ path: `${shots}/roles-${name}-${scheme}.png`, fullPage: true })
-          await fresh.getByLabel('Name').press('Enter')
-          const dialog = page.getByRole('dialog', { name: 'Assembly changes it by motion' })
-          await dialog.waitFor()
+          await page.getByRole('button', { name: 'Add a role…' }).click()
+          const fresh = page.getByRole('dialog', { name: 'New role in Web' })
+          await fresh.waitFor()
           assert.ok(
-            ((await dialog.textContent()) ?? '').includes('Web\'s roles are made and changed only by a motion of Assembly'),
+            ((await fresh.textContent()) ?? '').includes('Web\'s roles are made and changed only by a motion of Assembly'),
             `${at}: the dialog says why her write makes nothing`,
           )
-          assert.equal(await dialog.getByLabel('Title').inputValue(), `Make the ${role} role in Web`, `${at}: its title says the change`)
-          assert.equal(await dialog.getByLabel('Id').inputValue(), id, `${at}: its id is the name in lower case`)
-          await dialog.getByRole('button', { name: 'Propose to Assembly' }).click()
-          await dialog.waitFor({ state: 'hidden' })
+          await fresh.getByLabel('Name').fill(role)
+          assert.equal(await fresh.getByLabel('Id').inputValue(), id, `${at}: its id is the name in lower case`)
+          await fresh.getByLabel('Duty').fill('grants access to the studio\'s tools')
+          await fresh.getByLabel('Cap').fill('1')
+          await page.screenshot({ path: `${shots}/roles-${name}-${scheme}.png`, fullPage: true })
+          await fresh.getByRole('button', { name: 'Propose to Assembly' }).click()
+          await fresh.waitFor({ state: 'hidden' })
           assert.deepEqual(
-            await one(`SELECT d.circle, m.args FROM motion.motion d JOIN motion.action m ON m.motion = d.id WHERE m.kind = 'role' AND m.args ->> 'id' = $1`, [id]),
-            { circle: 'ag', args: { circle: 'web', id, name: role } },
-            `${at}: the assembly's motion makes the role in Web`,
+            await all(`SELECT d.circle, d.title, m.args FROM motion.motion d JOIN motion.action m ON m.motion = d.id WHERE m.kind = 'role' AND m.args ->> 'id' = $1`, [id]),
+            [{ circle: 'ag', title: `Make the ${role} role in Web`, args: { circle: 'web', id, name: role, duty: 'grants access to the studio\'s tools', holders: 1 } }],
+            `${at}: one motion of the assembly makes the role in Web, its name, duty and cap`,
           )
 
+          const dialog = page.getByRole('dialog', { name: 'Assembly changes it by motion' })
           await editor.getByLabel('Cap').fill('')
           await editor.getByLabel('Cap').press('Enter')
           await dialog.waitFor()

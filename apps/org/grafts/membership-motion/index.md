@@ -352,8 +352,15 @@ circle's terms read with the procedures in force on the day
 (`membership_motion.procedures`) and the circle that decides an
 amendment, and its roles, each with the circle that decides about it,
 and on the assembly's those every working circle has but `participant`,
-each dialog posting to `propose` as the New form does; a new role's id
-is its name typed in lower case, which the dialog may change. On a
+a term's edit, as it commits, opening the dialog proposing an
+`amend-role` motion of that one term. Below the roles, Add a role…
+opens a dialog composing a new role whole (`Compose`, [settings](../../core/ui/index.md#settings)):
+its name, its id, which follows the name in lower case until it is
+typed, its duty and its cap, proposed to the deciding circle as one
+`role` motion carrying them all, its title "Make the Editor role in
+Web"; the guard judges it, and a refusal stays in the dialog, saying
+why. Each dialog posts to `propose` as the New form does. The e2e
+scenario `roles` proposes a new role there and lifts a role's cap. On a
 mandate's page, the motion feat's Change… and Revoke…, whose write,
 `put`, it serves too.
 

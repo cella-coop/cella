@@ -85,6 +85,7 @@
         values={data.values}
         dashboard={data.dashboard}
         sorted={data.sorted}
+        declared={data.declared}
         whole={data.whole}
       />
     {/key}

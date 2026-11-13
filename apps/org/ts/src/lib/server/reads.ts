@@ -11,11 +11,12 @@ export const drawn = (query: URLSearchParams): number => {
   return Number.isInteger(n) && n > PAGE ? Math.min(n, MOST) : PAGE
 }
 
-// The rows a view keeps: its conditions, and its text filter over every
-// column the collection shows.
-export const keeping = (spec: Pick<Spec, 'where' | 'q'>, fs: Field[]): Keep => ({
+// The rows a view keeps: its conditions, its text filter over every
+// column the collection shows, and the order it sorts them in.
+export const keeping = (spec: Pick<Spec, 'where' | 'q' | 'sort'>, fs: Field[]): Keep => ({
   where: spec.where,
   ...(spec.q.trim() ? { q: { text: spec.q, keys: fs.map((f) => f.key) } } : {}),
+  ...(spec.sort ? { sort: spec.sort } : {}),
 })
 
 // A widget as the server measures it over a collection's rows: its own

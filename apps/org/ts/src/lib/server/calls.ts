@@ -31,7 +31,7 @@ export class Missing extends Error {}
 // A collection: the rows the view in the address keeps, its owner's and
 // those its extensions add, as the acting member sees them, with the
 // fields its extensions add to each, read in SQL a page at a time (`n`
-// rows, in the collection's order), in one statement with how many it
+// rows, in the view's sort, else the collection's order), in one statement with how many it
 // keeps, how many of those hold the text filter, its tabs' counts and
 // each enumeration's values; the field its rows are ordered by first;
 // what its header says about it; and, in the dashboard layout, its
@@ -81,7 +81,11 @@ export const collection = {
       look: looks,
       errors,
       dashboard: spec.layout === 'dashboard' ? await measured(db, from, spec, fs, name) : null,
-      sorted: ordered(from),
+      // The field the rows are sorted by first and which way: the view's,
+      // else the one the collection's read orders by first, which is
+      // `declared`, what Order by's default names.
+      sorted: spec.sort ? { key: spec.sort.field, dir: spec.sort.dir === 'desc' ? ('descending' as const) : ('ascending' as const) } : ordered(from),
+      declared: ordered(from),
       // Whether the lens leaves the collection whole, its rows naming no
       // circle that owns them.
       whole,

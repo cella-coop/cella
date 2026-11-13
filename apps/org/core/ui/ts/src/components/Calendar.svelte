@@ -21,6 +21,7 @@
     shown,
     href,
     link,
+    sorted = false,
   }: {
     rows: any[]
     on: Field
@@ -30,9 +31,12 @@
     href?: (row: any) => string | undefined
     // The address of the period around a day.
     link: (day: string | null) => string
+    // Whether the view sorts the rows, so each day keeps the order they
+    // came in rather than their time's.
+    sorted?: boolean
   } = $props()
 
-  const days = $derived(placed(rows, on, period))
+  const days = $derived(placed(rows, on, period, sorted))
   const toned = $derived(shown.find((c) => c.tone))
   const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   const number = (day: string) => Number(day.slice(8, 10))

@@ -2,14 +2,18 @@
   import type { Column } from '../models/view.ts'
   import { focused, scroller } from '../models/keys.ts'
   import { useSection } from '../hooks/useSection.ts'
+  import SortAscending from 'phosphor-svelte/lib/SortAscending'
+  import SortDescending from 'phosphor-svelte/lib/SortDescending'
   import Cell from './Cell.svelte'
+  import Icon from './Icon.svelte'
 
   // A table of rows; with none, one quiet line in their place, named for
   // the section it sits in unless `empty` says otherwise, and no headers.
   // Where the keyboard roves its rows, `stop` is the one row in the tab
   // order, the keyboard's row (`active`) takes the focus and a row
   // focused otherwise is reported (`onfocusrow`); `sorted` is the column
-  // the rows are ordered by, which its header says.
+  // the rows are ordered by, which its header says; with `onsort`, a
+  // header is a button that asks to order by its column.
   let {
     columns,
     rows,
@@ -18,6 +22,7 @@
     stop = -1,
     onfocusrow,
     sorted = null,
+    onsort,
     empty,
   }: {
     columns: Column[]
@@ -27,6 +32,7 @@
     stop?: number
     onfocusrow?: (i: number) => void
     sorted?: { key: string; dir: 'ascending' | 'descending' } | null
+    onsort?: (key: string) => void
     empty?: string
   } = $props()
 
@@ -43,7 +49,15 @@
       <thead>
         <tr>
           {#each columns as c (c.key)}
-            <th class:end={end(c)} aria-sort={sorted?.key === c.key ? sorted.dir : undefined}>{c.label}</th>
+            <th class:end={end(c)} aria-sort={sorted?.key === c.key ? sorted.dir : undefined}>
+              {#if onsort}
+                <button class="sort" onclick={() => onsort(c.key)}>
+                  {c.label}{#if sorted?.key === c.key}<Icon icon={sorted.dir === 'ascending' ? SortAscending : SortDescending} />{/if}
+                </button>
+              {:else}
+                {c.label}
+              {/if}
+            </th>
           {/each}
         </tr>
       </thead>
@@ -94,6 +108,22 @@
     color: var(--text-subtle);
     padding: var(--space-1) var(--space-3);
     white-space: nowrap;
+  }
+  /* A header that orders by its column reads as its label, its arrow
+     after it where the rows are ordered by it. */
+  .sort {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+  .sort:hover {
+    color: var(--text);
   }
   td {
     padding: 0 var(--space-3);

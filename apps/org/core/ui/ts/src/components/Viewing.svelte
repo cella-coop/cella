@@ -7,6 +7,8 @@
   import CalendarDots from 'phosphor-svelte/lib/CalendarDots'
   import ClockCounterClockwise from 'phosphor-svelte/lib/ClockCounterClockwise'
   import Check from 'phosphor-svelte/lib/Check'
+  import SortAscending from 'phosphor-svelte/lib/SortAscending'
+  import SortDescending from 'phosphor-svelte/lib/SortDescending'
   import type { Column } from '../models/view.ts'
   import { spans } from '../models/calendar.ts'
   import { arranged, type Custom, type Field, type Layout, type Result, type Spec, type Where, type Widget } from '../models/query.ts'
@@ -45,7 +47,7 @@
     shown,
     grouped,
     placing,
-    sorted = null,
+    declared = null,
     custom,
     dirty,
     onchange,
@@ -65,8 +67,9 @@
     grouped?: string
     // The date a calendar places the rows by.
     placing?: string
-    // The field the collection's read orders by first, and which way.
-    sorted?: { key: string; dir: 'ascending' | 'descending' } | null
+    // The field the collection's read orders by first, and which way,
+    // what Order by's default names.
+    declared?: { key: string; dir: 'ascending' | 'descending' } | null
     custom?: Custom
     dirty: boolean
     onchange: (spec: Spec) => void
@@ -104,12 +107,13 @@
   const ordered = $derived(arranged(columns, spec.order))
   const drag = useDrag()
 
-  // The orders the collection's read offers: its own, a field and its
-  // direction where it leads with one.
-  const orders = $derived.by(() => {
-    const c = sorted && columns.find((c) => c.key === sorted.key)
-    return [c ? `${c.label}, ${sorted?.dir}` : 'As kept']
+  // Order by's default, the collection's own order, named by the field
+  // and direction its read leads with where it leads with one.
+  const own = $derived.by(() => {
+    const c = declared && columns.find((c) => c.key === declared.key)
+    return c ? `Default: ${c.label}, ${declared?.dir}` : 'Default'
   })
+  const descending = $derived(spec.sort?.dir === 'desc')
 
   // What a condition may be put on: an enumeration with a choice of
   // values, or a date; each once.
@@ -240,9 +244,27 @@
 
     <span class="label" id="{id}-order">Order by</span>
     <div class="control">
-      <select aria-labelledby="{id}-order" disabled={orders.length < 2 || spec.layout === 'dashboard'}>
-        {#each orders as o (o)}<option>{o}</option>{/each}
+      <select
+        aria-labelledby="{id}-order"
+        value={spec.sort?.field ?? ''}
+        disabled={spec.layout === 'dashboard'}
+        onchange={(e) => {
+          const key = e.currentTarget.value
+          change({ sort: key ? { field: key, dir: spec.sort?.dir ?? 'asc' } : null })
+        }}
+      >
+        <option value="">{own}</option>
+        {#each columns as c (c.key)}<option value={c.key}>{c.label}</option>{/each}
       </select>
+      <button
+        class="direction"
+        aria-label={descending ? 'Descending' : 'Ascending'}
+        title={descending ? 'Descending' : 'Ascending'}
+        disabled={!spec.sort || spec.layout === 'dashboard'}
+        onclick={() => spec.sort && change({ sort: { field: spec.sort.field, dir: descending ? 'asc' : 'desc' } })}
+      >
+        <Icon icon={descending ? SortDescending : SortAscending} />
+      </button>
     </div>
 
     <span class="label" id="{id}-filter">Filter</span>
@@ -413,6 +435,25 @@
     width: auto;
     max-width: 11rem;
     min-width: 0;
+  }
+  .direction {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 1.9rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .direction:hover:not(:disabled) {
+    background: var(--hover);
+    color: var(--text);
+  }
+  .direction:disabled {
+    cursor: default;
+    opacity: 0.5;
   }
   .option {
     display: flex;

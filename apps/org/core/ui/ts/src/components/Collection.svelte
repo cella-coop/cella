@@ -81,6 +81,7 @@
     shifts,
     dashboard = null,
     sorted = null,
+    declared = null,
     whole = false,
   }: {
     name: string
@@ -118,9 +119,11 @@
     shifts: Shift[]
     // In the dashboard layout, the server's run of its widgets.
     dashboard?: { custom: boolean; widgets: Widget[]; results: Result[]; errors: string[] } | null
-    // The field the rows are ordered by first, and which way, which a
+    // The field the rows are ordered by first, and which way, the view's
+    // sort or else the collection's own order (`declared`), which a
     // table's header says.
     sorted?: { key: string; dir: 'ascending' | 'descending' } | null
+    declared?: { key: string; dir: 'ascending' | 'descending' } | null
     // Whether the member's lens leaves the collection whole, as it does
     // one whose rows name no circle that owns them, which its header says.
     whole?: boolean
@@ -216,9 +219,12 @@
     return `${page.url.pathname}?${q}`
   }
 
-  // A change to what the active view shows, kept in the address.
+  // A change to what the active view shows, kept in the address; where
+  // the viewer is in a calendar, `at`, is not the view's, and stays.
   function change(s: Spec) {
-    goto(link(view, s), { replace: true, reset: false })
+    const to = link(view, s)
+    const where = page.url.searchParams.get('at')
+    goto(where ? `${to}${to.endsWith('?') ? '' : '&'}at=${encodeURIComponent(where)}` : to, { replace: true, reset: false })
   }
 
   function opened(c: Custom) {
@@ -306,7 +312,7 @@
     {shown}
     grouped={grouped?.key}
     placing={placing?.key}
-    {sorted}
+    {declared}
     {custom}
     {dirty}
     onchange={change}
@@ -407,6 +413,7 @@
         stop={state.stop}
         onfocusrow={(i) => (state.active = i)}
         {sorted}
+        onsort={(key) => change({ ...spec, q: state.filter, sort: { field: key, dir: sorted?.key === key && sorted.dir === 'ascending' ? 'desc' : 'asc' } })}
       />
     {:else if spec.layout === 'gallery'}
       <Gallery rows={state.shown} {titled} {shown} {href} />
@@ -422,7 +429,7 @@
         onshift={(id, s, _, to) => move(id, s, to)}
       />
     {:else if spec.layout === 'calendar' && placing}
-      <Calendar rows={state.shown} on={placing} period={shownPeriod} {titled} {shown} {href} link={at} />
+      <Calendar rows={state.shown} on={placing} period={shownPeriod} {titled} {shown} {href} link={at} sorted={spec.sort !== null} />
     {:else if spec.layout === 'feed' && who && when}
       <ol class="list feed">
         {#each state.shown as row, i (row.id)}

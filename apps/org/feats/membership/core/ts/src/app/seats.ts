@@ -28,7 +28,7 @@ export const app: App = {
         related: (d: { seats: Seat[]; held: Held[] }) =>
           d.seats.filter((s) => !s.until).map((s) => ({ label: s.circleName, sub: s.roleName ?? undefined, href: `/circles/${s.circle}` })),
         tabs: [{ id: 'powers', label: 'Powers' }],
-        blocks: [Seats, { tab: 'joining', block: Circles }, { tab: 'rights', block: Decides }, { tab: 'powers', block: Powers }],
+        blocks: [{ tab: 'powers', block: Seats }, { tab: 'joining', block: Circles }, { tab: 'rights', block: Decides }, { tab: 'powers', block: Powers }],
       },
     },
   },

@@ -245,12 +245,12 @@ test('Inès\'s member page lists what joining asks of her and reads back what sh
 })
 
 test('a member\'s page lists every mandate may grants them: Inès\'s the participant\'s in Web and none of the assembly\'s, Chloé\'s the assembly\'s beside her member role\'s', async () => {
-  const theirs = await tab(ines, 'overview', ines)
+  const theirs = await tab(ines, 'powers', ines)
   for (const says of ['Powers held', 'Propose', 'Discuss', 'participant in Web']) {
     assert.ok(theirs.includes(says), `Inès's page says ${says}`)
   }
   assert.ok(!theirs.includes('in General assembly'), 'she sits nowhere but Web')
-  const chloes = await tab('chloe@lanterne.example', 'overview', camille)
+  const chloes = await tab('chloe@lanterne.example', 'powers', camille)
   for (const says of ['participant in General assembly', 'member in General assembly', 'participant in Marketing']) {
     assert.ok(chloes.includes(says), `Chloé's page says ${says}`)
   }

@@ -139,7 +139,8 @@ unseeded('in every browser, light and dark, Camille\'s Powers tab opens and its 
         for (const [who, name] of [[camille, 'camille'], [hugo, 'hugo'], [ines, 'ines']]) {
           await page.goto(`${dev.base}/people/${encodeURIComponent(who)}?tab=powers`)
           await page.waitForLoadState('networkidle')
-          const section = page.locator('section', { has: page.getByRole('heading', { name: 'Powers' }) })
+          // Powers, its count after it, not Powers held, which shares the tab.
+          const section = page.locator('section', { has: page.getByRole('heading', { name: /^Powers\s*\d*$/ }) })
           assert.match((await section.textContent()) ?? '', /every person's right/, `${engine}, ${scheme}: ${name}'s tab lists their rights`)
           await page.screenshot({ path: `${shots}/powers-${name}-${engine}-${scheme}.png`, fullPage: true })
         }

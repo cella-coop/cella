@@ -220,7 +220,9 @@ async function walk(stage: string, steps: (w: Walker) => Promise<void>) {
   })
 }
 
-const section = (page: Page, heading: string) => page.locator('section', { has: page.getByRole('heading', { name: heading }) })
+// A section by its title, its count after it or none, so Powers is not
+// Powers held.
+const section = (page: Page, heading: string) => page.locator('section', { has: page.getByRole('heading', { name: new RegExp(`^${heading}\\s*\\d*$`) }) })
 
 // Clicks a bill's Approve and returns the refusal its page shows.
 async function approving(w: Walker, bill: string) {

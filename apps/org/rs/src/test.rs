@@ -126,6 +126,8 @@ fn notary(repo: &Repo, steps: &Steps) -> Result {
 
 /// The node tools' own tests, `tools/_tests/*.test.mjs`, on the dev
 /// cluster by the PG* variables: migrate's make a database of their own.
+/// The site's, `site-*.test.mjs`, which read the site, are the site's
+/// check's (`cella check site`), so the org's gates read none of it.
 fn tools(repo: &Repo, steps: &Steps) -> Result {
     let dev = Dev::new(repo);
     dev.up()?;
@@ -135,8 +137,24 @@ fn tools(repo: &Repo, steps: &Steps) -> Result {
     if !steps.verbose {
         test.arg("--test-reporter=tap");
     }
-    test.arg(repo.root.join("tools/_tests/*.test.mjs"));
+    test.args(tool_tests(repo, false)?);
     steps.run("tools", &mut [test], tap)
+}
+
+/// The tools' test files, the site's (`site-*`) or every other, sorted.
+pub fn tool_tests(repo: &Repo, site: bool) -> Result<Vec<PathBuf>> {
+    let dir = repo.root.join("tools/_tests");
+    let read = fs::read_dir(&dir).map_err(|e| Fail::new(format!("{}: {e}", dir.display())))?;
+    let mut files: Vec<PathBuf> = read
+        .filter_map(|entry| entry.ok().map(|e| e.path()))
+        .filter(|path| {
+            path.file_name()
+                .and_then(|n| n.to_str())
+                .is_some_and(|n| n.ends_with(".test.mjs") && n.starts_with("site-") == site)
+        })
+        .collect();
+    files.sort();
+    Ok(files)
 }
 
 /// What a test file is, by where it sits.
@@ -433,7 +451,7 @@ fn passed(out: &str) -> Option<String> {
     Some(format!("{} passed", counts.iter().sum::<u64>()))
 }
 
-fn tap(out: &str) -> Option<String> {
+pub fn tap(out: &str) -> Option<String> {
     out.lines()
         .find_map(|l| l.strip_prefix("# pass "))
         .map(|n| format!("{n} passed"))

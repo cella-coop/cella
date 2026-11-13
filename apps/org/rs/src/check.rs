@@ -4,23 +4,30 @@ use crate::repo::Repo;
 use crate::run::{Result, Steps, last_line, quiet};
 use crate::site;
 
-/// What a commit must pass, or one part of it; no database.
+/// What a commit must pass, or one part of it; no database. `org` is every
+/// part but the site's, so the gates run the org's check and the site's
+/// apart, each kept by what it reads.
 pub fn run(repo: &Repo, steps: &Steps, part: Option<Part>, no_sql: bool) -> Result {
-    let parts = part.map_or_else(
-        || {
-            vec![
-                Part::Feats,
-                Part::Fixtures,
-                Part::Types,
-                Part::Shell,
-                Part::Pruned,
-                Part::Brand,
-                Part::Site,
-                Part::Rust,
-            ]
-        },
-        |p| vec![p],
-    );
+    let org = |site: bool| {
+        let mut parts = vec![
+            Part::Feats,
+            Part::Fixtures,
+            Part::Types,
+            Part::Shell,
+            Part::Pruned,
+            Part::Brand,
+        ];
+        if site {
+            parts.push(Part::Site);
+        }
+        parts.push(Part::Rust);
+        parts
+    };
+    let parts = match part {
+        None => org(true),
+        Some(Part::Org) => org(false),
+        Some(p) => vec![p],
+    };
     if parts.iter().any(|p| !matches!(p, Part::Rust)) {
         repo.install(steps)?;
     }
@@ -68,6 +75,7 @@ pub fn run(repo: &Repo, steps: &Steps, part: Option<Part>, no_sql: bool) -> Resu
                 steps.run("brand", &mut [cmd], last_line)?;
             }
             Part::Site => site::check(repo, steps)?,
+            Part::Org => unreachable!("org is its parts, listed above"),
             Part::Rust => {
                 let mut check = repo.cmd("cargo");
                 check.args(["check", "--workspace", "--quiet"]);

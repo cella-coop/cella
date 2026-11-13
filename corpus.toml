@@ -9,19 +9,29 @@ uncited = "warn"
 [review]
 decoupled = ["apps/site/**", "packages/brand/**", "packages/diagrams/**"]
 
-# The gates (apps/org/rs/index.md, Gates): `cella check`, then `cella
-# test`, each in the devshell (`nix develop -c`), which carries the
-# toolchain, the C compiler cargo links with and pgrx's settings, so they
-# run alike from a lane's shell and in the detached checkout `flow run
-# --at` makes. They replace the suites corpus infers from `Cargo.toml`
-# and `package.json`: no flow names those. `cella` installs the npm
-# workspace offline, and pnpm keeps a store per filesystem, so the
-# lockfile's packages are fetched into the store the checkout reads first;
-# a store that holds them already fetches nothing.
+# The gates (apps/org/rs/index.md, Gates): the org's check, `cella check
+# org`, then `cella test`, and the site's check, `cella check site`, each
+# in the devshell (`nix develop -c`), which carries the toolchain, the C
+# compiler cargo links with and pgrx's settings, so they run alike from a
+# lane's shell and in the detached checkout `flow run --at` makes. They
+# replace the suites corpus infers from `Cargo.toml` and `package.json`:
+# no flow names those. `cella` installs the npm workspace offline, and
+# pnpm keeps a store per filesystem, so the lockfile's packages are
+# fetched into the store the checkout reads first; a store that holds
+# them already fetches nothing.
+#
+# Each says what it `reads`, so its pass is kept under the hash of those
+# files and a later commit selecting the same ones takes it: a change in
+# the site alone runs the site's check, in minutes, and one in the org
+# alone the org's. The org's ops read everything but the site and the
+# diagrams, whose manifests they read through the feat check's edges and
+# the install; the root tsconfig leaves the diagrams to the site's check,
+# and `cella test tools` the site's tools' tests.
 [[op]]
 name = "cella-check"
-run = ["nix", "develop", "-c", "sh", "-c", "pnpm fetch --silent && cella check"]
+run = ["nix", "develop", "-c", "sh", "-c", "pnpm fetch --silent && cella check org"]
 kind = "check"
+reads = ["**", "!apps/site/src", "!apps/site/public", "!apps/site/test", "!apps/site/index.md", "!apps/site/astro.config.mjs", "!apps/site/tsconfig.json", "!apps/site/.prettierrc.json", "!packages/diagrams/src", "!packages/diagrams/index.md", "!packages/diagrams/tsconfig.json"]
 
 # `cella test` needs the dev cluster, which a fresh checkout has not
 # made: it is started on ports of the run's own, so lanes gating at once
@@ -32,6 +42,17 @@ name = "cella-test"
 run = ["nix", "develop", "-c", "sh", "-c", "export CELLA_PGPORT=$((20000 + $$ % 20000)) CELLA_ANALYTICS_PORT=$((40000 + $$ % 20000)); cella db start && cella test; status=$?; cella db stop; exit $status"]
 kind = "check"
 needs = ["cella-check"]
+reads = ["**", "!apps/site/src", "!apps/site/public", "!apps/site/test", "!apps/site/index.md", "!apps/site/astro.config.mjs", "!apps/site/tsconfig.json", "!apps/site/.prettierrc.json", "!packages/diagrams/src", "!packages/diagrams/index.md", "!packages/diagrams/tsconfig.json"]
+
+# The site's check reads the site, the brand, the diagrams and what runs
+# it: the CLI and the crate it builds on, the tools and their tests, the
+# settings the text's guard reads, the flake, every manifest the install
+# and cargo read, and the lockfiles.
+[[op]]
+name = "site-check"
+run = ["nix", "develop", "-c", "sh", "-c", "pnpm fetch --silent && cella check site"]
+kind = "check"
+reads = ["apps/site", "packages/brand", "packages/diagrams", "apps/org/rs", "apps/org/core/guards/rs", "tools", ".claude/settings.json", "flake.nix", "flake.lock", "**/package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", "tsconfig.json", "**/Cargo.toml", "Cargo.lock"]
 
 # The fold's scale tier (apps/org/rs/index.md, Gates), which the nightly
 # `scale` flow runs at a tenth of its size, about a million entries, the

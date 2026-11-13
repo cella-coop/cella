@@ -4,8 +4,9 @@ use std::process::{Command, Stdio};
 
 use crate::cli::{Site, SitePhoto};
 use crate::repo::Repo;
-use crate::run::{Fail, Result, Steps, last_line};
+use crate::run::{Fail, Result, Steps, last_line, quiet};
 use crate::secret;
+use crate::test;
 
 /// The landing site, `apps/site`: Astro's dev server, its static build
 /// into `apps/site/dist`, or its release, which puts what main holds live
@@ -89,7 +90,10 @@ pub fn run(repo: &Repo, steps: &Steps, command: Site) -> Result {
 /// as it found it, then the figure fixture's two builds there
 /// (`tools/site-figures.mjs`), which refuse an icon Phosphor lacks. It
 /// sits in `.data`, on the checkout's filesystem, since Astro moves its
-/// assets there by rename, which cannot cross to another.
+/// assets there by rename, which cannot cross to another. Then the
+/// diagrams' type check, by their own tsconfig, and the site's tools'
+/// tests (`tools/_tests/site-*.test.mjs`), which the org's check and tests
+/// leave to it, so they read nothing of the site or the diagrams.
 pub fn check(repo: &Repo, steps: &Steps) -> Result {
     let mut copy = repo.node("site-copy.mjs");
     copy.arg(repo.site_dir());
@@ -115,7 +119,17 @@ pub fn check(repo: &Repo, steps: &Steps) -> Result {
         .run("site", &mut [check, build], last_line)
         .and_then(|()| steps.run("site figures", &mut [figures], last_line));
     remove(&out)?;
-    result
+    result?;
+    let mut types = repo.cmd("tsc");
+    types.args(["-p", "packages/diagrams"]);
+    steps.run("diagrams types", &mut [types], quiet)?;
+    let mut tests = repo.cmd("node");
+    tests.arg("--test");
+    if !steps.verbose {
+        tests.arg("--test-reporter=tap");
+    }
+    tests.args(test::tool_tests(repo, true)?);
+    steps.run("site tools", &mut [tests], test::tap)
 }
 
 /// What a release build is given: the endpoints the production host's

@@ -212,10 +212,12 @@ pub enum Part {
     Pruned,
     /// The brand's generated files are what its house.json makes
     Brand,
-    /// The landing site's copy check, astro check over it, its build, then the figure fixture's
+    /// The landing site's copy check, astro check over it, its build, the figure fixture's, the diagrams' type check, then the site's tools' tests
     Site,
     /// cargo check and clippy over the workspace
     Rust,
+    /// Every part but the site's
+    Org,
 }
 
 #[derive(Subcommand)]

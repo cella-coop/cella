@@ -345,6 +345,7 @@
   }
   .top {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-2);
     padding-bottom: var(--space-4);
   }
@@ -377,8 +378,11 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  /* One column no wider than the sidebar: a long name truncates rather
+     than widen it. */
   .foot {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-3);
     padding-top: var(--space-2);
   }

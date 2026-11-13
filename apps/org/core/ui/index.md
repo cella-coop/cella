@@ -107,15 +107,14 @@ draws.
   scrolls. Its top is the co-op selector, the co-op's mark and name,
   followed by the circle's name where the member is in one but the
   assembly, "Lanterne / Web", so a lens is never hidden. Its menu lists
-  the scopes the shell serves (one today) with their legal names, then
-  the circles the member reads: the assembly first, the co-op's root
-  and the same place as the co-op, which clears the lens and is checked
-  where there is none, then the circles the member sits in, under
-  Yours, then the rest, under Others, the two named only where both
-  are there; nothing lists all circles at once, and a rule sets
-  Settings apart below them. A circle chosen there is the
-  circle the member is in, their **lens**, which every collection reads
-  through ([architecture](../../../../_corpus/doc/architecture.md#the-lens)):
+  the scopes the shell serves (one today) with their legal names; the
+  co-op row, whose root is the assembly, is checked where the member has
+  no lens and clears it, and below it come the circles the member sits
+  in, with the lens's own where they do not; nothing lists all circles
+  at once, and a rule sets Settings apart below them. A circle chosen
+  there is the circle the member is in, their **lens**, which every
+  collection reads through
+  ([architecture](../../../../_corpus/doc/architecture.md#the-lens)):
   a cookie of the scope's, written by `/lens` as `/theme` writes the
   theme, so the server renders the lensed page and nothing of it enters
   the log; a lens naming a circle the member no longer reads, or the

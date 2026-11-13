@@ -90,9 +90,10 @@
   // A collection's own icon, as the sidebar draws it, for a pin of a
   // preset that names no mark of its own.
   const owner = (collection: string) => nav.flatMap((g) => g.items).find((i) => i.href === `/${collection}`)?.icon
-  // Whether the circles past the assembly split into those the member sits
-  // in and the rest.
-  const split = $derived(circles.some((c) => !c.assembly && c.sits) && circles.some((c) => !c.assembly && !c.sits))
+  // The circles the selector lists: those the member sits in, and the lens's
+  // own where they do not, so the lens shows checked and can be cleared; the
+  // assembly is the co-op's own row.
+  const sat = $derived(circles.filter((c) => !c.assembly && (c.sits || c.id === lens?.id)))
 
   // The circle the member is in: their lens, or the assembly where they
   // lensed none, which reads whole.
@@ -176,32 +177,28 @@
           <b class="name">{scope.name}{#if lens}<span class="lensed"> / {lens.name}</span>{/if}</b>
           <Icon icon={CaretUpDown} size="0.9em" />
         {/snippet}
-        <button role="menuitemradio" aria-checked="true" class="item">
-          <span class="mark small">{scope.name.slice(0, 1).toUpperCase()}</span>
-          <span class="names">
-            <b>{scope.name}</b>
-            <span>{scope.legal ?? scope.address}</span>
-          </span>
-          <Icon icon={Check} />
-        </button>
-        {#if circles.length}
-          <!-- The circles: the assembly first, the co-op's root, which clears
-               the lens; any other chosen is the member's lens, which every
-               collection reads through. -->
-          <p class="label">Circles</p>
-          <form method="post" action="/lens" class="list" role="group" aria-label="Circles">
-            <input type="hidden" name="back" value={back} />
-            <!-- Past the assembly, the circles the member sits in first, then
-                 the rest, each group named where both are there. -->
-            {#each circles as c, i (c.id)}
-              {const on = $derived(c.assembly ? !lens : lens?.id === c.id)}
-              {#if split && !c.assembly && (circles[i - 1]?.assembly || c.sits !== circles[i - 1]?.sits)}<p class="label">{c.sits ? 'Yours' : 'Others'}</p>{/if}
-              <button role="menuitemradio" aria-checked={on} class="item" name="lens" value={c.assembly ? '' : c.id}>
-                {c.name}{#if on}<Icon icon={Check} />{/if}
+        <!-- The co-op and its circles are one radio group: the co-op, whose
+             root is the assembly, clears the member's lens, a circle sets it,
+             and every collection reads through the one chosen. -->
+        <form method="post" action="/lens" class="list" role="group" aria-label="Co-op">
+          <input type="hidden" name="back" value={back} />
+          <button role="menuitemradio" aria-checked={!lens} class="item" name="lens" value="">
+            <span class="mark small">{scope.name.slice(0, 1).toUpperCase()}</span>
+            <span class="names">
+              <b>{scope.name}</b>
+              <span>{scope.legal ?? scope.address}</span>
+            </span>
+            {#if !lens}<Icon icon={Check} />{/if}
+          </button>
+          {#if sat.length}
+            <p class="label">Circles</p>
+            {#each sat as c (c.id)}
+              <button role="menuitemradio" aria-checked={lens?.id === c.id} class="item" name="lens" value={c.id}>
+                {c.name}{#if lens?.id === c.id}<Icon icon={Check} />{/if}
               </button>
             {/each}
-          </form>
-        {/if}
+          {/if}
+        </form>
         {#if organization}<hr /><a class="item" role="menuitem" href={organization}>Settings</a>{/if}
       </Popover>
     </div>

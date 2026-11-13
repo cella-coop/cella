@@ -83,7 +83,7 @@ test('the sidebar names the co-op as the database does, and its menus open in th
   assert.equal((sidebar.match(/popover="auto"/g) ?? []).length, 2, 'the co-op menu and the account menu are popovers')
 })
 
-test('the co-op selector lists the assembly first, and any other circle chosen is the lens its trigger names until the assembly clears it', async () => {
+test('the co-op selector lists the circles the member sits in, and the one chosen is the lens its trigger names until the co-op clears it', async () => {
   const session = await shell.signIn(camille)
   const logged = async () => (await one<{ n: number }>('SELECT count(*)::int AS n FROM cella.log')).n
   const before = await logged()
@@ -103,13 +103,17 @@ test('the co-op selector lists the assembly first, and any other circle chosen i
   const checked = (text: string) => [...text.matchAll(/aria-checked="true"[^>]*name="lens" value="([^"]*)"/g)].map((m) => m[1])
 
   const whole = await seen()
-  const menu = whole.slice(whole.indexOf('action="/lens"'))
-  const order = ['General assembly', 'Yours', 'Brand', 'Coordination', 'Others', 'Marketing', 'Operations', 'Web', '<hr', 'Settings']
+  const menu = whole.slice(whole.indexOf('action="/lens"'), whole.indexOf('</form>', whole.indexOf('action="/lens"')))
+  const order = ['Lanterne', 'Circles', 'Brand', 'Coordination']
   const at = order.map((s) => menu.indexOf(s))
   assert.ok(at.every((i) => i >= 0), `the menu holds ${order.join(', ')}`)
-  assert.deepEqual([...at].sort((a, b) => a - b), at, 'the assembly first, then the circles Camille sits in, then the rest, each named, and a rule sets Settings apart')
-  assert.ok(!menu.includes('All circles'), 'no row lists all circles')
-  assert.deepEqual(checked(whole), [''], 'with no lens, the assembly is checked, its row clearing the lens')
+  assert.deepEqual([...at].sort((a, b) => a - b), at, 'the co-op first, then the circles Camille sits in')
+  assert.ok(!menu.includes('All circles') && !menu.includes('Yours') && !menu.includes('Others'), 'no All circles and no groups: the co-op itself clears the lens')
+  assert.ok(!menu.includes('General assembly'), 'the assembly is the co-op row, not a circle of its own')
+  for (const other of ['Marketing', 'Operations', 'Web']) {
+    assert.ok(!menu.includes(other), `${other}, a circle Camille does not sit in, is not listed`)
+  }
+  assert.deepEqual(checked(whole), [''], 'with no lens, the co-op is checked')
   assert.ok(!whole.includes('Co-op: Lanterne / '), 'and the trigger names the co-op alone')
 
   const set = await lensing('web')
@@ -130,7 +134,7 @@ test('the co-op selector lists the assembly first, and any other circle chosen i
 
   const cleared = await lensing('')
   assert.equal(cleared.status, 303)
-  assert.match(cleared.cookie, /^cella-lens=;.*Max-Age=0/i, 'the assembly clears the lens')
+  assert.match(cleared.cookie, /^cella-lens=;.*Max-Age=0/i, 'the co-op clears the lens')
   assert.equal(await logged(), before, 'and nothing of it enters the log')
 })
 

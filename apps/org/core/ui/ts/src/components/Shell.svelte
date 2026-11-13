@@ -187,7 +187,13 @@
       <Popover label="Co-op: {scope.name}{lens ? ` / ${lens.name}` : ''}">
         {#snippet trigger()}
           <span class="mark" aria-hidden="true">{scope.name.slice(0, 1).toUpperCase()}</span>
-          <b class="name">{scope.name}{#if lens}<span class="lensed"> / {lens.name}</span>{/if}</b>
+          <!-- Through a circle, the circle is the name and the co-op its
+               eyebrow. -->
+          {#if lens}
+            <span class="names"><span>{scope.name}</span><b class="name">{lens.name}</b></span>
+          {:else}
+            <b class="name">{scope.name}</b>
+          {/if}
           <Icon icon={CaretUpDown} size="0.9em" />
         {/snippet}
         <!-- The co-op and its circles are one radio group: the co-op, whose
@@ -489,9 +495,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-  .lensed {
-    color: var(--text-muted);
   }
   .names {
     display: grid;

@@ -5,8 +5,8 @@
 // nested in it; a graft is named in order and declared by a feat it
 // joins; a feat's name is unique in its app and has no hyphen. In a
 // node's core, no core feat builds on another, nor a core library on one:
-// a core graft joins them. A package's relative imports stay inside it,
-// and it exports only its surface.
+// a core graft joins them. A package's relative imports stay inside it and
+// point inward through its layers, and it exports only its surface.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -193,6 +193,27 @@ test('a package\'s relative imports stay inside it', () => {
   assert.doesNotMatch(ok, /outside its package/)
   const errors = tree({ files: { [`${src}/handlers/propose.ts`]: "import { party } from '../../../../../party/core/ts/src/index.ts'\n" } })
   assert.match(errors, /handlers\/propose\.ts: imports \.\.\/\.\.\/\.\.\/\.\.\/\.\.\/party\/core\/ts\/src\/index\.ts, outside its package apps\/org\/feats\/motion\/core\/ts; depend on the package instead/)
+})
+
+test('a package\'s layers import only the layers inside them', () => {
+  const ok = tree({
+    files: {
+      [`${src}/drivers/motions.ts`]: "import { actions } from '../models/actions.ts'\nimport type { Motions } from '../interfaces/motions.ts'\n",
+      [`${src}/components/Motion.svelte`]: "<script lang=\"ts\">\n  import { useMotion } from '../hooks/useMotion.ts'\n</script>\n",
+      [`${src}/index.ts`]: "export * from './app/index.ts'\n",
+    },
+  })
+  assert.doesNotMatch(ok, /a layer outside its own/)
+  const errors = tree({
+    files: {
+      [`${src}/models/motion.ts`]: "import { propose } from '../handlers/propose.ts'\n",
+      [`${src}/handlers/propose.ts`]: "import { motions } from '../drivers/motions.ts'\n",
+      [`${src}/hooks/useMotion.ts`]: "const pane = await import('../components/Motion.svelte')\n",
+    },
+  })
+  assert.match(errors, /models\/motion\.ts: imports \.\.\/handlers\/propose\.ts, in handlers, a layer outside its own models; imports point inward/)
+  assert.match(errors, /handlers\/propose\.ts: imports \.\.\/drivers\/motions\.ts, in drivers, a layer outside its own handlers/)
+  assert.match(errors, /hooks\/useMotion\.ts: imports \.\.\/components\/Motion\.svelte, in components, a layer outside its own hooks/)
 })
 
 test('a package exports only its surface', () => {

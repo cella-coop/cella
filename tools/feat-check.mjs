@@ -31,7 +31,8 @@
 // names its schema and the grafts that join it.
 //
 // It also checks that grafts are named and declared, that a package's
-// relative imports stay inside it and its exports are its public surface,
+// relative imports stay inside it and point inward through its layers, its
+// exports are its public surface,
 // through ui-check.mjs the client layers' rules, that a feat's or graft's
 // actions are named for it and declared only in its models/actions.ts,
 // through sql-check.mjs every sql/ file's boundaries,
@@ -302,7 +303,13 @@ for (const app of apps) {
 }
 
 // A package's relative imports stay inside it: no reaching into another
-// package's files around its manifest.
+// package's files around its manifest. Inside it, a file in a layer,
+// src/<layer>/, imports only its own layer and the layers inside it,
+// server then client, innermost first; a client layer's import of a
+// server one is ui-check's to refuse. A file in no layer, or an import of
+// one, is held by no layer's rule.
+const layers = ['models', 'interfaces', 'handlers', 'drivers', 'api', 'hooks', 'components', 'bindings', 'app']
+const layer = (path) => path.match(/^src\/([^/]+)\//)?.[1]
 const sources = (dir, out = []) => {
   for (const name of readdirSync(join(repo, dir))) {
     const path = join(dir, name)
@@ -320,10 +327,14 @@ const sources = (dir, out = []) => {
 for (const dir of byName.values()) {
   for (const file of sources(dir)) {
     const text = readFileSync(join(repo, file), 'utf8')
+    const own = layer(relative(join(repo, dir), join(repo, file)))
     for (const [, spec] of text.matchAll(/(?:from|import)\s*\(?\s*['"](\.{1,2}\/[^'"]+)['"]/g)) {
       const target = relative(join(repo, dir), resolve(join(repo, dirname(file)), spec))
+      const to = layer(target)
       if (target.startsWith('..')) {
         fail(`${file}: imports ${spec}, outside its package ${dir}; depend on the package instead`)
+      } else if (layers.includes(own) && layers.indexOf(to) > layers.indexOf(own)) {
+        fail(`${file}: imports ${spec}, in ${to}, a layer outside its own ${own}; imports point inward, ${layers.join(' → ')}`)
       }
     }
   }

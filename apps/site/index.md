@@ -50,7 +50,9 @@ Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:
 ## The layout
 
 A page is one MDX file, and its body places the site's components by
-name, with no import, the prose between them markdown (`src/components/figures.ts`):
+name, with no import, the prose between them markdown, its headings a
+level down, `#` an h2, `##` an h3 and `###` an h4, as the page's title,
+its hero's heading, is its one h1 (`src/components/figures.ts`):
 
 ```mdx
 +++

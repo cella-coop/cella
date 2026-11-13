@@ -44,6 +44,7 @@
     outcome,
     source,
     drawer,
+    kept = '',
     people,
     circles = [],
     lens = null,
@@ -59,6 +60,8 @@
     // What the command menu searches, read by the shell's query.
     source: Search
     drawer: boolean
+    // The sidebar accordions the viewer opened or shut, as their cookie holds them.
+    kept?: string
     // The names of the people the co-op knows, by address.
     people: Record<string, string>
     // The circles the member reads, the assembly first, then those they
@@ -69,7 +72,7 @@
     children: Snippet
   } = $props()
 
-  const state = useShell(() => outcome, () => drawer, () => people, () => lens, () => circles, () => nav)
+  const state = useShell(() => outcome, () => drawer, () => people, () => lens, () => circles, () => nav, () => kept)
   const favorites = useFavorites()
 
   function onkeydown(e: KeyboardEvent) {

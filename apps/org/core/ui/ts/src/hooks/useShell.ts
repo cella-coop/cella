@@ -8,7 +8,8 @@ const [get, set, has] = createContext<ShellState>()
 // The shell's state: the one the shell put in context, which pages and
 // frames below it read; the shell itself hands the outcome, the drawer's
 // opening state, the people's names, the lens, the circles the member
-// reads and the navigation the first time.
+// reads, the navigation and the accordions the viewer left open or shut
+// the first time.
 export function useShell(
   outcome: () => Outcome | null = () => null,
   drawer: () => boolean = () => true,
@@ -16,9 +17,10 @@ export function useShell(
   lens: () => Lens | null = () => null,
   circles: () => Lens[] = () => [],
   nav: () => Nav = () => [],
+  sections: () => string = () => '',
 ): ShellState {
   if (has()) {
     return get()
   }
-  return set(new ShellState(outcome, drawer, names, lens, circles, nav))
+  return set(new ShellState(outcome, drawer, names, lens, circles, nav, sections))
 }

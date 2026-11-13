@@ -150,7 +150,9 @@ draws.
   member, in the lensed circle where there is a lens, the count its
   page heads with, in a small quiet pill. Several accordions may be
   open at once: one the viewer never touched is open while it holds the
-  page, and one they opened or shut stays so. The foot is the command menu,
+  page, and one they opened or shut stays so across page loads, a cookie
+  keeping it as it keeps the drawer, so the server renders the
+  accordions as they left them. The foot is the command menu,
   then the account menu, the signed-in member, whose menu holds their
   address, Settings and Sign out, beside one icon button for the theme,
   which cycles system, light and dark and shows the current one. Settings is its own

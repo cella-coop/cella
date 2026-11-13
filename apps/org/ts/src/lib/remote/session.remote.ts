@@ -27,6 +27,7 @@ export const shell = query(() =>
     dev,
     theme: getRequestEvent().locals.theme,
     drawer: who.cookies.get('cella-drawer') !== 'closed',
+    sections: (who.cookies.get('cella-sections') ?? '').slice(0, 600),
   })),
 )
 

@@ -168,6 +168,22 @@ test('a lensed collection lists only its circle’s rows, and a registry says th
   assert.ok(!unlensed.includes('leaves Accounts whole'), 'with no lens it says nothing')
 })
 
+test('an accordion the viewer shut or opened stays so across page loads, by its cookie', async () => {
+  const session = await shell.signIn(camille)
+  const seen = async (sections?: string) => {
+    const cookie = sections ? `${session}; cella-sections=${encodeURIComponent(sections)}` : session
+    const res = await fetch(`${shell.base}/projects`, { headers: { accept: 'text/html', cookie } })
+    assert.equal(res.status, 200)
+    return res.text()
+  }
+  const open = (html: string, name: string) =>
+    new RegExp(`<button class="head[^"]*"[^>]*aria-expanded="true"[^>]*>(?:(?!</button>).)*?${name}`, 's').test(html)
+  const key = encodeURIComponent('feature:Governance')
+  assert.ok(open(await seen(`${key}:1`), 'Governance'), 'an accordion opened stays open')
+  assert.ok(!open(await seen(`${key}:0`), 'Governance'), 'an accordion shut stays shut')
+  assert.ok(!open(await seen(`${key}:1;;`), 'Governance'), 'a malformed cookie is ignored')
+})
+
 test('the sidebar’s counts narrow with the lens, and the Inbox and a shut accordion’s dot stay whole', async () => {
   const session = await shell.signIn(camille)
   const seen = async (lens?: string) => {

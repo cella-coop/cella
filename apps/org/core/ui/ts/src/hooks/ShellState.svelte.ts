@@ -9,12 +9,37 @@ export interface Lens {
   name: string
 }
 
+// An accordion's key as its cookie spells it, a circle's accordion name
+// URI-encoded so it holds no `:` or `,`.
+const KEY = /^[\w.~!*'()%-]{1,120}$/
+
+// The accordions a cookie holds, as `feature%3AGovernance:1,feature%3AWork:0`:
+// an oversized value is ignored, a malformed pair dropped.
+function parse(raw: string): Record<string, boolean> {
+  const out: Record<string, boolean> = {}
+  if (raw.length > 600) {
+    return out
+  }
+  for (const pair of raw.split(',').slice(0, 24)) {
+    const [key, flag, ...rest] = pair.split(':')
+    if (rest.length === 0 && KEY.test(key) && (flag === '0' || flag === '1')) {
+      try {
+        out[decodeURIComponent(key)] = flag === '1'
+      } catch {
+        // A key that is no URI encoding is malformed: dropped.
+      }
+    }
+  }
+  return out
+}
+
 // The shell's own state: the last write's outcome, until it is dismissed,
-// whether the drawer is open, which the viewer's cookie keeps so the
-// server renders the page as they left it, the names of the people the
-// co-op knows, by address, which a person's chip shows, the names of the
-// circles the member reads, by id, which a circle's column shows, the circle
-// the member lensed the co-op on, which the server read from their cookie,
+// whether the drawer is open and which sidebar accordions the viewer
+// opened or shut, which the viewer's cookies keep so the server renders
+// the page as they left it, the names of the people the co-op knows, by
+// address, which a person's chip shows, the names of the circles the
+// member reads, by id, which a circle's column shows, the circle the
+// member lensed the co-op on, which the server read from their cookie,
 // and the sidebar's navigation, whose collections' icons a record's chip
 // wears.
 export class ShellState {
@@ -40,6 +65,7 @@ export class ShellState {
     lens: () => Lens | null = () => null,
     circles: () => Lens[] = () => [],
     nav: () => Nav = () => [],
+    sections: () => string = () => '',
   ) {
     this.#outcome = outcome
     this.#names = names
@@ -47,6 +73,7 @@ export class ShellState {
     this.#circles = circles
     this.#nav = nav
     this.drawer = drawer()
+    this.toggled = parse(sections())
   }
 
   // The icon a collection's view declares, by the collection's name, or
@@ -105,6 +132,13 @@ export class ShellState {
 
   toggle(key: string, holds: boolean) {
     this.toggled[key] = !this.expanded(key, holds)
+    try {
+      const raw = Object.entries(this.toggled).map(([k, v]) => `${encodeURIComponent(k)}:${v ? 1 : 0}`).join(',')
+      document.cookie = `cella-sections=${encodeURIComponent(raw)}; path=/; max-age=31536000; samesite=lax`
+    } catch {
+      // Without the cookie the section still toggles; it only resets on
+      // the next page load.
+    }
   }
 
   // A panel's tab opens the drawer on it.

@@ -1074,7 +1074,7 @@ them. A grantee's name links to its circle, its issuer to
 its own, and the motion to its page; a link of the chain and a mandate
 under it opens its own page.
 
-A circle's page has a Settings tab, a `Settings` form ([settings](../ui/index.md#settings)) of its name, its purpose and its procedure, from those in force, and below them its roles, each its name, duty and cap, with a row to make a new one. None saves directly: an edit, as it commits, opens the dialog proposing an `amend-circle`, `role` or `amend-role` motion of the circle that decides about it, the assembly unless another holding `amend-circle` may (`motion.decider`), its reason the guard's, why no write of the reader's changes it. A role's cap emptied proposes lifting it, the `amend-role` motion giving its cap as none.
+A circle's page has a Settings tab, a `Settings` form ([settings](../ui/index.md#settings)) of its name, its purpose and its procedure, from those in force, and below them its roles, each its name, duty and cap, and Add a role…. None saves directly: an edit, as it commits, opens the dialog proposing an `amend-circle` or `amend-role` motion of the circle that decides about it, the assembly unless another holding `amend-circle` may (`motion.decider`), its reason the guard's, why no write of the reader's changes it. A role's cap emptied proposes lifting it, the `amend-role` motion giving its cap as none. Add a role… opens a dialog composing a new role whole, its name, id, duty and cap, proposed as one `role` motion of that circle.
 
 Each circle has a features page in Settings, `/settings/features/<id>`,
 which its Settings tab links to under its terms: a `Settings` form of

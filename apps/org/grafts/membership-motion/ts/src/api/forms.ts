@@ -1,5 +1,7 @@
 import type { Db, Form } from '@cella/org-db'
-import type { Applying, Asking } from '../models/asking.ts'
+import type { Propose } from '@cella/org-motion/models'
+import { organization } from '../drivers/asking.ts'
+import { particulars as names, type Applying, type Asking, type Particular } from '../models/asking.ts'
 
 const when = (form: Form) => {
   if (!form.get('deadline')) {
@@ -54,4 +56,43 @@ export function applying(form: Form, member: string): Applying {
     throw new Error(`“${form.get('shares')}” is not a whole number of shares`)
   }
   return { member, shares, ...when(form) }
+}
+
+// The co-op's particulars as a rule of its assembly, each value marked
+// once, worded as the founding words them from scope.toml
+// (tools/seed/found.mjs): a value left empty is left out, its name never.
+export function worded(p: Record<Particular, string | null>): string {
+  const mark = (name: Particular) => `{particulars_${name}: ${p[name]}}`
+  return [
+    `The co-op is called ${mark('name')}`,
+    p.legal_name ? `, its legal name ${mark('legal_name')}` : '',
+    p.form ? `, a ${mark('form')}` : '',
+    p.capital ? ` with a capital of ${mark('capital')}` : '',
+    p.seat ? `, whose seat is ${mark('seat')}` : '',
+    p.siren ? `, registered under SIREN ${mark('siren')}` : '',
+    p.rcs ? `${p.siren ? '' : ', registered'} at the trade register of ${mark('rcs')}` : '',
+    p.vat ? `, with the VAT number ${mark('vat')}` : '',
+  ].join('')
+}
+
+// A proposal from Settings' Organization page: a motion of the assembly
+// adopting the particulars again, each value typed (`arg.particulars_<name>`)
+// in place of the one in force and the rest as they stand, as a rule
+// replacing those in force with the protection they had.
+export async function particulars(form: Form, db: Db): Promise<Propose> {
+  const now = await organization(db)
+  if (!now.particulars) {
+    throw new Error('the co-op has no particulars in force to change: its founding motion adopts them')
+  }
+  const values: Record<Particular, string | null> = { ...now.particulars }
+  for (const name of names) {
+    if (form.all(`arg.particulars_${name}`).length > 0) {
+      values[name] = form.get(`arg.particulars_${name}`).trim() || null
+    }
+  }
+  if (!values.name) {
+    throw new Error('the co-op is called by a name: type the name it goes by')
+  }
+  const args = { kind: 'rule', wording: worded(values), replaces: now.particulars.policy, ...(now.protected ? { protected: now.protected } : {}) }
+  return { circle: form.get('circle'), title: form.get('title'), ...when(form), actions: [{ kind: 'policy', args }] }
 }

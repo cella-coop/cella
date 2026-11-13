@@ -8,7 +8,7 @@ import { close } from '../handlers/close.ts'
 import { propose } from '../handlers/propose.ts'
 import { put } from '../handlers/put.ts'
 import { roll, turnout } from '../drivers/roll.ts'
-import { amending, appointing, standing } from '../drivers/asking.ts'
+import { amending, appointing, organization, standing } from '../drivers/asking.ts'
 import { stances } from '../drivers/asks.ts'
 import * as forms from './forms.ts'
 
@@ -21,7 +21,7 @@ export type { Founded, Founding } from '../models/founding.ts'
 export { propose } from '../handlers/propose.ts'
 export { put } from '../handlers/put.ts'
 export { roll, turnout } from '../drivers/roll.ts'
-export { amending, appointing, standing } from '../drivers/asking.ts'
+export { amending, appointing, organization, standing } from '../drivers/asking.ts'
 export { stances } from '../drivers/asks.ts'
 
 // A motion's roll and outcome on its page and its turnout in the list;
@@ -31,8 +31,9 @@ export { stances } from '../drivers/asks.ts'
 // On a member's page, proposing their
 // admission, suspension or exclusion, and on an employee's own, applying
 // to join; on a circle's, a seat in it, what the motion feat proposes
-// about its powers, or, from its Settings tab, its amendment; and on a
-// mandate's, its change or its revocation.
+// about its powers, or, from its Settings tab, its amendment; on a
+// mandate's, its change or its revocation; and from Settings'
+// Organization page, the co-op's particulars replaced.
 export const slice: Slice = {
   name: 'membership-motion/circles',
   extends: {
@@ -68,6 +69,16 @@ export const slice: Slice = {
     mandates: {
       actions: {
         put: action('motion:motion:propose', (form, id, deps) => circles.revised(form, id ?? '', deps.db), async (input, deps) => propose(await circles.putting(input, deps.db), deps)),
+      },
+    },
+  },
+  // Settings' Organization page: the co-op's particulars, which only the
+  // assembly's motion replaces, and the scope's address and timezone.
+  settings: {
+    organization: {
+      read: (db) => organization(db),
+      actions: {
+        propose: action('motion:motion:propose', (form, _, deps) => forms.particulars(form, deps.db), propose),
       },
     },
   },

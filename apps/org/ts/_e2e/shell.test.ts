@@ -104,10 +104,10 @@ test('the co-op selector lists the assembly first, and any other circle chosen i
 
   const whole = await seen()
   const menu = whole.slice(whole.indexOf('action="/lens"'))
-  const order = ['General assembly', 'Brand', 'Coordination', '<hr', 'Marketing', 'Operations', 'Web']
+  const order = ['General assembly', 'Yours', 'Brand', 'Coordination', 'Others', 'Marketing', 'Operations', 'Web', '<hr', 'Settings']
   const at = order.map((s) => menu.indexOf(s))
   assert.ok(at.every((i) => i >= 0), `the menu holds ${order.join(', ')}`)
-  assert.deepEqual([...at].sort((a, b) => a - b), at, 'the assembly first, then the circles Camille sits in, then the rest')
+  assert.deepEqual([...at].sort((a, b) => a - b), at, 'the assembly first, then the circles Camille sits in, then the rest, each named, and a rule sets Settings apart')
   assert.ok(!menu.includes('All circles'), 'no row lists all circles')
   assert.deepEqual(checked(whole), [''], 'with no lens, the assembly is checked, its row clearing the lens')
   assert.ok(!whole.includes('Co-op: Lanterne / '), 'and the trigger names the co-op alone')

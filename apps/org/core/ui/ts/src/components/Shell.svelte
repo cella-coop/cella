@@ -90,6 +90,9 @@
   // A collection's own icon, as the sidebar draws it, for a pin of a
   // preset that names no mark of its own.
   const owner = (collection: string) => nav.flatMap((g) => g.items).find((i) => i.href === `/${collection}`)?.icon
+  // Whether the circles past the assembly split into those the member sits
+  // in and the rest.
+  const split = $derived(circles.some((c) => !c.assembly && c.sits) && circles.some((c) => !c.assembly && !c.sits))
 
   // The circle the member is in: their lens, or the assembly where they
   // lensed none, which reads whole.
@@ -188,16 +191,18 @@
           <p class="label">Circles</p>
           <form method="post" action="/lens" class="list" role="group" aria-label="Circles">
             <input type="hidden" name="back" value={back} />
+            <!-- Past the assembly, the circles the member sits in first, then
+                 the rest, each group named where both are there. -->
             {#each circles as c, i (c.id)}
               {const on = $derived(c.assembly ? !lens : lens?.id === c.id)}
-              {#if i > 0 && !c.sits && (circles[i - 1]?.sits || circles[i - 1]?.assembly)}<hr />{/if}
+              {#if split && !c.assembly && (circles[i - 1]?.assembly || c.sits !== circles[i - 1]?.sits)}<p class="label">{c.sits ? 'Yours' : 'Others'}</p>{/if}
               <button role="menuitemradio" aria-checked={on} class="item" name="lens" value={c.assembly ? '' : c.id}>
                 {c.name}{#if on}<Icon icon={Check} />{/if}
               </button>
             {/each}
           </form>
         {/if}
-        {#if organization}<a class="item" role="menuitem" href={organization}>Settings</a>{/if}
+        {#if organization}<hr /><a class="item" role="menuitem" href={organization}>Settings</a>{/if}
       </Popover>
     </div>
 
@@ -496,7 +501,7 @@
   .list {
     display: grid;
   }
-  .list hr {
+  hr {
     margin: var(--space-1) var(--space-2);
     border: none;
     border-top: 1px solid var(--line);

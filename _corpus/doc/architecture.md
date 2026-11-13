@@ -1,18 +1,475 @@
 +++
 title = "Architecture"
-updated = 2026-11-12
+updated = 2026-11-13
 +++
 
 # Architecture
 
-Cella is built as a tree of **feats**. The root feats of the repository are
-its **apps**; apps hold feats, feats hold feats, and **grafts** join feats.
-Each feat's **core** holds the libraries its feats inherit. The rules are
-corpus's composable architecture as ruled on 2026-10-17, with seedling's
-layers inside each package and the write labels and feat rulings of
-2026-10-24.
+Cella is built by the **Graft Architecture**: an app is a tree of
+**nodes**, each a **core** that cannot be removed, the optional
+**feats** on it and the **grafts** that own the relationships between
+them. It is six axioms, Nesting, Ancestry, Grafting, Ownership, Layering
+and Modularity, the corollaries that follow from them, and the
+definitions they use. Every clause says what holds it: a check that
+refuses a violation, review, or a ruling not yet built. The operator
+settled it on 9 November 2026; the design is the claude.ai page
+`TGBfX9TgH7Ypv7eDq6uwic`, version 65, its text in the workshop's
+`_corpus/graft-architecture.article.md`, and Astra's review of it
+against main, [the review](26-11-09-graft-architecture-review.md), is
+the reference for its findings.
+
+The sections after [Open](#open) say how each axiom is built today, in
+the code's own names. This page calls a call that writes a
+**command**; the code and those sections still call it an **action**
+(`models/actions.ts`, `cella:<feat>:<verb>` permissions, `## Actions`
+below), until the layout stream renames them. The tree they describe
+is the current one; [the target tree](#the-target-tree) maps each of
+its paths to where the axioms put it.
+
+## Definitions
+
+**Tree**
+
+- **node**: a core, with the feats and grafts on it. An app is the root
+  node. A node is logical: its directory holds `core/`, `feats/` and
+  `grafts/`, and a feat that is no node, a **leaf**, holds none of them.
+- **lineage** of a slice or a lib: its node and that node's ancestors. A
+  leaf feat's lineage is the node it sits on and that node's ancestors,
+  the base case; a feat that is a node is in its own lineage's next
+  link only for what sits on it.
+- **core**: a node's libs, core feats and core grafts; never removed.
+- **lib**: shared code with no data.
+
+**Slices**
+
+- **feat**: one domain. A feat may itself be a node.
+- **graft**: the relationship between the feats it joins.
+- **slice**: a feat or a graft, in core or not; each owns a schema.
+
+**Interface**
+
+- **call**: a query or a command a slice offers. A **query** reads.
+- **command**: a call that writes; the notary logs it, with a power and
+  a fold.
+- **api**: a slice's calls.
+- **contract**: what other slices may use of a slice: its models, its
+  calls, its bindings and its published keys.
+- **shell**: an entry point outside the tree that imports every slice
+  and serves its calls.
+
+**Shipping**
+
+- **module**: a manifest and the nodes, feats and grafts it ships.
+
+## Labels
+
+Every clause below carries one label:
+
+- **enforced**: a tool refuses a violation. The label names the check
+  and its scope: one of the five `cella check feats` runs
+  (`tools/feat-check.mjs` and, through it, `tools/sql-check.mjs`,
+  `tools/writes.mjs`, `tools/powers.mjs`; `tools/ui-check.mjs`), or
+  where it says so `cella migrate`, `cella check pruned`, the shell's
+  registry as it loads, or the notary at run time. Each has its
+  negative tests in `tools/_tests/`, which `cella test tools` runs.
+- **convention**: review holds it; no tool sees it.
+- **accepted**: ruled, and not yet built; the docs say it, the code does
+  not yet.
+- **proposed**: not yet ruled.
+
+A check holds no more than its scope: what it cannot see is said beside
+it, as SQL built at run time is beside `writes`.
+
+## The axioms
+
+### 1. Nesting
+
+**An app is a tree of nodes. A graft sits in a node holding all its
+feats.**
+
+- *enforced* (`feat-check`, placing each package by its path,
+  `tools/_tests/tree.test.mjs`): apps hold feats, feats hold feats, to
+  any depth; a node's core is inherited by its descendants.
+- *enforced* (`feat-check`'s edges for `packages/brand`,
+  `packages/diagrams` and `apps/site`): the brand, the diagrams and the
+  site sit outside the tree; the brand depends on no package of the
+  repository, the diagrams on the brand alone, the site on the brand and
+  the diagrams, and only the site depends on the diagrams.
+- *enforced* (`feat-check`, `tree.test.mjs`; `sql-check` deriving the
+  schema): a feat's name is unique in its app, at any depth, and
+  unhyphenated, and its schema is its name, a graft's its name with
+  underscores ([feats](#feats)). The check compares feats with feats,
+  not with core's feats.
+- *accepted*: a feat's name is unique among the installed modules; its
+  schema derives from its module and its name.
+- *proposed*: core holds libs, feats and grafts, `core/libs/`,
+  `core/feats/`, `core/grafts/`; core feats are feats that cannot be
+  removed. Today core's libraries and core feats sit side by side in
+  `core/`, told apart by whether the directory holds a `sql/`, and its
+  grafts in `core/grafts/` ([core grafts](#core-grafts)).
+- *proposed*: a leaf feat's folders are its layers; `core/` appears only
+  where a feat is also a node.
+- *proposed*: the manifest names the role: `app.toml` at an app,
+  `feat.toml` on every feat.
+
+### 2. Ancestry
+
+**A slice or a lib depends only on the cores of its lineage.**
+
+- *enforced*: imports, SQL references and UI extensions reach only the
+  cores of the lineage, or from a graft to what it joins. Imports:
+  `feat-check` reads each `package.json` and `cargo metadata` and
+  refuses any edge [the table](#what-may-depend-on-what) does not give,
+  and a relative import leaving its package (`tree.test.mjs`); a bare
+  import it does not read, the manifest being the edge. SQL:
+  `sql-check` refuses a reference outside [the schemas a slice may
+  name](#sql) (`reads.test.mjs`). UI: the shell's registry refuses, as
+  it loads, a slice extending a collection it may not
+  (`apps/org/ts/src/lib/server/slices.ts`); its reach takes in a
+  slice's joined feats, their ancestors and core's collections.
+- *enforced* (`sql-check`, every foreign key out of a schema): a key
+  never crosses a feat; the keys out of a slice's schema are its
+  record's owning circle, `circle.circle`, a grantee, `circle.grantee`,
+  and core's people, `person.person`, for a feat, a graft and core
+  alike, so a graft's key into a feat it joins is refused too
+  (`powers.test.mjs`). The check reads the keys a `CREATE TABLE`
+  makes; one an `ALTER TABLE` adds it does not.
+- *proposed*: a key may point into any core feat, as an author's into
+  the people.
+- *enforced* (`feat-check` on core's packages, `tree.test.mjs`;
+  `sql-check` on core's SQL, `core.test.mjs`; the shell's registry on
+  core's slices): within a core, as on a node, no feat depends on
+  another: a core feat uses its core's libs and its ancestors' cores,
+  and a core graft joins core feats, as `circle-policy` does. Ruled by
+  the operator on 9 November: "sideways core deps should not be
+  allowed, its a bug that it ever was".
+
+### 3. Grafting
+
+**A graft also depends on the feats it joins and on the grafts joining
+a proper subset of them.**
+
+- *enforced* (`feat-check`'s graft edges, `sql-check`'s graft schemas,
+  `tree.test.mjs`, `reads.test.mjs`): a graft reads the feats it joins,
+  the cores below them and the lower-order grafts at or below its node,
+  never a graft of equal or higher order ([graft order](#graft-order)).
+- *proposed*: a nested node's core feats can be joined by a graft from
+  above. Today no feat's graft joins a core feat, and `feat-check`
+  refuses one that joins `circle` or `person`.
+
+#### 3.1 Placement
+
+**A graft sits in the lowest node holding all its feats.** It follows
+from 1 and 3: a graft depends on every feat it joins, and the lowest
+node holding them all is the one place each is in reach and no child
+holds the relationship.
+
+- *enforced* (`feat-check`, `tree.test.mjs`): it sits where no child of
+  its node holds all its feats; it is named by its feats in alphabetical
+  order and declared in the `feat.toml` of a feat it joins. The check
+  sees that a joined feat declares it, not which feat extends.
+- *proposed*: it has one owning module.
+- *convention*: prefer pairs; three or more feats only when a concept
+  needs them all.
+
+#### 3.2 Migration
+
+**Migrations run in tree order: core, feats, then grafts by the number
+of feats they join.** It follows from 2 and 3: every dependency points
+to a core of the lineage, a joined feat or a lower-order graft, each of
+which this order applies first.
+
+- *enforced* (`cella migrate`, `tools/migrate.mjs` and
+  `tools/migrations.mjs`, `migrate.test.mjs` and
+  `migrations.test.mjs`): it walks the tree in that order, the notary
+  first, and refuses a database that applied a file since edited or
+  gone. Until launch the files are rewritten in place and every
+  database rebuilt ([migrations](#migrations)); the hashes hold each
+  database to the files it applied, not the repository to its history.
+- *accepted*: from launch an applied file is never edited: an app's
+  `migrations.lock` keeps every migration's hash and `cella check`
+  refuses a locked file edited or gone. No app holds a lock yet.
+
+#### 3.3 Removal
+
+**Removing a feat outside core removes only its subtree and the grafts
+that join it.** It follows from 2 and 3: nothing depends on a feat but
+what sits on it and the grafts joining it.
+
+- *enforced* (`cella check pruned` and `cella test pruned`,
+  `tools/prune.mjs` and `tools/pruned.mjs`, `prune.test.mjs`): no core
+  package depends on a non-core slice, checked by building with every
+  optional slice pruned, migrating core alone and signing in to it
+  ([removing a feat](#removing-a-feat)).
+- *convention*: who may act is core: seats, tenures and the authority
+  check, held by core's `circle` and its graft `circle-person`, which
+  registers the scope's one authority, `cella.authority` holding one
+  row ([circles are core](#circles-are-core)). The pruned build proves
+  core's authority answers with every feat pruned; no check refuses a
+  feat's registering the authority.
+- *proposed*: a motion's roll is core's too. Today it is the motion
+  feat's, which reads core's seats ([graft order](#graft-order)).
+- *proposed*: a module never adds to the app's core.
+- *convention*: nest only for a removable subtree.
+- *convention*: an unlinked record is valid: an invoice with no contact
+  is unbilled, not invalid.
+
+### 4. Ownership
+
+**A slice owns its schema: who reads its rows, and every write to them.
+Every write is a command; only migrations and erasure bypass the
+notary.**
+
+- *enforced* (`sql-check`, `reads.test.mjs`, `core.test.mjs`): a slice
+  creates, alters, indexes, drops and grants only in its own schema; a
+  core graft alters a table of a core feat it joins only to put it under
+  the circles' row-level policies, and only the notary is exempt. Roles,
+  event triggers, extensions, rules and default privileges the check
+  does not read.
+- *enforced* (`writes` on every package's TypeScript and the shell's,
+  `sql-check` on every `sql/` file, `writes.test.mjs`): writes stay
+  home: a graft changes a feat through its published write, reacts
+  through `on`, refuses through a guard; no slice writes, or puts a
+  trigger on, a table outside its schema, nor `cella.*` but to register,
+  and only `@cella/org-db` calls `cella.begin`, `cella.submit` and
+  `cella.follow` ([writes stay home](#writes-stay-home)). The check
+  reads static SQL; SQL built at run time and a target named without
+  its schema are left to review.
+- *enforced* (at run time, by the notary's event trigger binding every
+  table a migration makes, `core/notary/sql/007-notarised.sql`): every
+  table refuses a row written outside a notary transaction. A migration
+  writes with `cella.unbound` set, which only a superuser may set;
+  erasure writes as the vault redacts; the `cella`, `vault` and
+  `migration` schemas are not bound. Its tests are e2e,
+  `apps/org/ts/_e2e/notarised.test.ts` ([trust](trust.md#current-limits)).
+- *enforced* (`powers`, `powers.test.mjs`): every command names a power
+  its SQL registers in `cella.power`, granted by a mandate, a collective
+  mandate or a right in the fixtures, and a fold, `cella.lets_fold`,
+  that replays its entry; the log's first entry declares `first`
+  instead ([actions](#actions), [folds](#folds)). The check sees a fold
+  registered; that it replays its entry row for row is proved by the e2e
+  scenarios' re-fold ([tests](#tests)).
+- *enforced* (`sql-check`'s row-level policies, `reads.test.mjs`;
+  `cella migrate`'s `circle.unsecured`; `cella test e2e denial`): who
+  may read a row is held by row-level security, the mechanism chosen,
+  every table's enabled and forced and every reading policy of a known
+  pattern ([reading](#reading)). It holds against a reader, not a
+  hostile host ([trust](trust.md#current-limits)).
+- *accepted*: migrations change schemas outside the notary, under the
+  module set a motion or a policy activated; they are not entries.
+- *accepted*: erasure removes a personal value from the vault by the
+  person's right; the entry stays.
+- *enforced* (`writes`, the notary's package alone writing `cella.*`;
+  `sql-check`, `DROP EXTENSION cella` in every `sql/`): the notary is a
+  layer under every slice, its own package,
+  `apps/org/core/notary/rs`, and the `cella` database extension.
+- *proposed*: a setting every slice reads is owned by a circle and
+  offered by a core feat.
+
+#### 4.1 Guards
+
+**A guard lives in the SQL of the slice that owns what it guards, or of
+the graft joining the slices it spans.** It follows from 4 and 3: a
+guard refuses a write, every write is to rows a slice owns, and what
+spans slices is a graft's.
+
+- *enforced* (`sql-check`, every `sql/` file but the notary's,
+  `core.test.mjs`, `policy.test.mjs`): a guard never reads the clock or
+  randomness, since the log must replay, nor a policy's wording
+  ([policies](#policies)); the register's own SQL and the core graft
+  securing it read the wording. The check reads static SQL, and a `DO`
+  block it refuses only outside core; TypeScript it does not read.
+- *convention*: the handler checks the permission; the guard is never
+  repeated in TypeScript.
+- *convention*: a guard refuses as early as it can and says what would
+  fix it ([early and actionable](#early-and-actionable)).
+
+### 5. Layering
+
+**A slice's layers import only inward. Other slices use only its
+contract; only shells import its app.**
+
+- *enforced* (`feat-check`'s exports): a slice's package exports only
+  `./models`, `./api`, `./bindings` and `./app`, a core lib's `.`; the
+  check reads the export keys, not what they re-export.
+- *enforced* (`ui-check`, `ui.test.mjs`; the shell's registry): a
+  slice's UI is its own, mounted through `./api` and `./app`; client
+  code imports no server layer.
+- *accepted*: a slice's api is its calls. A call is a query or a
+  command, framework-free and validated by a Standard Schema; a query
+  may be written in SQL, as a view. Built for every read the web shell
+  makes, which `ui-check` holds by refusing a route's `load`
+  (`ui.test.mjs`; [remote functions](#remote-functions)).
+- *proposed*: a slice declares sockets, named and typed slots, in its
+  bindings; a graft or another module fills one with a plug from its own
+  app. A graft shows itself only so, never with pages of its own.
+- *proposed*: a slice's folders are its layers; inside one, files are
+  named by language, and a driver may hold a folder per system, such as
+  `postgres/`.
+- *proposed*: a slice's SQL follows its layers: tables in models, guards
+  and folds in handlers, SQL queries in api.
+
+#### 5.1 Composition
+
+**Only shells compose: they serve every slice's calls and match every
+plug to its socket.** It follows from 5 and 2: only a shell imports a
+slice's app, and no slice reaches a sibling to compose it.
+
+- *accepted*: the web shell serves calls as remote functions and REST,
+  the cli shell as commands, the analytics shell reads the SQL queries;
+  a new transport touches one shell. Ruled by the operator on 9
+  November (the review's finding 3).
+- *proposed*: an unmatched plug fails the build; no slice imports
+  another slice's app.
+- *proposed*: a shell is a kit in core and a root at the app.
+
+#### 5.2 Evolution
+
+**A change keeps a slice's contract, adds to it, or removes what nothing
+uses, never changing it in place; so a contract changes by expand,
+migrate, contract, and its dependents change in parallel.** It follows
+from 5 and 3: only the contract is reachable, and its dependents are
+known.
+
+- *proposed*: the checker fingerprints every contract and refuses a
+  change that alters or removes a member a dependent still uses.
+- *proposed*: a contract change is planned as an expand, one migration
+  per dependent, each its own lane, and a contract once all have
+  landed; the graft graph is the schedule.
+- *convention*: a core's contract is the costliest to change, since its
+  whole subtree depends on it; keep core small.
+- *accepted*: after launch, data changes the same way: add, backfill,
+  drop. Until launch, migrations are rewritten in place.
+
+### 6. Modularity
+
+**Each co-op chooses the modules its tree is composed of.**
+
+- *accepted*: a module is a manifest and its contributions, named in
+  reverse-DNS by its publisher's domain, which lists the signing key;
+  each part belongs to exactly one.
+- *accepted*: tables are private to their module: everything outside
+  it reaches a slice only through its calls and its published keys.
+- *accepted*: it is installed by motion and upgraded by a policy
+  adopted by motion.
+- *accepted*: hard requirements form a DAG; a graft onto another
+  module's feat is conditional on that module.
+- *accepted*: two installed feats sharing a name are aliased at
+  install; an unresolved collision is refused.
+
+#### 6.1 Retirement
+
+**A module is retired, never erased; the log keeps replaying its
+entries.** It follows from 6 and 4: every command's entry folds, and
+the log replays from its first entry.
+
+- *accepted*: retiring is refused while a hard requirement depends on
+  it; conditional grafts onto it retire with it.
+- *accepted*: folds are versioned per release; an entry folds with the
+  release that wrote it.
+- *accepted*: a retired module's tables freeze; its queries stay
+  readable for export, its commands are refused; only vault values are
+  erased.
+- *accepted*: a retired module may be reinstated by motion, at its
+  release or a later one; the log continues.
+- *accepted*: a set of modules is activated by a log entry citing the
+  motion or policy behind it.
+
+## Principles
+
+- **Autonomy.** A feat is one domain: its models, logic, schema and UI.
+  It imports no other feat and holds no foreign key into one.
+- **Composition.** Where two feats meet, a graft owns the meeting. It
+  depends on the feats; they never know it.
+- **Optionality.** Every feat outside core can be removed. What cannot
+  be removed without breaking the platform is a feat in core.
+- **Recursion.** A feat can be a node with its own core, feats and
+  grafts. The rules hold at every level.
+- **Code shared, data home.** Shared behaviour is a core lib; the data
+  it works on lives in each slice's own tables.
+- **Subsidiarity.** A rule, guard or relationship lives at the lowest
+  level that owns it.
+- **Parallel work.** Lanes meet only at contracts. A change inside a
+  slice touches nothing else; a contract changes by expand, migrate,
+  contract, so its dependents move in parallel.
+- **Redundancy.** The handler checks the permission and SQL holds the
+  guard; an ordered command is checked a third time by the notary.
+- **Enforced by tooling.** A rule a tool can see is checked, with a
+  negative test. A rule no tool can see says so.
+
+## The target tree
+
+The axioms place the tree as below; today's paths differ, and this
+table maps each one the target moves. The moves are the layout
+stream's and their own streams', each landing its row; until then the
+sections after [Open](#open) and the checks describe today's paths.
+
+```
+apps/org/
+  app.toml            the app, its scopes and its shells
+  core/
+    notary/           the database extension under every slice
+    libs/             pure code, no schema: ui, blocks, files, crypto, db, …
+    feats/            not optional: log, circle, person, motion, policy
+    grafts/           where two core feats meet: circle-person, circle-policy, …
+  feats/
+    task/             a leaf: feat.toml, index.md, package.json and its layers,
+                      app/ bindings/ components/ hooks/ api/ drivers/
+                      handlers/ interfaces/ models/ _tests/
+    finance/          a nested node: feat.toml, core/feats/{account,transaction},
+                      feats/{invoice,bill,expense,payslip}, grafts/
+  grafts/             at the lowest node holding all their feats
+  shells/
+    web/              remote functions and REST; mounts every app
+    cli/              the calls as commands of the cella CLI
+    analytics/        reads every slice's SQL queries, read-only
+```
+
+| Today | Target |
+|---|---|
+| `apps/org/feat.toml` | `apps/org/app.toml` |
+| `apps/org/core/<lib>/{ts,rs}`: `actions`, `body`, `crypto`, `db`, `guards`, `keystore`, `log`, `pdf`, `sign`, `ui`, `vat` | `apps/org/core/libs/<lib>/`, its layers as folders; `body` as `blocks`, and the log a core feat, `core/feats/log/` |
+| `apps/org/core/notary/{rs,sql}` | `apps/org/core/notary/` |
+| `apps/org/core/<feat>/{ts,sql}`: `circle`, `person`, `policy`, `analytics` | `apps/org/core/feats/<feat>/`; `analytics` the analytics shell's kit |
+| `apps/org/core/grafts/<graft>/{ts,sql}` | `apps/org/core/grafts/<graft>/`, its layers as folders |
+| `apps/org/feats/motion/` | `apps/org/core/feats/motion/`, and its graft with the register `core/grafts/motion-policy/` |
+| a leaf's `feats/<feat>/core/ts/src/<layer>/` and `core/sql/` | `feats/<feat>/<layer>/`, its SQL in the layer it belongs to: tables in `models/`, guards and folds in `handlers/`, queries in `api/` |
+| a graft's `grafts/<graft>/{ts,sql}` | `grafts/<graft>/<layer>/`, as a leaf's |
+| `apps/org/feats/{account,transaction}/` | `apps/org/feats/finance/core/feats/{account,transaction}/` |
+| `apps/org/feats/{invoice,bill,expense,payslip}/` | `apps/org/feats/finance/feats/<feat>/`, their grafts among themselves in `finance/grafts/` |
+| `apps/org/ts/` | `apps/org/shells/web/` |
+| `apps/org/rs/` | `apps/org/shells/cli/` |
+| the analytics shell, run by `cella analytics` | `apps/org/shells/analytics/` |
+
+Finance nested, motion and the log promoted into core, and a body as
+`blocks` are the design's picture, not yet ruled clauses: each lands
+by its own stream, and the axioms hold whichever way it goes.
+
+## Open
+
+Unplanned, and answered by no clause yet:
+
+- **Declaring calls and keys for other modules**: how a slice marks the
+  calls and keys other modules may use, how they are versioned with the
+  module, and how the checker knows which module owns what.
+- **Upgrades**: after launch migrations are append-only; how a module
+  version declares what it migrates, and what a co-op sees before its
+  policy applies it.
+- **Listing and vetting**: where modules are listed, and how a co-op
+  vets one before its motion.
+- **Per-co-op builds**: shells generated from each co-op's modules mean
+  a build per co-op, which a signed native client has to accommodate.
+- **Grafting into a nested core**: adopted in the design, so a root
+  feat's graft can join a nested node's core feat; whether it erodes
+  the nested node's encapsulation is watched.
+- **Manifests**: `app.toml` and `feat.toml`, or one `node.toml`.
+- **Two CLIs**: the `cella` dev tool and a co-op's runtime cli shell
+  are different things.
 
 ## The tree
+
+The tree as it is today and as the checks read it; [the target
+tree](#the-target-tree) maps each path the axioms move.
 
 ```mermaid
 flowchart BT
@@ -615,8 +1072,9 @@ in a node's core only if it spans everything below that node.
   members approved it is the `motion-patronage` graft's, and that the
   year's books are closed `account-patronage`'s.
 - An actor holds a power by a mandate covering the record's owning
-  circle: one guard on every action with a power, the membership
-  feat's, since whether a seat counts is that feat's to say; whether a
+  circle: one guard on every action with a power, core's graft
+  `circle-person`'s (`circle_person.empowered`), since who may act is
+  core's to say ([circles are core](#circles-are-core)); whether a
   scope covers a circle is core's rule (`circle.covers`), and no slice
   checks a scope again ([actions](#actions)).
 

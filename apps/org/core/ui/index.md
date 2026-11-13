@@ -499,9 +499,14 @@ priority, names no record and wears none.
 A settings page is a plain form, `Settings`, one `Setting` a row: its
 label, its current value in its field, and under it in a quiet line
 what changes it, a write the reader makes or a motion of the circle
-that decides it. Every field is editable, whoever reads it; Save posts
-only the fields changed. A slice declares each setting with the write
-that changes it directly, if any, and the motion kind that changes it
+that decides it. Every field is editable, whoever reads it, and the
+form has no Save: each setting commits as its field does. A pick, from
+a select, a checkbox, a radio or a calendar, commits as it is made; a
+typed value commits when focus leaves the field or on Enter (Ctrl or
+Cmd with Enter in a text area), and Escape takes a typed edit back
+(the `committing` attachment). A value committed as it was in force
+does nothing. A slice declares each setting with the write that
+changes it directly, if any, and the motion kind that changes it
 otherwise, its arguments filled from the field (`models/settings.ts`).
 A setting's field is one `Field` draws, or an arrangement, `Arrange`,
 where it declares its `choices`: a fieldset of every choice with a
@@ -533,34 +538,42 @@ the one it replaces, those the reader may change before proposing
 labelled as the New form labels them and the rest carried as they are,
 and the words its title says the change in. The form is handed the
 circle that decides its motions and the deadline asked for, as its
-slice reads them. `plan` splits the fields changed into each write,
-posted once with all its fields, one after the other until one does not
-settle, and one motion: the kind of the first field changed that its
-reader may not write, which every other field of that kind joins, its
-arguments merged and its titles joined. A field of another kind waits
-for the next Save, marked not saved, as does one no motion is declared
-to change. The dev server alone serves a specimen of a form mixing the
-two kinds, `/specimens/settings`, a page of no slice that reads nothing
-and has no actions, for the browser test to see the dialog on.
+slice reads them. The dev server alone serves a specimen of a form
+mixing the two kinds, `/specimens/settings`, a page of no slice that
+reads nothing and has no actions, for the browser test to see the
+dialog on.
 
-A field the reader may change saves by its write, and the form shows
-the outcome as any `Form` does: the last write's that names one, as
-the theme's cookie names none. A field they may not change, since its
-write needs a mandate they lack, or since only a motion changes it,
-does not save: Save opens `ProposeInstead`, a dialog in the top layer
-as `Popover` is, which says why in the guard's own words, the refusal
-its write's guard gives as early as it can, with the values it read,
-and offers to propose the change instead. Its form is the motions'
-New form, prefilled: the circle that decides it (`motion.decider`),
-its title saying the change ("Rename Coordination to Operations"),
-the action it carries with its arguments, from the value typed and the
-one it replaces, and the deadline the procedure its requirements fix
-asks for. The reader may edit any of it before proposing; Propose posts
-it to the page slice's own `propose` action, and the outcome names the
-log entry that proposes the
-motion. Closing the dialog keeps what was typed, and the field marks
-the change as not saved. A form whose fields mix the two saves the one
-kind and offers the motion for the other, in one go.
+A setting the reader may change saves by its write as it commits,
+through the page's writes as any form's: the write posts the fields
+it saves that differ from their values in force (`posted`), so one
+left as it is never posts and a contact detail never set stays unset.
+Each write has one post in flight at a time: a commit made while it
+posts waits for it to settle, then sends the values as they stand.
+Beside the field, in its quiet line, a mark says how the commit went,
+announced as it changes (`aria-live`): Saving… while it posts, a brief
+Saved once it settles, or Not saved and the refusal's reason, the
+field keeping what was typed; the shell shows the outcome as for any
+`Form`, the write's that names one, as the theme's cookie names none.
+A setting the reader may not change, since its write needs a mandate
+they lack, or since only a motion changes it, never posts a write: its
+commit opens `ProposeInstead`, a dialog in the top layer as `Popover`
+is, one a commit, which says plainly that the change needs a motion of
+the circle that decides it, shows the change from the value in force
+to the one typed, and says why in the guard's own words, the refusal
+its write's guard gives as early as it can, with the values it read
+(`proposal`). Its form is the motions' New form, prefilled: the circle
+that decides it (`motion.decider`), its title saying the change
+("Rename Coordination to Operations"), the action it carries with its
+arguments, from the value typed and the one it replaces, and the
+deadline the procedure its requirements fix asks for. The reader may
+edit any of it before proposing; its primary action, Propose to the
+deciding circle, posts it to the page slice's own `propose` action,
+the outcome naming the log entry that proposes the motion, and the
+field, marked Proposed, shows the value in force again, the change now
+the motion's to make. A refused proposal keeps the dialog open, saying
+why. Cancel, Escape or a click outside it takes the change back, the
+field showing the value in force. A setting no motion is declared to
+change, or with no circle to decide it, is marked Not saved.
 
 The Settings section opens on Account, the acting person's own
 settings at `/settings/account`, which the account menu at the
@@ -577,10 +590,11 @@ Organization, the co-op's own, comes first under Organization at
 name, legal form, capital, seat, SIREN, trade register and VAT number,
 none saved by anyone's write, since only a motion of the assembly
 adopts them ([the co-op's
-particulars](../circle/index.md#the-co-ops-particulars)). Save opens
-the dialog proposing a motion of the assembly, each value changed its
-own field, which carries Adopt a policy replacing the particulars with
-them, its procedure the one their protection fixes; and under the form,
+particulars](../circle/index.md#the-co-ops-particulars)). A value's
+edit, as it commits, opens the dialog proposing a motion of the
+assembly, the value its own field, which carries Adopt a policy
+replacing the particulars with it, its procedure the one their
+protection fixes; and under the form,
 read-only, the scope's address and its timezone, each saying a host
 sets it ([the notary](../notary/index.md#settings)). Membership-motion
 serves it, as the graft that proposes the assembly's motions

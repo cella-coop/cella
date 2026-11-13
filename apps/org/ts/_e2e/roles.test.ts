@@ -12,9 +12,10 @@
 // changes its duty and cap, each entry saying what it carried and what it
 // was. Then in every browser, light and dark, through the dev server:
 // Camille opens Web's Settings tab, types a new role's name in its New
-// role row and Saves, and the dialog offers the assembly's motion making
-// it, its id from the name, which she proposes; she empties the Editor
-// role's cap and Saves, and proposes the motion the dialog offers lifting
+// role row and presses Enter, and the dialog offers the assembly's motion
+// making it, its id from the name, which she proposes; she empties the
+// Editor role's cap and presses Enter, and proposes the motion the dialog
+// offers lifting
 // it, its cap given as none; then on the assembly's Settings tab she
 // lowers the Member role's cap below its holders, and the dialog shows the
 // guard's refusal before anything is proposed. Last, the first motion
@@ -198,20 +199,20 @@ eachBrowser((name, launch) => {
 
           const editor = page.locator('section.section', { has: page.getByRole('heading', { name: 'Editor', exact: true }) })
           assert.equal(await editor.getByLabel('Cap').inputValue(), '2', `${at}: the Editor role's cap in force`)
-          assert.equal(await editor.getByText('A motion of General assembly changes it').count(), 3, `${at}: each term is the assembly's motion's to change`)
+          assert.equal(await editor.getByText('Assembly changes it by motion').count(), 3, `${at}: each term is the assembly's motion's to change`)
           const fresh = page.locator('section.section', { has: page.getByRole('heading', { name: 'New role', exact: true }) })
           await fresh.getByLabel('Name').fill(role)
           await page.screenshot({ path: `${shots}/roles-${name}-${scheme}.png`, fullPage: true })
-          await fresh.getByRole('button', { name: 'Save' }).click()
-          const dialog = page.getByRole('dialog', { name: 'Propose it instead' })
+          await fresh.getByLabel('Name').press('Enter')
+          const dialog = page.getByRole('dialog', { name: 'Assembly changes it by motion' })
           await dialog.waitFor()
           assert.ok(
-            ((await dialog.textContent()) ?? '').includes('Web\'s roles are made and changed only by a motion of General assembly'),
+            ((await dialog.textContent()) ?? '').includes('Web\'s roles are made and changed only by a motion of Assembly'),
             `${at}: the dialog says why her write makes nothing`,
           )
           assert.equal(await dialog.getByLabel('Title').inputValue(), `Make the ${role} role in Web`, `${at}: its title says the change`)
           assert.equal(await dialog.getByLabel('Id').inputValue(), id, `${at}: its id is the name in lower case`)
-          await dialog.getByRole('button', { name: 'Propose' }).click()
+          await dialog.getByRole('button', { name: 'Propose to Assembly' }).click()
           await dialog.waitFor({ state: 'hidden' })
           assert.deepEqual(
             await one(`SELECT d.circle, m.args FROM motion.motion d JOIN motion.action m ON m.motion = d.id WHERE m.kind = 'role' AND m.args ->> 'id' = $1`, [id]),
@@ -220,13 +221,13 @@ eachBrowser((name, launch) => {
           )
 
           await editor.getByLabel('Cap').fill('')
-          await editor.getByRole('button', { name: 'Save' }).click()
+          await editor.getByLabel('Cap').press('Enter')
           await dialog.waitFor()
           assert.equal(await dialog.getByLabel('Title').inputValue(), 'Lift the Editor role\'s cap of 2', `${at}: its title says the cap is lifted`)
           assert.equal(await dialog.getByLabel('New cap').inputValue(), 'none', `${at}: it gives the cap as none`)
           const lift = `Lift the Editor role's cap of 2, ${at}`
           await dialog.getByLabel('Title').fill(lift)
-          await dialog.getByRole('button', { name: 'Propose' }).click()
+          await dialog.getByRole('button', { name: 'Propose to Assembly' }).click()
           await dialog.waitFor({ state: 'hidden' })
           assert.equal(
             (await all(`SELECT a.motion FROM motion.action a JOIN motion.motion d ON d.id = a.motion WHERE a.kind = 'amend-role' AND a.args = '{"role": "editor", "holders": null}' AND d.title = $1`, [lift])).length,
@@ -238,10 +239,10 @@ eachBrowser((name, launch) => {
           await page.waitForLoadState('networkidle')
           const member = page.locator('section.section', { has: page.getByRole('heading', { name: 'Member', exact: true }) })
           await member.getByLabel('Cap').fill('2')
-          await member.getByRole('button', { name: 'Save' }).click()
+          await member.getByLabel('Cap').press('Enter')
           await dialog.waitFor()
           assert.equal(await dialog.getByLabel('Title').inputValue(), 'Cap the Member role at 2', `${at}: its title says the change`)
-          await dialog.getByRole('button', { name: 'Propose' }).click()
+          await dialog.getByRole('button', { name: 'Propose to Assembly' }).click()
           const held = await members()
           await dialog
             .getByRole('alert')

@@ -1,4 +1,4 @@
-import type { Column, Kind } from './view.ts'
+import type { Column, Kind, Prop } from './view.ts'
 import { spans, type Span } from './calendar.ts'
 
 // What a collection's rows can be asked: its fields, typed from the columns
@@ -23,6 +23,26 @@ const types: Partial<Record<Kind, Type>> = { money: 'money', number: 'number', d
 
 export const fields = (columns: Column[]): Field[] =>
   columns.map((c) => ({ key: c.key, label: c.label, type: (c.kind && types[c.kind]) ?? 'text', value: c.value }))
+
+// The four fields the core read gives every collection's rows from the
+// log, which no slice declares: the dates and the actors of the first and
+// the latest entries about the row, when it was created and last updated
+// and by whom. Kept to the table, which shows them once a view does.
+export const logged: Column[] = [
+  { key: 'created', label: 'Created', kind: 'date', role: 'hidden', value: (r) => r.created },
+  { key: 'updated', label: 'Updated', kind: 'date', role: 'hidden', value: (r) => r.updated },
+  { key: 'created_by', label: 'Created by', kind: 'person', role: 'hidden', value: (r) => r.created_by },
+  { key: 'updated_by', label: 'Updated by', kind: 'person', role: 'hidden', value: (r) => r.updated_by },
+]
+
+// A collection's columns and the logged fields after them, but where it
+// has a field of the same key, as tasks' Created is their own.
+export const logging = (columns: Column[]): Column[] => [...columns, ...logged.filter((l) => !columns.some((c) => c.key === l.key))]
+
+// A record page's last properties: the logged fields as the log has them
+// for the record, `made`, but those its slices' properties already name.
+export const stamps = (made: Record<string, unknown> | null | undefined, props: Prop[]): Prop[] =>
+  logged.filter((l) => !props.some((p) => p.label === l.label)).map((l) => ({ label: l.label, value: l.value(made ?? {}) ?? null, kind: l.kind }))
 
 export const numeric = (f: Field) => f.type === 'number' || f.type === 'money'
 
@@ -326,10 +346,11 @@ export interface Spec {
 // How a collection looks before a view changes it, as it declares: its
 // layout, the enumeration its board groups by and its cards' fields, each
 // enumeration's values in the order its board's columns take, an empty
-// column included, and the date its calendar places the rows by and its
-// span.
+// column included, the date its calendar places the rows by and its
+// span, and the columns its table hides until a view shows them.
 export interface Look {
   layout?: Layout
+  hide?: string[]
   by?: string
   cards?: string[]
   lanes?: Record<string, string[]>
@@ -536,7 +557,7 @@ export const spec = (p?: Preset, look: Look = {}): Spec => ({
   layout: p?.layout ?? look.layout ?? 'list',
   where: p?.where ?? [],
   q: '',
-  hide: p?.hide ?? [],
+  hide: p?.hide ?? look.hide ?? [],
   order: p?.order ?? [],
   sort: p?.sort ?? null,
   by: p?.by ?? null,

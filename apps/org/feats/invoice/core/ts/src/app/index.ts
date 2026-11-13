@@ -35,6 +35,8 @@ export const app: App = {
           { key: 'owed', label: 'Owed', kind: 'money', role: 'hidden', value: (i: Listed) => i.owed },
           { key: 'state', label: 'Standing', kind: 'badge', role: 'meta', value: (i: Listed) => i.state, tone: (i: Listed) => tones[i.state] },
         ],
+        // Its calendar places each invoice on the day it is due.
+        look: { on: 'due' },
       },
       page: {
         eyebrow: 'Invoice',

@@ -1,4 +1,4 @@
-import { ask as asking, counts, ordered, read, texts, today, type Db, type Source } from '@cella/org-db'
+import { ask as asking, counts, made, ordered, read, texts, today, type Db, type Source } from '@cella/org-db'
 import { scoped } from '@cella/org-analytics'
 import { anchor, defaults, fields, grouping, limits, period, resolve, wheres, widgets, type Field, type Spec } from '@cella/org-ui/models'
 import { named } from '@cella/org-log/api'
@@ -137,7 +137,9 @@ async function measured(db: Db, from: Source, spec: Spec, fs: Field[], name: str
 
 // An item: its owner's data, given the address, and each extension's data
 // on it, by slice, with who looks, for a block that offers what only the
-// viewer may do. Of another circle's, it is none to the reader.
+// viewer may do, and when and by whom it was created and last updated, as
+// the log has it, once the reader has read it. Of another circle's, it is
+// none to the reader.
 export const item = {
   schema: texts(['name', 'id', 'search']),
   async run(db: Db, { name, id, search }: { name: string; id: string; search: string }, who: Reader) {
@@ -154,7 +156,7 @@ export const item = {
       m.extensions.filter((e) => e.extension.item).map(async (e) => [e.slice.name, await e.extension.item?.(db, id, who.actor)] as const),
     )
     const viewer = who.session && { actor: who.session.actor, device: who.session.device }
-    return { name, id, item: found, added: Object.fromEntries(added), viewer }
+    return { name, id, item: found, added: Object.fromEntries(added), viewer, made: (await made(db, [id]))[id] ?? null }
   },
 }
 

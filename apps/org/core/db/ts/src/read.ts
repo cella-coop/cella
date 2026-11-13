@@ -97,8 +97,21 @@ const named = (k: Keep) => [...k.where.map((c) => c.field), ...(k.q?.text.trim()
 // A row's logged fields, from `cella.made` over the ids of `rows`, a
 // relation of `row`s: what the log holds of the rows read, so only of
 // rows the reader reads. `m` is null where no entry names the row.
-const made = (rows: string) => `cella.made((SELECT array_agg(DISTINCT row->>'id') FILTER (WHERE row ? 'id') FROM ${rows}))`
+const making = (rows: string) => `cella.made((SELECT array_agg(DISTINCT row->>'id') FILTER (WHERE row ? 'id') FROM ${rows}))`
 const dated = `coalesce(jsonb_strip_nulls(to_jsonb(m) - 'id'), '{}')`
+
+// The logged fields of the records some ids name, by id, as a record's
+// page shows them: for a record the reader already read, since what the
+// log holds of it is every reader's. An id no settled entry names has
+// none.
+export type Made = { created: string | null; updated: string | null; created_by: string | null; updated_by: string | null }
+export async function made(db: Db, ids: string[]): Promise<Record<string, Made>> {
+  const { rows } = await db.query<Made & { id: string }>(
+    'SELECT id, created::text AS created, updated::text AS updated, created_by, updated_by FROM cella.made($1::text[])',
+    [ids],
+  )
+  return Object.fromEntries(rows.map(({ id, ...m }) => [id, m]))
+}
 
 // The rows as `r(src, at, row)`: each source's rows in its order, `row`
 // the JSON of the owner's fields with every extension's merged over it,
@@ -115,7 +128,7 @@ function rows(st: Statement, s: Source, every = false): string {
     ? s.rows.map((r, i) => `SELECT ${i} AS src, row_number() OVER (ORDER BY ${r.order}) AS at, to_jsonb(x) AS row FROM (${r.sql}) x${lensed}`).join('\n  UNION ALL\n  ')
     : `SELECT 0 AS src, 0::bigint AS at, NULL::jsonb AS row WHERE false`
   const merged = [...(every ? [dated] : []), 'o.row', ...s.fields.map((_, i) => `coalesce(to_jsonb(e${i}) - 'id', '{}')`)].join(' || ')
-  const joins = [...(every ? [`LEFT JOIN ${made('o')} m ON m.id = o.row->>'id'`] : []), ...s.fields.map((f, i) => `LEFT JOIN (${f}) e${i} ON e${i}.id::text = o.row->>'id'`)].join('\n  ')
+  const joins = [...(every ? [`LEFT JOIN ${making('o')} m ON m.id = o.row->>'id'`] : []), ...s.fields.map((f, i) => `LEFT JOIN (${f}) e${i} ON e${i}.id::text = o.row->>'id'`)].join('\n  ')
   return `WITH o AS (\n  ${from}\n), r AS MATERIALIZED (\n  SELECT o.src, o.at, ${merged} AS row FROM o\n  ${joins}\n)`
 }
 
@@ -196,7 +209,7 @@ export async function read(
     parts.push(
       every
         ? `(SELECT coalesce(json_agg(row ORDER BY ${order}), '[]') FROM ${drawn} p) AS rows`
-        : `(WITH p AS ${drawn} SELECT coalesce(json_agg(${dated} || p.row ORDER BY ${order}), '[]') FROM p LEFT JOIN ${made('p')} m ON m.id = p.row->>'id') AS rows`,
+        : `(WITH p AS ${drawn} SELECT coalesce(json_agg(${dated} || p.row ORDER BY ${order}), '[]') FROM p LEFT JOIN ${making('p')} m ON m.id = p.row->>'id') AS rows`,
     )
     if (a.keep.group) {
       const value = `coalesce(row->>${st.p(a.keep.group.field)}, '')`

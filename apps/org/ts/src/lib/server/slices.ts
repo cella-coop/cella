@@ -85,6 +85,36 @@ export const writes = [
   ),
 ]
 
+// Each collection's form serving a command, by the address the command
+// is served at over HTTP, `<feat>/<verb>` of its permission: the
+// collection, the write's name and the write its pages run. One address
+// names one permission, though several forms may serve it, as a motion's
+// proposal is served by each page that offers one.
+export interface Command {
+  collection: string
+  write: string
+  action: Action
+}
+
+const commanded = new Map<string, Command[]>()
+for (const name of collections.keys()) {
+  for (const write of writes) {
+    const a = action(name, write)
+    if (!a) {
+      continue
+    }
+    const [feat, , verb] = a.op.split(':')
+    const at = `${feat}/${verb}`
+    const other = commanded.get(at)?.find((c) => c.action.op !== a.op)
+    if (other) {
+      throw new Error(`${a.op} and ${other.action.op} would both be served at POST /api/${at}`)
+    }
+    commanded.set(at, [...(commanded.get(at) ?? []), { collection: name, write, action: a }])
+  }
+}
+
+export const commands = (feat: string, verb: string): Command[] => commanded.get(`${feat}/${verb}`) ?? []
+
 // The reactions to a settled op, from every slice.
 export const reactions = (op: Permission): Reaction[] => slices.flatMap((s) => s.on?.[op] ?? [])
 

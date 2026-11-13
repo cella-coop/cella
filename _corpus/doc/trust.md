@@ -1,6 +1,6 @@
 +++
 title = "Trust"
-updated = 2026-11-11
+updated = 2026-11-13
 +++
 
 # Trust
@@ -480,8 +480,13 @@ makes no claim that the host cannot forge a vote.
   time a handler signs, the post is answered with what to sign, the action,
   the request made plain and the scope, actor and device, and the browser
   signs it with that device and posts the proof back to the run it
-  answers, which only the session that started it may. The server holds
-  no member's key.
+  answers, which only the session that started it may. A client with no
+  page signs the same way: it signs in with its device as the sign-in
+  page does, posts a command as JSON to `POST /api/<feat>/<verb>`, and
+  is answered with what to sign until it is answered with the outcome
+  ([remote functions](architecture.md#remote-functions)); the endpoint
+  takes JSON alone, so no other site's page posts to it with a member's
+  cookie. The server holds no member's key.
 
 ## What a motion adopts
 

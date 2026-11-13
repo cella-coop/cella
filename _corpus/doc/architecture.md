@@ -1709,6 +1709,35 @@ again after a save that took or reached a verdict, as a theme's save
 is no proof, and a page whose write was refused before any signature
 reads again, so what a drop moved goes back.
 
+Every command is served over HTTP too, at `POST /api/<feat>/<verb>`, the
+address of its permission `<feat>:<entity>:<verb>` ([actions](#actions)),
+for a client with no page (`src/routes/api/[feat]/[verb]/+server.ts`).
+It runs the write a page's form runs, through the same relay, as the
+session's person and signed by the session's device: a request with no
+session is answered 401 by the server hook, as on every route but the
+sign-in's. Its body is JSON, validated by its schema (`called` in
+`#lib/server/api.ts`) before anything runs: the write's fields by name,
+each a text or a list of texts; the item it is on, `id`, as an item's
+page names it in its address; and, where more than one collection's form
+serves the permission, which one, `form`, the collection and the
+write's name (`tasks.create`), a body naming none of them refused with a
+400 that lists them (`commands` in `#lib/server/slices.ts`). A run that
+asks for a signature is answered 202 with what to sign, the run's id
+among it, and the client posts the proof back to the same address,
+`{ "run", "proof" }`, each time the run asks. The answer is JSON, the
+outcome `done` with its status: Settled 200, Pending 202, Refused 422
+with the guard's reason, and a write that reached no verdict 400, or
+404 for a command no slice serves, 409 for a run that is over or not
+the poster's and 429 past the relay's caps. The endpoint takes
+`application/json` alone and answers anything else 415, so a page of
+another site cannot post to it as a form with the session's cookie; a
+write carrying a file is posted by its page's form, since JSON carries
+none. A client signs in as the sign-in page does, by its device's
+answer to `/session`'s challenge, and keeps the session's cookie; no
+credential for a client with no device is built. The slice registry
+refuses two permissions served at one address, so `<feat>/<verb>` names
+one command whichever collection's form runs it.
+
 `cella check feats` enforces what it can see (`tools/ui-check.mjs`): of the
 tree's packages only the UI core holds CSS, the tokens it wears coming from
 the brand outside the tree, no other `.svelte` file has a `<style>` or a
@@ -1873,8 +1902,9 @@ shortly, as any failed write is, and a run frees its place as it
 settles, fails or gives up. The server holds no member's key,
 in dev mode or not; dev mode (`cella serve`) only offers the fixture
 members on the sign-in page, whose TEST-ONLY keys the browser derives.
-Until `POST /api/<feat>/<verb>` is served, these remote functions are the
-writes' only HTTP path.
+A client with no page posts the same writes to `POST
+/api/<feat>/<verb>` and signs them the same way ([remote
+functions](#remote-functions)).
 
 ### Reading at scale
 

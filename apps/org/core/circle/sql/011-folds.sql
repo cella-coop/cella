@@ -56,7 +56,8 @@ END
 $$;
 
 -- circle:role:amend: the role its entry names, its name, duty or cap
--- changed to the values it carries, each from what the entry says it was.
+-- changed to the values it carries, each from what the entry says it was,
+-- a cap carried as none lifting it.
 CREATE FUNCTION circle.fold_role_amend(entry jsonb) RETURNS void
 LANGUAGE plpgsql AS $$
 DECLARE
@@ -72,7 +73,8 @@ BEGIN
     RAISE EXCEPTION 'circle: entry % says the % role was %, where the fold has %', entry ->> 'n', p ->> 'role', p -> 'was', was;
   END IF;
   UPDATE circle.role
-  SET name = coalesce(p ->> 'name', name), duty = coalesce(p ->> 'duty', duty), holders = coalesce((p ->> 'holders')::int, holders)
+  SET name = coalesce(p ->> 'name', name), duty = coalesce(p ->> 'duty', duty),
+      holders = CASE WHEN p ? 'holders' THEN (p ->> 'holders')::int ELSE holders END
   WHERE id = p ->> 'role';
 END
 $$;

@@ -30,22 +30,23 @@ export async function make(input: Make, deps: Deps): Out<'circle:role:make', { r
 const duties = ['name', 'duty', 'holders'] as const
 
 // Amends a role, citing the motion that changes it: its name, its duty or
-// its cap from the verdict date; its id, its circle, its tenures and its
-// mandates stay. Its entry carries each term it changed and what it was.
+// its cap from the verdict date, a cap given as none lifting it; its id,
+// its circle, its tenures and its mandates stay. Its entry carries each
+// term it changed, a cap of none too, and what it was.
 export async function remake(input: Remake, deps: Deps): Out<'circle:role:amend', Remade> {
-  const given: Duties = Object.fromEntries(duties.filter((t) => input[t] !== undefined && input[t] !== null).map((t) => [t, input[t]]))
+  const given: Duties = Object.fromEntries(
+    duties.filter((t) => input[t] !== undefined && (input[t] !== null || t === 'holders')).map((t) => [t, input[t]]),
+  )
   return write(deps, {
     op: 'circle:role:amend' satisfies Action,
     request: input,
     state: async (tx) => {
       const { rows } = await tx.query<Required<Duties>>(`SELECT name, duty, holders FROM circle.role WHERE id = $1 FOR UPDATE`, [input.role])
       const was: Duties = Object.fromEntries(Object.keys(given).map((t) => [t, rows[0]?.[t as keyof Duties] ?? null]))
-      await tx.query(`UPDATE circle.role SET name = coalesce($2, name), duty = coalesce($3, duty), holders = coalesce($4, holders) WHERE id = $1`, [
-        input.role,
-        given.name ?? null,
-        given.duty ?? null,
-        given.holders ?? null,
-      ])
+      await tx.query(
+        `UPDATE circle.role SET name = coalesce($2, name), duty = coalesce($3, duty), holders = CASE WHEN $5 THEN $4::int ELSE holders END WHERE id = $1`,
+        [input.role, given.name ?? null, given.duty ?? null, given.holders ?? null, 'holders' in given],
+      )
       return { role: input.role, was }
     },
     payload: (v) => ({ role: v.role, ...given, was: v.was, motion: input.motion }),

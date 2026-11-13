@@ -30,7 +30,9 @@ export async function propose(form: Form, db: Db): Promise<Propose> {
 }
 
 // An action's arguments, each as its kind types it; an empty one is left
-// out, for the kind's guard to refuse if it needs it.
+// out, for the kind's guard to refuse if it needs it, and a number typed
+// as none is given as none, null, for the guard to judge, as a role's
+// cap lifted is.
 export function args(form: Form, fields: Arg[]): Carried['args'] {
   const out: Carried['args'] = {}
   for (const f of fields) {
@@ -38,7 +40,9 @@ export function args(form: Form, fields: Arg[]): Carried['args'] {
     if (!typed) {
       continue
     }
-    if (f.type === 'number') {
+    if (f.type === 'number' && typed.toLowerCase() === 'none') {
+      out[f.name] = null
+    } else if (f.type === 'number') {
       const n = Number(typed.replace(',', '.'))
       if (!Number.isFinite(n)) {
         throw new Error(`“${typed}” is not a number, for ${f.label.toLowerCase()}`)

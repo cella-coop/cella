@@ -1,13 +1,16 @@
-const count = (v: unknown) => (v === undefined || v === null || v === '' ? null : Number(v))
 import { done, write, type Deps, type Done } from '@cella/org-db'
 import type { Pending, Permission, Refused, Settled } from '@cella/org-actions'
 import { admitting, exclude, suspend } from '@cella/org-membership/api'
 import { add, amend, create, make, remake, remove, seatRole, seating, unseatRole } from '@cella/org-circle/api'
 import { circles } from '@cella/org-motion/api'
 
-type Args = Record<string, string | number | undefined>
+type Args = Record<string, string | number | null | undefined>
 
 const text = (v: unknown) => (v === undefined || v === null ? null : String(v))
+
+// A cap as the motion gives it: a count, or none, null, where it is given
+// blank or as none.
+const count = (v: unknown) => (v === undefined || v === null || v === '' ? null : Number(v))
 
 // A member a passing close admitted, with their shares and the seat it
 // gave them.
@@ -62,9 +65,11 @@ const writes: Record<string, { op: Permission; run: (a: Args, motion: string, de
     run: (a, motion, deps) =>
       make({ id: String(a.id), circle: String(a.circle), name: String(a.name), duty: text(a.duty) ?? '', holders: count(a.holders), motion }, deps),
   },
+  // A cap the motion leaves out stays as it was; one it gives as none
+  // lifts the role's.
   'amend-role': {
     op: 'circle:role:amend',
-    run: (a, motion, deps) => remake({ role: String(a.role), name: text(a.name), duty: text(a.duty), holders: count(a.holders), motion }, deps),
+    run: (a, motion, deps) => remake({ role: String(a.role), name: text(a.name), duty: text(a.duty), holders: 'holders' in a ? count(a.holders) : undefined, motion }, deps),
   },
   seat: {
     op: 'circle:seat:add',

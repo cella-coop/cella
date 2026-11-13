@@ -362,7 +362,8 @@ SELECT motion.register_carries('amend-role', 'Change a role', '[{"name": "role",
 -- `circle`, the role `self` aside, or none: a name given is not blank
 -- and no other role's in the circle, where a `*` role is in every one;
 -- a cap is a whole count above none, and not below the tenures of the
--- role running on the verdict date in any circle it is held in.
+-- role running on the verdict date in any circle it is held in, or none,
+-- JSON's null, which lifts the role's.
 CREATE FUNCTION membership_motion.duty_terms(self text, circle text, args jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -372,7 +373,7 @@ BEGIN ATOMIC
     WHEN o.id IS NOT NULL
       THEN 'the ' || o.id || ' role is named ' || o.name || ' already in ' || CASE o.circle WHEN '*' THEN 'every working circle' ELSE o.circle END
         || ': give the ' || p.label || ' role a name no other role of ' || CASE duty_terms.circle WHEN '*' THEN 'a working circle' ELSE duty_terms.circle END || ' has'
-    WHEN duty_terms.args ? 'holders' AND (p.cap IS NULL OR p.cap <> trunc(p.cap) OR p.cap <= 0)
+    WHEN duty_terms.args ? 'holders' AND jsonb_typeof(duty_terms.args -> 'holders') <> 'null' AND (p.cap IS NULL OR p.cap <> trunc(p.cap) OR p.cap <= 0)
       THEN (duty_terms.args ->> 'holders') || ' is no cap: give the ' || p.label || ' role a whole count of holders above none, or no cap'
     WHEN h.held > p.cap
       THEN 'the ' || p.label || ' role is held by ' || h.held || ' in ' || h.circle || ' on ' || to_char(cella.verdict_date(), 'YYYY-MM-DD')

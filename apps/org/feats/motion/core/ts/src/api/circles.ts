@@ -56,8 +56,10 @@ export async function about(form: Form, circle: string, db: Db): Promise<Put> {
   if (!form.get('deadline')) {
     throw new Error('a motion needs a deadline')
   }
-  const { grantee, ...args } = forms.args(form, fields)
-  if (grantee !== undefined) {
+  const { grantee, ...typed } = forms.args(form, fields)
+  // A limit or a budget typed as none is none, as one left empty.
+  const args: Put['args'] = Object.fromEntries(Object.entries(typed).filter((e): e is [string, string | number] => e[1] !== null))
+  if (grantee !== undefined && grantee !== null) {
     const [what, id] = String(grantee).split(':')
     if ((what !== 'role' && what !== 'circle') || !id) {
       throw new Error(`a mandate is granted to a role or a circle, as role:finance or circle:web, not “${grantee}”`)

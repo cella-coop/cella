@@ -1,6 +1,6 @@
 +++
 title = "Circle"
-updated = 2026-11-12
+updated = 2026-11-13
 +++
 
 Core's circles: the co-op's structure and the authority that flows
@@ -683,7 +683,10 @@ and `revoking`. Creating a circle places it nowhere: circles never nest.
   circle has, by the motion it cites: its id, name, duty and cap,
   holding nothing until a motion grants it a mandate. **role.amend**
   changes a role's name, its duty or its cap, from the verdict date;
-  its id, its circle, its tenures and its mandates stay. Both are
+  a field the motion leaves out stays as it was, and a cap it gives as
+  none lifts the role's, so the role is uncapped from that day; its
+  entry carries the cap as given, none too, and its fold sets it so.
+  Its id, its circle, its tenures and its mandates stay. Both are
   ordered, since the same motion's later actions seat people in the
   role and a cap counts the seats on the day.
 - **message**, a post to the channel, is planned, not built, so it is not
@@ -740,7 +743,9 @@ action: the role's circle is one the motion's circle may decide about,
 and a `*` role is the assembly's alone; a new role's id is no
 grantee's, since circles and roles share one key; a name given is not
 blank and no other role's in its circle; a cap is a positive count or
-none, and not below the tenures of the role running on the day;
+none, and not below the tenures of the role running on the day, a
+cap given as none lifting it and a cap left out reading as the role's
+own;
 `participant`, built in, is never changed. Each refusal names the
 role, the value it read and what would fix it.
 
@@ -941,7 +946,7 @@ them. A grantee's name links to its circle, its issuer to
 its own, and the motion to its page; a link of the chain and a mandate
 under it opens its own page.
 
-A circle's page has a Settings tab, a `Settings` form ([settings](../ui/index.md#settings)) of its name, its purpose and its procedure, from those in force, and below them its roles, each its name, duty and cap, with a row to make a new one. None saves directly: Save opens the dialog proposing an `amend-circle`, `role` or `amend-role` motion of the circle that decides about it, the assembly unless another holding `amend-circle` may (`motion.decider`), its reason the guard's, why no write of the reader's changes it.
+A circle's page has a Settings tab, a `Settings` form ([settings](../ui/index.md#settings)) of its name, its purpose and its procedure, from those in force, and below them its roles, each its name, duty and cap, with a row to make a new one. None saves directly: Save opens the dialog proposing an `amend-circle`, `role` or `amend-role` motion of the circle that decides about it, the assembly unless another holding `amend-circle` may (`motion.decider`), its reason the guard's, why no write of the reader's changes it. A role's cap emptied proposes lifting it, the `amend-role` motion giving its cap as none.
 
 Who sits in a circle is the membership feat's, which names people.
 Proposing to grant a mandate to one of its roles or to it, or to

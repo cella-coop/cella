@@ -26,7 +26,7 @@ export const app: App = {
         },
       ],
       page: {
-        blocks: [PathBlock],
+        blocks: [{ tab: 'joining', block: PathBlock }],
         activity: events,
       },
     },

@@ -457,8 +457,8 @@ as its seller as it issues (`invoice.seller()`), so a motion replacing
 the particulars changes the invoices issued once it applies and never
 one issued before ([invoice](../../feats/invoice/index.md#the-pdf)); and
 the shell calls the co-op by its name (`named` in `@cella/org-log`)
-and shows the particulars on Settings' Organization page, whose Save
-proposes the assembly's motion replacing them
+and shows the particulars on Settings' Organization page, where a
+value's edit proposes the assembly's motion replacing them
 ([settings](../ui/index.md#settings)).
 The scope's address and its timezone are no particulars: the notary
 signs by the one and dates by the other, so a host sets them
@@ -1074,7 +1074,7 @@ them. A grantee's name links to its circle, its issuer to
 its own, and the motion to its page; a link of the chain and a mandate
 under it opens its own page.
 
-A circle's page has a Settings tab, a `Settings` form ([settings](../ui/index.md#settings)) of its name, its purpose and its procedure, from those in force, and below them its roles, each its name, duty and cap, with a row to make a new one. None saves directly: Save opens the dialog proposing an `amend-circle`, `role` or `amend-role` motion of the circle that decides about it, the assembly unless another holding `amend-circle` may (`motion.decider`), its reason the guard's, why no write of the reader's changes it. A role's cap emptied proposes lifting it, the `amend-role` motion giving its cap as none.
+A circle's page has a Settings tab, a `Settings` form ([settings](../ui/index.md#settings)) of its name, its purpose and its procedure, from those in force, and below them its roles, each its name, duty and cap, with a row to make a new one. None saves directly: an edit, as it commits, opens the dialog proposing an `amend-circle`, `role` or `amend-role` motion of the circle that decides about it, the assembly unless another holding `amend-circle` may (`motion.decider`), its reason the guard's, why no write of the reader's changes it. A role's cap emptied proposes lifting it, the `amend-role` motion giving its cap as none.
 
 Each circle has a features page in Settings, `/settings/features/<id>`,
 which its Settings tab links to under its terms: a `Settings` form of
@@ -1127,7 +1127,7 @@ Every feat and graft reads core's circles; those that extend them:
 
 | Circle | Purpose |
 |---|---|
-| General assembly, the assembly | every member, one vote: statutes, admissions, accounts and surplus |
+| Assembly, the assembly | every member, one vote: statutes, admissions, accounts and surplus |
 | Coordination | weekly: pipeline, staffing and anything that crosses circles |
 | Web, Brand, Marketing, Operations | the working circles |
 
@@ -1186,7 +1186,7 @@ their tenure, and Camille sits there as a member.
 
 | Circle, by motion | Power |
 |---|---|
-| General assembly | `admit-member`, `suspend-member`, `exclude-member`, `adopt-policy`, `end-policy`, `approve-distribution`, `adopt-document`, `seat-member`, `create-circle`, `amend-circle` |
+| Assembly | `admit-member`, `suspend-member`, `exclude-member`, `adopt-policy`, `end-policy`, `approve-distribution`, `adopt-document`, `seat-member`, `create-circle`, `amend-circle` |
 | Coordination | `adopt-policy`, `end-policy`, `adopt-document`, `seat-member`; `approve-bill`, 3 000 € limit |
 | Operations | `adopt-policy`; `approve-bill`, 2 000 € limit |
 

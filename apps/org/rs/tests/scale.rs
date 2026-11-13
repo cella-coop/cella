@@ -27,7 +27,8 @@ use cella_guards::sign::Request;
 use ed25519_dalek::{Signer, SigningKey};
 use serde_json::{Value, json};
 
-/// The databases the tier renews each run and drops when it passes.
+/// The databases the tier renews each run, which `cella test scale` drops
+/// when it ends unless it keeps them.
 const SOURCE: &str = "cella_scale";
 const FOLD: &str = "cella_scale_fold";
 /// The generator's own signer, from entry 2, and its members' one device:
@@ -42,10 +43,12 @@ const CHUNK: usize = 50_000;
 /// The bounds the tier holds (architecture.md, "Tests"): the fold's peak
 /// memory by the end of the log is no more than this over its peak a tenth
 /// of the way; a re-fold from the latest checkpoint takes no longer than
-/// this; and the fold goes no slower than this.
+/// this; and the fold goes no slower than this, four fifths of the 1 661
+/// entries a second the run at full size measured on the box, 14 Nov
+/// 2026, rounded down to a hundred.
 const GROWTH_MB: f64 = 64.0;
 const REFOLD_SECONDS: f64 = 30.0;
-const FLOOR_PER_SECOND: f64 = 1_000.0;
+const FLOOR_PER_SECOND: f64 = 1_300.0;
 
 fn port() -> String {
     std::env::var("CELLA_PGPORT").unwrap_or_else(|_| "54342".into())
@@ -953,8 +956,19 @@ fn a_generated_scope_folds_in_bounded_memory_and_re_folds_from_its_latest_checkp
     let scratching = Instant::now();
     let agree = psql(FOLD, "SELECT cella.state_hash() = cella.kept_hash()");
     let scratch = scratching.elapsed().as_secs_f64();
+    // The two databases whole, the source and its fold, as they stand at
+    // the tier's end, which `cella test scale` reckons its disk by.
+    let disk: f64 = psql(
+        "postgres",
+        &format!(
+            "SELECT (pg_database_size('{SOURCE}') + pg_database_size('{FOLD}'))::float8 / 1e9"
+        ),
+    )
+    .parse()
+    .expect("the databases' size");
+    let on_disk = disk * 1e9 / head as f64;
     println!(
-        "scale: {head} entries; folded at {rate:.0} entries/s; a checkpoint {checkpoint:.1} ms from its kept hashes, {scratch:.1}s from scratch; peak memory {peak:.1} MB, {tenth:.1} MB a tenth of the way; re-folded from the latest checkpoint, entry {latest}, in {refold:.1}s; {bytes:.0} bytes an entry"
+        "scale: {head} entries; folded at {rate:.0} entries/s; a checkpoint {checkpoint:.1} ms from its kept hashes, {scratch:.1}s from scratch; peak memory {peak:.1} MB, {tenth:.1} MB a tenth of the way; re-folded from the latest checkpoint, entry {latest}, in {refold:.1}s; {bytes:.0} bytes an entry; both databases {disk:.1} GB, {on_disk:.0} bytes an entry"
     );
     assert_eq!(
         agree, "t",
@@ -1014,10 +1028,4 @@ fn a_generated_scope_folds_in_bounded_memory_and_re_folds_from_its_latest_checkp
         "t",
         "the planted receipts gone, it verifies again"
     );
-    for db in [FOLD, SOURCE] {
-        psql(
-            "postgres",
-            &format!("DROP DATABASE IF EXISTS {db} WITH (FORCE)"),
-        );
-    }
 }

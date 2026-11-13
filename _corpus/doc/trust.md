@@ -1,6 +1,6 @@
 +++
 title = "Trust"
-updated = 2026-11-13
+updated = 2026-11-14
 +++
 
 # Trust
@@ -197,7 +197,8 @@ sequenceDiagram
   exactly, so a write that changes state its entry does not carry fails
   the day it is written; its scale tier folds a generated scope of ten
   million entries and fails on memory that grows with the log or a
-  re-fold from the latest checkpoint over its bound. A scope still comes
+  re-fold from the latest checkpoint over its bound, and passed at full
+  size on the box on 14 Nov 2026 ([tests](architecture.md#tests)). A scope still comes
   back from its backup and its keys ([operations](operations.md)), never
   by folding its log, and the log proves the history of what came back.
   A Merkle tree over the log (RFC 9162), giving inclusion and consistency

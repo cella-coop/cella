@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::{Component, Path, PathBuf};
+use std::process::Command;
 
 use crate::cli::Test;
 use crate::db::Dev;
@@ -34,7 +35,11 @@ pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>) -> Result {
         Some(Test::Pruned) => pruned::serve(repo, steps),
         Some(Test::Slice { name }) => slices(repo, steps, name.as_deref()),
         Some(Test::E2e { name }) => e2e(repo, steps, name.as_deref()),
-        Some(Test::Scale { members, years }) => scale(repo, steps, members, years),
+        Some(Test::Scale {
+            members,
+            years,
+            keep,
+        }) => scale(repo, steps, members, years, keep),
     }
 }
 
@@ -44,12 +49,41 @@ fn rust(repo: &Repo, steps: &Steps, name: &str, package: &str) -> Result {
     steps.run(name, &mut [cmd], passed)
 }
 
+/// The scale tier's databases, which it renews each run.
+const SCALE: [&str; 2] = ["cella_scale", "cella_scale_fold"];
+
+/// The scale tier's size on disk: the entries a member makes a year, read
+/// from the run at full size (10 532 395 entries of ten thousand members
+/// over twenty years), and the bytes its two databases take an entry at
+/// their end, 4 208 in that run, with room for the write-ahead log
+/// (architecture.md, "Tests").
+const ENTRIES_A_MEMBER_YEAR: u64 = 54;
+const BYTES_AN_ENTRY: u64 = 4_500;
+
+/// What the scale tier leaves free on the cluster's disk at its peak, at
+/// least, since the lanes share it.
+const SPARE_GB: u64 = 20;
+
+const GB: u64 = 1_000_000_000;
+
 /// The fold's scale tier, `tests/scale.rs`, which `cella test cli` leaves
 /// out: a release build, since its generator signs millions of entries, on
-/// the dev cluster, sized by its arguments; it says what it measured.
-fn scale(repo: &Repo, steps: &Steps, members: usize, years: u32) -> Result {
+/// the dev cluster, sized by its arguments; it says what it measured. It
+/// refuses to start where its estimate would leave under [`SPARE_GB`] free
+/// on the cluster's disk, and drops its databases when it ends, passed or
+/// failed, unless it keeps them.
+fn scale(repo: &Repo, steps: &Steps, members: usize, years: u32, keep: bool) -> Result {
     let dev = Dev::new(repo);
     dev.up()?;
+    let entries = members as u64 * u64::from(years) * ENTRIES_A_MEMBER_YEAR;
+    let needs = entries * BYTES_AN_ENTRY / GB;
+    let free = free_gb(&repo.data())?;
+    if free < needs + SPARE_GB {
+        return Err(Fail::new(format!(
+            "the scale tier at {members} members over {years} years makes about {entries} entries, about {needs} GB at {BYTES_AN_ENTRY} bytes an entry, and the cluster's disk has {free} GB free, which would leave under {SPARE_GB} GB; free some, or run it smaller"
+        )));
+    }
+    drop_scale(&dev, steps)?;
     let mut cmd = repo.cmd("cargo");
     cmd.args([
         "test",
@@ -63,9 +97,44 @@ fn scale(repo: &Repo, steps: &Steps, members: usize, years: u32) -> Result {
         "--ignored",
         "--nocapture",
     ])
+    .env("CELLA_PGPORT", &dev.port)
     .env("CELLA_SCALE_MEMBERS", members.to_string())
     .env("CELLA_SCALE_YEARS", years.to_string());
-    steps.run("scale", &mut [cmd], measured)
+    let ran = steps.run("scale", &mut [cmd], measured);
+    if keep {
+        return ran;
+    }
+    let dropped = drop_scale(&dev, steps);
+    ran.and(dropped)
+}
+
+/// The scale tier's databases dropped, where they exist.
+fn drop_scale(dev: &Dev, steps: &Steps) -> Result {
+    let mut cmds: Vec<_> = SCALE
+        .iter()
+        .map(|db| {
+            let mut cmd = dev.on("postgres", "psql");
+            cmd.args(["-X", "-q", "-v", "ON_ERROR_STOP=1", "-c"])
+                .arg(format!("DROP DATABASE IF EXISTS {db} WITH (FORCE)"));
+            cmd
+        })
+        .collect();
+    steps.run("scale drop", &mut cmds, quiet)
+}
+
+/// The gigabytes free on the filesystem holding `dir`, as `df` says them.
+fn free_gb(dir: &Path) -> Result<u64> {
+    let out = Command::new("df")
+        .args(["--output=avail", "-B1"])
+        .arg(dir)
+        .output()
+        .map_err(|e| Fail::new(format!("df: {e}")))?;
+    String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .nth(1)
+        .and_then(|l| l.trim().parse::<u64>().ok())
+        .map(|b| b / GB)
+        .ok_or_else(|| Fail::new(format!("df says no free space for {}", dir.display())))
 }
 
 /// The scale tier's measurements, as its line `scale: …` says them.

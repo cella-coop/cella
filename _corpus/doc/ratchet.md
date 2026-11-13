@@ -1,6 +1,6 @@
 +++
 title = "Ratchet"
-updated = 2026-11-06
+updated = 2026-11-14
 +++
 
 # Ratchet
@@ -31,7 +31,8 @@ cost little now and a rewrite later, so rung 1 keeps all of them:
   state exactly, in memory its length never grows, each action's fold
   versioned as a guard is, and from a checkpoint's state hash as well as
   from the first entry; a test folds Lanterne's year to prove it, and a
-  generated scope of ten million entries to prove it scales
+  generated scope of ten million entries to prove it scales, which a run
+  on the box did on 14 Nov 2026 ([tests](architecture.md#tests))
   ([trust](trust.md#one-server));
 - member device keys;
 - personal data out of the log, behind single-use salted commitments;

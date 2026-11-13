@@ -54,9 +54,9 @@ run = ["nix", "develop", "-c", "sh", "-c", "pnpm fetch --silent && cella check s
 kind = "check"
 reads = ["apps/site", "packages/brand", "packages/diagrams", "apps/org/rs", "apps/org/core/guards/rs", "tools", ".claude/settings.json", "flake.nix", "flake.lock", "**/package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", "tsconfig.json", "**/Cargo.toml", "Cargo.lock"]
 
-# The fold's scale tier (apps/org/rs/index.md, Gates), which the nightly
-# `scale` flow runs at a tenth of its size, about a million entries, the
-# most the box's disk holds. Like `cella-test`, it fetches the lockfile's
+# The fold's scale tier (apps/org/rs/index.md, Gates), which the
+# `scale` flow runs each night at a tenth of its size, about a million
+# entries; its full size runs by hand. Like `cella-test`, it fetches the lockfile's
 # packages for the offline install and runs on a dev cluster of its own
 # ports, stopped after, pass or fail.
 [[op]]

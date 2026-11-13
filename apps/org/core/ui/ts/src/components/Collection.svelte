@@ -255,6 +255,10 @@
   const tinted = $derived(spec.layout === 'calendar' && spec.by ? columns.find((c) => c.key === grouping(spec, typed)?.key) : undefined)
   const tints = $derived(tinted ? lanes(look, tinted.key, values[tinted.key] ?? []) : [])
 
+  // A calendar draws its period even with no row on its days, so it keeps
+  // its header and navigation; `kept` counts the view over the whole
+  // collection, so only a collection with no rows says it is empty.
+
   // A list, a feed, a table and a gallery draw a page of rows at a time; a board
   // and a calendar place every row the view keeps, and a dashboard draws
   // none.
@@ -464,7 +468,7 @@
   <div class="rows">
     {#if spec.layout === 'dashboard'}
       <Dashboard results={dashboard?.results ?? []} errors={dashboard?.errors ?? []} />
-    {:else if state.shown.length === 0}
+    {:else if state.shown.length === 0 && !(spec.layout === 'calendar' && placing && kept > 0)}
       <p class="empty">{spec.q ? `Nothing matches “${spec.q}”.` : empty}</p>
     {:else if spec.layout === 'table'}
       <Table

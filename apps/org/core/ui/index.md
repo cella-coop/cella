@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -312,7 +312,9 @@ draws.
   it shows is where the viewer is, not part of the view: `at` in the
   address, today when absent, which its arrows and Today link to and
   a change to the view keeps
-  (`models/calendar.ts`). A view, its extensions overriding it part by
+  (`models/calendar.ts`). It draws that month or week, its header and
+  arrows with it, even where no row falls in it; only a view that keeps
+  no row at all says it is empty. A view, its extensions overriding it part by
   part, declares its `look`: its default layout, its board's grouping
   and columns' order (`lanes`), its cards' fields, its calendar's date
   (`on`) and span, and the columns a table hides until a view shows

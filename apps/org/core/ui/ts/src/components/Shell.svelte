@@ -8,6 +8,9 @@
   import CaretRight from 'phosphor-svelte/lib/CaretRight'
   import CaretUpDown from 'phosphor-svelte/lib/CaretUpDown'
   import Check from 'phosphor-svelte/lib/Check'
+  import Desktop from 'phosphor-svelte/lib/Desktop'
+  import Moon from 'phosphor-svelte/lib/Moon'
+  import Sun from 'phosphor-svelte/lib/Sun'
   import type { Jump, Nav, Person, Theme } from '../models/view.ts'
   import { listed, runs } from '../models/arrange.ts'
   import type { Outcome as Done } from '../models/outcome.ts'
@@ -94,6 +97,10 @@
   // own where they do not, so the lens shows checked and can be cleared; the
   // assembly is the co-op's own row.
   const sat = $derived(circles.filter((c) => !c.assembly && (c.sits || c.id === lens?.id)))
+  // The theme button cycles system, light, dark; its icon is the current one.
+  const cycle = { system: 'light', light: 'dark', dark: 'system' } as const
+  const marks = { system: Desktop, light: Sun, dark: Moon } as const
+  const next = $derived(cycle[theme])
 
   // The circle the member is in: their lens, or the assembly where they
   // lensed none, which reads whole.
@@ -253,6 +260,7 @@
 
     <div class="foot">
     <Command {collections} {source} />
+    <div class="who">
     <div class="account">
       <Popover label="Account: {actor?.name ?? 'no one signed in'}" side="top" wide>
         {#snippet trigger()}
@@ -272,14 +280,14 @@
             </form>
           </div>
         {/if}
-        <p class="label">Theme</p>
-        <form method="post" action="/theme" class="themes">
-          <input type="hidden" name="back" value={back} />
-          {#each ['system', 'light', 'dark'] as t (t)}
-            <button role="menuitemradio" aria-checked={theme === t} name="theme" value={t} class:on={theme === t}>{t}</button>
-          {/each}
-        </form>
       </Popover>
+    </div>
+    <form method="post" action="/theme" class="theme">
+      <input type="hidden" name="back" value={back} />
+      <button name="theme" value={next} title="Theme: {theme}. Switch to {next}" aria-label="Theme: {theme}. Switch to {next}">
+        <Icon icon={marks[theme]} />
+      </button>
+    </form>
     </div>
     </div>
   </nav>
@@ -503,8 +511,7 @@
     border: none;
     border-top: 1px solid var(--line);
   }
-  .item,
-  .themes button {
+  .item {
     display: flex;
     align-items: center;
     gap: var(--space-2);
@@ -517,30 +524,35 @@
     cursor: pointer;
   }
   .item:hover,
-  .item:focus-visible,
-  .themes button:hover {
+  .item:focus-visible {
     background: var(--hover);
   }
   .item :global(svg:last-child) {
     margin-inline-start: auto;
     color: var(--accent-text);
   }
-  /* A segmented control: a sunk well, the chosen segment lifted out. */
-  .themes {
+  .who {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+  .who .account {
+    flex: 1;
+    min-width: 0;
+  }
+  .theme button {
     display: grid;
-    grid-auto-flow: column;
-    background: var(--sunk);
+    place-items: center;
+    padding: var(--space-1);
+    border: none;
     border-radius: var(--radius-control);
-    padding: 2px;
-  }
-  .themes button {
-    justify-content: center;
-    text-transform: capitalize;
-    border-radius: calc(var(--radius-control) - 2px);
+    background: none;
     color: var(--text-muted);
+    cursor: pointer;
   }
-  .themes button.on {
-    background: var(--selected);
+  .theme button:hover,
+  .theme button:focus-visible {
+    background: var(--hover);
     color: var(--text);
   }
   .avatar {

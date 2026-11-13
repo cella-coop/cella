@@ -152,7 +152,8 @@ draws.
   open at once: one the viewer never touched is open while it holds the
   page, and one they opened or shut stays so. The foot is the command menu,
   then the account menu, the signed-in member, whose menu holds their
-  address, Settings, Sign out and the theme. Settings is its own
+  address, Settings and Sign out, beside one icon button for the theme,
+  which cycles system, light and dark and shows the current one. Settings is its own
   sidebar, one for the member and the co-op as Linear's, in place of
   the top and the features while one of its pages is open: Back to app,
   which returns to the last page left, then the `platform` collections

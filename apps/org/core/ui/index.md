@@ -189,6 +189,13 @@ draws.
   its values. The ui
   check refuses a layer floated by hand (`position: absolute` with a
   `z-index`) anywhere else.
+- `Dialog`: the one modal, a native `dialog` in the top layer, what
+  lies behind it dimmed: its title naming it, what it says above its
+  form, the form's fields, why the last submit was refused, and two
+  buttons, Cancel and the one that confirms. A modal is no page: it
+  confirms what it holds. Cancel, Escape and a click outside it cancel
+  it alike; whoever opens it holds the element and decides what a
+  cancel takes back.
 - `Frame` (`PageFrame.svelte`): the one page frame, its header one
   compact row as Linear's, spanning the content and the drawer: on an
   item, a quiet caret back to its collection, on a collection its icon as
@@ -558,8 +565,7 @@ field keeping what was typed; the shell shows the outcome as for any
 `Form`, the write's that names one, as the theme's cookie names none.
 A setting the reader may not change, since its write needs a mandate
 they lack, or since only a motion changes it, never posts a write: its
-commit opens `ProposeInstead`, a dialog in the top layer as `Popover`
-is, one a commit, which says plainly that the change needs a motion of
+commit opens `ProposeInstead`, a `Dialog`, one a commit, which says plainly that the change needs a motion of
 the circle that decides it, shows the change from the value in force
 to the one typed, and says why in the guard's own words, the refusal
 its write's guard gives as early as it can, with the values it read
@@ -576,6 +582,19 @@ the motion's to make. A refused proposal keeps the dialog open, saying
 why. Cancel, Escape or a click outside it takes the change back, the
 field showing the value in force. A setting no motion is declared to
 change, or with no circle to decide it, is marked Not saved.
+
+Something new that only a motion makes, as a circle's role, is no
+setting: it is composed whole and proposed as one motion. `Compose` is
+a quiet button, as Add a role…, opening a `Dialog` of its fields, each
+an argument of the motion's one action (`Composed`,
+`models/compose.ts`), a field that follows another until it is typed,
+as a role's id follows its name; above them, why a motion makes it, in
+its guard's words. Its primary action, Propose to the deciding circle,
+posts the motions' New form to the page's `propose`: the circle that
+decides it, the title its slice words from what was typed, the
+deadline the circle asks, and the action's arguments, typed and fixed.
+The guard judges it: a refusal keeps the dialog open with what was
+typed, saying why; a proposal closes it empty.
 
 The Settings section opens on Account, the acting person's own
 settings at `/settings/account`, which the account menu at the

@@ -1,6 +1,6 @@
 import { date, type App, type Embed } from '@cella/org-ui'
 import type { OnMeeting, Sitting } from '../models/tabled.ts'
-import { Card } from '@cella/org-motion/app'
+import { Card } from '@cella/org-motion/bindings'
 import Tabled from './blocks/Tabled.svelte'
 
 // A motion drawn inside a meeting's minutes where the meeting's page

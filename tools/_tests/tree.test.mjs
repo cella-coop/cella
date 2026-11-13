@@ -6,7 +6,9 @@
 // joins; a feat's name is unique in its app and has no hyphen. In a
 // node's core, no core feat builds on another, nor a core library on one:
 // a core graft joins them. A package's relative imports stay inside it and
-// point inward through its layers, and it exports only its surface.
+// point inward through its layers, and it exports only its surface, each
+// export's target in its layer; nothing re-exports another package of the
+// tree, and only a shell imports a slice's app.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -238,4 +240,78 @@ test('a graft is declared by a feat it joins, and a feat declares only the graft
 test('a feat\'s name has no hyphen', () => {
   const errors = tree({ extra: [['apps/org/feats/motion-plan', 'motion-plan']] })
   assert.match(errors, /apps\/org\/feats\/motion-plan: a feat's name has no hyphen; hyphens join feats in a graft's name/)
+})
+
+const membership = 'apps/org/feats/party/feats/membership/core/ts'
+const manifest = (name, deps = {}, more = {}) => JSON.stringify({ name: `@t/${name}`, dependencies: Object.fromEntries(Object.entries(deps).map(([k, v]) => [k, v])), ...more })
+
+test('an export\'s target sits in the layer its key names', () => {
+  const pkg = (exports) => ({ 'apps/org/feats/motion/core/ts/package.json': JSON.stringify({ name: '@t/motion', exports }) })
+  const errors = tree({ files: pkg({ './models': './src/models/index.ts', './api': './src/app/index.ts', './bindings': '../../../party/core/ts/src/app/index.ts' }) })
+  assert.match(errors, /motion\/core\/ts\/package\.json: exports \.\/api as \.\/src\/app\/index\.ts, outside src\/api\/; an export's target sits in the layer its key names/)
+  assert.match(errors, /exports \.\/bindings as \.\.\/\.\.\/\.\.\/party\/core\/ts\/src\/app\/index\.ts, outside src\/bindings\//)
+  assert.doesNotMatch(errors, /exports \.\/models as/)
+})
+
+test('nothing re-exports another package of the tree, by export from or by exporting a name it imported', () => {
+  const ok = tree({
+    deps: { membership: ['party'] },
+    files: {
+      [`${membership}/src/models/index.ts`]: "export * from './member.ts'\nexport { brand } from '@t/brand'\n",
+      [`${membership}/src/models/member.ts`]: "import type { Party } from '@t/party/models'\nexport type Member = { party: Party }\n",
+      'packages/brand/package.json': JSON.stringify({ name: '@t/brand', exports: { '.': './src/index.ts' } }),
+    },
+  })
+  assert.equal(ok, '')
+  const errors = tree({
+    deps: { membership: ['party'] },
+    files: {
+      [`${membership}/src/models/index.ts`]: "export * from '@t/party/models'\nexport type { Party as P } from '@t/party/models'\n",
+      [`${membership}/src/api/index.ts`]: "import { party, type Party } from '@t/party/api'\nexport { party }\nexport type { Party }\n",
+    },
+  })
+  assert.match(errors, /membership\/core\/ts\/src\/models\/index\.ts: re-exports @t\/party\/models, of @t\/party; nothing re-exports another package of the tree/)
+  assert.match(errors, /membership\/core\/ts\/src\/api\/index\.ts: re-exports party, imported from @t\/party\/api/)
+  assert.match(errors, /membership\/core\/ts\/src\/api\/index\.ts: re-exports Party, imported from @t\/party\/api/)
+})
+
+test('a re-export through an aliased dependency is refused as any', () => {
+  const errors = tree({
+    files: {
+      [`${membership}/package.json`]: manifest('membership', { p: 'workspace:@t/party@*' }),
+      [`${membership}/src/models/index.ts`]: "export { party } from 'p/models'\n",
+    },
+  })
+  assert.match(errors, /src\/models\/index\.ts: re-exports p\/models, of @t\/party/)
+  assert.doesNotMatch(errors, /not in the workspace/)
+})
+
+test('only a shell imports a slice\'s app; another slice uses its contract, and a library\'s app is open', () => {
+  const ok = tree({
+    deps: { membership: ['party', 'body'] },
+    files: {
+      'apps/org/ts/package.json': manifest('org', { '@t/motion': 'workspace:*', '@t/membership-motion': 'workspace:*' }),
+      'apps/org/ts/src/slices.ts': "import { app } from '@t/motion/app'\nimport { app as joined } from '@t/membership-motion/app'\n",
+      'apps/org/core/body/ts/package.json': manifest('body', {}, { exports: { './app': './src/app/index.ts' } }),
+      [`${membership}/src/app/blocks/Member.svelte`]: "<script lang=\"ts\">\n  import { Reader } from '@t/body/app'\n  import { Card } from '@t/party/bindings'\n</script>\n",
+    },
+    grafts: { 'membership-motion': { at: org, by: 'membership', deps: ['motion', 'membership', 'party'] } },
+  })
+  assert.equal(ok, '')
+  const errors = tree({
+    deps: { membership: ['party'] },
+    grafts: { 'membership-motion': { at: org, by: 'membership', deps: ['motion', 'membership', 'party'] } },
+    files: {
+      [`${membership}/src/app/blocks/Member.svelte`]: "<script lang=\"ts\">\n  import { Card } from '@t/party/app'\n</script>\n",
+      'apps/org/grafts/membership-motion/ts/package.json': manifest('membership-motion', { '@t/motion': 'workspace:*' }, { imports: { '#motion': '@t/motion/app' } }),
+      'apps/org/grafts/membership-motion/ts/src/app/index.ts': "import { Card } from '#motion'\n",
+    },
+  })
+  assert.match(errors, /membership\/core\/ts\/src\/app\/blocks\/Member\.svelte: imports @t\/party\/app, the app of @t\/party; only a shell imports a slice's app/)
+  assert.match(errors, /membership-motion\/ts\/src\/app\/index\.ts: imports #motion, the app of @t\/motion; only a shell imports a slice's app/)
+})
+
+test('a package\'s imports stay inside it', () => {
+  const errors = tree({ files: { [`${membership}/package.json`]: manifest('membership', {}, { imports: { '#party/*': '../../../../core/ts/src/*' } }) } })
+  assert.match(errors, /membership\/core\/ts\/package\.json: imports #party\/\* as \.\.\/\.\.\/\.\.\/\.\.\/core\/ts\/src\/\*, outside its package/)
 })

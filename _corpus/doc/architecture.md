@@ -292,9 +292,22 @@ contract; only shells import its app.**
 - *enforced* (`feat-check`, `tree.test.mjs`): a file in a layer imports
   only its own layer and the layers inside it, by the layer each path
   names ([inside a package](#inside-a-package)).
-- *enforced* (`feat-check`'s exports): a slice's package exports only
-  `./models`, `./api`, `./bindings` and `./app`, a core lib's `.`; the
-  check reads the export keys, not what they re-export.
+- *enforced* (`feat-check`'s exports, `tree.test.mjs`): a slice's
+  package exports only `./models`, `./api`, `./bindings` and `./app`, a
+  core lib's `.`, each export's target inside the layer its key names,
+  `./api`'s in `src/api/`, a lib's `.` anywhere inside its package.
+- *enforced* (`feat-check`, `tree.test.mjs`): nothing re-exports around
+  the tree. No module re-exports a module of another package of the
+  tree, by `export … from` or by exporting a name it imported, so a
+  slice is reached only through the package that owns it, by the edge
+  its manifest declares. The check resolves each import to the package
+  it names, through a dependency's alias and the package's `imports`.
+- *enforced* (`feat-check`, `tree.test.mjs`): **only a shell imports a
+  slice's app.** A feat's, a graft's or a core feat's `./app` is
+  imported by a node's root alone; another slice uses its contract, and
+  a card it draws elsewhere or a word it says the same way everywhere
+  sits in its `./bindings`. A lib holds no data and is no slice, so its
+  subpaths stay open to every package its edges allow.
 - *enforced* (`ui-check`, `ui.test.mjs`; the shell's registry): a
   slice's UI is its own, mounted through `./api` and `./app`; client
   code imports no server layer.
@@ -325,8 +338,9 @@ slice's app, and no slice reaches a sibling to compose it.
   the cli shell as commands, the analytics shell reads the SQL queries;
   a new transport touches one shell. Ruled by the operator on 9
   November (the review's finding 3).
-- *proposed*: an unmatched plug fails the build; no slice imports
-  another slice's app.
+- *enforced* (`feat-check`, `tree.test.mjs`): no slice imports another
+  slice's app ([5. Layering](#5-layering)).
+- *proposed*: an unmatched plug fails the build.
 - *proposed*: a shell is a kit in core and a root at the app.
 
 #### 5.2 Evolution
@@ -703,7 +717,8 @@ refuses any other alteration (`tools/_tests/core.test.mjs`).
 
 Nothing is ambient: no global module, no library outside the tree but the
 brand, which depends on nothing in it, and the diagrams, which depend on
-the brand alone; no re-export that reaches around it. Third-party crates and npm packages are the only other dependencies
+the brand alone; no re-export that reaches around it, which
+`cella check feats` refuses ([5. Layering](#5-layering)). Third-party crates and npm packages are the only other dependencies
 from outside. When two apps need the same library, the
 repository's root becomes the top node and the library moves into its core.
 
@@ -721,7 +736,9 @@ checks that every graft is declared by a feat it joins, that its name is
 in order, that every feat it names is below its node and that no child of
 its node holds them all, that it joins no feat with one nested in it, that
 a feat's name is unique in its app, that a package's relative imports stay
-inside it, and that a feat's or graft's actions are named for it and
+inside it, that its exports' targets sit in the layers they name, that no
+module re-exports another package of the tree, that only a node's root
+imports a slice's `./app`, and that a feat's or graft's actions are named for it and
 declared in its `models/actions.ts` alone. Through
 `tools/sql-check.mjs` it checks every `sql/` file (see [SQL](#sql)), and
 through `tools/powers.mjs` that the power each action's label names in
@@ -1617,15 +1634,21 @@ by the layer each path names.
   `interfaces` (repository contracts) → `handlers` (`(input, deps) → Result`,
   jobs) → `drivers` (repositories over the feat's schema) → `api` (remotes,
   endpoints, events, subscriptions).
-- Client: `hooks` → `components` → `bindings` (sockets, plugs) → `app`
+- Client: `hooks` → `components` → `bindings` (sockets, plugs, what other
+  slices' clients share) → `app`
   (pages, views, panes, blocks).
 - Tests in `_tests/` beside `src/`, a feat's or graft's slice tests; an app
   root's e2e tests in `_e2e/`.
 
 A package's `exports` name its public surface: a core library's `.`, and a
 slice's `./models`, `./api` (its writes, its reads and its server slice),
-`./bindings` and `./app` (its client slice). Nothing else is importable
-from outside it, and `cella check feats` refuses any other export.
+`./bindings` (what another slice's client may use of it: a card it draws
+elsewhere, a word it says the same way everywhere) and `./app` (its client
+slice, which only a shell imports). Nothing else is importable from outside
+it, and `cella check feats` refuses any other export, an export whose
+target lies outside the layer its key names, a module that re-exports
+another package of the tree, and an import of a slice's `./app` by any
+package but a node's root.
 
 ### Client state
 

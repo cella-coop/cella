@@ -50,7 +50,7 @@ one while the meeting is scheduled; the `motion` embed, so the
 meeting's page reads its minutes' motions as their document does; on
 a motion's page, the meetings it is tabled at.
 
-The embed's card is the motion feat's `Card`, the one
+The embed's card is the motion feat's `Card`, from its `./bindings`, the one
 `document-motion` draws too, over the motions the feat's
 `summaries` reads.
 

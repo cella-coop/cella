@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Badge, date } from '@cella/org-ui'
-  import type { Summary } from '../../models/motion.ts'
+  import type { Summary } from '../models/motion.ts'
 
   // A motion drawn as a card where another slice shows it, inside a
   // document or a meeting's minutes: its title, author, method and where it

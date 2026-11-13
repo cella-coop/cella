@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Note, power, Section, Table, type Column } from '@cella/org-ui'
   import type { Depth, Provenance } from '../../models/circle.ts'
-  import { cap, covers, narrows, tones } from '../words.ts'
+  import { cap, covers, narrows, tones } from '../../bindings/words.ts'
 
   // Where a mandate's authority comes from: its chain, the root the
   // assembly issued first, down to the mandate, each link with how it

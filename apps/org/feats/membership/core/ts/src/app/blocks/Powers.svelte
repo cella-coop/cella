@@ -1,6 +1,6 @@
 <script lang="ts">
   import { date, power, Section, Table, type Column } from '@cella/org-ui'
-  import { cap } from '@cella/org-circle/app'
+  import { cap } from '@cella/org-circle/bindings'
   import type { Power } from '../../models/power.ts'
 
   // What a person may do on the verdict date, power by power, and what

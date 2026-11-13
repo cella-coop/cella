@@ -1,7 +1,7 @@
 <script lang="ts">
   import { power, Section, Table, type Column } from '@cella/org-ui'
   import type { Detail, Role, Standing } from '../../models/circle.ts'
-  import { cap, covers, tones } from '../words.ts'
+  import { cap, covers, tones } from '../../bindings/words.ts'
 
   // A circle's roles, each with its duty and the circle it is of, and the
   // mandates that grant them powers in the Mandates collection's words:

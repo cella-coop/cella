@@ -1102,6 +1102,9 @@ importers:
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
+      '@cella/org-vat':
+        specifier: workspace:*
+        version: link:../../../core/vat/ts
       svelte:
         specifier: 5.57.2
         version: 5.57.2

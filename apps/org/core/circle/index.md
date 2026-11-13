@@ -984,10 +984,11 @@ The `mandates` collection lists every mandate, by power, with its
 grantee, cap, scope, issuer and whether it stands on the verdict date.
 Every page that shows a mandate says it in the same words: a role, a
 circle, an issuer and the circle a scope covers by name, never by id; a
-cap as `cap` in `app/words.ts` says it, "up to 1 200,00 € a write" or
+cap as `cap` in `bindings/words.ts` says it, "up to 1 200,00 € a write" or
 "within 1 000,00 € a month", an amount as `models/format.ts` writes
 one; and what it covers as `covers` says it, the whole co-op, its own
-circle or a circle by name.
+circle or a circle by name. The feat's `./bindings` shares `cap`, so
+motion's and membership's pages say a cap in the same words.
 A mandate's page, `/mandates/<id>`, as the shell addresses an item,
 shows where its authority comes from: its sentence, grantee, power,
 caps, scope, days and procedure, whether it stands, is yet to be, or

@@ -32,7 +32,9 @@
 //
 // It also checks that grafts are named and declared, that a package's
 // relative imports stay inside it and point inward through its layers, its
-// exports are its public surface,
+// exports are its public surface, each export's target in the layer it
+// names, that nothing re-exports another package of the tree, that only a
+// node's root, a shell, imports a slice's app,
 // through ui-check.mjs the client layers' rules, that a feat's or graft's
 // actions are named for it and declared only in its models/actions.ts,
 // through sql-check.mjs every sql/ file's boundaries,
@@ -183,11 +185,18 @@ const byName = new Map()
 for (const dir of [...dirs.filter((d) => existsSync(join(repo, d, 'package.json'))), ...shared, ...sites]) {
   byName.set(JSON.parse(readFileSync(join(repo, dir, 'package.json'), 'utf8')).name, dir)
 }
+// The workspace package each package's dependencies name, by the name it
+// imports them as: a dependency's key, or the package its alias names,
+// `"m": "workspace:@cella/org-motion@*"`.
+const aliases = new Map()
 for (const dir of byName.values()) {
   const pkg = JSON.parse(readFileSync(join(repo, dir, 'package.json'), 'utf8'))
   const deps = { ...pkg.dependencies, ...pkg.devDependencies }
-  for (const [name, spec] of Object.entries(deps)) {
+  aliases.set(dir, new Map())
+  for (const [key, spec] of Object.entries(deps)) {
     if (String(spec).startsWith('workspace:')) {
+      const name = String(spec).match(/^workspace:((?:@[^/@]+\/)?[^/@]+)@/)?.[1] ?? key
+      aliases.get(dir).set(key, name)
       byName.has(name) ? edges.push([dir, byName.get(name)]) : fail(`${dir}: depends on ${name}, which is not in the workspace`)
     }
   }
@@ -348,13 +357,109 @@ errors.push(...checkUi(repo, onTree))
 
 // A package's exports are its public surface: a library's `.`, a slice's
 // `./models`, `./api` (its writes, reads and server slice), `./bindings`
-// and `./app` (its client slice).
+// and `./app` (its client slice), each export's target inside the layer
+// its key names, `src/<layer>/`, and a library's anywhere inside it.
 const surface = new Set(['.', './models', './api', './bindings', './app'])
+// The paths a manifest's value names, through its conditions.
+const leaves = (v) => (typeof v === 'string' ? [v] : v && typeof v === 'object' ? Object.values(v).flatMap(leaves) : [])
+const manifest = (dir) => JSON.parse(readFileSync(join(repo, dir, 'package.json'), 'utf8'))
 for (const dir of onTree) {
-  const pkg = JSON.parse(readFileSync(join(repo, dir, 'package.json'), 'utf8'))
-  for (const key of Object.keys(pkg.exports ?? {})) {
+  const pkg = manifest(dir)
+  const exports = typeof pkg.exports === 'string' ? { '.': pkg.exports } : (pkg.exports ?? {})
+  for (const [key, value] of Object.entries(exports)) {
     if (!surface.has(key)) {
       fail(`${dir}/package.json: exports ${key}; a package exports only ${[...surface].join(', ')}`)
+      continue
+    }
+    const home = key === '.' ? '' : `src/${key.slice(2)}/`
+    for (const target of leaves(value)) {
+      const at = relative(join(repo, dir), resolve(join(repo, dir), target))
+      if (at.startsWith('..') || !at.startsWith(home)) {
+        fail(`${dir}/package.json: exports ${key} as ${target}, outside ${home || 'the package'}; an export's target sits in the layer its key names`)
+      }
+    }
+  }
+}
+
+// Nothing re-exports around the tree, and only a shell imports a slice's
+// app. Each import is resolved to the package it names, through the
+// dependency's alias and the package's `imports` (`#lib/*`); a module
+// that re-exports a module of another package of the tree, by `export …
+// from` or by exporting a name it imported, is refused, as is an import of
+// a slice's `./app` by any package but a node's root. A library holds no
+// data and is no slice: its subpaths are open to what may depend on it.
+const slice = (p) => Boolean(p) && (p.kind === 'graft' || (p.kind === 'core' && Boolean(p.graft || coreFeat(p) || (!p.lib && parentOf(p.node)))))
+const mapped = (imports, spec) => {
+  for (const [key, value] of Object.entries(imports ?? {})) {
+    const [target] = leaves(value)
+    const [head, tail] = key.split('*')
+    if (key === spec) {
+      return target
+    }
+    if (tail !== undefined && target && spec.startsWith(head) && spec.endsWith(tail) && spec.length >= head.length + tail.length) {
+      return target.replace('*', spec.slice(head.length, spec.length - tail.length))
+    }
+  }
+  return null
+}
+// The package of the tree a bare specifier reaches from `dir`, with its
+// subpath, or null where it reaches none.
+const reach = (dir, pkg, spec) => {
+  if (spec.startsWith('#')) {
+    const target = mapped(pkg.imports, spec)
+    if (!target || target.startsWith('.')) {
+      return null
+    }
+    spec = target
+  }
+  const m = spec.match(/^((?:@[^/]+\/)?[^/]+)(\/.*)?$/)
+  const name = m && (aliases.get(dir).get(m[1]) ?? (m[1] === pkg.name ? pkg.name : null))
+  const to = name && byName.get(name)
+  return to && onTree.includes(to) ? { name, to, sub: `.${m[2] ?? ''}` } : null
+}
+// The local names an import clause binds: `X`, `{ a, b as c }`, `* as N`.
+const bound = (clause) =>
+  clause.replace(/[{}]/g, ',').split(',').map((s) => s.trim().replace(/^type\s+/, '').replace(/^\*\s+as\s+/, '').split(/\s+as\s+/).pop()).filter((s) => /^[\w$]+$/.test(s))
+for (const dir of onTree) {
+  const pkg = manifest(dir)
+  const shell = place(dir)?.kind === 'root'
+  for (const [key, value] of Object.entries(pkg.imports ?? {})) {
+    for (const target of leaves(value).filter((t) => t.startsWith('.'))) {
+      if (relative(join(repo, dir), resolve(join(repo, dir), target)).startsWith('..')) {
+        fail(`${dir}/package.json: imports ${key} as ${target}, outside its package; depend on the package instead`)
+      }
+    }
+  }
+  for (const file of sources(dir)) {
+    const text = readFileSync(join(repo, file), 'utf8')
+    const foreign = (spec) => {
+      const r = reach(dir, pkg, spec)
+      return r && r.name !== pkg.name ? r : null
+    }
+    for (const [, spec] of text.matchAll(/(?:\bfrom|\bimport)\s*\(?\s*['"]([^'".][^'"]*)['"]/g)) {
+      const r = foreign(spec)
+      if (r && !shell && slice(place(r.to)) && (r.sub === './app' || r.sub.startsWith('./app/'))) {
+        fail(`${file}: imports ${spec}, the app of ${r.name}; only a shell imports a slice's app, so use its contract, what it shares in ./bindings`)
+      }
+    }
+    for (const [, spec] of text.matchAll(/\bexport\s+(?:type\s+)?(?:\*(?:\s+as\s+[\w$]+)?|\{[^}]*\})\s*from\s*['"]([^'"]+)['"]/g)) {
+      const r = foreign(spec)
+      if (r) {
+        fail(`${file}: re-exports ${spec}, of ${r.name}; nothing re-exports another package of the tree, so import it from the package that owns it`)
+      }
+    }
+    const imported = new Map()
+    for (const [, clause, spec] of text.matchAll(/\bimport\s+(?:type\s+)?([^'"]*?)\s*from\s*['"]([^'"]+)['"]/g)) {
+      if (foreign(spec)) {
+        bound(clause).forEach((n) => imported.set(n, spec))
+      }
+    }
+    const exported = [
+      ...[...text.matchAll(/\bexport\s+(?:type\s+)?\{([^}]*)\}(?!\s*from\b)/g)].flatMap(([, list]) => list.split(',').map((s) => s.trim().replace(/^type\s+/, '').split(/\s+as\s+/)[0])),
+      ...[...text.matchAll(/\bexport\s+default\s+([\w$]+)\s*;?\s*$/gm)].map(([, n]) => n),
+    ]
+    for (const n of new Set(exported.filter((n) => imported.has(n)))) {
+      fail(`${file}: re-exports ${n}, imported from ${imported.get(n)}; nothing re-exports another package of the tree, so import it from the package that owns it`)
     }
   }
 }

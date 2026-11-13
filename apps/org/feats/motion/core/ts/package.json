@@ -5,6 +5,7 @@
   "exports": {
     "./models": "./src/models/index.ts",
     "./api": "./src/api/index.ts",
+    "./bindings": "./src/bindings/index.ts",
     "./app": "./src/app/index.ts"
   },
   "dependencies": {

@@ -1,5 +1,5 @@
 import { csv, hundredths, type Imported, type Importer } from '@cella/org-db'
-import type { Line } from '@cella/org-invoice/models'
+import type { Line } from '@cella/org-vat'
 import { issue } from '../handlers/post.ts'
 
 // A day as YYYY-MM-DD, from that or DD/MM/YYYY.

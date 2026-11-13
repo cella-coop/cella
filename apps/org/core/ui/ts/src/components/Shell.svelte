@@ -25,6 +25,7 @@
   import { typing } from '../models/keys.ts'
   import { worn } from '../models/theme.ts'
   import { TestTube } from '../icons.ts'
+  import favicon from '@cella/brand/favicon.svg?url'
 
   // The shell: the sidebar and the content beside it; the last write's
   // outcome floats above. ] shows or hides every page's drawer. The
@@ -141,6 +142,11 @@
 </script>
 
 <svelte:window {onkeydown} />
+
+<!-- The brand's mark, as the site wears it, on every page of the app. -->
+<svelte:head>
+  <link rel="icon" type="image/svg+xml" href={favicon} />
+</svelte:head>
 
 <!-- Collections, each its icon, its title and its count where it has one. -->
 {#snippet links(items: Items)}

@@ -2,11 +2,16 @@
   import type { Snippet } from 'svelte'
   import '../styles/tokens.css'
   import '../styles/base.css'
+  import favicon from '@cella/brand/favicon.svg?url'
 
   // What a person reaches before signing in, alone on the page: the
   // co-op's mark and name above one panel, the sign-in or an invitation.
   let { scope, children }: { scope: { address: string; name: string; legal: string | null }; children: Snippet } = $props()
 </script>
+
+<svelte:head>
+  <link rel="icon" type="image/svg+xml" href={favicon} />
+</svelte:head>
 
 <div class="gate">
   <div class="panel">

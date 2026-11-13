@@ -43,7 +43,7 @@ test('every main page renders on the seed', async () => {
   const pages: [string, string][] = [
     ['/people', 'Camille Martin'],
     [`/people/${camille}?tab=powers`, 'Powers held'],
-    ['/circles', 'General assembly'],
+    ['/circles', 'Assembly'],
     ['/circles/ag?tab=roles', 'Manager'],
     ['/motions', 'Admit Inès Haddad'],
     ['/motions/m-2026-012', 'passes by consent'],
@@ -109,7 +109,7 @@ test('the co-op selector lists the circles the member sits in, and the one chose
   assert.ok(at.every((i) => i >= 0), `the menu holds ${order.join(', ')}`)
   assert.deepEqual([...at].sort((a, b) => a - b), at, 'the co-op first, then the circles Camille sits in')
   assert.ok(!menu.includes('All circles') && !menu.includes('Yours') && !menu.includes('Others'), 'no All circles and no groups: the co-op itself clears the lens')
-  assert.ok(!menu.includes('General assembly'), 'the assembly is the co-op row, not a circle of its own')
+  assert.ok(!menu.includes('Assembly'), 'the assembly is the co-op row, not a circle of its own')
   for (const other of ['Marketing', 'Operations', 'Web']) {
     assert.ok(!menu.includes(other), `${other}, a circle Camille does not sit in, is not listed`)
   }
@@ -405,7 +405,7 @@ test('closed on 31 October, m-2026-012 admits Inès and seats her in the close\'
   const subscribed = await one<{ op: string; actor: string }>('SELECT op, actor FROM cella.log WHERE n = $1', [closed.then[0].then[0].entry])
   assert.deepEqual(subscribed, { op: 'account:capital:subscribe', actor: camille })
   const { text } = await page(`/people/${ines}`)
-  assert.ok(text.includes('active') && text.includes('General assembly') && text.includes('phone'))
+  assert.ok(text.includes('active') && text.includes('Assembly') && text.includes('phone'))
   assert.ok((await page('/motions/m-2026-012')).text.includes('passed by consent'))
 })
 

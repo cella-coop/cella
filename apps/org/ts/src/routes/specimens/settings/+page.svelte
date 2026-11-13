@@ -16,7 +16,7 @@
       label: 'Circle name',
       value: 'Coordination',
       write: 'rename',
-      refused: 'camille@lanterne.example holds no amend-circle in coordination: only a motion of General assembly renames it',
+      refused: 'camille@lanterne.example holds no amend-circle in coordination: only a motion of Assembly renames it',
       motion: {
         kind: 'amend-circle',
         args: (value) => ({ circle: 'coordination', name: value }),
@@ -37,7 +37,7 @@
   {#if await served}
     <Frame title="Settings specimen">
       <Section title="Coordination">
-        <Settings {settings} decider={{ circle: 'ag', name: 'General assembly', deadline: '2026-11-23' }} />
+        <Settings {settings} decider={{ circle: 'ag', name: 'Assembly', deadline: '2026-11-23' }} />
       </Section>
     </Frame>
   {/if}

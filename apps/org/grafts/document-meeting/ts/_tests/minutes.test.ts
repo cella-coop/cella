@@ -15,8 +15,8 @@ before(async () => {
   await db.query(`INSERT INTO document.document (id, title) VALUES ('minutes-ag-2026-06-20', 'Minutes'), ('rate-card-2027', 'Rate card 2027')`)
   await db.query(
     `INSERT INTO meeting.meeting (id, circle, title, at) VALUES
-       ('ag-2026-06-20', 'ag', 'General assembly', '2026-06-20 10:00'),
-       ('ag-2026-10-31', 'ag', 'General assembly', '2026-10-31 10:00')`,
+       ('ag-2026-06-20', 'ag', 'Assembly', '2026-06-20 10:00'),
+       ('ag-2026-10-31', 'ag', 'Assembly', '2026-10-31 10:00')`,
   )
   await db.query(`INSERT INTO document_meeting.minutes (meeting, document) VALUES ('ag-2026-06-20', 'minutes-ag-2026-06-20')`)
 })

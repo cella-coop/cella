@@ -64,7 +64,7 @@ test('a withholding ends the disclosure rule in force and nothing else: one nami
   await db.query('BEGIN')
   try {
     await db.query(`SET LOCAL cella.clock = '2026-11-21'`)
-    await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'General assembly', true), ('operations', 'Operations', false) ON CONFLICT DO NOTHING`)
+    await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'Assembly', true), ('operations', 'Operations', false) ON CONFLICT DO NOTHING`)
     const withhold = (circle: string, policy: string) =>
       putting({ circle, kind: 'withhold', args: { policy }, deadline: '2026-12-05', body: '' }, db as unknown as Db)
     await assert.rejects(withhold('ag', 'p-none'), /no disclosure rule stands on 2026-11-21, so there is none to withhold/)

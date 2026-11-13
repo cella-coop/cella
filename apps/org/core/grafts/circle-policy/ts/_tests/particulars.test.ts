@@ -65,7 +65,7 @@ const read = async (actor: string | null = null) => {
 
 const staged = async () => {
   await db.query('BEGIN')
-  await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'General assembly', true) ON CONFLICT DO NOTHING`)
+  await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'Assembly', true) ON CONFLICT DO NOTHING`)
   await db.query(`INSERT INTO circle.circle (id, name) VALUES ('operations', 'Operations') ON CONFLICT DO NOTHING`)
 }
 

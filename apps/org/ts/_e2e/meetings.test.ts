@@ -65,9 +65,9 @@ test('the seed holds Lanterne\'s meetings: the June assembly, coordination every
 
 test('the meeting pages render: a calendar of the month, an agenda with who came, and the minutes with their cards', async () => {
   const pages: [string, string[]][] = [
-    ['/meetings', ['October 2026', 'Coordination', 'General assembly', 'class="calendar month']],
+    ['/meetings', ['October 2026', 'Coordination', 'Assembly', 'class="calendar month']],
     ['/meetings?at=2026-06-01', ['June 2026', 'Annual general assembly']],
-    ['/meetings?span=week&at=2026-10-26', ['26 Oct – 1 Nov 2026', 'General assembly']],
+    ['/meetings?span=week&at=2026-10-26', ['26 Oct – 1 Nov 2026', 'Assembly']],
     ['/meetings?view=list', ['Annual general assembly']],
     ['/meetings/coordination-2026-10-19?tab=agenda', ['The day rate: Malik', 'Motions tabled', 'm-2026-012', 'Attendance', '5 of 5, 3 needed']],
     ['/meetings/coordination-2026-09-21?tab=agenda', ['Léa Bernard', 'guest']],

@@ -82,7 +82,7 @@ test('Camille holds the commit as manager, by her tenure from 2024 to 2028, up t
   const commit = listed.filter((p) => p.power === 'commit')
   assert.deepEqual(commit.map((p) => [p.role, p.circle, p.since, p.until, p.limit, p.scope]), [['manager', 'ag', '2024-06-20', '2028-06-20', 2_000_000, null]])
   const { html, text } = await tab(camille)
-  for (const says of ['Powers', 'Commit', 'Manager in General assembly', '20 Jun 2024 – 20 Jun 2028', 'the whole co-op', 'seat in Coordination', "every member's right"]) {
+  for (const says of ['Powers', 'Commit', 'Manager in Assembly', '20 Jun 2024 – 20 Jun 2028', 'the whole co-op', 'seat in Coordination', "every member's right"]) {
     assert.ok(text.includes(says), `Camille's tab says ${says}`)
   }
   assert.ok(html.includes(`href="/mandates/${await mandate('manager', 'commit')}"`), 'the commit\'s line opens its mandate')
@@ -107,7 +107,7 @@ test('Inès, no member, holds Web\'s participant mandates by her seat there, and
   assert.deepEqual([...new Set(listed.map((p) => p.right).filter((r) => r !== null))].sort(), ['employee', 'person'])
   assert.ok(listed.some((p) => p.power === 'log-time' && p.right === 'employee'))
   const { text } = await tab(ines)
-  for (const says of ['Propose', 'seat in Web', 'Log time', "every employee's right", "every person's right", 'their own', 'Web, its own', 'General assembly']) {
+  for (const says of ['Propose', 'seat in Web', 'Log time', "every employee's right", "every person's right", 'their own', 'Web, its own', 'Assembly']) {
     assert.ok(text.includes(says), `Inès's tab says ${says}`)
   }
   assert.ok(!text.includes("every member's right"), 'she holds no member\'s right')

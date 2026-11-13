@@ -249,9 +249,9 @@ test('a member\'s page lists every mandate may grants them: Inès\'s the partici
   for (const says of ['Powers held', 'Propose', 'Discuss', 'participant in Web']) {
     assert.ok(theirs.includes(says), `Inès's page says ${says}`)
   }
-  assert.ok(!theirs.includes('in General assembly'), 'she sits nowhere but Web')
+  assert.ok(!theirs.includes('in Assembly'), 'she sits nowhere but Web')
   const chloes = await tab('chloe@lanterne.example', 'powers', camille)
-  for (const says of ['participant in General assembly', 'member in General assembly', 'participant in Marketing']) {
+  for (const says of ['participant in Assembly', 'member in Assembly', 'participant in Marketing']) {
     assert.ok(chloes.includes(says), `Chloé's page says ${says}`)
   }
   // For every person and power, may answers on the day exactly where
@@ -303,15 +303,15 @@ test('once m-2026-012 admits her, every step of joining is done, Web her working
   settled(await close({ motion: 'm-2026-012' }, reacting(as(camille))))
   const joining = await tab(ines, 'joining', ines)
   assert.equal(joining.match(/to do/g), null, 'nothing is left to join')
-  for (const says of ['20 shares of 50,00', 'phone, enrolled 1 Oct 2026 when the invitation was taken up', 'General assembly', 'Web']) {
+  for (const says of ['20 shares of 50,00', 'phone, enrolled 1 Oct 2026 when the invitation was taken up', 'Assembly', 'Web']) {
     assert.ok(joining.includes(says), `joining says ${says}`)
   }
   const rights = await tab(ines, 'rights', ines)
   for (const says of [
     'Inès has been a member since 31 Oct 2026',
     'Inès holds 20 shares of 50,00',
-    'General assembly as Member',
-    'General assembly and Web decide by consent',
+    'Assembly as Member',
+    'Assembly and Web decide by consent',
     'Through these seats Inès may',
     'invite someone to join, with their first device',
   ]) {

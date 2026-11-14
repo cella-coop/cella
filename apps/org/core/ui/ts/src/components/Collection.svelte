@@ -249,6 +249,10 @@
   // month or week around the day the address is at, else today's.
   const placing = $derived(typed.find((f) => f.key === spec.on) ?? typed.find((f) => f.type === 'date'))
   const shownPeriod = $derived(period(anchor(page.url.searchParams.get('at'), today), spec.span, today))
+  // The field a calendar colours its cards by, where the view groups by
+  // one, and its values in its board's order, which hand out the inks.
+  const tinted = $derived(spec.layout === 'calendar' && spec.by ? columns.find((c) => c.key === grouping(spec, typed)?.key) : undefined)
+  const tints = $derived(tinted ? lanes(look, tinted.key, values[tinted.key] ?? []) : [])
 
   // A list, a feed, a table and a gallery draw a page of rows at a time; a board
   // and a calendar place every row the view keeps, and a dashboard draws
@@ -487,7 +491,7 @@
         onshift={(id, s, _, to) => move(id, s, to)}
       />
     {:else if spec.layout === 'calendar' && placing}
-      <Calendar rows={state.shown} on={placing} period={shownPeriod} {titled} {shown} {href} link={at} sorted={spec.sort !== null} />
+      <Calendar rows={state.shown} on={placing} period={shownPeriod} {titled} {shown} {href} link={at} sorted={spec.sort !== null} by={tinted} order={tints} />
     {:else if spec.layout === 'feed' && who && when}
       <ol class="list feed">
         {#each state.shown as row, i (row.id)}

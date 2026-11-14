@@ -266,6 +266,10 @@
         <select aria-label="Span" value={spec.span} onchange={(e) => change({ span: e.currentTarget.value as Spec['span'] })}>
           {#each spans as s (s)}<option value={s}>{s === 'month' ? 'Month' : 'Week'}</option>{/each}
         </select>
+        <select aria-label="Colour by" value={spec.by ?? ''} onchange={(e) => change({ by: e.currentTarget.value || null })}>
+          <option value="">None</option>
+          {#each groups as f (f.key)}<option value={f.key}>{f.label}</option>{/each}
+        </select>
       {:else if spec.layout === 'dashboard'}
         <select aria-labelledby="{id}-group" disabled><option>None</option></select>
       {:else}
@@ -481,6 +485,7 @@
   }
   .control {
     display: flex;
+    flex-wrap: wrap;
     justify-content: flex-end;
     gap: var(--space-1);
     min-width: 0;

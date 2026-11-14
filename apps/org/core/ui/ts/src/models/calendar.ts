@@ -1,3 +1,4 @@
+import { nth } from './ink.ts'
 import type { Field } from './query.ts'
 
 // A calendar's period: a month, as weeks from the Monday on or before its
@@ -89,4 +90,33 @@ export function placed(rows: any[], on: Field, p: Period, sorted = false): Map<s
 export const time = (v: unknown) => {
   const s = String(v ?? '')
   return /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(s) ? s.slice(11, 16) : ''
+}
+
+// A calendar grouped by a field: each value its rows hold, in `order`,
+// the board's, then as the rows hold them, with how many of the rows hold
+// it and its ink, the five handed out in the site's turn and again from
+// the first past five, each by its place in `order`, so a value keeps
+// its colour from one month to the next; the rows holding none, None,
+// last and of no ink.
+export interface Key {
+  value: string
+  ink: number | null
+  count: number
+  // One of the rows holding it, which the legend draws its value from.
+  row: any
+}
+
+export function legend(rows: any[], key: string, order: string[]): Key[] {
+  const held = new Map<string, any[]>()
+  for (const r of rows) {
+    const v = r[key] === null || r[key] === undefined ? '' : String(r[key])
+    held.set(v, [...(held.get(v) ?? []), r])
+  }
+  const all = [...order.filter((v) => v !== ''), ...[...held.keys()].filter((v) => v !== '' && !order.includes(v))]
+  const keys = all.flatMap((v, i) => {
+    const rs = held.get(v)
+    return rs ? [{ value: v, ink: nth(i), count: rs.length, row: rs[0] }] : []
+  })
+  const none = held.get('')
+  return none ? [...keys, { value: '', ink: null, count: none.length, row: none[0] }] : keys
 }

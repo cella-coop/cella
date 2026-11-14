@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-13
+updated = 2026-11-14
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -79,6 +79,26 @@ ink. Components read roles, never shades:
 
 The theme is light, dark or the system's, a cookie the server writes into
 `<html data-theme>` before any script runs.
+
+The dev server alone serves a specimen of the shell in the brand's inks,
+`/specimens/ink`, a page of no slice that reads nothing, drawn by
+`Inks`, proposing where the site's five pentad inks (`--p0` to `--p4`)
+go in a working tool. Ink
+marks identity and the one primary action, and never fills a surface:
+the primary button as a cell solid in its ink, as the site's actions
+are, and a secondary action as a wash of it; the selected navigation row
+and the focus ring; a collection's icon tinted by its area's ink, and a
+record chip's icon by its collection's; a circle's or a person's avatar
+in an ink seeded by its name, as the site seeds its lists. Beside each,
+the same thing as the shell draws it today, and what stays neutral:
+tables, body text, forms and panels. The semantic tones keep their
+meanings, so no ink is a state's. The page shows both themes side by
+side, and each text on ink states its contrast, every one at least WCAG
+AA's 4.5:1 (3:1 for an icon or a ring). The inks are handed out in the
+site's turn started at the blue, so the first area's primary action never
+reads as a refusal, and one table, `models/ink.ts`, both draws each
+role and measures it, so the contrast the page states is the one it
+draws.
 
 ## Components
 

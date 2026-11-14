@@ -369,11 +369,15 @@ fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>, jobs: Option<usize>) -> R
 /// `CELLA_E2E_JOBS` says: as many as half the box's builds slice,
 /// `MemoryHigh` 11G, holds at a worker's peak measured on the box, since
 /// two gates runs may share it (index.md, "Gates").
-const JOBS: usize = 4;
+const JOBS: usize = 3;
 
 /// The variable that makes this binary a worker's child: the worker it
 /// runs the scenario it is handed for.
 const WORKER: &str = "CELLA_E2E_WORKER";
+
+/// The variable that makes a browser scenario drive its browsers one after
+/// another (`_e2e/browser.ts`).
+const APART: &str = "CELLA_BROWSERS_APART";
 
 /// How far apart the workers' analytics ports are, past every scenario's
 /// offset.
@@ -404,11 +408,17 @@ fn scenario(
         &mut [dev.seed(&worker.db, &lanterne)],
         quiet,
     )?;
-    steps.run(
-        &format!("e2e {name}"),
-        &mut [node_test(dev, steps, &worker.db, &[file])],
-        tap,
-    )?;
+    // A browser scenario drives its browsers at once, unless its file says
+    // why they would meet, in a line `// browsers: one at a time: <why>`.
+    let mut test = node_test(dev, steps, &worker.db, &[file]);
+    if let Some(why) = marked(file, "browsers")?
+        .as_deref()
+        .and_then(|m| m.strip_prefix("one at a time: "))
+    {
+        println!("{:<22} {why}", format!("apart e2e/{name}"));
+        test.env(APART, "1");
+    }
+    steps.run(&format!("e2e {name}"), &mut [test], tap)?;
     // What the scenario wrote, folded from its log into a fresh database,
     // matches it row for row, every slice folded, so a write whose entry
     // carries less than it changed fails the day it is written
@@ -643,8 +653,8 @@ impl Times {
 }
 
 /// What a scenario's file says of itself in a line `// <mark>: <why>`, such
-/// as why its log does not fold, `unfolded`, or why it runs by itself,
-/// `alone`.
+/// as why its log does not fold, `unfolded`, why it runs by itself,
+/// `alone`, or why its browsers run one at a time, `browsers`.
 fn marked(file: &Path, mark: &str) -> Result<Option<String>> {
     let text =
         fs::read_to_string(file).map_err(|e| Fail::new(format!("{}: {e}", file.display())))?;

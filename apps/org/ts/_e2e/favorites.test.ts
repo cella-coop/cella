@@ -14,7 +14,7 @@ import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
 import pg from 'pg'
 import type { Page } from 'playwright-core'
-import { browsers, serve, signIn } from './browser.ts'
+import { eachBrowser, serve, signIn } from './browser.ts'
 
 const su = new pg.Client()
 
@@ -47,7 +47,7 @@ after(async () => {
   await su.end()
 })
 
-for (const [engine, launch] of browsers()) {
+eachBrowser((engine, launch) => {
   test(`${engine}: a view across circles reads every circle Inès reads, and Favorites pin it and All the same in every circle`, async () => {
     mkdirSync(shots, { recursive: true })
     const owner = new Map((await su.query<{ id: string; circle: string }>(`SELECT id::text, circle FROM task.task`)).rows.map((r) => [r.id, r.circle]))
@@ -145,4 +145,4 @@ for (const [engine, launch] of browsers()) {
       await browser.close()
     }
   })
-}
+})

@@ -13,7 +13,7 @@ import { after, before, test } from 'node:test'
 import { mkdirSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { browsers, serve, signIn } from './browser.ts'
+import { inBrowsers, serve, signIn } from './browser.ts'
 import { Shell } from './serve.ts'
 
 const su = new pg.Client()
@@ -73,7 +73,7 @@ test('in every browser, light and dark, the walk is clicked through from Brand\'
   const [root, mid, deep] = [await id('coordination'), await id('operations'), await id('print-buyer')]
   await shell.stop()
   mkdirSync(shots, { recursive: true })
-  for (const [engine, launch] of browsers()) {
+  await inBrowsers(async (engine, launch) => {
     const browser = await launch()
     const dev = await serve()
     try {
@@ -110,5 +110,5 @@ test('in every browser, light and dark, the walk is clicked through from Brand\'
       await browser.close()
       await dev.stop()
     }
-  }
+  })
 })

@@ -2,9 +2,9 @@
 // either a corrected day or a calendar pick on that same form.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { browsers, serve, signIn } from './browser.ts'
+import { eachBrowser, serve, signIn } from './browser.ts'
 
-for (const [name, launch] of browsers()) {
+eachBrowser((name, launch) => {
   test(`${name}: a calendar pick clears the typed day's complaint`, async () => {
     const { base, stop } = await serve()
     let browser: Awaited<ReturnType<typeof launch>> | undefined
@@ -56,4 +56,4 @@ for (const [name, launch] of browsers()) {
       await stop()
     }
   })
-}
+})

@@ -17,13 +17,13 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
 import pg from 'pg'
-import { browsers, serve, signIn } from './browser.ts'
+import { eachBrowser, serve, signIn } from './browser.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-organization-shots'
 const camille = 'camille@lanterne.example'
 const montreuil = '14 rue des Graviers, 93100 Montreuil, France'
 
-for (const [name, launch] of browsers()) {
+eachBrowser((name, launch) => {
   test(`${name}: Camille changes the co-op's seat from Settings' Organization page, and its Save proposes the assembly's motion, light and dark`, async () => {
     mkdirSync(shots, { recursive: true })
     const su = new pg.Client()
@@ -118,4 +118,4 @@ for (const [name, launch] of browsers()) {
       await su.end()
     }
   })
-}
+})

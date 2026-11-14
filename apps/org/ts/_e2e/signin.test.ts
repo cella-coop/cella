@@ -12,7 +12,7 @@ import { after, before, describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { open, random, sha256, signer } from '@cella/org-sign'
-import { browsers } from './browser.ts'
+import { eachBrowser } from './browser.ts'
 import { Shell } from './serve.ts'
 
 const su = new pg.Client()
@@ -35,102 +35,98 @@ after(async () => {
   await su.end()
 })
 
-for (const [name, launch] of browsers()) {
-  describe(name, () => {
-    const sam = `sam-${name}@lanterne.example`
-    const secret = random()
+eachBrowser((name, launch) => {
+  const sam = `sam-${name}@lanterne.example`
+  const secret = random()
 
-    it('Camille invites Sam by a link, which only the link holds', async () => {
-      const done = await shell.act('/people', 'invite', { name: 'Sam Petit', address: sam, link: await sha256(secret) }, camille)
-      assert.equal(done.state, 'settled', done.reason)
-      assert.equal((await one<{ n: number }>('SELECT count(*)::int AS n FROM membership.link WHERE member = $1', [sam])).n, 1)
-    })
-
-    it('Sam takes it up in the browser, which makes, keeps and signs with a key it cannot export', async () => {
-      const browser = await launch()
-      try {
-        const context = await browser.newContext({ extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
-        const page = await context.newPage()
-        const errors: string[] = []
-        page.on('pageerror', (e) => errors.push(`${page.url()}: ${e.message}`))
-        const base = shell.base
-        // Firefox reports a module whose load a navigation cut off as the
-        // page's error, so each page settles before the next.
-        const visit = async (path: string) => {
-          const res = await page.goto(`${base}${path}`)
-          await page.waitForLoadState('networkidle')
-          return res
-        }
-
-        const signedOut = await visit('/people')
-        assert.match(page.url(), /\/sign-in\?back=%2Fpeople$/, 'with no session, a page goes to the sign-in')
-        assert.equal(signedOut?.status(), 200)
-        assert.ok(await page.getByText('This browser holds no device of lanterne.example').isVisible())
-
-        await visit(`/join/${secret}`)
-        assert.ok(await page.getByRole('heading', { name: 'Join Lanterne' }).isVisible())
-        await page.getByLabel('This device').fill('laptop')
-        await page.getByRole('button', { name: 'Take up the invitation' }).click()
-        await page.waitForURL(`${base}/people/${encodeURIComponent(sam)}?tab=joining`)
-        await page.waitForLoadState('networkidle')
-
-        const device = await one<{ key: string; label: string; enrolled_by: string | null }>(
-          `SELECT encode(key, 'hex') AS key, label, enrolled_by FROM person.device WHERE address = $1`,
-          [sam],
-        )
-        assert.deepEqual([device.label, device.enrolled_by], ['laptop', null], 'the acceptance enrolled the first device, by no device')
-        const kept = await page.evaluate(
-          () =>
-            new Promise<{ key: string; extractable: boolean }[]>((resolve, reject) => {
-              const req = indexedDB.open('cella')
-              req.onerror = () => reject(req.error)
-              req.onsuccess = () => {
-                const all = req.result.transaction('devices').objectStore('devices').getAll()
-                all.onsuccess = () => resolve(all.result.map((d: { key: string; secret: CryptoKey }) => ({ key: d.key, extractable: d.secret.extractable })))
-              }
-            }),
-        )
-        assert.deepEqual(kept, [{ key: device.key, extractable: false }], 'the browser keeps the enrolled key, and cannot export it')
-        const accepted = await one<{ device: string }>(`SELECT encode(device, 'hex') AS device FROM cella.receipt WHERE op = 'membership:member:accept' AND actor = $1`, [sam])
-        assert.equal(accepted.device, device.key, 'the device signed its own acceptance')
-        assert.equal((await visit(`/join/${secret}`))?.status(), 404, 'the link is spent')
-
-        await visit(`/people/${encodeURIComponent(sam)}`)
-        const profile = page.locator('form[data-write="profile"]')
-        await profile.getByLabel('Name').fill('Sam Petit-Roux')
-        await profile.getByRole('button', { name: 'Rename' }).click()
-        for (let i = 0; i < 50 && (await one<{ name: string }>('SELECT name FROM person.person WHERE address = $1', [sam])).name !== 'Sam Petit-Roux'; i++) {
-          await page.waitForTimeout(100)
-        }
-        const renamed = await one<{ op: string; device: string }>(`SELECT op, encode(device, 'hex') AS device FROM cella.receipt WHERE actor = $1 ORDER BY n DESC LIMIT 1`, [sam])
-        assert.deepEqual(renamed, { op: 'person:person:profile', device: device.key }, 'the write was signed in the browser by its device')
-
-        await page.getByRole('button', { name: /^Sam Petit-Roux/ }).click()
-        await page.getByRole('button', { name: 'Sign out' }).click()
-        await page.waitForURL(`${base}/sign-in`)
-        await page.waitForLoadState('networkidle')
-        await page.getByRole('button', { name: `Sign in as ${sam} · laptop` }).click()
-        await page.waitForURL(`${base}/inbox`)
-        await page.waitForLoadState('networkidle')
-        assert.ok(await page.getByText('Sam Petit-Roux').first().isVisible(), 'signed in again, on the same device')
-
-        await su.query(`UPDATE person.device SET revoked = '2026-10-24' WHERE key = decode($1, 'hex')`, [device.key])
-        await visit('/people')
-        assert.match(page.url(), /\/sign-in\?back=%2Fpeople$/, 'a revoked device\'s session opens nothing')
-        // Staged around the notary, the revocation is undone, skipping the
-        // trigger that keeps a revocation, so the log folds into the state
-        // the scenario leaves.
-        await su.query('BEGIN')
-        await su.query('SET LOCAL session_replication_role = replica')
-        await su.query(`UPDATE person.device SET revoked = NULL WHERE key = decode($1, 'hex')`, [device.key])
-        await su.query('COMMIT')
-        assert.deepEqual(errors, [], 'the pages threw nothing')
-      } finally {
-        await browser.close()
-      }
-    })
+  it('Camille invites Sam by a link, which only the link holds', async () => {
+    const done = await shell.act('/people', 'invite', { name: 'Sam Petit', address: sam, link: await sha256(secret) }, camille)
+    assert.equal(done.state, 'settled', done.reason)
+    assert.equal((await one<{ n: number }>('SELECT count(*)::int AS n FROM membership.link WHERE member = $1', [sam])).n, 1)
   })
-}
+
+  it('Sam takes it up in the browser, which makes, keeps and signs with a key it cannot export', async () => {
+    const browser = await launch()
+    try {
+      const context = await browser.newContext({ extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
+      const page = await context.newPage()
+      const errors: string[] = []
+      page.on('pageerror', (e) => errors.push(`${page.url()}: ${e.message}`))
+      const base = shell.base
+      // Firefox reports a module whose load a navigation cut off as the
+      // page's error, so each page settles before the next.
+      const visit = async (path: string) => {
+        const res = await page.goto(`${base}${path}`)
+        await page.waitForLoadState('networkidle')
+        return res
+      }
+
+      const signedOut = await visit('/people')
+      assert.match(page.url(), /\/sign-in\?back=%2Fpeople$/, 'with no session, a page goes to the sign-in')
+      assert.equal(signedOut?.status(), 200)
+      assert.ok(await page.getByText('This browser holds no device of lanterne.example').isVisible())
+
+      await visit(`/join/${secret}`)
+      assert.ok(await page.getByRole('heading', { name: 'Join Lanterne' }).isVisible())
+      await page.getByLabel('This device').fill('laptop')
+      await page.getByRole('button', { name: 'Take up the invitation' }).click()
+      await page.waitForURL(`${base}/people/${encodeURIComponent(sam)}?tab=joining`)
+      await page.waitForLoadState('networkidle')
+
+      const device = await one<{ key: string; label: string; enrolled_by: string | null }>(
+        `SELECT encode(key, 'hex') AS key, label, enrolled_by FROM person.device WHERE address = $1`,
+        [sam],
+      )
+      assert.deepEqual([device.label, device.enrolled_by], ['laptop', null], 'the acceptance enrolled the first device, by no device')
+      const kept = await page.evaluate(
+        () =>
+          new Promise<{ key: string; extractable: boolean }[]>((resolve, reject) => {
+            const req = indexedDB.open('cella')
+            req.onerror = () => reject(req.error)
+            req.onsuccess = () => {
+              const all = req.result.transaction('devices').objectStore('devices').getAll()
+              all.onsuccess = () => resolve(all.result.map((d: { key: string; secret: CryptoKey }) => ({ key: d.key, extractable: d.secret.extractable })))
+            }
+          }),
+      )
+      assert.deepEqual(kept, [{ key: device.key, extractable: false }], 'the browser keeps the enrolled key, and cannot export it')
+      const accepted = await one<{ device: string }>(`SELECT encode(device, 'hex') AS device FROM cella.receipt WHERE op = 'membership:member:accept' AND actor = $1`, [sam])
+      assert.equal(accepted.device, device.key, 'the device signed its own acceptance')
+      assert.equal((await visit(`/join/${secret}`))?.status(), 404, 'the link is spent')
+
+      await visit(`/people/${encodeURIComponent(sam)}`)
+      const profile = page.locator('form[data-write="profile"]')
+      await profile.getByLabel('Name').fill('Sam Petit-Roux')
+      await profile.getByRole('button', { name: 'Rename' }).click()
+      for (let i = 0; i < 50 && (await one<{ name: string }>('SELECT name FROM person.person WHERE address = $1', [sam])).name !== 'Sam Petit-Roux'; i++) {
+        await page.waitForTimeout(100)
+      }
+      const renamed = await one<{ op: string; device: string }>(`SELECT op, encode(device, 'hex') AS device FROM cella.receipt WHERE actor = $1 ORDER BY n DESC LIMIT 1`, [sam])
+      assert.deepEqual(renamed, { op: 'person:person:profile', device: device.key }, 'the write was signed in the browser by its device')
+
+      await page.getByRole('button', { name: /^Sam Petit-Roux/ }).click()
+      await page.getByRole('button', { name: 'Sign out' }).click()
+      await page.waitForURL(`${base}/sign-in`)
+      await page.waitForLoadState('networkidle')
+      await page.getByRole('button', { name: `Sign in as ${sam} · laptop` }).click()
+      await page.waitForURL(`${base}/inbox`)
+      await page.waitForLoadState('networkidle')
+      assert.ok(await page.getByText('Sam Petit-Roux').first().isVisible(), 'signed in again, on the same device')
+
+      await su.query(`UPDATE person.device SET revoked = '2026-10-24' WHERE key = decode($1, 'hex')`, [device.key])
+      await visit('/people')
+      assert.match(page.url(), /\/sign-in\?back=%2Fpeople$/, 'a revoked device\'s session opens nothing')
+      // Staged around the notary, the revocation is undone, skipping the
+      // trigger that keeps a revocation, so the log folds into the state
+      // the scenario leaves, in one query, so no other browser's falls
+      // inside its transaction.
+      await su.query(`BEGIN; SET LOCAL session_replication_role = replica; UPDATE person.device SET revoked = NULL WHERE key = decode('${device.key}', 'hex'); COMMIT`)
+      assert.deepEqual(errors, [], 'the pages threw nothing')
+    } finally {
+      await browser.close()
+    }
+  })
+})
 
 describe('what the server refuses', () => {
   it('a write signed by another device than the session\'s is refused by the notary', async () => {

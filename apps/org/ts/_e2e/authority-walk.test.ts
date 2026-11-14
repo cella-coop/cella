@@ -34,7 +34,7 @@ import { record } from '@cella/org-bill/api'
 import { approve } from '@cella/org-graft-bill-transaction/api'
 import type { Deps } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
-import { browsers, serve, signIn } from './browser.ts'
+import { inBrowsers, serve, signIn } from './browser.ts'
 
 const su = new pg.Client()
 let app: pg.Client | undefined
@@ -178,7 +178,7 @@ interface Walker {
 
 async function walk(stage: string, steps: (w: Walker) => Promise<void>) {
   mkdirSync(shots, { recursive: true })
-  for (const [engine, launch] of browsers()) {
+  await inBrowsers(async (engine, launch) => {
     const browser = await launch()
     const dev = await serve()
     try {
@@ -217,7 +217,7 @@ async function walk(stage: string, steps: (w: Walker) => Promise<void>) {
       await browser.close()
       await dev.stop()
     }
-  }
+  })
 }
 
 const section = (page: Page, heading: string) => page.locator('section', { has: page.getByRole('heading', { name: heading }) })

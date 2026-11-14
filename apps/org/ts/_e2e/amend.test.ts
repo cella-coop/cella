@@ -17,6 +17,8 @@
 // which the circle's page and the co-op selector name by its new name.
 // `SHOTS` names where its screenshots go. Run by `cella test e2e amend`.
 
+// browsers: one at a time: each browser renames Web by the assembly's motion and moves the scope's clock to its deadline, which the others read
+
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
@@ -25,7 +27,7 @@ import { vote } from '@cella/org-motion/api'
 import { carried, close, propose } from '@cella/org-graft-membership-motion/api'
 import type { Deps, Done } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
-import { browsers, serve, signIn } from './browser.ts'
+import { eachBrowser, serve, signIn } from './browser.ts'
 
 const su = new pg.Client()
 let app: pg.Client | undefined
@@ -138,7 +140,7 @@ test('the assembly changes Web\'s features by motion, its close replacing them i
   assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, 'project, task, timesheet, file, contact')
 })
 
-for (const [name, launch] of browsers()) {
+eachBrowser((name, launch) => {
   test(`${name}: Camille renames Web from its Settings tab by the assembly's motion, and its page and the co-op selector name it so, light and dark`, async () => {
     mkdirSync(shots, { recursive: true })
     const browser = await launch()
@@ -211,4 +213,4 @@ for (const [name, launch] of browsers()) {
       await browser.close()
     }
   })
-}
+})

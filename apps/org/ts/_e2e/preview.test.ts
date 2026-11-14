@@ -12,7 +12,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, before, describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { browsers, free, signIn } from './browser.ts'
+import { eachBrowser, free, signIn } from './browser.ts'
 import { cella } from './cluster.ts'
 import { own } from './port.ts'
 
@@ -77,20 +77,18 @@ it("offers Lanterne's fixture members at its sign-in", async () => {
   assert.match(page, /Camille Martin/)
 })
 
-for (const [name, launch] of browsers()) {
-  describe(name, () => {
-    it('signs Camille in with a TEST-ONLY key, and reads a collection', async () => {
-      const browser = await launch()
-      try {
-        const context = await browser.newContext({ extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
-        await signIn(context, base, camille)
-        const page = await context.newPage()
-        const res = await page.goto(`${base}/people`)
-        assert.equal(res?.status(), 200)
-        await page.getByText('Camille Martin').first().waitFor()
-      } finally {
-        await browser.close()
-      }
-    })
+eachBrowser((name, launch) => {
+  it('signs Camille in with a TEST-ONLY key, and reads a collection', async () => {
+    const browser = await launch()
+    try {
+      const context = await browser.newContext({ extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
+      await signIn(context, base, camille)
+      const page = await context.newPage()
+      const res = await page.goto(`${base}/people`)
+      assert.equal(res?.status(), 200)
+      await page.getByText('Camille Martin').first().waitFor()
+    } finally {
+      await browser.close()
+    }
   })
-}
+})

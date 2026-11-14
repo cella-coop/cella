@@ -32,7 +32,7 @@ import type { Deps } from '@cella/org-db'
 import { fixture, random, sha256, signer } from '@cella/org-sign'
 import { reader, scope, sign } from './lanterne.ts'
 import { reacting } from '../src/lib/server/slices.ts'
-import { browsers, serve, signIn } from './browser.ts'
+import { inBrowsers, serve, signIn } from './browser.ts'
 import { Shell, type Done } from './serve.ts'
 
 const su = new pg.Client()
@@ -225,7 +225,7 @@ test('Yara\'s motion\'s page shows under its close her admission forgone with it
     `account:capital:subscribe, entry ${close + 2}, forgone: ${subscription.reason}.`,
   ]
   mkdirSync(shots, { recursive: true })
-  for (const [engine, launch] of browsers()) {
+  await inBrowsers(async (engine, launch) => {
     const browser = await launch()
     const dev = await serve()
     try {
@@ -250,7 +250,7 @@ test('Yara\'s motion\'s page shows under its close her admission forgone with it
       await browser.close()
       await dev.stop()
     }
-  }
+  })
 })
 
 test('a motion suspending Chloé, suspended since, and Sofia forgoes Chloé\'s suspension with its reason and carries Sofia\'s, the close standing', async () => {

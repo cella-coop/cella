@@ -16,7 +16,7 @@ import { test } from 'node:test'
 import { mkdirSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import type { Page } from 'playwright-core'
-import { browsers, serve, signIn } from './browser.ts'
+import { eachBrowser, serve, signIn } from './browser.ts'
 
 const julien = 'julien@lanterne.example'
 const shots = process.env.SHOTS ?? '/tmp/cella-fields-shots'
@@ -46,7 +46,7 @@ async function draws(page: Page, layout: 'list' | 'feed', want: { sub: number; m
   assert.deepEqual(last, want, at)
 }
 
-for (const [browserName, launch] of browsers()) {
+eachBrowser((browserName, launch) => {
   test(`${browserName}: a list and a feed show the fields their view chooses, saved in a view and in the address, and every layout's Display changes what shows`, async () => {
     const { base, stop } = await serve()
     const browser = await launch()
@@ -173,4 +173,4 @@ for (const [browserName, launch] of browsers()) {
       await stop()
     }
   })
-}
+})

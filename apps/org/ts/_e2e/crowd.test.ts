@@ -17,12 +17,14 @@
 // (`CELLA_DEV`), so the browser holds a member's fixture device as the
 // test does. Run by `cella test e2e crowd`.
 
+// browsers: one at a time: each browser restarts the one shell and renames the same ten people, whose names and waiting writes the others assert
+
 import { after, before, describe, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import type { Browser } from 'playwright-core'
 import { signer } from '@cella/org-sign'
-import { browsers, signIn } from './browser.ts'
+import { eachBrowser, signIn } from './browser.ts'
 import { Shell, type Ask, type Done } from './serve.ts'
 
 const su = new pg.Client()
@@ -154,92 +156,90 @@ after(async () => {
   await su.end()
 })
 
-for (const [engine, launch] of browsers()) {
-  describe(engine, () => {
-    let browser: Browser
-    before(async () => {
-      browser = await launch()
-    })
-    after(async () => {
-      await browser?.close()
-    })
-
-    test('Ten people sign at once, Chloé on her page in the browser, and all settle while Inès keeps loading pages, each within the bound', async () => {
-      await shell.start('2026-10-24', { CELLA_DEV: '1' })
-      const nine = ten.filter((a) => a !== chloe)
-      const cookies = await Promise.all(nine.map((a) => shell.signIn(a)))
-      const hers = await own(browser, chloe)
-      const reader = browsing(ines)
-      await more(reader, 1)
-
-      const asks = await Promise.all(nine.map((a, i) => start(a, cookies[i], `Crowd ${ten.indexOf(a)}`)))
-      assert.equal(new Set(asks.map((a) => a.run)).size, 9, 'nine runs wait on their signatures at once')
-      const shown = await hers.rename(`Crowd ${ten.indexOf(chloe)}`)
-      assert.equal(shown.state, 'settled', `her page shows her rename settled while nine wait: ${shown.text}`)
-      assert.match(shown.text, /Settled, log entry \d+/)
-      await more(reader, pages.length)
-
-      const done = await Promise.all(nine.map((a, i) => sign(a, cookies[i], asks[i])))
-      assert.deepEqual(
-        done.map((d) => d.state),
-        nine.map(() => 'settled'),
-        JSON.stringify(done.filter((d) => d.state !== 'settled')),
-      )
-      await more(reader, 1)
-      const times = await reader.stop()
-      const slowest = within(times)
-      console.log(`# ${engine}: ${times.length} pages loaded while ten writes waited and settled, the slowest in ${Math.round(slowest)} ms`)
-      assert.deepEqual(
-        await names(ten),
-        Object.fromEntries(ten.map((a, i) => [a, `Crowd ${i}`])),
-      )
-      const { rows } = await su.query<{ device: string }>(
-        `SELECT encode(device, 'hex') AS device FROM cella.receipt WHERE op = 'person:person:profile' AND actor = $1 ORDER BY n DESC LIMIT 1`,
-        [chloe],
-      )
-      assert.deepEqual(rows, [{ device: (await shell.device(chloe)).key }], 'her rename was signed in the browser by her device')
-      assert.deepEqual(hers.errors, [], 'her page threw nothing')
-      await hers.close()
-    })
-
-    test('Camille abandons three writes unsigned and her page fails a fourth; others’ writes settle and Inès’s pages load, and her runs give up, leaving nothing and her places free', async () => {
-      await shell.start('2026-10-24', { CELLA_DEV: '1', CELLA_PATIENCE: String(patience) })
-      const before = (await names([camille]))[camille]
-      const hers = await own(browser, camille)
-      const cookie = await shell.signIn(camille)
-      const reader = browsing(ines)
-      await more(reader, 1)
-
-      const abandoned = await Promise.all([1, 2, 3].map((n) => start(camille, cookie, `Abandoned ${n}`)))
-      const fourth = await hers.rename('Abandoned 4')
-      assert.equal(fourth.state, 'failed', `her page shows the fourth failed: ${fourth.text}`)
-      assert.match(fourth.text, /Not submitted/)
-      assert.match(fourth.text, /you have 3 writes waiting on your signature; sign them or wait for them to end, then try again/)
-      const others = ten.slice(1, 4)
-      const settled = await Promise.all(others.map((a) => shell.act(profile(a), 'profile', { name: `Busy ${a}` }, a)))
-      assert.deepEqual(
-        settled.map((d) => d.state),
-        others.map(() => 'settled'),
-        JSON.stringify(settled),
-      )
-      await more(reader, pages.length)
-
-      await new Promise((r) => setTimeout(r, patience * 1000 + 500))
-      for (const ask of abandoned) {
-        const late = await sign(camille, cookie, ask)
-        assert.equal(late.state, 'failed')
-        assert.match(late.reason ?? '', /this write is over/, 'the run gave up, and a proof after it answers nothing')
-      }
-      assert.equal((await names([camille]))[camille], before, 'neither her abandoned runs nor the failed fourth wrote anything')
-
-      const again = await hers.rename('Camille again')
-      assert.equal(again.state, 'settled', `her places are free again: ${again.text}`)
-      assert.equal((await names([camille]))[camille], 'Camille again')
-      const times = await reader.stop()
-      const slowest = within(times)
-      console.log(`# ${engine}: ${times.length} pages loaded while Camille's runs waited and gave up, the slowest in ${Math.round(slowest)} ms`)
-      assert.deepEqual(hers.errors, [], 'her page threw nothing')
-      await hers.close()
-    })
+eachBrowser((engine, launch) => {
+  let browser: Browser
+  before(async () => {
+    browser = await launch()
   })
-}
+  after(async () => {
+    await browser?.close()
+  })
+
+  test('Ten people sign at once, Chloé on her page in the browser, and all settle while Inès keeps loading pages, each within the bound', async () => {
+    await shell.start('2026-10-24', { CELLA_DEV: '1' })
+    const nine = ten.filter((a) => a !== chloe)
+    const cookies = await Promise.all(nine.map((a) => shell.signIn(a)))
+    const hers = await own(browser, chloe)
+    const reader = browsing(ines)
+    await more(reader, 1)
+
+    const asks = await Promise.all(nine.map((a, i) => start(a, cookies[i], `Crowd ${ten.indexOf(a)}`)))
+    assert.equal(new Set(asks.map((a) => a.run)).size, 9, 'nine runs wait on their signatures at once')
+    const shown = await hers.rename(`Crowd ${ten.indexOf(chloe)}`)
+    assert.equal(shown.state, 'settled', `her page shows her rename settled while nine wait: ${shown.text}`)
+    assert.match(shown.text, /Settled, log entry \d+/)
+    await more(reader, pages.length)
+
+    const done = await Promise.all(nine.map((a, i) => sign(a, cookies[i], asks[i])))
+    assert.deepEqual(
+      done.map((d) => d.state),
+      nine.map(() => 'settled'),
+      JSON.stringify(done.filter((d) => d.state !== 'settled')),
+    )
+    await more(reader, 1)
+    const times = await reader.stop()
+    const slowest = within(times)
+    console.log(`# ${engine}: ${times.length} pages loaded while ten writes waited and settled, the slowest in ${Math.round(slowest)} ms`)
+    assert.deepEqual(
+      await names(ten),
+      Object.fromEntries(ten.map((a, i) => [a, `Crowd ${i}`])),
+    )
+    const { rows } = await su.query<{ device: string }>(
+      `SELECT encode(device, 'hex') AS device FROM cella.receipt WHERE op = 'person:person:profile' AND actor = $1 ORDER BY n DESC LIMIT 1`,
+      [chloe],
+    )
+    assert.deepEqual(rows, [{ device: (await shell.device(chloe)).key }], 'her rename was signed in the browser by her device')
+    assert.deepEqual(hers.errors, [], 'her page threw nothing')
+    await hers.close()
+  })
+
+  test('Camille abandons three writes unsigned and her page fails a fourth; others’ writes settle and Inès’s pages load, and her runs give up, leaving nothing and her places free', async () => {
+    await shell.start('2026-10-24', { CELLA_DEV: '1', CELLA_PATIENCE: String(patience) })
+    const before = (await names([camille]))[camille]
+    const hers = await own(browser, camille)
+    const cookie = await shell.signIn(camille)
+    const reader = browsing(ines)
+    await more(reader, 1)
+
+    const abandoned = await Promise.all([1, 2, 3].map((n) => start(camille, cookie, `Abandoned ${n}`)))
+    const fourth = await hers.rename('Abandoned 4')
+    assert.equal(fourth.state, 'failed', `her page shows the fourth failed: ${fourth.text}`)
+    assert.match(fourth.text, /Not submitted/)
+    assert.match(fourth.text, /you have 3 writes waiting on your signature; sign them or wait for them to end, then try again/)
+    const others = ten.slice(1, 4)
+    const settled = await Promise.all(others.map((a) => shell.act(profile(a), 'profile', { name: `Busy ${a}` }, a)))
+    assert.deepEqual(
+      settled.map((d) => d.state),
+      others.map(() => 'settled'),
+      JSON.stringify(settled),
+    )
+    await more(reader, pages.length)
+
+    await new Promise((r) => setTimeout(r, patience * 1000 + 500))
+    for (const ask of abandoned) {
+      const late = await sign(camille, cookie, ask)
+      assert.equal(late.state, 'failed')
+      assert.match(late.reason ?? '', /this write is over/, 'the run gave up, and a proof after it answers nothing')
+    }
+    assert.equal((await names([camille]))[camille], before, 'neither her abandoned runs nor the failed fourth wrote anything')
+
+    const again = await hers.rename('Camille again')
+    assert.equal(again.state, 'settled', `her places are free again: ${again.text}`)
+    assert.equal((await names([camille]))[camille], 'Camille again')
+    const times = await reader.stop()
+    const slowest = within(times)
+    console.log(`# ${engine}: ${times.length} pages loaded while Camille's runs waited and gave up, the slowest in ${Math.round(slowest)} ms`)
+    assert.deepEqual(hers.errors, [], 'her page threw nothing')
+    await hers.close()
+  })
+})

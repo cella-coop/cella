@@ -16,7 +16,7 @@ import { propose } from '@cella/org-graft-membership-motion/api'
 import type { Propose } from '@cella/org-motion/models'
 import type { Deps } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
-import { browsers, serve, signIn } from './browser.ts'
+import { inBrowsers, serve, signIn } from './browser.ts'
 
 const su = new pg.Client()
 let app: pg.Client
@@ -78,7 +78,7 @@ test('a proposal naming no author is the circle\'s', async () => {
 
 unseeded('the New form puts a motion as a held role or as its circle, and the page names that author in light and dark', async () => {
   mkdirSync(shots, { recursive: true })
-  for (const [engine, launch] of browsers()) {
+  await inBrowsers(async (engine, launch) => {
     const browser = await launch()
     const dev = await serve()
     try {
@@ -131,7 +131,7 @@ unseeded('the New form puts a motion as a held role or as its circle, and the pa
       await browser.close()
       await dev.stop()
     }
-  }
+  })
 })
 
 test('Julien may propose as neither the manager, which he does not hold, nor coordination', async () => {

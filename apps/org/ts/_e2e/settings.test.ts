@@ -14,7 +14,7 @@ import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
 import { parse, stringify } from 'devalue'
 import type { Page } from 'playwright-core'
-import { browsers, serve, signIn } from './browser.ts'
+import { eachBrowser, serve, signIn } from './browser.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-settings-shots'
 const refusal = 'camille@lanterne.example holds no amend-circle in coordination: only a motion of General assembly renames it'
@@ -40,7 +40,7 @@ function answer(page: Page) {
   }
 }
 
-for (const [name, launch] of browsers()) {
+eachBrowser((name, launch) => {
   test(`${name}: a mixed settings form saves the one kind and proposes the motion for the other, light and dark`, async () => {
     mkdirSync(shots, { recursive: true })
     const { base, stop } = await serve()
@@ -104,4 +104,4 @@ for (const [name, launch] of browsers()) {
       await stop()
     }
   })
-}
+})

@@ -11,6 +11,8 @@
 // assembly then puts Web's features back as they were. `SHOTS` names
 // where its screenshots go. Run by `cella test e2e features`.
 
+// browsers: one at a time: each browser changes Web's features and the scope's clock by the assembly's motions, which the others read
+
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
@@ -20,7 +22,7 @@ import { vote } from '@cella/org-motion/api'
 import { carried, close, propose } from '@cella/org-graft-membership-motion/api'
 import type { Deps, Done } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
-import { browsers, serve, signIn } from './browser.ts'
+import { eachBrowser, serve, signIn } from './browser.ts'
 
 const su = new pg.Client()
 let app: pg.Client | undefined
@@ -80,7 +82,7 @@ after(async () => {
   await su.end()
 })
 
-for (const [name, launch] of browsers()) {
+eachBrowser((name, launch) => {
   test(`${name}: Camille enables Invoice for Web and moves Contact up from Web's features page, by the assembly's motion, light and dark`, async () => {
     mkdirSync(shots, { recursive: true })
     const browser = await launch()
@@ -172,4 +174,4 @@ for (const [name, launch] of browsers()) {
       await browser.close()
     }
   })
-}
+})

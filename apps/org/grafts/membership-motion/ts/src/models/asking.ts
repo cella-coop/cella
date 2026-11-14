@@ -106,3 +106,16 @@ export interface Organization {
   scope: string | null
   timezone: string | null
 }
+
+// A circle's features page in Settings: its features in force, spelt as
+// one listing (`circle.features`), every feature the co-op installed, by
+// its schema, the circle that decides an amendment of it, and why no
+// write of the reader's changes them.
+export interface Featuring {
+  circle: string
+  name: string
+  features: string
+  installed: string[]
+  decider: { circle: string; name: string; deadline: string }
+  refused: string
+}

@@ -372,3 +372,15 @@ particulars in force, with the protection they had. The guard judges
 it as it judges any proposal, so a SIREN that is not nine digits is
 refused in the dialog before anything is proposed. The e2e scenario
 `organization` changes Lanterne's seat there, light and dark.
+
+It serves each circle's features page, `/settings/features/<id>`
+([the circle's shell](../../core/circle/index.md#shell)), a page of one
+circle, which the circle's Settings tab links to: the circle's features
+spelt as a listing (`circle.features`), every feature the co-op
+installed (`circle.installed`), and the circle that decides an
+amendment, with why no write of the reader's changes them. Its Save
+proposes an `amend-circle` motion carrying the listing as arranged,
+posted to the page's `propose` as the circle's Settings tab posts one,
+so the guard judges the listing there before anything is proposed. The
+e2e scenario `features` enables a feature of Web and moves one, by the
+assembly's motion, light and dark.

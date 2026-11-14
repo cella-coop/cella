@@ -214,11 +214,13 @@ export interface Importer {
   read(text: string, db: Db): Promise<Imported[]>
 }
 
-// A settings page a slice serves at `/settings/<name>`: what it reads for
-// the acting person, as their own name and devices, and the writes that
-// save it, as a collection's page makes them.
+// A settings page a slice serves at `/settings/<name>`, or, a page of one
+// thing, at `/settings/<name>/<id>`: what it reads for the acting person,
+// as their own name and devices, of that thing where it is one, none
+// where there is none, and the writes that save it, as a collection's
+// page makes them, given the thing's id as an item's are.
 export interface SettingsPage {
-  read(db: Db, actor: string): Promise<unknown | null>
+  read(db: Db, actor: string, id?: string): Promise<unknown | null>
   actions?: Record<string, Action>
 }
 

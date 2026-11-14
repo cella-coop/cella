@@ -69,7 +69,12 @@
     e.preventDefault()
   }
 
-  const collections: Jump[] = $derived(nav.flatMap((g) => g.items.map((i) => ({ title: i.title, href: i.href, kind: g.group }))))
+  // What the command menu jumps to: every collection, those kept out of the
+  // sidebar too, and every settings page but a page of one thing, whose
+  // address needs the thing it is of.
+  const collections: Jump[] = $derived(
+    nav.flatMap((g) => g.items.filter((i) => g.group !== 'platform' || i.listed !== false).map((i) => ({ title: i.title, href: i.href, kind: g.group }))),
+  )
   const here = (href: string) => page.url.pathname === href || page.url.pathname.startsWith(`${href}/`)
   const initials = (name: string) => name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('')
   const back = $derived(page.url.pathname + page.url.search)

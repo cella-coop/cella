@@ -180,11 +180,14 @@ export type Theme = 'light' | 'dark' | 'system'
 // A settings page a slice serves at `/settings/<name>`, in Settings'
 // sidebar under its group, first in it: its title and icon, and the block
 // that draws it, given what its server side read for the acting person,
-// who looks, and the theme they wear.
+// who looks, and the theme they wear. A page of one thing, served at
+// `/settings/<name>/<id>` as a circle's features are, is `listed: false`:
+// the sidebar names no thing, and the thing's own page links to it.
 export interface SettingsPage<T = any> {
   subgroup: 'Personal' | 'Organization'
   title: string
   caption?: string
+  listed?: boolean
   icon: Component<any>
   block: Component<{ data: T; viewer: Viewer | null; theme: Theme }>
 }

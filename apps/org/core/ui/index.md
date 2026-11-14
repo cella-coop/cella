@@ -416,6 +416,26 @@ that decides it. Every field is editable, whoever reads it; Save posts
 only the fields changed. A slice declares each setting with the write
 that changes it directly, if any, and the motion kind that changes it
 otherwise, its arguments filled from the field (`models/settings.ts`).
+A setting's field is one `Field` draws, or an arrangement, `Arrange`,
+where it declares its `choices`: a fieldset of every choice with a
+toggle, those on first in their order, each under its accordion where
+it has one, and the rest after them; each choice on moves up or down
+past its neighbour in its accordion, an ungrouped one past the choice
+or the accordion beside it, and an accordion as a whole; a choice's
+accordion is named in a field of its own, which moves it into the
+accordion of that name or makes one, and an accordion's heading renames
+it. Its value is one listing (`models/arrange.ts`): the choices on, in
+order, separated by commas, an accordion's run after its name and a
+colon, the runs separated by semicolons, as a circle's features are
+written ([features](../circle/index.md#features)).
+
+A settings page is served at `/settings/<name>`, listed in Settings'
+sidebar under its group, or, a page of one thing, at
+`/settings/<name>/<id>`, which its slice reads for that id and its
+writes are posted with, as an item's are; it is not listed, since the
+sidebar names no thing, and the thing's own page links to it, as a
+circle's links to its features page. While it is open, Settings'
+sidebar stands in place of the sections as on any settings page.
 
 A setting (`Declared`, as the package exports its type) names its
 field, its value in force, the page action that saves it, if one does,

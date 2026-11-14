@@ -658,7 +658,10 @@ lens and the people's names, and what a date field holds typed and says of it, a
 `hooks/` (`CollectionState`, `CommandState`, `ShellState`, `DateState`), and the sign-in and
 an invitation taken up (`SignInState`, `JoinState`), each reached through
 its `use*` hook, as [architecture](../../../../_corpus/doc/architecture.md#client-state)
-describes. `useSection` hands a `Section`'s title down, so an empty
+describes. `ShellState` imports no router: the shell hands its `follow` the
+router's `afterNavigate`, so the class stays plain TypeScript where a
+slice's block reaches it through `useShell`, as a circle's View as
+this circle reads the lens. `useSection` hands a `Section`'s title down, so an empty
 `Table` in it says "No roles" in one quiet line, with no headers.
 
 ## Dragging

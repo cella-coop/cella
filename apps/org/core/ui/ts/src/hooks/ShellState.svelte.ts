@@ -1,4 +1,3 @@
-import { afterNavigate } from '$app/navigation'
 import type { Component } from 'svelte'
 import type { Outcome } from '../models/outcome.ts'
 import type { Nav } from '../models/view.ts'
@@ -89,9 +88,10 @@ export class ShellState {
 
   // Keeps `left` on the page the viewer is on while it is not a page of
   // settings, each time the viewer arrives on one; called once, as the
-  // shell starts.
-  follow(path: () => string, away: () => boolean) {
-    afterNavigate(() => {
+  // shell starts, with the router's `after`, so the state class imports no
+  // framework of its own.
+  follow(path: () => string, away: () => boolean, after: (run: () => void) => void) {
+    after(() => {
       if (!away()) {
         this.left = path()
       }

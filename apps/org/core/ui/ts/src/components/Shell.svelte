@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
+  import { afterNavigate } from '$app/navigation'
   import { page } from '$app/state'
   import '../styles/tokens.css'
   import '../styles/base.css'
@@ -141,7 +142,7 @@
   const opens = (area: string) => (parts('platform').find((p) => p.sub === area) ?? parts('platform')[0])?.items[0]?.href
   const personal = $derived(opens('Personal'))
   const organization = $derived(opens('Organization'))
-  state.follow(() => back, () => settings)
+  state.follow(() => back, () => settings, afterNavigate)
 </script>
 
 <svelte:window {onkeydown} />

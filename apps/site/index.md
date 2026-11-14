@@ -581,7 +581,7 @@ none.
 The text is the operator's, written by hand; an agent writes
 `src/content/` never, and drafts only in `src/drafts/`, which the site
 marks as drafted until the operator writes over it ([the text](#the-text)).
-Two guards hold `src/content/`, each routable around:
+Three guards hold `src/content/`, each routable around:
 
 - **The settings.** `.claude/settings.json` denies `Edit`, `Write` and
   `NotebookEdit` on `apps/site/src/content/**` to every Claude session
@@ -616,14 +616,20 @@ Two guards hold `src/content/`, each routable around:
   needs a word of the text changed drafts it, or says so in its entry's
   Flag.
 
-Both guards act on an agent's calls alone. No git hook, check or gate
-refuses a commit that changes the text, so the operator writes it in
-their own editor and commits it by hand, as any commit; a release
-refuses only what is still drafted.
+- **The check.** `cella check` refuses a change, its commits since
+  main, the forge's `origin/main` where the checkout has it, where a
+  commit that changes a file under `src/content/` was not authored by
+  the operator's git identity, by its email, which the repository
+  declares once, in `tools/site-text-check.mjs`; the refusal names the
+  commit, its author and the files. Main itself has nothing since it,
+  and passes. It runs in the gates, as the first step of `cella check
+  site`, so it holds every lane, those that run no Claude hook among
+  them. It guards against an accident, not an attacker: a commit's
+  author is whatever its maker sets.
 
-No gate refuses a version that touches the text, since the forge does
-not yet record who pushed a version: what it keeps is the pushed
-head's committer, which any agent sets.
+The operator writes the text in their own editor and commits it by
+hand, as any commit; a release refuses only what is still drafted. The
+forge does not learn who pushed a version for the text's sake.
 
 ## How it lands
 
@@ -679,6 +685,6 @@ no file of the text.
 | `cella site dev [--port PORT]` | Astro's dev server on `http://localhost:4321` by default, reloading on every change to the site and to the brand's generated files; a change to the brand's model, `packages/brand/src/`, as its clusters, takes a restart, since Vite keeps the package's modules it loaded |
 | `cella site build [--release]` | the static site into `apps/site/dist`, its pages, its styles, its engravings and the brand's fonts and images, ready for any static host; `--release` refuses any text a draft still supplies |
 | `cella site release` | the release build of main's head live at `https://cella.coop`, in a directory of its own with the `current` link swapped to it, or nothing where cella.coop serves the same site already ([how it lands](#how-it-lands)) |
-| `cella check site` | the copy check (`tools/site-copy.mjs`, each page, layout and component read by Astro's parser), the diagram registry and metadata check (`tools/site-diagrams.mjs`, also checking every diagram the text or its drafts name, and the diagrams' vendored glyphs against Phosphor's), `astro check`, the type check of its `.astro` files and scripts, then its build into a temporary directory and the figure fixture's, then the diagrams' type check, by their own `tsconfig.json`, and the site's tools' tests, `tools/_tests/site-*.test.mjs`; a part of `cella check`, and the gates' check of the site, apart from the org's, so a change to the site alone gates in minutes ([gates](../org/rs/index.md#gates)) |
+| `cella check site` | the text check (`tools/site-text-check.mjs`, each commit since main that changes `src/content/` the operator's, [whose words](#whose-words)), the copy check (`tools/site-copy.mjs`, each page, layout and component read by Astro's parser), the diagram registry and metadata check (`tools/site-diagrams.mjs`, also checking every diagram the text or its drafts name, and the diagrams' vendored glyphs against Phosphor's), `astro check`, the type check of its `.astro` files and scripts, then its build into a temporary directory and the figure fixture's, then the diagrams' type check, by their own `tsconfig.json`, and the site's tools' tests, `tools/_tests/site-*.test.mjs`; a part of `cella check`, and the gates' check of the site, apart from the org's, so a change to the site alone gates in minutes ([gates](../org/rs/index.md#gates)) |
 
 `dist/` and Astro's `.astro/` are ignored by git.

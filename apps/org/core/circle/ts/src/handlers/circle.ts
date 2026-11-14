@@ -24,23 +24,37 @@ export async function create(input: Create, deps: Deps): Out<'circle:circle:crea
   })
 }
 
-const terms = ['name', 'purpose', 'procedure'] as const
+const terms = ['name', 'purpose', 'procedure', 'features'] as const
 
 // Amends a circle, citing the motion that changes it: its name, its
-// purpose or its procedure from the verdict date, its id never. Its entry
-// carries each term it changed and what it was.
+// purpose or its procedure from the verdict date, its id never, and its
+// features, replaced by the listing the motion gives. Its entry carries
+// each term it changed and what it was, features as `circle.features`
+// spells them.
 export async function amend(input: Amend, deps: Deps): Out<'circle:circle:amend', Amended> {
   const given: Terms = Object.fromEntries(terms.filter((t) => input[t] !== undefined && input[t] !== null).map((t) => [t, input[t]]))
   return write(deps, {
     op: 'circle:circle:amend' satisfies Action,
     request: input,
     state: async (tx) => {
-      const { rows } = await tx.query<Required<Terms>>(`SELECT name, purpose, procedure FROM circle.circle WHERE id = $1 FOR UPDATE`, [input.circle])
+      const { rows } = await tx.query<Required<Terms>>(
+        `SELECT name, purpose, procedure, circle.features(id) AS features FROM circle.circle WHERE id = $1 FOR UPDATE`,
+        [input.circle],
+      )
       const was: Terms = Object.fromEntries(Object.keys(given).map((t) => [t, rows[0]?.[t as keyof Terms] ?? null]))
       await tx.query(
         `UPDATE circle.circle SET name = coalesce($2, name), purpose = coalesce($3, purpose), procedure = coalesce($4, procedure) WHERE id = $1`,
         [input.circle, given.name ?? null, given.purpose ?? null, given.procedure ?? null],
       )
+      if (given.features !== undefined) {
+        await tx.query(`DELETE FROM circle.feature WHERE circle = $1`, [input.circle])
+        await tx.query(
+          `INSERT INTO circle.feature (circle, feat, position, "group")
+           SELECT $1, l.feat, l.position, l."group" FROM circle.listed($2) l
+           ON CONFLICT DO NOTHING`,
+          [input.circle, given.features],
+        )
+      }
       return { circle: input.circle, was }
     },
     payload: (v) => ({ circle: v.circle, ...given, was: v.was, motion: input.motion }),

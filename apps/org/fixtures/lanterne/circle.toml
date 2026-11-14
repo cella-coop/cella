@@ -34,6 +34,33 @@ id = "operations"
 name = "Operations"
 purpose = "finance, administration, contracts and tools"
 
+# The features each circle enabled, in its order, an accordion's run
+# after its name and a colon (`apps/org/core/circle/index.md#features`).
+
+[[feature]]
+circle = "ag"
+features = "Governance: motion, policy, document, meeting; Members: membership, patronage, person, circle"
+
+[[feature]]
+circle = "coordination"
+features = "Governance: motion, meeting, document; project"
+
+[[feature]]
+circle = "web"
+features = "project, task, timesheet, file, contact"
+
+[[feature]]
+circle = "brand"
+features = "project, task, timesheet, file, bill"
+
+[[feature]]
+circle = "marketing"
+features = "project, task, timesheet, contact, document"
+
+[[feature]]
+circle = "operations"
+features = "Books: account, transaction, report, import; Payments: invoice, bill, expense, payslip; contact, employment"
+
 [[role]]
 id = "member"
 circle = "ag"

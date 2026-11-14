@@ -3,7 +3,8 @@
 // the assembly, and a mandate keeps its grant and is a root the assembly
 // issued or issued under a parent its issuer holds, narrower than it in
 // cap, scope and term, and revoking one revokes every mandate issued
-// under it; and a role's holder cap counts its holders on each day. Run
+// under it; a role's holder cap counts its holders on each day; and a
+// circle's features read from a listing and fold as an amendment says. Run
 // by `cella test slice circle`.
 
 import { after, before, test } from 'node:test'
@@ -200,6 +201,42 @@ test('a role\'s holder cap counts the holders on each day, never every tenure a 
     await db.query(tenure, ['eve@example.org', null, '2025-06-01'])
     await db.query(tenure, ['fay@example.org', null, '2025-06-01'])
     await past(tenure, ['gus@example.org', null, null], /would make 3 holders before the records began/)
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})
+
+test('a circle\'s features are read from a listing in order, under their accordions, spelt one way, and an amendment\'s fold replaces them', async () => {
+  const listed = await db.query(`SELECT feat, position, "group" FROM circle.listed($1)`, [' Books:account ,transaction; contact,, ; Pay: bill '])
+  assert.deepEqual(listed.rows, [
+    { feat: 'account', position: 0, group: 'Books' },
+    { feat: 'transaction', position: 1, group: 'Books' },
+    { feat: 'contact', position: 2, group: null },
+    { feat: 'bill', position: 3, group: 'Pay' },
+  ])
+  const spelt = async (listing: string | null) => (await db.query<{ s: string }>('SELECT circle.spelt($1) AS s', [listing])).rows[0].s
+  assert.equal(await spelt(' Books:account ,transaction; contact,, ; Pay: bill '), 'Books: account, transaction; contact; Pay: bill')
+  assert.equal(await spelt('a; b, c; G: d; G: e'), 'a, b, c; G: d, e', 'a run of one accordion, or of none, is spelt once')
+  assert.equal(await spelt(''), '')
+  assert.equal(await spelt(null), '')
+  const installed = (await db.query<{ i: string }>('SELECT i FROM circle.installed() i')).rows.map((r) => r.i)
+  for (const core of ['circle', 'person', 'policy']) {
+    assert.ok(installed.includes(core), `core's ${core} is a feature every co-op has`)
+  }
+  assert.ok(!installed.some((i) => i.includes('-') || i.includes('_')), 'no graft is a feature')
+
+  await db.query('BEGIN')
+  try {
+    const features = async () => (await db.query<{ f: string }>(`SELECT circle.features('brand') AS f`)).rows[0].f
+    assert.equal(await features(), '', 'a circle enables nothing until it says so')
+    const fold = (payload: object) => db.query('SELECT circle.fold_amend($1)', [{ n: 7, date: '2026-11-14', payload: { circle: 'brand', motion: 'm-1', ...payload } }])
+    await fold({ features: 'Work: task, project; file', was: { features: '' } })
+    assert.equal(await features(), 'Work: task, project; file')
+    await db.query('SAVEPOINT stale')
+    await assert.rejects(fold({ features: 'task', was: { features: 'task' } }), /entry 7 says brand was .*, where the fold has/)
+    await db.query('ROLLBACK TO SAVEPOINT stale')
+    await fold({ features: 'file', was: { features: 'Work: task, project; file' } })
+    assert.deepEqual((await db.query(`SELECT feat, position, "group" FROM circle.feature WHERE circle = 'brand'`)).rows, [{ feat: 'file', position: 0, group: null }])
   } finally {
     await db.query('ROLLBACK')
   }

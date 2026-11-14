@@ -58,7 +58,8 @@ const writes: Record<string, { op: Permission; run: (a: Args, motion: string, de
   },
   'amend-circle': {
     op: 'circle:circle:amend',
-    run: (a, motion, deps) => amend({ circle: String(a.circle), name: text(a.name), purpose: text(a.purpose), procedure: text(a.procedure), motion }, deps),
+    run: (a, motion, deps) =>
+      amend({ circle: String(a.circle), name: text(a.name), purpose: text(a.purpose), procedure: text(a.procedure), features: text(a.features), motion }, deps),
   },
   role: {
     op: 'circle:role:make',

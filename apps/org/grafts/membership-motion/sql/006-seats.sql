@@ -236,9 +236,9 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
 
 -- A circle a motion amends, carried out by core's circle:circle:amend
 -- under the collective mandate `amend-circle`: its id, and any of its new
--- name, purpose and procedure.
+-- name, purpose, procedure and features, a listing of the circle's.
 SELECT motion.register_cite('circle:circle:amend', 'amend-circle', 'membership-motion');
-SELECT motion.register_carries('amend-circle', 'Change a circle', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "name", "label": "Name", "type": "text", "optional": true}, {"name": "purpose", "label": "Purpose", "type": "text", "optional": true}, {"name": "procedure", "label": "Procedure", "type": "text", "optional": true}]', 'circle:circle:amend', 'membership-motion');
+SELECT motion.register_carries('amend-circle', 'Change a circle', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "name", "label": "Name", "type": "text", "optional": true}, {"name": "purpose", "label": "Purpose", "type": "text", "optional": true}, {"name": "procedure", "label": "Procedure", "type": "text", "optional": true}, {"name": "features", "label": "Features, in order (Accordion: a, b; c)", "type": "text", "optional": true}]', 'circle:circle:amend', 'membership-motion');
 
 -- The procedures a circle may decide by on `day`: those built in, and
 -- those a procedure policy in force that day makes.
@@ -252,12 +252,24 @@ BEGIN ATOMIC
   ORDER BY o.id;
 END;
 
+-- An amendment's terms with its features, if it gives any, spelt as
+-- `circle.features` spells a circle's, so two listings of the same
+-- features compare equal however they are spaced.
+CREATE FUNCTION membership_motion.spelt(args jsonb) RETURNS jsonb
+LANGUAGE sql IMMUTABLE
+RETURN CASE WHEN spelt.args ? 'features'
+  THEN jsonb_set(spelt.args, '{features}', to_jsonb(circle.spelt(spelt.args ->> 'features')))
+  ELSE spelt.args END;
+
 -- The terms of a circle's amendment, `args` as the motion carries them,
 -- judged at the proposal and again as it is written: the circle is one
--- there is; it changes the name, the purpose or the procedure, and
--- nothing else; a name given is not blank and no other circle's; a
--- procedure given is one in force on the verdict date (`procedures`);
--- and it changes something of `was`, the circle's terms before it.
+-- there is; it changes the name, the purpose, the procedure or the
+-- features, and nothing else; a name given is not blank and no other
+-- circle's; a procedure given is one in force on the verdict date
+-- (`procedures`); features given name each a feature the co-op
+-- installed (`circle.installed`), none twice, each accordion named and
+-- its features listed together; and it changes something of `was`, the
+-- circle's terms before it, features compared as spelt (`spelt`).
 CREATE FUNCTION membership_motion.amend_terms(circle text, args jsonb, was jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -265,9 +277,9 @@ BEGIN ATOMIC
     WHEN c.id IS NULL
       THEN 'no circle ' || coalesce(amend_terms.circle, 'is named') || ': a motion amends a circle there is, by its id'
     WHEN x.key IS NOT NULL
-      THEN 'an amendment of ' || c.id || ' changes its name, its purpose or its procedure, not its ' || x.key
-    WHEN NOT (amend_terms.args ?| ARRAY['name', 'purpose', 'procedure'])
-      THEN 'the amendment of ' || c.id || ' gives no new name, purpose or procedure: give at least one'
+      THEN 'an amendment of ' || c.id || ' changes its name, its purpose, its procedure or its features, not its ' || x.key
+    WHEN NOT (amend_terms.args ?| ARRAY['name', 'purpose', 'procedure', 'features'])
+      THEN 'the amendment of ' || c.id || ' gives no new name, purpose, procedure or features: give at least one'
     WHEN amend_terms.args ? 'name' AND coalesce(amend_terms.args ->> 'name', '') !~ '\S'
       THEN 'the amendment of ' || c.id || ' gives it a blank name: give it a name'
     WHEN o.id IS NOT NULL
@@ -275,29 +287,63 @@ BEGIN ATOMIC
     WHEN amend_terms.args ? 'procedure' AND (amend_terms.args ->> 'procedure') NOT IN (SELECT membership_motion.procedures(cella.verdict_date()))
       THEN coalesce(amend_terms.args ->> 'procedure', 'none') || ' is no procedure in force on ' || to_char(cella.verdict_date(), 'YYYY-MM-DD')
         || ': give ' || c.id || ' one of ' || (SELECT string_agg(q, ', ') FROM membership_motion.procedures(cella.verdict_date()) q)
+    WHEN u.feat IS NOT NULL
+      THEN u.feat || ' is no feature the co-op has installed: give ' || c.id || ' features of ' || (SELECT string_agg(i, ', ') FROM circle.installed() i)
+    WHEN t.feat IS NOT NULL
+      THEN 'the features of ' || c.id || ' name ' || t.feat || ' twice: list each once'
+    WHEN EXISTS (SELECT FROM circle.listed(amend_terms.args ->> 'features') l WHERE l."group" !~ '\S')
+      THEN 'an accordion of ' || c.id || '''s features has a blank name: name it, or list its features under none'
+    WHEN g.name IS NOT NULL
+      THEN 'the features of ' || c.id || ' list the ' || g.name || ' accordion''s apart: list them together'
     WHEN NOT EXISTS (
-      SELECT FROM jsonb_each(amend_terms.args - 'circle') a WHERE a.value IS DISTINCT FROM amend_terms.was -> a.key
+      SELECT FROM jsonb_each(membership_motion.spelt(amend_terms.args) - 'circle') a WHERE a.value IS DISTINCT FROM amend_terms.was -> a.key
     ) THEN 'the amendment of ' || c.id || ' changes nothing: it is named ' || c.name || ', for ' || coalesce(nullif(c.purpose, ''), 'no purpose')
-      || ', deciding by ' || c.procedure || ' already; give a term it does not have'
+      || ', deciding by ' || c.procedure
+      || CASE WHEN amend_terms.args ? 'features' THEN ', with the features ' || coalesce(nullif(amend_terms.was ->> 'features', ''), 'none') ELSE '' END
+      || ' already; give a term it does not have'
   END
   FROM (SELECT amend_terms.circle AS circle) p
   LEFT JOIN circle.circle c ON c.id = p.circle
   LEFT JOIN LATERAL (
     SELECT k.key FROM jsonb_object_keys(amend_terms.args) k(key)
-    WHERE k.key NOT IN ('circle', 'name', 'purpose', 'procedure') ORDER BY k.key LIMIT 1
+    WHERE k.key NOT IN ('circle', 'name', 'purpose', 'procedure', 'features') ORDER BY k.key LIMIT 1
   ) x ON true
   LEFT JOIN LATERAL (
     SELECT y.id, y.name FROM circle.circle y
     WHERE y.id <> p.circle AND lower(btrim(y.name)) = lower(btrim(amend_terms.args ->> 'name'))
     ORDER BY y.id
     LIMIT 1
-  ) o ON true;
+  ) o ON true
+  LEFT JOIN LATERAL (
+    SELECT l.feat FROM circle.listed(amend_terms.args ->> 'features') l
+    WHERE l.feat NOT IN (SELECT circle.installed())
+    ORDER BY l.position
+    LIMIT 1
+  ) u ON true
+  LEFT JOIN LATERAL (
+    SELECT l.feat FROM circle.listed(amend_terms.args ->> 'features') l
+    GROUP BY l.feat HAVING count(*) > 1
+    ORDER BY min(l.position)
+    LIMIT 1
+  ) t ON true
+  LEFT JOIN LATERAL (
+    SELECT r.g AS name FROM (
+      SELECT l."group" AS g, l.position - row_number() OVER (PARTITION BY l."group" ORDER BY l.position) AS island
+      FROM circle.listed(amend_terms.args ->> 'features') l
+      WHERE l."group" IS NOT NULL
+    ) r
+    GROUP BY r.g HAVING count(DISTINCT r.island) > 1
+    ORDER BY r.g
+    LIMIT 1
+  ) g ON true;
 END;
 
--- A circle's terms as an amendment reads them, `was`.
+-- A circle's terms as an amendment reads them, `was`, its features spelt.
 CREATE FUNCTION membership_motion.terms(circle text) RETURNS jsonb
 LANGUAGE sql STABLE
-RETURN (SELECT jsonb_build_object('name', c.name, 'purpose', c.purpose, 'procedure', c.procedure) FROM circle.circle c WHERE c.id = terms.circle);
+RETURN (SELECT jsonb_build_object('name', c.name, 'purpose', c.purpose, 'procedure', c.procedure, 'features', circle.features(c.id))
+        FROM circle.circle c WHERE c.id = terms.circle);
+
 
 -- motion:motion:propose — a circle amended is the motion of a circle
 -- that may decide about it (`motion.decides`), on the terms
@@ -322,7 +368,8 @@ END;
 
 -- circle:circle:amend — the circle the write changed is one the cited
 -- motion amends, to the terms its entry carries and the circle now has,
--- on the terms `amend_terms` judges against what its entry says it was.
+-- its features compared as spelt, on the terms `amend_terms` judges
+-- against what its entry says it was.
 CREATE FUNCTION membership_motion.amends(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -333,7 +380,7 @@ BEGIN ATOMIC
       SELECT FROM motion.action m
       WHERE m.motion = d.id AND m.kind = 'amend-circle' AND m.args ->> 'circle' = c.id
         AND (m.args - 'circle') = p.terms
-        AND NOT EXISTS (SELECT FROM jsonb_each(p.terms) t WHERE t.value IS DISTINCT FROM membership_motion.terms(c.id) -> t.key)
+        AND NOT EXISTS (SELECT FROM jsonb_each(membership_motion.spelt(p.terms)) t WHERE t.value IS DISTINCT FROM membership_motion.terms(c.id) -> t.key)
     ) THEN d.id || ' does not amend ' || c.id || ' to ' || p.terms::text
     ELSE membership_motion.amend_terms(c.id, p.terms, p.was)
   END

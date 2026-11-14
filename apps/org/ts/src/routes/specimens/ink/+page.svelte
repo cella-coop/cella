@@ -3,9 +3,9 @@
   import { ink } from '#lib/remote/specimen.remote.ts'
 
   // DEV ONLY. Where the brand's inks would go in the shell, for the
-  // operator's review: Lanterne's sections as the sidebar shows them, a
-  // few of its circles and people, and a motion's page's writes. The dev
-  // server alone serves it, which its query says.
+  // operator's review: accordions of collections as the sidebar shows a
+  // circle's, a few of Lanterne's circles and people, and a motion's
+  // page's writes. The dev server alone serves it, which its query says.
   const served = ink()
   const areas = [
     { name: 'Governance', collections: [{ title: 'Motions', icon: icons.Scales }, { title: 'Meetings', icon: icons.Calendar }, { title: 'Circles', icon: icons.CirclesThree }] },

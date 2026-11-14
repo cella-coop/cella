@@ -172,11 +172,12 @@ export const index = {
 
 // What the shell around every page reads: the scope, who is signed in,
 // everyone the co-op knows by address, so a person shows by name wherever
-// a page names them, the circles the co-op selector offers and the one the
-// member lensed the co-op on, and how many rows the counted collections
+// a page names them, the circles the co-op selector offers, each with its
+// features, which the sidebar draws for the circle the member is in, and
+// the one the member lensed the co-op on, and how many rows the counted collections
 // hold for them, as what waits on them, the owner's and its extensions',
 // counted in SQL. `waiting` is every one of them, whole whatever the lens,
-// as a shut section's dot reads it; `counts` those in the lensed circle,
+// as a shut accordion's dot reads it; `counts` those in the lensed circle,
 // the count the collection's page heads with, as its pill reads it. Signed
 // out, it is the scope alone.
 export const shell = {

@@ -80,18 +80,24 @@ for (const [name, launch] of browsers()) {
 
           base = dev.base
           await signIn(context, base, camille)
-          await visit('/')
-          // The sidebar's sections are accordions: open every one and
-          // gather what they list; then enter Settings, its own sidebar,
-          // by the account menu's link, and gather its collections too.
+          // The sidebar shows the features of the circle she is in, some
+          // under accordions: in Operations, Web and the assembly, open
+          // every one and gather what they list; then enter Settings, its
+          // own sidebar, by the account menu's link, and gather its
+          // collections too.
           const nav = page.getByRole('navigation', { name: 'Main' })
           const shut = nav.locator('button.head[aria-expanded="false"]')
-          for (let left = 20; left > 0 && (await shut.count()) > 0; left--) {
-            await shut.first().click()
-          }
           const links = () => nav.locator('a[href^="/"]').evaluateAll((as) => as.map((a) => a.getAttribute('href')!))
-          const hrefs = await links()
-          found.push(...(await scan(page, scheme)))
+          const hrefs: string[] = []
+          for (const lens of ['operations', 'web', '']) {
+            await context.addCookies([{ name: 'cella-lens', value: lens, url: base }])
+            await visit('/')
+            for (let left = 20; left > 0 && (await shut.count()) > 0; left--) {
+              await shut.first().click()
+            }
+            hrefs.push(...(await links()))
+            found.push(...(await scan(page, scheme)))
+          }
           const menus = nav.locator('a[role="menuitem"]', { hasText: 'Settings' })
           const organization = await menus.nth(0).getAttribute('href')
           const settings = await menus.nth(1).getAttribute('href')

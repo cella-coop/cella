@@ -14,7 +14,6 @@ export const app: App = {
   collections: {
     documents: {
       view: {
-        group: 'office',
         title: 'Documents',
         icon: icons.FileText,
         create: Create,

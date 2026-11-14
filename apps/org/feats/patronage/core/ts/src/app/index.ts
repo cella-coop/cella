@@ -20,7 +20,6 @@ export const app: App = {
   collections: {
     distributions: {
       view: {
-        group: 'equity',
         title: 'Distributions',
         caption: 'Each year’s surplus, split as the statutes and the law require',
         icon: icons.ChartPie,
@@ -60,7 +59,6 @@ export const app: App = {
     },
     bases: {
       view: {
-        group: 'equity',
         title: 'Patronage',
         caption: 'The statutes’ terms for the work share: how it divides, what of it buys shares, and the most interest capital earns',
         icon: icons.SealCheck,
@@ -91,7 +89,6 @@ export const app: App = {
     },
     statements: {
       view: {
-        group: 'equity',
         title: 'Statements',
         caption: 'Each worker’s part of each year’s work share',
         icon: icons.Receipt,

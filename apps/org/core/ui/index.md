@@ -102,38 +102,50 @@ draws.
 
 ## Components
 
-- `Shell`: the grid, sidebar · content. The sidebar's top and foot stay
-  put and only its middle scrolls. Its top is the co-op selector, the
-  co-op's mark and name, followed by the lensed circle's name where the
-  member has one, "Lanterne / Web", so a lens is never hidden. Its menu
-  lists the scopes the shell serves (one today) with their legal names,
-  then the circles the member reads: "All circles" first, which clears
-  the lens and is checked where there is none, then the circles the
-  member sits in, then the rest. A circle chosen there is the member's
-  **lens**, which every collection reads through
-  ([architecture](../../../../_corpus/doc/architecture.md#the-lens)): a cookie
-  of the scope's, written by `/lens` as `/theme` writes the theme, so
-  the server renders the lensed page and nothing of it enters the log;
-  a lens naming a circle the member no longer reads is none. Then,
+- `Shell`: the grid, sidebar · content. The sidebar shows the circle
+  the member is in. Its top and foot stay put and only its middle
+  scrolls. Its top is the co-op selector, the co-op's mark and name,
+  followed by the circle's name where the member is in one but the
+  assembly, "Lanterne / Web", so a lens is never hidden. Its menu lists
+  the scopes the shell serves (one today) with their legal names, then
+  the circles the member reads: the assembly first, the co-op's root
+  and the same place as the co-op, which clears the lens and is checked
+  where there is none, then the circles the member sits in, then the
+  rest; nothing lists all circles at once. A circle chosen there is the
+  circle the member is in, their **lens**, which every collection reads
+  through ([architecture](../../../../_corpus/doc/architecture.md#the-lens)):
+  a cookie of the scope's, written by `/lens` as `/theme` writes the
+  theme, so the server renders the lensed page and nothing of it enters
+  the log; a lens naming a circle the member no longer reads, or the
+  assembly, is none, and with none the member is in the assembly, which
+  reads whole. A sign-in clears it, so it lands in the assembly. Then,
   always shown, the Inbox, whole whatever the lens, since it is what
   waits on the member, where `/` and the sign-in land, and Activity,
-  the log read as a feed of who did what. The middle holds the sections as
-  accordions, as Linear's teams: Governance, Office, Work, Payments,
-  Ledger and Equity, flat, never nested, each its name
-  and a caret, a dot on a shut one whose collections hold rows waiting
-  on the acting member, whole whatever the lens as the Inbox is. Open,
-  a section's collections hang from a guide
-  line; a section's collections that name a `subgroup` are labelled by
-  it where it has more than one. A collection the view declares
-  `counted` shows how many rows it holds for the acting member, in the
-  lensed circle where there is a lens, the count its page heads with,
-  in a small quiet pill. Several sections may be open at once: one the
-  viewer never touched is open while it holds the page, and one they
-  opened or shut stays so. The foot is the command menu,
+  the log read as a feed of who did what. The middle holds the features
+  the circle the member is in enabled, in its order
+  ([features](../circle/index.md#features)), each drawn as its
+  collections: those its feat owns that the sidebar lists, outside
+  Settings, so a feature that owns none, as membership, which adds to
+  the people, or one whose only collection is Settings' or unlisted, as
+  imports and files, shows nothing of its own. A run of features under
+  an accordion the circle named sits under it, as Linear's teams, its
+  name and a caret, flat, never nested, a dot on a shut one whose
+  collections hold rows waiting on the acting member, whole whatever
+  the lens as the Inbox is; open, its collections hang from a guide
+  line. The features under none are listed flat in their place. Nothing
+  the circle has not enabled is shown, nor a count of what another
+  circle holds; the command menu still reaches every collection. Last
+  in the middle, More… opens the circle's features page in Settings
+  ([the circle's shell](../circle/index.md#shell)). A collection the
+  view declares `counted` shows how many rows it holds for the acting
+  member, in the lensed circle where there is a lens, the count its
+  page heads with, in a small quiet pill. Several accordions may be
+  open at once: one the viewer never touched is open while it holds the
+  page, and one they opened or shut stays so. The foot is the command menu,
   then the account menu, the signed-in member, whose menu holds their
   address, Settings, Sign out and the theme. Settings is its own
   sidebar, one for the member and the co-op as Linear's, in place of
-  the top and the sections while one of its pages is open: Back to app,
+  the top and the features while one of its pages is open: Back to app,
   which returns to the last page left, then the `platform` collections
   in two groups, each under its heading, as each collection's
   `subgroup` names: Personal, the member's own (Devices), then
@@ -435,7 +447,7 @@ sidebar under its group, or, a page of one thing, at
 writes are posted with, as an item's are; it is not listed, since the
 sidebar names no thing, and the thing's own page links to it, as a
 circle's links to its features page. While it is open, Settings'
-sidebar stands in place of the sections as on any settings page.
+sidebar stands in place of the features as on any settings page.
 
 A setting (`Declared`, as the package exports its type) names its
 field, its value in force, the page action that saves it, if one does,

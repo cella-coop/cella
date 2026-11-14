@@ -1,6 +1,6 @@
 +++
 title = "Org"
-updated = 2026-11-13
+updated = 2026-11-14
 +++
 
 The cooperative workspace, for member-governed organisations. One deployment
@@ -54,8 +54,9 @@ analytics shell as `shells/analytics/`.
 `cella serve` shows Lanterne from the dev database. The sidebar's head
 is the Inbox, what waits on the acting person, its count beside it,
 where `/` lands, and Activity, the log. Each feat's collection is a page
-in one of the sidebar's sections: Governance, Office, Work, Payments,
-Ledger and Equity; the platform's are Settings', the member's Devices
+in the sidebar where the circle the member is in enabled its feature,
+under the circle's accordions ([features](core/circle/index.md#features));
+the platform's are Settings', the member's Devices
 under Personal and the co-op's Imports under Organization, and Files is
 reached by the command menu ([the shell](core/ui/index.md#components)).
 Every collection is the same component, its drawer's View panel of one shape holding the

@@ -20,7 +20,6 @@ export const app: App = {
   collections: {
     accounts: {
       view: {
-        group: 'ledger',
         title: 'Accounts',
         icon: icons.Bank,
         columns: [
@@ -45,7 +44,6 @@ export const app: App = {
     },
     periods: {
       view: {
-        group: 'ledger',
         title: 'Periods',
         icon: icons.Calendar,
         create: Open,
@@ -68,7 +66,6 @@ export const app: App = {
     },
     terms: {
       view: {
-        group: 'equity',
         title: 'Capital',
         caption: 'The statutes’ capital clauses: a share’s value, what an associate subscribes, and how one who leaves is repaid',
         icon: icons.SealCheck,

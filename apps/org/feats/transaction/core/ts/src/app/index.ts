@@ -9,7 +9,6 @@ export const app: App = {
   collections: {
     transactions: {
       view: {
-        group: 'ledger',
         title: 'Transactions',
         caption: 'The journal: every transaction in order',
         icon: icons.ArrowsLeftRight,

@@ -14,7 +14,6 @@ export const app: App = {
   collections: {
     motions: {
       view: {
-        group: 'governance',
         title: 'Motions',
         icon: icons.Scales,
         create: Create,

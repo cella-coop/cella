@@ -14,7 +14,6 @@ export const app: App = {
   collections: {
     tasks: {
       view: {
-        group: 'work',
         title: 'Tasks',
         icon: icons.CheckSquare,
         create: Create,

@@ -563,6 +563,13 @@ its features, are a later stream's
 The features are the structure's, read by whoever reads it ([who reads
 it](#who-reads-the-structure)).
 
+The sidebar shows the features of the circle the member is in, the
+assembly's where they lensed none, in its order and under its
+accordions, and nothing else of the co-op's collections but the Inbox
+and Activity ([the shell](../ui/index.md#components)); its api's `lenses`
+reads each circle the member reads with its features spelt as one
+listing, so the shell reads them with the selector's circles.
+
 ## Schema
 
 `circle` (`core/circle/sql/`): `circle.circle`, `circle.role`,

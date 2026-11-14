@@ -15,7 +15,6 @@ export const app: App = {
   collections: {
     bills: {
       view: {
-        group: 'payments',
         title: 'Bills',
         caption: 'What suppliers bill the co-op, approved within a mandate and paid from the bank',
         icon: icons.Receipt,

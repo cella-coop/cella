@@ -18,7 +18,6 @@ export const app: App = {
   collections: {
     meetings: {
       view: {
-        group: 'office',
         title: 'Meetings',
         caption: 'Circles meeting: their agendas, who came, and their minutes',
         icon: icons.ChatsCircle,

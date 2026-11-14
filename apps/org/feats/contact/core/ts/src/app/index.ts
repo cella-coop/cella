@@ -11,7 +11,6 @@ export const app: App = {
   collections: {
     contacts: {
       view: {
-        group: 'work',
         title: 'Contacts',
         icon: icons.Buildings,
         columns: [

@@ -16,7 +16,6 @@ export const app: App = {
   collections: {
     timesheets: {
       view: {
-        group: 'work',
         title: 'Timesheets',
         caption: 'Time entries by day; each member submits a month, and someone else approves it.',
         icon: icons.Clock,

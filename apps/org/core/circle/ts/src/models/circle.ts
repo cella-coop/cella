@@ -59,12 +59,15 @@ export interface Sat {
   name: string
 }
 
-// A circle the co-op selector offers as a lens, and whether the member
-// sits in it.
+// A circle the co-op selector offers as a lens, whether it is the
+// assembly, the co-op's root, which is no lens, whether the member sits
+// in it, and its features spelt as one listing (`circle.features`).
 export interface Lens {
   id: string
   name: string
+  assembly: boolean
   sits: boolean
+  features: string
 }
 
 // The circles a person sits in as a form offers them, the one a record

@@ -20,7 +20,7 @@
     actions,
     record,
   }: {
-    // The sidebar's sections, each taking its ink in turn.
+    // The sidebar's accordions, each taking its ink in turn.
     areas: Area[]
     // Circles and people, each its ink seeded by its name.
     names: string[]

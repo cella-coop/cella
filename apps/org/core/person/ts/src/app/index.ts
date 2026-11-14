@@ -41,7 +41,6 @@ export const app: App = {
     },
     people: {
       view: {
-        group: 'governance',
         title: 'People',
         caption: 'Everyone the co-op knows: its members and its workers, each by the address they sign with.',
         icon: icons.Users,

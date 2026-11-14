@@ -14,7 +14,6 @@ export const app: App = {
   collections: {
     circles: {
       view: {
-        group: 'governance',
         title: 'Circles',
         icon: icons.CirclesThree,
         look: { layout: 'gallery', cards: ['purpose', 'procedure'] },
@@ -50,7 +49,6 @@ export const app: App = {
     },
     mandates: {
       view: {
-        group: 'governance',
         title: 'Mandates',
         caption: 'Each grant of a power, issued down from the assembly',
         icon: icons.TreeStructure,

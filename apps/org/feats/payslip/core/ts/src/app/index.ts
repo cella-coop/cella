@@ -12,7 +12,6 @@ export const app: App = {
   collections: {
     payslips: {
       view: {
-        group: 'payments',
         title: 'Payslips',
         caption: 'Each month’s pay run, from salaries and approved time, approved and paid',
         icon: icons.Money,

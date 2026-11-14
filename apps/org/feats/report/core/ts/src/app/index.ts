@@ -39,7 +39,6 @@ export const app: App = {
   collections: {
     reports: {
       view: {
-        group: 'office',
         title: 'Reports',
         caption: 'The financial statements, the project margins, the federation figures and the members’ own, read through the analytics shell',
         icon: icons.ChartLine,

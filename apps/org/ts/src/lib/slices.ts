@@ -44,14 +44,15 @@ export const shifts = (name: string): Shift[] => [
 export const views = (name: string): Preset[] =>
   presets([...(collection(name)?.view.views ?? []), ...extensions(name).flatMap((e) => e.extension.views ?? [])])
 
-const order = ['home', 'governance', 'office', 'work', 'payments', 'ledger', 'equity', 'platform']
+const order = ['home', 'feature', 'platform']
 
-// The sidebar's sections: what waits on the acting member, then each
-// section's collections, of which the sidebar shows one at a time, and
-// Settings' pages, each first in its group, before its collections.
-// `counts` are the counted collections' rows for the acting member, by
-// address, in the lensed circle where there is a lens; `waiting`, all of
-// them whatever the lens.
+// The sidebar's navigation: what waits on the acting member; every
+// feature's collections, each naming the feat that owns it, of which the
+// sidebar shows those the circle the member is in enabled; and Settings'
+// pages, each first in its group, before its collections. `counts` are
+// the counted collections' rows for the acting member, by address, in the
+// lensed circle where there is a lens; `waiting`, all of them whatever
+// the lens.
 export const nav = (counts: Record<string, number> = {}, waiting: Record<string, number> = counts): Nav =>
   order
     .map((group) => ({
@@ -62,8 +63,17 @@ export const nav = (counts: Record<string, number> = {}, waiting: Record<string,
           : []),
         ...apps.flatMap((a) =>
           Object.entries(a.collections ?? {})
-            .filter(([, c]) => c.view.group === group)
-            .map(([name, c]) => ({ href: `/${name}`, title: c.view.title, icon: c.view.icon, count: counts[`/${name}`], waiting: waiting[`/${name}`], subgroup: c.view.subgroup, listed: c.view.listed })),
+            .filter(([, c]) => (c.view.group ?? 'feature') === group)
+            .map(([name, c]) => ({
+              href: `/${name}`,
+              title: c.view.title,
+              icon: c.view.icon,
+              count: counts[`/${name}`],
+              waiting: waiting[`/${name}`],
+              subgroup: c.view.subgroup,
+              listed: c.view.listed,
+              feature: a.name,
+            })),
         ),
       ],
     }))

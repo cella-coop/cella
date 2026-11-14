@@ -15,7 +15,6 @@ export const app: App = {
   collections: {
     invoices: {
       view: {
-        group: 'payments',
         title: 'Invoices',
         icon: icons.Receipt,
         create: Issue,

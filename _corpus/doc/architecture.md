@@ -2104,13 +2104,18 @@ blocks style nothing themselves.
 
 A member may lens the co-op on one of its circles, from the co-op
 selector ([the shell](../../apps/org/core/ui/index.md#components)): the
-circles they read, "All circles" first and the default. The lens is
+circles they read, the assembly first and the default. The assembly is
+the co-op's root and the same place as the co-op, so being in it is no
+lens, and the co-op reads whole; any other circle chosen is the circle
+the member is in, whose enabled features the sidebar shows
+([features](../../apps/org/core/circle/index.md#features)). The lens is
 the member's view and never a write: a cookie of the scope's, which
-`/lens` writes and the root layout reads, as `/theme` and the drawer's
-are, naming one circle the member reads, or none. Nothing of it
-enters the log and no row-level policy reads it, so it narrows what a
-reader reads and never widens it; a lens naming a circle the member
-no longer reads, or one of another scope, is none.
+`/lens` writes, a sign-in clears and the root layout reads, as `/theme`
+and the drawer's are, naming one circle the member reads, or none.
+Nothing of it enters the log and no row-level policy reads it, so it
+narrows what a reader reads and never widens it; a lens naming a
+circle the member no longer reads, the assembly, or one of another
+scope, is none.
 
 Every collection reads through the lens. An owner's `list`, and each
 select that adds rows (`rows`), exposes the circle that owns each row

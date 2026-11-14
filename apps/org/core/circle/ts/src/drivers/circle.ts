@@ -33,16 +33,16 @@ export async function sitting(db: Db, person: string, from: string, until: strin
 }
 
 // The circles a person may lens the co-op on: every circle they read,
-// those they sit in on `day` first, then the rest, each in the circles'
-// order.
+// the assembly first, then those they sit in on `day`, then the rest,
+// each in the circles' order, with the features each enabled.
 export async function lenses(db: Db, person: string, day: string): Promise<Lens[]> {
   const { rows } = await db.query<Lens>(
-    `SELECT c.id, c.name, EXISTS (
+    `SELECT c.id, c.name, c.assembly, circle.features(c.id) AS features, EXISTS (
        SELECT FROM circle.seat s WHERE s.circle = c.id AND s.member = $1
          AND (s.since IS NULL OR s.since <= $2::date) AND (s.until IS NULL OR s.until > $2::date)
      ) AS sits
      FROM circle.circle c
-     ORDER BY sits DESC, ${order}`,
+     ORDER BY c.assembly DESC, sits DESC, ${order}`,
     [person, day],
   )
   return rows

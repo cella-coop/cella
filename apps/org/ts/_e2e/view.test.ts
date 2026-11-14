@@ -40,13 +40,19 @@ for (const [name, launch] of browsers()) {
         const at = `${name}, ${scheme}`
 
         if (scheme === 'light') {
-          await visit('/')
+          // The sidebar shows the features of the circle she is in: gather
+          // the assembly's, Operations' and Web's, every accordion open.
           const nav = page.getByRole('navigation', { name: 'Main' })
           const shut = nav.locator('button.head[aria-expanded="false"]')
-          for (let left = 20; left > 0 && (await shut.count()) > 0; left--) {
-            await shut.first().click()
+          const hrefs: string[] = []
+          for (const lens of ['operations', 'web', '']) {
+            await context.addCookies([{ name: 'cella-lens', value: lens, url: base }])
+            await visit('/')
+            for (let left = 20; left > 0 && (await shut.count()) > 0; left--) {
+              await shut.first().click()
+            }
+            hrefs.push(...(await nav.locator('a[href^="/"]').evaluateAll((as) => as.map((a) => a.getAttribute('href')!))))
           }
-          const hrefs = await nav.locator('a[href^="/"]').evaluateAll((as) => as.map((a) => a.getAttribute('href')!))
           let seen = 0
           for (const path of [...new Set(hrefs)].filter((h) => h !== '/')) {
             await visit(path)

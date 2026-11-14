@@ -19,7 +19,6 @@ export const app: App = {
   collections: {
     projects: {
       view: {
-        group: 'work',
         title: 'Projects',
         icon: icons.Briefcase,
         create: Create,

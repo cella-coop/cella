@@ -81,7 +81,7 @@ test('the sidebar names the co-op as the database does, and its menus open in th
   assert.equal((text.match(/popover="auto"/g) ?? []).length, 2, 'the co-op menu and the account menu are popovers')
 })
 
-test('the co-op selector lists the circles, and the one chosen is the lens its trigger names until it is cleared', async () => {
+test('the co-op selector lists the assembly first, and any other circle chosen is the lens its trigger names until the assembly clears it', async () => {
   const session = await shell.signIn(camille)
   const logged = async () => (await one<{ n: number }>('SELECT count(*)::int AS n FROM cella.log')).n
   const before = await logged()
@@ -102,11 +102,12 @@ test('the co-op selector lists the circles, and the one chosen is the lens its t
 
   const whole = await seen()
   const menu = whole.slice(whole.indexOf('action="/lens"'))
-  const order = ['All circles', 'General assembly', 'Brand', 'Coordination', '<hr', 'Marketing', 'Operations', 'Web']
+  const order = ['General assembly', 'Brand', 'Coordination', '<hr', 'Marketing', 'Operations', 'Web']
   const at = order.map((s) => menu.indexOf(s))
   assert.ok(at.every((i) => i >= 0), `the menu holds ${order.join(', ')}`)
-  assert.deepEqual([...at].sort((a, b) => a - b), at, 'All circles first, then the circles Camille sits in, then the rest')
-  assert.deepEqual(checked(whole), [''], 'with no lens, All circles is checked')
+  assert.deepEqual([...at].sort((a, b) => a - b), at, 'the assembly first, then the circles Camille sits in, then the rest')
+  assert.ok(!menu.includes('All circles'), 'no row lists all circles')
+  assert.deepEqual(checked(whole), [''], 'with no lens, the assembly is checked, its row clearing the lens')
   assert.ok(!whole.includes('Co-op: Lanterne / '), 'and the trigger names the co-op alone')
 
   const set = await lensing('web')
@@ -121,10 +122,13 @@ test('the co-op selector lists the circles, and the one chosen is the lens its t
   const stale = await seen('nowhere')
   assert.ok(!stale.includes('Co-op: Lanterne / '), 'a lens naming no circle the member reads is none')
   assert.deepEqual(checked(stale), [''])
+  const root = await seen('ag')
+  assert.ok(!root.includes('Co-op: Lanterne / '), 'a lens naming the assembly is none, where the co-op reads whole')
+  assert.deepEqual(checked(root), [''])
 
   const cleared = await lensing('')
   assert.equal(cleared.status, 303)
-  assert.match(cleared.cookie, /^cella-lens=;.*Max-Age=0/i, 'All circles clears the lens')
+  assert.match(cleared.cookie, /^cella-lens=;.*Max-Age=0/i, 'the assembly clears the lens')
   assert.equal(await logged(), before, 'and nothing of it enters the log')
 })
 
@@ -158,7 +162,7 @@ test('a lensed collection lists only its circle’s rows, and a registry says th
   assert.ok(!unlensed.includes('leaves Accounts whole'), 'with no lens it says nothing')
 })
 
-test('the sidebar’s counts narrow with the lens, and the Inbox and a shut section’s dot stay whole', async () => {
+test('the sidebar’s counts narrow with the lens, and the Inbox and a shut accordion’s dot stay whole', async () => {
   const session = await shell.signIn(camille)
   const seen = async (lens?: string) => {
     const res = await fetch(`${shell.base}/projects`, { headers: { accept: 'text/html', cookie: lens ? `${session}; cella-lens=${lens}` : session } })
@@ -168,11 +172,14 @@ test('the sidebar’s counts narrow with the lens, and the Inbox and a shut sect
   const pill = (html: string, href: string) => Number(new RegExp(`href="${href}"[^>]*>(?:(?!</a>).)*?<span class="count[^"]*" aria-label="(\\d+) waiting">`, 's').exec(html)?.[1] ?? 0)
   const dots = (html: string) => [...html.matchAll(/aria-label="(\d+) waiting in ([^"]+)"/g)].map((m) => `${m[2]}: ${m[1]}`)
   const whole = await seen()
-  const lensed = await seen('web')
-  assert.ok(lensed.includes('Co-op: Lanterne / Web'), 'the co-op is lensed on Web')
+  const lensed = await seen('coordination')
+  assert.ok(lensed.includes('Co-op: Lanterne / Coordination'), 'the co-op is lensed on Coordination')
   assert.ok(pill(whole, '/inbox') > 0, 'Camille has asks waiting in her Inbox')
   assert.equal(pill(lensed, '/inbox'), pill(whole, '/inbox'), 'the Inbox counts what waits on her whatever the lens')
-  assert.deepEqual(dots(lensed), dots(whole), 'and a shut section’s dot is the same under the lens as without')
+  // The assembly's Governance and Coordination's hold the same collections,
+  // motions, documents and meetings, both shut on the projects.
+  const governance = (html: string) => dots(html).filter((d) => d.startsWith('Governance:'))
+  assert.deepEqual(governance(lensed), governance(whole), 'and a shut accordion’s dot is the same under the lens as without')
 })
 
 test('every collection has a dashboard, its widgets run by the server', async () => {

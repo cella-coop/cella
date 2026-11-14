@@ -6,14 +6,13 @@ import type { Look, Preset, Shift, Widget } from './query.ts'
 // pages are configuration over the one collection component and the one
 // detail view; blocks are the components a detail view composes.
 
-// The sidebar's sections: `home`, what waits on the acting member, always
-// shown; then accordions: governance; office, the documents, meetings and
-// reports; work; payments, money in and out; ledger, the accounts, their
-// periods and transactions; equity, the members' capital and what the
-// surplus builds; and `platform`, Settings, a sidebar of its own, its
-// collections under Personal, the member's own, or Organization, the
-// co-op's, as each names its `subgroup`.
-export type Group = 'home' | 'governance' | 'office' | 'work' | 'payments' | 'ledger' | 'equity' | 'platform'
+// Where the sidebar puts a collection that is not a feature's: `home`,
+// what waits on the acting member, always shown; and `platform`,
+// Settings, a sidebar of its own, its collections under Personal, the
+// member's own, or Organization, the co-op's, as each names its
+// `subgroup`. A collection that names neither is its feat's, in the
+// sidebar where the circle the member is in enabled that feature.
+export type Group = 'home' | 'platform'
 
 // A `person` is an address, shown as the person's chip: their name, the
 // address on hover; a `circle` is a circle's id, shown as its name.
@@ -133,10 +132,9 @@ export interface Panel {
 export type Status = (about: any) => { label: string; tone: Tone } | undefined
 
 export interface View<R = any> {
-  group: Group
-  // A heading the collection sits under within its section, where the
-  // section is long enough to need more than one; a section whose
-  // collections name none, or one, lists them without headings.
+  group?: Group
+  // A heading a Settings collection sits under, Personal or
+  // Organization.
   subgroup?: string
   title: string
   // A line under the title saying what the collection is, in its trade's
@@ -224,10 +222,15 @@ export interface Added<E = any> {
   page?: Omit<Partial<Page<E>>, 'eyebrow' | 'title' | 'summary'>
 }
 
-// The sidebar's navigation, by group: a collection's `count` is its rows
-// for the acting member in the lensed circle, its pill; `waiting`, all of
-// them whatever the lens, which a shut section's dot sums.
-export type Nav = { group: string; items: { href: string; title: string; icon: Component<any>; count?: number; waiting?: number; subgroup?: string; listed?: boolean }[] }[]
+// The sidebar's navigation, by group, `home`, `feature` and `platform`: a
+// feature's collection names its `feature`, the feat that owns it; a
+// collection's `count` is its rows for the acting member in the lensed
+// circle, its pill; `waiting`, all of them whatever the lens, which a
+// shut accordion's dot sums.
+export type Nav = {
+  group: string
+  items: { href: string; title: string; icon: Component<any>; count?: number; waiting?: number; subgroup?: string; listed?: boolean; feature?: string }[]
+}[]
 
 // A member the dev server may act as.
 export interface Person {

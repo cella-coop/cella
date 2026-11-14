@@ -131,6 +131,13 @@ export async function seed(db, read, { from, dir }) {
         r.holders ?? null,
       ])
     }
+    // The features each circle enabled, one listing a circle, in its order.
+    for (const f of structure.feature ?? []) {
+      await db.query('INSERT INTO circle.feature (circle, feat, position, "group") SELECT $1, l.feat, l.position, l."group" FROM circle.listed($2) l', [
+        f.circle,
+        f.features,
+      ])
+    }
 
     // Everyone the co-op knows, then the memberships they hold.
     const people = read('person').person ?? []

@@ -1,6 +1,6 @@
 +++
 title = "Lanterne"
-updated = 2026-11-13
+updated = 2026-11-14
 +++
 
 # Lanterne
@@ -65,6 +65,19 @@ circle beside coordination and the four working circles.
 | Brand | Camille Martin, Hugo Lefèvre, Sofia Rossi | Hugo |
 | Marketing | Malik Benali, Chloé Moreau | Malik |
 | Operations | Julien Petit | Julien |
+
+Each circle enables the features its work uses
+([features](../../core/circle/index.md#features)), the founding's
+`[[feature]]` rows in `circle.toml`, one listing a circle: the assembly
+its governance, motions, policies, documents and meetings, and its
+members, membership, patronage and core's people, circles and mandates;
+coordination its governance and projects; Operations, where finance
+sits, the books, accounts, transactions, reports and imports, and the
+payments, invoices, bills, expenses and payslips, with contacts and
+employment; Web its projects, tasks, timesheets, files and contacts;
+Brand its projects, tasks, timesheets, files and the print and paper
+bills Sofia approves; Marketing its projects, tasks, timesheets,
+contacts and documents.
 
 Camille is the manager, by a tenure from 20 June 2024 until 20 June 2028, with a mandate to
 sign contracts and commit up to 20 000 €. Julien holds the finance role: he

@@ -3,7 +3,10 @@
 // the proposal, each naming the circle, the value read and the fix: a
 // circle there is not, a term no amendment changes, a blank name, another
 // circle's name, a procedure in force nowhere, a change that changes
-// nothing, and Web amending itself. Then in every browser, light and
+// nothing, and Web amending itself; and features no installed feature, a
+// feature twice, an accordion blank or listed apart, and the features
+// Web has already. The assembly changes Web's features by motion, its
+// close replacing them in order, under their accordions. Then in every browser, light and
 // dark, through the dev server: Camille opens Web's Settings tab, its
 // name, purpose and procedure in force, each changed by a motion of the
 // General assembly; she types Brand's name and Saves, and the dialog
@@ -80,8 +83,8 @@ after(async () => {
 test('an amendment is refused at its proposal, naming the circle, the value read and the fix', async () => {
   const refused = async (args: Record<string, string>, circle?: string) => reason(await amending(args, circle))
   assert.match(await refused({ circle: 'nowhere', name: 'Somewhere' }), /no circle nowhere: a motion amends a circle there is, by its id/)
-  assert.match(await refused({ circle: 'web', id: 'webby' }), /an amendment of web changes its name, its purpose or its procedure, not its id/)
-  assert.match(await refused({ circle: 'web' }), /the amendment of web gives no new name, purpose or procedure: give at least one/)
+  assert.match(await refused({ circle: 'web', id: 'webby' }), /an amendment of web changes its name, its purpose, its procedure or its features, not its id/)
+  assert.match(await refused({ circle: 'web' }), /the amendment of web gives no new name, purpose, procedure or features: give at least one/)
   assert.match(await refused({ circle: 'web', name: '  ' }), /the amendment of web gives it a blank name: give it a name/)
   assert.match(await refused({ circle: 'web', name: ' brand ' }), /brand is named Brand already: give web a name no other circle has/)
   assert.match(
@@ -90,6 +93,15 @@ test('an amendment is refused at its proposal, naming the circle, the value read
   )
   assert.match(await refused({ circle: 'web', name: 'Web', procedure: 'consent' }), /the amendment of web changes nothing: it is named Web, for .*, deciding by consent already; give a term it does not have/)
   assert.match(await refused({ circle: 'web', name: 'Studio' }, 'web'), /web may not decide about web: put its amendment to the assembly, or to another circle holding amend-circle/)
+  assert.match(await refused({ circle: 'web', features: 'project, tasks' }), /tasks is no feature the co-op has installed: give web features of account, bill, circle, .*, task, timesheet, transaction/)
+  assert.match(await refused({ circle: 'web', features: 'project_task' }), /project_task is no feature the co-op has installed/)
+  assert.match(await refused({ circle: 'web', features: 'project, task, project' }), /the features of web name project twice: list each once/)
+  assert.match(await refused({ circle: 'web', features: ' : project; task' }), /an accordion of web's features has a blank name: name it, or list its features under none/)
+  assert.match(await refused({ circle: 'web', features: 'Work: project; file; Work: task' }), /the features of web list the Work accordion's apart: list them together/)
+  assert.match(
+    await refused({ circle: 'web', features: 'project,task ,timesheet, file,contact' }),
+    /the amendment of web changes nothing: .*, with the features project, task, timesheet, file, contact already; give a term it does not have/,
+  )
   assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM motion.action WHERE kind = 'amend-circle'`)).n, 0, 'nothing was proposed')
 })
 
@@ -104,6 +116,26 @@ test('the assembly changes Web\'s procedure and purpose by motion, its close ame
   assert.equal((entry.p.was as Record<string, string>).procedure, 'consent', 'its entry says what the procedure was')
   const back = settled(await amending({ circle: 'web', procedure: 'consent' })) as { motion: string }
   assert.deepEqual(states(await decided(back.motion)), [['circle:circle:amend', 'settled', '']])
+})
+
+test('the assembly changes Web\'s features by motion, its close replacing them in order and its entry carrying the set they replace', async () => {
+  const features = 'Work: project, task, timesheet; Files: file'
+  const { motion } = settled(await amending({ circle: 'web', features })) as { motion: string }
+  const out = await decided(motion)
+  assert.deepEqual(states(out), [['circle:circle:amend', 'settled', '']])
+  assert.deepEqual(await all(`SELECT feat, position, "group" FROM circle.feature WHERE circle = 'web' ORDER BY position`), [
+    { feat: 'project', position: 0, group: 'Work' },
+    { feat: 'task', position: 1, group: 'Work' },
+    { feat: 'timesheet', position: 2, group: 'Work' },
+    { feat: 'file', position: 3, group: 'Files' },
+  ])
+  const entry = await one<{ p: Record<string, unknown> }>(`SELECT cella.opened($1) AS p`, [out[0].entry])
+  assert.equal(entry.p.features, features)
+  assert.deepEqual(entry.p.was, { features: 'project, task, timesheet, file, contact' }, 'its entry says what the features were')
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('brand') AS f`)).f, 'project, task, timesheet, file, bill', 'no other circle\'s change')
+  const back = settled(await amending({ circle: 'web', features: 'project, task, timesheet, file, contact' })) as { motion: string }
+  assert.deepEqual(states(await decided(back.motion)), [['circle:circle:amend', 'settled', '']])
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, 'project, task, timesheet, file, contact')
 })
 
 for (const [name, launch] of browsers()) {

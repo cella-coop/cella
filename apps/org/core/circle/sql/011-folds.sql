@@ -21,15 +21,16 @@ END
 $$;
 
 -- circle:circle:amend: the circle its entry names, its name, purpose or
--- procedure changed to the values it carries, each from what the entry
--- says it was.
+-- procedure changed to the values it carries, and its features replaced
+-- by the listing it carries, each from what the entry says it was, the
+-- features as `circle.features` spells them (`012-features.sql`).
 CREATE FUNCTION circle.fold_amend(entry jsonb) RETURNS void
 LANGUAGE plpgsql AS $$
 DECLARE
   p jsonb := entry -> 'payload';
   was jsonb;
 BEGIN
-  SELECT jsonb_build_object('name', c.name, 'purpose', c.purpose, 'procedure', c.procedure) INTO was
+  SELECT jsonb_build_object('name', c.name, 'purpose', c.purpose, 'procedure', c.procedure, 'features', circle.features(c.id)) INTO was
   FROM circle.circle c WHERE c.id = p ->> 'circle';
   IF was IS NULL THEN
     RAISE EXCEPTION 'circle: entry % amends %, which the fold has no circle of', entry ->> 'n', p ->> 'circle';
@@ -40,6 +41,12 @@ BEGIN
   UPDATE circle.circle
   SET name = coalesce(p ->> 'name', name), purpose = coalesce(p ->> 'purpose', purpose), procedure = coalesce(p ->> 'procedure', procedure)
   WHERE id = p ->> 'circle';
+  IF p ? 'features' THEN
+    DELETE FROM circle.feature WHERE circle = p ->> 'circle';
+    INSERT INTO circle.feature (circle, feat, position, "group")
+    SELECT p ->> 'circle', l.feat, l.position, l."group" FROM circle.listed(p ->> 'features') l
+    ON CONFLICT DO NOTHING;
+  END IF;
 END
 $$;
 

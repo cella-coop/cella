@@ -93,3 +93,36 @@ test("the forge's main is the base where the checkout has it", () => {
   git('update-ref', 'refs/remotes/origin/main', 'HEAD')
   assert.equal(check().status, 0)
 })
+
+/** The operator's commit to the text on a branch of its own, `text`, off
+ * main, and a lane's commit elsewhere on the change, for a merge to join. */
+function diverged() {
+  const r = repo()
+  r.git('checkout', '-q', '-b', 'text', 'main')
+  const theirs = r.commit(operator, { 'apps/site/src/content/site.toml': 'title = "Cella, the workspace"\n' })
+  r.git('checkout', '-q', 'change')
+  r.commit(lane, { 'apps/site/src/components/Hero.astro': '<h1/>\n' })
+  return { ...r, theirs }
+}
+
+test("another author's merge whose resolution changes the text is refused, by the merge", () => {
+  const { git, check } = diverged()
+  git('merge', '-q', '--no-ff', '--no-commit', 'text')
+  writeFileSync(join(git('rev-parse', '--show-toplevel'), 'apps/site/src/content/site.toml'), 'title = "Celia"\n')
+  git('add', '-A')
+  git('commit', '-q', '--author', lane, '-m', 'merge the text')
+  const merge = git('rev-parse', 'HEAD')
+  const out = check()
+  assert.equal(out.status, 1)
+  assert.match(out.stderr, new RegExp(`${merge.slice(0, 12)} by ${lane}`))
+  assert.match(out.stderr, /apps\/site\/src\/content\/site\.toml/)
+  assert.match(out.stderr, /1 commit since main/)
+})
+
+test("another author's merge that only brings the operator's commits to the text in passes", () => {
+  const { git, check } = diverged()
+  git('merge', '-q', '--no-ff', '-m', 'merge the text', 'text')
+  const out = check()
+  assert.equal(out.status, 0, out.stderr)
+  assert.match(out.stdout, /every commit since main that changes it is the operator's/)
+})

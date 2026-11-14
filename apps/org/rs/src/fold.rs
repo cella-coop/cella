@@ -104,6 +104,16 @@ fn literal(s: &str) -> String {
 }
 
 pub fn fold(repo: &Repo, steps: &Steps, f: &Fold<'_>) -> Result {
+    fold_from(repo, steps, f, None)
+}
+
+/// A scenario's fold starts from the migrated, unseeded tree prepared once
+/// for the e2e run. The public `cella fold` still renews its destination.
+pub fn fold_test(repo: &Repo, steps: &Steps, template: &str, f: &Fold<'_>) -> Result {
+    fold_from(repo, steps, f, Some(template))
+}
+
+fn fold_from(repo: &Repo, steps: &Steps, f: &Fold<'_>, template: Option<&str>) -> Result {
     let dev = Dev::new(repo);
     dev.up()?;
     if f.source == f.into {
@@ -150,14 +160,26 @@ pub fn fold(repo: &Repo, steps: &Steps, f: &Fold<'_>) -> Result {
     }
     let at = match f.from {
         None => {
-            repo.install(steps)?;
+            if template.is_none() {
+                repo.install(steps)?;
+            }
             {
                 let _turn = dev.migrating()?;
-                steps.run(
-                    &format!("migrate {}", f.into),
-                    &mut dev.renew(f.into, None, None),
-                    quiet,
-                )?;
+                if let Some(template) = template {
+                    let cloning = Instant::now();
+                    dev.clone_test(steps, template, f.into)?;
+                    println!(
+                        "clone fold/{}: {:.1}s",
+                        f.source,
+                        cloning.elapsed().as_secs_f64()
+                    );
+                } else {
+                    steps.run(
+                        &format!("migrate {}", f.into),
+                        &mut dev.renew(f.into, None, None),
+                        quiet,
+                    )?;
+                }
             }
             settle(&dev, f)?;
             psql(

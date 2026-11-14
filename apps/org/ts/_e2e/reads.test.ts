@@ -1,15 +1,16 @@
 // The reads scenario: a collection read in SQL, a page at a time. The
-// composer over rows of its own, and through a lens; every collection's
-// read composed and run on a seeded Lanterne, each badge and date
-// column's key holding what it shows; and the built shell paging fifty
-// thousand time entries, its text filter, its counts and the viewer's own
-// views' tallies, outside dev mode. Run by `cella test e2e reads`.
+// composer over rows of its own, sorted, and through a lens; every
+// collection's read composed and run on a seeded Lanterne, each badge
+// and date column's key holding what it shows, each field sorting either
+// way; and the built shell paging fifty thousand time entries, sorted,
+// its text filter, its counts and the viewer's own views' tallies,
+// outside dev mode. Run by `cella test e2e reads`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { register } from 'node:module'
 import pg from 'pg'
-import { counts, measures, page, read, today, values, type Source } from '@cella/org-db'
+import { counts, measures, page, read, today, values, type Sort, type Source } from '@cella/org-db'
 import { fields } from '@cella/org-ui/models'
 import { slices, source } from '#lib/server/slices.ts'
 import { Shell } from './serve.ts'
@@ -79,6 +80,23 @@ test('the composer reads the rows it keeps in the order they list in, a page of 
   assert.deepEqual((await page(db, invoices, { where: [{ field: 'state', is: ['unpaid', 'overdue'] }] })).map((r) => r.id), ['b', 'a'])
   assert.deepEqual((await page(db, invoices, { where: [], q: { text: 'nUvO', keys: ['client', 'state'] } })).map((r) => r.id), ['a'], 'the filter holds in any case')
   assert.deepEqual(await page(db, invoices, { where: [], q: { text: 'nuvo', keys: ['state'] } }), [], 'only in the keys it names')
+})
+
+test('a sort orders the rows a keep keeps by any field either way, a number as a number, a row with none last, before a page is cut', async () => {
+  const db = await as(hugo)
+  const ids = async (sort: Sort, limit?: number, offset = 0, where: { field: string; is: string[] }[] = []) =>
+    (await page(db, invoices, { where, sort }, limit, offset)).map((r) => r.id)
+  // As text, 1000 would come before 200 and 500.
+  assert.deepEqual(await ids({ field: 'total', dir: 'asc' }), ['c', 'b', 'a'], 'money by its amount')
+  assert.deepEqual(await ids({ field: 'total', dir: 'desc' }), ['a', 'b', 'c'])
+  assert.deepEqual(await ids({ field: 'issued', dir: 'asc' }), ['a', 'b', 'c'], 'a date by its day')
+  assert.deepEqual(await ids({ field: 'issued', dir: 'desc' }), ['c', 'b', 'a'])
+  assert.deepEqual(await ids({ field: 'client', dir: 'asc' }), ['c', 'a', 'b'], 'an extension\'s field, a row without it last')
+  assert.deepEqual(await ids({ field: 'client', dir: 'desc' }), ['a', 'c', 'b'], 'last either way')
+  assert.deepEqual(await ids({ field: 'total', dir: 'asc' }, 1, 1), ['b'], 'the page is cut from the sorted rows')
+  assert.deepEqual(await ids({ field: 'total', dir: 'desc' }, 2, 1), ['b', 'c'])
+  assert.deepEqual(await ids({ field: 'total', dir: 'asc' }, undefined, 0, [{ field: 'state', is: ['unpaid', 'overdue'] }]), ['b', 'a'], 'over the rows the conditions keep')
+  assert.deepEqual(await ids({ field: 'nothing', dir: 'asc' }), ['c', 'b', 'a'], 'a field no row holds leaves the collection\'s order')
 })
 
 test('the composer counts, gives each enumeration\'s values, and runs the widgets as aggregates, the month the scope\'s', async () => {
@@ -171,6 +189,32 @@ test('each badge and date column\'s key holds what the column shows, as conditio
   assert.ok(checked > 1000, `${checked} values checked`)
 })
 
+test('every collection orders by each of its fields either way in SQL, money and numbers by their amount, dates by their day, a row with none last', async () => {
+  const db = await as(julien)
+  let checked = 0
+  for (const name of collections) {
+    const from = source(name) as Source
+    for (const f of fields(columns(name))) {
+      for (const dir of ['asc', 'desc'] as const) {
+        const rows = (await page(db, from, { where: [], sort: { field: f.key, dir } })) as Record<string, unknown>[]
+        if (f.type !== 'money' && f.type !== 'number' && f.type !== 'date') {
+          continue
+        }
+        const held = rows.map((r) => (r[f.key] === undefined || r[f.key] === null || r[f.key] === '' ? null : r[f.key]))
+        const none = held.indexOf(null)
+        assert.ok(none < 0 || held.slice(none).every((v) => v === null), `${name} by ${f.key}, ${dir}: a row with none is last`)
+        const vs = held.filter((v) => v !== null)
+        for (let i = 1; i < vs.length; i++) {
+          const [a, b] = dir === 'asc' ? [vs[i - 1], vs[i]] : [vs[i], vs[i - 1]]
+          assert.ok(f.type === 'date' ? String(a) <= String(b) : Number(a) <= Number(b), `${name} by ${f.key}, ${dir}: ${a} before ${b}`)
+          checked++
+        }
+      }
+    }
+  }
+  assert.ok(checked > 1000, `${checked} pairs checked`)
+})
+
 test('a page of fifty thousand time entries is read in SQL: a hundred rows drawn, more in the address, the filter and the counts on the server', async () => {
   // Fifty thousand entries of Camille's in October, a day's quarter hours.
   await su.query(
@@ -192,6 +236,20 @@ test('a page of fifty thousand time entries is read in SQL: a hundred rows drawn
 
   const more = await shell.page('/timesheets?n=250', julien)
   assert.equal(rows(more.text), 250, 'the address asks for more')
+
+  // A sort orders all fifty thousand before the page is cut: the next
+  // hundred continue the first.
+  const db = await as(julien)
+  const entries = source('timesheets') as Source
+  for (const sort of [{ field: 'hours', dir: 'desc' }, { field: 'day', dir: 'asc' }] as Sort[]) {
+    const [one, two] = [await page(db, entries, { where: [], sort }, 100), await page(db, entries, { where: [], sort }, 100, 100)]
+    const held = (r: { id: string } | undefined) => (r as Record<string, number | string> | undefined)?.[sort.field] ?? ''
+    const ends = [held(one[0]), held(one.at(-1)), held(two[0])]
+    assert.ok(sort.dir === 'desc' ? ends[0] >= ends[1] && ends[1] >= ends[2] : ends[0] <= ends[1] && ends[1] <= ends[2], `${sort.field}, ${sort.dir}: ${ends.join(', ')}`)
+  }
+  const sorted = await shell.page('/timesheets?sort=-day', julien)
+  assert.match(sorted.text, /aria-sort="descending"[^>]*>(?:(?!<\/th>)[\s\S])*Day/, 'the Day header says the rows are sorted by it, descending')
+  assert.equal(rows(sorted.text), 100, 'a sorted view draws a page')
 
   const filtered = await shell.page('/timesheets?q=load%2049999', julien)
   assert.equal(rows(filtered.text), 1, 'the text filter keeps the one entry in SQL')

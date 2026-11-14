@@ -250,20 +250,38 @@ export function result(w: Widget, measured: number | null | { label: string; val
 export const layouts = ['list', 'feed', 'table', 'gallery', 'board', 'calendar', 'dashboard'] as const
 export type Layout = (typeof layouts)[number]
 
+// The order a view sorts its rows in: by one field, ascending or
+// descending; the server reads them so, in SQL.
+export interface Sort {
+  field: string
+  dir: 'asc' | 'desc'
+}
+
+// A sort as the address says it, `sort=<key>`, or `sort=-<key>` for
+// descending, and back; a key that is no field is none.
+export const sorting = (raw: string | null, fs: Field[]): Sort | null => {
+  const desc = raw?.startsWith('-') ?? false
+  const key = desc ? raw?.slice(1) : raw
+  return key && fs.some((f) => f.key === key) ? { field: key, dir: desc ? 'desc' : 'asc' } : null
+}
+export const sortKey = (s: Sort | null): string => (s ? `${s.dir === 'desc' ? '-' : ''}${s.field}` : '')
+
 // How a collection is looked at: its layout, the conditions on its rows,
 // the text filter, the table's hidden columns and its columns' order (the
-// keys it moved; the rest follow as declared), the enumeration a board
-// groups by, the fields a gallery's or a board's cards show, the date a
-// calendar places the rows by and whether it shows a month or a week,
-// and the dashboard's widgets, null for the declared or derived ones.
-// Which month or week a calendar shows is not the view's: it is where
-// the viewer is, `at` in the address beside it.
+// keys it moved; the rest follow as declared), the field the rows are
+// sorted by and which way, null for the collection's own order, the
+// enumeration a board groups by, the fields a gallery's or a board's
+// cards show, the date a calendar places the rows by and whether it
+// shows a month or a week, and the dashboard's widgets, null for the
+// declared or derived ones. Which month or week a calendar shows is not
+// the view's: it is where the viewer is, `at` in the address beside it.
 export interface Spec {
   layout: Layout
   where: Where[]
   q: string
   hide: string[]
   order: string[]
+  sort: Sort | null
   by: string | null
   cards: string[]
   on: string | null
@@ -317,6 +335,7 @@ export interface Preset {
   where?: Where[]
   hide?: string[]
   order?: string[]
+  sort?: Sort
   by?: string
   cards?: string[]
   on?: string
@@ -363,7 +382,7 @@ const json = (raw: string | null): unknown => {
 // The view the address asks for: a preset or a custom view by `v`, All
 // when it names none, over the collection's look, its settings
 // overridden by the address's own (`view`, `where`, `q`, `hide`,
-// `order`, `by`, `cards`, `on`, `span`, `w`), each checked against the
+// `order`, `sort`, `by`, `cards`, `on`, `span`, `w`), each checked against the
 // fields. What
 // fails a check falls back to the view's, and is said.
 export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[], look: Look = {}): { id: string; spec: Spec; errors: string[] } {
@@ -392,6 +411,8 @@ export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[], look
   const keys = new Set(fs.map((f) => f.key))
   const list = (name: 'hide' | 'order' | 'cards') =>
     params.has(name) ? [...new Set((params.get(name) ?? '').split(','))].filter((k) => keys.has(k)) : base[name]
+  // An empty sort is the collection's own order.
+  const sort = params.has('sort') ? sorting(params.get('sort'), fs) : base.sort && keys.has(base.sort.field) ? base.sort : null
   const enums = fs.filter((f) => f.type === 'enum').map((f) => f.key)
   const asks = params.get('by')
   // None means the first enumeration, which the board chooses itself.
@@ -403,7 +424,7 @@ export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[], look
   const span = spans.find((s) => s === params.get('span')) ?? base.span
   return {
     id,
-    spec: { layout, where, q: (params.get('q') ?? '').slice(0, 200), hide: list('hide'), order: list('order'), by, cards: list('cards'), on, span, widgets: ws },
+    spec: { layout, where, q: (params.get('q') ?? '').slice(0, 200), hide: list('hide'), order: list('order'), sort, by, cards: list('cards'), on, span, widgets: ws },
     errors,
   }
 }
@@ -430,6 +451,9 @@ export function address(id: string, s: Spec, base: Spec): string {
     if (!same(s[name], base[name])) {
       q.set(name, s[name].join(','))
     }
+  }
+  if (!same(s.sort, base.sort)) {
+    q.set('sort', sortKey(s.sort))
   }
   if (s.by && s.by !== base.by) {
     q.set('by', s.by)
@@ -461,6 +485,7 @@ export const spec = (p?: Preset, look: Look = {}): Spec => ({
   q: '',
   hide: p?.hide ?? [],
   order: p?.order ?? [],
+  sort: p?.sort ?? null,
   by: p?.by ?? look.by ?? null,
   cards: p?.cards ?? look.cards ?? [],
   on: p?.on ?? look.on ?? null,

@@ -71,14 +71,15 @@ export function period(at: string, span: Span, today: string): Period {
 
 // The rows on each day of a period, by the date field a calendar places
 // them by, in the order of their time when the field holds one
-// (`YYYY-MM-DDTHH:MM`); a row with no date is on no day.
-export function placed(rows: any[], on: Field, p: Period): Map<string, any[]> {
+// (`YYYY-MM-DDTHH:MM`), or as they came where the view `sorted` them;
+// a row with no date is on no day.
+export function placed(rows: any[], on: Field, p: Period, sorted = false): Map<string, any[]> {
   const out = new Map<string, any[]>(p.days.map((d) => [d.day, []]))
   for (const r of rows) {
     const v = on.value(r)
     out.get(v ? String(v).slice(0, 10) : '')?.push(r)
   }
-  for (const list of out.values()) {
+  for (const list of sorted ? [] : out.values()) {
     list.sort((a, b) => String(on.value(a)).localeCompare(String(on.value(b))))
   }
   return out

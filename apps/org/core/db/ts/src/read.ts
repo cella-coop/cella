@@ -37,11 +37,19 @@ export type Condition =
   | { field: string; within: 'month' | 'year' }
   | { field: string; from: string; to: string }
 
+// An order a view puts the rows in: by one field, ascending or descending.
+export interface Sort {
+  field: string
+  dir: 'asc' | 'desc'
+}
+
 // Which rows a read keeps: those meeting every condition and, where there
-// is a text filter, holding it in one of `keys`, case aside.
+// is a text filter, holding it in one of `keys`, case aside; and the
+// order it reads them in, where it names one.
 export interface Keep {
   where: Condition[]
   q?: { text: string; keys: string[] }
+  sort?: Sort
 }
 
 // What a widget computes over the rows it keeps: how many, or a figure
@@ -99,8 +107,20 @@ function kept(st: Statement, k: Keep): string {
   return all.length ? all.join(' AND ') : 'true'
 }
 
+// The order the rows are read in: a sort's field first, by the value the
+// row holds under its key as JSON orders it, a number as a number and a
+// date, `YYYY-MM-DD`, as its text, a row with none last either way; then
+// the collection's own order, which breaks its ties.
+function sorting(st: Statement, sort: Sort | undefined): string {
+  if (!sort) {
+    return 'src, at'
+  }
+  const value = `nullif(nullif(row->${st.p(sort.field)}, 'null'::jsonb), '""'::jsonb)`
+  return `${value} ${sort.dir === 'desc' ? 'DESC' : 'ASC'} NULLS LAST, src, at`
+}
+
 // What a page of a collection asks of its rows: those `keep` keeps, in
-// the collection's order, `limit` of them after the first `offset` (all
+// its sort's order, else the collection's, `limit` of them after the first `offset` (all
 // of them with no limit); how many each of `counts` keeps; and each of
 // `values`' keys' values, sorted, the empty one left out, the choices an
 // enumeration's editor offers. Each part is left out where it is not
@@ -123,8 +143,10 @@ export async function read(
   const st = new Statement()
   const parts: string[] = []
   if (a.keep) {
+    const order = sorting(st, a.keep.sort)
+    const where = kept(st, a.keep)
     const bounds = `${a.limit === undefined ? '' : ` LIMIT ${st.p(a.limit)}`}${a.offset ? ` OFFSET ${st.p(a.offset)}` : ''}`
-    parts.push(`(SELECT coalesce(json_agg(row ORDER BY src, at), '[]') FROM (SELECT src, at, row FROM r WHERE ${kept(st, a.keep)} ORDER BY src, at${bounds}) p) AS rows`)
+    parts.push(`(SELECT coalesce(json_agg(row ORDER BY ${order}), '[]') FROM (SELECT src, at, row FROM r WHERE ${where} ORDER BY ${order}${bounds}) p) AS rows`)
   }
   if (a.counts?.length) {
     parts.push(`(SELECT json_build_array(${a.counts.map((k) => `count(*) FILTER (WHERE ${kept(st, k)})`).join(', ')}) FROM r) AS counts`)
@@ -158,7 +180,7 @@ export async function read(
 const owning = (r: Read) =>
   `coalesce((SELECT to_jsonb(z) ? 'circle' FROM (SELECT x.* FROM (VALUES (1)) one LEFT JOIN (${r.sql}) x ON false) z), false)`
 
-// The rows a read keeps, in the collection's order, `limit` of them after
+// The rows a read keeps, in its sort's order, else the collection's, `limit` of them after
 // the first `offset`; no limit reads them all.
 export const page = async (db: Db, s: Source, keep: Keep, limit?: number, offset = 0) => (await read(db, s, { keep, limit, offset })).rows
 

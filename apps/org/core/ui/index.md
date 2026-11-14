@@ -178,8 +178,9 @@ The theme is light, dark or the system's, a cookie the server writes into
   collection's fields allow), then the text filter, then the same rows
   in the same order everywhere, each a label and a dropdown: Group by
   (a board's columns, an enumeration; a calendar's date, and month or
-  week), Order by (the orders the collection's read offers, each a field
-  and its direction, most offering only their own) and Filter (a field to add
+  week), Order by (any of the collection's fields, and a toggle beside
+  it for ascending or descending; none chosen, the collection's own
+  order) and Filter (a field to add
   a condition on, the conditions under it as chips); then Display, a
   row that opens a popover of what is shown (in a table, its columns, in
   a gallery or on a board, its cards' fields, in a calendar, its cards'
@@ -211,11 +212,13 @@ The theme is light, dark or the system's, a cookie the server writes into
   only where a field enumerates; `Calendar` puts them on the days of a
   month, in whole weeks from Monday, or of a week, by a date field, in
   the order of their time where the date holds one
-  (`YYYY-MM-DDTHH:MM`), each tinted by the first of its cards' fields
+  (`YYYY-MM-DDTHH:MM`), or in the view's order where it sorts them,
+  each tinted by the first of its cards' fields
   that has a tone, a week showing the fields under each title; the
   calendar is offered only where a field is a date. Which month or week
   it shows is where the viewer is, not part of the view: `at` in the
-  address, today when absent, which its arrows and Today link to
+  address, today when absent, which its arrows and Today link to and
+  a change to the view keeps
   (`models/calendar.ts`). A view, its extensions overriding it part by
   part, declares its `look`: its default layout, its board's grouping
   and columns' order (`lanes`), its cards' fields, its calendar's date
@@ -240,7 +243,7 @@ The theme is light, dark or the system's, a cookie the server writes into
   of the collection as JSON once the page is in the browser
   (`ViewsState.tallies`), and its last button saves a new view. The active view (`v`)
   and what is changed from it (`view`, `where`, `q`, `hide`, `order`,
-  `by`, `cards`, `on`, `span`, `w`) live
+  `sort`, `by`, `cards`, `on`, `span`, `w`) live
   in the URL, so a view is a link and the server renders it, checking
   every part against the fields. A viewer's own views are a preference,
   never a record: `ViewsState` keeps them in the browser's storage as a
@@ -263,9 +266,15 @@ The theme is light, dark or the system's, a cookie the server writes into
   `RowState` (`useRow`), which the Collection, mounting once its query
   answers, follows and takes the row from. A table's column the rows
   are ordered by says so by `aria-sort` on its header, ascending or
-  descending, and the others carry none: the field the collection's read orders by first
-  (`ordered`), where one select reads its rows and its order leads with
-  a field by name; the view orders no rows of its own.
+  descending, and the others carry none: the field the view orders by
+  (`sort`, in the address as `sort=<key>` or `sort=-<key>` for
+  descending), or where it orders by none, the field the collection's
+  read orders by first (`ordered`), where one select reads its rows and
+  its order leads with a field by name. Clicking a table's header orders
+  by its field, and again turns the direction. The view's order is
+  every layout's: a list's, a feed's, a table's and a gallery's rows, a
+  board's cards in each column and a calendar's in each day, each read
+  in that order by the one statement, so the next hundred continue it.
 - `Detail`: the one record page, the same for every collection, as
   Linear's issue page. The content is the record's: its title, large,
   then its free-form content, a document's blocks where its kind holds

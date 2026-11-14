@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-11-13
+updated = 2026-11-14
 +++
 
 # Architecture
@@ -1542,18 +1542,31 @@ its latest checkpoint, ten thousand entries before the head. It says
 the entries folded a second, a checkpoint's time from the kept hashes
 and the state's hashed from scratch, the peak memory of the fold's
 sessions beside the shared buffers, a tenth of the way and at the end,
-the session that verifies the whole log among them, the re-fold's time
-and the log's bytes an entry with its receipt; and it fails where the
+the session that verifies the whole log among them, the re-fold's time,
+the log's bytes an entry with its receipt and what its two databases
+take on disk at its end; and it fails where the
 peak at the end is more than 64 MB over the peak a tenth of the way,
 where the re-fold takes more than thirty seconds, where the hashes the
 fold kept differ from its rows hashed from scratch, or where the fold
-runs under its floor, a thousand entries a second until a run at full size sets it.
+runs under its floor, 1 300 entries a second.
+The floor is four fifths of the rate the run at full size measured on
+the box, 14 Nov 2026, rounded down to a hundred. That run grew 10 532 395
+entries in 753 seconds, folded them at 1 661 entries a second, its
+sessions at 61.5 MB a tenth of the way and 109.0 MB at the end, hashed
+a checkpoint in 27.5 ms from the kept hashes and the state in 163.6
+seconds from scratch, and re-folded from its latest checkpoint in 19.8
+seconds; its log takes 1 765 bytes an entry with its receipt, and its
+two databases 44.3 GB at the end, 4 208 bytes an entry; it took three
+hours and twenty-four minutes, the whole log's two verifications about
+forty minutes each. `cella test scale` reckons its disk from it, 54
+entries a member a year at 4 500 bytes an entry, and refuses to start
+where that would leave under 20 GB free on the cluster's disk, which
+the lanes share, naming both figures; and it drops both databases when
+it ends, passed or failed, unless it keeps them (`--keep`).
 The forge's `scale` flow, `.corpus/flows/scale.toml`, runs the tier each
 night over main's head on the box, at a tenth of its size
-(`--members 1000`), about a million entries, which the box's disk holds;
-its bounds are the same at either size. A run at full size needs about
-45 GB of disk the box lacks: it runs by hand where a host has it, and the
-nightly flow grows to it once the box has.
+(`--members 1000`), about a million entries; its bounds are the same at
+either size. The full size runs by hand, since it takes hours.
 The fold test plants a receipt no verdict names, once before a
 checkpoint's receipts and once after them, and one keeping an entry
 past the head, as a log cut short leaves it; the verification resumed

@@ -376,6 +376,10 @@ pub enum Test {
         /// The years it grows over, from 2027
         #[arg(long, default_value_t = 20)]
         years: u32,
+
+        /// Keep its two databases when it ends, which it drops otherwise, passed or failed
+        #[arg(long)]
+        keep: bool,
     },
 }
 

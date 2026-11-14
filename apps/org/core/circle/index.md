@@ -1065,6 +1065,25 @@ under it opens its own page.
 
 A circle's page has a Settings tab, a `Settings` form ([settings](../ui/index.md#settings)) of its name, its purpose and its procedure, from those in force, and below them its roles, each its name, duty and cap, with a row to make a new one. None saves directly: Save opens the dialog proposing an `amend-circle`, `role` or `amend-role` motion of the circle that decides about it, the assembly unless another holding `amend-circle` may (`motion.decider`), its reason the guard's, why no write of the reader's changes it. A role's cap emptied proposes lifting it, the `amend-role` motion giving its cap as none.
 
+Each circle has a features page in Settings, `/settings/features/<id>`,
+which its Settings tab links to under its terms: a `Settings` form of
+one setting, the circle's features ([features](#features)), drawn as an
+arrangement ([settings](../ui/index.md#settings)). Every feature the
+co-op installed (`circle.installed`) has a toggle, by its name: those
+the circle enabled first, in its order, each under its accordion where
+it has one, and the rest after them. An enabled feature moves up or
+down past its neighbour in its accordion, an ungrouped one past the
+feature or the accordion beside it, and an accordion moves as a whole;
+naming a feature's accordion moves it into that accordion, or makes
+one, and renaming an accordion renames it on each of its features. A
+Save offers one `amend-circle` motion of the circle that decides about
+it, carrying the listing as arranged, its title saying what it enables
+and disables, or that it rearranges the circle's features where it
+does neither; the dialog says why no write of the reader's changes them,
+since no member's own write does ([features](#features)). Once the
+motion passes the page reads the new set. Membership-motion serves it
+([membership-motion](../../grafts/membership-motion/index.md#shell-of-the-roll)).
+
 Who sits in a circle is the membership feat's, which names people.
 Proposing to grant a mandate to one of its roles or to it, or to
 change or revoke one, is the motion feat's, a seat in it membership-motion's: the page's writes propose, and the

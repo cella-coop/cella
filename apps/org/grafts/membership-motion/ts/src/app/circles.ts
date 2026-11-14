@@ -8,6 +8,7 @@ import Electorate from './blocks/Electorate.svelte'
 import Membership from './blocks/Membership.svelte'
 import Outcome from './blocks/Outcome.svelte'
 import Organization from './blocks/Organization.svelte'
+import Features from './blocks/Features.svelte'
 
 const tones: Record<State, Tone> = { open: 'accent', passed: 'positive', rejected: 'negative' }
 
@@ -16,7 +17,8 @@ const tones: Record<State, Tone> = { open: 'accent', passed: 'positive', rejecte
 // into Passed or Rejected is its close; a motion's roll, each member's
 // stance and its outcome, and the form a member on the roll casts their
 // stance with; a circle's Settings tab, its terms and its roles, which a
-// motion amends and makes; and Settings' Organization page, the co-op's
+// motion amends and makes, and its features page in Settings; and
+// Settings' Organization page, the co-op's
 // particulars, which a motion of the assembly replaces.
 export const app: App = {
   name: 'membership-motion/circles',
@@ -73,6 +75,16 @@ export const app: App = {
       caption: 'What the co-op is called and what its papers print, which a motion of the assembly changes.',
       icon: icons.Buildings,
       block: Organization,
+    },
+    // A circle's features, a page of the circle, `/settings/features/<id>`,
+    // which its Settings tab links to, so the sidebar lists it nowhere.
+    features: {
+      subgroup: 'Organization',
+      title: 'Features',
+      caption: "What the circle shows in the sidebar, in its order, which a motion of the circle that decides about it changes.",
+      icon: icons.SquaresFour,
+      listed: false,
+      block: Features,
     },
   },
 }

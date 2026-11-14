@@ -18,12 +18,15 @@ export interface Moved {
 // page action that saves it, if one does, and, where the reader's write
 // would be refused, why, in its guard's own words, as the guard says it
 // before anything is written; and the motion that changes it otherwise.
+// One that declares `choices` is an arrangement (`Arrange`), its value a
+// listing of them (`models/arrange.ts`).
 export interface Setting {
   name: string
   label: string
   value: string
   type?: 'text' | 'number' | 'date' | 'email' | 'url'
   options?: { value: string; label: string }[]
+  choices?: { value: string; label: string }[]
   rows?: number
   write?: string
   refused?: string

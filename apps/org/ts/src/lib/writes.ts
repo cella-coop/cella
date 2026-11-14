@@ -38,18 +38,21 @@ export const onCollection = (name: () => string, id: () => string | undefined): 
     after: async () => {},
   }) as unknown as Route
 
-// A settings page, posting to the writes its slice saves by; it reads
-// through its `page` query, which a save that took or reached a verdict
-// reads again with the shell's, as the theme it wears may have changed;
-// a specimen, which reads nothing of its own (`own`), the shell's alone.
-export const onSettings = (page: () => string, own = true): Route =>
+// A settings page, posting to the writes its slice saves by, with the one
+// thing it is of where its address names one (`id`); it reads through
+// its `page` query, which a save that took or reached a verdict reads
+// again with the shell's, as the theme it wears may have changed; a
+// specimen, which reads nothing of its own (`own`), the shell's alone.
+const of = (settings: string, id: string): Record<string, string> => (id ? { settings, id } : { settings })
+
+export const onSettings = (page: () => string, own = true, id: () => string = () => ''): Route =>
   ({
-    form: (w: string, n: string) => setting.for(key({ settings: page() }, w, n)),
-    send: (w: string, fields: [string, string][]) => save({ at: { settings: page() }, write: w, fields }),
+    form: (w: string, n: string) => setting.for(key(of(page(), id()), w, n)),
+    send: (w: string, fields: [string, string][]) => save({ at: of(page(), id()), write: w, fields }),
     prove: (run: string, proof: string) => prove({ run, proof }),
     touched: [],
     ...reading,
-    after: () => Promise.all([shell().refresh(), own && read({ page: page() }).refresh()]).then(() => undefined),
+    after: () => Promise.all([shell().refresh(), own && read({ page: page(), id: id() }).refresh()]).then(() => undefined),
   }) as unknown as Route
 
 // An invitation's link, whose one write is its acceptance, sent and proved

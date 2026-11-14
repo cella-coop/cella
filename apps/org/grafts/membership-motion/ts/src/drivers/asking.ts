@@ -1,5 +1,5 @@
 import type { Db } from '@cella/org-db'
-import type { Amending, Appointing, Decider, Duty, Organization, Standing } from '../models/asking.ts'
+import type { Amending, Appointing, Decider, Duty, Featuring, Organization, Standing } from '../models/asking.ts'
 
 const decider = `json_build_object('id', d.id, 'name', d.name, 'procedure', d.procedure)`
 
@@ -115,4 +115,21 @@ export async function organization(db: Db): Promise<Organization> {
      FROM (SELECT) one LEFT JOIN circle.applied() a ON true`,
   )
   return rows[0]
+}
+
+// A circle's features page: its features in force, every feature the
+// co-op installed, and the circle that decides their amendment, as the
+// circle's Settings tab reads its terms; none for a circle there is not.
+export async function featuring(db: Db, circle: string): Promise<Featuring | null> {
+  const { rows } = await db.query<Featuring>(
+    `SELECT c.id AS circle, c.name, circle.features(c.id) AS features,
+            (SELECT coalesce(json_agg(i.f ORDER BY i.f), '[]') FROM circle.installed() i(f)) AS installed,
+            json_build_object('circle', d.id, 'name', d.name, 'deadline', to_char(cella.verdict_date() + 14, 'YYYY-MM-DD')) AS decider,
+            c.name || '''s features change only by a motion of ' || d.name || ', which holds amend-circle: no one''s own write changes them' AS refused
+     FROM circle.circle c
+     JOIN circle.circle d ON d.id = motion.decider(c.id, ARRAY['amend-circle'], cella.verdict_date())
+     WHERE c.id = $1`,
+    [circle],
+  )
+  return rows[0] ?? null
 }

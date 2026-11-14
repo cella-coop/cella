@@ -58,7 +58,7 @@ export const nav = (counts: Record<string, number> = {}, waiting: Record<string,
       group,
       items: [
         ...(group === 'platform'
-          ? apps.flatMap((a) => Object.entries(a.settings ?? {}).map(([name, s]) => ({ href: `/settings/${name}`, title: s.title, icon: s.icon, subgroup: s.subgroup })))
+          ? apps.flatMap((a) => Object.entries(a.settings ?? {}).map(([name, s]) => ({ href: `/settings/${name}`, title: s.title, icon: s.icon, subgroup: s.subgroup, listed: s.listed })))
           : []),
         ...apps.flatMap((a) =>
           Object.entries(a.collections ?? {})

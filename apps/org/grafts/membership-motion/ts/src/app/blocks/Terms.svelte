@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { Section, Settings, type Declared } from '@cella/org-ui'
+  import { Button, Note, Section, Settings, type Declared } from '@cella/org-ui'
   import type { Amending, OnCircle } from '../../models/asking.ts'
 
   // A circle's Settings tab: its name, its purpose and its procedure, from
   // those in force. None saves directly, since only a motion amends a
   // circle: Save opens the dialog proposing an `amend-circle` motion of
-  // the circle that decides about it, prefilled with what was typed.
+  // the circle that decides about it, prefilled with what was typed. Its
+  // features are a page of their own in Settings, which it links to.
   let { data }: { data: OnCircle | null; id: string } = $props()
 
   const amending = $derived(data?.amending)
@@ -37,5 +38,9 @@
 {#if amending}
   <Section title="Circle">
     <Settings {settings} decider={amending.decider} />
+  </Section>
+  <Section title="Features">
+    <Note text="What {amending.name} shows in the sidebar, in its order, under its accordions, which a motion of {amending.decider.name} changes." />
+    <Button href="/settings/features/{amending.circle}">Choose its features</Button>
   </Section>
 {/if}

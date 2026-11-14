@@ -210,7 +210,12 @@ draws.
   at most 16rem wide. A form a header's popover opens is no part of
   the row: its fields show their labels and its choices take its width.
   Under it, the content and the drawer, which
-  scrolls down and never across. The toggle, or `]` anywhere, shows and
+  scrolls down and never across. Where the window cannot hold the
+  sidebar, the content at its least width and the drawer side by side,
+  the drawer lies over the content's right edge at its own width,
+  raised as a floating thing is, and its toggle, `]` or Escape shuts
+  it; nothing wraps under the content, and the header stays its one
+  row, its tabs scrolling in their strip. The toggle, or `]` anywhere, shows and
   hides the drawer on every page at once; a cookie keeps the viewer's
   choice, so the server renders it. One tab per panel, the open one
   marked even when alone: a collection's View, an item's Details.

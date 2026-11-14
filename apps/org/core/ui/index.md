@@ -121,7 +121,15 @@ draws.
   reads whole. A sign-in clears it, so it lands in the assembly. Then,
   always shown, the Inbox, whole whatever the lens, since it is what
   waits on the member, where `/` and the sign-in land, and Activity,
-  the log read as a feed of who did what. The middle holds the features
+  the log read as a feed of who did what; then Favorites, the one place
+  the same in every circle: the views the member pinned, a collection's
+  preset or one of their own, each its icon and its name, opening its
+  view at its own address, in the circle the member is in unless the
+  view reads across circles. A pin is a preference, never a record,
+  kept in the browser beside the viewer's own views (`FavoritesState`,
+  `Saved`'s `pins`), and follows the view it pins: renamed or changed,
+  so is the pin, and deleted, it goes. With none pinned, Favorites says
+  where a view is pinned from. The middle holds the features
   the circle the member is in enabled, in its order
   ([features](../circle/index.md#features)), each drawn as its
   collections: those its feat owns that the sidebar lists, outside
@@ -223,8 +231,15 @@ draws.
   and after each row's title, in a feed, the fields after each line's
   title, in a table, its columns, in
   a gallery or on a board, its cards' fields, in a calendar, its cards'
-  fields, in a dashboard, its widgets); and last, saving what is shown
-  as a view. A row the layout has no use for is shown disabled, never
+  fields, in a dashboard, its widgets); then Circles, what the view
+  reads: This circle, the lens's, or Every circle, which drops the
+  lens's condition and reads every circle's rows the reader may read,
+  so a view across circles is a person's own and no feature holds a
+  read of its own for it
+  ([the lens](../../../../_corpus/doc/architecture.md#the-lens)),
+  disabled with no lens or where the lens leaves the collection whole;
+  and last, saving what is shown as a view, and pinning the open view to
+  Favorites or unpinning it. A row the layout has no use for is shown disabled, never
   dropped, so the rows never move; a control that offers no choice
   reads as its value, not as a control: a disabled field is muted, and
   a disabled select drops its field and chevron. What a collection offers lives only
@@ -236,7 +251,8 @@ draws.
   it groups and filters by who or which circle, as an enumeration does
   by its value. Its rows
   are the server's, kept, filtered, ordered and paged in SQL, and only
-  the lensed circle's where the member has a lens: a collection whose
+  the lensed circle's where the member has a lens, but in a view across
+  circles: a collection whose
   rows name no owning circle says under its header that the lens
   leaves it whole
   ([reading at scale](../../../../_corpus/doc/architecture.md#reading-at-scale),
@@ -293,7 +309,7 @@ draws.
   of the collection as JSON once the page is in the browser
   (`ViewsState.tallies`), and its last button saves a new view. The active view (`v`)
   and what is changed from it (`view`, `where`, `q`, `hide`, `order`,
-  `sort`, `by`, `cards`, `on`, `span`, `w`) live
+  `sort`, `by`, `cards`, `on`, `span`, `w`, `across`) live
   in the URL, so a view is a link and the server renders it, checking
   every part against the fields. A viewer's own views are a preference,
   never a record: `ViewsState` keeps them in the browser's storage as a

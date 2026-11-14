@@ -2117,7 +2117,8 @@ narrows what a reader reads and never widens it; a lens naming a
 circle the member no longer reads, the assembly, or one of another
 scope, is none.
 
-Every collection reads through the lens. An owner's `list`, and each
+Every collection reads through the lens, but in a view that reads
+across circles. An owner's `list`, and each
 select that adds rows (`rows`), exposes the circle that owns each row
 under `circle`, as nearly every table holds one since circles are core
 ([circles are core](#circles-are-core)), and where the member has a
@@ -2133,7 +2134,12 @@ and the log), reads whole whatever the lens, and says so under its
 header; a row that names none, as a report the feat draws itself, is
 kept. An item's page,
 the command menu and the Inbox, which is what waits on the member,
-read whatever the lens.
+read whatever the lens. A view that reads across circles (`across`,
+[views](../../apps/org/core/ui/index.md#components)) only drops the
+lens's condition: it reads every circle's rows the reader may read, so
+the row-level policies and the co-op's disclosure policies bound it as
+they bound the assembly's, no feature holds a read of its own for it,
+and nothing says how many rows the lens would have left out.
 
 ## The analytics shell
 

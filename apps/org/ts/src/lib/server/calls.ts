@@ -42,8 +42,8 @@ export class Missing extends Error {}
 // widgets run over the rows it keeps. A board places every row the view
 // keeps, a calendar those on the days it shows, and a dashboard draws
 // none. Under the member's lens it reads only the lensed circle's rows,
-// and says where the lens leaves it whole. `search` is the page's
-// address's query.
+// but in a view that reads across circles, and says where the lens
+// leaves it whole. `search` is the page's address's query.
 export const collection = {
   schema: texts(['name', 'search']),
   async run(db: Db, { name, search }: { name: string; search: string }, who: Reader) {
@@ -59,8 +59,10 @@ export const collection = {
     const { id, spec, errors } = resolve(url, tabs, fs, looks)
     const limit = drawn(url)
     const keeps = keeping(spec, fs)
-    // Its rows through the member's lens, where they have one.
-    const from = source(name, await lensed(db, who.cookies, who.actor)) ?? named
+    // Its rows through the member's lens, where they have one, but in a
+    // view that reads across circles, which reads every circle's rows the
+    // member reads.
+    const from = source(name, spec.across ? null : await lensed(db, who.cookies, who.actor)) ?? named
     const day = await today(db)
     const paged = spec.layout === 'list' || spec.layout === 'feed' || spec.layout === 'table' || spec.layout === 'gallery'
     // The field a list, a feed, a table or a gallery groups its rows by,

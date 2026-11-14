@@ -1,6 +1,8 @@
 import { onMount } from 'svelte'
 import { saved, type Custom, type Saved, type Spec } from '../models/query.ts'
 import { reorder } from '../models/drag.ts'
+import type { FavoritesState } from './FavoritesState.svelte.ts'
+import { useFavorites } from './useFavorites.ts'
 
 const key = 'cella-views'
 
@@ -10,6 +12,8 @@ const key = 'cella-views'
 // store is versioned to move into a member's preferences as it is. How
 // many rows each keeps is asked of the server, which renders the page
 // without them, once they are read and again whenever the rows change.
+// A view pinned to Favorites follows it: renamed, changed or deleted, so
+// is its pin, at the address `href` gives it.
 export class ViewsState {
   list: Custom[] = $state([])
   tallies: Record<string, number> = $state({})
@@ -18,12 +22,16 @@ export class ViewsState {
   name = $state('')
   icon = $state('bookmark')
   readonly #collection: () => string
+  readonly #href: (view: Custom) => string
+  readonly #favorites: FavoritesState
 
   // `rows` is anything that changes when the rows do, such as how many
   // the view keeps. Another collection is another component, and so
   // another state, so the views are read once, as it mounts.
-  constructor(collection: () => string, rows: () => unknown = () => null) {
+  constructor(collection: () => string, rows: () => unknown = () => null, href: (view: Custom) => string = (c) => `/${collection()}?v=${c.id}`) {
     this.#collection = collection
+    this.#href = href
+    this.#favorites = useFavorites()
     onMount(() => {
       this.list = this.#read().views[this.#collection()] ?? []
     })
@@ -33,13 +41,15 @@ export class ViewsState {
     })
   }
 
-  // Each view's count, from the collection's JSON read: one request for all.
+  // Each view's count, from the collection's JSON read: one request for
+  // all, each through the lens or, where it reads across circles, whole.
   async #tally(collection: string, list: Custom[]) {
     if (!list.length) {
       return
     }
     const where = encodeURIComponent(JSON.stringify(list.map((c) => c.spec.where)))
-    const answer = await fetch(`/${encodeURIComponent(collection)}?where=${where}`, { headers: { accept: 'application/json' } }).catch(() => null)
+    const across = encodeURIComponent(JSON.stringify(list.map((c) => c.spec.across)))
+    const answer = await fetch(`/${encodeURIComponent(collection)}?where=${where}&across=${across}`, { headers: { accept: 'application/json' } }).catch(() => null)
     const counts: unknown = answer?.ok ? await answer.json() : null
     if (Array.isArray(counts) && collection === this.#collection()) {
       this.tallies = Object.fromEntries(list.flatMap((c, i) => (typeof counts[i] === 'number' ? [[c.id, counts[i]]] : [])))
@@ -62,6 +72,11 @@ export class ViewsState {
     } catch {
       // Without storage the views last until the page is left.
     }
+    const collection = this.#collection()
+    this.#favorites.follow(
+      collection,
+      this.list.map((c) => ({ collection, view: c.id, name: c.name, ...(c.icon ? { icon: c.icon } : {}), href: this.#href(c) })),
+    )
   }
 
   find(id: string) {

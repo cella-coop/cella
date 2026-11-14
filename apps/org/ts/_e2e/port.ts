@@ -26,7 +26,7 @@ export interface Reading {
 
 export async function reading(su: pg.Client, offset: number, day: string): Promise<Reading> {
   const port = own(offset)
-  const db = su.database ?? 'cella_test'
+  const db = su.database ?? ''
   // The views read the scope's day as the role's sessions see it.
   await su.query(`ALTER ROLE cella_analytics IN DATABASE ${su.escapeIdentifier(db)} SET cella.clock = '${day}'`)
   const stop = () => execFileSync(bin, ['analytics', 'stop', '--port', port], { cwd: repo })

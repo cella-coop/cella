@@ -1527,8 +1527,9 @@ file anywhere else fails `cella test`:
   passes on a rerun is a fault, fixed in the scenario or in the page
   where it lies, never retried.
 
-Both run on the dev cluster (`cella db start`), on `cella_test`, renewed
-for each slice and each scenario.
+Both run on the dev cluster (`cella db start`): a slice's tests on
+`cella_test`, renewed for each slice, and a scenario on the database of
+the worker that runs it, `cella_test_<w>`, renewed for each scenario.
 
 The fold's **scale tier**, `cella test scale`, is a Rust test no other
 target runs, since it takes hours at its size. A TEST-ONLY generator

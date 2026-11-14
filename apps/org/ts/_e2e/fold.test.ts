@@ -67,7 +67,7 @@ import { reader, scope, sign } from './lanterne.ts'
 import { reacting } from '../src/lib/server/slices.ts'
 import { imported } from '../src/lib/server/feats/import.ts'
 
-const db = process.env.PGDATABASE ?? 'cella_test'
+const db = process.env.PGDATABASE ?? 'cella'
 const su = new pg.Client({ database: db })
 let app: pg.Client | undefined
 

@@ -28,8 +28,9 @@ export interface Source {
   lens?: string | null
 }
 
-// A condition on a row, as a view holds one: an enumeration among some of
-// its values, or a date within the month or the year of the scope's day,
+// A condition on a row, as a view holds one: a field among some of its
+// values, whatever its type, the value the row holds under its key as
+// text, or a date within the month or the year of the scope's day,
 // `cella.verdict_date()`; or, as a calendar keeps the rows it places, a
 // date on one of the days from `from` to `to`.
 export type Condition =
@@ -123,7 +124,9 @@ function sorting(st: Statement, sort: Sort | undefined): string {
 // its sort's order, else the collection's, `limit` of them after the first `offset` (all
 // of them with no limit); how many each of `counts` keeps; and each of
 // `values`' keys' values, sorted, the empty one left out, the choices an
-// enumeration's editor offers. Each part is left out where it is not
+// enumeration's editor offers; and `few`'s keys' values so, each where
+// they number at most `most`, else none, the values a view's Filter
+// offers a field by. Each part is left out where it is not
 // asked. Under a lens, it answers too whether the lens leaves the rows
 // whole, as it does where no select names the circle that owns its rows.
 export interface Asked {
@@ -132,6 +135,7 @@ export interface Asked {
   offset?: number
   counts?: Keep[]
   values?: string[]
+  few?: { keys: string[]; most: number }
 }
 
 // What a page asks, read in one statement over the rows composed once.
@@ -151,9 +155,12 @@ export async function read(
   if (a.counts?.length) {
     parts.push(`(SELECT json_build_array(${a.counts.map((k) => `count(*) FILTER (WHERE ${kept(st, k)})`).join(', ')}) FROM r) AS counts`)
   }
-  if (a.values?.length) {
+  const asked = [...(a.values ?? []), ...(a.few?.keys ?? [])]
+  if (asked.length) {
+    // Each key with the most values it is answered with, none for no bound.
+    const most = [...(a.values ?? []).map(() => null), ...(a.few?.keys ?? []).map(() => a.few?.most ?? 0)]
     parts.push(
-      `(SELECT coalesce(json_object_agg(k, vs), '{}') FROM (SELECT k, array_agg(DISTINCT v ORDER BY v) AS vs FROM r, unnest(${st.p(a.values)}::text[]) k, LATERAL (SELECT row->>k AS v) x WHERE v <> '' GROUP BY k) g) AS values`,
+      `(SELECT coalesce(json_object_agg(k, vs), '{}') FROM (SELECT k, array_agg(DISTINCT v ORDER BY v) AS vs FROM r, unnest(${st.p(asked)}::text[], ${st.p(most)}::int[]) u(k, most), LATERAL (SELECT row->>k AS v) x WHERE v <> '' GROUP BY k, most HAVING most IS NULL OR count(DISTINCT v) <= most) g) AS values`,
     )
   }
   if (parts.length && s.lens) {
@@ -170,7 +177,7 @@ export async function read(
   return {
     rows: found?.rows ?? [],
     counts: found?.counts ?? [],
-    values: { ...Object.fromEntries((a.values ?? []).map((k) => [k, []])), ...found?.values },
+    values: { ...Object.fromEntries(asked.map((k) => [k, []])), ...found?.values },
     whole: found?.whole ?? false,
   }
 }

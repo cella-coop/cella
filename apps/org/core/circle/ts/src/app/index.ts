@@ -59,7 +59,7 @@ export const app: App = {
           { key: 'granteeName', label: 'Granted to', role: 'sub', value: (m: Standing) => m.granteeName },
           { key: 'cap', label: 'Cap', value: (m: Standing) => cap(m) },
           { key: 'scope', label: 'Covers', value: (m: Standing) => covers(m) },
-          { key: 'issuerName', label: 'Issued by', value: (m: Standing) => m.issuerName },
+          { key: 'issuer', label: 'Issued by', kind: 'circle', value: (m: Standing) => m.issuer },
           { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: (m: Standing) => m.state, tone: (m: Standing) => tones[m.state] },
         ],
       },

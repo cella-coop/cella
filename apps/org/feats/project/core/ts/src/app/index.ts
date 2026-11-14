@@ -25,7 +25,7 @@ export const app: App = {
         create: Create,
         columns: [
           { key: 'title', label: 'Project', kind: 'title', role: 'title', value: (p: Project) => p.title },
-          { key: 'circle', label: 'Circle', kind: 'badge', role: 'sub', value: (p: Project) => p.circle },
+          { key: 'circle', label: 'Circle', kind: 'circle', role: 'sub', value: (p: Project) => p.circle },
           { key: 'progress', label: 'Milestones', role: 'meta', value: progress },
           { key: 'next', label: 'Next', role: 'hidden', value: (p: Project) => p.next },
           { key: 'budget', label: 'Budget', kind: 'money', role: 'meta', value: (p: Project) => p.budget },

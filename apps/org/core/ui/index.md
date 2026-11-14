@@ -200,8 +200,11 @@ draws.
   (a board's columns, an enumeration; a calendar's date, and month or
   week), Order by (any of the collection's fields, and a toggle beside
   it for ascending or descending; none chosen, the collection's own
-  order) and Filter (a field to add
-  a condition on, the conditions under it as chips); then Display, a
+  order) and Filter (a field to add a condition on: a date, or any field
+  with a handful of values, at most `limits.values` across the rows the
+  view would keep without it, an enumeration's, a person's and a
+  circle's among them; the conditions
+  under it as chips); then Display, a
   row that opens a popover of what is shown (in a table, its columns, in
   a gallery or on a board, its cards' fields, in a calendar, its cards'
   fields, in a dashboard, its widgets); and last, saving what is shown
@@ -210,8 +213,12 @@ draws.
   reads as its value, not as a control: a disabled field is muted, and
   a disabled select drops its field and chevron. What a collection offers lives only
   inside the dropdowns and popovers: its fields are a dropdown's
-  options, and a condition's values (an enumeration's, a date's month
-  or year) are picked in a popover opened from its chip. Its rows
+  options, and a condition's values (a field's, each a person or a
+  circle by name, or a date's month or year) are picked in a popover
+  opened from its chip. A column says what it holds by its kind, and a
+  `person` or a `circle` column is a field of its own type, never text:
+  it groups and filters by who or which circle, as an enumeration does
+  by its value. Its rows
   are the server's, kept, filtered, ordered and paged in SQL, and only
   the lensed circle's where the member has a lens: a collection whose
   rows name no owning circle says under its header that the lens
@@ -337,7 +344,9 @@ draws.
   never cut off), `Badge`, `Person` (a person wherever one appears:
   their name, their address on hover; a column, property or event of the
   `person` kind is an address drawn so, from the names of the people the
-  co-op knows, which the shell reads once for its pages), `Grid` (figures to type into, a row per
+  co-op knows, which the shell reads once for its pages; a column of the
+  `circle` kind is a circle's id drawn as its name, as the circles a
+  mandate names are), `Grid` (figures to type into, a row per
   thing and a column per day, each cell showing what it holds and taking
   what is added, with the totals; the arrows move between open cells;
   `pick` gives each row a choice in a column after its label, the
@@ -541,11 +550,11 @@ exported for slices to compose.
 Every collection has a dashboard, the third layout, configured and never
 coded. `models/query.ts`, exported alone as `@cella/org-ui/models` for the
 server, types a collection's fields from its columns' kinds (money and
-number, date, a badge as an enumeration, else text) and defines a widget
+number, date, a badge as an enumeration, a person, a circle, else text) and defines a widget
 as a plain object: a figure (`kpi`), the count of rows or the sum,
 average, minimum or maximum of a numeric field, or a chart of either,
 grouped by an enumeration (bars) or by a date's month (a line), each
-over optional conditions (an enumeration among some values, a date in
+over optional conditions (a field among some of its values, a date in
 the month or year of the scope's day). A view or a graft may declare its widgets
 (`dashboard`); without any, defaults derive from the fields. The
 viewer's own are JSON in the address (`w`), so the server renders them;

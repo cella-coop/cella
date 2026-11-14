@@ -5,7 +5,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { defaults, fields, result, widget, widgets, type Widget } from '@cella/org-ui/models'
+import { defaults, fields, filtering, limits, result, where, widget, widgets, type Widget } from '@cella/org-ui/models'
 
 const fs = fields([
   { key: 'id', label: 'Invoice', kind: 'title', value: (r: any) => r.id },
@@ -20,6 +20,28 @@ test('the fields are typed from the columns', () => {
     fs.map((f) => [f.key, f.type]),
     [['id', 'text'], ['state', 'enum'], ['issued', 'date'], ['total', 'money'], ['owed', 'money']],
   )
+})
+
+test('a person and a circle are fields of their own type, and a condition keeps any field among some values', () => {
+  const people = fields([
+    { key: 'by', label: 'By', kind: 'person', value: (r: any) => r.by },
+    { key: 'circle', label: 'Circle', kind: 'circle', value: (r: any) => r.circle },
+    { key: 'total', label: 'Total', kind: 'money', value: (r: any) => r.total },
+    { key: 'note', label: 'Note', value: (r: any) => r.note },
+  ])
+  assert.deepEqual(people.map((f) => f.type), ['person', 'circle', 'money', 'text'])
+  for (const w of [{ field: 'by', is: ['julien@lanterne.example'] }, { field: 'circle', is: ['web', 'coordination'] }, { field: 'total', is: ['1200'] }, { field: 'note', is: ['late'] }]) {
+    assert.deepEqual(where(w, people), w)
+  }
+  assert.throws(() => where({ field: 'by', is: Array.from({ length: limits.values + 1 }, (_, i) => `p${i}`) }, people), /lists the values/)
+  // Filter offers a date, and a field with more than one value and at most
+  // a handful.
+  const offered = (key: string, held: string[] | undefined) => filtering(people.find((f) => f.key === key) ?? fs[2], held)
+  assert.equal(offered('by', ['a', 'b']), true)
+  assert.equal(offered('by', ['a']), false)
+  assert.equal(offered('note', undefined), false)
+  assert.equal(offered('circle', Array.from({ length: limits.values + 1 }, (_, i) => `c${i}`)), false)
+  assert.equal(filtering(fs[2], undefined), true)
 })
 
 test('a widget over declared fields passes, as the plain object it was', () => {
@@ -37,7 +59,7 @@ test('a widget naming anything undeclared, or asking what a field cannot give, i
     [{ kind: 'kpi', title: '', measure: { op: 'count' } }, /title/],
     [{ kind: 'pie', title: 'x', measure: { op: 'count' } }, /kpi or a chart/],
     [{ kind: 'chart', title: 'x', measure: { op: 'count' }, by: 'total' }, /groups by an enumeration or a date/],
-    [{ kind: 'kpi', title: 'x', measure: { op: 'count' }, where: [{ field: 'total', is: ['1'] }] }, /on an enumeration or a date/],
+    [{ kind: 'kpi', title: 'x', measure: { op: 'count' }, where: [{ field: 'issued', is: ['2026-11-14'] }] }, /month or year/],
     [{ kind: 'kpi', title: 'x', measure: { op: 'count' }, where: [{ field: 'state', is: [] }] }, /lists the values/],
     [{ kind: 'kpi', title: 'x', measure: { op: 'count' }, where: [{ field: 'issued', within: 'decade' }] }, /month or year/],
     ['DROP', /an object/],

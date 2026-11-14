@@ -59,7 +59,7 @@
     children: Snippet
   } = $props()
 
-  const state = useShell(() => outcome, () => drawer, () => people, () => lens)
+  const state = useShell(() => outcome, () => drawer, () => people, () => lens, () => circles)
 
   function onkeydown(e: KeyboardEvent) {
     if (e.key !== ']' || e.metaKey || e.ctrlKey || e.altKey || typing(e) || document.querySelector('dialog[open]')) {

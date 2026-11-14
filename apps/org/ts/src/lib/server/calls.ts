@@ -1,6 +1,6 @@
 import { ask as asking, counts, ordered, read, texts, today, type Db, type Source } from '@cella/org-db'
 import { scoped } from '@cella/org-analytics'
-import { anchor, defaults, fields, period, resolve, wheres, widgets, type Field, type Spec } from '@cella/org-ui/models'
+import { anchor, defaults, fields, limits, period, resolve, wheres, widgets, type Field, type Spec } from '@cella/org-ui/models'
 import { named } from '@cella/org-log/api'
 import { people, person } from '@cella/org-person/api'
 import { lensed, lensing } from '#lib/server/lens.ts'
@@ -33,7 +33,9 @@ export class Missing extends Error {}
 // fields its extensions add to each, read in SQL a page at a time (`n`
 // rows, in the view's sort, else the collection's order), in one statement with how many it
 // keeps, how many of those hold the text filter, its tabs' counts and
-// each enumeration's values; the field its rows are ordered by first;
+// each enumeration's values, and those of every other field but a date
+// where it holds at most `limits.values`, what Filter offers; the field
+// its rows are ordered by first;
 // what its header says about it; and, in the dashboard layout, its
 // widgets run over the rows it keeps. A board places every row the view
 // keeps, a calendar those on the days it shows, and a dashboard draws
@@ -63,6 +65,7 @@ export const collection = {
       ...(spec.layout === 'dashboard' ? {} : { keep: placing(spec, fs, url, day) ?? keeps, ...(paged ? { limit } : {}) }),
       counts: [{ where: spec.where }, keeps, ...tabs.map((p) => ({ where: wheres(p.where, fs) }))],
       values: fs.filter((f) => f.type === 'enum').map((f) => f.key),
+      few: { keys: fs.filter((f) => f.type !== 'enum' && f.type !== 'date').map((f) => f.key), most: limits.values },
     })
     const [kept = 0, matched = 0, ...tallies] = counts
     const abouts = (await Promise.all(m.extensions.map((e) => e.extension.about?.(db, who.actor)))).filter((a) => a !== undefined)

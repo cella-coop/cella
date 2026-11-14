@@ -3,9 +3,13 @@
   import { show } from '../models/format.ts'
   import Badge from './Badge.svelte'
   import Person from './Person.svelte'
+  import { useShell } from '../hooks/useShell.ts'
 
   let { value, kind = 'text', tone }: { value: unknown; kind?: Kind; tone?: Tone } = $props()
   const text = $derived(show(value, kind))
+  // A circle's id is drawn as its name, where the member reads it.
+  const shell = useShell()
+  const shown = $derived(kind === 'circle' ? (shell.circle(text) ?? text) : text)
 </script>
 
 {#if kind === 'badge' && text !== '—'}
@@ -13,7 +17,7 @@
 {:else if kind === 'person' && text !== '—'}
   <Person address={text} />
 {:else}
-  <span class="cell {kind}" class:empty={text === '—'} class:toned={tone} data-tone={tone}>{text}</span>
+  <span class="cell {kind}" class:empty={text === '—'} class:toned={tone} data-tone={tone}>{shown}</span>
 {/if}
 
 <style>

@@ -10,13 +10,15 @@ export interface Lens {
 // The shell's own state: the last write's outcome, until it is dismissed,
 // whether the drawer is open, which the viewer's cookie keeps so the
 // server renders the page as they left it, the names of the people the
-// co-op knows, by address, which a person's chip shows, and the circle
+// co-op knows, by address, which a person's chip shows, the names of the
+// circles the member reads, by id, which a circle's column shows, and the circle
 // the member lensed the co-op on, which the server read from their cookie.
 export class ShellState {
   #dismissed: Outcome | null = $state.raw(null)
   readonly #outcome: () => Outcome | null
   readonly #names: () => Record<string, string>
   readonly #lens: () => Lens | null
+  readonly #circles: () => Lens[]
   drawer = $state(true)
   // The drawer's open panel, by id; a page without it opens its first.
   panel: string | null = $state(null)
@@ -31,10 +33,12 @@ export class ShellState {
     drawer: () => boolean,
     names: () => Record<string, string>,
     lens: () => Lens | null = () => null,
+    circles: () => Lens[] = () => [],
   ) {
     this.#outcome = outcome
     this.#names = names
     this.#lens = lens
+    this.#circles = circles
     this.drawer = drawer()
   }
 
@@ -53,6 +57,12 @@ export class ShellState {
   // one by it.
   name(address: string): string | undefined {
     return this.#names()[address]
+  }
+
+  // A circle's name by its id, or none where the member reads no circle
+  // by it.
+  circle(id: string): string | undefined {
+    return this.#circles().find((c) => c.id === id)?.name
   }
 
   // The circle every collection reads through, or none.

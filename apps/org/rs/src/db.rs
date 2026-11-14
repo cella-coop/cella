@@ -125,11 +125,28 @@ impl<'a> Dev<'a> {
             cmds.push(root);
         }
         if let Some(dir) = fixture {
-            let mut seed = self.on(db, "node");
-            seed.arg(self.repo.root.join("tools/seed.mjs")).arg(dir);
-            cmds.push(seed);
+            cmds.push(self.seed(db, dir));
         }
         cmds
+    }
+
+    /// The turn to migrate a database on the cluster, held until the file
+    /// it locks is dropped: a migration sets the cluster's roles, which two
+    /// at once would update together and one of them fail on, as the e2e
+    /// workers and the folds they run would.
+    pub fn migrating(&self) -> Result<fs::File> {
+        let at = self.repo.data().join("migrate.lock");
+        fs::create_dir_all(self.repo.data())
+            .and_then(|()| fs::File::create(&at))
+            .and_then(|f| f.lock().map(|()| f))
+            .map_err(|e| Fail::new(format!("{}: {e}", at.display())))
+    }
+
+    /// Seeds a migrated database from a fixture's directory.
+    pub fn seed(&self, db: &str, dir: &Path) -> Command {
+        let mut seed = self.on(db, "node");
+        seed.arg(self.repo.root.join("tools/seed.mjs")).arg(dir);
+        seed
     }
 
     pub fn start(&self, steps: &Steps) -> Result {
@@ -248,6 +265,7 @@ pub fn run(repo: &Repo, steps: &Steps, command: Db) -> Result {
                 .transpose()?;
             repo.install(steps)?;
             let db = db.unwrap_or_else(|| dev.db.clone());
+            let _turn = dev.migrating()?;
             steps.run(
                 &format!("reset {db}"),
                 &mut dev.renew(&db, None, fixture.as_deref()),

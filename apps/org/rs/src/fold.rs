@@ -151,11 +151,14 @@ pub fn fold(repo: &Repo, steps: &Steps, f: &Fold<'_>) -> Result {
     let at = match f.from {
         None => {
             repo.install(steps)?;
-            steps.run(
-                &format!("migrate {}", f.into),
-                &mut dev.renew(f.into, None, None),
-                quiet,
-            )?;
+            {
+                let _turn = dev.migrating()?;
+                steps.run(
+                    &format!("migrate {}", f.into),
+                    &mut dev.renew(f.into, None, None),
+                    quiet,
+                )?;
+            }
             settle(&dev, f)?;
             psql(
                 &dev,

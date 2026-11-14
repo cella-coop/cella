@@ -1,9 +1,14 @@
+use std::collections::BTreeMap;
 use std::fs;
+use std::io::{self, Read, Write};
 use std::path::{Component, Path, PathBuf};
 use std::process::Command;
+use std::sync::Mutex;
+use std::thread;
+use std::time::Instant;
 
 use crate::cli::Test;
-use crate::db::Dev;
+use crate::db::{self, Dev};
 use crate::fold;
 use crate::pruned;
 use crate::repo::Repo;
@@ -40,7 +45,7 @@ pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>) -> Result {
             tools(repo, steps)?;
             pruned::serve(repo, steps)?;
             slices(repo, steps, None)?;
-            e2e(repo, steps, None)
+            e2e(repo, steps, None, None)
         }
         Some(Test::Guards) => rust(repo, steps, "guards", "cella-guards"),
         Some(Test::Cli) => rust(repo, steps, "cli", "cella-cli"),
@@ -48,7 +53,7 @@ pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>) -> Result {
         Some(Test::Tools) => tools(repo, steps),
         Some(Test::Pruned) => pruned::serve(repo, steps),
         Some(Test::Slice { name }) => slices(repo, steps, name.as_deref()),
-        Some(Test::E2e { name }) => e2e(repo, steps, name.as_deref()),
+        Some(Test::E2e { name, jobs }) => e2e(repo, steps, name.as_deref(), jobs),
         Some(Test::Scale {
             members,
             years,
@@ -311,8 +316,11 @@ fn slices(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
 }
 
 /// Each e2e scenario's file on a database migrated whole and seeded with
-/// Lanterne, through the handlers on the dev cluster.
-fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
+/// Lanterne, through the handlers on the dev cluster: one at a time on this
+/// process at one worker, else across workers at once, each a child of
+/// this binary running one scenario at a time on its own database
+/// (`WORKER`).
+fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>, jobs: Option<usize>) -> Result {
     let mut files: Vec<PathBuf> = tests(repo)?
         .into_iter()
         .filter(|(k, _)| matches!(k, Kind::E2e))
@@ -334,61 +342,316 @@ fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
     }
     let dev = Dev::new(repo);
     dev.up()?;
+    // A worker's child runs the one scenario it is handed, on its worker's
+    // databases, the shell its parent built.
+    if let Some(w) = std::env::var(WORKER).ok().and_then(|w| w.parse().ok()) {
+        let (name, file) = chosen[0];
+        return scenario(repo, steps, &dev, &Worker::new(w), name, file);
+    }
     // A scenario may drive the shell as a browser would, through its built
     // server; the build is the production one.
     shell::build(repo, steps)?;
-    let lanterne = repo.root.join("apps/org/fixtures/lanterne");
-    // One worker runs every scenario, in the order of their names.
-    let worker = Worker::new(1);
-    for (name, file) in chosen {
-        steps.run(
-            &format!("db e2e/{name}"),
-            &mut dev.renew(&worker.db, None, Some(&lanterne)),
-            quiet,
-        )?;
-        steps.run(
-            &format!("e2e {name}"),
-            &mut [node_test(&dev, steps, &worker.db, &[file])],
-            tap,
-        )?;
-        // What the scenario wrote, folded from its log into a fresh
-        // database, matches it row for row, every slice folded, so a write
-        // whose entry carries less than it changed fails the day it is
-        // written (architecture.md, "Folds"); unless the scenario stages,
-        // around the notary, state its logged writes then build on, which
-        // no log can rebuild, and says so in an `// unfolded: <why>` line.
-        if let Some(why) = unfolded(file)? {
-            println!("{:<22} {why}", format!("unfolded e2e/{name}"));
-            continue;
+    let jobs = jobs
+        .or_else(|| std::env::var("CELLA_E2E_JOBS").ok()?.trim().parse().ok())
+        .unwrap_or(JOBS)
+        .clamp(1, chosen.len());
+    if jobs == 1 {
+        let worker = Worker::new(1);
+        for (name, file) in chosen {
+            scenario(repo, steps, &dev, &worker, name, file)?;
         }
-        let folded = fold::fold(
-            repo,
-            steps,
-            &fold::Fold {
-                source: &worker.db,
-                into: &worker.fold,
-                to: None,
-                from: None,
-                every: fold::EVERY,
-                compare: true,
-            },
-        );
-        let mut drop = dev.on("postgres", "dropdb");
-        drop.args(["--if-exists", "--force", &worker.fold]);
-        steps.run(&format!("unfold e2e/{name}"), &mut [drop], quiet)?;
-        folded?;
+        return Ok(());
     }
-    Ok(())
+    workers(repo, steps, &chosen, jobs)
 }
 
-/// Why a scenario's log does not fold, where its file says so in a line
-/// `// unfolded: <why>`.
-fn unfolded(file: &Path) -> Result<Option<String>> {
+/// How many workers run the scenarios at once, unless `--jobs` or
+/// `CELLA_E2E_JOBS` says: as many as half the box's builds slice,
+/// `MemoryHigh` 11G, holds at a worker's peak measured on the box, since
+/// two gates runs may share it (index.md, "Gates").
+const JOBS: usize = 4;
+
+/// The variable that makes this binary a worker's child: the worker it
+/// runs the scenario it is handed for.
+const WORKER: &str = "CELLA_E2E_WORKER";
+
+/// How far apart the workers' analytics ports are, past every scenario's
+/// offset.
+const SPREAD: u16 = 100;
+
+/// One scenario on a worker's database, renewed, migrated whole and seeded
+/// with Lanterne, then its log folded into the worker's fold database and
+/// compared, unless its file says why not.
+fn scenario(
+    repo: &Repo,
+    steps: &Steps,
+    dev: &Dev,
+    worker: &Worker,
+    name: &str,
+    file: &PathBuf,
+) -> Result {
+    let lanterne = repo.root.join("apps/org/fixtures/lanterne");
+    {
+        let _turn = dev.migrating()?;
+        steps.run(
+            &format!("db e2e/{name}"),
+            &mut dev.renew(&worker.db, None, None),
+            quiet,
+        )?;
+    }
+    steps.run(
+        &format!("seed e2e/{name}"),
+        &mut [dev.seed(&worker.db, &lanterne)],
+        quiet,
+    )?;
+    steps.run(
+        &format!("e2e {name}"),
+        &mut [node_test(dev, steps, &worker.db, &[file])],
+        tap,
+    )?;
+    // What the scenario wrote, folded from its log into a fresh database,
+    // matches it row for row, every slice folded, so a write whose entry
+    // carries less than it changed fails the day it is written
+    // (architecture.md, "Folds"); unless the scenario stages, around the
+    // notary, state its logged writes then build on, which no log can
+    // rebuild, and says so in an `// unfolded: <why>` line.
+    if let Some(why) = marked(file, "unfolded")? {
+        println!("{:<22} {why}", format!("unfolded e2e/{name}"));
+        return Ok(());
+    }
+    let folded = fold::fold(
+        repo,
+        steps,
+        &fold::Fold {
+            source: &worker.db,
+            into: &worker.fold,
+            to: None,
+            from: None,
+            every: fold::EVERY,
+            compare: true,
+        },
+    );
+    let mut drop = dev.on("postgres", "dropdb");
+    drop.args(["--if-exists", "--force", &worker.fold]);
+    steps.run(&format!("unfold e2e/{name}"), &mut [drop], quiet)?;
+    folded
+}
+
+/// The scenarios across `jobs` workers: the longest first, by the times the
+/// last run kept, each worker taking the next as it ends one and printing
+/// its output whole; a failure is named with its worker, the others run to
+/// their end, and the run fails naming each that failed. A scenario whose
+/// file has a line `// alone: <why>` disturbs what every worker shares, the
+/// cluster or the build, so it runs after the others, by itself.
+fn workers(repo: &Repo, steps: &Steps, chosen: &[&(String, PathBuf)], jobs: usize) -> Result {
+    let mut times = Times::read();
+    let mut order: Vec<&(String, PathBuf)> = chosen.to_vec();
+    // A scenario no run has timed goes first, the largest file first.
+    let size = |f: &Path| fs::metadata(f).map(|m| m.len()).unwrap_or(0);
+    order.sort_by(|(a, fa), (b, fb)| match (times.of(a), times.of(b)) {
+        (Some(x), Some(y)) => y.total_cmp(&x),
+        (None, Some(_)) => std::cmp::Ordering::Less,
+        (Some(_), None) => std::cmp::Ordering::Greater,
+        (None, None) => size(fb).cmp(&size(fa)),
+    });
+    let mut shared = Vec::new();
+    let mut alone = Vec::new();
+    for (name, file) in order {
+        match marked(file, "alone")? {
+            Some(why) => alone.push((name, why)),
+            None => shared.push(name),
+        }
+    }
+    let me = std::env::current_exe().map_err(|e| Fail::new(format!("cella: {e}")))?;
+    println!(
+        "{:<22} {} scenarios on {jobs} workers, then {} alone",
+        "e2e",
+        shared.len(),
+        alone.len()
+    );
+    let start = Instant::now();
+    let pool = Pool {
+        me: &me,
+        repo,
+        steps,
+        ended: Mutex::new(Vec::new()),
+        failed: Mutex::new(Vec::new()),
+    };
+    pool.run(shared, jobs);
+    for (name, why) in alone {
+        println!("{:<22} {why}", format!("alone e2e/{name}"));
+        pool.run(vec![name], 1);
+    }
+    for (name, secs) in pool.ended.into_inner().unwrap_or_default() {
+        times.set(name, secs);
+    }
+    times.write();
+    let mut failed = pool.failed.into_inner().unwrap_or_default();
+    println!(
+        "{:<22} {:.1} min on {jobs} workers",
+        "e2e",
+        start.elapsed().as_secs_f64() / 60.0
+    );
+    if failed.is_empty() {
+        return Ok(());
+    }
+    failed.sort();
+    Err(Fail::new(format!("e2e failed: {}", failed.join(", "))))
+}
+
+/// The workers of a run, each a child of this binary running one scenario
+/// at a time, and what their scenarios came to.
+struct Pool<'a> {
+    me: &'a Path,
+    repo: &'a Repo,
+    steps: &'a Steps,
+    /// Each scenario that passed, and the seconds it took.
+    ended: Mutex<Vec<(String, f64)>>,
+    failed: Mutex<Vec<String>>,
+}
+
+impl Pool<'_> {
+    /// Runs the scenarios on `jobs` workers, in their order, until each ended.
+    fn run(&self, names: Vec<&String>, jobs: usize) {
+        let queue = Mutex::new(names.into_iter());
+        thread::scope(|s| {
+            for w in 1..=jobs {
+                let queue = &queue;
+                s.spawn(move || {
+                    loop {
+                        // The queue is held only to take the next, never
+                        // while it runs.
+                        let next = lock(queue).next();
+                        let Some(name) = next else {
+                            break;
+                        };
+                        self.one(w, name);
+                    }
+                });
+            }
+        });
+    }
+
+    fn one(&self, w: usize, name: &str) {
+        let mut child = Command::new(self.me);
+        // A scenario's analytics shells take the worker's port plus their
+        // offset, so the same offset on two workers never meets on one.
+        let analytics = db::analytics_port() + SPREAD * (w as u16 - 1);
+        child
+            .current_dir(&self.repo.root)
+            .env(WORKER, w.to_string())
+            .env("CELLA_ANALYTICS_PORT", analytics.to_string());
+        if self.steps.verbose {
+            child.arg("--verbose");
+        }
+        child.args(["test", "e2e", name]);
+        let begun = Instant::now();
+        let (passed, out) = output(child);
+        let secs = begun.elapsed().as_secs_f64();
+        let mut stdout = io::stdout().lock();
+        let _ = stdout.write_all(&out);
+        if passed {
+            lock(&self.ended).push((name.to_owned(), secs));
+        } else {
+            let _ = writeln!(stdout, "{:<22} FAIL on worker {w}", format!("e2e/{name}"));
+            lock(&self.failed).push(name.to_owned());
+        }
+        let _ = stdout.flush();
+    }
+}
+
+/// A lock's value, though a worker that held it panicked.
+fn lock<T>(m: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
+    m.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+/// Whether a worker's child passed, and all it said, its standard output
+/// and error in the order it said them.
+fn output(mut child: Command) -> (bool, Vec<u8>) {
+    let mut out = Vec::new();
+    let spawned = io::pipe().and_then(|(mut reader, writer)| {
+        child.stdout(writer.try_clone()?).stderr(writer);
+        let mut running = child.spawn()?;
+        // The pipe ends only once no writer is left, so this side's goes first.
+        drop(child);
+        reader.read_to_end(&mut out)?;
+        running.wait()
+    });
+    match spawned {
+        Ok(status) => (status.success(), out),
+        Err(e) => {
+            out.extend_from_slice(format!("cella: {e}\n").as_bytes());
+            (false, out)
+        }
+    }
+}
+
+/// How long each scenario took when it last passed, in seconds, kept
+/// between runs under the user's cache, since a gates run's checkout is
+/// removed after it: a line `<name> <secs>` each.
+struct Times(BTreeMap<String, f64>);
+
+impl Times {
+    fn path() -> Option<PathBuf> {
+        let cache = std::env::var_os("XDG_CACHE_HOME")
+            .filter(|v| !v.is_empty())
+            .map(PathBuf::from)
+            .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".cache")))?;
+        Some(cache.join("cella/e2e-times"))
+    }
+
+    fn read() -> Self {
+        let text = Self::path()
+            .and_then(|p| fs::read_to_string(p).ok())
+            .unwrap_or_default();
+        Self(
+            text.lines()
+                .filter_map(|l| {
+                    let (name, secs) = l.split_once(' ')?;
+                    Some((name.to_owned(), secs.trim().parse().ok()?))
+                })
+                .collect(),
+        )
+    }
+
+    fn of(&self, name: &str) -> Option<f64> {
+        self.0.get(name).copied()
+    }
+
+    fn set(&mut self, name: String, secs: f64) {
+        self.0.insert(name, secs);
+    }
+
+    /// Writes the times beside their file and moves them over it, so runs
+    /// at once never read half of one; a run that cannot keeps none.
+    fn write(&self) {
+        let Some(path) = Self::path() else {
+            return;
+        };
+        let text: String = self
+            .0
+            .iter()
+            .map(|(name, secs)| format!("{name} {secs:.1}\n"))
+            .collect();
+        let next = path.with_extension(format!("{}", std::process::id()));
+        let _ = path
+            .parent()
+            .map_or(Ok(()), fs::create_dir_all)
+            .and_then(|()| fs::write(&next, text))
+            .and_then(|()| fs::rename(&next, &path));
+    }
+}
+
+/// What a scenario's file says of itself in a line `// <mark>: <why>`, such
+/// as why its log does not fold, `unfolded`, or why it runs by itself,
+/// `alone`.
+fn marked(file: &Path, mark: &str) -> Result<Option<String>> {
     let text =
         fs::read_to_string(file).map_err(|e| Fail::new(format!("{}: {e}", file.display())))?;
+    let prefix = format!("// {mark}: ");
     Ok(text
         .lines()
-        .find_map(|l| l.strip_prefix("// unfolded: "))
+        .find_map(|l| l.strip_prefix(prefix.as_str()))
         .map(str::to_owned))
 }
 

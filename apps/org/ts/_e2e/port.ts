@@ -13,9 +13,10 @@ import { shell } from '@cella/org-analytics/api'
 const repo = new URL('../../../../', import.meta.url).pathname
 const bin = process.env.CELLA_BIN ?? 'cella'
 
-// A scenario's port: the run's own, `CELLA_ANALYTICS_PORT` (54343 unset),
-// plus an offset of the scenario's, never a fixed one, so runs at once
-// never meet on one, nor a scenario on the run's dev shell.
+// A scenario's port: its worker's, `CELLA_ANALYTICS_PORT` (54343 unset), which
+// `cella test e2e` sets a hundred past the worker's before it, plus an
+// offset of the scenario's, never a fixed one, so runs at once never meet
+// on one, nor two workers of a run, nor a scenario on the run's dev shell.
 export const own = (offset: number) => String((Number(process.env.CELLA_ANALYTICS_PORT) || 54343) + offset)
 
 export interface Reading {

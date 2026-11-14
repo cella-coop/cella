@@ -366,6 +366,10 @@ pub enum Test {
     E2e {
         /// A scenario's file name in apps/org/ts/_e2e without .test.ts, such as admission
         name: Option<String>,
+
+        /// The workers running scenarios at once, each on a database of its own; CELLA_E2E_JOBS unset, else as many as half the box's builds slice holds
+        #[arg(long, short)]
+        jobs: Option<usize>,
     },
     /// The fold's scale tier: Lanterne grown to a generated scope, folded in memory that does not grow with its log and re-folded from its latest checkpoint within its bound; slow, so no other target runs it; needs the dev cluster
     Scale {

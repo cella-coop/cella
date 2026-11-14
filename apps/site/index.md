@@ -633,13 +633,14 @@ The site session works on it and never pushes main: each of its
 commits is one change, carrying its `Change-Id:` trailer, so the queue
 hands each out, in the stack's order, once it is built and approved. A
 build lane takes it as it takes any built change: it gates the change
-by the `gates` flow at its commit, rebases and gates again where main
-moved before it lands, as every change does, and lands it by its
-release, `corpus change release --merged`, one change a turn. Cella has
-no landing pass of the integrator's: a lane's release lands every
-change of it, the site's with them. Its paths are decoupled, so main
-moving only in them holds back no change that touches none of them
-([gates](../org/rs/index.md#gates)).
+by the `gates` flow at its commit and lands it by its release,
+`corpus change release --merged`, one change a turn. Cella has no
+landing pass of the integrator's: a lane's release lands every change
+of it, the site's with them. Its paths are decoupled, so main moving
+only outside them, as an org landing does, leaves a site change's green
+gates standing, and main moving only in them holds back no change that
+touches none of them; a change touching both rebases and gates again
+where main moved before it lands ([gates](../org/rs/index.md#gates)).
 
 It lands once the operator approves it. Their push of a version is
 that approval, said by record on the version, in their words, by the

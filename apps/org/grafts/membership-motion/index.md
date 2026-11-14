@@ -355,12 +355,13 @@ and on the assembly's those every working circle has but `participant`,
 a term's edit, as it commits, opening the dialog proposing an
 `amend-role` motion of that one term. Below the roles, Add a role…
 opens a dialog composing a new role whole (`Compose`, [settings](../../core/ui/index.md#settings)):
-its name, its id, which follows the name in lower case until it is
-typed, its duty and its cap, proposed to the deciding circle as one
+its name, its duty and its cap, with no id, which the role's make
+takes from its name ([circle](../../core/circle/index.md#actions)), proposed to the deciding circle as one
 `role` motion carrying them all, its title "Make the Editor role in
 Web"; the guard judges it, and a refusal stays in the dialog, saying
 why. Each dialog posts to `propose` as the New form does. The e2e
-scenario `roles` proposes a new role there and lifts a role's cap. On a
+scenario `roles` proposes a new role there by its name alone, sees it
+made under the id taken from it, and lifts a role's cap. On a
 mandate's page, the motion feat's Change… and Revoke…, whose write,
 `put`, it serves too.
 

@@ -598,8 +598,8 @@ Something new that only a motion makes, as a circle's role, is no
 setting: it is composed whole and proposed as one motion. `Compose` is
 a quiet button, as Add a role…, opening a `Dialog` of its fields, each
 an argument of the motion's one action (`Composed`,
-`models/compose.ts`), a field that follows another until it is typed,
-as a role's id follows its name; above them, why a motion makes it, in
+`models/compose.ts`), none of them a key the write can take itself,
+as a role's id is taken from its name; above them, why a motion makes it, in
 its guard's words. Its primary action, Propose to the deciding circle,
 posts the motions' New form to the page's `propose`: the circle that
 decides it, the title its slice words from what was typed, the

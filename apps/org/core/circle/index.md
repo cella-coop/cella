@@ -838,8 +838,12 @@ and `revoking`. Creating a circle places it nowhere: circles never nest.
   `circle.features` spells them. Ordered, since the
   procedure it sets decides the motions put to the circle after it.
 - **role.make** makes a role in a circle, or a `*` role every working
-  circle has, by the motion it cites: its id, name, duty and cap,
-  holding nothing until a motion grants it a mandate. **role.amend**
+  circle has, by the motion it cites: its name, duty and cap, its id taken from
+  its name as it is made, in lower case, each run of anything but a
+  letter or a digit one hyphen, with `-2`, `-3` and on after it where a
+  circle or a role already holds that key; its entry carries the id it
+  took, which its fold inserts. It holds nothing until a motion grants
+  it a mandate. **role.amend**
   changes a role's name, its duty or its cap, from the verdict date;
   a field the motion leaves out stays as it was, and a cap it gives as
   none lifts the role's, so the role is uncapped from that day; its
@@ -901,8 +905,8 @@ read and what would fix it.
 
 A role is made and changed the same way, by a `role` or `amend-role`
 action: the role's circle is one the motion's circle may decide about,
-and a `*` role is the assembly's alone; a new role's id is no
-grantee's, since circles and roles share one key; a name given is not
+and a `*` role is the assembly's alone; a new role names no id, since
+the make takes one no grantee holds from its name; a name given is not
 blank and no other role's in its circle; a cap is a positive count or
 none, and not below the tenures of the role running on the day, a
 cap given as none lifting it and a cap left out reading as the role's
@@ -1120,7 +1124,7 @@ them. A grantee's name links to its circle, its issuer to
 its own, and the motion to its page; a link of the chain and a mandate
 under it opens its own page.
 
-A circle's page has a Settings tab, a `Settings` form ([settings](../ui/index.md#settings)) of its name, its purpose and its procedure, from those in force, and below them its roles, each its name, duty and cap, and Add a role…. None saves directly: an edit, as it commits, opens the dialog proposing an `amend-circle` or `amend-role` motion of the circle that decides about it, the assembly unless another holding `amend-circle` may (`motion.decider`), its reason the guard's, why no write of the reader's changes it. A role's cap emptied proposes lifting it, the `amend-role` motion giving its cap as none. Add a role… opens a dialog composing a new role whole, its name, id, duty and cap, proposed as one `role` motion of that circle.
+A circle's page has a Settings tab, a `Settings` form ([settings](../ui/index.md#settings)) of its name, its purpose and its procedure, from those in force, and below them its roles, each its name, duty and cap, and Add a role…. None saves directly: an edit, as it commits, opens the dialog proposing an `amend-circle` or `amend-role` motion of the circle that decides about it, the assembly unless another holding `amend-circle` may (`motion.decider`), its reason the guard's, why no write of the reader's changes it. A role's cap emptied proposes lifting it, the `amend-role` motion giving its cap as none. Add a role… opens a dialog composing a new role whole, its name, duty and cap, its id taken from the name as it is made, proposed as one `role` motion of that circle.
 
 Each circle has a features page in Settings, `/settings/features/<id>`,
 which its Settings tab links to under its terms: a `Settings` form of

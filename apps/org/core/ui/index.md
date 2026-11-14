@@ -502,7 +502,9 @@ and its project `projects`; a property, by an `href` that is a record's
 own, `/<collection>/<id>`; a `person` is always one of `people`. The
 icon is the one that collection's view declares, which `Cell` reads
 from the sidebar's navigation the shell hands `useShell`, so no slice
-imports another's to find it. It stands at the value's size, quieter
+imports another's to find it. A person wears one person (Phosphor
+`User`), as core person's `people` declares, and a circle a group
+(`Users`), as core circle's `circles` declares. It stands at the value's size, quieter
 than its text, and is hidden from assistive technology, since the text
 names the record. A collection that declares no icon, or that the shell
 does not mount, leaves the value bare; an enumeration, as a task's

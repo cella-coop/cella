@@ -67,11 +67,12 @@ export const collection = {
     const paged = spec.layout === 'list' || spec.layout === 'feed' || spec.layout === 'table' || spec.layout === 'gallery'
     // The field a list, a feed, a table or a gallery groups its rows by,
     // read group by group in its board's order, and the one a board's
-    // columns are; each answered with all its values, as a board's
-    // columns are drawn from them.
+    // columns are, and the one a calendar's cards are coloured by; each
+    // answered with all its values, as a board's columns are drawn from
+    // them and a calendar's inks handed out by them.
     const by = grouping(spec, fs, looks)
     const group = paged && by ? { field: by.key, values: looks.lanes?.[by.key] ?? [] } : undefined
-    const full = (f: Field) => f.type === 'enum' || (f === by && (paged || spec.layout === 'board'))
+    const full = (f: Field) => f.type === 'enum' || (f === by && spec.layout !== 'dashboard')
     const { rows, counts, values, groups, whole } = await read(db, from, {
       ...(spec.layout === 'dashboard' ? {} : { keep: placing(spec, fs, url, day) ?? { ...keeps, ...(group ? { group } : {}) }, ...(paged ? { limit } : {}) }),
       counts: [{ where: spec.where }, keeps, ...tabs.map((p) => ({ where: wheres(p.where, fs) }))],

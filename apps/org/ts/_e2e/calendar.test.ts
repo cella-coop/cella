@@ -1,11 +1,12 @@
 // The calendar layout: a month as whole weeks from Monday, a week, the
 // rows on their days in the order of their time, and the view's date and
-// span carried in the address and checked against the fields. Pure: no
+// span carried in the address and checked against the fields, and the
+// inks a calendar grouped by a field hands its values. Pure: no
 // database, no server, though `cella test e2e` gives it both.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { address, anchor, fields, period, placed, resolve, spec, time } from '@cella/org-ui/models'
+import { address, anchor, fields, legend, period, placed, resolve, spec, time } from '@cella/org-ui/models'
 
 const fs = fields([
   { key: 'title', label: 'Meeting', kind: 'title', value: (r: any) => r.title },
@@ -67,4 +68,23 @@ test('the day a calendar is at is an ISO day from the address, else today', () =
   assert.equal(anchor('June', '2026-10-24'), '2026-10-24')
   assert.equal(anchor('2026-13-45', '2026-10-24'), '2026-10-24')
   assert.equal(anchor(null, '2026-10-24'), '2026-10-24')
+})
+
+test('a calendar grouped by a field hands its values the inks in turn, by their place in the board\'s order, None last and of none', () => {
+  const rows = [
+    { id: 'a', status: 'held' },
+    { id: 'b', status: 'scheduled' },
+    { id: 'c', status: null },
+    { id: 'd', status: 'held' },
+    { id: 'e', status: 'postponed' },
+  ]
+  const keys = legend(rows, 'status', ['scheduled', 'held', 'cancelled'])
+  assert.deepEqual(
+    keys.map((k) => [k.value, k.count, k.ink]),
+    [['scheduled', 1, 3], ['held', 2, 1], ['postponed', 1, 4], ['', 1, null]],
+    'cancelled holds no row and is not named, yet keeps its place, so held keeps its ink in a month without one',
+  )
+  assert.deepEqual(keys.map((k) => k.row.id), ['b', 'a', 'e', 'c'])
+  const many = Array.from({ length: 7 }, (_, i) => ({ id: String(i), circle: `c${i}` }))
+  assert.deepEqual(legend(many, 'circle', []).map((k) => k.ink), [3, 1, 2, 4, 0, 3, 1], 'the site\'s turn from the blue, and past five round again')
 })

@@ -220,7 +220,9 @@ draws.
   (any enumeration, person or circle field, or None: a board's columns,
   and in a list, a feed, a table and a gallery a header over each
   group's rows, naming its value and its count as a board's column
-  does; a calendar's date, and month or week), Order by (any of the collection's fields, and a toggle beside
+  does; a calendar's date, and month or week, and a value that colours
+  each card, a legend over the calendar naming each value with its
+  colour and count), Order by (any of the collection's fields, and a toggle beside
   it for ascending or descending; none chosen, the collection's own
   order) and Filter (a field to add a condition on: a date, or any field
   with a handful of values, at most `limits.values` across the rows the
@@ -279,8 +281,13 @@ draws.
   month, in whole weeks from Monday, or of a week, by a date field, in
   the order of their time where the date holds one
   (`YYYY-MM-DDTHH:MM`), or in the view's order where it sorts them,
-  each tinted by the first of its cards' fields
-  that has a tone, a week showing the fields under each title; the
+  each tinted by the value of the field it is grouped by, the values
+  handed the brand's five pentad inks (`--p0` to `--p4`) in the site's
+  turn, as the inks are handed out to areas, and again from the first
+  past five, and a legend above the days names each value with its colour and how many
+  of the rows it shows hold it, so a value is never told by colour
+  alone; grouped by nothing, each tinted by the first of its cards'
+  fields that has a tone, a week showing the fields under each title; the
   calendar is offered only where a field is a date. Which month or week
   it shows is where the viewer is, not part of the view: `at` in the
   address, today when absent, which its arrows and Today link to and

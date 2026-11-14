@@ -304,7 +304,9 @@ export const opens = (rows: Record<string, unknown>[], i: number, key: string): 
 // board groups by, null for none, the fields a gallery's or a board's
 // cards show, the date a calendar places the rows by and whether it
 // shows a month or a week, and the dashboard's widgets, null for the
-// declared or derived ones. Which month or week a calendar shows is not
+// declared or derived ones, and whether it reads across circles, every
+// circle's rows the reader may read, dropping the lens. Which month or
+// week a calendar shows is not
 // the view's: it is where the viewer is, `at` in the address beside it.
 export interface Spec {
   layout: Layout
@@ -318,6 +320,7 @@ export interface Spec {
   on: string | null
   span: Span
   widgets: Widget[] | null
+  across: boolean
 }
 
 // How a collection looks before a view changes it, as it declares: its
@@ -372,6 +375,7 @@ export interface Preset {
   on?: string
   span?: Span
   widgets?: Widget[]
+  across?: boolean
 }
 
 // A view a viewer saved from what they were looking at: a preference of
@@ -383,11 +387,24 @@ export interface Custom {
   spec: Spec
 }
 
-// Every custom view a viewer keeps, by collection; versioned, so it can
-// move from the browser into a member's preferences as it is.
+// A view pinned to Favorites, the same in every circle: the collection
+// and the view it pins, a preset's id or the viewer's own, with the name,
+// mark and address it was last drawn with.
+export interface Pin {
+  collection: string
+  view: string
+  name: string
+  icon?: string
+  href: string
+}
+
+// Every custom view a viewer keeps, by collection, and the views they
+// pinned, in their order; versioned, so it can move from the browser into
+// a member's preferences as it is.
 export interface Saved {
   v: 1
   views: Record<string, Custom[]>
+  pins: Pin[]
 }
 
 export const all: Preset = { id: 'all', name: 'All' }
@@ -413,7 +430,7 @@ const json = (raw: string | null): unknown => {
 // The view the address asks for: a preset or a custom view by `v`, All
 // when it names none, over the collection's look, its settings
 // overridden by the address's own (`view`, `where`, `q`, `hide`,
-// `order`, `sort`, `by`, `cards`, `on`, `span`, `w`), each checked against the
+// `order`, `sort`, `by`, `cards`, `on`, `span`, `w`, `across`), each checked against the
 // fields. What
 // fails a check falls back to the view's, and is said.
 export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[], look: Look = {}): { id: string; spec: Spec; errors: string[] } {
@@ -454,9 +471,10 @@ export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[], look
   const placing = params.get('on')
   const on = placing && dates.includes(placing) ? placing : base.on && dates.includes(base.on) ? base.on : null
   const span = spans.find((s) => s === params.get('span')) ?? base.span
+  const across = params.has('across') ? params.get('across') === '1' : base.across
   return {
     id,
-    spec: { layout, where, q: (params.get('q') ?? '').slice(0, 200), hide: list('hide'), order: list('order'), sort, by, cards: list('cards'), on, span, widgets: ws },
+    spec: { layout, where, q: (params.get('q') ?? '').slice(0, 200), hide: list('hide'), order: list('order'), sort, by, cards: list('cards'), on, span, widgets: ws, across },
     errors,
   }
 }
@@ -496,6 +514,9 @@ export function address(id: string, s: Spec, base: Spec): string {
   if (s.span !== base.span) {
     q.set('span', s.span)
   }
+  if (s.across !== base.across) {
+    q.set('across', s.across ? '1' : '0')
+  }
   if (!same(s.widgets, base.widgets)) {
     q.set('w', JSON.stringify(s.widgets))
   }
@@ -523,6 +544,7 @@ export const spec = (p?: Preset, look: Look = {}): Spec => ({
   on: p?.on ?? look.on ?? null,
   span: p?.span ?? look.span ?? 'month',
   widgets: p?.widgets ?? null,
+  across: p?.across ?? false,
 })
 
 // The columns in a view's order: the keys it moved first, then the rest
@@ -535,7 +557,7 @@ export function arranged<C extends { key: string }>(columns: C[], order: string[
 // A saved store as read back from the browser: anything unrecognised is
 // dropped rather than trusted.
 export function saved(x: unknown): Saved {
-  const store: Saved = { v: 1, views: {} }
+  const store: Saved = { v: 1, views: {}, pins: [] }
   if (typeof x !== 'object' || x === null || (x as Saved).v !== 1 || typeof (x as Saved).views !== 'object') {
     return store
   }
@@ -546,5 +568,21 @@ export function saved(x: unknown): Saved {
         .map((c) => ({ ...c, spec: { ...spec(), ...c.spec } }))
     }
   }
+  const pins: unknown = (x as Saved).pins
+  if (Array.isArray(pins)) {
+    store.pins = pins.filter(pinned).map((p) => ({ collection: p.collection, view: p.view, name: p.name, href: p.href, ...(typeof p.icon === 'string' ? { icon: p.icon } : {}) }))
+  }
   return store
 }
+
+// Whether a pin read back from the browser is one: a collection by name,
+// a view's id, a name, and an address on this origin, under its
+// collection.
+const pinned = (p: Pin): p is Pin =>
+  typeof p?.collection === 'string' &&
+  /^[\w-]{1,60}$/.test(p.collection) &&
+  typeof p.view === 'string' &&
+  /^[\w-]{1,60}$/.test(p.view) &&
+  typeof p.name === 'string' &&
+  typeof p.href === 'string' &&
+  (p.href === `/${p.collection}` || p.href.startsWith(`/${p.collection}?`))

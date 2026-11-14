@@ -12,6 +12,8 @@
   import { listed, runs } from '../models/arrange.ts'
   import type { Outcome as Done } from '../models/outcome.ts'
   import { useShell } from '../hooks/useShell.ts'
+  import { useFavorites } from '../hooks/useFavorites.ts'
+  import { mark } from '../marks.ts'
   import type { Search } from '../hooks/CommandState.svelte.ts'
   import Command from './Command.svelte'
   import Icon from './Icon.svelte'
@@ -24,7 +26,8 @@
   // The shell: the sidebar and the content beside it; the last write's
   // outcome floats above. ] shows or hides every page's drawer. The
   // sidebar shows the circle the member is in: its top stays put, the
-  // co-op selector, the Inbox and Activity. Its middle, which alone
+  // co-op selector, the Inbox, Activity and Favorites, the views the
+  // member pinned, the same in every circle. Its middle, which alone
   // scrolls, lists the circle's enabled features, in its order, under its
   // accordions, then More…. Its foot stays put too: the command menu and
   // the acting member's account.
@@ -63,6 +66,7 @@
   } = $props()
 
   const state = useShell(() => outcome, () => drawer, () => people, () => lens, () => circles)
+  const favorites = useFavorites()
 
   function onkeydown(e: KeyboardEvent) {
     if (e.key !== ']' || e.metaKey || e.ctrlKey || e.altKey || typing(e) || document.querySelector('dialog[open]')) {
@@ -81,6 +85,11 @@
   const here = (href: string) => page.url.pathname === href || page.url.pathname.startsWith(`${href}/`)
   const initials = (name: string) => name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('')
   const back = $derived(page.url.pathname + page.url.search)
+  // Whether a pin's address is the page open, a bare `?` as none.
+  const opened = (href: string) => href.replace(/\?$/, '') === back
+  // A collection's own icon, as the sidebar draws it, for a pin of a
+  // preset that names no mark of its own.
+  const owner = (collection: string) => nav.flatMap((g) => g.items).find((i) => i.href === `/${collection}`)?.icon
 
   // The circle the member is in: their lens, or the assembly where they
   // lensed none, which reads whole.
@@ -194,6 +203,26 @@
 
     <!-- Always here, above the features: what waits on the acting member. -->
     {@render links(nav.find((g) => g.group === 'home')?.items ?? [])}
+
+    <!-- Favorites, the one place the same in every circle: the views the
+         member pinned, each opening at its own address. -->
+    <div class="favorites">
+      <p class="label">Favorites</p>
+      {#if favorites.list.length}
+        <ul aria-label="Favorites">
+          {#each favorites.list as f (`${f.collection} ${f.view}`)}
+            {const on = $derived(opened(f.href))}
+            <li>
+              <a href={f.href} class:on aria-current={on ? 'page' : undefined}>
+                <Icon icon={f.icon ? mark(f.icon) : (owner(f.collection) ?? mark())} /><span class="title">{f.name}</span>
+              </a>
+            </li>
+          {/each}
+        </ul>
+      {:else}
+        <p class="hint">Pin a view from its View panel.</p>
+      {/if}
+    </div>
 
     </div>
 
@@ -327,6 +356,16 @@
   .middle {
     min-height: 0;
     overflow-y: auto;
+  }
+  /* Favorites stay in the top, so a long list scrolls in its own place. */
+  .favorites ul {
+    max-height: 12rem;
+    overflow-y: auto;
+  }
+  .favorites .title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .foot {
     display: grid;

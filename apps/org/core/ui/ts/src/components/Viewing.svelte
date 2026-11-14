@@ -12,13 +12,14 @@
   import type { Column } from '../models/view.ts'
   import { spans } from '../models/calendar.ts'
   import { show } from '../models/format.ts'
-  import { arranged, filtering, groupable, type Custom, type Field, type Layout, type Result, type Spec, type Where, type Widget } from '../models/query.ts'
+  import { arranged, filtering, groupable, type Custom, type Field, type Layout, type Pin, type Result, type Spec, type Where, type Widget } from '../models/query.ts'
   import { reorder } from '../models/drag.ts'
   import { marks } from '../marks.ts'
   import { sortable } from '../attachments/sortable.ts'
   import { useCollection } from '../hooks/useCollection.ts'
   import { useDrag } from '../hooks/useDrag.ts'
   import { useShell } from '../hooks/useShell.ts'
+  import { useFavorites } from '../hooks/useFavorites.ts'
   import { useViews } from '../hooks/useViews.ts'
   import Button from './Button.svelte'
   import Card from './Card.svelte'
@@ -33,12 +34,14 @@
   // Linear's display menu: the layout on top, the text filter, then the
   // same rows in the same order, each a label and a dropdown, Group by,
   // Order by and Filter, the conditions under it as chips; then Display,
-  // a popover of what is shown; then saving what is shown as the
-  // viewer's own view, or, on one of theirs, its name, its changes and
-  // its removal. What the collection offers lives only inside the
-  // dropdowns and popovers, and a row the layout has no use for is
-  // disabled, never dropped. A change hands the whole spec on to the
-  // collection, which puts it in the address.
+  // a popover of what is shown, and Circles, whether the view reads the
+  // lens's circle or every circle the reader reads; then saving what is
+  // shown as the viewer's own view, or, on one of theirs, its name, its
+  // changes and its removal, and pinning the open view to Favorites. What
+  // the collection offers lives only inside the dropdowns and popovers,
+  // and a row the layout has no use for is disabled, never dropped. A
+  // change hands the whole spec on to the collection, which puts it in
+  // the address.
   let {
     name,
     spec,
@@ -54,6 +57,8 @@
     declared = null,
     custom,
     dirty,
+    pin = null,
+    whole = false,
     onchange,
     onsave,
     onremove,
@@ -79,6 +84,10 @@
     declared?: { key: string; dir: 'ascending' | 'descending' } | null
     custom?: Custom
     dirty: boolean
+    // The open view as Favorites pins it, and whether the lens leaves the
+    // collection whole, its rows naming no circle that owns them.
+    pin?: Pin | null
+    whole?: boolean
     onchange: (spec: Spec) => void
     onsave: (view: Custom) => void
     onremove: () => void
@@ -88,6 +97,9 @@
   const state = useCollection()
   const views = useViews(() => name)
   const shell = useShell()
+  const favorites = useFavorites()
+  // Circles chooses only where a lens narrows the rows.
+  const narrowed = $derived(!!shell.lens && !whole)
 
   const groups = $derived(fields.filter(groupable))
   const dates = $derived(fields.filter((f) => f.type === 'date'))
@@ -384,6 +396,22 @@
         <select aria-labelledby="{id}-display" disabled><option>As listed</option></select>
       {/if}
     </div>
+
+    <!-- What the view reads: the lens's circle, or every circle's rows
+         the reader reads; with no lens, or where the lens leaves the
+         collection whole, it already reads every circle. -->
+    <span class="label" id="{id}-circles">Circles</span>
+    <div class="control">
+      <select
+        aria-labelledby="{id}-circles"
+        value={narrowed && !spec.across ? 'this' : 'every'}
+        disabled={!narrowed}
+        onchange={(e) => change({ across: e.currentTarget.value === 'every' })}
+      >
+        <option value="this">This circle</option>
+        <option value="every">Every circle</option>
+      </select>
+    </div>
   </div>
 
   <div class="saving">
@@ -418,6 +446,10 @@
           <Button onclick={() => (views.naming = false)}>Cancel</Button>
         </div>
       </form>
+    {/if}
+    {#if pin}
+      {const on = $derived(favorites.pinned(pin.collection, pin.view))}
+      <Button onclick={() => pin && (on ? favorites.unpin(pin.collection, pin.view) : favorites.pin(pin))}>{on ? 'Unpin from Favorites' : 'Pin to Favorites'}</Button>
     {/if}
   </div>
 </Card>

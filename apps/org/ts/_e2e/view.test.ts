@@ -1,11 +1,11 @@
 // The View panel has one shape on every collection, in every browser:
 // signed in as Camille on the dev server, each collection the sidebar
 // mounts draws, under its layout and its text filter, the same rows in
-// the same order, Group by, Order by, Filter and Display, whatever its
-// fields. On tasks, a board, Group by is its enumeration; a field chosen
-// in Filter opens its chip's popover, a value picked there keeps the
-// rows in the address and names itself on the chip, and Remove takes the
-// condition away; Display opens a popover of the cards' fields. On
+// the same order, Group by, Order by, Filter, Display and Circles,
+// whatever its fields. On tasks, a board, Group by is its enumeration; a
+// field chosen in Filter opens its chip's popover, a value picked there
+// keeps the rows in the address and names itself on the chip, and Remove
+// takes the condition away; Display opens a popover of the cards' fields. On
 // meetings, a calendar, Group by is its date and span. Light and dark,
 // `SHOTS` names where its screenshots go. Nothing is written. Run by
 // `cella test e2e view`.
@@ -17,7 +17,7 @@ import type { Page } from 'playwright-core'
 import { browsers, serve, signIn } from './browser.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-view-shots'
-const rows = ['Group by', 'Order by', 'Filter', 'Display']
+const rows = ['Group by', 'Order by', 'Filter', 'Display', 'Circles']
 
 const panel = (page: Page) => page.locator('section.card', { has: page.getByRole('heading', { name: 'View', exact: true }) })
 

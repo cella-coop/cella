@@ -16,6 +16,7 @@
     PAGE,
     spec as preset,
     type Custom,
+    type Pin,
     type Look,
     type Preset,
     type Result,
@@ -170,6 +171,7 @@
   const saved = useViews(
     () => name,
     () => kept,
+    (c) => customLink(c),
   )
   const drag = useDrag()
   const writes = useWrites()
@@ -197,6 +199,15 @@
   const link = (id: string, s: Spec) => `${page.url.pathname}${address(id, s, resolved(id))}`
   const presetLink = (p: Preset) => link(p.id, resolved(p.id))
   const customLink = (c: Custom) => link(c.id, c.spec)
+  // The open view as Favorites pins it: at its own address, not with what
+  // is changed from it, named by the collection where it is a preset.
+  const pin: Pin | null = $derived(
+    custom
+      ? { collection: name, view: custom.id, name: custom.name, ...(custom.icon ? { icon: custom.icon } : {}), href: customLink(custom) }
+      : active
+        ? { collection: name, view: active.id, name: active.id === 'all' ? title : `${title}: ${active.name}`, ...(active.icon ? { icon: active.icon } : {}), href: presetLink(active) }
+        : null,
+  )
 
   // The gallery's and the board's cards: the view's fields, or the
   // collection's lines under a title and its trailing meta; and the
@@ -359,6 +370,8 @@
     {declared}
     {custom}
     {dirty}
+    {pin}
+    {whole}
     onchange={change}
     onsave={opened}
     onremove={remove}
@@ -370,7 +383,7 @@
   {icon}
   {count}
   {caption}
-  subtitle={whole && shell.lens ? `The lens on ${shell.lens.name} leaves ${title} whole: no circle owns its rows.` : undefined}
+  subtitle={whole && shell.lens ? `The lens on ${shell.lens.name} leaves ${title} whole: no circle owns its rows.` : spec.across && shell.lens ? `Across circles: every circle's ${noun} you read.` : undefined}
   badges={status.map((s) => s(about)).filter((b) => b !== undefined)}
   panels={[{ id: 'view', label: 'View', icon: SlidersHorizontal, body: viewing }]}
 >

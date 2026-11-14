@@ -1,7 +1,11 @@
 // The site's text check (apps/site/index.md, whose words): a change's
 // commits since main, any that changes a file under
 // apps/site/src/content/ whose author is not the operator's git identity
-// is refused, named by its commit, its author and the files. Main is the
+// is refused, named by its commit, its author and the files. A merge is
+// judged by its own resolution, the files of the text that differ from
+// every parent (git's combined diff), so one that only brings commits in
+// names none and passes, each commit it brings judged by its own author.
+// Main is the
 // forge's, origin/main, where the checkout has it, else the local main;
 // on main itself there is nothing since it, and the check passes. It
 // reads a commit's author, which whoever makes the commit sets, so it
@@ -28,9 +32,10 @@ export function base(root) {
 }
 
 /** The commits of `base..HEAD` that change the text and are not the
- * operator's, `{ sha, author, files }`, oldest first. */
+ * operator's, `{ sha, author, files }`, oldest first; a merge's files are
+ * those its resolution changes from every parent. */
 export function refused(root, from) {
-  const log = git(root, ['log', '--reverse', '--no-renames', '--format=%x00%H%x09%an <%ae>', '--name-only', `${from}..HEAD`, '--', TEXT])
+  const log = git(root, ['log', '--reverse', '--no-renames', '--cc', '--format=%x00%H%x09%an <%ae>', '--name-only', `${from}..HEAD`, '--', TEXT])
   if (log.status !== 0) throw new Error(`git log ${from}..HEAD: ${log.stderr.trim()}`)
   return log.stdout
     .split('\0')
@@ -40,6 +45,7 @@ export function refused(root, from) {
       const [sha, author] = head.split('\t')
       return { sha, author, files: files.filter(Boolean) }
     })
+    .filter(({ files }) => files.length)
     .filter(({ author }) => !author.toLowerCase().endsWith(`<${OPERATOR}>`))
 }
 

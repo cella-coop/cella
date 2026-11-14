@@ -624,7 +624,12 @@ Three guards hold `src/content/`, each routable around:
   commit, its author and the files. Main itself has nothing since it,
   and passes. It runs in the gates, as the first step of `cella check
   site`, so it holds every lane, those that run no Claude hook among
-  them. It guards against an accident, not an attacker: a commit's
+  them. A merge commit is judged by what it changes itself, its
+  resolution: the files under `src/content/` that differ from every
+  parent, as git's combined diff names them. A merge whose resolution
+  rewrites the text is refused unless the operator authored it, and one
+  that only brings commits in passes, each of them judged by its own
+  author. It guards against an accident, not an attacker: a commit's
   author is whatever its maker sets.
 
 The operator writes the text in their own editor and commits it by

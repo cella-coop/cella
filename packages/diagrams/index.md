@@ -1,6 +1,6 @@
 +++
 title = "Diagrams"
-updated = 2026-11-10
+updated = 2026-11-14
 +++
 
 `@cella/diagrams` is the landing site's diagrams: Svelte components,
@@ -81,6 +81,8 @@ the geometry of the particles' paths.
   its own where it has one, as `wallet` a treasurer. `src/lang/glyphs.ts` holds Phosphor's paths, vendored so the
   package depends on the brand alone; `cella check site` compares each
   with `@phosphor-icons/core`'s own and refuses one that differs.
+  The same check type-checks the package by its own `tsconfig.json`,
+  which the repository's leaves it to.
 - **Boxes are records**: a rounded box filled with the ground, dashed
   while pending; a span, a faint wash, groups what happens together, as
   one transaction.

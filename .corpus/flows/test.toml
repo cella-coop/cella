@@ -1,5 +1,5 @@
-# What a push runs: the same two ops as the gates, in place of the
+# What a push runs: the same three ops as the gates, in place of the
 # `cargo test`, `cargo clippy`, `cargo fmt --check` and `npm test` corpus
 # would infer, which gate nothing `cella check` and `cella test` do not.
 on = ["push"]
-goals = ["cella-check", "cella-test"]
+goals = ["cella-check", "cella-test", "site-check"]

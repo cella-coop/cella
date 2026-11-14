@@ -48,6 +48,7 @@
     values,
     dashboard,
     shown,
+    choices,
     grouped,
     placing,
     declared = null,
@@ -66,9 +67,10 @@
     // another's where it holds a handful, what Filter offers.
     values: Record<string, string[]>
     dashboard: { custom: boolean; widgets: Widget[]; results: Result[]; errors: string[] } | null
-    // The fields a gallery's or a board's cards show, and the board's
-    // enumeration, person or circle.
+    // The fields the layout shows, a list's, a feed's or its cards', and
+    // those Display offers; and the board's enumeration, person or circle.
     shown: Column[]
+    choices: Column[]
     grouped?: string
     // The date a calendar places the rows by.
     placing?: string
@@ -132,6 +134,7 @@
   // What a row of the panel shows in its Display popover, by layout.
   const display = $derived(
     spec.layout === 'table' ? `${columns.filter((c) => c === titled || !hidden.has(c.key)).length} columns`
+    : spec.layout === 'list' || spec.layout === 'feed' ? `${shown.length} fields`
     : spec.layout === 'gallery' || spec.layout === 'board' || spec.layout === 'calendar' ? `${shown.length} card fields`
     : spec.layout === 'dashboard' && dashboard ? `${dashboard.widgets.length} widgets`
     : null,
@@ -140,7 +143,7 @@
   const change = (s: Partial<Spec>) => onchange({ ...spec, q: state.filter, ...s })
 
   function card(key: string, on: boolean) {
-    change({ cards: columns.filter((c) => c !== titled && (c.key === key ? on : showing.has(c.key))).map((c) => c.key) })
+    change({ cards: choices.filter((c) => (c.key === key ? on : showing.has(c.key))).map((c) => c.key) })
   }
 
   const on = (key: string) => spec.where.find((w) => w.field === key)
@@ -205,12 +208,13 @@
   }
 </script>
 
-<!-- The fields a gallery's, a board's or a calendar's cards show. -->
+<!-- The fields a list or a feed shows after each row's title, or a
+     gallery's, a board's or a calendar's cards. -->
 {#snippet cards()}
   <fieldset class="columns">
-    <legend class="label">Card fields</legend>
+    <legend class="label">{spec.layout === 'list' || spec.layout === 'feed' ? 'Fields' : 'Card fields'}</legend>
     <ul>
-      {#each columns.filter((c) => c !== titled) as c (c.key)}
+      {#each choices as c (c.key)}
         <li>
           <label>
             <input type="checkbox" checked={showing.has(c.key)} onchange={(e) => card(c.key, e.currentTarget.checked)} />

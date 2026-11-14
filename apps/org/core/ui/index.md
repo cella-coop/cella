@@ -219,7 +219,9 @@ draws.
   view would keep without it, an enumeration's, a person's and a
   circle's among them; the conditions
   under it as chips); then Display, a
-  row that opens a popover of what is shown (in a table, its columns, in
+  row that opens a popover of what is shown (in a list, the fields under
+  and after each row's title, in a feed, the fields after each line's
+  title, in a table, its columns, in
   a gallery or on a board, its cards' fields, in a calendar, its cards'
   fields, in a dashboard, its widgets); and last, saving what is shown
   as a view. A row the layout has no use for is shown disabled, never
@@ -417,7 +419,14 @@ A view whose rows are not its own items links each where its `href`
 says, as an inbox's ask links to where it is done.
 
 A `Column` places itself in the list view by `role`: the title, the line
-under it, the trailing meta, or the table alone.
+under it, the trailing meta, or the table alone. Its role is where it
+goes and what a list shows before a view chooses; a view's Display
+chooses which of a list's columns show, the title always among them,
+and which fields a feed's line shows after its title, both kept as
+`cards` in the view and its address, so a column the table alone shows
+by default can be put in a list's meta. A look's cards' fields are its
+cards', not a list's or a feed's: either shows its own default until
+the view chooses otherwise.
 
 ## Settings
 

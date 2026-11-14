@@ -211,9 +211,28 @@
     return by && { by, counts: groups }
   })
   const opening = (i: number) => !!group && opens(state.shown, i, group.by.key)
+  // The fields the view chooses, in its order, but those a layout always
+  // shows: a feed's who and when and every layout's title.
+  const chosen = (fixed: Column[]) => arranged(columns, spec.cards).filter((c) => spec.cards.includes(c.key) && !fixed.includes(c))
+  // What Display offers to show, and what shows: a list's fields under
+  // and after each row's title, the collection's lines and meta where the
+  // view chooses none; a feed's after its line's title, none where the
+  // view chooses none; else the cards' fields. A list and a feed take the
+  // look's own card fields as no choice, its cards' and not theirs.
+  const fixed = $derived(spec.layout === 'feed' ? [titled, who, when].filter((c) => c !== undefined) : [titled])
+  const choices = $derived(columns.filter((c) => !fixed.includes(c)))
+  const lined = $derived(spec.layout === 'list' || spec.layout === 'feed')
+  const choosing = $derived(spec.cards.length > 0 && !(lined && spec.cards.join() === (look.cards ?? []).join()))
   const shown = $derived(
-    spec.cards.length ? arranged(columns, spec.cards).filter((c) => spec.cards.includes(c.key)) : [...subs, ...metas].filter((c) => c !== grouped),
+    choosing ? chosen(fixed)
+    : spec.layout === 'list' ? [...subs, ...metas]
+    : spec.layout === 'feed' ? []
+    : [...subs, ...metas].filter((c) => c !== grouped),
   )
+  // A list places each field it shows by its role: a line under the title
+  // goes under it, any other after it, with the meta.
+  const lines = $derived(shown.filter((c) => c.role === 'sub'))
+  const after = $derived(shown.filter((c) => c.role !== 'sub'))
 
   // The calendar's date, the first when the view names none, and the
   // month or week around the day the address is at, else today's.
@@ -334,6 +353,7 @@
     {values}
     {dashboard}
     {shown}
+    {choices}
     grouped={grouped?.key}
     placing={placing?.key}
     {declared}
@@ -476,6 +496,9 @@
               {:else}
                 <span class="what">{titled.value(row)}</span>
               {/if}
+              {#each shown as c (c.key)}
+                <span class="sub"><Cell value={c.value(row)} kind={c.kind === 'badge' ? 'text' : c.kind} /></span>
+              {/each}
             </span>
             {#if self && self !== to}
               <a href={self} class="when" tabindex="-1"><Cell value={when.value(row)} kind="date" /></a>
@@ -503,12 +526,12 @@
               {:else}
                 <span class="title">{titled.value(row)}</span>
               {/if}
-              {#each subs as c (c.key)}
+              {#each lines as c (c.key)}
                 <span class="sub"><Cell value={c.value(row)} kind={c.kind === 'badge' ? 'text' : c.kind} /></span>
               {/each}
             </span>
             <span class="meta">
-              {#each metas as c (c.key)}
+              {#each after as c (c.key)}
                 <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} />
               {/each}
             </span>

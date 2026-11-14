@@ -78,7 +78,9 @@ test('the sidebar names the co-op as the database does, and its menus open in th
   assert.ok(text.includes('<title>Lanterne · cella</title>'), 'the co-op is called by its name')
   assert.ok(text.includes('Lanterne Worker Co-operative Limited Company'), 'its menu gives its legal name')
   assert.ok(!text.includes('lanterne.example</b>'), 'not by its address')
-  assert.equal((text.match(/popover="auto"/g) ?? []).length, 2, 'the co-op menu and the account menu are popovers')
+  // The sidebar's own: the View panel's Display is a popover too.
+  const sidebar = text.match(/<nav class="sidebar[\s\S]*?<\/nav>/)?.[0] ?? ''
+  assert.equal((sidebar.match(/popover="auto"/g) ?? []).length, 2, 'the co-op menu and the account menu are popovers')
 })
 
 test('the co-op selector lists the assembly first, and any other circle chosen is the lens its trigger names until the assembly clears it', async () => {

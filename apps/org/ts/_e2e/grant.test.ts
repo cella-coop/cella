@@ -24,7 +24,7 @@ import pg from 'pg'
 import { vote } from '@cella/org-motion/api'
 import type { Deps } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
-import { browsers, serve, signIn } from './browser.ts'
+import { inBrowsers, serve, signIn } from './browser.ts'
 import { Shell, type Done } from './serve.ts'
 
 const su = new pg.Client()
@@ -180,7 +180,7 @@ unseeded('in every browser, light and dark, Operations\' page refuses a grant wi
   const motions = await one<{ n: number }>('SELECT count(*)::int AS n FROM motion.motion')
   await shell.stop()
   mkdirSync(shots, { recursive: true })
-  for (const [engine, launch] of browsers()) {
+  await inBrowsers(async (engine, launch) => {
     const browser = await launch()
     const dev = await serve()
     try {
@@ -223,7 +223,7 @@ unseeded('in every browser, light and dark, Operations\' page refuses a grant wi
       await browser.close()
       await dev.stop()
     }
-  }
+  })
   assert.deepEqual(await one('SELECT count(*)::int AS n FROM motion.motion'), motions, 'no browser proposed the refused grant')
 })
 

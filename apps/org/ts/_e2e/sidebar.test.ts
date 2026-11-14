@@ -13,7 +13,7 @@ import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
 import pg from 'pg'
 import type { Page } from 'playwright-core'
-import { browsers, serve, signIn } from './browser.ts'
+import { eachBrowser, serve, signIn } from './browser.ts'
 
 const su = new pg.Client()
 
@@ -89,7 +89,7 @@ after(async () => {
   await su.end()
 })
 
-for (const [name, launch] of browsers()) {
+eachBrowser((name, launch) => {
   test(`${name}: the sidebar shows the circle Camille is in, the assembly first and where she lands, light and dark`, async () => {
     mkdirSync(shots, { recursive: true })
     const circles = (await su.query<{ id: string; name: string; assembly: boolean; features: string }>(
@@ -182,4 +182,4 @@ for (const [name, launch] of browsers()) {
       await browser.close()
     }
   })
-}
+})

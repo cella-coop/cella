@@ -19,7 +19,7 @@ import { mkdirSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { seats } from '@cella/org-membership/api'
-import { browsers, serve, signIn } from './browser.ts'
+import { inBrowsers, serve, signIn } from './browser.ts'
 import { reader } from './lanterne.ts'
 import { Shell } from './serve.ts'
 
@@ -126,7 +126,7 @@ unseeded('in every browser, light and dark, Camille\'s Powers tab opens and its 
   const commit = await mandate('manager', 'commit')
   await shell.stop()
   mkdirSync(shots, { recursive: true })
-  for (const [engine, launch] of browsers()) {
+  await inBrowsers(async (engine, launch) => {
     const browser = await launch()
     const dev = await serve()
     try {
@@ -158,7 +158,7 @@ unseeded('in every browser, light and dark, Camille\'s Powers tab opens and its 
       await browser.close()
       await dev.stop()
     }
-  }
+  })
 })
 
 if (!process.env.CELLA_STORY) runTest('powers story', async (t) => story((name, step) => t.test(name, step)))

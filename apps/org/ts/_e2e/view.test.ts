@@ -14,14 +14,14 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
 import type { Page } from 'playwright-core'
-import { browsers, serve, signIn } from './browser.ts'
+import { eachBrowser, serve, signIn } from './browser.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-view-shots'
 const rows = ['Group by', 'Order by', 'Filter', 'Display', 'Circles']
 
 const panel = (page: Page) => page.locator('section.card', { has: page.getByRole('heading', { name: 'View', exact: true }) })
 
-for (const [name, launch] of browsers()) {
+eachBrowser((name, launch) => {
   test(`${name}: every collection's View panel has one shape, its specifics in its dropdowns and popovers, light and dark`, async () => {
     mkdirSync(shots, { recursive: true })
     const { base, stop } = await serve()
@@ -113,4 +113,4 @@ for (const [name, launch] of browsers()) {
       await stop()
     }
   })
-}
+})

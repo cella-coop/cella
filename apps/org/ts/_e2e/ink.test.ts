@@ -8,11 +8,11 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
-import { browsers, serve, signIn } from './browser.ts'
+import { eachBrowser, serve, signIn } from './browser.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-ink-shots'
 
-for (const [name, launch] of browsers()) {
+eachBrowser((name, launch) => {
   test(`${name}: the ink specimen proposes where the inks go, both themes, every pair over AA`, async () => {
     mkdirSync(shots, { recursive: true })
     const { base, stop } = await serve()
@@ -49,4 +49,4 @@ for (const [name, launch] of browsers()) {
       await stop()
     }
   })
-}
+})

@@ -8,17 +8,18 @@
 // stand, the sidebar's account naming her by the new name. No field of
 // hers opens a motion. `SHOTS` names where its screenshots go. Run by
 // `cella test e2e account`.
+// browsers: one at a time: each browser renames Camille, whose row the others read back and whose name their pages show
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
 import pg from 'pg'
-import { browsers, serve, signIn } from './browser.ts'
+import { eachBrowser, serve, signIn } from './browser.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-account-shots'
 const camille = 'camille@lanterne.example'
 
-for (const [name, launch] of browsers()) {
+eachBrowser((name, launch) => {
   test(`${name}: Camille changes her name and theme from her Account settings, and both stand after a reload, light and dark`, async () => {
     mkdirSync(shots, { recursive: true })
     const su = new pg.Client()
@@ -86,4 +87,4 @@ for (const [name, launch] of browsers()) {
       await su.end()
     }
   })
-}
+})

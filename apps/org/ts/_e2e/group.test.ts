@@ -23,7 +23,7 @@ import { page as read, type Source } from '@cella/org-db'
 import { statuses } from '@cella/org-expense/models'
 import { people } from '@cella/org-person/api'
 import { source } from '#lib/server/slices.ts'
-import { browsers, serve, signIn } from './browser.ts'
+import { eachBrowser, serve, signIn } from './browser.ts'
 
 const julien = 'julien@lanterne.example'
 const shots = process.env.SHOTS ?? '/tmp/cella-group-shots'
@@ -123,7 +123,7 @@ async function groups(page: Page, name: string, layout: string, want: Drawn[], a
   assert.fail(`${at}: drawn ${JSON.stringify(last)}, wanted ${JSON.stringify(wanted)}`)
 }
 
-for (const [browserName, launch] of browsers()) {
+eachBrowser((browserName, launch) => {
   test(`${browserName}: every layout but the calendar and the dashboard groups by an enumeration, a person and a circle, saved in a view and in the address`, async () => {
     const { base, stop } = await serve()
     const browser = await launch()
@@ -231,4 +231,4 @@ for (const [browserName, launch] of browsers()) {
       await stop()
     }
   })
-}
+})

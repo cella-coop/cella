@@ -14,7 +14,7 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { browsers, serve, signIn } from './browser.ts'
+import { inBrowsers, serve, signIn } from './browser.ts'
 import { Shell } from './serve.ts'
 
 const su = new pg.Client()
@@ -70,7 +70,7 @@ test('the server renders the sign-in, an invitation\'s link and a settings page 
 
 test('in every browser, a page opened draws its skeleton while its query is held, then its content, and a missing item its failed snippet', async () => {
   await shell.stop()
-  for (const [engine, launch] of browsers()) {
+  await inBrowsers(async (engine, launch) => {
     const browser = await launch()
     const dev = await serve()
     try {
@@ -154,5 +154,5 @@ test('in every browser, a page opened draws its skeleton while its query is held
       await browser.close()
       await dev.stop()
     }
-  }
+  })
 })

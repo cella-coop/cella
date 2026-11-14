@@ -3,8 +3,14 @@
 // and Playwright's Chromium, Firefox and WebKit from nixpkgs'
 // playwright-driver.browsers, which playwright-core's version matches and
 // the devshell and `cella` export as PLAYWRIGHT_BROWSERS_PATH.
-// `BROWSERS` (comma-separated) narrows the browsers run.
+// `BROWSERS` (comma-separated) narrows the browsers run. A scenario drives
+// its browsers at once, each in a context of its own, against the one
+// server `serve` shares among them; one whose browsers would meet in what
+// they write says why in a line `// browsers: one at a time: <why>`, and
+// the run, which prints it, sets `CELLA_BROWSERS_APART`, so they run one
+// after another.
 
+import { describe } from 'node:test'
 import { spawn, type ChildProcess } from 'node:child_process'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { createServer } from 'node:net'
@@ -48,6 +54,37 @@ export function browsers(): [string, () => Promise<Browser>][] {
   return Object.entries(engines).filter(([name]) => wanted.includes(name))
 }
 
+// Whether this scenario's browsers run one after another, as its file's
+// `// browsers: one at a time` line asks.
+const apart = () => process.env.CELLA_BROWSERS_APART === '1'
+
+// Each browser's tests, which `register` declares for the browser it is
+// handed: the browsers' at once, each browser's own in their order.
+export function eachBrowser(register: (name: string, launch: () => Promise<Browser>) => void) {
+  describe('in each browser', { concurrency: apart() ? 1 : true }, () => {
+    for (const [name, launch] of browsers()) describe(name, { concurrency: 1 }, () => register(name, launch))
+  })
+}
+
+// `drive` in each browser, at once, within one test: every browser runs to
+// its end, and the test fails with what failed, named by its browser.
+export async function inBrowsers(drive: (name: string, launch: () => Promise<Browser>) => Promise<void>) {
+  const all = browsers()
+  if (apart()) {
+    for (const [name, launch] of all) await drive(name, launch)
+    return
+  }
+  const ran = await Promise.allSettled(all.map(([name, launch]) => drive(name, launch)))
+  const failed = ran.flatMap((r, i) => (r.status === 'rejected' ? [[all[i][0], r.reason] as const] : []))
+  if (failed.length === 1) throw failed[0][1]
+  if (failed.length > 1) {
+    throw new AggregateError(
+      failed.map(([, e]) => e),
+      failed.map(([name, e]) => `${name}: ${e instanceof Error ? e.message : String(e)}`).join('\n'),
+    )
+  }
+}
+
 // A port free on localhost now.
 export const free = () =>
   new Promise<number>((resolve) => {
@@ -58,9 +95,33 @@ export const free = () =>
     })
   })
 
+type Served = { base: string; stop: () => Promise<void> }
+
+// The server the browsers running now share, and how many hold it.
+let shared: { started: Promise<Served>; holders: number } | undefined
+
 // The built shell in dev mode, whose sign-in page offers the fixture
-// members.
-export async function serve(): Promise<{ base: string; stop: () => Promise<void> }> {
+// members: one server for the browsers that ask while it runs, stopped
+// when the last of them stops it.
+export async function serve(): Promise<Served> {
+  if (!shared) shared = { started: start(), holders: 0 }
+  const held = shared
+  held.holders++
+  const { base, stop } = await held.started
+  let stopped = false
+  return {
+    base,
+    stop: async () => {
+      if (stopped) return
+      stopped = true
+      if (--held.holders > 0) return
+      if (shared === held) shared = undefined
+      await stop()
+    },
+  }
+}
+
+async function start(): Promise<Served> {
   const port = await free()
   const base = `http://127.0.0.1:${port}`
   // adapter-node takes the origin to be https unless a proxy's header says

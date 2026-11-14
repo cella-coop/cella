@@ -30,7 +30,7 @@ import { vote } from '@cella/org-motion/api'
 import { carried, close, propose } from '@cella/org-graft-membership-motion/api'
 import type { Deps, Done } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
-import { browsers, serve, signIn } from './browser.ts'
+import { eachBrowser, serve, signIn } from './browser.ts'
 
 const su = new pg.Client()
 let app: pg.Client | undefined
@@ -177,7 +177,7 @@ test('the assembly makes an Editor role in Web and seats Léa in it by one motio
   )
 })
 
-for (const [name, launch] of browsers()) {
+eachBrowser((name, launch) => {
   test(`${name}: Camille proposes a new role from Web's Settings tab, and sees a cap below the Member role's holders refused, light and dark`, async () => {
     mkdirSync(shots, { recursive: true })
     const browser = await launch()
@@ -224,12 +224,13 @@ for (const [name, launch] of browsers()) {
           await dialog.waitFor()
           assert.equal(await dialog.getByLabel('Title').inputValue(), 'Lift the Editor role\'s cap of 2', `${at}: its title says the cap is lifted`)
           assert.equal(await dialog.getByLabel('New cap').inputValue(), 'none', `${at}: it gives the cap as none`)
-          const lifting = await all(`SELECT motion FROM motion.action WHERE kind = 'amend-role' AND args = '{"role": "editor", "holders": null}'`)
+          const lift = `Lift the Editor role's cap of 2, ${at}`
+          await dialog.getByLabel('Title').fill(lift)
           await dialog.getByRole('button', { name: 'Propose' }).click()
           await dialog.waitFor({ state: 'hidden' })
           assert.equal(
-            (await all(`SELECT motion FROM motion.action WHERE kind = 'amend-role' AND args = '{"role": "editor", "holders": null}'`)).length,
-            lifting.length + 1,
+            (await all(`SELECT a.motion FROM motion.action a JOIN motion.motion d ON d.id = a.motion WHERE a.kind = 'amend-role' AND a.args = '{"role": "editor", "holders": null}' AND d.title = $1`, [lift])).length,
+            1,
             `${at}: the assembly's motion lifts the Editor role's cap`,
           )
 
@@ -262,7 +263,7 @@ for (const [name, launch] of browsers()) {
       await browser.close()
     }
   })
-}
+})
 
 test('the motion the Settings tab proposed carries and lifts the Editor role\'s cap, its entry carrying the cap as none', async () => {
   const lifting = await one<{ motion: string } | undefined>(

@@ -18,7 +18,7 @@ import pg from 'pg'
 import type { Locator, Page } from 'playwright-core'
 import { page as read, type Sort, type Source } from '@cella/org-db'
 import { source } from '#lib/server/slices.ts'
-import { browsers, serve, signIn } from './browser.ts'
+import { eachBrowser, serve, signIn } from './browser.ts'
 
 const julien = 'julien@lanterne.example'
 const shots = process.env.SHOTS ?? '/tmp/cella-order-shots'
@@ -91,7 +91,7 @@ async function follows(page: Page, name: string, layout: string, want: string[],
   assert.fail(`${at}: drawn ${JSON.stringify(last)}, wanted in the order ${JSON.stringify(want)}`)
 }
 
-for (const [browserName, launch] of browsers()) {
+eachBrowser((browserName, launch) => {
   test(`${browserName}: every layout orders its rows by a money, a number and a date field either way, saved in a view and in the address`, async () => {
     const { base, stop } = await serve()
     const browser = await launch()
@@ -185,4 +185,4 @@ for (const [browserName, launch] of browsers()) {
       await stop()
     }
   })
-}
+})

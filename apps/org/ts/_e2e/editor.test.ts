@@ -17,7 +17,7 @@ import { mkdirSync } from 'node:fs'
 import pg from 'pg'
 import type { Browser, BrowserContext, Page } from 'playwright-core'
 import { createDoc, edits, type Fragment, type Run } from '@cella/org-body/models'
-import { browsers, serve, signIn } from './browser.ts'
+import { eachBrowser, serve, signIn } from './browser.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-editor-shots'
 const camille = 'camille@lanterne.example'
@@ -88,1002 +88,1000 @@ after(async () => {
   await su.end()
 })
 
-for (const [name, launch] of browsers()) {
-  describe(name, () => {
-    let browser: Browser
-    let context: BrowserContext
-    let a: Page
-    let bo: Page
-    // What the pages threw, which fails the test it happens in.
-    const errors: string[] = []
-    const clean = () => assert.deepEqual(errors.splice(0), [], 'the pages threw nothing')
+eachBrowser((name, launch) => {
+  let browser: Browser
+  let context: BrowserContext
+  let a: Page
+  let bo: Page
+  // What the pages threw, which fails the test it happens in.
+  const errors: string[] = []
+  const clean = () => assert.deepEqual(errors.splice(0), [], 'the pages threw nothing')
 
-    // The editor's state, read from its element.
-    const rows = (page: Page = a): Promise<Row[]> =>
-      page.evaluate(() => {
-        const ed = (document.querySelector('[data-editor]') as any).cellaEditor
-        return ed.rows.map((v: any) => {
-          const t = ed.doc.getTree('blocks').getNodeByID(v.id).data.get('text')
-          const runs = t.toDelta().map((d: any) => {
-            const marks = Object.fromEntries(Object.entries(d.attributes ?? {}).filter(([, x]) => x !== null && x !== false))
-            return Object.keys(marks).length ? { text: d.insert, marks } : { text: d.insert }
-          })
-          return { id: v.id, depth: v.depth, kind: v.kind, props: v.props, text: t.toString(), runs }
+  // The editor's state, read from its element.
+  const rows = (page: Page = a): Promise<Row[]> =>
+    page.evaluate(() => {
+      const ed = (document.querySelector('[data-editor]') as any).cellaEditor
+      return ed.rows.map((v: any) => {
+        const t = ed.doc.getTree('blocks').getNodeByID(v.id).data.get('text')
+        const runs = t.toDelta().map((d: any) => {
+          const marks = Object.fromEntries(Object.entries(d.attributes ?? {}).filter(([, x]) => x !== null && x !== false))
+          return Object.keys(marks).length ? { text: d.insert, marks } : { text: d.insert }
         })
+        return { id: v.id, depth: v.depth, kind: v.kind, props: v.props, text: t.toString(), runs }
       })
-    const line = (i: number, page: Page = a) => page.locator('[data-editor] .line').nth(i)
-    const editable = (i: number, page: Page = a) => line(i, page).locator('[contenteditable=true]')
+    })
+  const line = (i: number, page: Page = a) => page.locator('[data-editor] .line').nth(i)
+  const editable = (i: number, page: Page = a) => line(i, page).locator('[contenteditable=true]')
 
-    const caret = (page: Page = a): Promise<{ id: string | undefined; offset: number }> =>
-      page.evaluate(() => {
-        const el = document.activeElement as HTMLElement
-        const s = document.getSelection()!
-        const r = document.createRange()
-        r.setStart(el, 0)
-        r.setEnd(s.focusNode!, s.focusOffset)
-        return { id: el.dataset.block, offset: r.toString().length }
-      })
+  const caret = (page: Page = a): Promise<{ id: string | undefined; offset: number }> =>
+    page.evaluate(() => {
+      const el = document.activeElement as HTMLElement
+      const s = document.getSelection()!
+      const r = document.createRange()
+      r.setStart(el, 0)
+      r.setEnd(s.focusNode!, s.focusOffset)
+      return { id: el.dataset.block, offset: r.toString().length }
+    })
 
-    const settle = (page: Page = a) => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0))))
+  const settle = (page: Page = a) => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0))))
 
-    // Waits until a condition on a tab's rows holds, as edits travel.
-    async function until(test: (r: Row[]) => boolean, page: Page = a, what = 'the rows') {
-      for (let i = 0; i < 100; i++) {
-        if (test(await rows(page))) {
-          return
-        }
-        await page.waitForTimeout(100)
+  // Waits until a condition on a tab's rows holds, as edits travel.
+  async function until(test: (r: Row[]) => boolean, page: Page = a, what = 'the rows') {
+    for (let i = 0; i < 100; i++) {
+      if (test(await rows(page))) {
+        return
       }
-      assert.fail(`${what} never came: ${JSON.stringify((await rows(page)).map((r) => r.text))}`)
+      await page.waitForTimeout(100)
     }
+    assert.fail(`${what} never came: ${JSON.stringify((await rows(page)).map((r) => r.text))}`)
+  }
 
-    // Both tabs saved everything and read the same, by the canonical hash
-    // each previews.
-    async function converged() {
-      let last: string[] = []
-      for (let i = 0; i < 100; i++) {
-        const states = await Promise.all([a, bo].map((pg) => pg.locator('[data-state][data-hash]').evaluate((el) => [el.getAttribute('data-state'), el.getAttribute('data-hash')])))
-        last = states.flat() as string[]
-        if (states[0][0] === 'saved' && states[1][0] === 'saved' && states[0][1] === states[1][1]) {
-          const canon = (pg: Page) => pg.evaluate(() => JSON.stringify((document.querySelector('[data-editor]') as any).cellaEditor.rows.length))
-          assert.equal(await canon(a), await canon(bo))
-          clean()
-          return
-        }
-        await a.waitForTimeout(100)
+  // Both tabs saved everything and read the same, by the canonical hash
+  // each previews.
+  async function converged() {
+    let last: string[] = []
+    for (let i = 0; i < 100; i++) {
+      const states = await Promise.all([a, bo].map((pg) => pg.locator('[data-state][data-hash]').evaluate((el) => [el.getAttribute('data-state'), el.getAttribute('data-hash')])))
+      last = states.flat() as string[]
+      if (states[0][0] === 'saved' && states[1][0] === 'saved' && states[0][1] === states[1][1]) {
+        const canon = (pg: Page) => pg.evaluate(() => JSON.stringify((document.querySelector('[data-editor]') as any).cellaEditor.rows.length))
+        assert.equal(await canon(a), await canon(bo))
+        clean()
+        return
       }
-      assert.fail(`the tabs never converged: ${last.join(' ')}`)
+      await a.waitForTimeout(100)
     }
+    assert.fail(`the tabs never converged: ${last.join(' ')}`)
+  }
 
-    // The DOM shows the model: each editable's text is its block's.
-    async function shows(page: Page = a) {
-      const out = await page.evaluate(() => {
+  // The DOM shows the model: each editable's text is its block's.
+  async function shows(page: Page = a) {
+    const out = await page.evaluate(() => {
+      const ed = (document.querySelector('[data-editor]') as any).cellaEditor
+      const wrong: string[] = []
+      for (const el of document.querySelectorAll<HTMLElement>('[data-editor] [data-block]')) {
+        const t = ed.doc.getTree('blocks').getNodeByID(el.dataset.block).data.get('text').toString()
+        if ((el.textContent ?? '') !== t) {
+          wrong.push(`${JSON.stringify(el.textContent)} ≠ ${JSON.stringify(t)}`)
+        }
+      }
+      return wrong
+    })
+    assert.deepEqual(out, [], 'the page shows the model')
+    clean()
+  }
+
+  // Remote edits, made in the other tab's document and sent as its
+  // member's writes.
+  const remote = (fn: string, arg: unknown) =>
+    bo.evaluate(
+      ([src, x]) => {
         const ed = (document.querySelector('[data-editor]') as any).cellaEditor
-        const wrong: string[] = []
-        for (const el of document.querySelectorAll<HTMLElement>('[data-editor] [data-block]')) {
-          const t = ed.doc.getTree('blocks').getNodeByID(el.dataset.block).data.get('text').toString()
-          if ((el.textContent ?? '') !== t) {
-            wrong.push(`${JSON.stringify(el.textContent)} ≠ ${JSON.stringify(t)}`)
+        new Function('doc', 'x', src)(ed.doc, x)
+        ed.doc.commit()
+      },
+      [fn, arg] as const,
+    )
+
+  async function end(i: number, page: Page = a) {
+    await editable(i, page).click()
+    await page.keyboard.press('Control+End')
+  }
+
+  async function home(i: number, page: Page = a) {
+    await editable(i, page).click()
+    await page.keyboard.press('Control+Home')
+  }
+
+  async function open(page: Page, id: string) {
+    page.on('pageerror', (e) => errors.push(`${e.message}\n${e.stack}`))
+    await page.goto(`${base}/documents/${id}`)
+    await page.waitForSelector('[data-editor] [data-block]')
+    await page.waitForSelector('[data-sync=live]')
+  }
+
+  async function fresher() {
+    const id = await fresh()
+    await a?.close()
+    await bo?.close()
+    a = await context.newPage()
+    bo = await context.newPage()
+    await open(a, id)
+    await open(bo, id)
+  }
+
+  before(async () => {
+    browser = await launch()
+    context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
+    await signIn(context, base, camille)
+  })
+
+  after(async () => {
+    await browser?.close()
+  })
+
+  describe('typing and blocks', () => {
+    it('types into a block, and the other tab receives it', async () => {
+      await fresher()
+      await end(1)
+      await a.keyboard.type(' Done.')
+      const r = await rows()
+      assert.ok(r[1].text.endsWith('rate. Done.'), r[1].text)
+      await shows()
+      await until((x) => x[1].text.endsWith('rate. Done.'), bo, 'the edit in the other tab')
+      await converged()
+    })
+
+    it('splits on Enter and merges on Backspace', async () => {
+      await fresher()
+      await end(0)
+      await a.keyboard.press('ArrowLeft')
+      await a.keyboard.press('ArrowLeft')
+      await a.keyboard.press('Enter')
+      let r = await rows()
+      assert.equal(r[0].text, 'Rate card 20')
+      assert.equal(r[1].text, '27')
+      assert.equal(r[1].kind, 'paragraph', 'a heading continues as a paragraph')
+      assert.deepEqual(await caret(), { id: r[1].id, offset: 0 })
+      await a.keyboard.press('Backspace')
+      r = await rows()
+      assert.equal(r[0].text, 'Rate card 2027')
+      assert.deepEqual(await caret(), { id: r[0].id, offset: 12 })
+      await converged()
+    })
+
+    it('turns a block by markdown shortcut', async () => {
+      await fresher()
+      await end(1)
+      await a.keyboard.press('Enter')
+      await a.keyboard.type('## Terms')
+      await a.keyboard.press('Enter')
+      await a.keyboard.type('- one')
+      await a.keyboard.press('Enter')
+      await a.keyboard.type('[] two')
+      await a.keyboard.press('Enter')
+      await a.keyboard.press('Enter')
+      await a.keyboard.type('---')
+      const r = await rows()
+      assert.deepEqual(
+        r.slice(2, 7).map((x) => [x.kind, x.text]),
+        [
+          ['heading', 'Terms'],
+          ['bullet', 'one'],
+          ['todo', 'two'],
+          ['divider', ''],
+          ['paragraph', ''],
+        ],
+      )
+      assert.equal(r[2].props.level, 2)
+      await shows()
+      await converged()
+    })
+
+    it('turns a block from the slash menu, by keyboard', async () => {
+      await fresher()
+      await end(1)
+      await a.keyboard.press('Enter')
+      await a.keyboard.type('/quo')
+      const menu = a.locator('[role=listbox][aria-label="Turn into"]')
+      await menu.waitFor()
+      assert.deepEqual(await menu.locator('[role=option] span:first-child').allTextContents(), ['Quote'])
+      await a.keyboard.press('Enter')
+      await a.keyboard.type('Said')
+      const r = await rows()
+      assert.equal(r[2].kind, 'quote')
+      assert.equal(r[2].text, 'Said')
+      assert.equal(await menu.count(), 0)
+    })
+
+    it('embeds a motion from the slash menu, which the graft draws', async () => {
+      await fresher()
+      await end(1)
+      await a.keyboard.press('Enter')
+      await a.keyboard.type('/motion')
+      const menu = a.locator('[role=listbox][aria-label="Turn into"]')
+      await menu.waitFor()
+      await a.keyboard.press('Enter')
+      await a.locator('select[aria-label="Which motion this block shows"]').selectOption('m-2026-007')
+      const r = await rows()
+      assert.equal(r[2].kind, 'embed')
+      assert.deepEqual(r[2].props, { embed: 'motion', ref: 'm-2026-007' })
+      assert.match((await line(2).textContent()) ?? '', /Adopt the internal rules, version 3/)
+      await converged()
+    })
+
+    it('nests and unnests with Tab and Shift-Tab', async () => {
+      await fresher()
+      await end(7)
+      await a.keyboard.press('Tab')
+      let r = await rows()
+      assert.equal(r[7].text, 'Brand identity — per project')
+      assert.equal(r[7].depth, 1)
+      assert.equal(r[8].depth, 2, 'its children come along')
+      assert.equal((await caret()).id, r[7].id, 'the caret stays in the block')
+      await a.keyboard.press('Shift+Tab')
+      r = await rows()
+      assert.equal(r[7].depth, 0)
+      await converged()
+    })
+
+    it('toggles bold for the next typed text', async () => {
+      await fresher()
+      await end(1)
+      await a.keyboard.press('Control+b')
+      await a.keyboard.type('Z')
+      const r = await rows()
+      assert.deepEqual(r[1].runs.at(-1), { text: 'Z', marks: { bold: true } })
+    })
+
+    it('merges the next block on Delete at the end', async () => {
+      await fresher()
+      await end(5)
+      await a.keyboard.press('Delete')
+      const r = await rows()
+      assert.equal(r[5].text, 'Standard: 560 €Solidarity: 380 €')
+      assert.equal(r[6].text, 'Brand identity — per project')
+      await converged()
+    })
+
+    it('links a selection with Ctrl-K, in the popover', async () => {
+      await fresher()
+      await home(0)
+      await a.keyboard.press('Shift+End')
+      await a.keyboard.press('Control+k')
+      const field = a.locator('[data-href] input')
+      await field.waitFor({ state: 'visible' })
+      await field.fill('https://lanterne.example')
+      await field.press('Enter')
+      await until((x) => x[0].runs[0]?.marks?.link === 'https://lanterne.example')
+      assert.deepEqual((await rows())[0].runs, [{ text: 'Rate card 2027', marks: { link: 'https://lanterne.example' } }])
+      assert.equal(await editable(0).locator('a').getAttribute('href'), 'https://lanterne.example')
+    })
+
+    it('steps onto the motion embed as a whole, and past it', async () => {
+      await fresher()
+      await end(1)
+      await a.keyboard.press('ArrowDown')
+      const r = await rows()
+      assert.equal(await a.locator('[data-editor] [data-selected]').getAttribute('data-row'), r[2].id)
+      await a.keyboard.press('Enter')
+      const after = await rows()
+      assert.equal(after[3].kind, 'paragraph')
+      assert.deepEqual(await caret(), { id: after[3].id, offset: 0 })
+    })
+
+    it('moves the caret across blocks with the arrows', async () => {
+      await fresher()
+      await end(0)
+      await a.keyboard.press('ArrowRight')
+      const r = await rows()
+      assert.deepEqual(await caret(), { id: r[1].id, offset: 0 })
+      await a.keyboard.press('ArrowLeft')
+      assert.deepEqual(await caret(), { id: r[0].id, offset: 14 })
+      await a.keyboard.press('ArrowDown')
+      assert.equal((await caret()).id, r[1].id)
+    })
+  })
+
+  describe('choosing blocks and structure', () => {
+    it('chooses blocks with Shift-arrows and deletes them', async () => {
+      await fresher()
+      await end(5)
+      await a.keyboard.press('Shift+ArrowDown')
+      assert.equal(await a.locator('[data-editor] [data-selected]').count(), 2)
+      await a.screenshot({ path: `${shots}/${name}-chosen.png` })
+      await a.keyboard.press('Backspace')
+      const r = await rows()
+      assert.equal(r.length, 25)
+      assert.equal(r[4].text, 'Day of work — per day')
+      assert.equal(r[5].text, 'Brand identity — per project')
+      await converged()
+    })
+
+    it('chooses blocks by dragging across them', async () => {
+      await fresher()
+      const from = (await editable(4).boundingBox())!
+      const to = (await editable(6).boundingBox())!
+      await a.mouse.move(from.x + 10, from.y + 5)
+      await a.mouse.down()
+      await a.mouse.move(to.x + 20, to.y + 5, { steps: 8 })
+      await a.mouse.up()
+      assert.equal(await a.locator('[data-editor] [data-selected]').count(), 3)
+    })
+
+    it('moves a chosen block with Alt-Shift-arrows', async () => {
+      await fresher()
+      await line(2).locator('.embed .kind').click()
+      await a.keyboard.press('Alt+Shift+ArrowDown')
+      const r = await rows()
+      assert.equal(r[2].kind, 'heading')
+      assert.equal(r[3].kind, 'embed')
+      await converged()
+    })
+
+    it('reorders by the grip, by pointer and by keyboard', async () => {
+      await fresher()
+      // Brand identity, with its children, before Day of work.
+      await line(7).hover()
+      const grip = (await line(7).locator('[data-drag-handle]').boundingBox())!
+      const target = (await line(4).boundingBox())!
+      await a.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2)
+      await a.mouse.down()
+      await a.mouse.move(target.x + 60, target.y + 2, { steps: 8 })
+      await a.mouse.up()
+      let r = await rows()
+      assert.deepEqual(
+        r.slice(4, 8).map((x) => [x.depth, x.text]),
+        [
+          [0, 'Brand identity — per project'],
+          [1, 'Standard: from 6 500 €'],
+          [1, 'Solidarity: from 3 300 €'],
+          [0, 'Day of work — per day'],
+        ],
+      )
+      // The code block up past the numbered items, from the keyboard.
+      await line(26).locator('[data-drag-handle]').focus()
+      await a.keyboard.press('Space')
+      await a.keyboard.press('ArrowUp')
+      await a.keyboard.press('ArrowUp')
+      await a.keyboard.press('Space')
+      r = await rows()
+      assert.deepEqual(
+        r.slice(24, 27).map((x) => x.kind),
+        ['code', 'numbered', 'numbered'],
+      )
+      await converged()
+    })
+
+    it('copies blocks and pastes them elsewhere', async () => {
+      await fresher()
+      await line(22).hover()
+      await line(22).locator('[data-drag-handle]').click()
+      assert.equal(await a.locator('[data-editor] [data-selected]').count(), 1)
+      await a.keyboard.press('Control+c')
+      await end(0)
+      await a.keyboard.press('Control+v')
+      const r = await rows()
+      assert.equal(r[1].kind, 'todo')
+      assert.equal(r[1].text, 'Decide whether existing retainers keep the 2026 rate')
+      assert.equal(r.length, 28)
+      await converged()
+    })
+
+    it('copies a range of text with its marks, and pastes it in another block', async () => {
+      await fresher()
+      await editable(1).click()
+      // "solidarity", bold, from its start to its end.
+      const at = (await rows())[1].text.indexOf('solidarity')
+      await a.keyboard.press('Control+Home')
+      for (let i = 0; i < at; i++) {
+        await a.keyboard.press('ArrowRight')
+      }
+      for (let i = 0; i < 'solidarity'.length; i++) {
+        await a.keyboard.press('Shift+ArrowRight')
+      }
+      await a.keyboard.press('Control+c')
+      await end(0)
+      await a.keyboard.press('Control+v')
+      const r = await rows()
+      assert.equal(r[0].text, 'Rate card 2027solidarity')
+      assert.deepEqual(r[0].runs.at(-1), { text: 'solidarity', marks: { bold: true } })
+      await converged()
+    })
+
+    it('pastes plain text from outside as paragraphs', async () => {
+      await fresher()
+      // Copied from a text area outside the editor, as from another app.
+      await a.evaluate(() => {
+        const area = document.createElement('textarea')
+        area.id = 'outside'
+        area.value = 'one\ntwo'
+        document.body.append(area)
+      })
+      await a.locator('#outside').focus()
+      await a.keyboard.press('Control+a')
+      await a.keyboard.press('Control+c')
+      await end(0)
+      await a.keyboard.press('Control+v')
+      const r = await rows()
+      assert.equal(r[0].text, 'Rate card 2027one')
+      assert.equal(r[1].text, 'two')
+      assert.deepEqual(await caret(), { id: r[1].id, offset: 3 })
+    })
+  })
+
+  describe('composition, collaboration and repair', () => {
+    it('commits an IME composition as one insert', async () => {
+      await fresher()
+      await end(0)
+      if (name === 'chromium') {
+        const cdp = await context.newCDPSession(a)
+        await cdp.send('Input.imeSetComposition', { text: 'n', selectionStart: 1, selectionEnd: 1 })
+        await cdp.send('Input.imeSetComposition', { text: 'ni', selectionStart: 2, selectionEnd: 2 })
+        await cdp.send('Input.imeSetComposition', { text: '你', selectionStart: 1, selectionEnd: 1 })
+        assert.equal((await rows())[0].text, 'Rate card 2027', 'nothing reaches Loro mid-composition')
+        await cdp.send('Input.insertText', { text: '你好' })
+      } else {
+        // No IME to drive here: the events an IME fires, with the text it
+        // draws into the block meanwhile.
+        await a.evaluate(() => {
+          const el = document.activeElement as HTMLElement
+          el.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true, data: '' }))
+          el.append(document.createTextNode('ni'))
+        })
+        assert.equal((await rows())[0].text, 'Rate card 2027', 'nothing reaches Loro mid-composition')
+        await a.evaluate(() => {
+          document.activeElement!.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: '你好' }))
+        })
+      }
+      await settle()
+      let r = await rows()
+      assert.equal(r[0].text, 'Rate card 2027你好')
+      assert.equal(await editable(0).textContent(), 'Rate card 2027你好')
+      assert.deepEqual(await caret(), { id: r[0].id, offset: 16 })
+      await a.keyboard.type('!')
+      r = await rows()
+      assert.equal(r[0].text, 'Rate card 2027你好!')
+      await converged()
+    })
+
+    it('keeps the caret in place when the other tab edits the same block', async () => {
+      await fresher()
+      await home(1)
+      for (let i = 0; i < 4; i++) {
+        await a.keyboard.press('ArrowRight')
+      }
+      const id = (await rows())[1].id
+      assert.deepEqual(await caret(), { id, offset: 4 })
+      await remote(`const t = doc.getTree('blocks').getNodeByID(x).data.get('text'); t.insert(0, 'NB: '); t.insert(t.length, ' (draft)')`, id)
+      await until((r) => r[1].text.startsWith('NB: '))
+      await settle()
+      assert.deepEqual(await caret(), { id, offset: 8 }, 'the caret moved with the text before it')
+      await a.keyboard.type('X')
+      const r = await rows()
+      assert.ok(r[1].text.startsWith('NB: Day X'), r[1].text)
+      assert.ok(r[1].text.endsWith(' (draft)'))
+      await converged()
+    })
+
+    it('keeps typing contiguous while the other tab types in the same block', async () => {
+      await fresher()
+      await end(0)
+      const id = (await rows())[0].id
+      for (const ch of 'abcdef') {
+        await remote(`doc.getTree('blocks').getNodeByID(x).data.get('text').insert(0, '~')`, id)
+        await a.keyboard.type(ch)
+        await a.waitForTimeout(60)
+      }
+      await until((r) => r[0].text === '~~~~~~Rate card 2027abcdef')
+      await settle()
+      assert.deepEqual(await caret(), { id, offset: 26 })
+      await converged()
+    })
+
+    it('undoes its own edits only', async () => {
+      await fresher()
+      await end(0)
+      await a.keyboard.type(' A')
+      const id = (await rows())[4].id
+      await remote(`doc.getTree('blocks').getNodeByID(x).data.get('text').insert(0, 'B ')`, id)
+      await until((r) => r[4].text.startsWith('B '))
+      await editable(0).click()
+      await a.keyboard.press('Control+z')
+      await settle()
+      let r = await rows()
+      assert.equal(r[0].text, 'Rate card 2027')
+      assert.equal(r[4].text, 'B Day of work — per day')
+      await a.keyboard.press('Control+Shift+z')
+      r = await rows()
+      assert.equal(r[0].text, 'Rate card 2027 A')
+      await converged()
+    })
+
+    it('holds edits offline and converges on reconnecting', async () => {
+      await fresher()
+      await context.setOffline(true)
+      await end(0)
+      await a.keyboard.type(' one')
+      await end(0, bo)
+      await bo.keyboard.type(' two')
+      await a.waitForTimeout(600)
+      assert.match((await a.locator('[data-state]').getAttribute('data-state')) ?? '', /^(offline|saving)/)
+      await context.setOffline(false)
+      await until((r) => r[0].text.length === 'Rate card 2027 one two'.length, a, 'both edits in the first tab')
+      await until((r) => r[0].text.length === 'Rate card 2027 one two'.length, bo, 'both edits in the second tab')
+      const text = (await rows())[0].text
+      assert.ok(text === 'Rate card 2027 one two' || text === 'Rate card 2027 two one', text)
+      await converged()
+    })
+
+    it('paints a block again when something else changes its text', async () => {
+      await fresher()
+      await a.evaluate(() => {
+        const el = document.querySelectorAll<HTMLElement>('[data-editor] [data-block]')[1]
+        el.firstChild!.textContent = 'rewritten by an extension'
+      })
+      await settle()
+      await shows()
+      assert.ok(((await editable(1).textContent()) ?? '').startsWith('Day rates'))
+    })
+
+    it('survives random keys, compositions and remote edits, the page showing the model and the tabs converging', async () => {
+      await fresher()
+      const seed = Number(process.env.FUZZ_SEED ?? 1) + made
+      let s = seed >>> 0
+      const next = () => {
+        s = (s + 0x6d2b79f5) >>> 0
+        let t = s
+        t = Math.imul(t ^ (t >>> 15), t | 1)
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+      }
+      const pick = <T>(xs: readonly T[]): T => xs[Math.floor(next() * xs.length)]
+      const keys = ['a', 'é', ' ', '😀', 'Enter', 'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Tab', 'Shift+Tab', 'Control+b', 'Shift+ArrowLeft', 'Escape'] as const
+      const steps = Number(process.env.FUZZ_STEPS ?? 160)
+      await end(1)
+      for (let i = 0; i < steps; i++) {
+        const roll = next()
+        if (roll < 0.08) {
+          // A remote edit at a random block's start.
+          const r = await rows(bo)
+          const id = pick(r.filter((x) => x.kind !== 'embed' && x.kind !== 'divider')).id
+          await remote(`doc.getTree('blocks').getNodeByID(x).data.get('text').insert(0, 'r')`, id)
+        } else if (roll < 0.12) {
+          // A composition, as an IME ends one.
+          await a.evaluate(() => {
+            const el = document.activeElement as HTMLElement
+            if (el?.dataset.block) {
+              el.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true, data: '' }))
+              el.append(document.createTextNode('か'))
+              el.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: '漢' }))
+            }
+          })
+        } else {
+          const key = pick(keys)
+          if (key === 'Escape') {
+            // Choosing a block whole, then back into text with an arrow.
+            await a.keyboard.press('Escape')
+            await a.keyboard.press(pick(['ArrowDown', 'ArrowUp']))
+          } else if (key.length <= 2 && !key.includes('+')) {
+            await a.keyboard.type(key)
+          } else {
+            await a.keyboard.press(key)
           }
         }
-        return wrong
-      })
-      assert.deepEqual(out, [], 'the page shows the model')
-      clean()
-    }
+        if (!(await a.evaluate(() => (document.activeElement as HTMLElement)?.dataset.block !== undefined))) {
+          const all = await a.locator('[data-editor] [data-block]').count()
+          await a.locator('[data-editor] [data-block]').nth(Math.floor(next() * all)).click()
+        }
+        if (i % 20 === 19) {
+          await settle()
+          await shows()
+        }
+      }
+      await settle()
+      await shows()
+      await converged()
+      await shows(bo)
+      await a.screenshot({ path: `${shots}/${name}-fuzzed.png`, fullPage: true })
+    })
+  })
 
-    // Remote edits, made in the other tab's document and sent as its
-    // member's writes.
-    const remote = (fn: string, arg: unknown) =>
-      bo.evaluate(
-        ([src, x]) => {
-          const ed = (document.querySelector('[data-editor]') as any).cellaEditor
-          new Function('doc', 'x', src)(ed.doc, x)
-          ed.doc.commit()
-        },
-        [fn, arg] as const,
-      )
-
-    async function end(i: number, page: Page = a) {
-      await editable(i, page).click()
-      await page.keyboard.press('Control+End')
-    }
-
-    async function home(i: number, page: Page = a) {
-      await editable(i, page).click()
-      await page.keyboard.press('Control+Home')
-    }
-
-    async function open(page: Page, id: string) {
-      page.on('pageerror', (e) => errors.push(`${e.message}\n${e.stack}`))
-      await page.goto(`${base}/documents/${id}`)
-      await page.waitForSelector('[data-editor] [data-block]')
-      await page.waitForSelector('[data-sync=live]')
-    }
-
-    async function fresher() {
-      const id = await fresh()
+  // What the walk in a headless browser found broken
+  // (_corpus/review/2026-11-09/editor-walk.md), each walked again.
+  describe('what the walk found broken', () => {
+    // A document with no draft yet, as the New form starts one, open in
+    // one tab only.
+    async function empty(): Promise<void> {
+      const id = `empty-${++made}`
+      await su.query('INSERT INTO document.document (id, title) VALUES ($1, $2)', [id, `Empty ${made}`])
       await a?.close()
       await bo?.close()
       a = await context.newPage()
-      bo = await context.newPage()
       await open(a, id)
-      await open(bo, id)
     }
 
-    before(async () => {
-      browser = await launch()
-      context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
-      await signIn(context, base, camille)
-    })
-
-    after(async () => {
-      await browser?.close()
-    })
-
-    describe('typing and blocks', () => {
-      it('types into a block, and the other tab receives it', async () => {
-        await fresher()
-        await end(1)
-        await a.keyboard.type(' Done.')
-        const r = await rows()
-        assert.ok(r[1].text.endsWith('rate. Done.'), r[1].text)
-        await shows()
-        await until((x) => x[1].text.endsWith('rate. Done.'), bo, 'the edit in the other tab')
-        await converged()
-      })
-
-      it('splits on Enter and merges on Backspace', async () => {
-        await fresher()
-        await end(0)
-        await a.keyboard.press('ArrowLeft')
-        await a.keyboard.press('ArrowLeft')
-        await a.keyboard.press('Enter')
-        let r = await rows()
-        assert.equal(r[0].text, 'Rate card 20')
-        assert.equal(r[1].text, '27')
-        assert.equal(r[1].kind, 'paragraph', 'a heading continues as a paragraph')
-        assert.deepEqual(await caret(), { id: r[1].id, offset: 0 })
-        await a.keyboard.press('Backspace')
-        r = await rows()
-        assert.equal(r[0].text, 'Rate card 2027')
-        assert.deepEqual(await caret(), { id: r[0].id, offset: 12 })
-        await converged()
-      })
-
-      it('turns a block by markdown shortcut', async () => {
-        await fresher()
-        await end(1)
-        await a.keyboard.press('Enter')
-        await a.keyboard.type('## Terms')
-        await a.keyboard.press('Enter')
-        await a.keyboard.type('- one')
-        await a.keyboard.press('Enter')
-        await a.keyboard.type('[] two')
-        await a.keyboard.press('Enter')
-        await a.keyboard.press('Enter')
-        await a.keyboard.type('---')
-        const r = await rows()
-        assert.deepEqual(
-          r.slice(2, 7).map((x) => [x.kind, x.text]),
-          [
-            ['heading', 'Terms'],
-            ['bullet', 'one'],
-            ['todo', 'two'],
-            ['divider', ''],
-            ['paragraph', ''],
-          ],
-        )
-        assert.equal(r[2].props.level, 2)
-        await shows()
-        await converged()
-      })
-
-      it('turns a block from the slash menu, by keyboard', async () => {
-        await fresher()
-        await end(1)
-        await a.keyboard.press('Enter')
-        await a.keyboard.type('/quo')
-        const menu = a.locator('[role=listbox][aria-label="Turn into"]')
-        await menu.waitFor()
-        assert.deepEqual(await menu.locator('[role=option] span:first-child').allTextContents(), ['Quote'])
-        await a.keyboard.press('Enter')
-        await a.keyboard.type('Said')
-        const r = await rows()
-        assert.equal(r[2].kind, 'quote')
-        assert.equal(r[2].text, 'Said')
-        assert.equal(await menu.count(), 0)
-      })
-
-      it('embeds a motion from the slash menu, which the graft draws', async () => {
-        await fresher()
-        await end(1)
-        await a.keyboard.press('Enter')
-        await a.keyboard.type('/motion')
-        const menu = a.locator('[role=listbox][aria-label="Turn into"]')
-        await menu.waitFor()
-        await a.keyboard.press('Enter')
-        await a.locator('select[aria-label="Which motion this block shows"]').selectOption('m-2026-007')
-        const r = await rows()
-        assert.equal(r[2].kind, 'embed')
-        assert.deepEqual(r[2].props, { embed: 'motion', ref: 'm-2026-007' })
-        assert.match((await line(2).textContent()) ?? '', /Adopt the internal rules, version 3/)
-        await converged()
-      })
-
-      it('nests and unnests with Tab and Shift-Tab', async () => {
-        await fresher()
-        await end(7)
-        await a.keyboard.press('Tab')
-        let r = await rows()
-        assert.equal(r[7].text, 'Brand identity — per project')
-        assert.equal(r[7].depth, 1)
-        assert.equal(r[8].depth, 2, 'its children come along')
-        assert.equal((await caret()).id, r[7].id, 'the caret stays in the block')
-        await a.keyboard.press('Shift+Tab')
-        r = await rows()
-        assert.equal(r[7].depth, 0)
-        await converged()
-      })
-
-      it('toggles bold for the next typed text', async () => {
-        await fresher()
-        await end(1)
-        await a.keyboard.press('Control+b')
-        await a.keyboard.type('Z')
-        const r = await rows()
-        assert.deepEqual(r[1].runs.at(-1), { text: 'Z', marks: { bold: true } })
-      })
-
-      it('merges the next block on Delete at the end', async () => {
-        await fresher()
-        await end(5)
-        await a.keyboard.press('Delete')
-        const r = await rows()
-        assert.equal(r[5].text, 'Standard: 560 €Solidarity: 380 €')
-        assert.equal(r[6].text, 'Brand identity — per project')
-        await converged()
-      })
-
-      it('links a selection with Ctrl-K, in the popover', async () => {
-        await fresher()
-        await home(0)
-        await a.keyboard.press('Shift+End')
-        await a.keyboard.press('Control+k')
-        const field = a.locator('[data-href] input')
-        await field.waitFor({ state: 'visible' })
-        await field.fill('https://lanterne.example')
-        await field.press('Enter')
-        await until((x) => x[0].runs[0]?.marks?.link === 'https://lanterne.example')
-        assert.deepEqual((await rows())[0].runs, [{ text: 'Rate card 2027', marks: { link: 'https://lanterne.example' } }])
-        assert.equal(await editable(0).locator('a').getAttribute('href'), 'https://lanterne.example')
-      })
-
-      it('steps onto the motion embed as a whole, and past it', async () => {
-        await fresher()
-        await end(1)
-        await a.keyboard.press('ArrowDown')
-        const r = await rows()
-        assert.equal(await a.locator('[data-editor] [data-selected]').getAttribute('data-row'), r[2].id)
-        await a.keyboard.press('Enter')
-        const after = await rows()
-        assert.equal(after[3].kind, 'paragraph')
-        assert.deepEqual(await caret(), { id: after[3].id, offset: 0 })
-      })
-
-      it('moves the caret across blocks with the arrows', async () => {
-        await fresher()
-        await end(0)
-        await a.keyboard.press('ArrowRight')
-        const r = await rows()
-        assert.deepEqual(await caret(), { id: r[1].id, offset: 0 })
-        await a.keyboard.press('ArrowLeft')
-        assert.deepEqual(await caret(), { id: r[0].id, offset: 14 })
-        await a.keyboard.press('ArrowDown')
-        assert.equal((await caret()).id, r[1].id)
-      })
-    })
-
-    describe('choosing blocks and structure', () => {
-      it('chooses blocks with Shift-arrows and deletes them', async () => {
-        await fresher()
-        await end(5)
-        await a.keyboard.press('Shift+ArrowDown')
-        assert.equal(await a.locator('[data-editor] [data-selected]').count(), 2)
-        await a.screenshot({ path: `${shots}/${name}-chosen.png` })
-        await a.keyboard.press('Backspace')
-        const r = await rows()
-        assert.equal(r.length, 25)
-        assert.equal(r[4].text, 'Day of work — per day')
-        assert.equal(r[5].text, 'Brand identity — per project')
-        await converged()
-      })
-
-      it('chooses blocks by dragging across them', async () => {
-        await fresher()
-        const from = (await editable(4).boundingBox())!
-        const to = (await editable(6).boundingBox())!
-        await a.mouse.move(from.x + 10, from.y + 5)
-        await a.mouse.down()
-        await a.mouse.move(to.x + 20, to.y + 5, { steps: 8 })
-        await a.mouse.up()
-        assert.equal(await a.locator('[data-editor] [data-selected]').count(), 3)
-      })
-
-      it('moves a chosen block with Alt-Shift-arrows', async () => {
-        await fresher()
-        await line(2).locator('.embed .kind').click()
-        await a.keyboard.press('Alt+Shift+ArrowDown')
-        const r = await rows()
-        assert.equal(r[2].kind, 'heading')
-        assert.equal(r[3].kind, 'embed')
-        await converged()
-      })
-
-      it('reorders by the grip, by pointer and by keyboard', async () => {
-        await fresher()
-        // Brand identity, with its children, before Day of work.
-        await line(7).hover()
-        const grip = (await line(7).locator('[data-drag-handle]').boundingBox())!
-        const target = (await line(4).boundingBox())!
-        await a.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2)
-        await a.mouse.down()
-        await a.mouse.move(target.x + 60, target.y + 2, { steps: 8 })
-        await a.mouse.up()
-        let r = await rows()
-        assert.deepEqual(
-          r.slice(4, 8).map((x) => [x.depth, x.text]),
-          [
-            [0, 'Brand identity — per project'],
-            [1, 'Standard: from 6 500 €'],
-            [1, 'Solidarity: from 3 300 €'],
-            [0, 'Day of work — per day'],
-          ],
-        )
-        // The code block up past the numbered items, from the keyboard.
-        await line(26).locator('[data-drag-handle]').focus()
-        await a.keyboard.press('Space')
-        await a.keyboard.press('ArrowUp')
-        await a.keyboard.press('ArrowUp')
-        await a.keyboard.press('Space')
-        r = await rows()
-        assert.deepEqual(
-          r.slice(24, 27).map((x) => x.kind),
-          ['code', 'numbered', 'numbered'],
-        )
-        await converged()
-      })
-
-      it('copies blocks and pastes them elsewhere', async () => {
-        await fresher()
-        await line(22).hover()
-        await line(22).locator('[data-drag-handle]').click()
-        assert.equal(await a.locator('[data-editor] [data-selected]').count(), 1)
-        await a.keyboard.press('Control+c')
-        await end(0)
-        await a.keyboard.press('Control+v')
-        const r = await rows()
-        assert.equal(r[1].kind, 'todo')
-        assert.equal(r[1].text, 'Decide whether existing retainers keep the 2026 rate')
-        assert.equal(r.length, 28)
-        await converged()
-      })
-
-      it('copies a range of text with its marks, and pastes it in another block', async () => {
-        await fresher()
-        await editable(1).click()
-        // "solidarity", bold, from its start to its end.
-        const at = (await rows())[1].text.indexOf('solidarity')
-        await a.keyboard.press('Control+Home')
-        for (let i = 0; i < at; i++) {
-          await a.keyboard.press('ArrowRight')
-        }
-        for (let i = 0; i < 'solidarity'.length; i++) {
-          await a.keyboard.press('Shift+ArrowRight')
-        }
-        await a.keyboard.press('Control+c')
-        await end(0)
-        await a.keyboard.press('Control+v')
-        const r = await rows()
-        assert.equal(r[0].text, 'Rate card 2027solidarity')
-        assert.deepEqual(r[0].runs.at(-1), { text: 'solidarity', marks: { bold: true } })
-        await converged()
-      })
-
-      it('pastes plain text from outside as paragraphs', async () => {
-        await fresher()
-        // Copied from a text area outside the editor, as from another app.
-        await a.evaluate(() => {
-          const area = document.createElement('textarea')
-          area.id = 'outside'
-          area.value = 'one\ntwo'
-          document.body.append(area)
-        })
-        await a.locator('#outside').focus()
-        await a.keyboard.press('Control+a')
-        await a.keyboard.press('Control+c')
-        await end(0)
-        await a.keyboard.press('Control+v')
-        const r = await rows()
-        assert.equal(r[0].text, 'Rate card 2027one')
-        assert.equal(r[1].text, 'two')
-        assert.deepEqual(await caret(), { id: r[1].id, offset: 3 })
-      })
-    })
-
-    describe('composition, collaboration and repair', () => {
-      it('commits an IME composition as one insert', async () => {
-        await fresher()
-        await end(0)
-        if (name === 'chromium') {
-          const cdp = await context.newCDPSession(a)
-          await cdp.send('Input.imeSetComposition', { text: 'n', selectionStart: 1, selectionEnd: 1 })
-          await cdp.send('Input.imeSetComposition', { text: 'ni', selectionStart: 2, selectionEnd: 2 })
-          await cdp.send('Input.imeSetComposition', { text: '你', selectionStart: 1, selectionEnd: 1 })
-          assert.equal((await rows())[0].text, 'Rate card 2027', 'nothing reaches Loro mid-composition')
-          await cdp.send('Input.insertText', { text: '你好' })
-        } else {
-          // No IME to drive here: the events an IME fires, with the text it
-          // draws into the block meanwhile.
-          await a.evaluate(() => {
-            const el = document.activeElement as HTMLElement
-            el.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true, data: '' }))
-            el.append(document.createTextNode('ni'))
-          })
-          assert.equal((await rows())[0].text, 'Rate card 2027', 'nothing reaches Loro mid-composition')
-          await a.evaluate(() => {
-            document.activeElement!.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: '你好' }))
-          })
-        }
-        await settle()
-        let r = await rows()
-        assert.equal(r[0].text, 'Rate card 2027你好')
-        assert.equal(await editable(0).textContent(), 'Rate card 2027你好')
-        assert.deepEqual(await caret(), { id: r[0].id, offset: 16 })
-        await a.keyboard.type('!')
-        r = await rows()
-        assert.equal(r[0].text, 'Rate card 2027你好!')
-        await converged()
-      })
-
-      it('keeps the caret in place when the other tab edits the same block', async () => {
-        await fresher()
-        await home(1)
-        for (let i = 0; i < 4; i++) {
-          await a.keyboard.press('ArrowRight')
-        }
-        const id = (await rows())[1].id
-        assert.deepEqual(await caret(), { id, offset: 4 })
-        await remote(`const t = doc.getTree('blocks').getNodeByID(x).data.get('text'); t.insert(0, 'NB: '); t.insert(t.length, ' (draft)')`, id)
-        await until((r) => r[1].text.startsWith('NB: '))
-        await settle()
-        assert.deepEqual(await caret(), { id, offset: 8 }, 'the caret moved with the text before it')
-        await a.keyboard.type('X')
-        const r = await rows()
-        assert.ok(r[1].text.startsWith('NB: Day X'), r[1].text)
-        assert.ok(r[1].text.endsWith(' (draft)'))
-        await converged()
-      })
-
-      it('keeps typing contiguous while the other tab types in the same block', async () => {
-        await fresher()
-        await end(0)
-        const id = (await rows())[0].id
-        for (const ch of 'abcdef') {
-          await remote(`doc.getTree('blocks').getNodeByID(x).data.get('text').insert(0, '~')`, id)
-          await a.keyboard.type(ch)
-          await a.waitForTimeout(60)
-        }
-        await until((r) => r[0].text === '~~~~~~Rate card 2027abcdef')
-        await settle()
-        assert.deepEqual(await caret(), { id, offset: 26 })
-        await converged()
-      })
-
-      it('undoes its own edits only', async () => {
-        await fresher()
-        await end(0)
-        await a.keyboard.type(' A')
-        const id = (await rows())[4].id
-        await remote(`doc.getTree('blocks').getNodeByID(x).data.get('text').insert(0, 'B ')`, id)
-        await until((r) => r[4].text.startsWith('B '))
-        await editable(0).click()
-        await a.keyboard.press('Control+z')
-        await settle()
-        let r = await rows()
-        assert.equal(r[0].text, 'Rate card 2027')
-        assert.equal(r[4].text, 'B Day of work — per day')
-        await a.keyboard.press('Control+Shift+z')
-        r = await rows()
-        assert.equal(r[0].text, 'Rate card 2027 A')
-        await converged()
-      })
-
-      it('holds edits offline and converges on reconnecting', async () => {
-        await fresher()
-        await context.setOffline(true)
-        await end(0)
-        await a.keyboard.type(' one')
-        await end(0, bo)
-        await bo.keyboard.type(' two')
-        await a.waitForTimeout(600)
-        assert.match((await a.locator('[data-state]').getAttribute('data-state')) ?? '', /^(offline|saving)/)
-        await context.setOffline(false)
-        await until((r) => r[0].text.length === 'Rate card 2027 one two'.length, a, 'both edits in the first tab')
-        await until((r) => r[0].text.length === 'Rate card 2027 one two'.length, bo, 'both edits in the second tab')
-        const text = (await rows())[0].text
-        assert.ok(text === 'Rate card 2027 one two' || text === 'Rate card 2027 two one', text)
-        await converged()
-      })
-
-      it('paints a block again when something else changes its text', async () => {
-        await fresher()
-        await a.evaluate(() => {
-          const el = document.querySelectorAll<HTMLElement>('[data-editor] [data-block]')[1]
-          el.firstChild!.textContent = 'rewritten by an extension'
-        })
-        await settle()
-        await shows()
-        assert.ok(((await editable(1).textContent()) ?? '').startsWith('Day rates'))
-      })
-
-      it('survives random keys, compositions and remote edits, the page showing the model and the tabs converging', async () => {
-        await fresher()
-        const seed = Number(process.env.FUZZ_SEED ?? 1) + made
-        let s = seed >>> 0
-        const next = () => {
-          s = (s + 0x6d2b79f5) >>> 0
-          let t = s
-          t = Math.imul(t ^ (t >>> 15), t | 1)
-          t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-          return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-        }
-        const pick = <T>(xs: readonly T[]): T => xs[Math.floor(next() * xs.length)]
-        const keys = ['a', 'é', ' ', '😀', 'Enter', 'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Tab', 'Shift+Tab', 'Control+b', 'Shift+ArrowLeft', 'Escape'] as const
-        const steps = Number(process.env.FUZZ_STEPS ?? 160)
-        await end(1)
-        for (let i = 0; i < steps; i++) {
-          const roll = next()
-          if (roll < 0.08) {
-            // A remote edit at a random block's start.
-            const r = await rows(bo)
-            const id = pick(r.filter((x) => x.kind !== 'embed' && x.kind !== 'divider')).id
-            await remote(`doc.getTree('blocks').getNodeByID(x).data.get('text').insert(0, 'r')`, id)
-          } else if (roll < 0.12) {
-            // A composition, as an IME ends one.
-            await a.evaluate(() => {
-              const el = document.activeElement as HTMLElement
-              if (el?.dataset.block) {
-                el.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true, data: '' }))
-                el.append(document.createTextNode('か'))
-                el.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: '漢' }))
-              }
-            })
-          } else {
-            const key = pick(keys)
-            if (key === 'Escape') {
-              // Choosing a block whole, then back into text with an arrow.
-              await a.keyboard.press('Escape')
-              await a.keyboard.press(pick(['ArrowDown', 'ArrowUp']))
-            } else if (key.length <= 2 && !key.includes('+')) {
-              await a.keyboard.type(key)
-            } else {
-              await a.keyboard.press(key)
-            }
-          }
-          if (!(await a.evaluate(() => (document.activeElement as HTMLElement)?.dataset.block !== undefined))) {
-            const all = await a.locator('[data-editor] [data-block]').count()
-            await a.locator('[data-editor] [data-block]').nth(Math.floor(next() * all)).click()
-          }
-          if (i % 20 === 19) {
-            await settle()
-            await shows()
-          }
-        }
-        await settle()
-        await shows()
-        await converged()
-        await shows(bo)
-        await a.screenshot({ path: `${shots}/${name}-fuzzed.png`, fullPage: true })
-      })
-    })
-
-    // What the walk in a headless browser found broken
-    // (_corpus/review/2026-11-09/editor-walk.md), each walked again.
-    describe('what the walk found broken', () => {
-      // A document with no draft yet, as the New form starts one, open in
-      // one tab only.
-      async function empty(): Promise<void> {
-        const id = `empty-${++made}`
-        await su.query('INSERT INTO document.document (id, title) VALUES ($1, $2)', [id, `Empty ${made}`])
-        await a?.close()
-        await bo?.close()
-        a = await context.newPage()
-        await open(a, id)
+    const saved = async (page: Page = a) => {
+      for (let i = 0; i < 100 && (await page.locator('[data-state]').getAttribute('data-state')) !== 'saved'; i++) {
+        await page.waitForTimeout(100)
       }
+      assert.equal(await page.locator('[data-state]').getAttribute('data-state'), 'saved')
+    }
 
-      const saved = async (page: Page = a) => {
-        for (let i = 0; i < 100 && (await page.locator('[data-state]').getAttribute('data-state')) !== 'saved'; i++) {
-          await page.waitForTimeout(100)
-        }
-        assert.equal(await page.locator('[data-state]').getAttribute('data-state'), 'saved')
+    it('gives a new document a block to type in, and one undone past its first block', async () => {
+      await empty()
+      let r = await rows()
+      assert.deepEqual(
+        r.map((x) => [x.kind, x.text]),
+        [['paragraph', '']],
+      )
+      assert.equal((await caret()).id, r[0].id, 'the caret is in it')
+      await a.keyboard.type('First')
+      assert.equal((await rows())[0].text, 'First')
+      await saved()
+      // The only block made by this tab's own edit, as the walk made it:
+      // undone, the draft holds nothing, and is given a paragraph again.
+      await a.evaluate(() => {
+        const ed = (document.querySelector('[data-editor]') as any).cellaEditor
+        const t = ed.doc.getTree('blocks')
+        const first = t.roots()[0]
+        const n = t.createNode(undefined, 1)
+        n.data.set('type', 'paragraph')
+        n.data.setContainer('text', new (first.data.get('text').constructor)()).insert(0, 'mine')
+        ed.doc.commit()
+        t.delete(first.id)
+        ed.doc.commit({ origin: 'seed' })
+      })
+      await until((x) => x.length === 1 && x[0].text === 'mine')
+      await end(0)
+      await a.keyboard.press('Control+z')
+      await until((x) => x.length === 1 && x[0].text === '', a, 'a paragraph after the undo')
+      r = await rows()
+      assert.equal((await caret()).id, r[0].id)
+      await a.keyboard.type('Again')
+      assert.equal((await rows())[0].text, 'Again')
+      await saved()
+      await a.screenshot({ path: `${shots}/${name}-new-document.png` })
+      clean()
+    })
+
+    it('leaves a code block that ends the document, by ArrowDown and by Enter on its empty last line', async () => {
+      await fresher()
+      await end(26)
+      await a.keyboard.press('ArrowDown')
+      let r = await rows()
+      assert.equal(r.length, 28)
+      assert.deepEqual([r[27].kind, r[27].text], ['paragraph', ''])
+      assert.equal((await caret()).id, r[27].id)
+      await a.keyboard.type('Below')
+      await a.keyboard.press('Backspace')
+      await a.keyboard.press('Backspace')
+      await a.keyboard.press('Backspace')
+      await a.keyboard.press('Backspace')
+      await a.keyboard.press('Backspace')
+      await a.keyboard.press('Backspace')
+      r = await rows()
+      assert.equal(r.length, 27, 'Backspace in the empty paragraph merges it back')
+      await end(26)
+      await a.keyboard.press('Enter')
+      assert.equal((await rows())[26].text, '[rate]\nday = 560\n', 'one Enter is a line in the code')
+      await a.keyboard.press('Enter')
+      r = await rows()
+      assert.equal(r[26].text, '[rate]\nday = 560', 'the empty line goes')
+      assert.deepEqual([r[27].kind, r[27].text], ['paragraph', ''])
+      assert.equal((await caret()).id, r[27].id)
+      await a.keyboard.type('After the code')
+      assert.equal((await rows())[27].text, 'After the code')
+      await shows()
+      await converged()
+    })
+
+    it('puts the caret after a picked embed, and browses its picker by arrow without picking', async () => {
+      await fresher()
+      await end(1)
+      await a.keyboard.press('Enter')
+      await a.keyboard.type('/motion')
+      await a.locator('[role=listbox][aria-label="Turn into"]').waitFor()
+      await a.keyboard.press('Enter')
+      const picker = a.locator('select[aria-label="Which motion this block shows"]')
+      await picker.focus()
+      await a.keyboard.press('ArrowDown')
+      await settle()
+      let r = await rows()
+      assert.equal(r[2].kind, 'embed')
+      assert.equal(r[2].props.ref, undefined, 'an arrow only browses')
+      if (name === 'chromium') {
+        // Chromium moves a closed select by its arrows; Enter picks there.
+        const browsed = await picker.inputValue()
+        assert.ok(browsed)
+        await a.keyboard.press('Enter')
+        r = await rows()
+        assert.equal(r[2].props.ref, browsed)
+      } else {
+        await picker.selectOption('m-2026-007')
+        r = await rows()
+        assert.equal(r[2].props.ref, 'm-2026-007')
       }
+      assert.equal((await caret()).id, r[3].id, 'the caret is in the paragraph after it')
+      await a.keyboard.type('Then')
+      assert.deepEqual([(await rows())[3].kind, (await rows())[3].text], ['paragraph', 'Then'])
+      await converged()
+    })
 
-      it('gives a new document a block to type in, and one undone past its first block', async () => {
-        await empty()
-        let r = await rows()
-        assert.deepEqual(
-          r.map((x) => [x.kind, x.text]),
-          [['paragraph', '']],
-        )
-        assert.equal((await caret()).id, r[0].id, 'the caret is in it')
-        await a.keyboard.type('First')
-        assert.equal((await rows())[0].text, 'First')
-        await saved()
-        // The only block made by this tab's own edit, as the walk made it:
-        // undone, the draft holds nothing, and is given a paragraph again.
-        await a.evaluate(() => {
-          const ed = (document.querySelector('[data-editor]') as any).cellaEditor
-          const t = ed.doc.getTree('blocks')
-          const first = t.roots()[0]
-          const n = t.createNode(undefined, 1)
-          n.data.set('type', 'paragraph')
-          n.data.setContainer('text', new (first.data.get('text').constructor)()).insert(0, 'mine')
-          ed.doc.commit()
-          t.delete(first.id)
-          ed.doc.commit({ origin: 'seed' })
-        })
-        await until((x) => x.length === 1 && x[0].text === 'mine')
-        await end(0)
-        await a.keyboard.press('Control+z')
-        await until((x) => x.length === 1 && x[0].text === '', a, 'a paragraph after the undo')
-        r = await rows()
-        assert.equal((await caret()).id, r[0].id)
-        await a.keyboard.type('Again')
-        assert.equal((await rows())[0].text, 'Again')
-        await saved()
-        await a.screenshot({ path: `${shots}/${name}-new-document.png` })
-        clean()
+    it('opens the slash menu above the caret near the window bottom', async () => {
+      await fresher()
+      await end(25)
+      await a.keyboard.press('Enter')
+      await editable(26).evaluate((el) => el.scrollIntoView({ block: 'end' }))
+      await editable(26).click()
+      await a.keyboard.type('/')
+      const menu = a.locator('[role=listbox][aria-label="Turn into"]')
+      await menu.waitFor()
+      await settle()
+      const box = (await menu.boundingBox())!
+      const block = (await editable(26).boundingBox())!
+      assert.ok(box.y >= 0 && box.y + box.height <= 900, `the menu is in the window: ${box.y}–${box.y + box.height}`)
+      if (block.y + block.height + box.height > 900) {
+        assert.ok(box.y + box.height <= block.y + block.height, `it opens above the caret: ${box.y + box.height} > ${block.y}`)
+      }
+      await a.screenshot({ path: `${shots}/${name}-slash-at-the-bottom.png` })
+      await a.keyboard.press('Escape')
+      clean()
+    })
+
+    it('drags a preview that holds its block', async () => {
+      await fresher()
+      await line(1).hover()
+      const grip = (await line(1).locator('[data-drag-handle]').boundingBox())!
+      await a.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2)
+      await a.mouse.down()
+      await a.mouse.move(grip.x + 30, grip.y + 60, { steps: 6 })
+      const fit = await a.evaluate(() => {
+        const p = document.querySelector<HTMLElement>('.drag-preview')!
+        const box = p.getBoundingClientRect()
+        const t = p.querySelector<HTMLElement>('.text')!.getBoundingClientRect()
+        return { box: [box.top, box.bottom], text: [t.top, t.bottom], said: p.textContent ?? '' }
       })
+      await a.screenshot({ path: `${shots}/${name}-drag-preview.png` })
+      await a.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2, { steps: 6 })
+      await a.mouse.up()
+      assert.match(fit.said, /Day rates and project floors/)
+      assert.ok(fit.text[0] >= fit.box[0] - 1 && fit.text[1] <= fit.box[1] + 1, `the text is inside the preview: ${JSON.stringify(fit)}`)
+      clean()
+    })
 
-      it('leaves a code block that ends the document, by ArrowDown and by Enter on its empty last line', async () => {
-        await fresher()
-        await end(26)
-        await a.keyboard.press('ArrowDown')
-        let r = await rows()
-        assert.equal(r.length, 28)
-        assert.deepEqual([r[27].kind, r[27].text], ['paragraph', ''])
-        assert.equal((await caret()).id, r[27].id)
-        await a.keyboard.type('Below')
-        await a.keyboard.press('Backspace')
-        await a.keyboard.press('Backspace')
-        await a.keyboard.press('Backspace')
-        await a.keyboard.press('Backspace')
-        await a.keyboard.press('Backspace')
-        await a.keyboard.press('Backspace')
-        r = await rows()
-        assert.equal(r.length, 27, 'Backspace in the empty paragraph merges it back')
-        await end(26)
-        await a.keyboard.press('Enter')
-        assert.equal((await rows())[26].text, '[rate]\nday = 560\n', 'one Enter is a line in the code')
-        await a.keyboard.press('Enter')
-        r = await rows()
-        assert.equal(r[26].text, '[rate]\nday = 560', 'the empty line goes')
-        assert.deepEqual([r[27].kind, r[27].text], ['paragraph', ''])
-        assert.equal((await caret()).id, r[27].id)
-        await a.keyboard.type('After the code')
-        assert.equal((await rows())[27].text, 'After the code')
-        await shows()
-        await converged()
-      })
+    it('copies the first block chosen whole, and pastes it elsewhere', async () => {
+      await fresher()
+      await line(0).hover()
+      await line(0).locator('[data-drag-handle]').click()
+      assert.equal(await a.locator('[data-editor] [data-selected]').count(), 1)
+      await a.keyboard.press('Control+c')
+      await end(3)
+      await a.keyboard.press('Control+v')
+      const r = await rows()
+      assert.equal(r.length, 28)
+      assert.deepEqual([r[4].kind, r[4].text], ['heading', 'Rate card 2027'])
+      await converged()
+    })
 
-      it('puts the caret after a picked embed, and browses its picker by arrow without picking', async () => {
-        await fresher()
-        await end(1)
-        await a.keyboard.press('Enter')
-        await a.keyboard.type('/motion')
-        await a.locator('[role=listbox][aria-label="Turn into"]').waitFor()
-        await a.keyboard.press('Enter')
-        const picker = a.locator('select[aria-label="Which motion this block shows"]')
-        await picker.focus()
-        await a.keyboard.press('ArrowDown')
-        await settle()
-        let r = await rows()
-        assert.equal(r[2].kind, 'embed')
-        assert.equal(r[2].props.ref, undefined, 'an arrow only browses')
-        if (name === 'chromium') {
-          // Chromium moves a closed select by its arrows; Enter picks there.
-          const browsed = await picker.inputValue()
-          assert.ok(browsed)
-          await a.keyboard.press('Enter')
-          r = await rows()
-          assert.equal(r[2].props.ref, browsed)
-        } else {
-          await picker.selectOption('m-2026-007')
-          r = await rows()
-          assert.equal(r[2].props.ref, 'm-2026-007')
-        }
-        assert.equal((await caret()).id, r[3].id, 'the caret is in the paragraph after it')
-        await a.keyboard.type('Then')
-        assert.deepEqual([(await rows())[3].kind, (await rows())[3].text], ['paragraph', 'Then'])
-        await converged()
-      })
-
-      it('opens the slash menu above the caret near the window bottom', async () => {
-        await fresher()
-        await end(25)
-        await a.keyboard.press('Enter')
-        await editable(26).evaluate((el) => el.scrollIntoView({ block: 'end' }))
-        await editable(26).click()
-        await a.keyboard.type('/')
-        const menu = a.locator('[role=listbox][aria-label="Turn into"]')
-        await menu.waitFor()
-        await settle()
-        const box = (await menu.boundingBox())!
-        const block = (await editable(26).boundingBox())!
-        assert.ok(box.y >= 0 && box.y + box.height <= 900, `the menu is in the window: ${box.y}–${box.y + box.height}`)
-        if (block.y + block.height + box.height > 900) {
-          assert.ok(box.y + box.height <= block.y + block.height, `it opens above the caret: ${box.y + box.height} > ${block.y}`)
-        }
-        await a.screenshot({ path: `${shots}/${name}-slash-at-the-bottom.png` })
-        await a.keyboard.press('Escape')
-        clean()
-      })
-
-      it('drags a preview that holds its block', async () => {
-        await fresher()
-        await line(1).hover()
-        const grip = (await line(1).locator('[data-drag-handle]').boundingBox())!
-        await a.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2)
-        await a.mouse.down()
-        await a.mouse.move(grip.x + 30, grip.y + 60, { steps: 6 })
-        const fit = await a.evaluate(() => {
-          const p = document.querySelector<HTMLElement>('.drag-preview')!
-          const box = p.getBoundingClientRect()
-          const t = p.querySelector<HTMLElement>('.text')!.getBoundingClientRect()
-          return { box: [box.top, box.bottom], text: [t.top, t.bottom], said: p.textContent ?? '' }
-        })
-        await a.screenshot({ path: `${shots}/${name}-drag-preview.png` })
-        await a.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2, { steps: 6 })
-        await a.mouse.up()
-        assert.match(fit.said, /Day rates and project floors/)
-        assert.ok(fit.text[0] >= fit.box[0] - 1 && fit.text[1] <= fit.box[1] + 1, `the text is inside the preview: ${JSON.stringify(fit)}`)
-        clean()
-      })
-
-      it('copies the first block chosen whole, and pastes it elsewhere', async () => {
-        await fresher()
+    it("cuts and copies a comment's text as its own while blocks are chosen, and a press outside ends the choice", async () => {
+      await fresher()
+      await a.getByRole('button', { name: 'Save version' }).click()
+      await a.locator('input[name^="f.quote["]').waitFor()
+      await editable(0).click()
+      await a.keyboard.press('Control+Home')
+      await a.keyboard.press('Shift+End')
+      await settle()
+      assert.equal(await a.locator('input[name^="f.quote["]').inputValue(), 'Rate card 2027')
+      await a.locator('textarea[name^="f.text["]').fill('The year is right.')
+      await a.getByRole('button', { name: 'Comment', exact: true }).click()
+      await a.locator('[data-editor] [data-block] mark').first().waitFor({ timeout: 10000 })
+      const said = a.getByText('The year is right.', { exact: true }).first()
+      await said.waitFor({ timeout: 10000 })
+      const choose = async () => {
         await line(0).hover()
         await line(0).locator('[data-drag-handle]').click()
-        assert.equal(await a.locator('[data-editor] [data-selected]').count(), 1)
-        await a.keyboard.press('Control+c')
-        await end(3)
-        await a.keyboard.press('Control+v')
+        assert.equal(await a.locator('[data-editor][data-chosen]').count(), 1, 'the block is chosen')
+      }
+      const intact = async () => {
         const r = await rows()
-        assert.equal(r.length, 28)
-        assert.deepEqual([r[4].kind, r[4].text], ['heading', 'Rate card 2027'])
-        await converged()
+        assert.equal(r.length, 27, 'no block was cut')
+        assert.deepEqual([r[0].kind, r[0].text], ['heading', 'Rate card 2027'])
+      }
+      // The comment's text selected with no press, as the keyboard may:
+      // the choice stands, and the cut and the copy are the text's.
+      await choose()
+      await said.evaluate((el) => {
+        const r = document.createRange()
+        r.selectNodeContents(el)
+        const s = document.getSelection()!
+        s.removeAllRanges()
+        s.addRange(r)
       })
-
-      it("cuts and copies a comment's text as its own while blocks are chosen, and a press outside ends the choice", async () => {
-        await fresher()
-        await a.getByRole('button', { name: 'Save version' }).click()
-        await a.locator('input[name^="f.quote["]').waitFor()
-        await editable(0).click()
-        await a.keyboard.press('Control+Home')
-        await a.keyboard.press('Shift+End')
-        await settle()
-        assert.equal(await a.locator('input[name^="f.quote["]').inputValue(), 'Rate card 2027')
-        await a.locator('textarea[name^="f.text["]').fill('The year is right.')
-        await a.getByRole('button', { name: 'Comment', exact: true }).click()
-        await a.locator('[data-editor] [data-block] mark').first().waitFor({ timeout: 10000 })
-        const said = a.getByText('The year is right.', { exact: true }).first()
-        await said.waitFor({ timeout: 10000 })
-        const choose = async () => {
-          await line(0).hover()
-          await line(0).locator('[data-drag-handle]').click()
-          assert.equal(await a.locator('[data-editor][data-chosen]').count(), 1, 'the block is chosen')
-        }
-        const intact = async () => {
-          const r = await rows()
-          assert.equal(r.length, 27, 'no block was cut')
-          assert.deepEqual([r[0].kind, r[0].text], ['heading', 'Rate card 2027'])
-        }
-        // The comment's text selected with no press, as the keyboard may:
-        // the choice stands, and the cut and the copy are the text's.
-        await choose()
-        await said.evaluate((el) => {
-          const r = document.createRange()
-          r.selectNodeContents(el)
-          const s = document.getSelection()!
-          s.removeAllRanges()
-          s.addRange(r)
-        })
-        await a.keyboard.press('Control+x')
-        await intact()
-        await a.keyboard.press('Control+c')
-        await end(3)
-        await a.keyboard.press('Control+v')
-        assert.equal((await rows())[3].text, 'ServicesThe year is right.', 'the clipboard holds the text')
-        await a.keyboard.press('Control+z')
-        await until((x) => x[3].text === 'Services')
-        // A press in the comment's text ends the choice.
-        await choose()
-        await said.click({ clickCount: 3 })
-        assert.equal(await a.locator('[data-editor][data-chosen]').count(), 0, 'the choice ended')
-        await a.keyboard.press('Control+x')
-        await a.keyboard.press('Control+c')
-        await intact()
-        await converged()
-      })
-
-      it('quotes the selection in a comment, highlighted once posted', async () => {
-        await fresher()
-        await a.getByRole('button', { name: 'Save version' }).click()
-        await a.locator('input[name^="f.quote["]').waitFor()
-        await editable(0).click()
-        await a.keyboard.press('Control+Home')
-        await a.keyboard.press('Shift+End')
-        await settle()
-        assert.equal(await a.locator('input[name^="f.quote["]').inputValue(), 'Rate card 2027')
-        await a.locator('textarea[name^="f.text["]').fill('The year is right.')
-        await a.getByRole('button', { name: 'Comment', exact: true }).click()
-        await a.locator('[data-editor] [data-block] mark').first().waitFor({ timeout: 10000 })
-        assert.equal(await editable(0).locator('mark').textContent(), 'Rate card 2027')
-        clean()
-      })
-
-      it('keeps the toolbar over its selection as the window narrows', async () => {
-        await fresher()
-        await editable(1).click()
-        await a.keyboard.press('Control+Home')
-        for (let i = 0; i < 9; i++) {
-          await a.keyboard.press('Shift+ArrowRight')
-        }
-        const bar = a.locator('[role=toolbar][aria-label=Format]')
-        await bar.waitFor()
-        await a.setViewportSize({ width: 420, height: 900 })
-        try {
-          await settle()
-          await a.waitForTimeout(200)
-          const box = (await bar.boundingBox())!
-          // Where the toolbar goes: over the caret at the selection's focus,
-          // kept in the window.
-          const at = await a.evaluate(() => {
-            const s = document.getSelection()!
-            const r = s.getRangeAt(0).cloneRange()
-            r.collapse(false)
-            const c = r.getClientRects()[0] ?? r.getBoundingClientRect()
-            return { x: c.left, y: c.top }
-          })
-          const x = Math.max(8, Math.min(at.x, 420 - 8 - box.width))
-          const y = Math.max(8, at.y - 40)
-          assert.ok(Math.abs(box.x - x) <= 4 && Math.abs(box.y - y) <= 4, `the toolbar is over its selection: at ${box.x}, ${box.y}, not ${x}, ${y}`)
-          await a.screenshot({ path: `${shots}/${name}-toolbar-narrow.png` })
-        } finally {
-          await a.setViewportSize({ width: 1280, height: 900 })
-        }
-        clean()
-      })
+      await a.keyboard.press('Control+x')
+      await intact()
+      await a.keyboard.press('Control+c')
+      await end(3)
+      await a.keyboard.press('Control+v')
+      assert.equal((await rows())[3].text, 'ServicesThe year is right.', 'the clipboard holds the text')
+      await a.keyboard.press('Control+z')
+      await until((x) => x[3].text === 'Services')
+      // A press in the comment's text ends the choice.
+      await choose()
+      await said.click({ clickCount: 3 })
+      assert.equal(await a.locator('[data-editor][data-chosen]').count(), 0, 'the choice ended')
+      await a.keyboard.press('Control+x')
+      await a.keyboard.press('Control+c')
+      await intact()
+      await converged()
     })
 
-    describe('pages', () => {
-      it('shows the rate card, and the version a motion adopts', async () => {
-        const page = await context.newPage()
-        await page.goto(`${base}/documents/rate-card-2027`)
-        await page.waitForSelector('[data-editor] [data-block]')
-        await page.screenshot({ path: `${shots}/${name}-rate-card.png`, fullPage: true })
-        await page.goto(`${base}/motions/m-2026-011`)
-        const text = (await page.locator('main, body').first().textContent()) ?? ''
-        assert.match(text, /rate-card-2027@2/)
-        assert.match(text, /Online shop/)
-        await page.screenshot({ path: `${shots}/${name}-motion.png`, fullPage: true })
-        await page.close()
-      })
+    it('quotes the selection in a comment, highlighted once posted', async () => {
+      await fresher()
+      await a.getByRole('button', { name: 'Save version' }).click()
+      await a.locator('input[name^="f.quote["]').waitFor()
+      await editable(0).click()
+      await a.keyboard.press('Control+Home')
+      await a.keyboard.press('Shift+End')
+      await settle()
+      assert.equal(await a.locator('input[name^="f.quote["]').inputValue(), 'Rate card 2027')
+      await a.locator('textarea[name^="f.text["]').fill('The year is right.')
+      await a.getByRole('button', { name: 'Comment', exact: true }).click()
+      await a.locator('[data-editor] [data-block] mark').first().waitFor({ timeout: 10000 })
+      assert.equal(await editable(0).locator('mark').textContent(), 'Rate card 2027')
+      clean()
+    })
 
-      it('draws the focus ring on a text field, a select and a textarea the keyboard reaches, light and dark', async () => {
-        const page = await context.newPage()
-        await page.goto(`${base}/motions`)
-        await page.waitForLoadState('networkidle')
-        await page.keyboard.press('c')
-        const form = page.locator('form[data-write="propose"]')
-        await form.waitFor()
-        // The ring a field draws: its box-shadow, or for a select its
-        // outline, which WebKit's native menu list keeps where it drops a
-        // shadow.
-        const ring = () =>
-          page.evaluate(() => {
-            const probe = document.body.appendChild(document.createElement('div'))
-            probe.style.boxShadow = 'var(--focus)'
-            probe.style.outline = 'var(--focus-outline)'
-            const s = getComputedStyle(probe)
-            const drawn = { shadow: s.boxShadow, outline: `${s.outlineStyle} ${s.outlineWidth} ${s.outlineColor}` }
-            probe.remove()
-            return drawn
-          })
-        for (const theme of ['light', 'dark']) {
-          await page.evaluate((t) => (document.documentElement.dataset.theme = t), theme)
-          const expected = await ring()
-          assert.notEqual(expected.shadow, 'none')
-          for (const [field, at] of [
-            ['text field', form.locator('input[name^="f.title["]')],
-            ['select', form.locator('select[name^="f.circle["]')],
-            ['textarea', form.locator('textarea[name^="f.body["]')],
-          ] as const) {
-            // Reached by Tab from the control before it, as a person does.
-            await at.focus()
-            await page.keyboard.press('Shift+Tab')
-            await page.keyboard.press('Tab')
-            assert.ok(await at.evaluate((el) => el === document.activeElement), `Tab reaches the ${field}`)
-            const got = await at.evaluate((el) => {
-              const s = getComputedStyle(el)
-              return { shadow: s.boxShadow, outline: `${s.outlineStyle} ${s.outlineWidth} ${s.outlineColor}` }
-            })
-            const drawn = field === 'select' ? got.shadow === expected.shadow || got.outline === expected.outline : got.shadow === expected.shadow
-            assert.ok(drawn, `the ${field} draws the ring, ${theme}: ${JSON.stringify(got)}`)
-            if (field !== 'textarea') {
-              await form.screenshot({ path: `${shots}/${name}-focus-${field === 'select' ? 'select-' : ''}${theme}.png` })
-            }
-          }
-        }
-        await page.close()
-      })
-
-      it('moves the focus to the row j and k reach, opens it on Enter and focuses it again on back; a table marks the column its rows are ordered by', async () => {
-        const page = await context.newPage()
-        await page.goto(`${base}/people`)
-        await page.waitForLoadState('networkidle')
-        const rows = page.locator('.rows li')
-        const focused = () => page.evaluate(() => [...document.querySelectorAll('.rows li')].indexOf(document.activeElement as Element))
-        // Before the keyboard is on a row, the first is the one in the tab
-        // order, and its link is in none.
-        assert.deepEqual(await rows.evaluateAll((ls) => ls.map((l) => l.getAttribute('tabindex')).slice(0, 3)), ['0', '-1', '-1'])
-        assert.equal(await rows.first().locator('a').getAttribute('tabindex'), '-1')
-        for (const key of ['j', 'j', 'j']) {
-          await page.keyboard.press(key)
-        }
-        assert.equal(await focused(), 2, 'three j focus the third row')
-        await page.keyboard.press('k')
-        assert.equal(await focused(), 1, 'k focuses the second')
-        await page.keyboard.press('ArrowDown')
-        assert.equal(await focused(), 2, 'the arrow focuses the third again')
-        assert.equal(await rows.nth(2).getAttribute('tabindex'), '0')
-        // Tab leaves the rows from it, and coming back returns to it.
-        await page.keyboard.press('Tab')
-        assert.equal(await focused(), -1, 'Tab leaves the rows')
-        await page.keyboard.press('Shift+Tab')
-        assert.equal(await focused(), 2, 'Shift+Tab comes back to the third row')
-        const href = await rows.nth(2).locator('a').getAttribute('href')
-        await page.keyboard.press('Enter')
-        await page.waitForURL(`${base}${href}`)
-        // The item is drawn once its query answers, after the address.
-        await page.locator('h1.record').waitFor()
-        await page.goBack()
-        await page.waitForURL(`${base}/people`)
-        await rows.nth(2).waitFor()
-        for (let i = 0; i < 50 && (await focused()) !== 2; i++) {
-          await page.waitForTimeout(20)
-        }
-        assert.equal(await focused(), 2, 'back focuses the row Enter opened')
-        await page.screenshot({ path: `${shots}/${name}-row-focus.png` })
-
-        // People list by name, expenses the latest spent first.
-        for (const [at, label, dir] of [
-          ['/people?view=table', 'Name', 'ascending'],
-          ['/expenses?view=table', 'Spent on', 'descending'],
-        ] as const) {
-          await page.goto(`${base}${at}`)
-          const sorted = await page.locator('th[aria-sort]').evaluateAll((hs) => hs.map((h) => [h.textContent?.trim(), h.getAttribute('aria-sort')]))
-          assert.deepEqual(sorted, [[label, dir]], `${at} marks ${label} alone`)
-        }
-        // A table's rows rove as the list's do.
-        await page.waitForLoadState('networkidle')
-        await page.keyboard.press('j')
-        await page.keyboard.press('j')
-        assert.equal(await page.evaluate(() => [...document.querySelectorAll('tbody tr')].indexOf(document.activeElement as Element)), 1, 'two j focus the second row of the table')
-        await page.screenshot({ path: `${shots}/${name}-table-focus.png` })
-        await page.close()
-      })
+    it('keeps the toolbar over its selection as the window narrows', async () => {
+      await fresher()
+      await editable(1).click()
+      await a.keyboard.press('Control+Home')
+      for (let i = 0; i < 9; i++) {
+        await a.keyboard.press('Shift+ArrowRight')
+      }
+      const bar = a.locator('[role=toolbar][aria-label=Format]')
+      await bar.waitFor()
+      await a.setViewportSize({ width: 420, height: 900 })
+      try {
+        await settle()
+        await a.waitForTimeout(200)
+        const box = (await bar.boundingBox())!
+        // Where the toolbar goes: over the caret at the selection's focus,
+        // kept in the window.
+        const at = await a.evaluate(() => {
+          const s = document.getSelection()!
+          const r = s.getRangeAt(0).cloneRange()
+          r.collapse(false)
+          const c = r.getClientRects()[0] ?? r.getBoundingClientRect()
+          return { x: c.left, y: c.top }
+        })
+        const x = Math.max(8, Math.min(at.x, 420 - 8 - box.width))
+        const y = Math.max(8, at.y - 40)
+        assert.ok(Math.abs(box.x - x) <= 4 && Math.abs(box.y - y) <= 4, `the toolbar is over its selection: at ${box.x}, ${box.y}, not ${x}, ${y}`)
+        await a.screenshot({ path: `${shots}/${name}-toolbar-narrow.png` })
+      } finally {
+        await a.setViewportSize({ width: 1280, height: 900 })
+      }
+      clean()
     })
   })
-}
+
+  describe('pages', () => {
+    it('shows the rate card, and the version a motion adopts', async () => {
+      const page = await context.newPage()
+      await page.goto(`${base}/documents/rate-card-2027`)
+      await page.waitForSelector('[data-editor] [data-block]')
+      await page.screenshot({ path: `${shots}/${name}-rate-card.png`, fullPage: true })
+      await page.goto(`${base}/motions/m-2026-011`)
+      const text = (await page.locator('main, body').first().textContent()) ?? ''
+      assert.match(text, /rate-card-2027@2/)
+      assert.match(text, /Online shop/)
+      await page.screenshot({ path: `${shots}/${name}-motion.png`, fullPage: true })
+      await page.close()
+    })
+
+    it('draws the focus ring on a text field, a select and a textarea the keyboard reaches, light and dark', async () => {
+      const page = await context.newPage()
+      await page.goto(`${base}/motions`)
+      await page.waitForLoadState('networkidle')
+      await page.keyboard.press('c')
+      const form = page.locator('form[data-write="propose"]')
+      await form.waitFor()
+      // The ring a field draws: its box-shadow, or for a select its
+      // outline, which WebKit's native menu list keeps where it drops a
+      // shadow.
+      const ring = () =>
+        page.evaluate(() => {
+          const probe = document.body.appendChild(document.createElement('div'))
+          probe.style.boxShadow = 'var(--focus)'
+          probe.style.outline = 'var(--focus-outline)'
+          const s = getComputedStyle(probe)
+          const drawn = { shadow: s.boxShadow, outline: `${s.outlineStyle} ${s.outlineWidth} ${s.outlineColor}` }
+          probe.remove()
+          return drawn
+        })
+      for (const theme of ['light', 'dark']) {
+        await page.evaluate((t) => (document.documentElement.dataset.theme = t), theme)
+        const expected = await ring()
+        assert.notEqual(expected.shadow, 'none')
+        for (const [field, at] of [
+          ['text field', form.locator('input[name^="f.title["]')],
+          ['select', form.locator('select[name^="f.circle["]')],
+          ['textarea', form.locator('textarea[name^="f.body["]')],
+        ] as const) {
+          // Reached by Tab from the control before it, as a person does.
+          await at.focus()
+          await page.keyboard.press('Shift+Tab')
+          await page.keyboard.press('Tab')
+          assert.ok(await at.evaluate((el) => el === document.activeElement), `Tab reaches the ${field}`)
+          const got = await at.evaluate((el) => {
+            const s = getComputedStyle(el)
+            return { shadow: s.boxShadow, outline: `${s.outlineStyle} ${s.outlineWidth} ${s.outlineColor}` }
+          })
+          const drawn = field === 'select' ? got.shadow === expected.shadow || got.outline === expected.outline : got.shadow === expected.shadow
+          assert.ok(drawn, `the ${field} draws the ring, ${theme}: ${JSON.stringify(got)}`)
+          if (field !== 'textarea') {
+            await form.screenshot({ path: `${shots}/${name}-focus-${field === 'select' ? 'select-' : ''}${theme}.png` })
+          }
+        }
+      }
+      await page.close()
+    })
+
+    it('moves the focus to the row j and k reach, opens it on Enter and focuses it again on back; a table marks the column its rows are ordered by', async () => {
+      const page = await context.newPage()
+      await page.goto(`${base}/people`)
+      await page.waitForLoadState('networkidle')
+      const rows = page.locator('.rows li')
+      const focused = () => page.evaluate(() => [...document.querySelectorAll('.rows li')].indexOf(document.activeElement as Element))
+      // Before the keyboard is on a row, the first is the one in the tab
+      // order, and its link is in none.
+      assert.deepEqual(await rows.evaluateAll((ls) => ls.map((l) => l.getAttribute('tabindex')).slice(0, 3)), ['0', '-1', '-1'])
+      assert.equal(await rows.first().locator('a').getAttribute('tabindex'), '-1')
+      for (const key of ['j', 'j', 'j']) {
+        await page.keyboard.press(key)
+      }
+      assert.equal(await focused(), 2, 'three j focus the third row')
+      await page.keyboard.press('k')
+      assert.equal(await focused(), 1, 'k focuses the second')
+      await page.keyboard.press('ArrowDown')
+      assert.equal(await focused(), 2, 'the arrow focuses the third again')
+      assert.equal(await rows.nth(2).getAttribute('tabindex'), '0')
+      // Tab leaves the rows from it, and coming back returns to it.
+      await page.keyboard.press('Tab')
+      assert.equal(await focused(), -1, 'Tab leaves the rows')
+      await page.keyboard.press('Shift+Tab')
+      assert.equal(await focused(), 2, 'Shift+Tab comes back to the third row')
+      const href = await rows.nth(2).locator('a').getAttribute('href')
+      await page.keyboard.press('Enter')
+      await page.waitForURL(`${base}${href}`)
+      // The item is drawn once its query answers, after the address.
+      await page.locator('h1.record').waitFor()
+      await page.goBack()
+      await page.waitForURL(`${base}/people`)
+      await rows.nth(2).waitFor()
+      for (let i = 0; i < 50 && (await focused()) !== 2; i++) {
+        await page.waitForTimeout(20)
+      }
+      assert.equal(await focused(), 2, 'back focuses the row Enter opened')
+      await page.screenshot({ path: `${shots}/${name}-row-focus.png` })
+
+      // People list by name, expenses the latest spent first.
+      for (const [at, label, dir] of [
+        ['/people?view=table', 'Name', 'ascending'],
+        ['/expenses?view=table', 'Spent on', 'descending'],
+      ] as const) {
+        await page.goto(`${base}${at}`)
+        const sorted = await page.locator('th[aria-sort]').evaluateAll((hs) => hs.map((h) => [h.textContent?.trim(), h.getAttribute('aria-sort')]))
+        assert.deepEqual(sorted, [[label, dir]], `${at} marks ${label} alone`)
+      }
+      // A table's rows rove as the list's do.
+      await page.waitForLoadState('networkidle')
+      await page.keyboard.press('j')
+      await page.keyboard.press('j')
+      assert.equal(await page.evaluate(() => [...document.querySelectorAll('tbody tr')].indexOf(document.activeElement as Element)), 1, 'two j focus the second row of the table')
+      await page.screenshot({ path: `${shots}/${name}-table-focus.png` })
+      await page.close()
+    })
+  })
+})

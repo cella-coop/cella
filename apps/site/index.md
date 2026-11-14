@@ -1,6 +1,6 @@
 +++
 title = "Site"
-updated = 2026-11-13
+updated = 2026-11-14
 +++
 
 `apps/site` (`@cella/site`) is cella's landing site: an
@@ -54,7 +54,11 @@ name, with no import, the prose between them markdown, its headings a
 level down, `#` an h2, `##` an h3 and `###` an h4, as the page's title,
 its hero's heading, is its one h1 (`src/components/figures.ts`). Each
 is set in the display face, tight, clearly over the prose's text and
-well under a section's heading (`src/layouts/Base.astro`):
+well under a section's heading at every width: at full width an h2 is
+2.85rem, an h3 2.15rem and an h4 1.65rem, and as the screen narrows
+and a section's heading shrinks towards its 2.1rem, they shrink with
+it, to 1.8rem, 1.55rem and 1.3rem, and stay under it
+(`src/layouts/Base.astro`):
 
 ```mdx
 +++

@@ -92,6 +92,9 @@ unseeded('the New form puts a motion as a held role or as its circle, and the pa
             await signIn(context, dev.base, who)
             const page = await context.newPage()
             await page.goto(`${dev.base}/motions`)
+            // A click before the page hydrates opens nothing, as on a box
+            // whose cores run other scenarios at once.
+            await page.waitForLoadState('networkidle')
             await page.getByRole('button', { name: 'New' }).click()
             const form = page.locator('form').filter({ has: page.getByRole('button', { name: 'Propose' }) })
             await form.locator('select[name^="f.circle["]').selectOption('ag')

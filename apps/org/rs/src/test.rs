@@ -10,12 +10,26 @@ use crate::repo::Repo;
 use crate::run::{Fail, Result, Steps, quiet};
 use crate::shell;
 
-/// The database each slice test file and each e2e scenario runs on, fresh
-/// each time.
+/// The database each slice test file runs on, fresh each time.
 const DB: &str = "cella_test";
 
-/// Where each e2e scenario's log is folded after it, and dropped.
-const FOLD: &str = "cella_test_fold";
+/// A worker of the e2e run, by what each scenario it runs writes: its
+/// database, `cella_test_<w>`, fresh for each, and the one its log is
+/// folded into after it and dropped, `cella_test_fold_<w>`. A scenario
+/// reads neither name but through the `PGDATABASE` it is handed.
+struct Worker {
+    db: String,
+    fold: String,
+}
+
+impl Worker {
+    fn new(w: usize) -> Self {
+        Self {
+            db: format!("{DB}_{w}"),
+            fold: format!("{DB}_fold_{w}"),
+        }
+    }
+}
 
 pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>) -> Result {
     match only {
@@ -289,7 +303,7 @@ fn slices(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
         }
         steps.run(
             &format!("slice {slice}"),
-            &mut [node_test(&dev, steps, &files)],
+            &mut [node_test(&dev, steps, DB, &files)],
             tap,
         )?;
     }
@@ -324,15 +338,17 @@ fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
     // server; the build is the production one.
     shell::build(repo, steps)?;
     let lanterne = repo.root.join("apps/org/fixtures/lanterne");
+    // One worker runs every scenario, in the order of their names.
+    let worker = Worker::new(1);
     for (name, file) in chosen {
         steps.run(
             &format!("db e2e/{name}"),
-            &mut dev.renew(DB, None, Some(&lanterne)),
+            &mut dev.renew(&worker.db, None, Some(&lanterne)),
             quiet,
         )?;
         steps.run(
             &format!("e2e {name}"),
-            &mut [node_test(&dev, steps, &[file])],
+            &mut [node_test(&dev, steps, &worker.db, &[file])],
             tap,
         )?;
         // What the scenario wrote, folded from its log into a fresh
@@ -349,8 +365,8 @@ fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
             repo,
             steps,
             &fold::Fold {
-                source: DB,
-                into: FOLD,
+                source: &worker.db,
+                into: &worker.fold,
                 to: None,
                 from: None,
                 every: fold::EVERY,
@@ -358,7 +374,7 @@ fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
             },
         );
         let mut drop = dev.on("postgres", "dropdb");
-        drop.args(["--if-exists", "--force", FOLD]);
+        drop.args(["--if-exists", "--force", &worker.fold]);
         steps.run(&format!("unfold e2e/{name}"), &mut [drop], quiet)?;
         folded?;
     }
@@ -376,8 +392,8 @@ fn unfolded(file: &Path) -> Result<Option<String>> {
         .map(str::to_owned))
 }
 
-fn node_test(dev: &Dev, steps: &Steps, files: &[&PathBuf]) -> std::process::Command {
-    let mut test = dev.on(DB, "node");
+fn node_test(dev: &Dev, steps: &Steps, db: &str, files: &[&PathBuf]) -> std::process::Command {
+    let mut test = dev.on(db, "node");
     // A scenario that rehearses an operation runs this binary, as a host would.
     if let Ok(me) = std::env::current_exe() {
         test.env("CELLA_BIN", me);

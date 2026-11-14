@@ -28,7 +28,7 @@ import { published } from '../src/lib/server/published.ts'
 
 const repo = new URL('../../../../', import.meta.url).pathname
 const bin = process.env.CELLA_BIN ?? 'cella'
-const db = process.env.PGDATABASE ?? 'cella_test'
+const db = process.env.PGDATABASE ?? 'cella'
 // A port of its own, apart from the dev shell's and the run's others.
 const port = own(10)
 const url = `quack:localhost:${port}`

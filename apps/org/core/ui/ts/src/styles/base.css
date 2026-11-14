@@ -92,6 +92,21 @@ select:focus-visible {
   outline-offset: 0;
 }
 
+/* A control that offers no choice reads as its value, not as a control:
+   muted, and a select without its chevron or its field. */
+input:disabled,
+select:disabled,
+textarea:disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+select:disabled {
+  appearance: none;
+  background: transparent;
+  opacity: 1;
+}
+
 /* A textarea holds prose, a note or a message, so it reads as the rest. */
 textarea {
   font-size: var(--text-sm);

@@ -12,7 +12,7 @@
   import type { Column } from '../models/view.ts'
   import { spans } from '../models/calendar.ts'
   import { show } from '../models/format.ts'
-  import { arranged, filtering, type Custom, type Field, type Layout, type Result, type Spec, type Where, type Widget } from '../models/query.ts'
+  import { arranged, filtering, groupable, type Custom, type Field, type Layout, type Result, type Spec, type Where, type Widget } from '../models/query.ts'
   import { reorder } from '../models/drag.ts'
   import { marks } from '../marks.ts'
   import { sortable } from '../attachments/sortable.ts'
@@ -67,7 +67,7 @@
     values: Record<string, string[]>
     dashboard: { custom: boolean; widgets: Widget[]; results: Result[]; errors: string[] } | null
     // The fields a gallery's or a board's cards show, and the board's
-    // enumeration.
+    // enumeration, person or circle.
     shown: Column[]
     grouped?: string
     // The date a calendar places the rows by.
@@ -87,11 +87,11 @@
   const views = useViews(() => name)
   const shell = useShell()
 
-  const groups = $derived(fields.filter((f) => f.type === 'enum'))
+  const groups = $derived(fields.filter(groupable))
   const dates = $derived(fields.filter((f) => f.type === 'date'))
-  // A board only where a field enumerates what it groups by, a calendar
-  // only where one is a date, and a feed only where one is and a column
-  // is a person.
+  // A board only where a field is one it groups by, an enumeration, a
+  // person or a circle, a calendar only where one is a date, and a feed
+  // only where one is and a column is a person.
   const layouts: { id: Layout; label: string; icon: typeof Rows }[] = $derived(
     [
       { id: 'list' as const, label: 'List', icon: Rows },
@@ -250,8 +250,13 @@
         <select aria-label="Span" value={spec.span} onchange={(e) => change({ span: e.currentTarget.value as Spec['span'] })}>
           {#each spans as s (s)}<option value={s}>{s === 'month' ? 'Month' : 'Week'}</option>{/each}
         </select>
-      {:else}
+      {:else if spec.layout === 'dashboard'}
         <select aria-labelledby="{id}-group" disabled><option>None</option></select>
+      {:else}
+        <select aria-labelledby="{id}-group" value={spec.by ?? ''} onchange={(e) => change({ by: e.currentTarget.value || null })}>
+          <option value="">None</option>
+          {#each groups as f (f.key)}<option value={f.key}>{f.label}</option>{/each}
+        </select>
       {/if}
     </div>
 

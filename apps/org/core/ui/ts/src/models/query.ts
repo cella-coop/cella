@@ -272,11 +272,36 @@ export const sorting = (raw: string | null, fs: Field[]): Sort | null => {
 }
 export const sortKey = (s: Sort | null): string => (s ? `${s.dir === 'desc' ? '-' : ''}${s.field}` : '')
 
+// What a view groups its rows by: an enumeration, a person or a circle.
+export const groupable = (f: Field) => f.type === 'enum' || f.type === 'person' || f.type === 'circle'
+
+// The field a view groups its rows by: its own, else, on a board, which
+// always groups, the one the collection's look names, else the first
+// enumeration, else the first person or circle; none elsewhere, for a
+// look's is its board's.
+export const grouping = (s: Pick<Spec, 'layout' | 'by'>, fs: Field[], look: Look = {}): Field | undefined => {
+  const named = (key: string | null | undefined) => fs.find((f) => f.key === key && groupable(f))
+  return named(s.by) ?? (s.layout === 'board' ? (named(look.by) ?? fs.find((f) => f.type === 'enum') ?? fs.find(groupable)) : undefined)
+}
+
+// The group a row falls under: the value it holds under the field's key,
+// as text, the empty one where it holds none, as the server groups it.
+export const under = (row: Record<string, unknown>, key: string): string => {
+  const v = row[key]
+  return v === null || v === undefined ? '' : String(v)
+}
+
+// Whether the `i`th of rows read group by group opens a group: the first,
+// or one under another value than the row before it.
+export const opens = (rows: Record<string, unknown>[], i: number, key: string): boolean =>
+  i === 0 || under(rows[i] ?? {}, key) !== under(rows[i - 1] ?? {}, key)
+
 // How a collection is looked at: its layout, the conditions on its rows,
 // the text filter, the table's hidden columns and its columns' order (the
 // keys it moved; the rest follow as declared), the field the rows are
 // sorted by and which way, null for the collection's own order, the
-// enumeration a board groups by, the fields a gallery's or a board's
+// enumeration, person or circle a list, a feed, a table, a gallery or a
+// board groups by, null for none, the fields a gallery's or a board's
 // cards show, the date a calendar places the rows by and whether it
 // shows a month or a week, and the dashboard's widgets, null for the
 // declared or derived ones. Which month or week a calendar shows is not
@@ -419,10 +444,11 @@ export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[], look
     params.has(name) ? [...new Set((params.get(name) ?? '').split(','))].filter((k) => keys.has(k)) : base[name]
   // An empty sort is the collection's own order.
   const sort = params.has('sort') ? sorting(params.get('sort'), fs) : base.sort && keys.has(base.sort.field) ? base.sort : null
-  const enums = fs.filter((f) => f.type === 'enum').map((f) => f.key)
+  const groups = fs.filter(groupable).map((f) => f.key)
   const asks = params.get('by')
-  // None means the first enumeration, which the board chooses itself.
-  const by = asks && enums.includes(asks) ? asks : base.by && enums.includes(base.by) ? base.by : null
+  // An empty `by` groups by nothing; none on a board means the first
+  // enumeration, which the board chooses itself.
+  const by = asks === '' ? null : asks && groups.includes(asks) ? asks : base.by && groups.includes(base.by) ? base.by : null
   // None means the first date, which the calendar chooses itself.
   const dates = fs.filter((f) => f.type === 'date').map((f) => f.key)
   const placing = params.get('on')
@@ -461,8 +487,8 @@ export function address(id: string, s: Spec, base: Spec): string {
   if (!same(s.sort, base.sort)) {
     q.set('sort', sortKey(s.sort))
   }
-  if (s.by && s.by !== base.by) {
-    q.set('by', s.by)
+  if (s.by !== base.by) {
+    q.set('by', s.by ?? '')
   }
   if (s.on && s.on !== base.on) {
     q.set('on', s.on)
@@ -492,7 +518,7 @@ export const spec = (p?: Preset, look: Look = {}): Spec => ({
   hide: p?.hide ?? [],
   order: p?.order ?? [],
   sort: p?.sort ?? null,
-  by: p?.by ?? look.by ?? null,
+  by: p?.by ?? null,
   cards: p?.cards ?? look.cards ?? [],
   on: p?.on ?? look.on ?? null,
   span: p?.span ?? look.span ?? 'month',

@@ -44,13 +44,23 @@ export interface Sort {
   dir: 'asc' | 'desc'
 }
 
+// How a view groups its rows: by one field's value, its `values` first in
+// the order given, as a board's columns take them, any other after them
+// as it orders, and a row with none last.
+export interface Group {
+  field: string
+  values: string[]
+}
+
 // Which rows a read keeps: those meeting every condition and, where there
 // is a text filter, holding it in one of `keys`, case aside; and the
-// order it reads them in, where it names one.
+// order it reads them in, by its group, then its sort, where it names
+// them.
 export interface Keep {
   where: Condition[]
   q?: { text: string; keys: string[] }
   sort?: Sort
+  group?: Group
 }
 
 // What a widget computes over the rows it keeps: how many, or a figure
@@ -108,16 +118,23 @@ function kept(st: Statement, k: Keep): string {
   return all.length ? all.join(' AND ') : 'true'
 }
 
-// The order the rows are read in: a sort's field first, by the value the
-// row holds under its key as JSON orders it, a number as a number and a
-// date, `YYYY-MM-DD`, as its text, a row with none last either way; then
-// the collection's own order, which breaks its ties.
-function sorting(st: Statement, sort: Sort | undefined): string {
-  if (!sort) {
-    return 'src, at'
+// The order the rows are read in: a group's field first, its values in
+// the order given, any other after them, a row with none last; then a
+// sort's field, by the value the row holds under its key as JSON orders
+// it, a number as a number and a date, `YYYY-MM-DD`, as its text, a row
+// with none last either way; then the collection's own order, which
+// breaks their ties.
+function sorting(st: Statement, sort: Sort | undefined, group: Group | undefined): string {
+  const by: string[] = []
+  if (group) {
+    const value = `coalesce(row->>${st.p(group.field)}, '')`
+    const given = `array_position(${st.p(group.values)}::text[], ${value})`
+    by.push(`${value} = ''`, `${given} IS NULL`, given, value)
   }
-  const value = `nullif(nullif(row->${st.p(sort.field)}, 'null'::jsonb), '""'::jsonb)`
-  return `${value} ${sort.dir === 'desc' ? 'DESC' : 'ASC'} NULLS LAST, src, at`
+  if (sort) {
+    by.push(`nullif(nullif(row->${st.p(sort.field)}, 'null'::jsonb), '""'::jsonb) ${sort.dir === 'desc' ? 'DESC' : 'ASC'} NULLS LAST`)
+  }
+  return [...by, 'src, at'].join(', ')
 }
 
 // What a page of a collection asks of its rows: those `keep` keeps, in
@@ -126,7 +143,9 @@ function sorting(st: Statement, sort: Sort | undefined): string {
 // `values`' keys' values, sorted, the empty one left out, the choices an
 // enumeration's editor offers; and `few`'s keys' values so, each where
 // they number at most `most`, else none, the values a view's Filter
-// offers a field by. Each part is left out where it is not
+// offers a field by. Where `keep` groups the rows, it answers too how
+// many of them each value holds across every page, a row with none
+// under the empty value. Each part is left out where it is not
 // asked. Under a lens, it answers too whether the lens leaves the rows
 // whole, as it does where no select names the circle that owns its rows.
 export interface Asked {
@@ -143,14 +162,18 @@ export async function read(
   db: Db,
   s: Source,
   a: Asked,
-): Promise<{ rows: { id: string }[]; counts: number[]; values: Record<string, string[]>; whole: boolean }> {
+): Promise<{ rows: { id: string }[]; counts: number[]; values: Record<string, string[]>; groups: Record<string, number>; whole: boolean }> {
   const st = new Statement()
   const parts: string[] = []
   if (a.keep) {
-    const order = sorting(st, a.keep.sort)
+    const order = sorting(st, a.keep.sort, a.keep.group)
     const where = kept(st, a.keep)
     const bounds = `${a.limit === undefined ? '' : ` LIMIT ${st.p(a.limit)}`}${a.offset ? ` OFFSET ${st.p(a.offset)}` : ''}`
     parts.push(`(SELECT coalesce(json_agg(row ORDER BY ${order}), '[]') FROM (SELECT src, at, row FROM r WHERE ${where} ORDER BY ${order}${bounds}) p) AS rows`)
+    if (a.keep.group) {
+      const value = `coalesce(row->>${st.p(a.keep.group.field)}, '')`
+      parts.push(`(SELECT coalesce(json_object_agg(g, n), '{}') FROM (SELECT ${value} AS g, count(*) AS n FROM r WHERE ${where} GROUP BY 1) c) AS groups`)
+    }
   }
   if (a.counts?.length) {
     parts.push(`(SELECT json_build_array(${a.counts.map((k) => `count(*) FILTER (WHERE ${kept(st, k)})`).join(', ')}) FROM r) AS counts`)
@@ -168,7 +191,7 @@ export async function read(
   }
   const found = parts.length
     ? (
-        await db.query<{ rows?: { id: string }[]; counts?: number[]; values?: Record<string, string[]>; whole?: boolean }>(
+        await db.query<{ rows?: { id: string }[]; counts?: number[]; values?: Record<string, string[]>; groups?: Record<string, number>; whole?: boolean }>(
           `${rows(st, s)}\nSELECT ${parts.join(',\n  ')}`,
           st.params,
         )
@@ -178,6 +201,7 @@ export async function read(
     rows: found?.rows ?? [],
     counts: found?.counts ?? [],
     values: { ...Object.fromEntries(asked.map((k) => [k, []])), ...found?.values },
+    groups: found?.groups ?? {},
     whole: found?.whole ?? false,
   }
 }

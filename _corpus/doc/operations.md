@@ -377,3 +377,11 @@ database, and the template is never written.
 A visitor's copy is a scope spawned on demand, the first form of how a
 host spawns a scope per co-op: a database made from a template, a
 server and a port of its own, and an end.
+
+A copy ends after two hours with no request from its visitor: its
+server stopped, its database dropped. The host caps how many copies run
+at once (the module's `demo.visitors`, 10 unless the host says
+otherwise, what a cx23 holds beside the site); a visitor who would pass
+the cap ends the copy idle longest first. A visitor whose copy ended
+is prepared a fresh one, the page saying their earlier copy was reset.
+Reset now ends a visitor's copy and prepares a fresh one at once.

@@ -7,6 +7,7 @@
 // sets her role on her page, which makes her a client, and clears it
 // again. Run by `cella test`, which builds the shell first, on a fresh
 // database.
+// covers: contact contact-invoice invoice
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

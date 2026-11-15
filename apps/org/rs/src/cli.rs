@@ -151,6 +151,10 @@ pub enum Command {
     Test {
         #[command(subcommand)]
         only: Option<Test>,
+
+        /// Run only the e2e scenarios the diff from this revision reaches, the other parts whole
+        #[arg(long, value_name = "REV")]
+        since: Option<String>,
     },
 
     /// Fold a database's log into a fresh one migrated as the scope's, entry by entry, recording a checkpoint every so many entries; then its log verifies
@@ -370,6 +374,10 @@ pub enum Test {
         /// The workers running scenarios at once, each on a database of its own; CELLA_E2E_JOBS unset, else as many as half the box's builds slice holds
         #[arg(long, short)]
         jobs: Option<usize>,
+
+        /// Only the scenarios the diff from this revision reaches, by the slices each imports or names in its `// covers:` line; all of them where it touches a file outside a slice's package
+        #[arg(long, value_name = "REV")]
+        since: Option<String>,
     },
     /// The fold's scale tier: Lanterne grown to a generated scope, folded in memory that does not grow with its log and re-folded from its latest checkpoint within its bound; slow, so no other target runs it; needs the dev cluster
     Scale {

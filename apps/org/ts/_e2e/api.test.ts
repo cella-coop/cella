@@ -12,6 +12,7 @@
 // Chloé and Yusuf, of two circles, each read their own payslips alone,
 // and the other's is a 404; the query string takes the page's address's
 // layout and filter. Run by `cella test e2e api`.
+// covers: expense payslip project task
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

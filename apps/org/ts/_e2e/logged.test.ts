@@ -10,6 +10,7 @@
 // them by their start, and an invoice's by the day it is due, with
 // Created and Updated among the dates it offers. `SHOTS` names where its
 // screenshots go. Run by `cella test e2e logged`.
+// covers: contact invoice meeting
 
 import { after, before, test } from 'node:test'
 import { mkdirSync } from 'node:fs'

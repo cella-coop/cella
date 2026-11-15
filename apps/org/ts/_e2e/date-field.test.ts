@@ -1,5 +1,6 @@
 // A browser's date field rejects a day that does not exist, then accepts
 // either a corrected day or a calendar pick on that same form.
+// covers: project
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { eachBrowser, serve, signIn } from './browser.ts'

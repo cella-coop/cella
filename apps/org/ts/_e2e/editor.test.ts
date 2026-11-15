@@ -10,6 +10,7 @@
 // the focus and has it again on back, and a table marks the column its
 // rows are ordered by. Run by `cella test e2e editor`, on the built shell.
 // unfolded: it carries each fresh rate card in around the notary, which its logged edits then write to, since no test of it signs a creation
+// covers: document expense motion
 
 import { after, before, describe, it } from 'node:test'
 import assert from 'node:assert/strict'

@@ -9,6 +9,7 @@
 // Thomas may not; Camille files a record of her own and not of Hugo's;
 // and Thomas uploads a paper of the co-op's own from the Files page. Run
 // by `cella test e2e files`.
+// covers: employment employment-file expense expense-file file file-membership
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

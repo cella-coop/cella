@@ -13,6 +13,7 @@
 // view saved with its group restores it from its tab, the address alone
 // draws it, and None draws the rows as one again. `SHOTS` names where its
 // screenshots go. Nothing is written. Run by `cella test e2e group`.
+// covers: expense file
 
 import { after, before, test } from 'node:test'
 import { mkdirSync } from 'node:fs'

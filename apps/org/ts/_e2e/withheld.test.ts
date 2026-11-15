@@ -8,6 +8,7 @@
 // dark, Inès opens it and finds the same; `SHOTS` names where its
 // screenshots go. Run by `cella test e2e withheld`.
 // unfolded: it hands the print buyer role from Sofia to Inès around the notary, since no write of the scenario seats a role's holder
+// covers: core
 
 import { after, before, test } from 'node:test'
 import { mkdirSync } from 'node:fs'

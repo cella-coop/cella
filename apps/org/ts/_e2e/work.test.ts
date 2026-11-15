@@ -8,6 +8,7 @@
 // goes beyond the pot; and a lead budgets their own circle's projects
 // alone, by their mandates' scope. Run by `cella test`, which builds the shell first,
 // on a fresh database.
+// covers: contact contact-project employment-project-timesheet invoice invoice-project project project-timesheet task timesheet
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

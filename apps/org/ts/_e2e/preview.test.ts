@@ -5,6 +5,7 @@
 // signed in in each browser reads a collection. Its database is
 // `cella_preview`, so it writes nothing to the test database.
 // alone: its build stages the extension and the shell anew and its serve restarts the cluster, which every other scenario runs on
+// covers: core
 
 import { spawn, type ChildProcess } from 'node:child_process'
 import { mkdtempSync, rmSync } from 'node:fs'

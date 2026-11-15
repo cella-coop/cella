@@ -12,6 +12,7 @@
 // where its screenshots go. Run by `cella test e2e features`.
 
 // browsers: one at a time: each browser changes Web's features and the scope's clock by the assembly's motions, which the others read
+// covers: membership-motion motion
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

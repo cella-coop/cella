@@ -8,6 +8,7 @@
 // motion and the outcome shows. The specimen has no actions: each post
 // is answered here, so nothing is written. `SHOTS` names where its
 // screenshots go. Run by `cella test e2e settings`.
+// covers: core
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'

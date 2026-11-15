@@ -9,6 +9,7 @@
 // the scenario reads them itself. A view saved with a condition restores
 // it from its tab, and the address alone draws it. `SHOTS` names where
 // its screenshots go. Nothing is written. Run by `cella test e2e filter`.
+// covers: expense file
 
 import { after, before, test } from 'node:test'
 import { mkdirSync } from 'node:fs'

@@ -10,6 +10,7 @@
 // draws the same legend from it. None takes the colours away. `SHOTS`
 // names where its screenshots go. Nothing is written. Run by `cella test
 // e2e colour`.
+// covers: meeting
 
 import { after, before, test } from 'node:test'
 import { mkdirSync } from 'node:fs'

@@ -4,6 +4,7 @@
 // share reconciles with what the slices' own reads say, the books to the
 // cent, the projects' time to the minute and its cost to the cent, the
 // payroll to the cent. Run by `cella test` on a fresh database.
+// covers: all
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

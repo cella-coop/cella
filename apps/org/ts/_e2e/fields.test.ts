@@ -11,6 +11,7 @@
 // a board and in a calendar, a field taken away in Display is one fewer
 // shown. `SHOTS` names where its screenshots go. Nothing is written. Run
 // by `cella test e2e fields`.
+// covers: file meeting task
 
 import { test } from 'node:test'
 import { mkdirSync } from 'node:fs'

@@ -7,6 +7,7 @@
 // fifty thousand time entries, sorted and grouped, its text filter, its
 // counts and the viewer's own views' tallies, outside dev mode. Run by
 // `cella test e2e reads`.
+// covers: all
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

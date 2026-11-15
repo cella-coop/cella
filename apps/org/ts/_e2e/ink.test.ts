@@ -4,6 +4,7 @@
 // primary action is solid in an ink where today's is plain, and the
 // shell around the specimen keeps today's. It reads and writes nothing.
 // `SHOTS` names where its screenshots go. Run by `cella test e2e ink`.
+// covers: core
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'

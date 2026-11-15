@@ -6,6 +6,7 @@
 // serious or critical fails it, unless `waiting` lists its rule on that
 // page: what waits for the operator's design session, since its fix
 // would change the design system's look. Run by `cella test e2e a11y`.
+// covers: all
 
 import { after, before, describe, it } from 'node:test'
 import assert from 'node:assert/strict'

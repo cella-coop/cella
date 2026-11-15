@@ -4,6 +4,7 @@
 // one; and Julien proposing as the manager, which he does not hold, or
 // as coordination, another circle, is refused, the reason naming the
 // role or the circle and never him. Run by `cella test e2e author`.
+// covers: membership-motion motion
 
 import { test as runTest } from 'node:test'
 import { createStory } from './story.ts'

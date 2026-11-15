@@ -309,6 +309,29 @@ for (const app of apps) {
       fail(`${d}: declares graft ${g}, which no node of ${app} holds`)
     }
   }
+  // Each e2e scenario's `// covers:` line names slices of the app, its
+  // feats and grafts, or `all`, or `core` for the core's alone; and a
+  // scenario that drives the shell, importing `./browser.ts` or
+  // `./serve.ts` itself or through a helper beside it, has one, since its
+  // imports do not say whose pages it drives (architecture.md, "Tests").
+  const e2e = join(app, 'ts/_e2e')
+  const slices = new Set([...held, ...descendants(app).map((d) => basename(d)), 'all', 'core'])
+  const helpers = (file) => [...readFileSync(join(repo, e2e, file), 'utf8').matchAll(/(?:from|import)\s*\(?\s*['"]\.\/([^'"]+)['"]/g)].map((m) => m[1])
+  const drives = (file, seen = new Set()) => {
+    seen.add(file)
+    return helpers(file).some((h) => h === 'browser.ts' || h === 'serve.ts' || (!seen.has(h) && existsSync(join(repo, e2e, h)) && drives(h, seen)))
+  }
+  for (const file of existsSync(join(repo, e2e)) ? readdirSync(join(repo, e2e)).filter((f) => f.endsWith('.test.ts')).sort() : []) {
+    const covers = readFileSync(join(repo, e2e, file), 'utf8').match(/^\/\/ covers: (.*)$/m)
+    for (const name of covers ? covers[1].split(/\s+/).filter(Boolean) : []) {
+      if (!slices.has(name)) {
+        fail(`${e2e}/${file}: covers ${name}, a slice ${app} lacks`)
+      }
+    }
+    if (!covers && drives(file)) {
+      fail(`${e2e}/${file}: drives the shell and has no \`// covers: <slice> …\` line naming the slices whose pages it drives`)
+    }
+  }
 }
 
 // A package's relative imports stay inside it: no reaching into another

@@ -11,6 +11,7 @@ use crate::cli::Test;
 use crate::db::{self, Dev};
 use crate::fold;
 use crate::pruned;
+use crate::reach;
 use crate::repo::Repo;
 use crate::run::{Fail, Result, Steps, quiet};
 use crate::shell;
@@ -38,7 +39,7 @@ impl Worker {
     }
 }
 
-pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>) -> Result {
+pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>, since: Option<&str>) -> Result {
     match only {
         None => {
             rust(repo, steps, "guards", "cella-guards")?;
@@ -47,7 +48,7 @@ pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>) -> Result {
             tools(repo, steps)?;
             pruned::serve(repo, steps)?;
             slices(repo, steps, None)?;
-            e2e(repo, steps, None, None)
+            e2e(repo, steps, None, None, since)
         }
         Some(Test::Guards) => rust(repo, steps, "guards", "cella-guards"),
         Some(Test::Cli) => rust(repo, steps, "cli", "cella-cli"),
@@ -55,7 +56,9 @@ pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>) -> Result {
         Some(Test::Tools) => tools(repo, steps),
         Some(Test::Pruned) => pruned::serve(repo, steps),
         Some(Test::Slice { name }) => slices(repo, steps, name.as_deref()),
-        Some(Test::E2e { name, jobs }) => e2e(repo, steps, name.as_deref(), jobs),
+        Some(Test::E2e { name, jobs, since }) => {
+            e2e(repo, steps, name.as_deref(), jobs, since.as_deref())
+        }
         Some(Test::Scale {
             members,
             years,
@@ -321,8 +324,15 @@ fn slices(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
 /// Lanterne, through the handlers on the dev cluster: one at a time on this
 /// process at one worker, else across workers at once, each a child of
 /// this binary running one scenario at a time on its own database
-/// (`WORKER`).
-fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>, jobs: Option<usize>) -> Result {
+/// (`WORKER`). Given `since`, only those the diff from it reaches
+/// ([`reach`]).
+fn e2e(
+    repo: &Repo,
+    steps: &Steps,
+    only: Option<&str>,
+    jobs: Option<usize>,
+    since: Option<&str>,
+) -> Result {
     let mut files: Vec<PathBuf> = tests(repo)?
         .into_iter()
         .filter(|(k, _)| matches!(k, Kind::E2e))
@@ -341,6 +351,18 @@ fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>, jobs: Option<usize>) -> R
             only.unwrap_or(""),
             known.join(", ")
         )));
+    }
+    let chosen = match since {
+        Some(rev) => reached(repo, rev, chosen)?,
+        None => chosen,
+    };
+    if chosen.is_empty() {
+        println!(
+            "{:<22} the diff from {} reaches no scenario",
+            "e2e",
+            since.unwrap_or("")
+        );
+        return Ok(());
     }
     let dev = Dev::new(repo);
     dev.up()?;
@@ -396,6 +418,44 @@ fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>, jobs: Option<usize>) -> R
     };
     let cleaned = drop_templates(&dev, steps);
     ran.and(cleaned)
+}
+
+/// The scenarios the diff from `rev` reaches, each printed with why it
+/// runs or is left out.
+fn reached<'a>(
+    repo: &Repo,
+    rev: &str,
+    chosen: Vec<&'a (String, PathBuf)>,
+) -> Result<Vec<&'a (String, PathBuf)>> {
+    let files = reach::diff(&repo.root, rev)?;
+    let mut trees: BTreeMap<PathBuf, reach::Tree> = BTreeMap::new();
+    let mut kept = Vec::new();
+    let mut left = 0;
+    for pair in chosen {
+        let (name, file) = pair;
+        // The app a scenario sits in, `<app>/ts/_e2e/<name>.test.ts`.
+        let app = file.ancestors().nth(3).unwrap_or(&repo.root).to_path_buf();
+        let tree = trees
+            .entry(app.clone())
+            .or_insert_with(|| reach::tree(&app));
+        match reach::reaches(&files, &reach::scenario(file, tree)?, tree) {
+            Ok(why) => {
+                println!("{:<22} {why}", format!("reached e2e/{name}"));
+                kept.push(pair);
+            }
+            Err(why) => {
+                println!("{:<22} {why}", format!("left out e2e/{name}"));
+                left += 1;
+            }
+        }
+    }
+    println!(
+        "{:<22} {} files since {rev} reach {} scenarios, {left} left out",
+        "e2e",
+        files.len(),
+        kept.len()
+    );
+    Ok(kept)
 }
 
 fn drop_templates(dev: &Dev, steps: &Steps) -> Result {

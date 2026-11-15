@@ -18,6 +18,7 @@
 // `SHOTS` names where its screenshots go. Run by `cella test e2e amend`.
 
 // browsers: one at a time: each browser renames Web by the assembly's motion and moves the scope's clock to its deadline, which the others read
+// covers: membership-motion motion
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

@@ -149,6 +149,34 @@ impl<'a> Dev<'a> {
         seed
     }
 
+    /// Clone the migrated, seeded template into a worker's database. Postgres
+    /// does not copy ALTER DATABASE settings with a template, so apply them
+    /// before the worker connects. Caller holds the cluster's migration lock
+    /// to serialize clones of the same template across workers.
+    pub fn clone_test(&self, steps: &Steps, template: &str, db: &str) -> Result {
+        let mut drop = self.on("postgres", "dropdb");
+        drop.args(["--if-exists", "--force", db]);
+        let mut create = self.on("postgres", "createdb");
+        create.args(["--template", template, db]);
+        steps.run(&format!("clone {db}"), &mut [drop, create], quiet)?;
+        let mut settings = self.on("postgres", "psql");
+        settings.args(["-X", "-q", "-t", "-A", "-v", "ON_ERROR_STOP=1", "-c"])
+            .arg(format!(
+                "SELECT coalesce(string_agg(format('ALTER DATABASE %I SET %s TO %L', '{}', split_part(s, '=', 1), substr(s, strpos(s, '=') + 1)), '; '), '')
+                 FROM pg_db_role_setting d, unnest(d.setconfig) s
+                 WHERE d.setdatabase = (SELECT oid FROM pg_database WHERE datname = '{}') AND d.setrole = 0
+                   AND split_part(s, '=', 1) <> 'cella.unbound'",
+                db.replace('\'', "''"), template.replace('\'', "''")
+            ));
+        let sql = Steps::read(&mut settings)?;
+        if !sql.is_empty() {
+            let mut apply = self.on("postgres", "psql");
+            apply.args(["-X", "-q", "-v", "ON_ERROR_STOP=1", "-c", &sql]);
+            steps.run(&format!("settings {db}"), &mut [apply], quiet)?;
+        }
+        Ok(())
+    }
+
     pub fn start(&self, steps: &Steps) -> Result {
         let dir = ext_build(self.repo, steps)?;
         self.load(steps, &dir)

@@ -17,6 +17,7 @@ use crate::shell;
 
 /// The database each slice test file runs on, fresh each time.
 const DB: &str = "cella_test";
+const TEMPLATE: &str = "cella_test_lanterne";
 
 /// A worker of the e2e run, by what each scenario it runs writes: its
 /// database, `cella_test_<w>`, fresh for each, and the one its log is
@@ -355,14 +356,40 @@ fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>, jobs: Option<usize>) -> R
         .or_else(|| std::env::var("CELLA_E2E_JOBS").ok()?.trim().parse().ok())
         .unwrap_or(JOBS)
         .clamp(1, chosen.len());
-    if jobs == 1 {
-        let worker = Worker::new(1);
-        for (name, file) in chosen {
-            scenario(repo, steps, &dev, &worker, name, file)?;
-        }
-        return Ok(());
+    let lanterne = repo.root.join("apps/org/fixtures/lanterne");
+    let prepared = Instant::now();
+    let result = (|| {
+        let _turn = dev.migrating()?;
+        steps.run(
+            "db e2e template",
+            &mut dev.renew(TEMPLATE, None, Some(&lanterne)),
+            quiet,
+        )
+    })();
+    if let Err(e) = result {
+        drop_template(&dev, steps)?;
+        return Err(e);
     }
-    workers(repo, steps, &chosen, jobs)
+    println!(
+        "e2e template: migrated and seeded in {:.1}s",
+        prepared.elapsed().as_secs_f64()
+    );
+    let ran = if jobs == 1 {
+        let worker = Worker::new(1);
+        chosen
+            .iter()
+            .try_for_each(|(name, file)| scenario(repo, steps, &dev, &worker, name, file))
+    } else {
+        workers(repo, steps, &chosen, jobs)
+    };
+    let cleaned = drop_template(&dev, steps);
+    ran.and(cleaned)
+}
+
+fn drop_template(dev: &Dev, steps: &Steps) -> Result {
+    let mut drop = dev.on("postgres", "dropdb");
+    drop.args(["--if-exists", "--force", TEMPLATE]);
+    steps.run("db e2e template drop", &mut [drop], quiet)
 }
 
 /// How many workers run the scenarios at once, unless `--jobs` or
@@ -383,8 +410,8 @@ const APART: &str = "CELLA_BROWSERS_APART";
 /// offset.
 const SPREAD: u16 = 100;
 
-/// One scenario on a worker's database, renewed, migrated whole and seeded
-/// with Lanterne, then its log folded into the worker's fold database and
+/// One scenario on a worker's database cloned from the run's seeded
+/// template, then its log folded into the worker's fold database and
 /// compared, unless its file says why not.
 fn scenario(
     repo: &Repo,
@@ -394,20 +421,12 @@ fn scenario(
     name: &str,
     file: &PathBuf,
 ) -> Result {
-    let lanterne = repo.root.join("apps/org/fixtures/lanterne");
+    let cloning = Instant::now();
     {
         let _turn = dev.migrating()?;
-        steps.run(
-            &format!("db e2e/{name}"),
-            &mut dev.renew(&worker.db, None, None),
-            quiet,
-        )?;
+        dev.clone_test(steps, TEMPLATE, &worker.db)?;
     }
-    steps.run(
-        &format!("seed e2e/{name}"),
-        &mut [dev.seed(&worker.db, &lanterne)],
-        quiet,
-    )?;
+    println!("clone e2e/{name}: {:.1}s", cloning.elapsed().as_secs_f64());
     // A browser scenario drives its browsers at once, unless its file says
     // why they would meet, in a line `// browsers: one at a time: <why>`.
     let mut test = node_test(dev, steps, &worker.db, &[file]);

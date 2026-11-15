@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-14
+updated = 2026-11-15
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -204,7 +204,12 @@ draws.
   choice, so the server renders it. One tab per panel, the open one
   marked even when alone: a collection's View, an item's Details.
   While a navigation runs (SvelteKit's `navigating`), its content stays,
-  dimmed and `aria-busy`, until the next page's queries answer.
+  dimmed and `aria-busy`, until the next page's queries answer. A
+  navigation a component starts, the collection's, the detail's Escape
+  and the command menu's, lets go where it starts of one the next
+  navigation abandons, overtaken or unloaded under, and raises any other
+  failure (`models/navigation.ts`), so leaving a page mid-navigation
+  raises no page error in any browser.
 - `Skeleton` and `Failed`: what a page's boundary draws while its
   queries load the first time, its frame named by what the shell knows
   without them and quiet lines where its content goes, static and

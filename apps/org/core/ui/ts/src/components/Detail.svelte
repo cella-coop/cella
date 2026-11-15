@@ -5,6 +5,7 @@
   import Info from 'phosphor-svelte/lib/Info'
   import type { Event, Link, Prop, Tab } from '../models/view.ts'
   import { typing } from '../models/keys.ts'
+  import { abandon } from '../models/navigation.ts'
   import Activity from './Activity.svelte'
   import Frame from './PageFrame.svelte'
   import Pill from './Pill.svelte'
@@ -60,7 +61,7 @@
 
   function onkeydown(e: KeyboardEvent) {
     if (e.key === 'Escape' && !e.defaultPrevented && !typing(e) && !document.querySelector('dialog[open]')) {
-      goto(back.href)
+      goto(back.href).catch(abandon)
     }
   }
 </script>

@@ -1,5 +1,5 @@
 import { type Added, type App, type Column, type Look, type Nav, type Owned, type Preset, type SettingsPage, type Shift, type Widget } from '@cella/org-ui'
-import { presets } from '@cella/org-ui/models'
+import { logged, logging, presets } from '@cella/org-ui/models'
 import { app as log } from '@cella/org-log/app'
 import { app as person } from '@cella/org-person/app'
 import { app as circle } from '@cella/org-circle/app'
@@ -17,11 +17,10 @@ export const extensions = (name: string): { slice: string; extension: Added }[] 
   apps.flatMap((a) => (a.extends?.[name] ? [{ slice: a.name, extension: a.extends[name] }] : []))
 
 // A collection's columns: its owner's, then each extension's over the
-// fields it adds to the rows.
-export const columns = (name: string): Column[] => [
-  ...(collection(name)?.view.columns ?? []),
-  ...extensions(name).flatMap((e) => e.extension.columns ?? []),
-]
+// fields it adds to the rows, then the four the core read adds to every
+// row from the log, but those of a key it has.
+export const columns = (name: string): Column[] =>
+  logging([...(collection(name)?.view.columns ?? []), ...extensions(name).flatMap((e) => e.extension.columns ?? [])])
 
 // The dashboard a collection's owner and extensions declare, if they do.
 export const dashboard = (name: string): Widget[] | undefined => {
@@ -30,9 +29,12 @@ export const dashboard = (name: string): Widget[] | undefined => {
 }
 
 // How a collection looks before a view changes it: its owner's look, each
-// extension's overriding it.
-export const look = (name: string): Look =>
-  Object.assign({}, collection(name)?.view.look, ...extensions(name).map((e) => e.extension.look ?? {}))
+// extension's overriding it, its table hiding the logged fields it adds
+// until a view shows them.
+export const look = (name: string): Look => {
+  const hide = columns(name).filter((c) => logged.includes(c)).map((c) => c.key)
+  return Object.assign({ hide }, collection(name)?.view.look, ...extensions(name).map((e) => e.extension.look ?? {}))
+}
 
 // The board moves a collection's slices make writes.
 export const shifts = (name: string): Shift[] => [

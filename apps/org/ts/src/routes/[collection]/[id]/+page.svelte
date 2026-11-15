@@ -2,6 +2,7 @@
   import { browser } from '$app/env'
   import { page as here } from '$app/state'
   import { Detail, Failed, Skeleton, useWrites, type Block, type Embeds, type Placed, type Tab } from '@cella/org-ui'
+  import { stamps } from '@cella/org-ui/models'
   import { item as read } from '#lib/remote/item.remote.ts'
   import { collection, extensions } from '#lib/slices.ts'
   import { onCollection } from '#lib/writes.ts'
@@ -70,10 +71,13 @@
       ...(page?.actions ? [{ block: page.actions, data: data.item }] : []),
       ...added.flatMap((a) => (a.page.actions ? [{ block: a.page.actions as Block, data: a.data }] : [])),
     ]
+    // Its slices' properties, then when and by whom it was created and last
+    // updated, as the log has it, but what they already name.
+    const properties = all(page?.properties, (p) => p.properties)
     return {
       mounted,
       page,
-      properties: all(page?.properties, (p) => p.properties),
+      properties: [...properties, ...stamps(data.made, properties)],
       related: all(page?.related, (p) => p.related),
       activity,
       tabs,

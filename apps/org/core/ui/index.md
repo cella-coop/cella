@@ -256,7 +256,17 @@ draws.
   opened from its chip. A column says what it holds by its kind, and a
   `person` or a `circle` column is a field of its own type, never text:
   it groups and filters by who or which circle, as an enumeration does
-  by its value. Its rows
+  by its value. Every collection's fields end with the four the core
+  read gives its rows from the log, which no slice declares (`logged`):
+  Created and Updated, dates, and Created by and Updated by, people
+  ([db](../db/index.md)), but where the collection has a field of the
+  same key, as tasks' Created is their own (`logging`). They are fields
+  as any: Order by orders by them either way, Filter adds a condition on
+  them, Group by groups by Created by and Updated by, and Display
+  chooses them; a table shows them once a view does, as the shell's
+  look of every collection hides them (`hide`), and a list, a gallery,
+  a board and a calendar as a view's fields. So every collection holds
+  a date and a person, and offers a feed and a calendar. Its rows
   are the server's, kept, filtered, ordered and paged in SQL, and only
   the lensed circle's where the member has a lens, but in a view across
   circles: a collection whose
@@ -293,14 +303,20 @@ draws.
   of the rows it shows hold it, so a value is never told by colour
   alone; grouped by nothing, each tinted by the first of its cards'
   fields that has a tone, a week showing the fields under each title; the
-  calendar is offered only where a field is a date. Which month or week
+  calendar is offered only where a field is a date, as every
+  collection's Created is. It places the rows by the view's date,
+  chosen under Group by, else its look's (`on`), the collection's own
+  meaningful date, as a meeting's start or an invoice's due day, else
+  its first date, its own before the logged ones, so a collection with
+  no date of its own places them by Created. Which month or week
   it shows is where the viewer is, not part of the view: `at` in the
   address, today when absent, which its arrows and Today link to and
   a change to the view keeps
   (`models/calendar.ts`). A view, its extensions overriding it part by
   part, declares its `look`: its default layout, its board's grouping
   and columns' order (`lanes`), its cards' fields, its calendar's date
-  (`on`) and span; the log opens as a feed, circles and projects as a gallery, motions and
+  (`on`) and span, and the columns a table hides until a view shows
+  them (`hide`); the log opens as a feed, circles and projects as a gallery, motions and
   tasks as a board, timesheets as a table, meetings as a calendar of
   months. A board move is
   a write only where a slice declares it (`shifts`: the field, the
@@ -364,7 +380,11 @@ draws.
   (`activity`), a comment's words as its `body`; the page merges every
   slice's and shows them oldest first, the box last. The drawer's
   Details panel holds its properties, label and value rows on the
-  drawer itself, with no card or panel around them, and under them
+  drawer itself, with no card or panel around them, ending with the
+  record's Created, Updated, Created by and Updated by as the log has
+  them (`stamps`), the dates and actors of its first and latest
+  entries, which the item's read gives beside its data, but those its
+  slices' properties already name, as a task's Created; and under them
   Related; nothing in the drawer is boxed. A record whose structured
   data is central to it puts that data in a tab of its own after the
   first (`tabs`): a motion's Stances and Effects, a meeting's Agenda, a

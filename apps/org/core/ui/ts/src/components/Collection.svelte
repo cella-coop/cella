@@ -498,6 +498,7 @@
         {#each state.shown as row, i (row.id)}
           {const to = $derived(href?.(row))}
           {const self = $derived(own?.(row))}
+          {const by = $derived(who.value(row))}
           {#if opening(i)}{@render head(row)}{/if}
           <!-- svelte-ignore a11y_no_noninteractive_tabindex: the keyboard roves the rows, one in the tab order, so a screen reader reads the row it is on -->
           <li
@@ -508,7 +509,8 @@
           >
             <span class="dot"></span>
             <span class="main">
-              <b class="who"><Person address={String(who.value(row))} /></b>
+              <!-- A row no one is named on, as one the founding carried in, names no one. -->
+              <b class="who">{#if by}<Person address={String(by)} />{/if}</b>
               {#if to}
                 <a href={to} class="what stretched" tabindex="-1">{titled.value(row)}</a>
               {:else}

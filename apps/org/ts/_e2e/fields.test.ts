@@ -98,8 +98,8 @@ eachBrowser((browserName, launch) => {
       await display().waitFor()
       assert.deepEqual(
         await display().getByRole('checkbox').evaluateAll((bs) => bs.map((b) => (b as HTMLInputElement).checked)),
-        [true, true, true, true, false, false],
-        `${browserName}: a list's Display offers every field but the title, those its roles show checked`,
+        [true, true, true, true, false, false, false, false, false, false],
+        `${browserName}: a list's Display offers every field but the title, the logged ones last, those its roles show checked`,
       )
       await field('Size', false, 'id,class,uploaded')
       await field('Type', true, 'id,class,uploaded,type')
@@ -125,8 +125,8 @@ eachBrowser((browserName, launch) => {
       await display().waitFor()
       assert.deepEqual(
         await display().getByRole('checkbox').evaluateAll((bs) => bs.map((b) => b.parentElement?.textContent?.trim())),
-        ['Id', 'Kind', 'Size', 'Type'],
-        `${browserName}: a feed's Display offers every field but the title, who and when`,
+        ['Id', 'Kind', 'Size', 'Type', 'Created', 'Updated', 'Created by', 'Updated by'],
+        `${browserName}: a feed's Display offers every field but the title, who and when, the logged ones last`,
       )
       await field('Kind', true, 'class')
       await field('Type', true, 'class,type')

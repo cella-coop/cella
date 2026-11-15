@@ -535,7 +535,16 @@ as they are made. A field the reader may change saves by its write as
 it is left, one write after another, and says its outcome in its quiet
 line, as the shell shows any `Form`'s too: saving, then saved, or the
 guard's refusal, its reason with the values it read, the value typed
-kept in the field and marked not saved until the reader changes it. A
+kept in the field and marked not saved until the reader changes it.
+What a field saves is the value it was left with last: left while an
+earlier write of it is still under way, it is changed as against the
+value that write leaves in force, not the one the page shows yet, so
+leaving it back on the value it showed before posts that value too,
+after the write before it, and the field keeps showing it meanwhile. A
+write that settles while a later one of the same field waits says
+nothing in its quiet line, and the field goes on showing what was left
+in it last; only the last write's outcome is said, and only once it
+settles does the field follow the page's data again. A
 field they may not change, since its write needs a mandate they lack,
 or since only a motion changes it, does not save: leaving it opens
 `ProposeInstead`, a dialog in the top layer as `Popover` is, which

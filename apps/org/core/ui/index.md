@@ -499,6 +499,12 @@ order, separated by commas, an accordion's run after its name and a
 colon, the runs separated by semicolons, as a circle's features are
 written ([features](../circle/index.md#features)).
 
+A record's page draws a field it saves in the same way: its block draws
+`Settings` with that one setting, its write posted with the record's id
+as an item's are, as a contact's note is
+([contact](../../feats/contact/index.md#shell)), and the page has no
+Save button either.
+
 A settings page is served at `/settings/<name>`, listed in Settings'
 sidebar under its group, or, a page of one thing, at
 `/settings/<name>/<id>`, which its slice reads for that id and its

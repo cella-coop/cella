@@ -355,7 +355,7 @@ fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>, jobs: Option<usize>) -> R
     shell::build(repo, steps)?;
     let jobs = jobs
         .or_else(|| std::env::var("CELLA_E2E_JOBS").ok()?.trim().parse().ok())
-        .unwrap_or(JOBS)
+        .unwrap_or_else(idle_jobs)
         .clamp(1, chosen.len());
     let lanterne = repo.root.join("apps/org/fixtures/lanterne");
     let prepared = Instant::now();
@@ -410,11 +410,45 @@ fn drop_templates(dev: &Dev, steps: &Steps) -> Result {
     steps.run("db e2e templates drop", &mut drops, quiet)
 }
 
-/// How many workers run the scenarios at once, unless `--jobs` or
+/// The most workers that run the scenarios at once, unless `--jobs` or
 /// `CELLA_E2E_JOBS` says: as many as half the box's builds slice,
 /// `MemoryHigh` 11G, holds at a worker's peak measured on the box, since
-/// two gates runs may share it (index.md, "Gates").
+/// two gates runs may share it (index.md, "Gates"). Fewer run where the
+/// box's cores are busy (`jobs_for`).
 const JOBS: usize = 3;
+
+/// The workers a run takes, unless `--jobs` or `CELLA_E2E_JOBS` says: by
+/// the one-minute load average at its start over the cores it may use,
+/// printed with the choice; the memory bound alone where the load is
+/// unreadable.
+fn idle_jobs() -> usize {
+    let cores = std::thread::available_parallelism().map_or(1, |n| n.get());
+    let load = std::fs::read_to_string("/proc/loadavg")
+        .ok()
+        .and_then(|l| l.split_whitespace().next()?.parse::<f64>().ok());
+    match load {
+        Some(load) => {
+            let jobs = jobs_for(load, cores);
+            println!(
+                "{:<22} load {load:.1} on {cores} cores: {jobs} workers",
+                "e2e workers"
+            );
+            jobs
+        }
+        None => {
+            println!("{:<22} load unreadable: {JOBS} workers", "e2e workers");
+            JOBS
+        }
+    }
+}
+
+/// One worker for each two of the `cores` a load average of `load` leaves
+/// idle, at most `JOBS` and never fewer than one, so lanes gating at once
+/// on a busy box do not starve each other's scenarios into their timeouts.
+fn jobs_for(load: f64, cores: usize) -> usize {
+    let idle = (cores as f64 - load).max(0.0);
+    ((idle / 2.0) as usize).clamp(1, JOBS)
+}
 
 /// The variable that makes this binary a worker's child: the worker it
 /// runs the scenario it is handed for.
@@ -855,7 +889,7 @@ pub fn tap(out: &str) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Kind, classify, contract};
+    use super::{JOBS, Kind, classify, contract, jobs_for};
     use std::path::Path;
 
     fn kind(p: &str) -> Option<String> {
@@ -887,6 +921,16 @@ mod tests {
             kind("apps/org/ts/_e2e/admission.test.ts").as_deref(),
             Some("e2e")
         );
+    }
+
+    #[test]
+    fn the_workers_are_what_the_idle_cores_leave_room_for() {
+        assert_eq!(jobs_for(2.0, 8), 3);
+        assert_eq!(jobs_for(4.0, 8), 2);
+        assert_eq!(jobs_for(6.0, 8), 1);
+        assert_eq!(jobs_for(45.0, 8), 1);
+        assert_eq!(jobs_for(0.0, 8), JOBS);
+        assert_eq!(jobs_for(0.0, 1), 1);
     }
 
     #[test]

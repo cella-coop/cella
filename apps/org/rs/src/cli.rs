@@ -367,7 +367,7 @@ pub enum Test {
         /// A scenario's file name in apps/org/ts/_e2e without .test.ts, such as admission
         name: Option<String>,
 
-        /// The workers running scenarios at once, each on a database of its own; CELLA_E2E_JOBS unset, else as many as half the box's builds slice holds
+        /// The workers running scenarios at once, each on a database of its own; CELLA_E2E_JOBS unset, else one for each two cores the load leaves idle, at most three and at least one
         #[arg(long, short)]
         jobs: Option<usize>,
     },

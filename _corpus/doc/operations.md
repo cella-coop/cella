@@ -358,3 +358,22 @@ first start, its copy served, its sign-in offering Lanterne's members,
 each marked, under the banner, and a member signs in and signs a write;
 the template, built again from nothing, holds the same log, and a copy
 of each verifies.
+
+## A visitor's scope
+
+The demo serves each visitor a scope of their own, a copy of its
+template, so what they do changes only what they see, and nobody signs
+up. `cella demo serve` is its front, the one address the host serves.
+A visitor arriving without the demo's cookie is shown a page saying
+their co-op is being prepared, while the front copies the template into
+a database of their own (`CREATE DATABASE … TEMPLATE`, about 0.2 s) and
+starts a server on it, `cella serve --prod --demo` on a port of its own
+with the demo's keys, never a real scope's; the page goes on to it once
+it answers. The cookie names the copy by a random id and nothing else,
+and brings the visitor back to the same copy; the front passes each of
+their requests to its server and to no other. No copy reads another's
+database, and the template is never written.
+
+A visitor's copy is a scope spawned on demand, the first form of how a
+host spawns a scope per co-op: a database made from a template, a
+server and a port of its own, and an end.

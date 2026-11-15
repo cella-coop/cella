@@ -5,9 +5,11 @@
 // with nothing new not made, a refused save kept for the next, none
 // after a post that failed or was refused, two browsers saving from one
 // base, the second refused and saving both editors' edits, a peer
-// dropped when its answer turns no, a reader who may not discuss, and a
+// dropped when its answer turns no, a reader who may not discuss, a
 // restart in which a browser rejoins, posts what the session lacks and
-// saves it. The clock is the test's. Run by `cella test slice body`.
+// saves it, and one in which a browser with no edit of its own but
+// another's has its catch-up refused and saves nothing until a later one
+// is taken. The clock is the test's. Run by `cella test slice body`.
 
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
@@ -552,6 +554,44 @@ describe('a restart', () => {
     assert.equal(ana.live.unsaved, false)
     await next.clock.tick(10_000)
     assert.equal(next.saves.length, 2)
+  })
+
+  it('saves nothing from a browser whose catch-up is refused, though it made no edit of its own, until a later one is taken', async () => {
+    const first = world()
+    const ana = await browser(first, 'ana')
+    const ben = await browser(first, 'ben')
+    await ana.type('alpha')
+    await first.clock.tick(3_000)
+    assert.equal(first.saves.length, 1)
+    // Ben hears ana's edit, and the server stops before her pause: her
+    // save gets no answer, and her browser closes.
+    await ana.type('beta', 1)
+    assert.deepEqual(words(ben.doc), ['alpha', 'beta'])
+    first.stop()
+    await first.clock.tick(3_000)
+    assert.match(ana.live.problem ?? '', /no answer/)
+    const next = world(first.kept)
+    const fresh = await browser(next, 'cleo')
+    ben.refusePosts('the session refuses this post')
+    await ben.rejoin(next)
+    await next.clock.tick(10_000)
+    assert.equal(next.saves.length, 1)
+    assert.deepEqual(words(fresh.doc), ['alpha'])
+    assert.match(ben.live.problem ?? '', /refuses this post/)
+    assert.equal(ben.live.unsaved, true)
+    // Its stream comes back and the session takes its catch-up: ben saves
+    // ana's edit at the pause, naming her.
+    ben.refusePosts(null)
+    ben.peer.leave()
+    await ben.rejoin(next)
+    assert.deepEqual(words(fresh.doc), ['alpha', 'beta'])
+    await next.clock.tick(3_000)
+    assert.equal(next.saves.length, 2)
+    assert.equal(next.saves[1].actor, 'ben')
+    assert.deepEqual(next.saves[1].contributors, ['ana'])
+    assert.deepEqual(words(read(next.saves[1].snapshot)), ['alpha', 'beta'])
+    assert.equal(ben.live.problem, null)
+    assert.equal(ben.live.unsaved, false)
   })
 })
 

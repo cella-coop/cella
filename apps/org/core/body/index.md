@@ -173,11 +173,13 @@ saves nothing itself, since the server signs with none
 - **Saving.** An editor's browser saves through the feat's save action,
   signed by its device as a document's edits are: after a pause of 3
   seconds in its edits, and when it leaves the body, the page's
-  unmounting or the tab's hiding. It posts its own edits to the session
-  first, and saves only once the session accepted every one: where a
-  post fails or is refused, it makes no save, keeps the edits, says
-  why, and tries again after its next pause, so no save carries an edit
-  the session refused or never had. The save carries the snapshot of
+  unmounting or the tab's hiding. It posts to the session first every
+  edit it holds that the session lacks, its own and those it heard from
+  other editors, and saves only once the session accepted all of them,
+  its version vector holding the browser's: where a post fails or is
+  refused, it makes no save, keeps the edits, says why, and tries again
+  after its next pause, so no save carries an edit the session refused
+  or never had, whoever made it. The save carries the snapshot of
   the merged document as the browser holds it, in its `snapshot` field;
   its `base`, the SHA-256 of the saved body it last imported, empty for
   a body never saved; and the addresses of who contributed since the
@@ -211,9 +213,13 @@ saves nothing itself, since the server signs with none
   last save is held in the session and in each open editor's browser. A
   server that restarts starts a body's session again from its saved
   snapshot when the first editor rejoins; an editor's browser rejoins
-  with its version vector, posts the updates the session lacks, and
-  saves them at its next pause, so a crash of the server loses nothing
-  an open browser holds. A browser closed with edits no save carried
+  with its version vector, posts the whole update the session lacks,
+  its own edits and those it heard from others before the crash, and
+  saves at its next pause only once the session accepted that update;
+  a catch-up refused or failed is posted again at the next pause, and
+  until it is accepted the browser saves nothing, though it made no
+  edit of its own. So a crash of the server loses nothing an open
+  browser holds, and no browser saves past the session. A browser closed with edits no save carried
   loses them, but where another editor's browser holds them.
 
 A slice mounts the editor over the session's stream, handing `LiveState`
@@ -268,8 +274,10 @@ are their feats' own, and not held.
   editors' edits; a peer dropped when its answer
   turns no, at an update and at a save, a reader who may not discuss
   and one who reads nothing; a restart in which a peer rejoins, posts
-  what the session lacks and saves it; and the live route's events and
-  posts.
+  what the session lacks and saves it; a restart in which a browser
+  that made no edit of its own but heard another editor's rejoins, its
+  catch-up refused, and makes no save until a later catch-up is
+  accepted; and the live route's events and posts.
 - The editor's browser walk stays the document feat's
   (`_e2e/editor.test.ts`), since a document's page is where it is
   driven; a record's page drives the same editor, over the live

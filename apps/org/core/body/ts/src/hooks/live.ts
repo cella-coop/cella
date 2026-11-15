@@ -1,4 +1,4 @@
-import { VersionVector, type LoroDoc } from 'loro-crdt'
+import { VersionVector, type LoroDoc, type PeerID } from 'loro-crdt'
 import { ahead, b64, baseOf, holds, type Joined, type Kept, type Merged } from '../models/body.ts'
 
 // What a post comes to: taken, or refused and why. A post that got no
@@ -42,14 +42,15 @@ export interface Timing {
 // action, signed by its device, after a pause of 3 seconds in its own
 // edits and when it leaves, with who contributed since the last save as
 // the session tells it; a save with nothing new since the last is not
-// made, nor one while an edit of its own is one the session refused or
-// never had. Each save names as its `base` the hash of the saved body
+// made, nor one while it holds an edit the session refused or never had,
+// its own or another's. Each save names as its `base` the hash of the saved body
 // this browser last imported, so the feat refuses one whose snapshot
 // does not hold the body it would replace; refused so, the browser reads
 // the record's body, merges it and saves at once. A save refused
 // otherwise, or failed, says why and is tried again after the next
 // pause. A body that rejoins a session the server restarted posts what
-// the session lacks, others' edits too, and saves it at its pause.
+// the session lacks, others' edits too, and saves at its pause only once
+// the session took it.
 export class Live {
   readonly doc: LoroDoc
   readonly #link: Link
@@ -62,7 +63,9 @@ export class Live {
   // Whether the last post or save got an answer.
   online = false
   #action = ''
-  #sent = 0
+  // What the session is known to hold: its version at the join and,
+  // since, every update it relayed, saved or took from this browser.
+  #accepted = new VersionVector(null)
   #saved = new VersionVector(null)
   // The hash of the saved body this browser last imported, which its
   // next save names: empty for a body never saved.
@@ -88,6 +91,16 @@ export class Live {
     return this.doc.oplogVersion().get(this.doc.peerIdStr) ?? 0
   }
 
+  // Takes what `held` names, each peer's end, into what the session is
+  // known to hold.
+  #accept(held: Map<PeerID, number>): void {
+    const vv = this.#accepted.toJSON()
+    for (const [peer, n] of held) {
+      vv.set(peer, Math.max(vv.get(peer) ?? 0, n))
+    }
+    this.#accepted = VersionVector.parseJSON(vv)
+  }
+
   // Whether this browser holds an edit the last save does not.
   get unsaved(): boolean {
     return ahead(this.doc, this.#saved)
@@ -107,7 +120,8 @@ export class Live {
 
   // The session's `joined`: what this browser may do and saves by, and,
   // where the session lacks edits this browser holds, as after a restart
-  // of the server, one post of all of them and a save at the pause.
+  // of the server, one post of all of them, its own and others', and a
+  // save at the pause, made only once the session took that post.
   async joined(j: Joined): Promise<void> {
     this.writable = j.writable
     this.actor = j.actor
@@ -119,23 +133,19 @@ export class Live {
     const saved = VersionVector.decode(b64.decode(j.saved))
     this.#contributors = saved.compare(this.#saved) === 0 ? new Set([...this.#contributors, ...j.contributors]) : new Set(j.contributors)
     this.#saved = saved
-    const version = VersionVector.decode(b64.decode(j.version))
-    this.#sent = version.get(this.doc.peerIdStr) ?? 0
+    this.#accepted = VersionVector.decode(b64.decode(j.version))
     this.changed()
-    if (!this.writable || !ahead(this.doc, version)) {
+    if (!this.writable || !ahead(this.doc, this.#accepted)) {
       return
     }
-    while (this.#sending) {
-      await this.#sending
-    }
-    const upto = this.#own
-    await this.#send(this.doc.export({ mode: 'update', from: version }), upto)
+    await this.#flush()
     this.#later()
   }
 
   // An update the session relays.
   heard(m: Merged): void {
-    this.doc.import(b64.decode(m.update))
+    const { success } = this.doc.import(b64.decode(m.update))
+    this.#accept(new Map([...success].map(([peer, span]) => [peer, span.end])))
     for (const c of m.contributors) {
       this.#contributors.add(c)
     }
@@ -158,6 +168,7 @@ export class Live {
     }
     this.#base = k.base
     this.#saved = VersionVector.decode(b64.decode(k.saved))
+    this.#accept(this.#saved.toJSON())
     this.#contributors = new Set(k.contributors)
   }
 
@@ -174,34 +185,30 @@ export class Live {
     this.#pause = clock.set(() => this.save(), pause)
   }
 
-  // This browser's own edits the session does not hold yet, as one update.
+  // Every edit this browser holds that the session is not known to, as
+  // one update: its own, and after a restart others' it heard before.
   async #flush(): Promise<void> {
     while (this.#sending) {
       await this.#sending
     }
-    const upto = this.#own
-    if (!this.writable || upto <= this.#sent) {
+    if (!this.writable || !ahead(this.doc, this.#accepted)) {
       return
     }
-    const vv = this.doc.oplogVersion().toJSON()
-    if (this.#sent) {
-      vv.set(this.doc.peerIdStr, this.#sent)
-    } else {
-      vv.delete(this.doc.peerIdStr)
-    }
-    await this.#send(this.doc.export({ mode: 'update', from: VersionVector.parseJSON(vv) }), upto)
+    const upto = this.doc.oplogVersion()
+    await this.#send(this.doc.export({ mode: 'update', from: this.#accepted }), upto)
   }
 
-  // A post of this browser's own edits. Taken, a save that waited on them
-  // is made at the pause; one that got no answer is tried again.
-  async #send(update: Uint8Array, upto: number): Promise<void> {
+  // A post of the edits up to `upto` the session lacks. Taken, a save
+  // that waited on them is made at the pause; one that got no answer is
+  // tried again.
+  async #send(update: Uint8Array, upto: VersionVector): Promise<void> {
     this.#sending = (async () => {
       try {
         const out = await this.#link.post(update)
         this.online = true
         if (out.ok) {
-          this.#sent = Math.max(this.#sent, upto)
-          if (this.#held && this.#own <= this.#sent) {
+          this.#accept(upto.toJSON())
+          if (this.#held && !ahead(this.doc, this.#accepted)) {
             this.#held = false
             this.problem = null
             this.#later()
@@ -223,7 +230,7 @@ export class Live {
   }
 
   // Saves the merged body now, if this browser holds an edit the last
-  // save does not and the session took every edit of its own: those
+  // save does not and the session took every edit it holds: those
   // posted first, then the snapshot through the feat's save action,
   // signed by its device, naming its base and who contributed since the
   // last save, this browser's own person among them where it edited; then
@@ -246,11 +253,11 @@ export class Live {
       return
     }
     await this.#flush()
-    // No save carries an edit of this browser's the session refused or
-    // never had: it waits on them, and the edits are kept.
-    if (this.#own > this.#sent) {
+    // No save carries an edit the session refused or never had, this
+    // browser's or another's: it waits on them, and the edits are kept.
+    if (ahead(this.doc, this.#accepted)) {
       this.#held = true
-      this.problem ??= 'your edits have not reached the body’s session yet: it is saved once they do'
+      this.problem ??= 'edits this browser holds have not reached the body’s session yet: it is saved once they do'
       this.changed()
       return
     }

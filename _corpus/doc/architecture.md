@@ -1525,7 +1525,10 @@ file anywhere else fails `cella test`:
   in every browser it drives, or it is red: it waits on what the page
   shows, never on a guess at how long the page takes, so a timeout that
   passes on a rerun is a fault, fixed in the scenario or in the page
-  where it lies, never retried.
+  where it lies, never retried. A page error is the same fault: a
+  navigation the page starts is awaited or handled where it starts, so
+  one the next navigation abandons rejects nothing the page leaves
+  unhandled.
 
 Both run on the dev cluster (`cella db start`): a slice's tests on
 `cella_test`, renewed for each slice, and a scenario on the database of

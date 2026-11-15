@@ -3,6 +3,7 @@
   import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass'
   import type { Jump } from '../models/view.ts'
   import { nearest } from '../models/keys.ts'
+  import { abandon } from '../models/navigation.ts'
   import { useCommand } from '../hooks/useCommand.ts'
   import type { Search } from '../hooks/CommandState.svelte.ts'
   import Icon from './Icon.svelte'
@@ -19,7 +20,7 @@
     const item = state.shown[i]
     if (item) {
       state.close()
-      goto(item.href)
+      goto(item.href).catch(abandon)
     }
   }
 

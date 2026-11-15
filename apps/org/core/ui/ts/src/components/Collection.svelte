@@ -26,6 +26,7 @@
     under,
   } from '../models/query.ts'
   import { anchor, period } from '../models/calendar.ts'
+  import { abandon } from '../models/navigation.ts'
   import { control, focused, typing } from '../models/keys.ts'
   import { mark } from '../marks.ts'
   import { sortable } from '../attachments/sortable.ts'
@@ -154,7 +155,7 @@
       more: () => {
         const q = new URLSearchParams(page.url.search)
         q.set('n', String(rows.length + PAGE))
-        goto(`${page.url.pathname}?${q}`, { replace: true, reset: false })
+        goto(`${page.url.pathname}?${q}`, { replace: true, reset: false }).catch(abandon)
       },
     },
   )
@@ -274,17 +275,17 @@
   function change(s: Spec) {
     const to = link(view, s)
     const where = page.url.searchParams.get('at')
-    goto(where ? `${to}${to.endsWith('?') ? '' : '&'}at=${encodeURIComponent(where)}` : to, { replace: true, reset: false })
+    goto(where ? `${to}${to.endsWith('?') ? '' : '&'}at=${encodeURIComponent(where)}` : to, { replace: true, reset: false }).catch(abandon)
   }
 
   function opened(c: Custom) {
-    goto(customLink(c))
+    goto(customLink(c)).catch(abandon)
   }
 
   function remove() {
     if (custom) {
       saved.remove(custom.id)
-      goto(link('all', resolved('all')))
+      goto(link('all', resolved('all'))).catch(abandon)
     }
   }
 
@@ -300,7 +301,7 @@
   function open(i: number) {
     const target = state.shown[i] && href?.(state.shown[i])
     if (target) {
-      goto(target)
+      goto(target).catch(abandon)
     }
   }
 

@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-11-14
+updated = 2026-11-15
 +++
 
 # Architecture
@@ -301,7 +301,10 @@ contract; only shells import its app.**
   tree, by `export … from` or by exporting a name it imported, so a
   slice is reached only through the package that owns it, by the edge
   its manifest declares. The check resolves each import to the package
-  it names, through a dependency's alias and the package's `imports`.
+  it names, through a dependency's alias and the package's `imports`,
+  a conditional entry through every target it names, so an import that
+  reaches another slice's app or a re-export by any one of them is
+  refused.
 - *enforced* (`feat-check`, `tree.test.mjs`): **only a shell imports a
   slice's app.** A feat's, a graft's or a core feat's `./app` is
   imported by a node's root alone; another slice uses its contract, and

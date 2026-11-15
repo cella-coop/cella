@@ -1,6 +1,6 @@
 +++
 title = "Enforcement"
-updated = 2026-11-13
+updated = 2026-11-15
 +++
 
 # Enforcement
@@ -44,8 +44,8 @@ Short names: fc `tools/feat-check.mjs`, sc `tools/sql-check.mjs`, pw
 | A graft reads only the feats it joins, their cores, and the grafts at or below its node that join a proper subset of them | [graft order](architecture.md#graft-order) | fc, the tree's edges, in code; sc, "is outside", in SQL | `T/tree.test.mjs`: a graft reads no core of a feat it does not join, nor a graft above its node; none for a graft of equal order, nor in SQL |
 | A package's relative imports stay inside it | [what may depend on what](architecture.md#what-may-depend-on-what) | fc, "outside its package" | `T/tree.test.mjs`: an import that climbs out of its package |
 | A package exports only its surface, each export's target in the layer its key names | [5. Layering](architecture.md#5-layering), [inside a package](architecture.md#inside-a-package) | fc, the exports and their targets | `T/tree.test.mjs`: an export of `./internal`; an export whose target leaves its layer |
-| Nothing re-exports around the tree | [5. Layering](architecture.md#5-layering) | fc, "re-exports", each import resolved through the dependency's alias and the package's `imports` | `T/tree.test.mjs`: a module that re-exports another package, by `export … from` or by exporting a name it imported; a re-export through an aliased dependency |
-| Only a shell imports a slice's app | [5. Layering](architecture.md#5-layering), [5.1 Composition](architecture.md#51-composition) | fc, "only a shell imports" | `T/tree.test.mjs`: a feat importing another's app; a graft importing a feat's app through a `#` import |
+| Nothing re-exports around the tree | [5. Layering](architecture.md#5-layering) | fc, "re-exports", each import resolved through the dependency's alias and the package's `imports`, a conditional entry through every target it names | `T/tree.test.mjs`: a module that re-exports another package, by `export … from` or by exporting a name it imported; a re-export through an aliased dependency; a re-export through a conditional `#` import whose later target names another package |
+| Only a shell imports a slice's app | [5. Layering](architecture.md#5-layering), [5.1 Composition](architecture.md#51-composition) | fc, "only a shell imports" | `T/tree.test.mjs`: a feat importing another's app; a graft importing a feat's app through a `#` import; a feat importing another's app through a conditional `#` import whose `default` names it |
 | A server or client layer imports only the layers inside it | [inside a package](architecture.md#inside-a-package) | fc, by each file's path and each import's; ui refuses a client import of a server layer | `T/tree.test.mjs`: a model importing a handler; a handler importing a driver; a hook importing a component; `T/ui.test.mjs`: a client import of a server layer |
 | A graft sits at the lowest node and joins no feat with one nested in it | [grafts](architecture.md#grafts) | fc | `T/tree.test.mjs`: a graft sits at the lowest node that holds every feat it joins; a graft never joins a feat with one nested in it |
 | A graft is named in order and declared by a feat it joins; a feat's name has no hyphen | [grafts](architecture.md#grafts) | fc | `T/tree.test.mjs`: a graft out of order; a graft no feat it joins declares; a feat named with a hyphen |

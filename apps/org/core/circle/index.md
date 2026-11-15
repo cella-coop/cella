@@ -1,6 +1,6 @@
 +++
 title = "Circle"
-updated = 2026-11-14
+updated = 2026-11-15
 +++
 
 Core's circles: the co-op's structure and the authority that flows
@@ -457,8 +457,8 @@ as its seller as it issues (`invoice.seller()`), so a motion replacing
 the particulars changes the invoices issued once it applies and never
 one issued before ([invoice](../../feats/invoice/index.md#the-pdf)); and
 the shell calls the co-op by its name (`named` in `@cella/org-log`)
-and shows the particulars on Settings' Organization page, whose Save
-proposes the assembly's motion replacing them
+and shows the particulars on Settings' Organization page, where leaving
+a particular changed proposes the assembly's motion replacing them
 ([settings](../ui/index.md#settings)).
 The scope's address and its timezone are no particulars: the notary
 signs by the one and dates by the other, so a host sets them
@@ -1070,7 +1070,7 @@ them. A grantee's name links to its circle, its issuer to
 its own, and the motion to its page; a link of the chain and a mandate
 under it opens its own page.
 
-A circle's page has a Settings tab, a `Settings` form ([settings](../ui/index.md#settings)) of its name, its purpose and its procedure, from those in force, and below them its roles, each its name, duty and cap, with a row to make a new one. None saves directly: Save opens the dialog proposing an `amend-circle`, `role` or `amend-role` motion of the circle that decides about it, the assembly unless another holding `amend-circle` may (`motion.decider`), its reason the guard's, why no write of the reader's changes it. A role's cap emptied proposes lifting it, the `amend-role` motion giving its cap as none.
+A circle's page has a Settings tab, a `Settings` form ([settings](../ui/index.md#settings)) of its name, its purpose and its procedure, from those in force, and below them its roles, each its name, duty and cap, with a row to make a new one. None saves directly, and the tab has no Save button: leaving a field changed opens the dialog proposing an `amend-circle`, `role` or `amend-role` motion of the circle that decides about it, the assembly unless another holding `amend-circle` may (`motion.decider`), its reason the guard's, why no write of the reader's changes it, and closing it keeps the value typed, marked not saved. A role's cap emptied proposes lifting it, the `amend-role` motion giving its cap as none.
 
 Each circle has a features page in Settings, `/settings/features/<id>`,
 which its Settings tab links to under its terms: a `Settings` form of
@@ -1083,7 +1083,7 @@ down past its neighbour in its accordion, an ungrouped one past the
 feature or the accordion beside it, and an accordion moves as a whole;
 naming a feature's accordion moves it into that accordion, or makes
 one, and renaming an accordion renames it on each of its features. A
-Save offers one `amend-circle` motion of the circle that decides about
+move or a toggle, made, offers one `amend-circle` motion of the circle that decides about
 it, carrying the listing as arranged, its title saying what it enables
 and disables, or that it rearranges the circle's features where it
 does neither; the dialog says why no write of the reader's changes them,

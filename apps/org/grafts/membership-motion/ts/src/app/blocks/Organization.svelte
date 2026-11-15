@@ -4,8 +4,9 @@
 
   // Settings' Organization page: the co-op's particulars in force, none
   // saved by anyone's write, since only a motion of the assembly adopts
-  // them: Save opens the dialog proposing one, each value changed its own
-  // field; and the scope's address and timezone, which a host sets.
+  // them: leaving one changed opens the dialog proposing one, each value
+  // changed its own field; and the scope's address and timezone, which a
+  // host sets.
   let { data }: { data: Organization } = $props()
 
   const labels: Record<Particular, string> = {

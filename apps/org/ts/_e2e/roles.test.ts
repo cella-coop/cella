@@ -12,9 +12,9 @@
 // changes its duty and cap, each entry saying what it carried and what it
 // was. Then in every browser, light and dark, through the dev server:
 // Camille opens Web's Settings tab, types a new role's name in its New
-// role row and Saves, and the dialog offers the assembly's motion making
+// role row and leaves it, and the dialog offers the assembly's motion making
 // it, its id from the name, which she proposes; she empties the Editor
-// role's cap and Saves, and proposes the motion the dialog offers lifting
+// role's cap and leaves it, and proposes the motion the dialog offers lifting
 // it, its cap given as none; then on the assembly's Settings tab she
 // lowers the Member role's cap below its holders, and the dialog shows the
 // guard's refusal before anything is proposed. Last, the first motion
@@ -202,7 +202,7 @@ eachBrowser((name, launch) => {
           const fresh = page.locator('section.section', { has: page.getByRole('heading', { name: 'New role', exact: true }) })
           await fresh.getByLabel('Name').fill(role)
           await page.screenshot({ path: `${shots}/roles-${name}-${scheme}.png`, fullPage: true })
-          await fresh.getByRole('button', { name: 'Save' }).click()
+          await fresh.getByLabel('Name').press('Tab')
           const dialog = page.getByRole('dialog', { name: 'Propose it instead' })
           await dialog.waitFor()
           assert.ok(
@@ -220,7 +220,7 @@ eachBrowser((name, launch) => {
           )
 
           await editor.getByLabel('Cap').fill('')
-          await editor.getByRole('button', { name: 'Save' }).click()
+          await editor.getByLabel('Cap').press('Tab')
           await dialog.waitFor()
           assert.equal(await dialog.getByLabel('Title').inputValue(), 'Lift the Editor role\'s cap of 2', `${at}: its title says the cap is lifted`)
           assert.equal(await dialog.getByLabel('New cap').inputValue(), 'none', `${at}: it gives the cap as none`)
@@ -238,7 +238,7 @@ eachBrowser((name, launch) => {
           await page.waitForLoadState('networkidle')
           const member = page.locator('section.section', { has: page.getByRole('heading', { name: 'Member', exact: true }) })
           await member.getByLabel('Cap').fill('2')
-          await member.getByRole('button', { name: 'Save' }).click()
+          await member.getByLabel('Cap').press('Tab')
           await dialog.waitFor()
           assert.equal(await dialog.getByLabel('Title').inputValue(), 'Cap the Member role at 2', `${at}: its title says the change`)
           await dialog.getByRole('button', { name: 'Propose' }).click()

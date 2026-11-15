@@ -3,8 +3,10 @@
 // co-op menu and lands on Organization, `/settings/organization`, first
 // under Organization: the co-op's particulars in force, each changed by a
 // motion of the General assembly, and under them the scope's address and
-// timezone, each set by a host. She types a new seat and a SIREN of five
-// digits and Saves; the dialog says why no write of hers changes them and
+// timezone, each set by a host, and no Save button. She types a new seat
+// and leaves it, and the dialog offers its motion; she closes it by
+// Escape, the seat kept, marked not saved, types a SIREN of five
+// digits and leaves it; the dialog says why no write of hers changes them and
 // offers the assembly's motion, prefilled, each value its own field, whose
 // proposal the guard refuses there before anything is proposed. She
 // mends the SIREN in the dialog and proposes it: the assembly's motion
@@ -24,7 +26,7 @@ const camille = 'camille@lanterne.example'
 const montreuil = '14 rue des Graviers, 93100 Montreuil, France'
 
 eachBrowser((name, launch) => {
-  test(`${name}: Camille changes the co-op's seat from Settings' Organization page, and its Save proposes the assembly's motion, light and dark`, async () => {
+  test(`${name}: Camille changes the co-op's seat from Settings' Organization page, and leaving it proposes the assembly's motion, light and dark`, async () => {
     mkdirSync(shots, { recursive: true })
     const su = new pg.Client()
     await su.connect()
@@ -65,10 +67,19 @@ eachBrowser((name, launch) => {
           await page.screenshot({ path: `${shots}/organization-${name}-${scheme}.png`, fullPage: true })
           await scope.screenshot({ path: `${shots}/organization-scope-${name}-${scheme}.png` })
 
+          assert.equal(await page.getByRole('button', { name: /^Save/ }).count(), 0, `${at}: the page has no Save button`)
           await form.getByLabel('Seat').fill(seat)
-          await form.getByLabel('SIREN').fill('12345')
-          await form.getByRole('button', { name: 'Save' }).click()
+          await form.getByLabel('Seat').press('Tab')
           const dialog = page.getByRole('dialog', { name: 'Propose it instead' })
+          await dialog.waitFor()
+          assert.equal(await dialog.getByLabel('Title').inputValue(), `Change the co-op's seat to ${seat}`, `${at}: leaving the seat offers its change alone`)
+          await page.keyboard.press('Escape')
+          await dialog.waitFor({ state: 'hidden' })
+          const seated = form.locator('.setting', { has: page.getByLabel('Seat') })
+          assert.equal(await form.getByLabel('Seat').inputValue(), seat, `${at}: closing keeps the seat typed`)
+          assert.match((await seated.textContent()) ?? '', /Not saved/, `${at}: marked not saved`)
+          await form.getByLabel('SIREN').fill('12345')
+          await form.getByLabel('SIREN').press('Tab')
           await dialog.waitFor()
           assert.ok(
             ((await dialog.textContent()) ?? '').includes("The co-op's particulars change only by a motion of General assembly, which adopts them as a policy: no one's own write changes them"),

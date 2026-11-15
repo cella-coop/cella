@@ -1,6 +1,6 @@
 +++
 title = "membership-motion"
-updated = 2026-11-14
+updated = 2026-11-15
 +++
 
 What a motion decides of a membership: admitting someone invited,
@@ -362,7 +362,7 @@ It serves Settings' Organization page, `/settings/organization`
 in force, read from core's row (`circle.particulars()`) with the
 procedure protecting the policy they are; the assembly, which alone
 adopts them; and the scope's address and timezone, which a host sets.
-No write of anyone's saves a particular, so Save opens the dialog
+No write of anyone's saves a particular, so leaving one changed opens the dialog
 proposing a motion of the assembly, each value changed its own field
 (New seat, New VAT number), posted to the page's `propose`. It words
 the particulars again as the founding words them, the values typed in
@@ -378,7 +378,7 @@ It serves each circle's features page, `/settings/features/<id>`
 circle, which the circle's Settings tab links to: the circle's features
 spelt as a listing (`circle.features`), every feature the co-op
 installed (`circle.installed`), and the circle that decides an
-amendment, with why no write of the reader's changes them. Its Save
+amendment, with why no write of the reader's changes them. Each move or toggle
 proposes an `amend-circle` motion carrying the listing as arranged,
 posted to the page's `propose` as the circle's Settings tab posts one,
 so the guard judges the listing there before anything is proposed. The

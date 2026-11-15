@@ -481,8 +481,9 @@ the view chooses otherwise.
 A settings page is a plain form, `Settings`, one `Setting` a row: its
 label, its current value in its field, and under it in a quiet line
 what changes it, a write the reader makes or a motion of the circle
-that decides it. Every field is editable, whoever reads it; Save posts
-only the fields changed. A slice declares each setting with the write
+that decides it. Every field is editable, whoever reads it, and the
+page has no Save button: each field saves on its own as its reader
+leaves it, only when its value changed. A slice declares each setting with the write
 that changes it directly, if any, and the motion kind that changes it
 otherwise, its arguments filled from the field (`models/settings.ts`).
 A setting's field is one `Field` draws, or an arrangement, `Arrange`,
@@ -515,40 +516,46 @@ the one it replaces, those the reader may change before proposing
 labelled as the New form labels them and the rest carried as they are,
 and the words its title says the change in. The form is handed the
 circle that decides its motions and the deadline asked for, as its
-slice reads them. `plan` splits the fields changed into each write,
-posted once with all its fields, one after the other until one does not
-settle, and one motion: the kind of the first field changed that its
-reader may not write, which every other field of that kind joins, its
-arguments merged and its titles joined. A field of another kind waits
-for the next Save, marked not saved, as does one no motion is declared
-to change. The dev server alone serves a specimen of a form mixing the
+slice reads them. Each field is its own write or its own proposal:
+`offer` makes the motion a field left proposes, its change joined by
+every other change of its kind still marked not saved, their arguments
+merged and their titles joined. The dev server alone serves a specimen of a form mixing the
 two kinds, `/specimens/settings`, a page of no slice that reads nothing
 and has no actions, for the browser test to see the dialog on.
 
-A field the reader may change saves by its write, and the form shows
-the outcome as any `Form` does: the last write's that names one, as
-the theme's cookie names none. A field they may not change, since its
-write needs a mandate they lack, or since only a motion changes it,
-does not save: Save opens `ProposeInstead`, a dialog in the top layer
-as `Popover` is, which says why in the guard's own words, the refusal
-its write's guard gives as early as it can, with the values it read,
-and offers to propose the change instead. Its form is the motions'
-New form, prefilled: the circle that decides it (`motion.decider`),
-its title saying the change ("Rename Coordination to Operations"),
-the action it carries with its arguments, from the value typed and the
-one it replaces, and the deadline the procedure its requirements fix
-asks for. The reader may edit any of it before proposing; Propose posts
-it to the page slice's own `propose` action, and the outcome names the
-log entry that proposes the
-motion. Closing the dialog keeps what was typed, and the field marks
-the change as not saved. A form whose fields mix the two saves the one
-kind and offers the motion for the other, in one go.
+A field is left as focus leaves it, or by Enter in a one-line field;
+a choice from its options, a toggle and an arrangement's move are left
+as they are made. A field the reader may change saves by its write as
+it is left, one write after another, and says its outcome in its quiet
+line, as the shell shows any `Form`'s too: saving, then saved, or the
+guard's refusal, its reason with the values it read, the value typed
+kept in the field and marked not saved until the reader changes it. A
+field they may not change, since its write needs a mandate they lack,
+or since only a motion changes it, does not save: leaving it opens
+`ProposeInstead`, a dialog in the top layer as `Popover` is, which
+says why in the guard's own words, the refusal its write's guard gives
+as early as it can, with the values it read, and offers to propose the
+change instead. Its form is the motions' New form, prefilled: the
+circle that decides it (`motion.decider`), its title saying the change
+("Rename Coordination to Operations"), the action it carries with its
+arguments, from the value typed and the one it replaces, and the
+deadline the procedure its requirements fix asks for. The reader may
+edit any of it before proposing; Propose posts it to the page slice's
+own `propose` action, and the outcome names the log entry that
+proposes the motion. Closing the dialog, by Keep editing, Escape or a
+click outside it, keeps what was typed, and the field marks the change
+as not saved. Where focus goes back to the field, as after Enter or a
+choice, leaving it then offers nothing, so the reader may go on to
+another; changed, or come back to and left again, it offers the motion
+again, joined by the changes of its kind not saved. A field no
+motion is declared to change is marked not saved as it is left.
 
 The Settings section opens on Account, the acting person's own
 settings at `/settings/account`, which the account menu at the
 sidebar's foot links to as well: a `Settings` form of their name, email
 and phone, each saved by `profile`, every person's right on their own,
-and their theme, light, dark or the system's, saved in its cookie and worn at once; and
+and their theme, light, dark or the system's, saved in its cookie and
+worn as it is chosen, each saved as it is left; and
 under it their devices, the one their session signs with marked as this
 device and each other current one with its revoke, as on their page.
 Its fields are all the reader's own, so none opens a motion.
@@ -559,9 +566,9 @@ Organization, the co-op's own, comes first under Organization at
 name, legal form, capital, seat, SIREN, trade register and VAT number,
 none saved by anyone's write, since only a motion of the assembly
 adopts them ([the co-op's
-particulars](../circle/index.md#the-co-ops-particulars)). Save opens
-the dialog proposing a motion of the assembly, each value changed its
-own field, which carries Adopt a policy replacing the particulars with
+particulars](../circle/index.md#the-co-ops-particulars)). Leaving a
+field changed opens the dialog proposing a motion of the assembly, each
+value changed its own field in it, which carries Adopt a policy replacing the particulars with
 them, its procedure the one their protection fixes; and under the form,
 read-only, the scope's address and its timezone, each saying a host
 sets it ([the notary](../notary/index.md#settings)). Membership-motion

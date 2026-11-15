@@ -5,8 +5,9 @@
   // A circle's features page in Settings: every feature the co-op
   // installed with a toggle, those the circle enabled in its order, under
   // their accordions. None saves directly, since only a motion amends a
-  // circle: Save opens the dialog proposing an `amend-circle` motion of
-  // the circle that decides about it, carrying the listing as arranged.
+  // circle: a toggle or a move, made, opens the dialog proposing an
+  // `amend-circle` motion of the circle that decides about it, carrying
+  // the listing as arranged.
   let { data }: { data: Featuring } = $props()
 
   // A feature by its name, as its schema is named.

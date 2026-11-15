@@ -1,7 +1,6 @@
 // A settings page's model: each setting with its current value, the
 // write that saves it directly, if any, and the motion that changes it
-// otherwise; and what a Save of the fields changed does, the writes it
-// posts and the motion it offers to propose instead.
+// otherwise; and the motion a field left proposes instead.
 
 // The motion that changes a setting: its kind, the arguments it carries,
 // from the value typed and the one it replaces, those the reader may
@@ -56,16 +55,6 @@ export interface Proposal {
   fields: string[]
 }
 
-// What a Save does: each write it posts with the fields it saves, the
-// motion it offers, and the fields changed it does neither for, left
-// marked not saved: those of another kind of motion than the one offered,
-// for a Save after it, or those no motion is declared to change.
-export interface Plan {
-  saves: { write: string; fields: Record<string, string> }[]
-  proposal: Proposal | null
-  left: string[]
-}
-
 // Whether the reader's own write saves a setting.
 export const direct = (s: Setting) => !!s.write && !s.refused
 
@@ -77,19 +66,17 @@ export function changer(s: Setting, decider: Decider | null): string {
   return s.motion && decider ? `A motion of ${decider.name} changes it` : 'Nothing you may write changes it'
 }
 
-// Splits the fields changed, `typed` by name, into the writes that save
-// them and the one motion that proposes the rest: the first changed
-// field's kind, which every other changed field of that kind joins, its
-// arguments merged and its titles joined.
-export function plan(settings: Setting[], typed: Record<string, string>, decider: Decider | null): Plan {
-  const changed = settings.filter((s) => s.name in typed && typed[s.name] !== s.value)
-  const saves = new Map<string, Record<string, string>>()
-  for (const s of changed.filter(direct)) {
-    saves.set(s.write!, { ...saves.get(s.write!), [s.name]: typed[s.name] })
+// The motion a field left proposes, `typed` by name: its own change,
+// joined by every other change of its kind its reader may not write,
+// their arguments merged and their titles joined; none where no motion
+// is declared to change it or no circle decides one.
+export function offer(settings: Setting[], typed: Record<string, string>, decider: Decider | null, left: Setting): Proposal | null {
+  const kind = left.motion?.kind
+  const changed = (s: Setting) => s.name in typed && typed[s.name] !== s.value
+  if (!kind || !decider || direct(left) || !changed(left)) {
+    return null
   }
-  const moved = changed.filter((s) => !direct(s))
-  const kind = decider ? moved.find((s) => s.motion)?.motion?.kind : undefined
-  const joining = moved.filter((s) => kind && s.motion?.kind === kind)
+  const joining = settings.filter((s) => !direct(s) && s.motion?.kind === kind && changed(s))
   const args = new Map<string, Proposal['args'][number]>()
   for (const s of joining) {
     for (const [name, value] of Object.entries(s.motion!.args(typed[s.name], s.value))) {
@@ -97,21 +84,14 @@ export function plan(settings: Setting[], typed: Record<string, string>, decider
     }
   }
   const says = (s: Setting) => s.motion!.says?.(typed[s.name], s.value) ?? `Change ${s.label.toLowerCase()} from “${s.value}” to “${typed[s.name]}”`
-  const proposal: Proposal | null = kind && decider
-    ? {
-        circle: decider.circle,
-        name: decider.name,
-        title: joining.map(says).join('; '),
-        deadline: decider.deadline,
-        kind,
-        args: [...args.values()],
-        reasons: [...new Set(joining.map((s) => s.refused ?? `${s.label} has no write of its own: only a motion of ${decider.name} changes it`))],
-        fields: joining.map((s) => s.name),
-      }
-    : null
   return {
-    saves: [...saves].map(([write, fields]) => ({ write, fields })),
-    proposal,
-    left: moved.filter((s) => !joining.includes(s)).map((s) => s.name),
+    circle: decider.circle,
+    name: decider.name,
+    title: joining.map(says).join('; '),
+    deadline: decider.deadline,
+    kind,
+    args: [...args.values()],
+    reasons: [...new Set(joining.map((s) => s.refused ?? `${s.label} has no write of its own: only a motion of ${decider.name} changes it`))],
+    fields: joining.map((s) => s.name),
   }
 }

@@ -9,9 +9,10 @@
 // close replacing them in order, under their accordions. Then in every browser, light and
 // dark, through the dev server: Camille opens Web's Settings tab, its
 // name, purpose and procedure in force, each changed by a motion of the
-// General assembly; she types Brand's name and Saves, and the dialog
-// says why her write changes nothing and offers the motion, whose
-// proposal the guard refuses there, before anything is proposed; she
+// General assembly, and no Save button; she types Brand's name and
+// leaves it, and the dialog says why her write changes nothing and
+// offers the motion, whose proposal the guard refuses there, before
+// anything is proposed; she
 // types a name of Web's own in the dialog and proposes it, every member
 // consents, and on its deadline she closes it: its close renames Web,
 // which the circle's page and the co-op selector name by its new name.
@@ -169,7 +170,8 @@ eachBrowser((name, launch) => {
           await page.screenshot({ path: `${shots}/amend-${name}-${scheme}.png`, fullPage: true })
 
           await form.getByLabel('Name').fill('Brand')
-          await form.getByRole('button', { name: 'Save' }).click()
+          assert.equal(await page.getByRole('button', { name: /^Save/ }).count(), 0, `${at}: the tab has no Save button`)
+          await form.getByLabel('Name').press('Tab')
           const dialog = page.getByRole('dialog', { name: 'Propose it instead' })
           await dialog.waitFor()
           assert.ok(

@@ -1,15 +1,22 @@
-import { plan, type Decider, type Plan, type Proposal, type Setting } from '../models/settings.ts'
+import { direct, offer, type Decider, type Proposal, type Setting } from '../models/settings.ts'
+import { took, type Answer } from '../post.ts'
+
+// What a field's quiet line says of its last write: under way, saved, or
+// refused, with the reason its outcome gives.
+export type Note = { state: 'saving' } | { state: 'saved' } | { state: 'refused'; reason: string }
 
 // A settings form while it is read and changed: what was typed in each
 // field, by name, the rest showing the value in force, so a field saved
-// follows the page's data; the fields a Save left unsaved, marked so,
-// those its motion is about until it is proposed; and the motion offered
-// instead, in its dialog while it is open.
+// follows the page's data; each field's last write, and the value it
+// posted; the fields left unsaved, marked so, those a motion is about
+// until it is proposed; and the motion offered instead, in its dialog
+// while it is open. Each field saves on its own as it is left, by the
+// form's `post`, one write after another.
 export class SettingsState {
   typed = $state<Record<string, string>>({})
   unsaved = $state<string[]>([])
+  notes = $state<Record<string, Note>>({})
   offered = $state<Proposal | null>(null)
-  pending = $state(false)
   // The dialog offering the motion, whether its proposal is posting, and
   // why it was not proposed, as its refusal says.
   dialog: HTMLDialogElement | undefined = $state()
@@ -17,10 +24,18 @@ export class SettingsState {
   problem = $state<string | null>(null)
   readonly #settings: () => Setting[]
   readonly #decider: () => Decider | null
+  readonly #post: (write: string, fields: [string, string][]) => Promise<Answer>
+  #sent: Record<string, string> = {}
+  // The field whose leave opened the dialog, and, where focus went back
+  // to it as the dialog closed, it with its value then.
+  #left: string | null = null
+  #dismissed: { name: string; value: string } | null = null
+  #writing: Promise<void> = Promise.resolve()
 
-  constructor(settings: () => Setting[], decider: () => Decider | null) {
+  constructor(settings: () => Setting[], decider: () => Decider | null, post: (write: string, fields: [string, string][]) => Promise<Answer>) {
     this.#settings = settings
     this.#decider = decider
+    this.#post = post
   }
 
   get decider(): Decider | null {
@@ -31,39 +46,74 @@ export class SettingsState {
     return this.typed[s.name] ?? s.value
   }
 
+  // A value typed: what was said of the last one goes, and it is marked
+  // not saved only once it is left again.
   type(s: Setting, value: string) {
     this.typed[s.name] = value
     this.unsaved = this.unsaved.filter((n) => n !== s.name)
+    delete this.notes[s.name]
   }
 
-  // Whether anything differs from what is in force.
-  get changed(): boolean {
-    return this.#settings().some((s) => s.name in this.typed && this.typed[s.name] !== s.value)
-  }
-
-  // Starts a Save, or says one is under way: its writes and its motion.
-  start(): Plan | null {
-    if (this.pending) {
-      return null
+  // A field left: changed, its reader's write saves it, once for each
+  // value, so one refused or lost posts again only once changed; or it is
+  // marked not saved and the motion that changes it is offered, while no
+  // dialog is open already, and but for the leave that follows the
+  // dialog's closing, focus gone back to the field, unchanged.
+  leave(s: Setting) {
+    const value = this.typed[s.name]
+    if (value === undefined || value === s.value) {
+      delete this.typed[s.name]
+      return
     }
-    this.pending = true
-    return plan(this.#settings(), this.typed, this.#decider())
-  }
-
-  // The writes made: those that settled follow the page's data again;
-  // the rest are marked not saved, and the motion is offered once every
-  // write settled.
-  saved(p: Plan, settled: string[]) {
-    const stood = p.saves.filter((s) => settled.includes(s.write))
-    for (const name of stood.flatMap((s) => Object.keys(s.fields))) {
-      delete this.typed[name]
+    if (direct(s)) {
+      if (this.#sent[s.name] !== value) {
+        this.#sent[s.name] = value
+        this.#writing = this.#writing.then(() => this.#save(s, value)).catch(() => undefined)
+      }
+      return
     }
-    this.unsaved = [...p.saves.filter((s) => !stood.includes(s)).flatMap((s) => Object.keys(s.fields)), ...p.left, ...(p.proposal?.fields ?? [])]
-    this.offered = stood.length === p.saves.length ? p.proposal : null
+    this.#mark(s.name)
+    const dismissed = this.#dismissed?.name === s.name && this.#dismissed.value === value
+    this.#dismissed = null
+    if (this.dialog?.open || dismissed) {
+      return
+    }
+    this.#left = s.name
+    this.offered = offer(this.#settings(), this.typed, this.#decider(), s)
     this.problem = null
-    this.pending = false
     if (this.offered) {
       this.dialog?.showModal()
+    }
+  }
+
+  // Posts a field's write: settled, it follows the page's data again,
+  // unless something else was typed since; refused, the value typed
+  // stays, marked not saved, under the reason its outcome gives.
+  async #save(s: Setting, value: string) {
+    this.notes[s.name] = { state: 'saving' }
+    let answer: Answer | null = null
+    try {
+      answer = await this.#post(s.write!, [[s.name, value]])
+    } finally {
+      const changed = this.typed[s.name] !== value
+      if (answer && took(answer)) {
+        if (!changed) {
+          delete this.typed[s.name]
+          this.notes[s.name] = { state: 'saved' }
+        }
+      } else {
+        if (!changed) {
+          const reason = answer && 'done' in answer ? answer.done?.reason : undefined
+          this.notes[s.name] = { state: 'refused', reason: reason ?? 'it was not saved' }
+          this.#mark(s.name)
+        }
+      }
+    }
+  }
+
+  #mark(name: string) {
+    if (!this.unsaved.includes(name)) {
+      this.unsaved = [...this.unsaved, name]
     }
   }
 
@@ -98,8 +148,17 @@ export class SettingsState {
   }
 
   // The dialog closed, by its button, Escape or a click outside it: what
-  // was typed stays, marked not saved.
+  // was typed stays, marked not saved. A close heard once the dialog is
+  // open again is a stale one, as Chromium may deliver Escape's after the
+  // next field left opened it, and changes nothing.
   dismiss() {
+    if (this.dialog?.open) {
+      return
+    }
+    const left = this.#left
+    const back = left !== null && left in this.typed && (document.activeElement as { name?: string } | null)?.name === left
+    this.#dismissed = back ? { name: left, value: this.typed[left] } : null
+    this.#left = null
     this.offered = null
     this.problem = null
   }

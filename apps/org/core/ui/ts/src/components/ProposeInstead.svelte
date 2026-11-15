@@ -5,11 +5,11 @@
   import Button from './Button.svelte'
   import Field from './Field.svelte'
 
-  // The motion a Save offers instead of a write the reader may not make:
-  // a dialog in the top layer saying why, in the guard's own words, and
-  // the motions' New form, prefilled, which the reader may change before
-  // it posts to the page's `action`, by the page's `send`. Closing it
-  // keeps what was typed in the settings, marked not saved.
+  // The motion a field left offers instead of a write the reader may not
+  // make: a dialog in the top layer saying why, in the guard's own words,
+  // and the motions' New form, prefilled, which the reader may change
+  // before it posts to the page's `action`, by the page's `send`.
+  // Closing it keeps what was typed in the settings, marked not saved.
   let { action }: { action: string } = $props()
 
   const state = useSettings()

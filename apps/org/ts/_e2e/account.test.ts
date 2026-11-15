@@ -2,9 +2,10 @@
 // Lanterne through the dev server: Camille opens Settings from the
 // account menu and lands on her Account, `/settings/account`, first
 // under Personal: her name, email and phone, her theme, and her devices,
-// the one she signs with marked as this device. She changes her name
-// and her theme in one Save; the name settles by `profile`, signed by
-// her device, the page wears the theme at once, and after a reload both
+// the one she signs with marked as this device, and no Save button. She
+// changes her name and leaves it, and it settles by `profile`, signed by
+// her device, saying it saved; she picks a theme, and the page wears it
+// at once; after a reload both
 // stand, the sidebar's account naming her by the new name. No field of
 // hers opens a motion. `SHOTS` names where its screenshots go. Run by
 // `cella test e2e account`.
@@ -61,11 +62,13 @@ eachBrowser((name, launch) => {
         assert.match((await devices.textContent()) ?? '', /, this device/, `${at}: the device she signs with is marked`)
         await page.screenshot({ path: `${shots}/account-${name}-${scheme}.png`, fullPage: true })
 
+        assert.equal(await page.getByRole('button', { name: /^Save/ }).count(), 0, `${at}: the page has no Save button`)
         await form.getByLabel('Name').fill(renamed)
-        await form.getByLabel('Theme').selectOption(other)
-        await form.getByRole('button', { name: 'Save' }).click()
-        await page.waitForFunction((t) => document.documentElement.dataset.theme === t, other)
+        await form.getByLabel('Name').press('Tab')
         await page.getByRole('status').filter({ hasText: /Settled/ }).waitFor()
+        await form.locator('.setting', { has: page.getByLabel('Name') }).getByText('Saved', { exact: true }).waitFor()
+        await form.getByLabel('Theme').selectOption(other)
+        await page.waitForFunction((t) => document.documentElement.dataset.theme === t, other)
         assert.equal(await form.getByLabel('Name').inputValue(), renamed, `${at}: the field shows the name saved`)
         assert.doesNotMatch((await form.textContent()) ?? '', /Not saved/, `${at}: every field saved`)
         const row = await su.query<{ name: string }>('SELECT name FROM person.person WHERE address = $1', [camille])

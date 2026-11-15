@@ -2,10 +2,11 @@
 // Lanterne through the dev server: Camille opens Web's Settings tab and
 // follows it to Web's features page, `/settings/features/web`, every
 // installed feature with a toggle, Web's on in its order. She turns
-// Invoice on, moves Contact up past File and Saves; the dialog says why
-// no write of hers changes Web's features and offers the assembly's
-// `amend-circle` motion, carrying the listing as she arranged it. She
-// proposes it, every member consents, and on its deadline she closes it:
+// Invoice on, and the dialog offers the motion at once; she closes it,
+// the change marked not saved, and moves Contact up past File; the
+// dialog says why no write of hers changes Web's features and offers
+// the assembly's `amend-circle` motion, carrying the listing as she
+// arranged it. She proposes it, every member consents, and on its deadline she closes it:
 // after a reload the page reads Web's new set, in its new order; and
 // Operations' page shows its features under its accordions. The
 // assembly then puts Web's features back as they were. `SHOTS` names
@@ -112,13 +113,17 @@ eachBrowser((name, launch) => {
           assert.equal(await form.getByRole('button', { name: 'Move Project up' }).isDisabled(), true, `${at}: the first moves up no further`)
           await page.screenshot({ path: `${shots}/features-${name}-${scheme}.png`, fullPage: true })
 
-          await form.getByRole('switch', { name: 'Invoice' }).check()
-          await form.getByRole('button', { name: 'Move Contact up' }).click()
-          assert.equal(await shown(page), 'Project, Task, Timesheet, Contact, File, Invoice', `${at}: Invoice on at the end, Contact up past File`)
-          await page.screenshot({ path: `${shots}/features-arranged-${name}-${scheme}.png`, fullPage: true })
-          await form.getByRole('button', { name: 'Save' }).click()
+          assert.equal(await page.getByRole('button', { name: /^Save/ }).count(), 0, `${at}: the page has no Save button`)
+          await form.getByRole('switch', { name: 'Invoice' }).click()
           const dialog = page.getByRole('dialog', { name: 'Propose it instead' })
           await dialog.waitFor()
+          assert.equal(await dialog.getByLabel('Title').inputValue(), 'Enable Invoice for Web', `${at}: a toggle, made, offers the motion`)
+          await page.keyboard.press('Escape')
+          await dialog.waitFor({ state: 'hidden' })
+          assert.match((await form.textContent()) ?? '', /Not saved/, `${at}: closed, the change is marked not saved`)
+          await form.getByRole('button', { name: 'Move Contact up' }).click()
+          await dialog.waitFor()
+          assert.equal(await shown(page), 'Project, Task, Timesheet, Contact, File, Invoice', `${at}: Invoice on at the end, Contact up past File`)
           assert.ok(
             ((await dialog.textContent()) ?? '').includes("Web's features change only by a motion of General assembly, which holds amend-circle: no one's own write changes them"),
             `${at}: the dialog says why her write changes nothing`,

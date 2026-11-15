@@ -4,9 +4,9 @@
 
   // The roles on a circle's Settings tab, below its terms: each its name,
   // duty and cap, and a row to make a new one. None saves directly, since
-  // only a motion makes or changes a role: Save opens the dialog proposing
-  // an `amend-role` or `role` motion of the circle that decides about it,
-  // prefilled with what was typed.
+  // only a motion makes or changes a role: leaving a term changed opens
+  // the dialog proposing an `amend-role` or `role` motion of the circle
+  // that decides about it, prefilled with what was typed.
   let { data }: { data: OnCircle | null; id: string } = $props()
 
   const amending = $derived(data?.amending)

@@ -1,6 +1,6 @@
 +++
 title = "Person"
-updated = 2026-11-13
+updated = 2026-11-15
 +++
 
 Everyone the co-op knows, by the address they sign with, and their
@@ -307,8 +307,8 @@ and each other current one has its revoke, signed from this one; with
 none, the page says it is their only device. The same fields and
 devices are the acting person's Account settings, `/settings/account`
 ([settings](../ui/index.md#settings)), which this core's `./app`
-mounts in the Settings section, saving the name, email and phone by
-`profile`. Enrolling a later device
+mounts in the Settings section, saving the name, email and phone each by
+`profile` as it is left. Enrolling a later device
 from a current one is not offered yet. The dev server signs as a person with a
 device's TEST-ONLY fixture key only when it is the key enrolled under that
 label and not revoked.

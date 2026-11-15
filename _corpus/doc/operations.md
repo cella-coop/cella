@@ -385,3 +385,11 @@ otherwise, what a cx23 holds beside the site); a visitor who would pass
 the cap ends the copy idle longest first. A visitor whose copy ended
 is prepared a fresh one, the page saying their earlier copy was reset.
 Reset now ends a visitor's copy and prepares a fresh one at once.
+
+Every page of a visitor's copy wears a banner fixed above the shell,
+never dismissed: that this is a prototype, that its co-op is Lanterne,
+a mock, and this copy is the visitor's own, that it resets after two
+hours idle and how long is left, and its Reset now. Nobody signs up or
+sets a password: the sign-in offers Lanterne's members, as the demo's
+always does. A demo build sends no mail and calls nothing outside its
+host: what would send mail is kept in the copy alone.

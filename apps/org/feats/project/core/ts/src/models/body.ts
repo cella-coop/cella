@@ -4,7 +4,8 @@ import type { Canon } from '@cella/org-body/models'
 // it, a Loro snapshot in base64, which the browser's editor opens, and its
 // canonical form, which the page draws until it does, null both where it
 // has none yet; and an editor's save of it, the merged snapshot as its
-// browser holds it and who contributed since the last save, by address.
+// browser holds it, the hash of the saved body it merged, empty for
+// none, and who contributed since the last save, by address.
 
 export interface Bodied {
   snapshot: string | null
@@ -14,6 +15,7 @@ export interface Bodied {
 export interface BodySave {
   project: string
   snapshot: Uint8Array
+  base: string
   contributors: string[]
 }
 

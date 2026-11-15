@@ -32,13 +32,14 @@ export function move(form: Form, task: string): Move {
 }
 
 // An editor's save of a task's body, as its browser posts it: the merged
-// snapshot in base64 in `snapshot`, and one `contributor` an address.
+// snapshot in base64 in `snapshot`, the hash of the saved body it merged
+// in `base`, and one `contributor` an address.
 export function save(form: Form, task: string): Save {
   const snapshot = form.get('snapshot')
   if (!snapshot) {
     throw new Error('a save carries the body’s snapshot')
   }
-  return { task, snapshot: b64.decode(snapshot), contributors: form.all('contributor') }
+  return { task, snapshot: b64.decode(snapshot), base: form.get('base'), contributors: form.all('contributor') }
 }
 
 // A comment as its box posts it: its text, each mention `@[address]` in

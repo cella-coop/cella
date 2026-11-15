@@ -237,13 +237,13 @@ test('a column that may hold personal data is registered personal or commented n
   assert.match(foreign.errors.join('\n'), /registers member.member.name as personal: a feat registers only its own schema's columns/)
 })
 
-test('the SQL check collects the literal guard and cites rows, each cite with its power', async () => {
+test('the SQL check collects the literal guard, with its function, and cites rows, each cite with its power', async () => {
   const { errors, found } = await check({
     member: `INSERT INTO cella.guard (op, fn, owner) VALUES ('member:member:profile', 'member.own(jsonb)', 'member');`,
     'member-motion': `INSERT INTO motion.cites (op, power, owner) VALUES ('member:member:admit', 'admit-member', 'member-motion');`,
   })
   assert.deepEqual(errors, [])
-  assert.deepEqual(found.guards, [{ op: 'member:member:profile', owner: 'member' }])
+  assert.deepEqual(found.guards, [{ op: 'member:member:profile', fn: 'member.own(jsonb)', owner: 'member' }])
   assert.deepEqual(found.cites, [{ op: 'member:member:admit', power: 'admit-member', owner: 'member-motion' }])
   const stances = await check({ motion: `INSERT INTO motion.stance_power (op, power, owner) VALUES ('motion:motion:vote', 'vote', 'motion');` })
   assert.deepEqual([stances.errors, stances.found.stances], [[], [{ op: 'motion:motion:vote', power: 'vote', owner: 'motion' }]])

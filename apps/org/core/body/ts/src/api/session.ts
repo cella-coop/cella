@@ -2,7 +2,7 @@ import type { Db } from '@cella/org-db'
 import type { VersionVector } from 'loro-crdt'
 import { createDoc } from '../models/blocks.ts'
 import { canonical } from '../models/canonical.ts'
-import { since, type LoroDoc } from '../models/body.ts'
+import { baseOf, since, type LoroDoc } from '../models/body.ts'
 
 // What a feat that keeps bodies hands the session when its `./api`
 // mounts: the collection its records are served under, how to read a
@@ -32,15 +32,20 @@ export interface Options {
 // with who contributed since the last save, or that it is dropped and why.
 export type Heard =
   | { type: 'update'; update: Uint8Array; contributors: string[] }
-  | { type: 'saved'; saved: Uint8Array; contributors: string[] }
+  | { type: 'saved'; saved: Uint8Array; snapshot: Uint8Array; base: string; contributors: string[] }
   | { type: 'dropped'; reason: string }
 
 // What a post to the session comes to: an update merged, a save taken
-// note of, or why not.
-export type Posted = { state: 'merged' } | { state: 'saved' } | { state: 'refused'; reason: string }
+// note of, with the body the record holds as every peer hears it, or why
+// not.
+export type Posted =
+  | { state: 'merged' }
+  | { state: 'saved'; saved: Uint8Array; snapshot: Uint8Array; base: string; contributors: string[] }
+  | { state: 'refused'; reason: string }
 
 // What a peer is handed as it joins: its place, the update holding all
-// it lacks, and what its browser needs to save.
+// it lacks, and what its browser needs to save, the hash of the body the
+// record holds among it.
 export interface Opened {
   peer: Peer
   update: Uint8Array
@@ -48,6 +53,7 @@ export interface Opened {
   version: Uint8Array
   saved: Uint8Array
   contributors: string[]
+  base: string
 }
 
 // The power editing a body needs, in the record's circle.
@@ -94,21 +100,23 @@ export class Peer {
 }
 
 // One open body: the server's own peer, its document, the version vector
-// of the snapshot last saved, whose Loro peer each editor's browser is,
-// and who has it open.
+// of the snapshot last saved and that snapshot's hash, whose Loro peer
+// each editor's browser is, and who has it open.
 class Open {
   readonly mount: Mount
   readonly record: string
   readonly doc: LoroDoc
   saved: VersionVector
+  base: string
   authors = new Map<string, string>()
   peers = new Set<Peer>()
 
-  constructor(mount: Mount, record: string, doc: LoroDoc) {
+  constructor(mount: Mount, record: string, doc: LoroDoc, base: string) {
     this.mount = mount
     this.record = record
     this.doc = doc
     this.saved = doc.oplogVersion()
+    this.base = base
   }
 
   // Who contributed since the last save: the editors whose browsers' Loro
@@ -195,6 +203,7 @@ export class Session {
       version: body.doc.oplogVersion().encode(),
       saved: body.saved.encode(),
       contributors: body.contributors(),
+      base: body.base,
     }
   }
 
@@ -212,7 +221,7 @@ export class Session {
         if (saved) {
           doc.import(saved)
         }
-        const body = new Open(m, record, doc)
+        const body = new Open(m, record, doc, baseOf(saved))
         this.#open.set(k, body)
         return body
       })().finally(() => this.#opening.delete(k))
@@ -271,8 +280,10 @@ export class Session {
   // session reads the snapshot the record holds now, as `actor` reads
   // it, merges it in and counts from it who contributed since; it asks
   // every peer again, dropping a writable one that may no longer discuss
-  // the body and any that no longer reads it, and tells the rest. What
-  // the record holds is the save, whoever's landed last.
+  // the body and any that no longer reads it, and tells the rest the
+  // snapshot and its hash, which each browser imports and saves from
+  // next. What the record holds is the save, whoever's landed last; a
+  // browser whose save was refused for its `base` posts this to read it.
   async saved(kind: string, record: string, actor: string): Promise<Posted> {
     const m = this.#mounted(kind)
     const theirs = this.#theirs(kind, record, actor)
@@ -292,6 +303,7 @@ export class Session {
     }
     body.doc.import(snapshot)
     body.saved = kept.oplogVersion()
+    body.base = baseOf(snapshot)
     for (const who of new Set([...body.peers].map((p) => p.actor))) {
       const asked = await this.#ask(m, record, who)
       for (const p of [...body.peers].filter((p) => p.actor === who)) {
@@ -302,11 +314,11 @@ export class Session {
         }
       }
     }
-    const heard = { type: 'saved' as const, saved: body.saved.encode(), contributors: body.contributors() }
+    const heard = { saved: body.saved.encode(), snapshot, base: body.base, contributors: body.contributors() }
     for (const p of body.peers) {
-      p.tell(heard)
+      p.tell({ type: 'saved', ...heard })
     }
-    return { state: 'saved' }
+    return { state: 'saved', ...heard }
   }
 
   #drop(body: Open, peer: Peer, reason: string): void {

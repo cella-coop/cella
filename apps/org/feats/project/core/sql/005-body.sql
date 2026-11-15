@@ -26,6 +26,23 @@ END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES ('project:body:save', 'project.contributed(jsonb)', 'project');
 
+-- project:body:save: the save's snapshot holds the body it replaces. Its
+-- `base`, the hash of the saved body the browser merged, empty for none,
+-- is `replaced`, the `encode(sha256(body), 'hex')` of the body the project
+-- held, which the handler read under the row's lock in the save's own
+-- transaction, since at the verdict the row holds the new one. Refused,
+-- it names both and what would let it.
+CREATE FUNCTION project.based(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT 'a body''s save merged the body hashed ' || coalesce(nullif(based.payload ->> 'base', ''), 'none')
+      || ', but the project held the one hashed ' || coalesce(nullif(based.payload ->> 'replaced', ''), 'none')
+      || '; merging the saved body into the snapshot and saving again would allow it'
+  WHERE coalesce(based.payload ->> 'base', '') <> coalesce(based.payload ->> 'replaced', '');
+END;
+
+INSERT INTO cella.guard (op, fn, owner) VALUES ('project:body:save', 'project.based(jsonb)', 'project');
+
 -- project:body:save: the body set to the snapshot its entry carries, in hex.
 CREATE FUNCTION project.fold_body_save(entry jsonb) RETURNS void
 LANGUAGE sql

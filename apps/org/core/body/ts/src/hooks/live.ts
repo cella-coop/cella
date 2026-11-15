@@ -1,5 +1,5 @@
 import { VersionVector, type LoroDoc } from 'loro-crdt'
-import { ahead, b64, type Joined, type Kept, type Merged } from '../models/body.ts'
+import { ahead, b64, baseOf, holds, type Joined, type Kept, type Merged } from '../models/body.ts'
 
 // What a post comes to: taken, or refused and why. A post that got no
 // answer throws.
@@ -7,11 +7,14 @@ export type Sent = { ok: true } | { ok: false; reason: string }
 
 // How an editor's browser reaches a record's body: it posts its Loro
 // updates to the live session, saves a snapshot through the feat's save
-// action, signed by its device, and tells the session it saved.
+// action, signed by its device, naming the hash of the saved body it
+// merged as its `base`, and tells the session it saved, which answers with
+// the body the record holds; one that got no answer or was refused
+// throws.
 export interface Link {
   post(update: Uint8Array): Promise<Sent>
-  save(action: string, snapshot: Uint8Array, contributors: string[]): Promise<Sent>
-  saved(): Promise<Sent>
+  save(action: string, snapshot: Uint8Array, contributors: string[], base: string): Promise<Sent>
+  saved(): Promise<Kept>
 }
 
 // The browser's timers, which the tests drive by hand.
@@ -39,9 +42,14 @@ export interface Timing {
 // action, signed by its device, after a pause of 3 seconds in its own
 // edits and when it leaves, with who contributed since the last save as
 // the session tells it; a save with nothing new since the last is not
-// made. A refused or failed save says why and is tried again after the
-// next pause. A body that rejoins a session the server restarted posts
-// what the session lacks, others' edits too, and saves it at its pause.
+// made, nor one while an edit of its own is one the session refused or
+// never had. Each save names as its `base` the hash of the saved body
+// this browser last imported, so the feat refuses one whose snapshot
+// does not hold the body it would replace; refused so, the browser reads
+// the record's body, merges it and saves at once. A save refused
+// otherwise, or failed, says why and is tried again after the next
+// pause. A body that rejoins a session the server restarted posts what
+// the session lacks, others' edits too, and saves it at its pause.
 export class Live {
   readonly doc: LoroDoc
   readonly #link: Link
@@ -56,6 +64,11 @@ export class Live {
   #action = ''
   #sent = 0
   #saved = new VersionVector(null)
+  // The hash of the saved body this browser last imported, which its
+  // next save names: empty for a body never saved.
+  #base = ''
+  // Whether a save waits on edits the session has not taken yet.
+  #held = false
   #contributors = new Set<string>()
   #sending: Promise<void> | null = null
   #saving: Promise<void> | null = null
@@ -99,6 +112,7 @@ export class Live {
     this.writable = j.writable
     this.actor = j.actor
     this.#action = j.save
+    this.#base = j.base
     // Rejoining after the same save, as after a restart of the server,
     // this browser keeps who it heard contributed since, edits the new
     // session never saw among them.
@@ -127,14 +141,24 @@ export class Live {
     }
   }
 
-  // A save the session learned of. Where this browser holds an edit it
-  // does not, it saves them at the pause.
+  // A save the session learned of: its snapshot, which this browser
+  // imports, Loro merging it into what it holds, and takes as the base of
+  // its next save. Where this browser holds an edit it does not, it saves
+  // them at the pause.
   kept(k: Kept): void {
-    this.#saved = VersionVector.decode(b64.decode(k.saved))
-    this.#contributors = new Set(k.contributors)
+    this.#keep(k)
     if (this.writable && this.unsaved) {
       this.#later()
     }
+  }
+
+  #keep(k: Kept): void {
+    if (k.snapshot) {
+      this.doc.import(b64.decode(k.snapshot))
+    }
+    this.#base = k.base
+    this.#saved = VersionVector.decode(b64.decode(k.saved))
+    this.#contributors = new Set(k.contributors)
   }
 
   // The session dropped this browser, and why: it edits no more.
@@ -168,6 +192,8 @@ export class Live {
     await this.#send(this.doc.export({ mode: 'update', from: VersionVector.parseJSON(vv) }), upto)
   }
 
+  // A post of this browser's own edits. Taken, a save that waited on them
+  // is made at the pause; one that got no answer is tried again.
   async #send(update: Uint8Array, upto: number): Promise<void> {
     this.#sending = (async () => {
       try {
@@ -175,6 +201,11 @@ export class Live {
         this.online = true
         if (out.ok) {
           this.#sent = Math.max(this.#sent, upto)
+          if (this.#held && this.#own <= this.#sent) {
+            this.#held = false
+            this.problem = null
+            this.#later()
+          }
         } else {
           this.problem = out.reason
         }
@@ -192,10 +223,13 @@ export class Live {
   }
 
   // Saves the merged body now, if this browser holds an edit the last
-  // save does not: its own posted first, then the snapshot through the
-  // feat's save action, signed by its device, naming who contributed
-  // since the last save, this browser's own person among them where it
-  // edited; then it tells the session. One save at a time.
+  // save does not and the session took every edit of its own: those
+  // posted first, then the snapshot through the feat's save action,
+  // signed by its device, naming its base and who contributed since the
+  // last save, this browser's own person among them where it edited; then
+  // it tells the session and imports the body the record holds. Refused,
+  // it reads that body, and where it is not the one its base names,
+  // merges it and saves once more at once. One save at a time.
   async save(): Promise<void> {
     if (this.#saving) {
       return this.#saving
@@ -212,34 +246,81 @@ export class Live {
       return
     }
     await this.#flush()
-    if (!this.unsaved) {
+    // No save carries an edit of this browser's the session refused or
+    // never had: it waits on them, and the edits are kept.
+    if (this.#own > this.#sent) {
+      this.#held = true
+      this.problem ??= 'your edits have not reached the body’s session yet: it is saved once they do'
+      this.changed()
       return
     }
+    const refused = await this.#attempt()
+    if (refused === null) {
+      return
+    }
+    try {
+      const k = await this.#link.saved()
+      if (k.base !== refused.base) {
+        this.#keep(k)
+        const again = await this.#attempt()
+        if (again === null) {
+          return
+        }
+        this.problem = again.reason
+        this.changed()
+        return
+      }
+    } catch {
+      // The record's body could not be read: the refusal stands.
+    }
+    this.problem = refused.reason
+    this.changed()
+  }
+
+  // One save of the body as this browser holds it, from its base: null
+  // where it was made, had nothing new or got no answer, else why it was
+  // refused and the base it carried, which a `saved` heard meanwhile may
+  // have moved on. A browser yet to import the saved body its base
+  // names, as between the session's `joined` and its catch-up, saves at
+  // the next pause instead.
+  async #attempt(): Promise<{ reason: string; base: string } | null> {
+    if (!this.unsaved) {
+      return null
+    }
+    if (!holds(this.doc, this.#saved)) {
+      this.#later()
+      return null
+    }
     const version = this.doc.oplogVersion()
+    const snapshot = this.doc.export({ mode: 'snapshot' })
     const contributors = new Set(this.#contributors)
     if (this.#own > (this.#saved.get(this.doc.peerIdStr) ?? 0)) {
       contributors.add(this.actor)
     }
+    const base = this.#base
     let out: Sent
     try {
-      out = await this.#link.save(this.#action, this.doc.export({ mode: 'snapshot' }), [...contributors].sort())
+      out = await this.#link.save(this.#action, snapshot, [...contributors].sort(), base)
       this.online = true
     } catch {
       this.online = false
       this.problem = 'the save got no answer: it is tried again after your next pause'
       this.changed()
-      return
+      return null
     }
     if (!out.ok) {
-      this.problem = out.reason
-      this.changed()
-      return
+      return { reason: out.reason, base }
     }
     this.problem = null
     this.#saved = version
+    this.#base = baseOf(snapshot)
     this.#contributors = new Set()
     this.changed()
-    await this.#link.saved().catch(() => {})
+    await this.#link.saved().then(
+      (k) => this.#keep(k),
+      () => {},
+    )
+    return null
   }
 
   // This browser leaves the body: it saves what it holds that the last

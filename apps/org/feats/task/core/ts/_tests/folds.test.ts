@@ -2,7 +2,8 @@
 // app's core and this feat, in a transaction rolled back after: a task
 // folds created under its id on the entry's day, its title as its
 // commitment; moved, completed keeping its first day, and reopened; its
-// body set to each save's snapshot, one with no canonical form refused;
+// body set to each save's snapshot, one with no canonical form refused,
+// and a save refused unless its base is the hash of the body it replaces;
 // its comments posted and resolved, a reply to a reply refused, and a
 // mention read by its person's name, erased once their name is; a
 // reaction folded on and off, and refused off the six or where its
@@ -11,7 +12,7 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { createDoc, edits, thread } from '@cella/org-body/models'
+import { baseOf, createDoc, edits, thread } from '@cella/org-body/models'
 import { comments } from '../src/drivers/comment.ts'
 
 const db = new pg.Client()
@@ -63,6 +64,19 @@ test('a body folds saved as the snapshot its entry carries, and a later save rep
   const second = body('Go live on Monday')
   await fold('fold_body_save', 8, 'task:body:save', '2041-01-21', { task: 't-9002', circle: 'ag', snapshot: hex(second), contributors: [] })
   assert.equal(hex((await saved()).body), hex(second))
+})
+
+test('a body’s save is refused unless its base is the hash of the body it replaces, which the browser computes as Postgres does', async () => {
+  const { body, hash } = await one<{ body: Buffer; hash: string }>(`SELECT body, encode(sha256(body), 'hex') AS hash FROM task.task WHERE id = 't-9002'`)
+  assert.equal(baseOf(new Uint8Array(body)), hash)
+  const based = async (payload: unknown) => (await one<{ reason: string | null }>('SELECT task.based($1) AS reason', [payload])).reason
+  assert.equal(await based({ task: 't-9002', base: '', replaced: '' }), null)
+  assert.equal(await based({ task: 't-9002', base: hash, replaced: hash }), null)
+  assert.equal(
+    await based({ task: 't-9002', base: '', replaced: hash }),
+    `a body's save merged the body hashed none, but the task held the one hashed ${hash}; merging the saved body into the snapshot and saving again would allow it`,
+  )
+  assert.match((await based({ task: 't-9002', base: 'ab'.repeat(32), replaced: '' })) ?? '', /merged the body hashed (ab){32}, but the task held the one hashed none;/)
 })
 
 test('a body with no canonical form is refused by its column', async () => {

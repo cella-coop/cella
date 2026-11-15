@@ -47,7 +47,11 @@ and on leaving the body: it posts `task:body:save` with the merged
 snapshot, and its entry names who contributed since the last save, as
 core body's session tells it, each holding `discuss` in the task's
 circle, which the feat's guard checks of each at the save as the
-session does at every update ([the live
+session does at every update. Its `base` names the saved body the
+browser merged, and the guard `task.based` refuses a save whose base is
+not the hash of the body the task held, which the handler reads under
+the row's lock as `replaced`, so a stale snapshot never erases another
+editor's save ([the live
 session](../../core/body/index.md#the-live-session)).
 
 A comment is a root or a reply to one: a reply to a reply is refused,
@@ -187,6 +191,11 @@ Yusuf's Inbox until he answers.
   entries naming both; a reload opens on the save, and Camille, seated
   in other circles, opens it on the save too, since Lanterne's
   participants discuss in every circle; screenshots light and dark.
+- In Chromium (`ts/_e2e/body.test.ts`): Léa and Thomas, on a task
+  whose body was never saved, save from one base at once; the save that
+  lands second is refused for its base and its browser merges the saved
+  body, so the column and a reload hold both members' edits, and every
+  entry replaced the body its base names.
 
 ## Analytics
 

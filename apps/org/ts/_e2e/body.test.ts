@@ -16,7 +16,7 @@ import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
 import pg from 'pg'
 import type { BrowserContext, Page } from 'playwright-core'
-import { eachBrowser, serve, signIn } from './browser.ts'
+import { browsers, eachBrowser, serve, signIn } from './browser.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-body-shots'
 const lea = 'lea@lanterne.example'
@@ -119,4 +119,74 @@ eachBrowser((name, launch) => {
       await su.end()
     }
   })
+})
+
+// Two tabs on a task whose body was never saved save from one base: once
+// Léa's line has reached Thomas, he types one of his own and both tabs
+// save at once, as on leaving, each naming no saved body as its base. The
+// task's guard refuses whichever lands second for its base; that browser
+// reads the saved body, merges it and saves what it holds that the first
+// did not, so the reload holds both members' edits and a stale snapshot
+// erased neither. In Chromium.
+const chromium = browsers().find(([name]) => name === 'chromium')
+test('chromium: two tabs saving from one base keep both members’ edits', { skip: !chromium }, async () => {
+  const task = 't-7'
+  const su = new pg.Client()
+  await su.connect()
+  const { base, stop } = await serve()
+  const browser = await chromium![1]()
+  const errors: string[] = []
+  try {
+    const open = async (actor: string) => {
+      const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
+      await signIn(context, base, actor)
+      const page = await context.newPage()
+      page.on('pageerror', (e) => errors.push(`${actor}: ${e.message}`))
+      await page.goto(`${base}/tasks/${task}`)
+      await page.waitForSelector('[data-body=edit][data-state=saved]', { timeout: 20_000 })
+      return page
+    }
+    const none = await su.query<{ body: Buffer | null }>('SELECT body FROM task.task WHERE id = $1', [task])
+    assert.equal(none.rows[0]?.body ?? null, null, 'the task holds no saved body yet')
+    const a = await open(lea)
+    const b = await open(thomas)
+    const first = 'Léa writes from no saved body'
+    await editor(a).locator('[contenteditable=true]').first().click()
+    await a.keyboard.type(first)
+    await shows(b, [first], "Thomas's tab")
+    const second = 'Thomas writes from no saved body'
+    await editor(b).locator('[contenteditable=true]').last().click()
+    await b.keyboard.press('End')
+    await b.keyboard.press('Enter')
+    await b.keyboard.type(second)
+    // Both tabs hide at once, which saves each from the base it holds.
+    const hide = () => {
+      Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true })
+      document.dispatchEvent(new Event('visibilitychange'))
+    }
+    await Promise.all([a.evaluate(hide), b.evaluate(hide)])
+    await saved(a)
+    await saved(b)
+    const row = await su.query<{ text: string }>('SELECT cella.document_text(body) AS text FROM task.task WHERE id = $1', [task])
+    assert.match(row.rows[0]?.text ?? '', new RegExp(`${first}[\\s\\S]*${second}`), "the task's column holds both members' edits")
+    const entries = await su.query<{ base: string; replaced: string }>(
+      `SELECT cella.opened(n) ->> 'base' AS base, cella.opened(n) ->> 'replaced' AS replaced FROM cella.log
+       WHERE op = 'task:body:save' AND cella.opened(n) ->> 'task' = $1 ORDER BY n`,
+      [task],
+    )
+    assert.ok(entries.rows.length >= 1, 'the body was saved by task:body:save')
+    assert.equal(entries.rows[0].base, '', 'the first save names no saved body as its base')
+    assert.ok(
+      entries.rows.every((e) => e.base === e.replaced),
+      'every save landed replaced the body its base names',
+    )
+    await a.reload()
+    await a.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+    await shows(a, [first, second], "Léa's tab after a reload")
+    assert.deepEqual(errors, [], 'the pages threw nothing')
+  } finally {
+    await browser.close()
+    await stop()
+    await su.end()
+  }
 })

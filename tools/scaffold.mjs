@@ -187,7 +187,7 @@ export function scaffold(repo, part, feat) {
     if (new RegExp(`ADD COLUMN body\\b|^\\s+body bytea`, 'm').test(f.sql)) {
       refuse(`${feat} has a body already: its SQL makes a body column`)
     }
-    fresh(feat, f.sql, ['contributed', 'fold_body_save'])
+    fresh(feat, f.sql, ['contributed', 'based', 'fold_body_save'])
     put(join(f.sqlDir, `${pad(f.next)}-body.sql`), bodySql(feat))
     put(ts('src/models/body.ts'), bodyModels(feat))
     put(ts('src/handlers/body.ts'), bodyHandler(feat))
@@ -291,6 +291,23 @@ END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES ('${F}:body:save', '${F}.contributed(jsonb)', '${F}');
 
+-- ${F}:body:save: the save's snapshot holds the body it replaces. Its
+-- \`base\`, the hash of the saved body the browser merged, empty for none,
+-- is \`replaced\`, the \`encode(sha256(body), 'hex')\` of the body the ${F}
+-- held, which the handler read under the row's lock in the save's own
+-- transaction, since at the verdict the row holds the new one. Refused,
+-- it names both and what would let it.
+CREATE FUNCTION ${F}.based(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT 'a body''s save merged the body hashed ' || coalesce(nullif(based.payload ->> 'base', ''), 'none')
+      || ', but the ${F} held the one hashed ' || coalesce(nullif(based.payload ->> 'replaced', ''), 'none')
+      || '; merging the saved body into the snapshot and saving again would allow it'
+  WHERE coalesce(based.payload ->> 'base', '') <> coalesce(based.payload ->> 'replaced', '');
+END;
+
+INSERT INTO cella.guard (op, fn, owner) VALUES ('${F}:body:save', '${F}.based(jsonb)', '${F}');
+
 -- ${F}:body:save: the body set to the snapshot its entry carries, in hex.
 CREATE FUNCTION ${F}.fold_body_save(entry jsonb) RETURNS void
 LANGUAGE sql
@@ -308,7 +325,8 @@ const bodyModels = (F) => `import type { Canon } from '@cella/org-body/models'
 // it, a Loro snapshot in base64, which the browser's editor opens, and its
 // canonical form, which the page draws until it does, null both where it
 // has none yet; and an editor's save of it, the merged snapshot as its
-// browser holds it and who contributed since the last save, by address.
+// browser holds it, the hash of the saved body it merged, empty for
+// none, and who contributed since the last save, by address.
 
 export interface Bodied {
   snapshot: string | null
@@ -318,6 +336,7 @@ export interface Bodied {
 export interface BodySave {
   ${F}: string
   snapshot: Uint8Array
+  base: string
   contributors: string[]
 }
 
@@ -337,14 +356,24 @@ type Action = keyof typeof actions
 // Saves a ${F}'s body: the merged snapshot an editor's browser signs, with
 // who contributed since the last save, each of whom the feat's guard asks
 // holds \`discuss\` in the ${F}'s circle, as the saver must. The payload
-// names the circle the handler read, which the power's guard reads. A
-// snapshot with no canonical form is refused by the column.
+// names the circle the handler read, which the power's guard reads. Its
+// \`base\`, the hash of the saved body the browser merged, goes in the
+// payload with \`replaced\`, the hash of the body it replaces, read under
+// the row's lock; the feat's guard refuses the save where they differ,
+// so a stale snapshot never erases another editor's save. A snapshot
+// with no canonical form is refused by the column.
 export async function saveBody(input: BodySave, deps: Deps): Promise<Outcome<(typeof actions)['${F}:body:save'], BodySaved>> {
   let snapshot = ''
+  let replaced = ''
   return write(deps, {
     op: '${F}:body:save' satisfies Action,
     request: input,
     state: async (tx) => {
+      const held = await tx.query<{ replaced: string }>(
+        \`SELECT coalesce(encode(sha256(body), 'hex'), '') AS replaced FROM ${F}.${F} WHERE id = $1 FOR UPDATE\`,
+        [input.${F}],
+      )
+      replaced = held.rows[0]?.replaced ?? ''
       const { rows } = await tx.query<{ circle: string; snapshot: string }>(
         \`UPDATE ${F}.${F} SET body = $2 WHERE id = $1 RETURNING circle, encode(body, 'hex') AS snapshot\`,
         [input.${F}, input.snapshot],
@@ -356,8 +385,9 @@ export async function saveBody(input: BodySave, deps: Deps): Promise<Outcome<(ty
       return { ${F}: input.${F}, circle: rows[0].circle }
     },
     // The log keeps the snapshot, in hex, which its fold sets the body to,
-    // and who contributed to it since the last.
-    payload: (v) => ({ ...v, snapshot, contributors: [...new Set(input.contributors)].sort() }),
+    // the base it was merged from and the hash of the body it replaced, and
+    // who contributed to it since the last.
+    payload: (v) => ({ ...v, snapshot, base: input.base, replaced, contributors: [...new Set(input.contributors)].sort() }),
   })
 }
 `
@@ -401,13 +431,14 @@ import { bodied, bodyCircle, savedBody } from '../drivers/body.ts'
 // bodies and that save, and its page's item with its body.
 
 // An editor's save, as its browser posts it: the merged snapshot in
-// base64 in \`snapshot\`, and one \`contributor\` an address.
+// base64 in \`snapshot\`, the hash of the saved body it merged in \`base\`,
+// and one \`contributor\` an address.
 export function saving(form: Form, id: string): BodySave {
   const snapshot = form.get('snapshot')
   if (!snapshot) {
     throw new Error('a save carries the body’s snapshot')
   }
-  return { ${F}: id, snapshot: b64.decode(snapshot), contributors: form.all('contributor') }
+  return { ${F}: id, snapshot: b64.decode(snapshot), base: form.get('base'), contributors: form.all('contributor') }
 }
 
 export const bodyActions = {

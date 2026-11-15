@@ -1230,7 +1230,7 @@ function collects(b, lib, found) {
       found.powers.push({ op: vals.op, power: vals.power ?? null, amount: vals.amount ?? null, owner: lib })
     }
     if (b.relation.relname === 'guard' && vals.op) {
-      found.guards.push({ op: vals.op, owner: lib })
+      found.guards.push({ op: vals.op, fn: vals.fn ?? null, owner: lib })
     }
   }
 }
@@ -1255,7 +1255,7 @@ function registers(b, o, s, fail, found) {
       fail(`registers a ${what} as ${vals.owner}, not as itself, ${o.name}`)
     }
     if (what === 'guard' && vals.op) {
-      found.guards.push({ op: vals.op, owner: o.name })
+      found.guards.push({ op: vals.op, fn: vals.fn ?? null, owner: o.name })
     }
     if (what === 'power' && vals.op) {
       found.powers.push({ op: vals.op, power: vals.power ?? null, amount: vals.amount ?? null, owner: o.name })

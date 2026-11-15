@@ -9,13 +9,14 @@ import { bodied, bodyCircle, savedBody } from '../drivers/body.ts'
 // bodies and that save, and its page's item with its body.
 
 // An editor's save, as its browser posts it: the merged snapshot in
-// base64 in `snapshot`, and one `contributor` an address.
+// base64 in `snapshot`, the hash of the saved body it merged in `base`,
+// and one `contributor` an address.
 export function saving(form: Form, id: string): BodySave {
   const snapshot = form.get('snapshot')
   if (!snapshot) {
     throw new Error('a save carries the body’s snapshot')
   }
-  return { project: id, snapshot: b64.decode(snapshot), contributors: form.all('contributor') }
+  return { project: id, snapshot: b64.decode(snapshot), base: form.get('base'), contributors: form.all('contributor') }
 }
 
 export const bodyActions = {

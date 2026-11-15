@@ -9,7 +9,8 @@ const retry = 2000
 // Where a record's body lives, as the slice that mounts it says: the URL
 // of its live session, and the write that saves it, sent by the page's
 // `send` and signed as any write is, its snapshot in the `snapshot`
-// field and one `contributor` field an address.
+// field, the hash of the saved body it merged in `base`, and one
+// `contributor` field an address.
 export interface Seat {
   live: () => string
   save: (write: string, fields: [string, string][]) => Promise<Answer>
@@ -24,6 +25,19 @@ const sent = (a: Answer): Sent => {
     return { ok: false, reason: a.done?.reason ?? `the save was refused (${a.status})` }
   }
   throw new Error('not taken')
+}
+
+// The post telling the session this browser saved, answered with the body
+// the record holds; one refused or with no answer it can read throws.
+async function kept(url: string): Promise<Kept> {
+  const body = new FormData()
+  body.append('saved', '1')
+  const res = await fetch(url, { method: 'POST', body, headers: { accept: 'application/json' } })
+  const r = (await res.json()) as { type: string; data?: Kept & { done?: { reason?: string } } }
+  if (r.type !== 'success' || !r.data) {
+    throw new Error(r.data?.done?.reason ?? `refused (${res.status})`)
+  }
+  return r.data
 }
 
 // A post to the live session, answered as a form's is. One with no
@@ -66,9 +80,15 @@ export class LiveState {
     this.#at = at
     const link: Link = {
       post: (update) => told(at.live(), [['update', b64.encode(update)]]),
-      save: async (write, snapshot, contributors) =>
-        sent(await at.save(write, [['snapshot', b64.encode(snapshot)], ...contributors.map((c): [string, string] => ['contributor', c])])),
-      saved: () => told(at.live(), [['saved', '1']]),
+      save: async (write, snapshot, contributors, base) =>
+        sent(
+          await at.save(write, [
+            ['snapshot', b64.encode(snapshot)],
+            ['base', base],
+            ...contributors.map((c): [string, string] => ['contributor', c]),
+          ]),
+        ),
+      saved: () => kept(at.live()),
     }
     this.#live = new Live(doc, link)
     this.#live.changed = () => this.#show()

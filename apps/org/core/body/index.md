@@ -147,7 +147,8 @@ saves nothing itself, since the server signs with none
 - **Joining.** An editor opens `/<collection>/<record>/body/live`, a
   stream of server-sent events: `joined`, whether this peer may edit,
   its address, the name of the save action, the session's version
-  vector, the last save's and who contributed since; then an `update`
+  vector, the last save's, who contributed since and the hash of the
+  body the record holds, the `base` its next save names; then an `update`
   holding all it lacks by the Loro version vector it sends (`vv`), then
   each update merged, from any peer, its own too, which Loro imports
   once, with who contributed since the last save. The browser names its
@@ -173,18 +174,37 @@ saves nothing itself, since the server signs with none
   signed by its device as a document's edits are: after a pause of 3
   seconds in its edits, and when it leaves the body, the page's
   unmounting or the tab's hiding. It posts its own edits to the session
-  first; the save carries the snapshot of the merged document as the
-  browser holds it, in its `snapshot` field, and the addresses
-  of who contributed since the last save, one `contributor` field each,
-  which the session tells each editor with the updates it relays, its
-  own person among them where it edited; the feat's fold sets the
+  first, and saves only once the session accepted every one: where a
+  post fails or is refused, it makes no save, keeps the edits, says
+  why, and tries again after its next pause, so no save carries an edit
+  the session refused or never had. The save carries the snapshot of
+  the merged document as the browser holds it, in its `snapshot` field;
+  its `base`, the SHA-256 of the saved body it last imported, empty for
+  a body never saved; and the addresses of who contributed since the
+  last save, one `contributor` field each, which the session tells each
+  editor with the updates it relays, its own person among them where it
+  edited. The feat's guard refuses a save whose `base` is not the hash
+  of the body the record holds, naming both hashes and that the browser
+  merges the saved body and saves again: the handler reads that hash,
+  `encode(sha256(body), 'hex')`, under the row's lock in the save's own
+  transaction and puts it in the entry as `replaced` beside the `base`,
+  since at the verdict the row holds the new body, and the guard
+  refuses where the two differ; so a save replaces the body
+  only where its snapshot holds the one it replaces, and a stale
+  snapshot never erases another editor's save. The feat's fold sets the
   record's `body` column to it. Then the browser posts `saved` to the
   live address: the session reads the snapshot the record holds now, as
   that editor reads it, counts from it who contributed since, and tells
-  every editor (`saved`), whose browser saves at its next pause where it
-  holds an edit the record does not. A save with nothing new since the
-  last save is not made, so of editors pausing together the first saves
-  and the rest find nothing new. A save refused, or one that fails,
+  every editor (`saved`) with the snapshot and its hash, which each
+  browser imports, Loro merging it into what it holds, and takes as its
+  `base`; it saves at its next pause where it holds an edit the record
+  does not. A browser whose save is refused reads the record's body by
+  posting `saved`, which the session answers with the snapshot and its
+  hash; where that is not the body its `base` named, it imports it and
+  saves at once, its edits and the saved ones merged, and where it holds
+  nothing the saved body does not, it makes no save. A save with nothing
+  new since the last save is not made, so of editors pausing together
+  the first saves and the rest find nothing new. A save refused, or one that fails,
   keeps the edits in the session and in the browser, says why, and is
   tried again after the browser's next pause.
 - **A crash.** The server keeps no buffer: what was merged since the
@@ -223,8 +243,8 @@ A feat gains a body or threads by `cella scaffold body|comments <feat>`
 ([the CLI](../../rs/index.md#commands)), which writes them into its own
 folder, as the project feat's were; then `cella check feats` holds them
 whole: a feat whose table keeps a `body` of core body's, a `bytea`,
-declares `<feat>:body:save` with `discuss`, its fold and the session's
-mount, and a feat with a thread's comment table, `<feat>.comment` with
+declares `<feat>:body:save` with `discuss`, its fold, its guard on the
+save's `base` and the session's mount, and a feat with a thread's comment table, `<feat>.comment` with
 replies by `parent`, declares post, resolve and react with theirs, and
 the mention table and the reaction guard, each refused by name where
 one is missing. A motion's text body and a document's anchored comments
@@ -242,7 +262,10 @@ are their feats' own, and not held.
   of the test's own, converging, and a late joiner catching up; the
   saves a browser's pauses and its leaving make, each signed by its
   device and naming who contributed, a save with nothing new not made,
-  and a refused save kept for the next; a peer dropped when its answer
+  and a refused save kept for the next; no save after a post that
+  failed or was refused; two browsers saving from one base, the second
+  refused for its `base`, then merging the first's save and saving both
+  editors' edits; a peer dropped when its answer
   turns no, at an update and at a save, a reader who may not discuss
   and one who reads nothing; a restart in which a peer rejoins, posts
   what the session lacks and saves it; and the live route's events and

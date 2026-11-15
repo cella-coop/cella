@@ -2,7 +2,8 @@
 // writes them into the feat's own folder, named for it, and refuses a
 // feat that has them already; and the feat check refuses a feat that
 // keeps a body or threads without their commands, powers, folds, the
-// session's mount, the mention table or the reaction guard, each by name.
+// guard on a save's base, the session's mount, the mention table or the
+// reaction guard, each by name.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -24,7 +25,7 @@ const col = (key, type) => ({ key, type, path: 'apps/org/feats/note/core/sql/001
 const kept = () => ({
   columns: [col('note.note.body', 'bytea'), col('note.comment.parent', 'int8'), col('note.comment.text', 'text')],
   tables: [{ key: 'note.note' }, { key: 'note.comment' }, { key: 'note.mention' }, { key: 'note.reaction' }],
-  guards: [{ op: 'note:body:save', owner: 'note' }, { op: 'note:comment:post', owner: 'note' }, { op: 'note:comment:react', owner: 'note' }],
+  guards: [{ op: 'note:body:save', fn: 'note.contributed(jsonb)', owner: 'note' }, { op: 'note:body:save', fn: 'note.based(jsonb)', owner: 'note' }, { op: 'note:comment:post', owner: 'note' }, { op: 'note:comment:react', owner: 'note' }],
   folds: ['note:body:save', 'note:comment:post', 'note:comment:resolve', 'note:comment:react'].map((o) => ({ op: o, owner: 'note' })),
 })
 const ops = () => ['note:body:save', 'note:comment:post', 'note:comment:resolve', 'note:comment:react'].map((o) => op(o))
@@ -34,13 +35,17 @@ test('a feat that keeps its body and threads whole passes', () => {
   assert.deepEqual(whole(feats(), ops(), kept()), [])
 })
 
-test('a body with no save, a save needing another power, one with no fold, and a body no session mounts are each refused by name', () => {
+test('a body with no save, a save needing another power, one with no fold, one with no guard on its base and a body no session mounts are each refused by name', () => {
   const without = ops().filter((o) => o.op !== 'note:body:save')
   assert.deepEqual(whole(feats(), without, kept()), [`${file}: note keeps a body in note.note.body but declares no note:body:save: run cella scaffold, or declare it with its power and fold`])
   const other = ops().map((o) => (o.op === 'note:body:save' ? op(o.op, 'edit-note') : o))
   assert.deepEqual(whole(feats(), other, kept()), [`${file}: note:body:save needs edit-note, but a body in note.note.body is discussed: it needs discuss`])
   const unfolded = { ...kept(), folds: kept().folds.filter((f) => f.op !== 'note:body:save') }
   assert.deepEqual(whole(feats(), ops(), unfolded), [`${file}: note:body:save has no fold, so a body in note.note.body would not fold: register it by cella.lets_fold`])
+  const unbased = { ...kept(), guards: kept().guards.filter((g) => g.fn !== 'note.based(jsonb)') }
+  assert.deepEqual(whole(feats(), ops(), unbased), [
+    `${file}: note keeps a body in note.note.body but no guard note.based on note:body:save: a save whose base is not the body it replaces would erase another editor's`,
+  ])
   assert.deepEqual(whole(feats(false), ops(), kept()), [
     `${file}: note keeps a body in note.note.body but mounts none in core body's session: its collection names body: { circle, saved, save }`,
   ])
@@ -109,6 +114,9 @@ test('scaffold body writes a feat its body, named for it, into its own folder, a
     assert.match(sql, /\('note:body:save', 'discuss', NULL, 'note'\)/)
     assert.match(sql, /cella\.lets_fold\('note:body:save', 1, 'note\.fold_body_save\(jsonb\)', 'note'\)/)
     assert.match(sql, /INSERT INTO cella\.guard \(op, fn, owner\) VALUES \('note:body:save', 'note\.contributed\(jsonb\)', 'note'\)/)
+    assert.match(sql, /INSERT INTO cella\.guard \(op, fn, owner\) VALUES \('note:body:save', 'note\.based\(jsonb\)', 'note'\)/)
+    assert.match(sql, /WHERE coalesce\(based\.payload ->> 'base', ''\) <> coalesce\(based\.payload ->> 'replaced', ''\);/)
+    assert.match(read(join(t.ts, 'src/handlers/body.ts')), /SELECT coalesce\(encode\(sha256\(body\), 'hex'\), ''\) AS replaced FROM note\.note WHERE id = \$1 FOR UPDATE/)
     assert.match(read(join(t.ts, 'src/models/actions.ts')), /'note:body:save': confluent\(\{ power: 'discuss' \}\),\n\} satisfies Actions/)
     const api = read(join(t.ts, 'src/api/index.ts'))
     assert.match(api, /item: withBody\(item\),/)

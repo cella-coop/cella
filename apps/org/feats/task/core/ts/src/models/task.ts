@@ -60,10 +60,12 @@ export interface Page extends Task {
 }
 
 // An editor's save of a task's body: the merged snapshot as its browser
-// holds it, and who contributed since the last save, by address.
+// holds it, the hash of the saved body it merged, empty for none, and who
+// contributed since the last save, by address.
 export interface Save {
   task: string
   snapshot: Uint8Array
+  base: string
   contributors: string[]
 }
 

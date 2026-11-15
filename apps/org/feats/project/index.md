@@ -64,7 +64,9 @@ register the body's and the threads'.
   covers the shares granted from it is `membership-project`'s guard on the
   same action;
 - a body's save names only contributors who discuss in its circle
-  (`project.contributed`); a reply answers a root, a mention names a
+  (`project.contributed`), and replaces only the body its `base` names,
+  the hash the handler read of it under the row's lock
+  (`project.based`); a reply answers a root, a mention names a
   person the co-op knows, and only a root is resolved (`project.posts`,
   `project.resolves`); a reaction is one of the six, refused where the
   circle turned reactions off (`project.reacts`). An archived project's

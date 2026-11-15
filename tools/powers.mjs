@@ -207,8 +207,9 @@ export function granted(ops, grants, stances = []) {
 // Where a feat keeps a body or threads but not whole, as
 // `cella scaffold` writes them (core body's doc, "Threads"): a `body`
 // of core body's, a `bytea` column on a table of its schema, needs
-// `<feat>:body:save`, needing `discuss`, its fold and the session's
-// mount, a `body:` in a collection of its slice; a thread's
+// `<feat>:body:save`, needing `discuss`, its fold, its guard on the
+// save's `base`, `<feat>.based`, and the session's mount, a `body:` in a
+// collection of its slice; a thread's
 // `<feat>.comment` table, its replies by `parent`, needs post, resolve
 // and react,
 // each needing `discuss` and folding, the `<feat>.mention` table and a
@@ -236,6 +237,9 @@ export function whole(feats, ops, found) {
     if (body) {
       const what = `a body in ${body.key}`
       out.push(...needs(file, F, what, `${F}:body:save`))
+      if (!(found.guards ?? []).some((g) => g.op === `${F}:body:save` && g.fn === `${F}.based(jsonb)`)) {
+        out.push(`${file}: ${F} keeps ${what} but no guard ${F}.based on ${F}:body:save: a save whose base is not the body it replaces would erase another editor's`)
+      }
       if (!mounts) {
         out.push(`${file}: ${F} keeps ${what} but mounts none in core body's session: its collection names body: { circle, saved, save }`)
       }

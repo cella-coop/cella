@@ -187,7 +187,7 @@ test('24 October: contacts are kept, archived and erased, and the work goes on: 
   const brief = createDoc()
   edits.paste(brief, undefined, 0, [{ type: 'paragraph', runs: [{ text: 'Three labels, one vine, printed by Imprimerie Sud' }], children: [] }])
   brief.commit()
-  settled(await saveBrief({ project, snapshot: brief.export({ mode: 'snapshot' }), contributors: [hugo] }, as(hugo)))
+  settled(await saveBrief({ project, snapshot: brief.export({ mode: 'snapshot' }), base: '', contributors: [hugo] }, as(hugo)))
   const { comment: ask } = settled(await discussProject({ project, parent: null, text: `@[${sofia}] can the vine be redrawn by the 6th?` }, as(hugo))) as { comment: number }
   settled(await discussProject({ project, parent: ask, text: 'Yes, by the 6th.' }, as(sofia)))
   settled(await settleProject({ comment: ask, resolved: true }, as(hugo)))
@@ -199,7 +199,7 @@ test('24 October: contacts are kept, archived and erased, and the work goes on: 
   const notes = createDoc()
   edits.paste(notes, undefined, 0, [{ type: 'todo', checked: false, runs: [{ text: 'Send the redrawn vine to the printer' }], children: [] }])
   notes.commit()
-  settled(await saveBody({ task, snapshot: notes.export({ mode: 'snapshot' }), contributors: [sofia] }, as(sofia)))
+  settled(await saveBody({ task, snapshot: notes.export({ mode: 'snapshot' }), base: '', contributors: [sofia] }, as(sofia)))
   settled(await complete({ task }, as(sofia)))
   const { comment: root } = settled(await postComment({ task, parent: null, text: `@[${hugo}] the vine is redrawn: does it print?` }, as(sofia))) as { comment: number }
   settled(await postComment({ task, parent: root, text: 'It prints well.' }, as(hugo)))

@@ -79,6 +79,11 @@ test('what is no command, no JSON, no session’s or names no form is refused be
   assert.equal(odd.status, 400)
   assert.match(((await odd.json()) as { done: { reason: string } }).done.reason, /title is a text or a list of texts/)
 
+  for (const body of [JSON.stringify({ form: 'tasks.create', fields: null }), JSON.stringify({ run: 'none', proof: null }), '{"form": "tasks.create", "fields": {']) {
+    const malformed = await raw('/api/task/create', body, json)
+    assert.equal(malformed.status, 400, `${body} is refused 400, never a 500`)
+  }
+
   const gone = await raw('/api/task/create', JSON.stringify({ run: 'none', proof: { device: 'a', salt: 'b', nonce: 'c', sig: 'd' } }), json)
   assert.equal(gone.status, 409, 'a proof for a run that is not the poster’s')
 

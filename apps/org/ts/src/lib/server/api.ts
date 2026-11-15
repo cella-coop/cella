@@ -41,8 +41,8 @@ export const called: Schema<Called> = {
           return { issues: [{ message: `${k} is a text`, path: [k] }] }
         }
       }
-      const given = (v.fields ?? {}) as Record<string, unknown>
-      if (typeof given !== 'object' || Array.isArray(given)) {
+      const given = ('fields' in v ? v.fields : {}) as Record<string, unknown> | null
+      if (!given || typeof given !== 'object' || Array.isArray(given)) {
         return { issues: [{ message: 'fields is an object of the write’s fields by name', path: ['fields'] }] }
       }
       const fields: Fields = new Map()

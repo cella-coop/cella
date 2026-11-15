@@ -378,6 +378,10 @@ pub enum Test {
         /// Only the scenarios the diff from this revision reaches, by the slices each imports or names in its `// covers:` line; all of them where it touches a file outside a slice's package
         #[arg(long, value_name = "REV")]
         since: Option<String>,
+
+        /// Every scenario, then apps/org/ts/_e2e/overlap.md written: what each reaches, those another holds whole and the pairs sharing most; a review list, never a delete list
+        #[arg(long, conflicts_with_all = ["name", "since"])]
+        overlap: bool,
     },
     /// The fold's scale tier: Lanterne grown to a generated scope, folded in memory that does not grow with its log and re-folded from its latest checkpoint within its bound; slow, so no other target runs it; needs the dev cluster
     Scale {

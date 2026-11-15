@@ -11,6 +11,7 @@ mod data;
 mod db;
 pub mod fold;
 mod key;
+mod overlap;
 mod pruned;
 mod reach;
 mod repo;

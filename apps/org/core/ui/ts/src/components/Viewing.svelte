@@ -68,8 +68,9 @@
     fields: Field[]
     columns: Column[]
     titled: Column
-    // Each field's values over the rows, an enumeration's all of them and
-    // another's where it holds a handful, what Filter offers.
+    // Each field's values: an enumeration's over every row, and
+    // another's over the rows the view's other conditions keep, where
+    // they number a handful, what Filter offers.
     values: Record<string, string[]>
     dashboard: { custom: boolean; widgets: Widget[]; results: Result[]; errors: string[] } | null
     // The fields the layout shows, a list's, a feed's or its cards', and

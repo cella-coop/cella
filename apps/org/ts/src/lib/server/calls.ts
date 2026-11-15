@@ -35,8 +35,9 @@ export class Missing extends Error {}
 // collection's order), in one statement with how many it
 // keeps, how many of those hold the text filter, its tabs' counts and
 // each enumeration's values (and those of the field the rows are grouped
-// by), and those of every other field but a date
-// where it holds at most `limits.values`, what Filter offers; the field
+// by), and those of every other field but a date over the rows the
+// view's other conditions keep, where they number at most
+// `limits.values`, what Filter offers; the field
 // its rows are ordered by first;
 // what its header says about it; and, in the dashboard layout, its
 // widgets run over the rows it keeps. A board places every row the view
@@ -77,7 +78,7 @@ export const collection = {
       ...(spec.layout === 'dashboard' ? {} : { keep: placing(spec, fs, url, day) ?? { ...keeps, ...(group ? { group } : {}) }, ...(paged ? { limit } : {}) }),
       counts: [{ where: spec.where }, keeps, ...tabs.map((p) => ({ where: wheres(p.where, fs) }))],
       values: fs.filter(full).map((f) => f.key),
-      few: { keys: fs.filter((f) => !full(f) && f.type !== 'date').map((f) => f.key), most: limits.values },
+      few: { keys: fs.filter((f) => !full(f) && f.type !== 'date').map((f) => f.key), most: limits.values, keep: keeps },
     })
     const [kept = 0, matched = 0, ...tallies] = counts
     const abouts = (await Promise.all(m.extensions.map((e) => e.extension.about?.(db, who.actor)))).filter((a) => a !== undefined)

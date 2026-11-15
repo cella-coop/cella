@@ -115,8 +115,9 @@ export function where(x: unknown, fs: Field[]): Where {
 }
 
 // Whether a view's Filter offers a field: a date, or a field holding more
-// than one value and at most `limits.values` across the collection's rows,
-// `held` its values as the server read them, none where it holds more.
+// than one value and at most `limits.values` across the rows the view's
+// other conditions keep, `held` its values as the server read them, none
+// where it holds more.
 export const filtering = (f: Field, held: string[] | undefined) =>
   f.type === 'date' || ((held?.length ?? 0) > 1 && (held?.length ?? 0) <= limits.values)
 

@@ -278,3 +278,12 @@ runs it, its sign-in offering Lanterne's fixture members by name, each
 marked as a demo member, where a production sign-in offers no one;
 every page says it is a demo. The demo's scope carries its own keys,
 never a real scope's.
+
+`cella demo template --url URL` builds the demo's template from
+nothing: a database migrated, Lanterne seeded, then a scenario played
+on it through the notary, so it holds a co-op mid-year with motions,
+invoices and meetings in flight. Nobody is served the template itself:
+each visitor is served a copy of it of their own ([a visitor's
+scope](#a-visitors-scope)). The module's demo option builds it when its
+service first starts and again after each upgrade, so no copy is older
+than the build that serves it.

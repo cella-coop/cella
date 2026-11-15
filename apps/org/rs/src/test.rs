@@ -18,6 +18,7 @@ use crate::shell;
 /// The database each slice test file runs on, fresh each time.
 const DB: &str = "cella_test";
 const TEMPLATE: &str = "cella_test_lanterne";
+const FOLD_TEMPLATE: &str = "cella_test_fold_template";
 
 /// A worker of the e2e run, by what each scenario it runs writes: its
 /// database, `cella_test_<w>`, fresh for each, and the one its log is
@@ -361,19 +362,30 @@ fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>, jobs: Option<usize>) -> R
     let result = (|| {
         let _turn = dev.migrating()?;
         steps.run(
+            "db e2e fold template",
+            &mut dev.renew(FOLD_TEMPLATE, None, None),
+            quiet,
+        )?;
+        println!(
+            "e2e fold template: migrated in {:.1}s",
+            prepared.elapsed().as_secs_f64()
+        );
+        let seeded = Instant::now();
+        steps.run(
             "db e2e template",
             &mut dev.renew(TEMPLATE, None, Some(&lanterne)),
             quiet,
-        )
+        )?;
+        println!(
+            "e2e template: migrated and seeded in {:.1}s",
+            seeded.elapsed().as_secs_f64()
+        );
+        Ok(())
     })();
     if let Err(e) = result {
-        drop_template(&dev, steps)?;
+        drop_templates(&dev, steps)?;
         return Err(e);
     }
-    println!(
-        "e2e template: migrated and seeded in {:.1}s",
-        prepared.elapsed().as_secs_f64()
-    );
     let ran = if jobs == 1 {
         let worker = Worker::new(1);
         chosen
@@ -382,14 +394,20 @@ fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>, jobs: Option<usize>) -> R
     } else {
         workers(repo, steps, &chosen, jobs)
     };
-    let cleaned = drop_template(&dev, steps);
+    let cleaned = drop_templates(&dev, steps);
     ran.and(cleaned)
 }
 
-fn drop_template(dev: &Dev, steps: &Steps) -> Result {
-    let mut drop = dev.on("postgres", "dropdb");
-    drop.args(["--if-exists", "--force", TEMPLATE]);
-    steps.run("db e2e template drop", &mut [drop], quiet)
+fn drop_templates(dev: &Dev, steps: &Steps) -> Result {
+    let mut drops: Vec<_> = [TEMPLATE, FOLD_TEMPLATE]
+        .iter()
+        .map(|name| {
+            let mut drop = dev.on("postgres", "dropdb");
+            drop.args(["--if-exists", "--force", name]);
+            drop
+        })
+        .collect();
+    steps.run("db e2e templates drop", &mut drops, quiet)
 }
 
 /// How many workers run the scenarios at once, unless `--jobs` or
@@ -448,9 +466,10 @@ fn scenario(
         println!("{:<22} {why}", format!("unfolded e2e/{name}"));
         return Ok(());
     }
-    let folded = fold::fold(
+    let folded = fold::fold_test(
         repo,
         steps,
+        FOLD_TEMPLATE,
         &fold::Fold {
             source: &worker.db,
             into: &worker.fold,

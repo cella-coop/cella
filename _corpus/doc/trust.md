@@ -353,7 +353,13 @@ sequenceDiagram
   the whole for every reader, as functions running as their owner; the
   figures behind them read as their rows do. The server acts as
   `cella_app` whatever role it logs in as, so an owner's or a
-  superuser's login reads no further. The log's `form` is the owner's alone, and the vault opens only
+  superuser's login reads no further. What a collection's rows add from
+  the log, each row's Created, Updated, Created by and Updated by, the
+  dates and actors of its first and latest entries
+  ([db](../../apps/org/core/db/index.md)), is read for the rows the
+  reader's row-level policies already let them read, and is what the
+  log's dates, actors and `cella.records(n)` show every reader already,
+  so it opens nothing a policy hides. The log's `form` is the owner's alone, and the vault opens only
   through `cella.disclosed(n)`: to the entry's writer, to the person
   every commitment in it is about, or to a holder of the power its action
   needs.

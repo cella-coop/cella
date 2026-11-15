@@ -5,7 +5,9 @@ import type { Db } from './index.ts'
 // rest. `sql` selects `id`, as text, and each field under the key of the
 // column that shows it, already as the column shows it, since conditions,
 // the text filter and widgets read the field in SQL; `order` is the order
-// it lists in, an ORDER BY over the columns `sql` selects.
+// it lists in, an ORDER BY over the columns `sql` selects. The read adds
+// four fields no slice selects, from the log: `created`, `updated`,
+// `created_by` and `updated_by`.
 export interface Read {
   sql: string
   order: string
@@ -81,19 +83,39 @@ class Statement {
   }
 }
 
+// The four fields the read adds to every row from the log, which no slice
+// selects: the dates and actors of the first and the latest settled
+// entries about it.
+export const logged = ['created', 'updated', 'created_by', 'updated_by'] as const
+
+// Whether a read asks after one of the logged fields over every row, by a
+// condition, the text filter, a sort, a group, a value or a widget, so they
+// are read for every row rather than for the rows a page draws.
+const asking = (keys: string[]) => keys.some((k) => (logged as readonly string[]).includes(k))
+const named = (k: Keep) => [...k.where.map((c) => c.field), ...(k.q?.text.trim() ? k.q.keys : []), ...(k.sort ? [k.sort.field] : []), ...(k.group ? [k.group.field] : [])]
+
+// A row's logged fields, from `cella.made` over the ids of `rows`, a
+// relation of `row`s: what the log holds of the rows read, so only of
+// rows the reader reads. `m` is null where no entry names the row.
+const made = (rows: string) => `cella.made((SELECT array_agg(DISTINCT row->>'id') FILTER (WHERE row ? 'id') FROM ${rows}))`
+const dated = `coalesce(jsonb_strip_nulls(to_jsonb(m) - 'id'), '{}')`
+
 // The rows as `r(src, at, row)`: each source's rows in its order, `row`
 // the JSON of the owner's fields with every extension's merged over it,
 // one join per extension, so the collection is one statement. Under a
 // lens, a select's rows are those whose `circle` is the lens's; a select
-// that names no owning circle, and a row that names none, are kept.
-function rows(st: Statement, s: Source): string {
+// that names no owning circle, and a row that names none, are kept. Where
+// the read asks after the logged fields over every row (`every`), each
+// row holds them under its own, which win; else a page joins them to the
+// rows it draws alone.
+function rows(st: Statement, s: Source, every = false): string {
   const lens = s.lens ? st.p(s.lens) : null
   const lensed = lens ? ` WHERE coalesce(to_jsonb(x)->>'circle', ${lens}) = ${lens}` : ''
   const from = s.rows.length
     ? s.rows.map((r, i) => `SELECT ${i} AS src, row_number() OVER (ORDER BY ${r.order}) AS at, to_jsonb(x) AS row FROM (${r.sql}) x${lensed}`).join('\n  UNION ALL\n  ')
     : `SELECT 0 AS src, 0::bigint AS at, NULL::jsonb AS row WHERE false`
-  const merged = ['o.row', ...s.fields.map((_, i) => `coalesce(to_jsonb(e${i}) - 'id', '{}')`)].join(' || ')
-  const joins = s.fields.map((f, i) => `LEFT JOIN (${f}) e${i} ON e${i}.id::text = o.row->>'id'`).join('\n  ')
+  const merged = [...(every ? [dated] : []), 'o.row', ...s.fields.map((_, i) => `coalesce(to_jsonb(e${i}) - 'id', '{}')`)].join(' || ')
+  const joins = [...(every ? [`LEFT JOIN ${made('o')} m ON m.id = o.row->>'id'`] : []), ...s.fields.map((f, i) => `LEFT JOIN (${f}) e${i} ON e${i}.id::text = o.row->>'id'`)].join('\n  ')
   return `WITH o AS (\n  ${from}\n), r AS MATERIALIZED (\n  SELECT o.src, o.at, ${merged} AS row FROM o\n  ${joins}\n)`
 }
 
@@ -165,11 +187,17 @@ export async function read(
 ): Promise<{ rows: { id: string }[]; counts: number[]; values: Record<string, string[]>; groups: Record<string, number>; whole: boolean }> {
   const st = new Statement()
   const parts: string[] = []
+  const every = asking([...(a.keep ? named(a.keep) : []), ...(a.counts ?? []).flatMap(named), ...(a.values ?? []), ...(a.few?.keys ?? [])])
   if (a.keep) {
     const order = sorting(st, a.keep.sort, a.keep.group)
     const where = kept(st, a.keep)
     const bounds = `${a.limit === undefined ? '' : ` LIMIT ${st.p(a.limit)}`}${a.offset ? ` OFFSET ${st.p(a.offset)}` : ''}`
-    parts.push(`(SELECT coalesce(json_agg(row ORDER BY ${order}), '[]') FROM (SELECT src, at, row FROM r WHERE ${where} ORDER BY ${order}${bounds}) p) AS rows`)
+    const drawn = `(SELECT src, at, row FROM r WHERE ${where} ORDER BY ${order}${bounds})`
+    parts.push(
+      every
+        ? `(SELECT coalesce(json_agg(row ORDER BY ${order}), '[]') FROM ${drawn} p) AS rows`
+        : `(WITH p AS ${drawn} SELECT coalesce(json_agg(${dated} || p.row ORDER BY ${order}), '[]') FROM p LEFT JOIN ${made('p')} m ON m.id = p.row->>'id') AS rows`,
+    )
     if (a.keep.group) {
       const value = `coalesce(row->>${st.p(a.keep.group.field)}, '')`
       parts.push(`(SELECT coalesce(json_object_agg(g, n), '{}') FROM (SELECT ${value} AS g, count(*) AS n FROM r WHERE ${where} GROUP BY 1) c) AS groups`)
@@ -192,7 +220,7 @@ export async function read(
   const found = parts.length
     ? (
         await db.query<{ rows?: { id: string }[]; counts?: number[]; values?: Record<string, string[]>; groups?: Record<string, number>; whole?: boolean }>(
-          `${rows(st, s)}\nSELECT ${parts.join(',\n  ')}`,
+          `${rows(st, s, every)}\nSELECT ${parts.join(',\n  ')}`,
           st.params,
         )
       ).rows[0]
@@ -264,7 +292,8 @@ export async function measures(db: Db, s: Source, ms: Measure[]): Promise<(numbe
     const skip = m.by.month ? ` AND coalesce(row->>${by}, '') <> ''` : ''
     return `(SELECT coalesce(json_agg(json_build_object('label', label, 'value', value) ORDER BY label), '[]') FROM (SELECT ${label} AS label, coalesce(${value}, 0)::float8 AS value FROM r WHERE ${where}${skip} GROUP BY 1) g) AS m${i}`
   })
-  const { rows: found } = await db.query<Record<string, number | null | { label: string; value: number }[]>>(`${rows(st, s)}\nSELECT ${each.join(',\n  ')}`, st.params)
+  const every = asking(ms.flatMap((m) => [...named(m), ...(m.field ? [m.field] : []), ...(m.by ? [m.by.field] : [])]))
+  const { rows: found } = await db.query<Record<string, number | null | { label: string; value: number }[]>>(`${rows(st, s, every)}\nSELECT ${each.join(',\n  ')}`, st.params)
   return ms.map((_, i) => found[0]?.[`m${i}`] ?? null)
 }
 

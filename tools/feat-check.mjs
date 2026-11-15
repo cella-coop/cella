@@ -383,40 +383,37 @@ for (const dir of onTree) {
 
 // Nothing re-exports around the tree, and only a shell imports a slice's
 // app. Each import is resolved to the package it names, through the
-// dependency's alias and the package's `imports` (`#lib/*`); a module
-// that re-exports a module of another package of the tree, by `export …
-// from` or by exporting a name it imported, is refused, as is an import of
-// a slice's `./app` by any package but a node's root. A library holds no
-// data and is no slice: its subpaths are open to what may depend on it.
+// dependency's alias and the package's `imports` (`#lib/*`), a conditional
+// entry to every target it names; a module that re-exports a module of
+// another package of the tree, by `export … from` or by exporting a name it
+// imported, is refused, as is an import of a slice's `./app` by any package
+// but a node's root. A library holds no data and is no slice: its subpaths
+// are open to what may depend on it.
 const slice = (p) => Boolean(p) && (p.kind === 'graft' || (p.kind === 'core' && Boolean(p.graft || coreFeat(p) || (!p.lib && parentOf(p.node)))))
+// The targets a `#` specifier maps to, every one its conditions name.
 const mapped = (imports, spec) => {
   for (const [key, value] of Object.entries(imports ?? {})) {
-    const [target] = leaves(value)
+    const targets = leaves(value)
     const [head, tail] = key.split('*')
     if (key === spec) {
-      return target
+      return targets
     }
-    if (tail !== undefined && target && spec.startsWith(head) && spec.endsWith(tail) && spec.length >= head.length + tail.length) {
-      return target.replace('*', spec.slice(head.length, spec.length - tail.length))
+    if (tail !== undefined && targets.length && spec.startsWith(head) && spec.endsWith(tail) && spec.length >= head.length + tail.length) {
+      return targets.map((t) => t.replace('*', spec.slice(head.length, spec.length - tail.length)))
     }
   }
-  return null
+  return []
 }
-// The package of the tree a bare specifier reaches from `dir`, with its
-// subpath, or null where it reaches none.
-const reach = (dir, pkg, spec) => {
-  if (spec.startsWith('#')) {
-    const target = mapped(pkg.imports, spec)
-    if (!target || target.startsWith('.')) {
-      return null
-    }
-    spec = target
-  }
-  const m = spec.match(/^((?:@[^/]+\/)?[^/]+)(\/.*)?$/)
-  const name = m && (aliases.get(dir).get(m[1]) ?? (m[1] === pkg.name ? pkg.name : null))
-  const to = name && byName.get(name)
-  return to && onTree.includes(to) ? { name, to, sub: `.${m[2] ?? ''}` } : null
-}
+// The packages of the tree a bare specifier reaches from `dir`, each with
+// its subpath: a dependency's one, or one for each target of a `#` import
+// that names a package.
+const reach = (dir, pkg, spec) =>
+  (spec.startsWith('#') ? mapped(pkg.imports, spec).filter((t) => !t.startsWith('.')) : [spec]).flatMap((s) => {
+    const m = s.match(/^((?:@[^/]+\/)?[^/]+)(\/.*)?$/)
+    const name = m && (aliases.get(dir).get(m[1]) ?? (m[1] === pkg.name ? pkg.name : null))
+    const to = name && byName.get(name)
+    return to && onTree.includes(to) ? [{ name, to, sub: `.${m[2] ?? ''}` }] : []
+  })
 // The local names an import clause binds: `X`, `{ a, b as c }`, `* as N`.
 const bound = (clause) =>
   clause.replace(/[{}]/g, ',').split(',').map((s) => s.trim().replace(/^type\s+/, '').replace(/^\*\s+as\s+/, '').split(/\s+as\s+/).pop()).filter((s) => /^[\w$]+$/.test(s))
@@ -432,25 +429,22 @@ for (const dir of onTree) {
   }
   for (const file of sources(dir)) {
     const text = readFileSync(join(repo, file), 'utf8')
-    const foreign = (spec) => {
-      const r = reach(dir, pkg, spec)
-      return r && r.name !== pkg.name ? r : null
-    }
+    const foreign = (spec) => reach(dir, pkg, spec).filter((r) => r.name !== pkg.name)
     for (const [, spec] of text.matchAll(/(?:\bfrom|\bimport)\s*\(?\s*['"]([^'".][^'"]*)['"]/g)) {
-      const r = foreign(spec)
-      if (r && !shell && slice(place(r.to)) && (r.sub === './app' || r.sub.startsWith('./app/'))) {
-        fail(`${file}: imports ${spec}, the app of ${r.name}; only a shell imports a slice's app, so use its contract, what it shares in ./bindings`)
+      for (const r of foreign(spec)) {
+        if (!shell && slice(place(r.to)) && (r.sub === './app' || r.sub.startsWith('./app/'))) {
+          fail(`${file}: imports ${spec}, the app of ${r.name}; only a shell imports a slice's app, so use its contract, what it shares in ./bindings`)
+        }
       }
     }
     for (const [, spec] of text.matchAll(/\bexport\s+(?:type\s+)?(?:\*(?:\s+as\s+[\w$]+)?|\{[^}]*\})\s*from\s*['"]([^'"]+)['"]/g)) {
-      const r = foreign(spec)
-      if (r) {
-        fail(`${file}: re-exports ${spec}, of ${r.name}; nothing re-exports another package of the tree, so import it from the package that owns it`)
+      for (const name of new Set(foreign(spec).map((r) => r.name))) {
+        fail(`${file}: re-exports ${spec}, of ${name}; nothing re-exports another package of the tree, so import it from the package that owns it`)
       }
     }
     const imported = new Map()
     for (const [, clause, spec] of text.matchAll(/\bimport\s+(?:type\s+)?([^'"]*?)\s*from\s*['"]([^'"]+)['"]/g)) {
-      if (foreign(spec)) {
+      if (foreign(spec).length) {
         bound(clause).forEach((n) => imported.set(n, spec))
       }
     }

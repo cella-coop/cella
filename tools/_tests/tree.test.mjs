@@ -311,6 +311,28 @@ test('only a shell imports a slice\'s app; another slice uses its contract, and 
   assert.match(errors, /membership-motion\/ts\/src\/app\/index\.ts: imports #motion, the app of @t\/motion; only a shell imports a slice's app/)
 })
 
+test('a conditional `#` import is resolved through every target it names', () => {
+  const conditional = { '#motion': { types: './src/types.ts', default: '@t/motion/app' } }
+  const errors = tree({
+    files: {
+      [`${membership}/package.json`]: manifest('membership', { '@t/motion': 'workspace:*' }, { imports: conditional }),
+      [`${membership}/src/types.ts`]: 'export type Card = unknown\n',
+      [`${membership}/src/app/index.ts`]: "import { Card } from '#motion'\n",
+      [`${membership}/src/models/index.ts`]: "export { motion } from '#motion'\n",
+    },
+  })
+  assert.match(errors, /membership\/core\/ts\/src\/app\/index\.ts: imports #motion, the app of @t\/motion; only a shell imports a slice's app/)
+  assert.match(errors, /membership\/core\/ts\/src\/models\/index\.ts: re-exports #motion, of @t\/motion; nothing re-exports another package of the tree/)
+  const ok = tree({
+    files: {
+      [`${membership}/package.json`]: manifest('membership', {}, { imports: { '#own/*': { types: './src/*.d.ts', default: './src/*.ts' } } }),
+      [`${membership}/src/models/index.ts`]: "export { member } from '#own/member'\n",
+      [`${membership}/src/member.ts`]: 'export const member = 1\n',
+    },
+  })
+  assert.equal(ok, '')
+})
+
 test('a package\'s imports stay inside it', () => {
   const errors = tree({ files: { [`${membership}/package.json`]: manifest('membership', {}, { imports: { '#party/*': '../../../../core/ts/src/*' } }) } })
   assert.match(errors, /membership\/core\/ts\/package\.json: imports #party\/\* as \.\.\/\.\.\/\.\.\/\.\.\/core\/ts\/src\/\*, outside its package/)

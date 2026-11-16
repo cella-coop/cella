@@ -1,10 +1,11 @@
 // The ui check: CSS only in the UI core, state and effects only in hooks,
 // no module-level mutable state in client code, no server layer imported
-// by a client one, no legacy Svelte or SvelteKit form.
+// by a client one, no legacy Svelte or SvelteKit form, and no create form
+// drawn but in New's Dialog.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { problems } from '../ui-check.mjs'
+import { inlineCreates, problems } from '../ui-check.mjs'
 
 const block = 'apps/org/feats/invoice/core/ts/src/app/blocks/Lines.svelte'
 const component = (script, markup = '<p>x</p>') => `<script lang="ts">\n${script}\n</script>\n\n${markup}\n`
@@ -186,4 +187,25 @@ test('a route\'s server load or actions, or a universal load, is refused; an end
   assert.deepEqual(problems('apps/org/ts/src/routes/+layout.ts', 'export const ssr = true\n', false), [], 'a route option is no load')
   assert.deepEqual(problems('apps/org/ts/src/routes/search/+server.ts', "export const GET = () => new Response('[]')\n", false), [])
   assert.deepEqual(problems('apps/org/ts/src/lib/server/load.ts', 'export const load = () => ({})\n', false), [], 'only a route file is a route')
+})
+
+test('a create form drawn inline on a page is refused by name; New opens it in the Dialog', () => {
+  const app = {
+    path: 'apps/org/feats/task/core/ts/src/app/index.ts',
+    text: "import Body from './blocks/Body.svelte'\nimport Create from './blocks/Create.svelte'\nexport const app = { collections: { tasks: { view: { create: Create }, page: { blocks: [Body] } } } }\n",
+  }
+  const create = { path: 'apps/org/feats/task/core/ts/src/app/blocks/Create.svelte', text: component('', '<Form action="create" submit="Create task" />') }
+  const inline = { path: 'apps/org/feats/task/core/ts/src/app/blocks/Body.svelte', text: component("  import Create from './Create.svelte'", '<Create rows={[]} about={null} />') }
+  assert.deepEqual(inlineCreates([app, create, inline]), [
+    'apps/org/feats/task/core/ts/src/app/blocks/Body.svelte: draws Create.svelte, the create form apps/org/feats/task/core/ts/src/app/index.ts declares, inline; a create form opens only in the Dialog behind New',
+  ])
+  assert.deepEqual(inlineCreates([app, create]), [], 'a create form only its app declares passes')
+
+  const collection = 'apps/org/core/ui/ts/src/components/Collection.svelte'
+  const drawn = (markup) => [{ path: collection, text: component("  import Dialog from './Dialog.svelte'", markup) }]
+  const each = '{#each creates as c (c)}<c.form />{/each}'
+  assert.deepEqual(inlineCreates(drawn(`<Card title="New">${each}</Card>`)), [
+    `${collection}: draws a collection's create forms outside its Dialog; New opens them in the one Dialog`,
+  ])
+  assert.deepEqual(inlineCreates(drawn(`<Dialog title="New">${each}</Dialog>\n<!-- {#each creates} -->`)), [], "the Dialog behind New holds them")
 })

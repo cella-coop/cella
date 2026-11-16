@@ -195,7 +195,28 @@ draws.
   buttons, Cancel and the one that confirms. A modal is no page: it
   confirms what it holds. Cancel, Escape and a click outside it cancel
   it alike; whoever opens it holds the element and decides what a
-  cancel takes back.
+  cancel takes back. It holds forms of their own where its opener hands
+  it no submit, as New does a collection's create forms, each ending in
+  its own confirming button and Cancel.
+- New: every collection's create, the header's New and its `c`, opens
+  the one `Dialog` titled for the collection ("New in Tasks"), holding
+  the create form the collection or its extensions declare, each under
+  its title where there are several, mounted only while it is open, so
+  each New starts empty (`CreateState`, `useCreate`). A `Form` under it
+  is a create form: its fields and its write are its slice's, and it
+  ends in Cancel and its confirming button (Create task, Propose). A
+  write that settles closes the dialog, the rows read again with the new
+  one among them; a refusal keeps it open with what was typed and the
+  guard's reason inside it, above its buttons; Cancel, Escape or a click
+  outside closes it with nothing written. While it is open the rows
+  behind it take no key. **A modal is not a page**: it holds one task
+  and ends in the buttons that confirm it (create, save, propose) and
+  one that cancels; **a page holds no create form**. The ui check
+  refuses a component that imports a create form a slice's app declares,
+  and the UI core drawing a collection's creates outside its Dialog
+  ([enforcement](../../../../_corpus/doc/enforcement.md)); a block
+  drawing a form that creates a record of another kind on its own page
+  no tool sees, and review holds it.
 - `Frame` (`PageFrame.svelte`): the one page frame, its header one
   compact row as Linear's, spanning the content and the drawer: on an
   item, a quiet caret back to its collection, on a collection its icon as
@@ -368,7 +389,7 @@ draws.
   only a page of rows; a collection page renders nothing else, which the ui
   check enforces on the shell's `[collection]` page. Keyboard
   first: `j`/`k` move, Enter opens, `/` filters (opening the drawer), `c`
-  opens New. The row `j`/`k` moves to takes the focus, one row in the
+  opens New's dialog. The row `j`/`k` moves to takes the focus, one row in the
   tab order at a time (a roving `tabindex`, the row's link out of it),
   so a screen reader reads it and the ring shows where the keyboard is;
   Tab leaves the rows from it and comes back to it, moving past the last
@@ -444,7 +465,9 @@ draws.
   `Button`, `Form` (a write, posting to the route's `write` form for a
   named write, files and all, through `post`, its fields bound to it; `ready` false keeps its button disabled while
   there is nothing to post; the fields a refused write names as `spent`,
-  written before it stopped, are emptied),
+  written before it stopped, are emptied; in New's dialog it ends in
+  Cancel, closes the dialog once settled and says a refusal's reason
+  itself),
   `Hidden` (a value a form posts that no one types, named through the
   form it is in),
   `Field` (text, a number, a date, a time, an address, an email or a
@@ -672,9 +695,9 @@ exported.
 ## State
 
 A component holds no state of its own: the collection's filter and row,
-the command menu, the dismissed outcome, the drawer's opening, the
+whether its New is open, the command menu, the dismissed outcome, the drawer's opening, the
 lens and the people's names, and what a date field holds typed and says of it, are state classes in
-`hooks/` (`CollectionState`, `CommandState`, `ShellState`, `DateState`), and the sign-in and
+`hooks/` (`CollectionState`, `CreateState`, `CommandState`, `ShellState`, `DateState`), and the sign-in and
 an invitation taken up (`SignInState`, `JoinState`), each reached through
 its `use*` hook, as [architecture](../../../../_corpus/doc/architecture.md#client-state)
 describes. `ShellState` imports no router: the shell hands its `follow` the

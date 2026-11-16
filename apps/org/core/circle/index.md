@@ -600,7 +600,9 @@ value neither `on` nor `off`, a circle it may not set or any other
 value is refused as it is adopted, saying what is wrong
 (`circle_policy.setting_flaw`); one whose days meet those of a rule
 setting the same setting for the same circle, not revoked, is refused
-unless it replaces that one, saying which. The first setting is
+unless it replaces that one, saying which, and a motion carrying two
+for the same setting and circle whose days meet is refused at its
+proposal (`motion.circle_asks`). The first setting is
 `reactions`, on by default, which core circle's own migration
 registers, since core body has no SQL, and every feat's threads read.
 A slice reads a setting by `circle.setting_of`, and each setting with

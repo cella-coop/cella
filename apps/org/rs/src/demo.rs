@@ -82,19 +82,8 @@ fn serve(repo: &Repo, how: &Demo) -> Result {
     use std::os::unix::process::CommandExt;
     let Demo::Serve {
         template,
-        port,
-        cap,
-        idle,
-        evict_after,
-        memory,
-        connections,
-        per_ip,
-        per_ip_window,
-        per_minute,
-        tick,
-        trust_proxy,
         server,
-        sockets,
+        options,
     } = how
     else {
         unreachable!("serve is handed Demo::Serve")
@@ -105,26 +94,7 @@ fn serve(repo: &Repo, how: &Demo) -> Result {
     };
     let mut cmd = repo.node("demo-serve.mjs");
     cmd.args(["--template", template, "--server", &server]);
-    for (name, value) in [
-        ("--port", u32::from(*port)),
-        ("--cap", *cap),
-        ("--idle", *idle),
-        ("--evict-after", *evict_after),
-        ("--memory", *memory),
-        ("--connections", *connections),
-        ("--per-ip", *per_ip),
-        ("--per-ip-window", *per_ip_window),
-        ("--per-minute", *per_minute),
-        ("--tick", *tick),
-    ] {
-        cmd.args([name, &value.to_string()]);
-    }
-    if let Some(dir) = sockets {
-        cmd.args(["--sockets", dir]);
-    }
-    if *trust_proxy {
-        cmd.arg("--trust-proxy");
-    }
+    cmd.args(options);
     let e = cmd.exec();
     Err(Fail::new(format!("demo serve: {e}")))
 }

@@ -405,57 +405,13 @@ pub enum Demo {
         #[arg(long, value_name = "NAME")]
         template: String,
 
-        /// The front's port on 127.0.0.1, behind the host's proxy
-        #[arg(long, default_value_t = 3000)]
-        port: u16,
-
-        /// The most copies served at once; a visitor past it ends the copy idle longest
-        #[arg(long, default_value_t = 10)]
-        cap: u32,
-
-        /// Seconds with no request before a copy ends
-        #[arg(long, default_value_t = 7200)]
-        idle: u32,
-
-        /// Seconds a copy is idle before a newcomer at the cap may end it
-        #[arg(long, value_name = "SECONDS", default_value_t = 300)]
-        evict_after: u32,
-
-        /// MiB a copy's server may hold resident before its copy ends
-        #[arg(long, value_name = "MIB", default_value_t = 256)]
-        memory: u32,
-
-        /// Connections a copy's role may hold to its database
-        #[arg(long, default_value_t = 10)]
-        connections: u32,
-
-        /// Copies one address may make in --per-ip-window seconds
-        #[arg(long, default_value_t = 5)]
-        per_ip: u32,
-
-        /// The window --per-ip counts over, in seconds
-        #[arg(long, value_name = "SECONDS", default_value_t = 600)]
-        per_ip_window: u32,
-
-        /// Copies the whole host may make in a minute
-        #[arg(long, default_value_t = 20)]
-        per_minute: u32,
-
-        /// Seconds between the checks that end idle or oversized copies
-        #[arg(long, value_name = "SECONDS", default_value_t = 30)]
-        tick: u32,
-
-        /// Take the visitor's address from the last `x-forwarded-for` hop, as the host's proxy sets it
-        #[arg(long)]
-        trust_proxy: bool,
-
         /// The built shell each copy runs, as `cella-server` runs it; apps/org/ts/build unset
         #[arg(long, value_name = "DIR")]
         server: Option<String>,
 
-        /// Where each copy's server listens, a socket of its own; `RUNTIME_DIRECTORY` unset
-        #[arg(long, value_name = "DIR")]
-        sockets: Option<String>,
+        /// The front's limits, as `tools/demo-serve.mjs` reads them: --port, --cap, --idle, --lifetime, --upload, --storage, --per-address and the rest
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true, value_name = "OPTION")]
+        options: Vec<String>,
     },
 }
 

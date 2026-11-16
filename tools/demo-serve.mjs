@@ -15,28 +15,40 @@
 // being prepared, whose script asks the front to make one (POST
 // /_demo/start), so a crawler that runs no script makes none; once made,
 // the page goes on to it. A copy ends after `--idle` seconds with no
-// request, when its server passes `--memory`, at Reset now (POST
-// /_demo/reset, which makes a fresh one at once), and when a visitor
-// would pass `--cap`, the copy idle longest, if it has been idle
-// `--evict-after` seconds; else the newcomer is asked to come back. To
-// end a copy is to stop its server, then drop its database and its role.
-// The front starts by ending every copy an earlier run of it left.
+// request, `--lifetime` seconds after it was made however busy, when its
+// server passes `--memory` MiB, when it stores past twice `--storage`
+// MiB (past `--storage` it takes no more writes), the copy storing most
+// while the disk holds less than `--disk-floor` MiB free, at Reset now
+// (POST /_demo/reset, which makes a fresh one at once), and when a
+// visitor would pass `--cap`: the copy idle longest, if idle
+// `--evict-after` seconds, else the oldest, if older than `--min-age`;
+// else the newcomer is asked to come back. `--cap` unset, the host's
+// memory less `--reserve` over `--footprint` MiB a copy. A write takes
+// no body past `--upload` MiB. An address, an IPv6 one by its /64, holds
+// `--per-address` copies at most and makes `--per-address-rate` in
+// `--rate-window` seconds, the host `--per-minute`, `--concurrent` at
+// once; only a copy made counts. To end a copy is to stop its server,
+// then drop its database and its role. The front starts by ending every
+// copy an earlier run of it left.
 //
 // It talks to Postgres as its own role over the cluster's socket, by the
-// PG* variables (`cella_demo_front` on `postgres`), a role that may make
+// PG* variables (`<database>_front` on `postgres`), a role that may make
 // databases and roles and grant `cella_app`, never be it: so it drops a
 // database only where it owns it, a copy it made, and it checks each
 // name and comment before it does.
 //
 //   node tools/demo-serve.mjs --template NAME --server DIR [--port 3000]
-//     [--host 127.0.0.1] [--prefix NAME_v] [--sockets DIR] [--cap 10]
-//     [--idle 7200] [--evict-after 300] [--memory 256] [--connections 10]
-//     [--per-ip 5] [--per-ip-window 600] [--per-minute 20] [--tick 30]
+//     [--host 127.0.0.1] [--prefix NAME_v] [--sockets DIR] [--cap N]
+//     [--reserve 1536] [--footprint 160] [--idle 7200] [--lifetime 7200]
+//     [--evict-after 300] [--min-age 600] [--memory 192]
+//     [--connections 10] [--upload 2] [--storage 64] [--disk /var/lib]
+//     [--disk-floor 1024] [--per-address 40] [--per-address-rate 80]
+//     [--rate-window 600] [--per-minute 60] [--concurrent 4] [--tick 30]
 //     [--trust-proxy]
 
 import { spawn } from 'node:child_process'
 import { randomBytes, timingSafeEqual } from 'node:crypto'
-import { readFileSync, rmSync, mkdirSync } from 'node:fs'
+import { mkdirSync, readFileSync, rmSync, statfsSync } from 'node:fs'
 import http from 'node:http'
 import { join } from 'node:path'
 import pg from 'pg'
@@ -64,27 +76,45 @@ const prefix = flag('--prefix', `${template.replace(/_template$/, '')}_v`)
 if (!IDENT.test(prefix)) {
   throw new Error(`demo serve: --prefix ${prefix} is no plain lower-case name`)
 }
+// The copies a host holds, unless `--cap` says: its memory, less what the
+// rest of the host needs (`--reserve`), over what one copy costs it, its
+// server and its Postgres connections (`--footprint`), both in MiB.
+function derivedCap(reserve, footprint) {
+  const m = /MemTotal:\s+(\d+) kB/.exec(readFileSync('/proc/meminfo', 'utf8'))
+  const total = m ? Number(m[1]) / 1024 : 0
+  return Math.max(1, Math.floor((total - reserve) / footprint))
+}
+const idle = whole('--idle', 7200)
 const config = {
   port: whole('--port', 3000),
   host: flag('--host', '127.0.0.1'),
   sockets: flag('--sockets', process.env.RUNTIME_DIRECTORY ?? join(process.cwd(), '.data', 'visitors')),
-  cap: whole('--cap', 10),
-  idle: whole('--idle', 7200),
+  cap: flag('--cap') ? whole('--cap') : derivedCap(whole('--reserve', 1536), whole('--footprint', 160)),
+  idle,
+  lifetime: whole('--lifetime', 7200),
   evictAfter: whole('--evict-after', 300),
-  memory: whole('--memory', 256),
+  minAge: whole('--min-age', 600),
+  memory: whole('--memory', 192),
   connections: whole('--connections', 10),
-  perIp: whole('--per-ip', 5),
-  perIpWindow: whole('--per-ip-window', 600),
-  perMinute: whole('--per-minute', 20),
+  upload: whole('--upload', 2),
+  storage: whole('--storage', 64),
+  disk: flag('--disk', '/var/lib'),
+  diskFloor: whole('--disk-floor', 1024),
+  perAddress: whole('--per-address', 40),
+  perAddressRate: whole('--per-address-rate', 80),
+  rateWindow: whole('--rate-window', 600),
+  perMinute: whole('--per-minute', 60),
+  concurrent: whole('--concurrent', 4),
   // A check at least four times in each idle span, so a copy ends soon after.
-  tick: Math.min(whole('--tick', 30), Math.max(1, Math.floor(whole('--idle', 7200) / 4))),
+  tick: Math.min(whole('--tick', 30), Math.max(1, Math.floor(idle / 4))),
   trustProxy: args.includes('--trust-proxy'),
 }
 // A copy's database and its role share one name: the prefix and 16 hex
 // digits, random, never the visitor's cookie.
 const COPY = new RegExp(`^${prefix}_[0-9a-f]{16}$`)
 const MARK = `a copy of ${template}: `
-const COOKIE = 'cella-visitor'
+// `__Host-`: set by this host alone, on every path, always over TLS.
+const COOKIE = '__Host-cella-visitor'
 const log = (line) => console.log(`demo serve: ${line}`)
 
 // --- Postgres, as the front's own role ---------------------------------
@@ -210,9 +240,11 @@ function socketOf(name) {
   return join(config.sockets, `${name}.sock`)
 }
 
-async function start(cookie) {
+async function start(cookie, address) {
   const begun = Date.now()
-  const copy = { name: null, child: null, seen: Date.now(), made: Date.now(), ready: null, ended: false, cookie }
+  // `size`: the bytes its visitor stored, past the template's; `full` once
+  // past `--storage`, when it takes no more writes.
+  const copy = { name: null, child: null, seen: begun, made: begun, ends: begun + config.lifetime * 1000, ready: null, ended: false, cookie, address, size: 0, full: false, measured: 0 }
   copies.set(cookie, copy)
   preparing++
   copy.ready = (async () => {
@@ -235,8 +267,9 @@ async function start(cookie) {
           DATABASE_URL: `postgresql://${name}:${password}@/${name}?host=${encodeURIComponent(process.env.PGHOST ?? '/run/postgresql')}`,
           CELLA_DEMO: '1',
           CELLA_DEMO_IDLE: String(config.idle),
+          CELLA_DEMO_ENDS: String(Math.floor(copy.ends / 1000)),
           PROTOCOL_HEADER: 'x-forwarded-proto',
-          BODY_SIZE_LIMIT: '11M',
+          BODY_SIZE_LIMIT: `${config.upload}M`,
           NODE_OPTIONS: `--max-old-space-size=${Math.max(64, Math.floor(config.memory * 0.6))}`,
         },
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -324,8 +357,45 @@ function end(copy, why) {
   return copy.gone
 }
 
-// Every tick: a copy idle past `--idle` ends, and one whose server holds
-// more than `--memory` MiB resident.
+// What each copy stores past the template, by `pg_database_size`: past
+// `--storage` MiB it takes no more writes, past twice that it ends. Read
+// every tick, and before a write when the last reading is two seconds old.
+let base = null
+async function measure(list) {
+  const named = list.filter((c) => c.name && !c.ended)
+  if (!named.length) {
+    return
+  }
+  await admin(async (db) => {
+    base ??= Number((await db.query('SELECT pg_database_size($1::name) AS n', [template])).rows[0].n)
+    const { rows } = await db.query('SELECT datname, pg_database_size(oid) AS n FROM pg_database WHERE datname = ANY($1)', [named.map((c) => c.name)])
+    const sizes = new Map(rows.map((r) => [r.datname, Number(r.n)]))
+    for (const copy of named) {
+      copy.size = Math.max(0, (sizes.get(copy.name) ?? base) - base)
+      copy.full = copy.size > config.storage * MiB
+      copy.measured = Date.now()
+      if (copy.size > 2 * config.storage * MiB) {
+        end(copy, `it stored ${Math.round(copy.size / MiB)} MiB`)
+      }
+    }
+  })
+}
+const MiB = 1024 * 1024
+
+// The host's free disk where Postgres keeps its files, in MiB.
+function freeDisk() {
+  try {
+    const s = statfsSync(config.disk)
+    return (s.bavail * s.bsize) / MiB
+  } catch {
+    return Infinity
+  }
+}
+
+// Every tick: a copy idle past `--idle` ends, one older than `--lifetime`
+// however busy, one whose server holds more than `--memory` MiB resident,
+// and one storing past twice `--storage`; while the disk holds less than
+// `--disk-floor` MiB free, the copy storing most ends, one a tick.
 function rss(child) {
   try {
     const m = /VmRSS:\s+(\d+) kB/.exec(readFileSync(`/proc/${child.pid}/status`, 'utf8'))
@@ -334,52 +404,110 @@ function rss(child) {
     return 0
   }
 }
-setInterval(() => {
+setInterval(async () => {
   const now = Date.now()
   for (const copy of [...copies.values()]) {
     if (now - copy.seen > config.idle * 1000) {
       end(copy, `idle ${Math.round((now - copy.seen) / 1000)} s`)
+    } else if (now > copy.ends) {
+      end(copy, `its lifetime of ${config.lifetime} s`)
     } else if (copy.child && rss(copy.child) > config.memory) {
       end(copy, `its server passed ${config.memory} MiB`)
+    }
+  }
+  try {
+    await measure([...copies.values()])
+  } catch (e) {
+    log(`the copies could not be measured: ${e.message}`)
+  }
+  if (freeDisk() < config.diskFloor) {
+    const largest = [...copies.values()].filter((c) => c.name).sort((a, b) => b.size - a.size)[0]
+    if (largest) {
+      end(largest, `the disk is below ${config.diskFloor} MiB free, and it stored most`)
     }
   }
 }, config.tick * 1000).unref()
 
 // --- limits on making copies -------------------------------------------
 
-// How many copies each address made lately, and the host made this
-// minute: in memory alone, each forgotten once its window is past.
+// The address a request comes from, an IPv6 one by its /64, which one
+// household or phone holds whole: the last `x-forwarded-for` hop where
+// the host's proxy sets it (`--trust-proxy`), else the socket's peer.
+function addressOf(req) {
+  let ip = req.socket.remoteAddress ?? ''
+  if (config.trustProxy) {
+    const forwarded = String(req.headers['x-forwarded-for'] ?? '').split(',').map((s) => s.trim()).filter(Boolean)
+    if (forwarded.length) {
+      ip = forwarded[forwarded.length - 1]
+    }
+  }
+  ip = ip.replace(/^::ffff:(?=\d+\.\d+\.\d+\.\d+$)/, '')
+  if (!ip.includes(':')) {
+    return ip
+  }
+  const [head, tail = ''] = ip.split('%')[0].split('::')
+  const left = head ? head.split(':') : []
+  const right = ip.includes('::') && tail ? tail.split(':') : []
+  const groups = [...left, ...Array(Math.max(0, 8 - left.length - right.length)).fill('0'), ...right]
+  return `${groups.slice(0, 4).map((g) => (parseInt(g, 16) || 0).toString(16)).join(':')}::/64`
+}
+
+// The copies each address made lately, and the host this minute, each
+// counted once made, so a refused or failed attempt costs nothing: in
+// memory alone, forgotten once its window is past.
 const made = new Map()
 let minute = { at: 0, n: 0 }
-function allowed(ip) {
-  const now = Date.now()
+function prune(now) {
   if (now - minute.at > 60_000) {
     minute = { at: now, n: 0 }
   }
   for (const [k, times] of made) {
-    const kept = times.filter((t) => now - t < config.perIpWindow * 1000)
+    const kept = times.filter((t) => now - t < config.rateWindow * 1000)
     kept.length ? made.set(k, kept) : made.delete(k)
   }
-  const mine = made.get(ip) ?? []
-  if (mine.length >= config.perIp || minute.n >= config.perMinute || preparing >= 3) {
-    return false
+}
+// Why a copy cannot be made for `address` now, with the status to answer,
+// or null: copies being made at once, the copies it holds (`--per-address`,
+// the one a reset ends aside), the copies it made lately, the host's rate,
+// and the disk.
+function refusal(address, resetting) {
+  prune(Date.now())
+  const held = [...copies.values()].filter((c) => c.address === address && c !== resetting).length
+  if (preparing >= config.concurrent) {
+    return [503, 'Several copies are being prepared; yours is next in a moment.']
   }
-  made.set(ip, [...mine, now])
+  if (held >= config.perAddress) {
+    return [429, `Your network holds ${held} copies of the demo already, as many as one may; try again once one resets.`]
+  }
+  if ((made.get(address) ?? []).length >= config.perAddressRate || minute.n >= config.perMinute) {
+    return [429, 'Many copies were made from here lately; try again in a few minutes.']
+  }
+  if (freeDisk() < config.diskFloor) {
+    return [503, 'The demo is short of room just now; try again in a few minutes.']
+  }
+  return null
+}
+function counted(address) {
+  made.set(address, [...(made.get(address) ?? []), Date.now()])
   minute.n++
-  return true
 }
 
-// Room for one more copy: below the cap, or the copy idle longest ended,
-// if it has been idle long enough; else none.
+// Room for one more copy: below the cap, or else the copy idle longest
+// ended, if idle `--evict-after` seconds, or else the oldest, if older
+// than `--min-age`; else none.
 async function room() {
   if (copies.size + ending.size < config.cap) {
     return true
   }
-  const idlest = [...copies.values()].sort((a, b) => a.seen - b.seen)[0]
-  if (!idlest || Date.now() - idlest.seen < config.evictAfter * 1000) {
+  const now = Date.now()
+  const all = [...copies.values()]
+  const idlest = all.filter((c) => now - c.seen >= config.evictAfter * 1000).sort((a, b) => a.seen - b.seen)[0]
+  const oldest = all.filter((c) => now - c.made >= config.minAge * 1000).sort((a, b) => a.made - b.made)[0]
+  const out = idlest ?? oldest
+  if (!out) {
     return false
   }
-  await end(idlest, 'the idlest, at the cap')
+  await end(out, idlest ? 'the idlest, at the cap' : 'the oldest, at the cap')
   return copies.size + ending.size < config.cap
 }
 
@@ -409,9 +537,7 @@ function copyOf(cookie) {
   }
   return null
 }
-const secure = (req) => req.headers['x-forwarded-proto'] === 'https'
-const setCookie = (req, value) =>
-  `${COOKIE}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 86400}${secure(req) ? '; Secure' : ''}`
+const setCookie = (value) => `${COOKIE}=${value}; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=${7 * 86400}`
 // The visitor's own cookie stripped from what their server is handed.
 const withoutOurs = (header) =>
   (header ?? '')
@@ -419,16 +545,6 @@ const withoutOurs = (header) =>
     .map((p) => p.trim())
     .filter((p) => p && !p.startsWith(`${COOKIE}=`))
     .join('; ')
-
-function addressOf(req) {
-  if (config.trustProxy) {
-    const forwarded = String(req.headers['x-forwarded-for'] ?? '').split(',').map((s) => s.trim()).filter(Boolean)
-    if (forwarded.length) {
-      return forwarded[forwarded.length - 1]
-    }
-  }
-  return req.socket.remoteAddress ?? ''
-}
 
 // A POST from this host's own pages, as a browser says it.
 function sameOrigin(req) {
@@ -481,12 +597,12 @@ function prepare(res, again) {
     script: `<script>
 (async () => {
   const state = document.getElementById('state')
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 120; i++) {
     const res = await fetch('/_demo/start', { method: 'POST', credentials: 'same-origin' }).catch(() => null)
     if (res && res.ok) { location.reload(); return }
     const text = res ? await res.text() : 'The demo cannot be reached.'
     state.textContent = text
-    await new Promise((r) => setTimeout(r, 10000))
+    await new Promise((r) => setTimeout(r, res && res.status === 503 ? 4000 : 15000))
   }
 })()
 </script>`,
@@ -527,30 +643,33 @@ async function handle(req, res) {
       await copy.ready.catch(() => {})
       return plain(res, copy.ended ? 503 : 200, copy.ended ? 'Your copy could not be made; try again.' : 'ready')
     }
-    // Counted before a reset ends the copy, so a visitor refused keeps it.
-    if (!allowed(addressOf(req))) {
-      return plain(res, 429, 'Too many copies made from here lately; try again in a few minutes.', { 'retry-after': '120' })
+    // Checked before a reset ends the copy, so a visitor refused keeps it.
+    const address = addressOf(req)
+    const refused = refusal(address, path === '/_demo/reset' ? copy : null)
+    if (refused) {
+      return plain(res, refused[0], refused[1], { 'retry-after': refused[0] === 503 ? '5' : '60' })
     }
     if (copy) {
       await end(copy, 'Reset now')
     }
     if (!(await room())) {
-      return plain(res, 503, 'Every copy the demo holds is in use; try again in a few minutes.', { 'retry-after': '300' })
+      return plain(res, 503, 'Every copy the demo holds is in use; try again in a few minutes.', { 'retry-after': '60' })
     }
     // A fresh cookie for every copy: an earlier one names nothing.
     const fresh = randomBytes(32).toString('base64url')
-    const made = await start(fresh)
-    const headers = { 'set-cookie': setCookie(req, fresh) }
+    const next = await start(fresh, address)
+    const ok = await next.ready.then(
+      () => true,
+      () => false,
+    )
+    if (ok) {
+      counted(address)
+    }
+    const headers = { 'set-cookie': setCookie(fresh) }
     if (path === '/_demo/reset') {
-      await made.ready.catch(() => {})
       return plain(res, 303, 'A fresh copy.', { ...headers, location: '/' })
     }
-    try {
-      await made.ready
-      return plain(res, 200, 'ready', headers)
-    } catch {
-      return plain(res, 503, 'Your copy could not be made; try again.')
-    }
+    return ok ? plain(res, 200, 'ready', headers) : plain(res, 503, 'Your copy could not be made; try again.')
   }
 
   if (!copy) {
@@ -568,6 +687,24 @@ async function handle(req, res) {
     req.resume()
     return prepare(res, true)
   }
+  // A write: no body past `--upload` MiB, and none at all once the copy
+  // stores past `--storage` MiB, measured afresh where the last reading is
+  // two seconds old.
+  const limit = config.upload * MiB
+  const writes = !['GET', 'HEAD', 'OPTIONS'].includes(req.method ?? 'GET')
+  if (writes) {
+    if (Number(req.headers['content-length'] ?? 0) > limit) {
+      req.resume()
+      return plain(res, 413, `A demo takes files up to ${config.upload} MB.`, { connection: 'close' })
+    }
+    if (Date.now() - copy.measured > 2000) {
+      await measure([copy]).catch((e) => log(`${copy.name} could not be measured: ${e.message}`))
+    }
+    if (copy.full || copy.ended) {
+      req.resume()
+      return plain(res, 507, `Your copy holds as much as a demo copy may (${config.storage} MB). Reset now for a fresh one.`)
+    }
+  }
   const headers = { ...req.headers, cookie: withoutOurs(req.headers.cookie) }
   if (!headers.cookie) {
     delete headers.cookie
@@ -577,14 +714,37 @@ async function handle(req, res) {
     res.writeHead(up.statusCode ?? 502, up.headers)
     up.pipe(res)
   })
+  let cut = false
   upstream.on('error', () => {
+    if (cut) {
+      return
+    }
     if (!res.headersSent) {
       plain(res, 502, 'Your copy did not answer; reload the page.')
     } else {
       res.destroy()
     }
   })
+  // A body sent with no length is counted as it passes.
+  let sent = 0
+  req.on('data', (chunk) => {
+    sent += chunk.length
+    if (sent > limit && !cut) {
+      cut = true
+      upstream.destroy()
+      if (!res.headersSent) {
+        plain(res, 413, `A demo takes files up to ${config.upload} MB.`, { connection: 'close' })
+      }
+      req.unpipe(upstream)
+      req.resume()
+    }
+  })
   req.pipe(upstream)
+  if (writes) {
+    res.on('finish', () => {
+      copy.measured = 0
+    })
+  }
 }
 
 mkdirSync(config.sockets, { recursive: true, mode: 0o700 })
@@ -600,7 +760,7 @@ const front = http.createServer((req, res) => {
 front.headersTimeout = 20_000
 front.requestTimeout = 120_000
 front.listen(config.port, config.host, () => {
-  log(`on http://${config.host}:${config.port}, ${config.cap} copies of ${template} at most, each ending after ${config.idle} s idle`)
+  log(`on http://${config.host}:${config.port}, ${config.cap} copies of ${template} at most, each ending after ${config.idle} s idle or ${config.lifetime} s old`)
 })
 
 async function stop() {

@@ -20,9 +20,9 @@ let
   demos = lib.filterAttrs (_: s: s.demo.enable) cfg.scopes;
   kept = lib.filterAttrs (_: s: !s.demo.enable) cfg.scopes;
   template = s: "${s.database}_template";
-  # A demo serving each visitor a copy of its own (`demo.visitors`): its
+  # A demo serving each visitor a copy of its own (no `demo.shared`): its
   # front's role, and the name every copy and its role share.
-  visiting = s: s.demo.enable && s.demo.visitors != null;
+  visiting = s: s.demo.enable && !s.demo.shared;
   visited = lib.filterAttrs (_: visiting) cfg.scopes;
   front = s: "${s.database}_front";
   copies = s: "/^${s.database}_v_[0-9a-f]{16}\$";
@@ -162,47 +162,105 @@ in
               default = "authority-walk";
               description = "The e2e scenario whose story the template plays on Lanterne.";
             };
+            shared = mkOption {
+              type = types.bool;
+              default = false;
+              description = ''
+                Serve one copy to everyone, the scope's own `database`, as `cella
+                serve --prod --demo` does, made afresh each night at `resetAt`:
+                the fallback for a demo a presenter leads. Unset, `cella demo
+                serve`, the demo's front on `port`, serves each visitor a copy of
+                the template and a server of their own, made at their first visit.
+              '';
+            };
+            resetAt = mkOption {
+              type = types.str;
+              default = "*-*-* 04:00:00";
+              description = "When a shared demo's copy is made afresh, as systemd's `OnCalendar`.";
+            };
             visitors = mkOption {
               type = types.nullOr types.ints.positive;
-              default = 10;
+              default = null;
               description = ''
-                How many visitors' copies run at once, each a copy of the template
-                and a server of its own that `cella demo serve`, the demo's front
-                on `port`, makes at the visitor's first visit and ends after it is
-                idle; a visitor past it ends the copy idle longest. 10 is what a
-                cx23 holds beside the site. null serves one copy to everyone, the
-                scope's own `database`, as `cella serve --prod --demo` does.
+                How many visitors' copies run at once; a newcomer past it ends the
+                copy idle longest, or else the oldest. null derives it from the
+                host's memory when the front starts: (RAM - `reserve`) / `footprint`.
               '';
+            };
+            reserve = mkOption {
+              type = types.ints.positive;
+              default = 1536;
+              description = "MiB of the host's memory kept for everything but the copies: Postgres's shared buffers, the proxy, the site and the rest.";
+            };
+            footprint = mkOption {
+              type = types.ints.positive;
+              default = 160;
+              description = "MiB one copy costs the host: its server (about 127 MiB resident, measured) and its Postgres connections.";
             };
             idle = mkOption {
               type = types.ints.positive;
               default = 7200;
               description = "Seconds with no request before a visitor's copy ends: its server stopped, its database and role dropped.";
             };
+            lifetime = mkOption {
+              type = types.ints.positive;
+              default = 7200;
+              description = "Seconds after it was made that a copy ends however busy, so no visitor holds one for good.";
+            };
             evictAfter = mkOption {
               type = types.ints.positive;
               default = 300;
-              description = "Seconds a copy is idle before a newcomer at the cap may end it; while every copy is busier, the newcomer is asked to come back.";
+              description = "Seconds a copy is idle before a newcomer at the cap may end it.";
+            };
+            minAge = mkOption {
+              type = types.ints.positive;
+              default = 600;
+              description = "Seconds old a copy is before a newcomer at the cap may end it, the oldest, where none is idle `evictAfter`; while none is, the newcomer is asked to come back.";
             };
             memory = mkOption {
               type = types.ints.positive;
-              default = 256;
-              description = "MiB a copy's server may hold resident before its copy ends; the front's unit holds `visitors` times it, and a little more.";
+              default = 192;
+              description = "MiB a copy's server may hold resident before its copy ends.";
             };
             connections = mkOption {
               type = types.ints.positive;
               default = 10;
               description = "Connections a copy's role may hold to its database; its server's pools take eight.";
             };
-            perIp = mkOption {
+            upload = mkOption {
               type = types.ints.positive;
-              default = 5;
-              description = "Copies one address may make in ten minutes, by the last `x-forwarded-for` hop the host's proxy sets.";
+              default = 2;
+              description = "MiB a request's body may hold, a file uploaded with it.";
+            };
+            storage = mkOption {
+              type = types.ints.positive;
+              default = 64;
+              description = "MiB a copy may store past its template; past it the copy takes no write, saying so, and past twice it ends.";
+            };
+            diskFloor = mkOption {
+              type = types.ints.positive;
+              default = 1024;
+              description = "MiB free on `/var/lib`'s disk below which no copy is made and the copy storing most ends, one each check.";
+            };
+            perAddress = mkOption {
+              type = types.ints.positive;
+              default = 40;
+              description = "Copies one address, an IPv6 one by its /64, holds at once: a room full of people behind one NAT address.";
+            };
+            perAddressRate = mkOption {
+              type = types.ints.positive;
+              default = 80;
+              description = "Copies one address makes in ten minutes; only a copy made counts, never a refused attempt.";
             };
             perMinute = mkOption {
               type = types.ints.positive;
-              default = 20;
+              default = 60;
               description = "Copies the host makes in a minute, whoever asks.";
+            };
+            concurrent = mkOption {
+              type = types.ints.positive;
+              default = 4;
+              description = "Copies made at once; past it a newcomer's page asks again in a few seconds.";
             };
           };
         };
@@ -406,6 +464,26 @@ in
             ReadWritePaths = [ (home name) ];
           };
         };
+      } // lib.optionalAttrs (s.demo.enable && s.demo.shared) {
+        # A shared demo's copy made afresh each night, its server stopped
+        # while it is, so the next day starts from the template.
+        "cella-${name}-reset" = {
+          description = "cella: the ${name} demo's copy made afresh";
+          after = [ "cella-${name}-setup.service" ];
+          requires = [ "cella-${name}-setup.service" ];
+          path = [ pg pkgs.util-linux config.systemd.package ];
+          environment.HOME = "/tmp";
+          serviceConfig = {
+            Type = "oneshot";
+            PrivateTmp = true;
+            WorkingDirectory = "/tmp";
+          };
+          script = ''
+            systemctl stop cella-${name}.service
+            runuser -u postgres -- ${cella} demo copy ${db} --url ${url "postgres" (template s)} --replace
+            systemctl start cella-${name}.service
+          '';
+        };
       } // lib.optionalAttrs (visiting s) {
         # A visiting demo's front, `cella demo serve` on the scope's port:
         # each visitor's copy of the template made at their first visit,
@@ -430,28 +508,33 @@ in
             RuntimeDirectory = "cella-${name}";
             RuntimeDirectoryMode = "0700";
             WorkingDirectory = "/run/cella-${name}";
-            ExecStart = lib.concatStringsSep " " [
+            ExecStart = lib.concatStringsSep " " ([
               "${cella} demo serve --template ${template s}"
+              "--server ${cfg.package}/share/cella/apps/org/ts/build --"
               "--port ${toString s.port}"
-              "--cap ${toString s.demo.visitors}"
-              "--idle ${toString s.demo.idle}"
-              "--evict-after ${toString s.demo.evictAfter}"
-              "--memory ${toString s.demo.memory}"
-              "--connections ${toString s.demo.connections}"
-              "--per-ip ${toString s.demo.perIp}"
-              "--per-minute ${toString s.demo.perMinute}"
-              "--trust-proxy"
-              "--server ${cfg.package}/share/cella/apps/org/ts/build"
               "--sockets /run/cella-${name}"
-            ];
+              "--trust-proxy"
+              "--disk /var/lib"
+            ] ++ lib.optional (s.demo.visitors != null) "--cap ${toString s.demo.visitors}"
+            ++ lib.mapAttrsToList (flag: value: "--${flag} ${toString value}") {
+              inherit (s.demo) reserve footprint idle lifetime memory connections upload storage concurrent;
+              evict-after = s.demo.evictAfter;
+              min-age = s.demo.minAge;
+              disk-floor = s.demo.diskFloor;
+              per-address = s.demo.perAddress;
+              per-address-rate = s.demo.perAddressRate;
+              per-minute = s.demo.perMinute;
+            });
             Restart = "on-failure";
             # The front alone is signalled, and ends every copy before it
             # goes; what is left after a minute is killed.
             KillMode = "mixed";
             TimeoutStopSec = 60;
             UMask = "0077";
-            MemoryMax = "${toString (s.demo.visitors * s.demo.memory + 384)}M";
-            TasksMax = s.demo.visitors * 32 + 64;
+            # Every copy and the front: what the cap holds, or, the cap
+            # derived from the host's memory, all but its reserve.
+            MemoryMax = if s.demo.visitors != null then "${toString (s.demo.visitors * s.demo.memory + 384)}M" else "90%";
+            TasksMax = 4096;
             LimitNOFILE = 8192;
             IPAddressDeny = "any";
             IPAddressAllow = "localhost";
@@ -503,7 +586,12 @@ in
       };
     };
 
-    systemd.timers = lib.optionalAttrs (cfg.backup.enable && kept != { }) {
+    systemd.timers = lib.mapAttrs' (name: s: lib.nameValuePair "cella-${name}-reset" {
+      description = "cella: the ${name} demo's copy made afresh each night";
+      wantedBy = [ "timers.target" ];
+      timerConfig.OnCalendar = s.demo.resetAt;
+    }) (lib.filterAttrs (_: s: s.demo.enable && s.demo.shared) cfg.scopes)
+    // lib.optionalAttrs (cfg.backup.enable && kept != { }) {
       cella-backup = {
         description = "cella: the nightly backup of every scope";
         wantedBy = [ "timers.target" ];

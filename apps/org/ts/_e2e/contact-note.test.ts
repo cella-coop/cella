@@ -5,6 +5,7 @@
 // saying it saved; after a reload the note stands. Each browser writes
 // the note of a contact of its own, so they never meet. `SHOTS` names
 // where its screenshots go. Run by `cella test e2e contact-note`.
+// covers: contact
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'

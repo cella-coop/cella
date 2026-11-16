@@ -10,6 +10,7 @@
 // the body is core body's session tests' to prove. Each browser edits a
 // task of its own, so they meet in nothing they write. Screenshots light
 // and dark go to `SHOTS`. Run by `cella test e2e body`.
+// covers: task
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'

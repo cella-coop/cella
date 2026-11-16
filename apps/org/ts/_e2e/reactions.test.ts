@@ -10,6 +10,7 @@
 // the same page, a rule replacing the first, and Léa's 👍 is drawn again.
 // `SHOTS` names where its screenshots go, light and dark. Run by
 // `cella test e2e reactions`.
+// covers: motion task
 
 // browsers: one at a time: each browser changes Web's reactions and the scope's clock by the assembly's motions, which the others read
 

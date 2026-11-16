@@ -9,6 +9,7 @@
 // discuss in every circle, so the box withheld is not walked here. Each
 // browser posts on a task of its own. Screenshots light and dark go to
 // `SHOTS`. Run by `cella test e2e thread`.
+// covers: task
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'

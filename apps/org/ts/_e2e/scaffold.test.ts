@@ -9,6 +9,7 @@
 // resolves the thread, which folds the reply away. The task's own
 // scenarios, `body` and `thread`, walk the rest in every browser.
 // Screenshots go to `SHOTS`. Run by `cella test e2e scaffold`.
+// covers: project
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'

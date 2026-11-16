@@ -1,8 +1,9 @@
 // The ink specimen (`/specimens/ink`), in every browser, light and dark:
 // both themes side by side, each a region wearing its own; every pair
-// each ink draws states its contrast and none is under AA; the proposed
-// primary action is solid in an ink where today's is plain, and the
-// shell around the specimen keeps today's. It reads and writes nothing.
+// each ink draws states its contrast and none is under AA; the primary
+// action is landed, so today's button already wears the lead ink the
+// proposed column draws, the same colour as one another, and the shell
+// around the specimen keeps today's. It reads and writes nothing.
 // `SHOTS` names where its screenshots go. Run by `cella test e2e ink`.
 // covers: core
 
@@ -36,7 +37,7 @@ eachBrowser((name, launch) => {
           assert.equal(cells.length, 30, `${at}: ${theme} states six pairs for each of five inks`)
           assert.ok(cells.every((c) => /^\d+\.\d:1$/.test(c.trim())), `${at}: ${theme}, every pair over AA: ${cells.join(', ')}`)
           const [today, proposed] = await region.getByRole('button', { name: 'Propose' }).evaluateAll((els) => els.map((e) => getComputedStyle(e).backgroundColor))
-          assert.notEqual(today, proposed, `${at}: ${theme}, the proposed primary wears an ink`)
+          assert.equal(today, proposed, `${at}: ${theme}, the primary already wears the lead ink, landed`)
         }
         const light = await page.getByRole('region', { name: 'Light theme' }).evaluate((e) => getComputedStyle(e).backgroundColor)
         const dark = await page.getByRole('region', { name: 'Dark theme' }).evaluate((e) => getComputedStyle(e).backgroundColor)

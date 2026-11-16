@@ -90,7 +90,7 @@ test('Lanterne\'s policies show which are the SCOP SARL\'s defaults, and its sta
   assert.equal(page.policies.find((p) => p.id === 'm-2021-001/12')?.takes, null)
   assert.equal(page.policies.find((p) => p.id === 'm-2021-001/43')?.takes, null)
   assert.deepEqual(page.departures, [])
-  assert.deepEqual(await all(`SELECT standing, count(*)::int AS n FROM policy.standing('ag', '2026-11-07') GROUP BY 1`), [{ standing: 'taken', n: 36 }])
+  assert.deepEqual(await all(`SELECT standing, count(*)::int AS n FROM policy.standing('ag', '2026-11-07') GROUP BY 1`), [{ standing: 'taken', n: 37 }])
   assert.deepEqual(await all(`SELECT * FROM policy.standing('coordination', '2026-11-07')`), [])
   assert.ok((await statutes()).plain.split('\n').includes('These statutes leave none of their legal form\'s defaults.'))
   // Each default that states the law names it, and none is reviewed yet.

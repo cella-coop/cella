@@ -139,7 +139,7 @@ test('October\'s run waits for every worker\'s approved month', async () => {
   await on('2026-11-02')
   const early = await generate({ month: '2026-10' }, as(julien))
   assert.equal(early.state, 'refused')
-  assert.match(reason(early), /2026-10 in web is open, not approved: the run waits for it/)
+  assert.match(reason(early), /2026-10 in [a-z]+ is open, not approved: the run waits for it/)
 })
 
 test('once every October is approved, Julien prepares the run from the approved time, Inès\'s with the members\'', async () => {

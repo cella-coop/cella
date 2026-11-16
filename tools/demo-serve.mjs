@@ -523,13 +523,16 @@ async function handle(req, res) {
       if (Date.now() - copy.made < 20_000) {
         return plain(res, 303, 'Your copy is fresh already.', { location: '/' })
       }
-      await end(copy, 'Reset now')
     } else if (copy) {
       await copy.ready.catch(() => {})
       return plain(res, copy.ended ? 503 : 200, copy.ended ? 'Your copy could not be made; try again.' : 'ready')
     }
+    // Counted before a reset ends the copy, so a visitor refused keeps it.
     if (!allowed(addressOf(req))) {
       return plain(res, 429, 'Too many copies made from here lately; try again in a few minutes.', { 'retry-after': '120' })
+    }
+    if (copy) {
+      await end(copy, 'Reset now')
     }
     if (!(await room())) {
       return plain(res, 503, 'Every copy the demo holds is in use; try again in a few minutes.', { 'retry-after': '300' })

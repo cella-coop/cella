@@ -54,6 +54,12 @@ eachBrowser((name, launch) => {
           await page.waitForLoadState('networkidle')
           const nav = page.getByRole('navigation', { name: 'Main' })
           assert.equal(await nav.locator('a[aria-current="page"]').textContent().then((t) => t?.trim()), 'Organization', `${at}: the sidebar marks it`)
+          assert.equal(await nav.locator('p.heading').textContent().then((t) => t?.trim()), 'Settings', `${at}: Settings stands apart as the sidebar's own heading`)
+          assert.deepEqual(
+            (await nav.locator('p.group', { hasText: 'Organization' }).locator('xpath=following-sibling::ul[1]').locator('a').allTextContents()).map((t) => t.trim()),
+            ['Organization', 'Imports', 'Features'],
+            `${at}: Organization lists Features beside Imports`,
+          )
 
           const form = page.locator('form.settings')
           assert.equal(await form.getByLabel('Name', { exact: true }).inputValue(), 'Lanterne', `${at}: its name in force`)

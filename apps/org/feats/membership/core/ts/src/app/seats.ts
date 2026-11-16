@@ -16,14 +16,14 @@ export const app: App = {
   extends: {
     circles: {
       columns: [{ key: 'seated', label: 'Seated', kind: 'number', role: 'meta', value: (r: { seated?: number }) => r.seated ?? 0 }],
-      look: { cards: ['purpose', 'parent', 'seated'] },
+      look: { cards: ['purpose', 'seated'] },
       page: {
         properties: (s: Seat[]) => [{ label: 'Seated', value: new Set(s.filter((x) => !x.until).map((x) => x.member)).size, kind: 'number' }],
         blocks: [{ tab: 'roles', block: Members }],
       },
     },
     people: {
-      columns: [{ key: 'circles', label: 'Circles', kind: 'mono', role: 'hidden', value: (r: { circles?: string }) => r.circles }],
+      columns: [{ key: 'circles', label: 'Circles', kind: 'mono', role: 'meta', value: (r: { circles?: string }) => r.circles }],
       page: {
         related: (d: { seats: Seat[]; held: Held[] }) =>
           d.seats.filter((s) => !s.until).map((s) => ({ label: s.circleName, sub: s.roleName ?? undefined, href: `/circles/${s.circle}` })),

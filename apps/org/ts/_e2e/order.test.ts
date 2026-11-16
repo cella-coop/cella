@@ -115,11 +115,17 @@ eachBrowser((browserName, launch) => {
 
       // Order by a field and turn its direction, in the View panel; each
       // order checked against the rows sorted here.
-      const ordering = async (name: string, layout: string, fields: string[]) => {
+      // `own` is the collection's own sort, which the address leaves out.
+      const ordering = async (name: string, layout: string, fields: string[], own: string) => {
+        const sorted = async (want: string) => {
+          await page.waitForURL((u) => (u.searchParams.get('sort') ?? own) === want)
+        }
         const view = panel(page)
         const select = view.getByLabel('Order by')
         for (const field of fields) {
-          const dir = sort()?.startsWith('-') ? 'desc' : 'asc'
+          // A field chosen keeps the direction the toggle shows, the view's
+          // own order's where it sorts by none.
+          const dir = (await view.locator('.order .direction').getAttribute('aria-label')) === 'Descending' ? 'desc' : 'asc'
           await choose(select, field)
           await sorted(`${dir === 'desc' ? '-' : ''}${field}`)
           await follows(page, name, layout, await expected(name, { field, dir }), `${browserName} ${name} ${layout} by ${field}, ${dir}`)
@@ -139,18 +145,19 @@ eachBrowser((browserName, launch) => {
       assert.ok(busiest, 'Lanterne has expenses')
 
       for (const layout of ['list', 'table', 'gallery', 'board', 'calendar']) {
-        await visit(`/expenses?view=${layout}${layout === 'calendar' ? `&at=${busiest}` : ''}`)
+        // Grouped by nothing, so the rows are drawn as one.
+        await visit(`/expenses?view=${layout}&by=${layout === 'calendar' ? `&at=${busiest}` : ''}`)
         assert.equal(await panel(page).getByRole('button', { name: layout[0].toUpperCase() + layout.slice(1), exact: true }).getAttribute('aria-pressed'), 'true', `${browserName}: expenses in a ${layout}`)
-        await ordering('expenses', layout, ['total', 'day'])
+        await ordering('expenses', layout, ['total', 'day'], '-day')
       }
 
-      await visit('/files?view=feed')
+      await visit('/files?view=feed&by=')
       assert.equal(await panel(page).getByRole('button', { name: 'Feed', exact: true }).getAttribute('aria-pressed'), 'true', `${browserName}: files in a feed`)
-      await ordering('files', 'feed', ['uploaded', 'size'])
+      await ordering('files', 'feed', ['uploaded', 'size'], '-uploaded')
 
       // A table's header orders by its column, and again turns it; the
       // header says so.
-      await visit('/expenses?view=table')
+      await visit('/expenses?view=table&by=')
       const amount = page.locator('th', { hasText: 'Amount' })
       await amount.getByRole('button').click()
       await sorted('total')
@@ -162,7 +169,7 @@ eachBrowser((browserName, launch) => {
       assert.equal(await amount.getAttribute('aria-sort'), 'descending')
 
       // A view saved with its order restores it from its tab.
-      await panel(page).getByRole('button', { name: 'Save as view' }).click()
+      await panel(page).getByRole('button', { name: 'Save', exact: true }).click()
       await panel(page).getByLabel('View name').fill('Largest first')
       await panel(page).getByRole('button', { name: 'Save view' }).click()
       await page.waitForURL((u) => u.searchParams.get('v')?.startsWith('c-') ?? false)
@@ -175,7 +182,7 @@ eachBrowser((browserName, launch) => {
  `${browserName}: Order by names the saved view's field`)
 
       // The address alone draws the order, from the server.
-      await visit('/expenses?view=table&sort=-day')
+      await visit('/expenses?view=table&by=&sort=-day')
       await follows(page, 'expenses', 'table', await expected('expenses', { field: 'day', dir: 'desc' }), `${browserName}: the address`)
       assert.equal(await panel(page).getByRole('button', { name: 'Descending' }).count(), 1, `${browserName}: the direction says descending`)
       mkdirSync(shots, { recursive: true })

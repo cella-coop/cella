@@ -37,7 +37,7 @@ export const app: App = {
           tone: (r: { state?: State }) => (r.state ? tones[r.state] : 'neutral'),
         },
       ],
-      look: { layout: 'board', by: 'state', lanes: { state: [...states] }, cards: ['circleName', 'deadline', 'turnout'] },
+      look: { layout: 'board', by: 'state', lanes: { state: [...states] }, cards: ['circle', 'deadline', 'turnout'] },
       // The close freezes which stances counted; whether it passed is the
       // database's, so Passed and Rejected both take the drop.
       shifts: [{ by: 'state', from: ['open'], to: ['passed', 'rejected'], action: 'close' }],

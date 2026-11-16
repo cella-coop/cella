@@ -70,7 +70,7 @@ const root: App = {
   name: 'org',
   extends: {
     projects: { look: { cards: ['contact', 'progress', 'budget', 'used'] } },
-    tasks: { look: { cards: ['assignee', 'project', 'priority', 'due'] } },
+    tasks: { look: { cards: ['priority', 'due', 'assigned', 'project'] } },
   },
 }
 

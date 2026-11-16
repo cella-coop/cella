@@ -18,6 +18,9 @@ export const app: App = {
           { key: 'form', label: 'Form', role: 'sub', value: (c: Contact) => c.form ?? c.kind },
           { key: 'client', label: 'Client', kind: 'badge', role: 'meta', value: (c: Contact) => c.client },
         ],
+        // Grouped by the client's stage, contacts that are no client
+        // after them, by name.
+        look: { by: 'client', sort: { field: 'name', dir: 'asc' }, lanes: { client: ['lead', 'active', 'inactive'] } },
         // A client is a contact holding the role, at any of its stages.
         views: [{ id: 'clients', name: 'Clients', where: [{ field: 'client', is: ['lead', 'active', 'inactive'] }] }],
       },

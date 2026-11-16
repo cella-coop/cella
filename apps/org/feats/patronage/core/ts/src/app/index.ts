@@ -34,7 +34,8 @@ export const app: App = {
           { key: 'basis', label: 'Work share by', kind: 'badge', role: 'hidden', value: (d: Distribution) => d.basis },
           { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: (d: Staged) => d.state, tone: (d: Staged) => tones[d.state] },
         ],
-        look: { layout: 'table' },
+        // One a year: a list, the latest first.
+        look: { layout: 'list' },
       },
       page: {
         eyebrow: 'Distribution',
@@ -94,14 +95,16 @@ export const app: App = {
         caption: 'Each worker’s part of each year’s work share',
         icon: icons.Receipt,
         columns: [
-          { key: 'year', label: 'Year', kind: 'title', role: 'title', value: (s: Statement) => String(s.year) },
-          { key: 'worker', label: 'Worker', kind: 'person', role: 'sub', value: (s: Statement) => s.worker },
+          { key: 'name', label: 'Worker', kind: 'title', role: 'title', value: (s: Statement & { name?: string }) => s.name ?? s.worker },
+          { key: 'year', label: 'Year', kind: 'badge', role: 'hidden', value: (s: Statement) => String(s.year) },
+          { key: 'worker', label: 'Person', kind: 'person', role: 'hidden', value: (s: Statement) => s.worker },
           { key: 'salary', label: 'By pay', kind: 'money', role: 'hidden', value: (s: Statement) => s.salary },
           { key: 'hours', label: 'By time', kind: 'money', role: 'hidden', value: (s: Statement) => s.hours },
           { key: 'equal', label: 'Equal', kind: 'money', role: 'hidden', value: (s: Statement) => s.equal },
           { key: 'amount', label: 'Part', kind: 'money', role: 'meta', value: (s: Statement) => s.amount },
         ],
-        look: { layout: 'table' },
+        // Each year's work share, the latest first, its largest part first.
+        look: { layout: 'list', by: 'year', sort: { field: 'amount', dir: 'desc' } },
         empty: 'A statement is drawn for each worker when the assembly approves a year’s distribution.',
       },
       page: {

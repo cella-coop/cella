@@ -1,6 +1,6 @@
 +++
 title = "Bill"
-updated = 2026-11-13
+updated = 2026-11-16
 +++
 
 What the co-op is billed: a supplier's bill recorded as it came, with its
@@ -158,8 +158,8 @@ an approval by its recorder among them.
 
 ## Shell
 
-The `bills` collection in Payments, the latest recorded first, each with
-its status, overdue where it is; its dashboard shows what awaits approval
+The `bills` collection in Payments, grouped by standing, overdue first,
+then the approval queue, the soonest due first; its dashboard shows what awaits approval
 and payment, what is overdue, and the amounts by month and by category.
 New records one (`record`) with its lines, typed as an invoice's are. A
 bill's page, its header's crumb its id, is titled by its supplier, with

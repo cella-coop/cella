@@ -31,7 +31,9 @@ export const app: App = {
           { key: 'length', label: 'Minutes', kind: 'number', role: 'hidden', value: (m: Meeting) => m.length },
           { key: 'status', label: 'Status', kind: 'badge', role: 'meta', value: (m: Meeting) => m.status, tone: (m: Meeting) => tones[m.status] },
         ],
-        look: { layout: 'calendar', on: 'at', span: 'month', cards: ['circle', 'place', 'status'], lanes: { status: ['scheduled', 'held', 'cancelled'] } },
+        // A month of meetings, each tinted by its circle, which the legend
+        // names, so its card shows where and how it stands.
+        look: { layout: 'calendar', on: 'at', span: 'month', by: 'circle', sort: { field: 'at', dir: 'asc' }, cards: ['place', 'status'], lanes: { status: ['scheduled', 'held', 'cancelled'] } },
       },
       page: {
         eyebrow: 'Meeting',

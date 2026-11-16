@@ -25,6 +25,9 @@ export const app: App = {
           tone: (r: { stage?: Stage }) => tones[r.stage ?? 'employee'],
         },
       ],
+      // People grouped by where they stand on the path: members,
+      // candidates and former members are the co-op's real split.
+      look: { by: 'stage', lanes: { stage: ['employee', 'candidate', 'invited', 'member', 'gone'] } },
       page: {
         blocks: [{ tab: 'membership', block: PathBlock }],
         activity: events,

@@ -73,6 +73,27 @@ eachBrowser((name, launch) => {
         const view = panel(page)
         assert.equal(await chosen(view.getByLabel('Group by')), 'status', `${at}: a board groups by its enumeration`)
         await page.screenshot({ path: `${shots}/tasks-${name}-${scheme}.png` })
+        // Order by names a field alone, never "Default", its direction
+        // before it, so every control ends on the panel's one right edge;
+        // the foot is one row, Pin with its icon, and Save only once the
+        // view changes.
+        assert.doesNotMatch((await view.textContent()) ?? '', /Default/, `${at}: the panel never says Default`)
+        const edge = async (control: string) => {
+          const box = await view.getByRole('combobox', { name: control }).boundingBox()
+          return box ? box.x + box.width : NaN
+        }
+        const direction = await view.locator('.order .direction').boundingBox()
+        const ordering = await view.getByRole('combobox', { name: 'Order by' }).boundingBox()
+        assert.ok(direction && ordering && direction.x + direction.width <= ordering.x + 1, `${at}: the direction sits before Order by`)
+        assert.ok(direction && ordering && Math.abs(direction.y - ordering.y) < 8, `${at}: the direction and Order by share a row`)
+        for (const control of ['Order by', 'Filter', 'Circles']) {
+          assert.ok(Math.abs((await edge(control)) - (await edge('Group by'))) < 1.5, `${at}: ${control} ends on Group by's right edge`)
+        }
+        const save = view.getByRole('button', { name: 'Save', exact: true })
+        const pin = view.getByRole('button', { name: 'Pin', exact: true })
+        assert.equal(await save.count(), 0, `${at}: no Save before the view changes`)
+        assert.equal(await pin.locator('svg').count(), 1, `${at}: Pin wears its pin`)
+        assert.equal(await view.getByPlaceholder('Search').count(), 1, `${at}: the search box says Search`)
         // Group by answers the keyboard: an arrow opens its list on the
         // option chosen, which wears the check, as the active descendant;
         // Escape closes it, choosing nothing, the focus staying on it.
@@ -104,6 +125,9 @@ eachBrowser((name, launch) => {
         await page.waitForURL(/[?&]where=/)
         // The rows follow the address once its query answers.
         await view.locator('.chips', { hasText: `: ${value}` }).waitFor()
+        await save.waitFor()
+        const [saving, pinning] = [await save.boundingBox(), await pin.boundingBox()]
+        assert.ok(saving && pinning && Math.abs(saving.y - pinning.y) < 4, `${at}: Save and Pin share one row once the view changes`)
         assert.match((await view.locator('.chips').textContent()) ?? '', new RegExp(`: ${value}`), `${at}: the chip names what it keeps`)
         await menu.getByRole('menuitem', { name: 'Remove' }).click()
         await page.waitForURL((u) => !u.searchParams.has('where'))

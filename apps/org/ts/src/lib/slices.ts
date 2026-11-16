@@ -30,10 +30,11 @@ export const dashboard = (name: string): Widget[] | undefined => {
 
 // How a collection looks before a view changes it: its owner's look, each
 // extension's overriding it, its table hiding the logged fields it adds
-// until a view shows them.
+// until a view shows them, and every column each of them hides.
 export const look = (name: string): Look => {
-  const hide = columns(name).filter((c) => logged.includes(c)).map((c) => c.key)
-  return Object.assign({ hide }, collection(name)?.view.look, ...extensions(name).map((e) => e.extension.look ?? {}))
+  const looks = [collection(name)?.view.look ?? {}, ...extensions(name).map((e) => e.extension.look ?? {})]
+  const hide = [...columns(name).filter((c) => logged.includes(c)).map((c) => c.key), ...looks.flatMap((l) => l.hide ?? [])]
+  return { ...Object.assign({}, ...looks), hide: [...new Set(hide)] }
 }
 
 // The board moves a collection's slices make writes.

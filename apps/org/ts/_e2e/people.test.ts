@@ -89,7 +89,7 @@ test('every worker has a contract, the members who work and Inès, who is employ
     { address: 'paul@lanterne.example', stage: 'gone' },
   ])
   const { text } = await shell.page('/people', camille)
-  // Her chips: a worker, and invited to be a member.
+  // Her group: invited to be a member, with the co-op's workers.
   for (const says of ['People', 'Inès Haddad', 'worker', 'invited']) {
     assert.ok(text.includes(says), `the people say ${says}`)
   }

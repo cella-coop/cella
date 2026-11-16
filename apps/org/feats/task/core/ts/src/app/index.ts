@@ -23,7 +23,8 @@ export const app: App = {
         create: Create,
         columns: [
           { key: 'title', label: 'Task', kind: 'title', role: 'title', value: (t: Task) => t.title },
-          { key: 'id', label: 'Id', kind: 'mono', role: 'sub', value: (t: Task) => t.id },
+          { key: 'id', label: 'Id', kind: 'mono', role: 'hidden', value: (t: Task) => t.id },
+          { key: 'circle', label: 'Circle', kind: 'circle', role: 'hidden', value: (t: Task & { circle?: string }) => t.circle },
           { key: 'priority', label: 'Priority', kind: 'badge', role: 'meta', value: (t: Task) => t.priority, tone: (t: Task) => urgency[t.priority] },
           { key: 'due', label: 'Due', kind: 'date', role: 'meta', value: (t: Task) => t.due },
           { key: 'status', label: 'Status', kind: 'badge', role: 'meta', value: (t: Task) => t.status, tone: (t: Task) => tones[t.status] },

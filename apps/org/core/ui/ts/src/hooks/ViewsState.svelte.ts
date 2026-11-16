@@ -1,8 +1,8 @@
 import { onMount } from 'svelte'
 import { saved, type Custom, type Saved, type Spec } from '../models/query.ts'
 import { reorder } from '../models/drag.ts'
-import type { FavoritesState } from './FavoritesState.svelte.ts'
-import { useFavorites } from './useFavorites.ts'
+import type { PinnedState } from './PinnedState.svelte.ts'
+import { usePinned } from './usePinned.ts'
 
 const key = 'cella-views'
 
@@ -12,7 +12,7 @@ const key = 'cella-views'
 // store is versioned to move into a member's preferences as it is. How
 // many rows each keeps is asked of the server, which renders the page
 // without them, once they are read and again whenever the rows change.
-// A view pinned to Favorites follows it: renamed, changed or deleted, so
+// A view pinned under Pinned follows it: renamed, changed or deleted, so
 // is its pin, at the address `href` gives it.
 export class ViewsState {
   list: Custom[] = $state([])
@@ -23,7 +23,7 @@ export class ViewsState {
   icon = $state('bookmark')
   readonly #collection: () => string
   readonly #href: (view: Custom) => string
-  readonly #favorites: FavoritesState
+  readonly #pinned: PinnedState
 
   // `rows` is anything that changes when the rows do, such as how many
   // the view keeps. Another collection is another component, and so
@@ -31,7 +31,7 @@ export class ViewsState {
   constructor(collection: () => string, rows: () => unknown = () => null, href: (view: Custom) => string = (c) => `/${collection()}?v=${c.id}`) {
     this.#collection = collection
     this.#href = href
-    this.#favorites = useFavorites()
+    this.#pinned = usePinned()
     onMount(() => {
       this.list = this.#read().views[this.#collection()] ?? []
     })
@@ -73,7 +73,7 @@ export class ViewsState {
       // Without storage the views last until the page is left.
     }
     const collection = this.#collection()
-    this.#favorites.follow(
+    this.#pinned.follow(
       collection,
       this.list.map((c) => ({ collection, view: c.id, name: c.name, ...(c.icon ? { icon: c.icon } : {}), href: this.#href(c) })),
     )

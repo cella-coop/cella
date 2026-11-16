@@ -1,7 +1,9 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
   import DateField from './DateField.svelte'
+  import FilePicker from './FilePicker.svelte'
   import Select from './Select.svelte'
+  import TimeField from './TimeField.svelte'
   import { useForm } from '../hooks/useForm.ts'
 
   let {
@@ -43,7 +45,8 @@
 </script>
 
 <!-- Its label names the field by its id, never by wrapping it, so a press
-     inside a select's list or a date's calendar is no press on the label. -->
+     inside a select's list, a date's calendar or a time's list is no press
+     on the label; a file's label names its Choose file. -->
 <div class="field" class:wide>
   {#if hint}
     <div class="head"><label class="label" for={id} id="{id}-label">{label}</label>{@render hint()}</div>
@@ -54,8 +57,10 @@
     <Select {id} labelledby="{id}-label" name={posted} {options} {placeholder} {required} bind:value={() => String(value ?? ''), (v) => (value = v)} />
   {:else if type === 'date'}
     <DateField {id} name={posted} {required} bind:value />
+  {:else if type === 'time'}
+    <TimeField {id} name={posted} {required} bind:value />
   {:else if type === 'file'}
-    <input {id} name={posted} type="file" {required} {accept} />
+    <FilePicker {id} labelledby="{id}-label" name={posted} {required} {accept} />
   {:else if rows}
     <textarea {id} name={posted} {rows} {required} {placeholder} bind:value></textarea>
   {:else}

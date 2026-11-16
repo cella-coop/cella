@@ -3,13 +3,13 @@ import { saved, type Pin, type Saved } from '../models/query.ts'
 
 const key = 'cella-views'
 
-// The views a viewer pinned to Favorites, the one place of the sidebar
+// The views a viewer pinned under Pinned, the one place of the sidebar
 // the same in every circle: preferences kept in their browser beside
 // their own views, never records of the co-op's. Read once the page is
 // in the browser, as the server cannot; each change is read from the
 // store and written back to it at once, so a collection's views and the
 // pins never write over each other.
-export class FavoritesState {
+export class PinnedState {
   list: Pin[] = $state([])
 
   constructor() {

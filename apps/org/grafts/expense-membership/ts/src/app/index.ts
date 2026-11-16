@@ -8,8 +8,9 @@ export const app: App = {
   name: 'expense-membership',
   extends: {
     expenses: {
-      columns: [{ key: 'name', label: 'Member', role: 'hidden', value: (r: Partial<Claimed>) => r.name ?? '' }],
-      look: { cards: ['name', 'total', 'day'] },
+      // The claimant's name, which the text filter finds; the card shows
+      // the member as a person, the expense's own column.
+      columns: [{ key: 'name', label: 'Claimed by', role: 'hidden', value: (r: Partial<Claimed>) => r.name ?? '' }],
       page: {
         properties: (c: Claimed | null) => [
           { label: 'Claimed by', value: c?.name },

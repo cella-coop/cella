@@ -50,7 +50,8 @@ export const app: App = {
           { key: 'owner', label: 'Saved by', role: 'hidden', value: (r: Report) => r.owner },
           { key: 'saved', label: 'Saved on', kind: 'date', role: 'hidden', value: (r: Report) => r.saved },
         ],
-        look: { layout: 'table' },
+        // Read one at a time, so a list, by kind, by title.
+        look: { layout: 'list', by: 'kind', sort: { field: 'title', dir: 'asc' }, lanes: { kind: ['income', 'balance', 'margins', 'federation', 'custom'] } },
       },
       page: {
         eyebrow: 'Report',

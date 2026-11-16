@@ -11,9 +11,9 @@ const columns = `p.month || '~' || p.member AS id, p.month, p.member, (p.minutes
 const from = 'FROM payslip.payslip p JOIN payslip.run r ON r.month = p.month'
 
 // The payslips as the collection lists them, the latest month first, each
-// with its title.
+// with its title, the name of the person it pays.
 export const listing: Read = {
-  sql: `SELECT ${columns}, 'Payslip ' || p.month AS label, p.circle ${from}`,
+  sql: `SELECT ${columns}, coalesce((SELECT n.name FROM person.person n WHERE n.address = p.member), p.member) AS label, p.circle ${from}`,
   order: 'month DESC, member',
 }
 

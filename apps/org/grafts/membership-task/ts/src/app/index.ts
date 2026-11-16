@@ -11,8 +11,9 @@ export const app: App = {
   extends: {
     tasks: {
       columns: [
-        { key: 'assignee', label: 'Assignee', kind: 'badge', role: 'meta', record: 'people', value: (r: { assignee?: string }) => r.assignee },
-        { key: 'assigned', label: 'Assigned to', kind: 'person', role: 'hidden', value: (r: { assigned?: string }) => r.assigned },
+        // A person, by the address they sign with, shown as their chip and
+        // grouped as a person.
+        { key: 'assigned', label: 'Assignee', kind: 'person', role: 'meta', value: (r: { assigned?: string }) => r.assigned },
       ],
       page: {
         properties: (a: Assigned) => [

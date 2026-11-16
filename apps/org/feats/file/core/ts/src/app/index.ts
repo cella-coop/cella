@@ -22,18 +22,20 @@ export const app: App = {
         create: Upload,
         columns: [
           { key: 'name', label: 'File', kind: 'title', role: 'title', value: (f: File) => f.name },
-          { key: 'id', label: 'Id', kind: 'mono', role: 'sub', value: (f: File) => f.id },
+          { key: 'id', label: 'Id', kind: 'mono', role: 'hidden', value: (f: File) => f.id },
+          { key: 'uploader', label: 'By', kind: 'person', role: 'sub', value: (f: File) => f.uploader },
           { key: 'class', label: 'Kind', kind: 'badge', role: 'meta', value: (f: Listed) => f.class, tone: (f: Listed) => tones[f.retention] },
           { key: 'size', label: 'Size', role: 'meta', value: (f: File) => sized(f.size) },
           { key: 'uploaded', label: 'Uploaded', kind: 'date', role: 'meta', value: (f: File) => f.uploaded },
           { key: 'type', label: 'Type', kind: 'mono', role: 'hidden', value: (f: File) => f.type },
-          { key: 'uploader', label: 'By', kind: 'person', role: 'hidden', value: (f: File) => f.uploader },
           { key: 'subject', label: 'Concerns', kind: 'person', role: 'hidden', of: 'people', value: (f: File) => f.subject },
         ],
         dashboard: [
           { kind: 'kpi', title: 'Files', measure: { op: 'count' } },
           { kind: 'chart', title: 'By kind', measure: { op: 'count' }, by: 'class' },
         ],
+        // By kind, the latest uploaded first.
+        look: { by: 'class', sort: { field: 'uploaded', dir: 'desc' }, lanes: { class: ['expense-receipt', 'payroll', 'profile', 'none'] } },
       },
       page: {
         eyebrow: 'File',

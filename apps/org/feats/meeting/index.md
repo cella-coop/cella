@@ -1,6 +1,6 @@
 +++
 title = "Meeting"
-updated = 2026-11-13
+updated = 2026-11-16
 +++
 
 Circles meeting: when and where, what is on the agenda, and whether the
@@ -164,7 +164,8 @@ keeps its minutes as written.
 
 The `meetings` collection, in Governance, opens as a calendar of the
 month by the day each meeting meets (the UI core's calendar layout,
-`look.on = 'at'`), each entry tinted by its status; the list, table,
+`look.on = 'at'`), each entry tinted by its circle, which the legend
+names, its card its place and status; the list, table,
 gallery, board by status and dashboard are a click away in the View
 card. A new meeting is scheduled from the New form. A meeting's page,
 its header's crumb its id, has two tabs: **Overview**, its content, the

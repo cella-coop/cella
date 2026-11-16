@@ -116,6 +116,8 @@ export interface Listed {
   versions: number
   adopted: string | null
   edited: string | null
+  // The circle it is owned by, by id.
+  circle?: string | null
 }
 
 export interface Version {

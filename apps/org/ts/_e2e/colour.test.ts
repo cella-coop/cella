@@ -136,7 +136,9 @@ eachBrowser((browserName, launch) => {
         const page = await context.newPage()
         const errors: string[] = []
         page.on('pageerror', (e) => errors.push(`${page.url()}: ${e.message}`))
-        await page.goto(`${base}/meetings?at=2026-10-01`)
+        // The meetings open coloured by their circle; asked for nothing,
+        // the calendar has no legend.
+        await page.goto(`${base}/meetings?at=2026-10-01&by=`)
         await page.waitForLoadState('networkidle')
         assert.equal(await page.locator('.calendar .legend').count(), 0, `${at}: grouped by nothing, no legend`)
 
@@ -145,7 +147,9 @@ eachBrowser((browserName, launch) => {
         const by = view.getByRole('combobox', { name: 'Colour by' })
         assert.equal(await chosen(by), '', `${at}: the calendar is coloured by nothing at first`)
         await choose(by, { label: 'Circle' })
-        await page.waitForURL((u) => u.searchParams.get('by') === 'circle')
+        // The circle is the meetings' own colour, which the address need
+        // not name.
+        await page.waitForURL((u) => !u.searchParams.has('by'))
         assert.equal(page.url().includes('at=2026-10-01'), true, `${at}: where the viewer is stays`)
 
         // The legend, then the cards, polled until the address is drawn.
@@ -168,7 +172,7 @@ eachBrowser((browserName, launch) => {
         await check('chosen')
         await page.screenshot({ path: `${shots}/meetings-${browserName}-${scheme}.png`, fullPage: true })
 
-        // A reload of the address draws the same.
+        // A reload of the address, the meetings' default, draws the same.
         await page.reload()
         await page.waitForLoadState('networkidle')
         assert.equal(await chosen(panel(page).getByRole('combobox', { name: 'Colour by' })), 'circle', `${at}: the reload keeps the grouping`)
@@ -177,7 +181,7 @@ eachBrowser((browserName, launch) => {
         // None takes the colours away.
         await choose(panel(page).getByRole('combobox', { name: 'Colour by' }), { label: 'None' })
 
-        await page.waitForURL((u) => !u.searchParams.has('by'))
+        await page.waitForURL((u) => u.searchParams.get('by') === '')
         for (let tries = 0; tries < 60 && (await page.locator('.calendar .legend').count()) > 0; tries++) {
           await page.waitForTimeout(250)
         }

@@ -23,7 +23,7 @@ export const app: App = {
   extends: {
     people: {
       columns: [
-        { key: 'member', label: 'Member', kind: 'badge', role: 'meta', value: (r: Row) => r.member ?? '', tone: (r: Row) => (r.status ? tones[r.status] : 'neutral') },
+        { key: 'member', label: 'Member', kind: 'badge', role: 'hidden', value: (r: Row) => r.member ?? '', tone: (r: Row) => (r.status ? tones[r.status] : 'neutral') },
         { key: 'shares', label: 'Shares', kind: 'number', role: 'hidden', value: (r: Row) => r.shares },
         { key: 'since', label: 'Member since', kind: 'date', role: 'hidden', value: (r: Row) => r.since },
       ],

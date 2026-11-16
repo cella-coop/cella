@@ -72,7 +72,7 @@
       {#each keys as k (k.value)}
         <li style={k.ink === null ? undefined : inked(k.ink)} class:inked={k.ink !== null}>
           <span class="swatch" aria-hidden="true"></span>
-          <Group {by} row={k.row} empty={k.value === ''} count={k.count} />
+          <Group {by} row={k.row} value={k.value} count={k.count} />
         </li>
       {/each}
     </ul>

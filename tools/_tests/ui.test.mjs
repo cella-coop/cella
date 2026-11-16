@@ -194,7 +194,7 @@ test('a route\'s server load or actions, or a universal load, is refused; an end
   assert.deepEqual(problems('apps/org/ts/src/lib/server/load.ts', 'export const load = () => ({})\n', false), [], 'only a route file is a route')
 })
 
-test('never native components: a native select, date input, checkbox or radio in the org app is refused by name; the UI core\'s pass', () => {
+test('never native components: a native select, date or time input, checkbox, radio or visible file input in the org app is refused by name; the UI core\'s pass', () => {
   for (const [markup, what] of [
     ['<select name="kind"><option>a</option></select>', /draws a native <select>; never native components: compose the UI core's Select/],
     ['<input name="due" type="date" required />', /draws a native date input; never native components/],
@@ -202,6 +202,9 @@ test('never native components: a native select, date input, checkbox or radio in
     ['<input type="checkbox" checked aria-label="Done" />', /draws a native checkbox or radio; never native components: compose the UI core's Checkbox/],
     ['<input\n  role="switch"\n  type="checkbox"\n/>', /draws a native checkbox or radio/],
     ['<input type="radio" name="a" />', /draws a native checkbox or radio/],
+    ['<input name="time" type="time" value="10:00" required />', /draws a native time input; never native components: compose the UI core's Field of type time/],
+    ['<input {id} name={posted} type="file" {required} {accept} />', /draws a native file input; never native components: compose the UI core's Field of type file/],
+    ['<input\n  onchange={(e) => took(e)}\n  type=file\n  class="hidden"\n/>', /draws a native file input/],
   ]) {
     const found = problems(block, component('', markup), false)
     assert.equal(found.length, 1, `${markup}: ${found}`)
@@ -214,6 +217,9 @@ test('never native components: a native select, date input, checkbox or radio in
     '<Select label="Kind" options={kinds} bind:value />\n<Checkbox label="Done" bind:checked />\n<Field label="Due" name="due" type="date" />\n<input type="hidden" name="a" />\n<input class="selected" />\n<!-- <select> in a comment -->',
   )
   assert.deepEqual(problems(block, composed, false), [])
+  // The file picker's own input, kept hidden for the form to post, passes.
+  const picker = component('', '<input\n  bind:this={input}\n  type="file"\n  hidden\n  {name}\n  onchange={(e) => (e.currentTarget.value = "")}\n/>\n<Field label="Time" name="time" type="time" />')
+  assert.deepEqual(problems('apps/org/core/ui/ts/src/components/FilePicker.svelte', picker, true), [])
   // A select in a script's string, or outside the org app, is not drawn here.
   assert.deepEqual(problems(block, component("  const html = '<select>'"), false), [])
   assert.deepEqual(problems('apps/site/src/components/Form.svelte', component('', '<select></select>'), false).filter((p) => /native/.test(p)), [])

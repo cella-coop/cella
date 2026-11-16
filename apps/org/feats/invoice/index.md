@@ -1,6 +1,6 @@
 +++
 title = "Invoice"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 What the co-op bills: issue an invoice, send it, record what is paid
@@ -213,7 +213,9 @@ labels never wait.
 
 ## Shell
 
-The `invoices` collection, the latest first, each with its standing; its
+The `invoices` collection, grouped by standing, overdue first, the
+soonest due first, each with whom it bills, its label, what is owed and
+its due day; its
 dashboard shows what is owed and overdue, what was invoiced this year,
 the amounts by month and the invoices by standing, and its calendar
 places each on the day it is due; overdue reads the

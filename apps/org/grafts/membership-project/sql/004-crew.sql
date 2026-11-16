@@ -17,12 +17,18 @@ CREATE TABLE membership_project.member (
 
 CREATE INDEX ON membership_project.member (member);
 
--- Both sides resolve: the project exists, and the member is active, as
--- membership-task's assignee is.
+-- Both sides resolve: the project exists and is live, as a share's is, and
+-- the member is active, as membership-task's assignee is.
 CREATE FUNCTION membership_project.crewed() RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+  archived date;
 BEGIN
-  IF NOT EXISTS (SELECT FROM project.project p WHERE p.id = NEW.project) THEN
+  SELECT p.archived INTO archived FROM project.project p WHERE p.id = NEW.project;
+  IF NOT FOUND THEN
     RAISE EXCEPTION 'no project %', NEW.project USING ERRCODE = 'triggered_action_exception';
+  END IF;
+  IF archived IS NOT NULL THEN
+    RAISE EXCEPTION '% was archived on %', NEW.project, archived USING ERRCODE = 'triggered_action_exception';
   END IF;
   IF NOT membership.active(NEW.member, cella.verdict_date()) THEN
     RAISE EXCEPTION '% is no active member: a project''s crew is of them', NEW.member USING ERRCODE = 'triggered_action_exception';

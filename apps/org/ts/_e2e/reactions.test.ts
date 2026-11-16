@@ -124,20 +124,19 @@ eachBrowser((name, launch) => {
       const form = page.locator('form.settings')
       await form.getByLabel(/Reactions on comments/).selectOption(value)
       await page.screenshot({ path: `${shots}/rules-${value}-${name}.png`, fullPage: true })
-      await form.getByRole('button', { name: 'Save' }).click()
-      const dialog = page.getByRole('dialog', { name: 'Propose it instead' })
+      const dialog = page.getByRole('dialog', { name: 'Assembly changes it by motion' })
       await dialog.waitFor()
       assert.ok(
-        ((await dialog.textContent()) ?? '').includes("Web's settings change only by a rule a motion of General assembly adopts: no one's own write changes them"),
+        ((await dialog.textContent()) ?? '').includes("Web's settings change only by a rule a motion of Assembly adopts: no one's own write changes them"),
         `${name}: the dialog says why her write changes nothing`,
       )
       assert.equal(await dialog.getByLabel('Title').inputValue(), `Turn reactions on comments ${value} in Web`, `${name}: its title says the change`)
       assert.equal(await dialog.getByLabel('Circle').inputValue(), 'ag', `${name}: put to the assembly`)
-      await dialog.getByRole('button', { name: 'Propose' }).click()
+      await dialog.getByRole('button', { name: 'Propose to Assembly' }).click()
       await dialog.waitFor({ state: 'hidden' })
       const { motion } = await one<{ motion: string }>(
         `SELECT motion FROM motion.action WHERE kind = 'policy' AND args ->> 'wording' = $1 AND motion <> ALL ($2::text[]) ORDER BY motion DESC LIMIT 1`,
-        [`General assembly sets {setting: reactions} to {value: ${value}} for {circle: web}`, seen],
+        [`Assembly sets {setting: reactions} to {value: ${value}} for {circle: web}`, seen],
       )
       seen.push(motion)
       assert.deepEqual(states(await decided(motion)), [['motion:policy:adopt', 'settled', '']], `${name}: its close adopts the rule`)

@@ -1,13 +1,13 @@
 // The features scenario, in every browser, light and dark, on a seeded
 // Lanterne through the dev server: Camille opens Web's Settings tab and
 // follows it to Web's features page, `/settings/features/web`, every
-// installed feature with a toggle, Web's on in its order. She turns
-// Invoice on, and the dialog offers the motion at once; she closes it,
-// the change marked not saved, and moves Contact up past File; the
-// dialog says why no write of hers changes Web's features and offers
-// the assembly's `amend-circle` motion, carrying the listing as she
-// arranged it. She proposes it, every member consents, and on its deadline she closes it:
-// after a reload the page reads Web's new set, in its new order; and
+// installed feature with a toggle, Web's on in its order, and no Save
+// button. She turns Invoice on, and the dialog offers the motion at
+// once; Cancel takes the change back. She turns it on again; the dialog
+// says why no write of hers changes Web's features and offers the
+// assembly's `amend-circle` motion, carrying the listing with Invoice
+// at its end. She proposes it, every member consents, and on its
+// deadline she closes it: after a reload the page reads Web's new set; and
 // Operations' page shows its features under its accordions. The
 // assembly then puts Web's features back as they were. `SHOTS` names
 // where its screenshots go. Run by `cella test e2e features`.
@@ -31,7 +31,7 @@ let app: pg.Client | undefined
 const shots = process.env.SHOTS ?? '/tmp/cella-features-shots'
 const camille = 'camille@lanterne.example'
 const web = 'project, task, timesheet, file, contact'
-const arranged = 'project, task, timesheet, contact, file, invoice'
+const arranged = 'project, task, timesheet, file, contact, invoice'
 let today = '2026-11-09'
 // The motions proposed from the page, so each run finds its own.
 const seen: string[] = []
@@ -109,30 +109,30 @@ eachBrowser((name, launch) => {
           assert.equal(await shown(page), 'Project, Task, Timesheet, File, Contact', `${at}: Web's features on, in its order`)
           assert.equal(await form.getByRole('switch', { name: 'Invoice' }).isChecked(), false, `${at}: an installed feature Web has not enabled is off`)
           assert.equal(await form.getByRole('switch', { name: 'Circle' }).isChecked(), false, `${at}: core's collections are features too`)
-          assert.equal(await form.getByText('A motion of General assembly changes it').count(), 1, `${at}: the assembly's motion changes them`)
+          assert.equal(await form.getByText('Assembly changes it by motion').count(), 1, `${at}: the assembly's motion changes them`)
           assert.equal(await form.getByRole('button', { name: 'Move Project up' }).isDisabled(), true, `${at}: the first moves up no further`)
           await page.screenshot({ path: `${shots}/features-${name}-${scheme}.png`, fullPage: true })
 
           assert.equal(await page.getByRole('button', { name: /^Save/ }).count(), 0, `${at}: the page has no Save button`)
           await form.getByRole('switch', { name: 'Invoice' }).click()
-          const dialog = page.getByRole('dialog', { name: 'Propose it instead' })
+          const dialog = page.getByRole('dialog', { name: 'Assembly changes it by motion' })
           await dialog.waitFor()
           assert.equal(await dialog.getByLabel('Title').inputValue(), 'Enable Invoice for Web', `${at}: a toggle, made, offers the motion`)
-          await page.keyboard.press('Escape')
+          await dialog.getByRole('button', { name: 'Cancel' }).click()
           await dialog.waitFor({ state: 'hidden' })
-          assert.match((await form.textContent()) ?? '', /Not saved/, `${at}: closed, the change is marked not saved`)
-          await form.getByRole('button', { name: 'Move Contact up' }).click()
+          assert.equal(await form.getByRole('switch', { name: 'Invoice' }).isChecked(), false, `${at}: Cancel takes the change back`)
+          await form.getByRole('switch', { name: 'Invoice' }).click()
           await dialog.waitFor()
-          assert.equal(await shown(page), 'Project, Task, Timesheet, Contact, File, Invoice', `${at}: Invoice on at the end, Contact up past File`)
+          assert.equal(await shown(page), 'Project, Task, Timesheet, File, Contact, Invoice', `${at}: Invoice on at the end`)
           assert.ok(
-            ((await dialog.textContent()) ?? '').includes("Web's features change only by a motion of General assembly, which holds amend-circle: no one's own write changes them"),
+            ((await dialog.textContent()) ?? '').includes("Web's features change only by a motion of Assembly, which holds amend-circle: no one's own write changes them"),
             `${at}: the dialog says why her write changes nothing`,
           )
           assert.equal(await dialog.getByLabel('Title').inputValue(), 'Enable Invoice for Web', `${at}: its title says the change`)
           assert.equal(await dialog.getByLabel('Circle').inputValue(), 'ag', `${at}: put to the assembly`)
           assert.equal(await dialog.getByLabel('New features').inputValue(), arranged, `${at}: the listing as she arranged it`)
           await page.screenshot({ path: `${shots}/features-propose-${name}-${scheme}.png` })
-          await dialog.getByRole('button', { name: 'Propose' }).click()
+          await dialog.getByRole('button', { name: 'Propose to Assembly' }).click()
           await dialog.waitFor({ state: 'hidden' })
 
           const { motion } = await one<{ motion: string }>(
@@ -150,7 +150,7 @@ eachBrowser((name, launch) => {
 
           await page.reload()
           await page.waitForLoadState('networkidle')
-          assert.equal(await shown(page), 'Project, Task, Timesheet, Contact, File, Invoice', `${at}: the page reads Web's new set after a reload`)
+          assert.equal(await shown(page), 'Project, Task, Timesheet, File, Contact, Invoice', `${at}: the page reads Web's new set after a reload`)
           await page.screenshot({ path: `${shots}/features-carried-${name}-${scheme}.png`, fullPage: true })
 
           await page.goto(`${dev.base}/settings/features/operations`)

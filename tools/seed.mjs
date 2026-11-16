@@ -23,8 +23,19 @@ for (let i = 3; i < process.argv.length; i += 2) {
 if (scenarios.length > 1) {
   throw new Error('seed one story at a time; run cella db reset before seeding another')
 }
+// A story connects by the PG* variables, as the e2e scenarios do, and as
+// the app's role as well as the superuser: a URL becomes them, its host
+// a socket's directory where its `host` parameter names one.
 if (scenarios.length && process.env.DATABASE_URL) {
-  throw new Error('--scenario needs the dev cluster, not --url')
+  const at = new URL(process.env.DATABASE_URL)
+  const set = (name, value) => {
+    if (value) process.env[name] = value
+  }
+  set('PGHOST', at.searchParams.get('host') ?? decodeURIComponent(at.hostname))
+  set('PGPORT', at.port || at.searchParams.get('port'))
+  set('PGUSER', decodeURIComponent(at.username))
+  set('PGPASSWORD', decodeURIComponent(at.password))
+  set('PGDATABASE', decodeURIComponent(at.pathname.slice(1)))
 }
 const read = (file) => {
   const path = join(dir, `${file}.toml`)

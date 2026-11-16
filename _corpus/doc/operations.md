@@ -292,11 +292,50 @@ module refuses a host mixing a demo with a co-op's scope. The e2e
 scenario `demo` asserts a demo build's sign-in, its banner and a demo
 member's write, and that the same build without it offers no one.
 
-`cella demo template --url URL` builds the demo's template from
-nothing: a database migrated, Lanterne seeded, then a scenario played
-on it through the notary, so it holds a co-op mid-year with motions,
-invoices and meetings in flight. Nobody is served the template itself:
-each visitor is served a copy of it of their own ([a visitor's
-scope](#a-visitors-scope)). The module's demo option builds it when its
-service first starts and again after each upgrade, so no copy is older
-than the build that serves it.
+`cella demo template --url URL [--scenario NAME]` builds the demo's
+template from nothing, in the database `URL` names, logging in as the
+cluster's superuser: the database dropped if it is there and made
+afresh, migrated, Lanterne founded in it, then the story of an e2e
+scenario played on it through the notary and the guards, as `cella seed
+--scenario` plays it, `authority-walk` unset, which leaves Lanterne on
+31 October 2026 with its four motions open, its bills, invoices,
+meetings and mandates as its year left them ([the authority
+walk](../../apps/org/fixtures/lanterne/index.md#the-authority-walk)).
+The story's clock is the app role's in that database (`cella.clock`), so
+the demo lives on the story's last day. The template is then marked a
+template and closed to every connection (`IS_TEMPLATE`, no
+`ALLOW_CONNECTIONS`), so nobody is served it, and labelled, as its
+database's comment, with the tree that built it and its story: run
+again by the same build with the same story it does nothing, and
+`--again` builds it anew. The module's demo builds it as
+`<database>_template` each time its setup starts, so it is built at the
+first start and again after each upgrade, and no copy is older than the
+build that serves it.
+
+### A copy of the template
+
+A demo scope is served from a copy of the template, never from the
+template, and a host makes as many as it serves, each a database of its
+own: `cella demo copy NAME --url TEMPLATE_URL [--replace]`. The copy is
+`CREATE DATABASE NAME TEMPLATE <template>`, Postgres copying the
+template's files, with no migration, seed or story run again, then the
+settings the template's database and roles carry there, which a copy
+does not take by itself: the scope's address and timezone the founding
+set and the story's clock. Its comment names the template and the label
+the template had, `a copy of <template>: <label>`, so a host knows a
+copy made before the template was built again. Every copy is signed by
+the cluster's demo key, as its template was, and its log verifies; what
+a visitor writes in one changes no other and never the template.
+
+This is how a host starts many scopes from one template: per scope, a
+copy made by `cella demo copy`, a server on it, `cella-server` with
+`PGDATABASE` naming the copy, `CELLA_DEMO=1`, a port of its own and a
+session key, and, to end it, the server stopped and the copy dropped
+(`DROP DATABASE … WITH (FORCE)`). The module's demo serves one copy, the
+scope's own `database`, made afresh by its setup whenever the template
+was built since, so an upgrade resets it and a restart keeps what was
+written. `checks.demo` boots a demo host: its template is built at the
+first start, its copy served, its sign-in offering Lanterne's members,
+each marked, under the banner, and a member signs in and signs a write;
+the template, built again from nothing, holds the same log, and a copy
+of each verifies.

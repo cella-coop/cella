@@ -241,9 +241,9 @@ draws.
   colour and count), Order by (any of the collection's fields, and a toggle beside
   it for ascending or descending; none chosen, the collection's own
   order) and Filter (a field to add a condition on: a date, or any field
-  with a handful of values, at most `limits.values` across the rows the
-  view would keep without it, an enumeration's, a person's and a
-  circle's among them; the conditions
+  with a handful of values, at most `limits.values`, an enumeration's
+  across every row and any other's across the rows the view would keep
+  without it, a person's and a circle's among them; the conditions
   under it as chips); then Display, a
   row that opens a popover of what is shown (in a list, the fields under
   and after each row's title, in a feed, the fields after each line's

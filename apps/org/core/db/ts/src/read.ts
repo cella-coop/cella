@@ -176,8 +176,9 @@ function sorting(st: Statement, sort: Sort | undefined, group: Group | undefined
 // its sort's order, else the collection's, `limit` of them after the first `offset` (all
 // of them with no limit); how many each of `counts` keeps; and each of
 // `values`' keys' values, sorted, the empty one left out, the choices an
-// enumeration's editor offers; and `few`'s keys' values so, each where
-// they number at most `most`, else none, the values a view's Filter
+// enumeration's editor offers; and `few`'s keys' values so, each over
+// the rows its `keep` keeps but for its conditions on that key, and each
+// where they number at most `most`, else none, the values a view's Filter
 // offers a field by. Where `keep` groups the rows, it answers too how
 // many of them each value holds across every page, a row with none
 // under the empty value. Each part is left out where it is not
@@ -189,7 +190,23 @@ export interface Asked {
   offset?: number
   counts?: Keep[]
   values?: string[]
-  few?: { keys: string[]; most: number }
+  few?: { keys: string[]; most: number; keep?: Keep }
+}
+
+// The keys asked values of, each with the most it is answered with (none
+// for no bound) and the rows they are read over: `values`' over every
+// row, and `few`'s over the rows its keep keeps without its conditions on
+// the key, those it has none on read together.
+function asked(a: Asked): { keys: string[]; most: number | null; keep?: Keep }[] {
+  const few = a.few
+  const on = new Set(few?.keep?.where.map((c) => c.field) ?? [])
+  const without = (k: string) => few?.keep && { ...few.keep, where: few.keep.where.filter((c) => c.field !== k) }
+  const free = few?.keys.filter((k) => !on.has(k)) ?? []
+  return [
+    ...(a.values?.length ? [{ keys: a.values, most: null }] : []),
+    ...(few && free.length ? [{ keys: free, most: few.most, keep: few.keep }] : []),
+    ...(few?.keys.filter((k) => on.has(k)).map((k) => ({ keys: [k], most: few.most, keep: without(k) })) ?? []),
+  ]
 }
 
 // What a page asks, read in one statement over the rows composed once.
@@ -200,7 +217,7 @@ export async function read(
 ): Promise<{ rows: { id: string }[]; counts: number[]; values: Record<string, string[]>; groups: Record<string, number>; whole: boolean }> {
   const st = new Statement()
   const parts: string[] = []
-  const every = asking([...(a.keep ? named(a.keep) : []), ...(a.counts ?? []).flatMap(named), ...(a.values ?? []), ...(a.few?.keys ?? [])])
+  const every = asking([...(a.keep ? named(a.keep) : []), ...(a.counts ?? []).flatMap(named), ...(a.values ?? []), ...(a.few?.keys ?? []), ...(a.few?.keep ? named(a.few.keep) : [])])
   if (a.keep) {
     const order = sorting(st, a.keep.sort, a.keep.group)
     const where = kept(st, a.keep)
@@ -219,13 +236,14 @@ export async function read(
   if (a.counts?.length) {
     parts.push(`(SELECT json_build_array(${a.counts.map((k) => `count(*) FILTER (WHERE ${kept(st, k)})`).join(', ')}) FROM r) AS counts`)
   }
-  const asked = [...(a.values ?? []), ...(a.few?.keys ?? [])]
-  if (asked.length) {
-    // Each key with the most values it is answered with, none for no bound.
-    const most = [...(a.values ?? []).map(() => null), ...(a.few?.keys ?? []).map(() => a.few?.most ?? 0)]
-    parts.push(
-      `(SELECT coalesce(json_object_agg(k, vs), '{}') FROM (SELECT k, array_agg(DISTINCT v ORDER BY v) AS vs FROM r, unnest(${st.p(asked)}::text[], ${st.p(most)}::int[]) u(k, most), LATERAL (SELECT row->>k AS v) x WHERE v <> '' GROUP BY k, most HAVING most IS NULL OR count(DISTINCT v) <= most) g) AS values`,
+  const sets = asked(a)
+  const keys = sets.flatMap((v) => v.keys)
+  if (sets.length) {
+    const each = sets.map(
+      (v) =>
+        `SELECT k, array_agg(DISTINCT v ORDER BY v) AS vs FROM r, unnest(${st.p(v.keys)}::text[]) u(k), LATERAL (SELECT row->>k AS v) x WHERE v <> '' AND ${v.keep ? kept(st, v.keep) : 'true'} GROUP BY k${v.most === null ? '' : ` HAVING count(DISTINCT v) <= ${st.p(v.most)}`}`,
     )
+    parts.push(`(SELECT coalesce(json_object_agg(k, vs), '{}') FROM (${each.join(' UNION ALL ')}) g) AS values`)
   }
   if (parts.length && s.lens) {
     parts.push(`NOT (${['false', ...s.rows.map(owning)].join(' OR ')}) AS whole`)
@@ -241,7 +259,7 @@ export async function read(
   return {
     rows: found?.rows ?? [],
     counts: found?.counts ?? [],
-    values: { ...Object.fromEntries(asked.map((k) => [k, []])), ...found?.values },
+    values: { ...Object.fromEntries(keys.map((k) => [k, []])), ...found?.values },
     groups: found?.groups ?? {},
     whole: found?.whole ?? false,
   }

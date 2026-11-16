@@ -7,7 +7,10 @@
 // offers each field, its chip's popover its values, a person and a circle
 // by name, and each layout draws only the rows the condition keeps, as
 // the scenario reads them itself. A view saved with a condition restores
-// it from its tab, and the address alone draws it. `SHOTS` names where
+// it from its tab, and the address alone draws it. Filter offers a
+// field's values among the rows the other conditions keep: the mandates'
+// powers, too many across them all, once Issued by keeps one circle's,
+// and only the powers that circle's mandates hold. `SHOTS` names where
 // its screenshots go. Nothing is written. Run by `cella test e2e filter`.
 
 import { after, before, test } from 'node:test'
@@ -17,6 +20,7 @@ import pg from 'pg'
 import type { Locator, Page } from 'playwright-core'
 import { page as read, type Condition, type Source } from '@cella/org-db'
 import { people } from '@cella/org-person/api'
+import { limits } from '@cella/org-ui/models'
 import { source } from '#lib/server/slices.ts'
 import { eachBrowser, serve, signIn } from './browser.ts'
 
@@ -191,6 +195,37 @@ eachBrowser((browserName, launch) => {
       assert.match(await panel(page).locator('.chips').innerText(), new RegExp(`Issued by: ${named}`))
       mkdirSync(shots, { recursive: true })
       await page.screenshot({ path: `${shots}/mandates-${browserName}.png` })
+
+      // Filter offers a field's values among the rows the view's other
+      // conditions keep: the mandates' powers are too many to offer
+      // across them all, a handful among one circle's, and a power only
+      // another circle's mandates hold is not offered.
+      const powers = async (where: Condition[]) => [...new Set((await rows('mandates', where)).map((r) => String(r.power ?? '')).filter(Boolean))].sort()
+      assert.ok((await powers([])).length > limits.values, `the mandates hold more than ${limits.values} powers`)
+      let narrow = ''
+      for (const i of issuers) {
+        const n = (await powers([{ field: 'issuer', is: [i] }])).length
+        if (n > 1 && n <= limits.values) {
+          narrow = i
+          break
+        }
+      }
+      assert.ok(narrow, 'one circle issued a handful of the powers')
+      const own = await powers([{ field: 'issuer', is: [narrow] }])
+      const others = (await powers([])).filter((p) => !own.includes(p))
+      assert.ok(others.length > 0, 'other circles issued powers this one did not')
+      const offers = async () => (await panel(page).getByRole('combobox', { name: 'Filter' }).locator('option').allInnerTexts()).map((t) => t.trim())
+      await visit('/mandates?view=list')
+      assert.ok(!(await offers()).includes('Power'), `${browserName}: Filter offers no Power across every mandate`)
+      await visit(`/mandates?view=list&where=${encodeURIComponent(JSON.stringify([{ field: 'issuer', is: [narrow] }]))}`)
+      assert.ok((await offers()).includes('Power'), `${browserName}: Filter offers Power once Issued by keeps one circle's mandates`)
+      await panel(page).getByRole('combobox', { name: 'Filter' }).selectOption({ label: 'Power' })
+      const menu = page.locator('[aria-label="Condition on Power"]')
+      await menu.locator('[role="menuitemcheckbox"]').first().waitFor()
+      const offered = await menu.locator('[role="menuitemcheckbox"]').evaluateAll((els) => els.map((el) => el.getAttribute('data-value') ?? ''))
+      assert.deepEqual([...offered].sort(), own, `${browserName}: Power offers the powers of the mandates Issued by keeps, and only those`)
+      assert.ok(!offered.some((p) => others.includes(p)), `${browserName}: no power only another circle's mandates hold is offered`)
+      await page.keyboard.press('Escape')
 
       assert.deepEqual(errors, [], `${browserName}: no page error`)
       await context.close()

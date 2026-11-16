@@ -98,7 +98,7 @@ eachBrowser((browserName, launch) => {
       await panel(page).getByRole('button', { name: '4 fields' }).click()
       await display().waitFor()
       assert.deepEqual(
-        await display().getByRole('checkbox').evaluateAll((bs) => bs.map((b) => (b as HTMLInputElement).checked)),
+        await display().getByRole('checkbox').evaluateAll((bs) => bs.map((b) => b.getAttribute('aria-checked') === 'true')),
         [true, true, true, true, false, false, false, false, false, false],
         `${browserName}: a list's Display offers every field but the title, the logged ones last, those its roles show checked`,
       )
@@ -158,7 +158,8 @@ eachBrowser((browserName, launch) => {
         const before = await count()
         await button.click()
         await display().waitFor()
-        await display().locator('input[type=checkbox]:checked:not(:disabled)').first().uncheck()
+        await display().locator('[role=checkbox][aria-checked=true]:not(:disabled)').first().uncheck()
+
         await page.waitForURL((u) => u.searchParams.has(noun === 'columns' ? 'hide' : 'cards'))
         await page.keyboard.press('Escape')
         for (let tries = 0; tries < 60 && (await count()) !== before - 1; tries++) {

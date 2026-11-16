@@ -24,6 +24,7 @@ import { people } from '@cella/org-person/api'
 import { limits } from '@cella/org-ui/models'
 import { source } from '#lib/server/slices.ts'
 import { eachBrowser, serve, signIn } from './browser.ts'
+import { choose, offered } from './controls.ts'
 
 const julien = 'julien@lanterne.example'
 const shots = process.env.SHOTS ?? '/tmp/cella-filter-shots'
@@ -127,7 +128,7 @@ eachBrowser((browserName, launch) => {
       // takes the condition and the layout draws only what it keeps.
       const filtering = async (name: string, layout: string, field: { key: string; label: string }, value: string, said: string) => {
         const view = panel(page)
-        await view.getByRole('combobox', { name: 'Filter' }).selectOption({ label: field.label })
+        await choose(view.getByRole('combobox', { name: 'Filter' }), { label: field.label })
         const item = page.locator(`[role="menuitemcheckbox"][data-value="${value}"]`)
         await item.waitFor()
         assert.equal((await item.innerText()).trim(), said, `${browserName}: ${name}'s ${field.label} offers ${value} as ${said}`)
@@ -215,12 +216,13 @@ eachBrowser((browserName, launch) => {
       const own = await powers([{ field: 'issuer', is: [narrow] }])
       const others = (await powers([])).filter((p) => !own.includes(p))
       assert.ok(others.length > 0, 'other circles issued powers this one did not')
-      const offers = async () => (await panel(page).getByRole('combobox', { name: 'Filter' }).locator('option').allInnerTexts()).map((t) => t.trim())
+      const offers = async () => (await offered(panel(page).getByRole('combobox', { name: 'Filter' }))).map((o) => o.label)
       await visit('/mandates?view=list')
       assert.ok(!(await offers()).includes('Power'), `${browserName}: Filter offers no Power across every mandate`)
       await visit(`/mandates?view=list&where=${encodeURIComponent(JSON.stringify([{ field: 'issuer', is: [narrow] }]))}`)
       assert.ok((await offers()).includes('Power'), `${browserName}: Filter offers Power once Issued by keeps one circle's mandates`)
-      await panel(page).getByRole('combobox', { name: 'Filter' }).selectOption({ label: 'Power' })
+      await choose(panel(page).getByRole('combobox', { name: 'Filter' }), { label: 'Power' })
+
       const menu = page.locator('[aria-label="Condition on Power"]')
       await menu.locator('[role="menuitemcheckbox"]').first().waitFor()
       const offered = await menu.locator('[role="menuitemcheckbox"]').evaluateAll((els) => els.map((el) => el.getAttribute('data-value') ?? ''))

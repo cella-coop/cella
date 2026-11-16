@@ -25,6 +25,7 @@ import { carried, close, propose } from '@cella/org-graft-membership-motion/api'
 import type { Deps, Done } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
 import { eachBrowser, serve, signIn } from './browser.ts'
+import { chosen } from './controls.ts'
 
 const su = new pg.Client()
 let app: pg.Client | undefined
@@ -130,7 +131,8 @@ eachBrowser((name, launch) => {
             `${at}: the dialog says why her write changes nothing`,
           )
           assert.equal(await dialog.getByLabel('Title').inputValue(), 'Enable Invoice for Web', `${at}: its title says the change`)
-          assert.equal(await dialog.getByLabel('Circle').inputValue(), 'ag', `${at}: put to the assembly`)
+          assert.equal(await chosen(dialog.getByLabel('Circle')), 'ag',
+ `${at}: put to the assembly`)
           assert.equal(await dialog.getByLabel('New features').inputValue(), arranged, `${at}: the listing as she arranged it`)
           await page.screenshot({ path: `${shots}/features-propose-${name}-${scheme}.png` })
           await dialog.getByRole('button', { name: 'Propose to Assembly' }).click()

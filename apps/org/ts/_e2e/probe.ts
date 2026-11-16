@@ -5,7 +5,9 @@
 // the server asks for signed by that device as the browser signs it.
 // Prints the write's outcome as JSON and fails unless it settled. It
 // reads the member's device from the scope's database by the PG*
-// variables, as a superuser.
+// variables, as a superuser. Through a visiting demo's front, which knows
+// a visitor by a cookie, `PROBE_COOKIE` is that cookie, sent with every
+// request, so the probe signs in and writes in that visitor's copy.
 // Usage: node apps/org/ts/_e2e/probe.ts BASE [ACTOR]
 
 import pg from 'pg'
@@ -15,6 +17,15 @@ import { Shell } from './serve.ts'
 const [base, actor = 'camille@lanterne.example'] = process.argv.slice(2)
 if (!base) {
   throw new Error('probe: name the server, such as http://127.0.0.1:3000')
+}
+const visitor = process.env.PROBE_COOKIE
+if (visitor) {
+  const send = globalThis.fetch
+  globalThis.fetch = (input: Parameters<typeof fetch>[0], init: RequestInit = {}) => {
+    const headers = new Headers(init.headers)
+    headers.set('cookie', [visitor, headers.get('cookie')].filter(Boolean).join('; '))
+    return send(input, { ...init, headers })
+  }
 }
 const su = new pg.Client()
 await su.connect()

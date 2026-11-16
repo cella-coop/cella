@@ -386,10 +386,11 @@
           touch $out
         '';
 
-        # The module run in a VM: a co-op's scope, and a demo's
-        # (nix/test.nix).
+        # The module run in a VM: a co-op's scope, a demo's, and a demo
+        # serving each visitor a copy of their own (nix/test.nix).
         module = import ./nix/test.nix { inherit self pkgs; kind = "scope"; };
         demo = import ./nix/test.nix { inherit self pkgs; kind = "demo"; };
+        visitors = import ./nix/test.nix { inherit self pkgs; kind = "visitors"; };
       });
 
       # services.cella: a host's scopes, each a database on its Postgres 18

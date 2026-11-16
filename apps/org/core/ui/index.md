@@ -530,6 +530,12 @@ order, separated by commas, an accordion's run after its name and a
 colon, the runs separated by semicolons, as a circle's features are
 written ([features](../circle/index.md#features)).
 
+A record's page draws a field it saves in the same way: its block draws
+`Settings` with that one setting, its write posted with the record's id
+as an item's are, as a contact's note is
+([contact](../../feats/contact/index.md#shell)), and the page has no
+Save button either.
+
 A settings page is served at `/settings/<name>`, listed in Settings'
 sidebar under its group, or, a page of one thing, at
 `/settings/<name>/<id>`, which its slice reads for that id and its
@@ -600,7 +606,8 @@ The Settings section opens on Account, the acting person's own
 settings at `/settings/account`, which the account menu at the
 sidebar's foot links to as well: a `Settings` form of their name, email
 and phone, each saved by `profile`, every person's right on their own,
-and their theme, light, dark or the system's, saved in its cookie and worn at once; and
+and their theme, light, dark or the system's, saved in its cookie and
+worn as it is chosen, each saved as it is left; and
 under it their devices, the one their session signs with marked as this
 device and each other current one with its revoke, as on their page.
 Its fields are all the reader's own, so none opens a motion.

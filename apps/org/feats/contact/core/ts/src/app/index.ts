@@ -5,7 +5,7 @@ import Note from './blocks/Note.svelte'
 
 // The feat's client side: the contacts, with a view of the clients among
 // them, and a contact's page with its client role and its note, the
-// grafts adding its invoices and its projects as tabs.
+// grafts filling its Projects and Invoices tabs.
 export const app: App = {
   name: 'contact',
   collections: {
@@ -39,7 +39,11 @@ export const app: App = {
           ...(c.parent ? [{ label: c.parent, sub: 'part of', href: `/contacts/${c.parent}` }] : []),
           ...(c.person ? [{ label: c.name, sub: 'person', href: `/people/${c.person}` }] : []),
         ],
-        tabs: [{ id: 'overview', label: 'Overview' }],
+        tabs: [
+          { id: 'overview', label: 'Overview' },
+          { id: 'projects', label: 'Projects' },
+          { id: 'invoices', label: 'Invoices' },
+        ],
         blocks: [Client, Note],
       },
     },

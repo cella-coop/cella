@@ -1,6 +1,6 @@
 +++
 title = "Membership"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 A person's membership, from invited to exited, with the shares they hold.
@@ -227,8 +227,8 @@ since her hire: she holds Web's participant mandates there, proposing
 and discussing in Web, and none of the assembly's; beside them, a
 person's rights and an employee's. Paul, gone, holds a person's alone.
 
-In the shell, `membership/seats` adds a circle's seats to its page, in
-a Seats tab of their own, one row per person with every role they hold in it, and how many sit in it
+In the shell, `membership/seats` adds a circle's seats to its page, on
+its Roles tab under its roles, one row per person with every role they hold in it, and how many sit in it
 to the list and its gallery cards; and to a person's page their seats
 and the powers they hold through them, each power by its plain name
 and its policy's sentence, the mandates `circle_person.holds` gives on
@@ -236,11 +236,11 @@ the verdict date, which `circle_person.may` would grant before any limit
 is spent: the participant's `propose` and `discuss` in each circle they
 sit in, Inès's in Web, beside their roles', and none of a suspended
 member's; and to the list the circles they sit in;
-under Joining, whether they sit in the assembly and in a working
-circle; and under Own and decide, what they decide read back as
+under Membership, whether they sit in the assembly and in a working
+circle; and under Membership, what they decide read back as
 sentences: where they sit, how each of those circles decides, and the
 mandates they act by, each as its policy reads, its limit in it; and
-under Powers, their seats and every power they hold and by what
+under Authority, their seats and every power they hold and by what
 ([shell](#shell)).
 
 ## Grafts
@@ -268,7 +268,7 @@ records of its circle, its holder's own or the whole co-op, and a seat
 with no mandate covers none; and a right is held by
 whoever core's person says is one of its people, with no seat, and
 `circle_person.rights` lists a right exactly where `entitled` grants its
-power. `powers` (`cella test e2e powers`) reads the Powers tab of
+power. `powers` (`cella test e2e powers`) reads the Authority tab of
 every Lanterne person against `may` and `entitled`, power by power,
 each signed in as the person whose page it is, Inès as herself, and a
 non-member reading another's tab finds no right on it.
@@ -300,7 +300,7 @@ page offers them Erase my data instead, which says what the law keeps,
 asks them to confirm and signs `erase`. Seats and powers are this
 feat's `membership/seats` ([seats](#seats)).
 
-A person's page has a Powers tab: what they may do on the verdict date,
+A person's page has an Authority tab: what they may do on the verdict date,
 power by power, each as `circle_person.may` and `circle_person.entitled`
 answer it and through what. A power held by a seat names the circle it
 is held in, the role, the tenure that holds the role, from and until,
@@ -330,7 +330,7 @@ each kept by the slice that knows it: the membership's own, invited and
 then admitted, and a device that signs; the admission once a probation
 ends (`employment-membership-motion`); the texts to read
 (`document-membership`); the circles ([seats](#seats)); and the
-capital (`account-membership`). Own and decide reads back in plain
+capital (`account-membership`). Membership reads back in plain
 sentences what membership is, one member, one vote; what the member owns,
 from the statutes' terms (`account-membership`); and what they decide,
 from their seats and mandates ([seats](#seats)); and holds what the
@@ -343,7 +343,7 @@ sentences from its own guards and parameters, so the page says what the
 guards say. For a person who is no member, both say what joining would be.
 
 In the inbox, core's person's, the membership adds their invitation
-while they are invited, to take up on their Joining tab.
+while they are invited, to take up on their Membership tab.
 
 ## Import
 

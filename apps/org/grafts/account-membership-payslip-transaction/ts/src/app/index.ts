@@ -8,7 +8,7 @@ import Withheld from './blocks/Withheld.svelte'
 export const app: App = {
   name: 'account-membership-payslip-transaction',
   extends: {
-    people: { page: { blocks: [{ tab: 'rights', block: Instalments }] } },
+    people: { page: { blocks: [{ tab: 'membership', block: Instalments }] } },
     payslips: { page: { blocks: [{ tab: 'lines', block: Withheld }] } },
   },
 }

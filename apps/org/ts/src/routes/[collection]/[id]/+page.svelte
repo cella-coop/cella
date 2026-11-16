@@ -28,9 +28,10 @@
 
   // The owner's page over the item, and each extension's cards and blocks
   // over its own data on the item: one detail view whatever the kind. The
-  // page's tabs are the owner's, then any an extension adds; a block sits
-  // in the tab it names, a bare one in the first; the address holds the
-  // open tab. All of it is the item's collection's, as the data names it,
+  // page's tabs are the owner's, at most four, which the tabs check
+  // holds; a block sits in the tab it names, a bare one in the first; a
+  // tab past the first that holds no block is not shown; the address
+  // holds the open tab. All of it is the item's collection's, as the data names it,
   // never the address's, which runs ahead of the data while the next item
   // reads.
   function shown(data: Data) {
@@ -46,13 +47,15 @@
     const activity = [...(page?.activity?.(data.item) ?? []).reverse(), ...added.flatMap((a) => (a.page.activity?.(a.data) ?? []).reverse())].sort((x, y) =>
       x.at < y.at ? -1 : x.at > y.at ? 1 : 0,
     )
-    const tabs: Tab[] = [...(page?.tabs ?? []), ...added.flatMap((a) => a.page.tabs ?? [])]
-    const tab = tabs.find((t) => t.id === here.url.searchParams.get('tab'))?.id ?? tabs[0]?.id
-    const place = (p: Placed) => (typeof p === 'function' ? { tab: tabs[0]?.id, block: p } : p)
-    const blocks = [
+    const declared: Tab[] = page?.tabs ?? []
+    const place = (p: Placed) => (typeof p === 'function' ? { tab: declared[0]?.id, block: p } : p)
+    const placed = [
       ...(page?.blocks ?? []).map((p) => ({ ...place(p), data: data.item })),
       ...added.flatMap((a) => (a.page.blocks ?? []).map((p) => ({ ...place(p), data: a.data }))),
-    ].filter((b) => b.tab === tab)
+    ]
+    const tabs = declared.filter((t, i) => i === 0 || placed.some((b) => b.tab === t.id))
+    const tab = tabs.find((t) => t.id === here.url.searchParams.get('tab'))?.id ?? tabs[0]?.id
+    const blocks = placed.filter((b) => b.tab === tab)
     // What each slice draws inside the item's blocks, with its data on the
     // item: a graft's motion inside a document.
     const embeds: Embeds = Object.fromEntries([
@@ -84,7 +87,15 @@
       mounted,
       page,
       properties: [...properties, ...stamps(data.made, properties)],
-      related: all(page?.related, (p) => p.related),
+      // Its jumps, each collection holding rows that name it, by its
+      // name, then the records its slices link to.
+      related: [
+        ...data.jumps.flatMap((j) => {
+          const to = collection(j.collection)
+          return to ? [{ label: to.view.title, href: j.href, collection: j.collection, count: j.count }] : []
+        }),
+        ...all(page?.related, (p) => p.related),
+      ],
       activity,
       tabs,
       tab,

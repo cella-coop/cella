@@ -34,13 +34,11 @@ export const app: App = {
           { label: 'Credit', value: l.credit, kind: 'money' },
           { label: 'Balance', value: l.balance, kind: 'money', tone: l.balance < 0 ? 'negative' : undefined },
         ],
-        tabs: [{ id: 'ledger', label: 'Ledger' }],
         blocks: [{ tab: 'ledger', block: Movements }],
       },
     },
     periods: {
       page: {
-        tabs: [{ id: 'entries', label: 'Entries' }],
         blocks: [{ tab: 'entries', block: Entries }],
       },
     },

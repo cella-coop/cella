@@ -1,6 +1,6 @@
 +++
 title = "Contact"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 The organisations and people the co-op deals with: its CRM. Companies
@@ -186,9 +186,9 @@ on a settings field (`Settings`); the last writer wins it. A person
 contact's page
 reads their name, email and phone from core and links their entry in
 People among its related. The data central to
-it is in tabs after the first: what it owes and the invoices that bill
-it, in Invoices (`contact-invoice`), and the projects it commissioned,
-in Projects (`contact-project`).
+it is in the two tabs after the first, which this feat chooses: the
+projects it commissioned, in Projects (`contact-project`), and what it
+owes and the invoices that bill it, in Invoices (`contact-invoice`).
 
 ## Import
 

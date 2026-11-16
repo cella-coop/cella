@@ -33,6 +33,11 @@ export interface Column<R = any> {
   // The collection whose record the value names, as a task's assignee
   // names one of `people`: the value wears that collection's icon.
   record?: string
+  // The collection whose record's id the value is, as a task's project's
+  // id: that record's page jumps by it to the rows naming it. A person
+  // column's address names one of `people`, a circle column's id one of
+  // `circles`, with no `of`.
+  of?: string
 }
 
 // A label and value row in the drawer's Details; one whose `href` is a
@@ -45,10 +50,16 @@ export interface Prop {
   href?: string
 }
 
+// A line of the drawer's Related: a record it links to, or a jump to the
+// collection `collection` names, filtered to the rows that name the
+// record, wearing that collection's icon and `count`, how many of them
+// the reader sees.
 export interface Link {
   label: string
   sub?: string
   href: string
+  collection?: string
+  count?: number
 }
 
 export interface Event {
@@ -87,9 +98,11 @@ export interface Viewer {
 export type Block<T = any> = Component<{ data: T; id: string; embeds?: Embeds; viewer?: Viewer | null }>
 
 // A block in a tab of the item's page: a bare block sits in the first.
+// An extension's block names a tab its owner's page declares.
 export type Placed<T = any> = Block<T> | { tab: string; block: Block<T> }
 
-// A tab of an item's page, a genuinely different view of the item.
+// A tab of an item's page, a genuinely different view of the item. Only
+// the page's owner declares tabs, at most four.
 export interface Tab {
   id: string
   label: string
@@ -117,8 +130,11 @@ export interface Page<T = any> {
   // The box that adds a comment, under the Activity, where the kind
   // takes comments.
   comment?: Block<T>
-  // The page's tabs, the first its default, as pills in the header; an
-  // extension may add its own after the owner's.
+  // The page's tabs, the first its default, as pills in the header: at
+  // most four, in order, chosen by the slice that owns the collection,
+  // its extensions placing their blocks in them. A tab past the first
+  // that holds no block, as one whose extension is pruned, is not shown;
+  // an extension the owner gives no tab is a jump in Related.
   tabs?: Tab[]
   blocks?: Placed<T>[]
   // What this slice draws inside the item's blocks, by kind.
@@ -226,9 +242,10 @@ export interface Added<E = any> {
   // `title`.
   create?: Component<{ rows: any[]; about: any }>
   title?: string
-  // What it adds to the item's page; its subtitle stands where the
-  // owner's page gives none, as a mandate reads as its policy's sentence.
-  page?: Omit<Partial<Page<E>>, 'eyebrow' | 'title' | 'summary'>
+  // What it adds to the item's page, its blocks in the tabs the owner's
+  // page declares; its subtitle stands where the owner's page gives none,
+  // as a mandate reads as its policy's sentence.
+  page?: Omit<Partial<Page<E>>, 'eyebrow' | 'title' | 'summary' | 'tabs'>
 }
 
 // The sidebar's navigation, by group, `home`, `feature` and `platform`: a

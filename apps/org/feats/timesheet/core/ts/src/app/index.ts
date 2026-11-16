@@ -27,6 +27,7 @@ export const app: App = {
           { key: 'billable', label: 'Kind', kind: 'badge', role: 'hidden', value: (e: Listed) => e.billable },
           { key: 'month', label: 'Month', kind: 'badge', role: 'hidden', value: (e: Listed) => e.month },
           { key: 'state', label: 'Timesheet', kind: 'badge', role: 'meta', value: (e: Listed) => e.state, tone: (e: Listed) => tones[e.state] },
+          { key: 'member', label: 'Member', kind: 'person', role: 'hidden', value: (e: Listed) => e.member },
         ],
         look: { layout: 'table', lanes: { state: ['open', 'submitted', 'approved'] } },
         dashboard: [

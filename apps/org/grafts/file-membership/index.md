@@ -1,6 +1,6 @@
 +++
 title = "file-membership"
-updated = 2026-11-11
+updated = 2026-11-16
 +++
 
 A member's records on file, such as their signed subscription form: files
@@ -67,8 +67,9 @@ once one has left.
 
 ## Shell
 
-A Records tab on a person's page: the records on their file, each opening
-as its file, and another filed.
+On a person's Work tab, the records on their file, each opening as its
+file, and another filed; their files are also a jump in Related, by
+whom each concerns.
 
 ## Lanterne
 

@@ -6,10 +6,11 @@ import Members from './blocks/Members.svelte'
 import Powers from './blocks/Powers.svelte'
 import Seats from './blocks/Seats.svelte'
 
-// The feat's seats, client side: a circle's seats, and a member's seats and the
-// mandates they hold through them; every power they hold and by what, on
-// its own tab; the circles joining asks, and what a member decides, read
-// back as sentences.
+// The feat's seats, client side: a circle's seats, on its Roles tab; and on
+// a member's Authority tab their seats and the mandates they hold through
+// them, and every power they hold and by what; on their Membership tab
+// the circles joining asks, and what a member decides, read back as
+// sentences.
 export const app: App = {
   name: 'membership/seats',
   extends: {
@@ -18,8 +19,7 @@ export const app: App = {
       look: { cards: ['purpose', 'parent', 'seated'] },
       page: {
         properties: (s: Seat[]) => [{ label: 'Seated', value: new Set(s.filter((x) => !x.until).map((x) => x.member)).size, kind: 'number' }],
-        tabs: [{ id: 'seats', label: 'Seats' }],
-        blocks: [{ tab: 'seats', block: Members }],
+        blocks: [{ tab: 'roles', block: Members }],
       },
     },
     people: {
@@ -27,8 +27,7 @@ export const app: App = {
       page: {
         related: (d: { seats: Seat[]; held: Held[] }) =>
           d.seats.filter((s) => !s.until).map((s) => ({ label: s.circleName, sub: s.roleName ?? undefined, href: `/circles/${s.circle}` })),
-        tabs: [{ id: 'powers', label: 'Powers' }],
-        blocks: [{ tab: 'powers', block: Seats }, { tab: 'joining', block: Circles }, { tab: 'rights', block: Decides }, { tab: 'powers', block: Powers }],
+        blocks: [{ tab: 'authority', block: Seats }, { tab: 'membership', block: Circles }, { tab: 'membership', block: Decides }, { tab: 'authority', block: Powers }],
       },
     },
   },

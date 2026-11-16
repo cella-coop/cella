@@ -1,5 +1,5 @@
-import { numbered, type Db } from '@cella/org-db'
-import type { Claim, Claimed } from '../models/claim.ts'
+import type { Db } from '@cella/org-db'
+import type { Claimed } from '../models/claim.ts'
 
 // Each expense's member and decider, by name, by the expense's id.
 export const claims = 'SELECT expense AS id, name, decider_name FROM expense_membership.claim'
@@ -7,14 +7,4 @@ export const claims = 'SELECT expense AS id, name, decider_name FROM expense_mem
 export async function claim(db: Db, expense: string): Promise<Claimed | null> {
   const { rows } = await db.query<Claimed>('SELECT name, decider_name FROM expense_membership.claim WHERE expense = $1', [expense])
   return rows[0] ?? null
-}
-
-// A member's expenses, the latest first.
-export async function claimed(db: Db, member: string): Promise<Claim[]> {
-  const { rows } = await db.query<Claim>(
-    `SELECT e.id, e.label, to_char(e.day, 'YYYY-MM-DD') AS day, expense.total(e)::float8 AS total, e.status
-     FROM expense.expense e WHERE e.member = $1 ORDER BY e.day DESC, ${numbered('e.id', 'DESC')}`,
-    [member],
-  )
-  return rows
 }

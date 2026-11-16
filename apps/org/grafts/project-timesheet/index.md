@@ -1,6 +1,6 @@
 +++
 title = "project-timesheet"
-updated = 2026-11-13
+updated = 2026-11-16
 +++
 
 Time against a project, what it spent of the budget, what it cost the
@@ -78,8 +78,9 @@ the founding carries.
 
 Adds to each entry its project's title, and to the timesheets' dashboard
 the hours by project; to each project its hours and what they spent, a
-card field of the projects' gallery. On a project's page it adds the Time
-tab: the hours, billable hours and what they spent, the hours by member,
+card field of the projects' gallery, and its project's id, a hidden field by
+which a project's page jumps in Related to its time. On a project's Budget
+tab it adds: the hours, billable hours and what they spent, the hours by member,
 the latest entries and logging time against the project as the acting
 member, for the circle they name among those they sit in that day, the
 project's offered first where they sit in it, so the entry goes into

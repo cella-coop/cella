@@ -9,7 +9,7 @@ const category = (e: Expense) => categories.find((c) => c.code === e.category)?.
 // The feat's client side: the expenses as a board by status, on which a
 // card dragged into the next column is that column's write; a new claim
 // as the acting member; and an expense's page with its next write, its
-// receipts and postings the tabs its extenders add.
+// receipts and postings the tabs its extenders fill.
 export const app: App = {
   name: 'expense',
   collections: {
@@ -29,6 +29,7 @@ export const app: App = {
           { key: 'net', label: 'Before VAT', kind: 'money', role: 'hidden', value: (e: Expense) => e.net },
           { key: 'vat', label: 'VAT', kind: 'money', role: 'hidden', value: (e: Expense) => e.vat },
           { key: 'decided', label: 'Decided', kind: 'date', role: 'hidden', value: (e: Expense) => e.decided },
+          { key: 'member', label: 'Member', kind: 'person', role: 'hidden', value: (e: Expense) => e.member },
         ],
         look: { layout: 'board', by: 'status', lanes: { status: [...statuses] }, cards: ['total', 'day'] },
         shifts: [
@@ -65,7 +66,11 @@ export const app: App = {
           ...(e.submitted ? [{ at: e.submitted, text: 'submitted' }] : []),
           { at: e.day, text: 'spent' },
         ],
-        tabs: [{ id: 'overview', label: 'Overview' }],
+        tabs: [
+          { id: 'overview', label: 'Overview' },
+          { id: 'receipts', label: 'Receipts' },
+          { id: 'postings', label: 'Postings' },
+        ],
         actions: Status,
       },
     },

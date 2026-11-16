@@ -1,10 +1,10 @@
 import type { Db } from '@cella/org-db'
-import type { Assigned, Doing } from '../models/assignment.ts'
+import type { Assigned } from '../models/assignment.ts'
 
 // Who does each task, by task: the assignee's name, which a board may
-// group by.
+// group by, and their address, by which their page jumps to their tasks.
 export const assignees =
-  'SELECT a.task AS id, mp.name AS assignee FROM membership_task.assignment a JOIN (membership.member m JOIN person.person mp ON mp.address = m.address) ON m.address = a.member'
+  'SELECT a.task AS id, mp.name AS assignee, a.member AS assigned FROM membership_task.assignment a JOIN (membership.member m JOIN person.person mp ON mp.address = m.address) ON m.address = a.member'
 
 export async function assigned(db: Db, task: string): Promise<Assigned> {
   const { rows } = await db.query<{ address: string; name: string }>(
@@ -15,16 +15,4 @@ export async function assigned(db: Db, task: string): Promise<Assigned> {
     `SELECT m.address, p.name FROM membership.member m JOIN person.person p ON p.address = m.address WHERE membership.active(m.address, cella.verdict_date()) ORDER BY p.name`,
   )
   return { assignee: rows[0] ?? null, members }
-}
-
-// The tasks a member does that are not done, the most pressing first.
-export async function doing(db: Db, member: string): Promise<Doing[]> {
-  const { rows } = await db.query<Doing>(
-    `SELECT t.id, t.title, t.status, t.priority, to_char(t.due, 'YYYY-MM-DD') AS due
-     FROM membership_task.assignment a JOIN task.task t ON t.id = a.task
-     WHERE a.member = $1 AND t.status <> 'done'
-     ORDER BY array_position(ARRAY['urgent', 'high', 'normal', 'low'], t.priority), t.due NULLS LAST, t.id`,
-    [member],
-  )
-  return rows
 }

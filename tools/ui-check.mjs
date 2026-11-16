@@ -25,10 +25,13 @@
 //   still compile but are what code written from older knowledge reaches
 //   for, and no `{@html}`, which would render text as markup.
 // - Never native components: no `.svelte` file in the org app draws the
-//   browser's own select, date field, checkbox or radio (`<select>`, an
-//   `<input>` of type date, datetime-local, month, week, checkbox or
-//   radio); it composes the UI core's Select, date field and Checkbox,
-//   which are on-brand and accessible in every browser alike.
+//   browser's own select, date or time field, checkbox, radio or file
+//   field (`<select>`, an `<input>` of type date, datetime-local, month,
+//   week, time, checkbox, radio or file); it composes the UI core's
+//   Select, date, time and file Field and Checkbox, which are on-brand and
+//   accessible in every browser alike. A file input carrying `hidden` is
+//   allowed: the file picker keeps one inside, unseen, for the form to
+//   post.
 // - No route loads or acts: no `+page.server.ts` or `+layout.server.ts`
 //   under a package's `src/routes/`, and no `load` in a `+page.ts` or
 //   `+layout.ts`; a page reads through queries and writes through forms,
@@ -157,11 +160,47 @@ const tags = (text) =>
 // The browser's own controls, which the UI core's replace: in an org
 // app's markup, past its scripts, styles and comments.
 const org = /^apps\/org\//
-const natives = [
-  [/<select[\s>/]/, 'a native <select>', "the UI core's Select"],
-  [/<input\b[^>]*\stype\s*=\s*["']?(date|datetime-local|month|week)["'\s/>]/, 'a native date input', "the UI core's Field of type date"],
-  [/<input\b[^>]*\stype\s*=\s*["']?(checkbox|radio)["'\s/>]/, 'a native checkbox or radio', "the UI core's Checkbox, or a button group"],
+const natives = [[/<select[\s>/]/, 'a native <select>', "the UI core's Select"]]
+// An `<input>`'s types that are the browser's own controls; a file input
+// may be drawn `hidden`, as the file picker's own.
+const inputs = [
+  [/^(date|datetime-local|month|week)$/, 'a native date input', "the UI core's Field of type date"],
+  [/^time$/, 'a native time input', "the UI core's Field of type time"],
+  [/^(checkbox|radio)$/, 'a native checkbox or radio', "the UI core's Checkbox, or a button group"],
+  [/^file$/, 'a native file input', "the UI core's Field of type file", 'hidden'],
 ]
+
+// Each `<input>` tag drawn, read whole past a `>` in a `{…}` expression or
+// a quoted value, as an arrow's, its expressions emptied to `{}`.
+function inputTags(drawn) {
+  const out = []
+  for (const m of drawn.matchAll(/<input\b/g)) {
+    let tag = ''
+    let depth = 0
+    let quote = null
+    for (let i = m.index; i < drawn.length; i++) {
+      const c = drawn[i]
+      if (depth > 0) {
+        depth += c === '{' ? 1 : c === '}' ? -1 : 0
+        tag += depth === 0 ? '}' : ''
+        continue
+      }
+      if (quote) {
+        quote = c === quote ? null : quote
+      } else if (c === '"' || c === "'") {
+        quote = c
+      } else if (c === '{') {
+        depth = 1
+      }
+      tag += c
+      if (!quote && c === '>') {
+        break
+      }
+    }
+    out.push(tag)
+  }
+  return out
+}
 const markupOf = (text) => text.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<style[\s\S]*?<\/style>/g, '').replace(/<!--[\s\S]*?-->/g, '')
 
 // A route's server load or actions, and a universal load.
@@ -198,10 +237,18 @@ export function problems(path, text, ui) {
   }
   if (svelte && org.test(path)) {
     const drawn = markupOf(text)
-    for (const [re, what, instead] of natives) {
-      if (re.test(drawn)) {
-        out.push(`${path}: draws ${what}; never native components: compose ${instead}`)
+    const found = new Set(natives.filter(([re]) => re.test(drawn)))
+    for (const tag of inputTags(drawn)) {
+      const type = tag.match(/\stype\s*=\s*["']?([\w-]+)/)?.[1]?.toLowerCase() ?? ''
+      const hidden = /\shidden(?=[\s/>=])/.test(tag)
+      for (const rule of inputs) {
+        if (rule[0].test(type) && !(rule[3] === 'hidden' && hidden)) {
+          found.add(rule)
+        }
       }
+    }
+    for (const [, what, instead] of [...natives, ...inputs].filter((r) => found.has(r))) {
+      out.push(`${path}: draws ${what}; never native components: compose ${instead}`)
     }
   }
   for (const selector of ringless(path, text)) {

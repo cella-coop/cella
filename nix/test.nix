@@ -111,6 +111,15 @@ pkgs.testers.runNixOSTest {
           assert after > head, f"the log's head stayed at {head}"
           host.succeed("${as "${cella} log verify --url '${url "demo"}'"}")
 
+      with subtest("a demo drops no database that is not its own: a co-op's is refused as a copy and as a template"):
+          host.succeed("${as "createdb coop"}")
+          host.succeed("""${psql "coop" "CREATE TABLE kept (n int); INSERT INTO kept VALUES (1)"} """)
+          said = host.fail("${as "${cella} demo copy coop --url '${url "demo_template"}' --replace"} 2>&1")
+          assert "is not a copy of demo_template" in said, said
+          said = host.fail("${as "${cella} demo template --again --url '${url "coop"}'"} 2>&1")
+          assert "is not a template" in said, said
+          host.succeed("""${psql "coop" "SELECT n FROM kept"} | grep -qx 1""")
+
       with subtest("the template, built again from nothing, holds the same log, and both verify"):
           ops = "SELECT string_agg(n || ' ' || op || ' ' || date, ',' ORDER BY n) FROM cella.log"
           host.succeed("${as "${cella} demo copy first --url '${url "demo_template"}'"}")

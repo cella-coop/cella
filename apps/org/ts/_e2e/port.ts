@@ -33,7 +33,7 @@ export async function reading(su: pg.Client, offset: number, day: string): Promi
   const stop = () => execFileSync(bin, ['analytics', 'stop', '--port', port], { cwd: repo })
   stop()
   execFileSync(bin, ['analytics', 'start', '--db', db, '--port', port], { cwd: repo })
-  const url = `quack:localhost:${port}`
+  const url = `quack:127.0.0.1:${port}`
   const token = join(repo, '.data/analytics', port, 'token')
   const analytics = await shell({ url, token: readFileSync(token, 'utf8').trim(), extensions: process.env.CELLA_DUCKDB_EXTENSIONS ?? '' })
   return {

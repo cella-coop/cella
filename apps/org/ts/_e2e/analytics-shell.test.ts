@@ -31,7 +31,7 @@ const bin = process.env.CELLA_BIN ?? 'cella'
 const db = process.env.PGDATABASE ?? 'cella'
 // A port of its own, apart from the dev shell's and the run's others.
 const port = own(10)
-const url = `quack:localhost:${port}`
+const url = `quack:127.0.0.1:${port}`
 const extensions = process.env.CELLA_DUCKDB_EXTENSIONS ?? ''
 const cella = (...args: string[]) => spawnSync(bin, [...args, '--port', port], { cwd: repo, encoding: 'utf8' })
 

@@ -11,7 +11,7 @@ import { compile } from '../check.ts'
 import type { Analytics, Audience, Catalog, Head, Result, Type, Value } from '../report.ts'
 
 export interface Options {
-  // Where the shell serves, `quack:localhost:54343`.
+  // Where the shell serves, `quack:127.0.0.1:54343`.
   url: string
   token: string
   // The directory holding DuckDB's extensions by version and platform,

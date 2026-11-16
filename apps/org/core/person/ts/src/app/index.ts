@@ -32,7 +32,15 @@ export const app: App = {
           { key: 'due', label: 'Due', kind: 'date', role: 'meta', value: (a: Ask) => a.due },
           { key: 'since', label: 'Since', kind: 'date', role: 'hidden', value: (a: Ask) => a.since },
         ],
-        look: { layout: 'list', lanes: { kind: ['stance', 'approval', 'meeting', 'mention', 'invitation'] } },
+        // Grouped by kind, what is due soonest first, and an ask with no
+        // due date after those with one, the longest waiting first.
+        look: {
+          layout: 'list',
+          by: 'kind',
+          sort: { field: 'due', dir: 'asc' },
+          then: { field: 'since', dir: 'asc' },
+          lanes: { kind: ['stance', 'approval', 'meeting', 'mention', 'invitation'] },
+        },
         empty: 'Nothing waits on you.',
         linked: false,
         href: (a: Ask) => a.href,
@@ -47,8 +55,9 @@ export const app: App = {
         icon: icons.User,
         columns: [
           { key: 'name', label: 'Name', kind: 'title', role: 'title', value: (p: Person) => p.name },
-          { key: 'address', label: 'Address', kind: 'text', role: 'sub', value: (p: Person) => p.address },
+          { key: 'address', label: 'Address', kind: 'text', role: 'hidden', value: (p: Person) => p.address },
         ],
+        look: { sort: { field: 'name', dir: 'asc' } },
       },
       page: {
         eyebrow: 'Person',
@@ -71,7 +80,16 @@ export const app: App = {
       },
     },
     devices: {
-      view: { group: 'platform', subgroup: 'Personal', title: 'Devices', icon: icons.SealCheck, columns, linked: false },
+      // Which are still live, the newest first.
+      view: {
+        group: 'platform',
+        subgroup: 'Personal',
+        title: 'Devices',
+        icon: icons.SealCheck,
+        columns,
+        look: { by: 'state', sort: { field: 'enrolled', dir: 'desc' }, lanes: { state: ['active', 'revoked'] } },
+        linked: false,
+      },
     },
   },
   // The acting person's own settings, first under Personal: their name,

@@ -29,12 +29,15 @@ export const app: App = {
           { key: 'circle', label: 'Circle', kind: 'circle', role: 'sub', record: 'circles', value: (p: Project) => p.circle },
           { key: 'progress', label: 'Milestones', role: 'meta', value: progress },
           { key: 'next', label: 'Next', role: 'hidden', value: (p: Project) => p.next },
-          { key: 'budget', label: 'Budget', kind: 'money', role: 'meta', value: (p: Project) => p.budget },
+          { key: 'budget', label: 'Budget', kind: 'money', role: 'hidden', value: (p: Project) => p.budget },
           { key: 'started', label: 'Started', kind: 'date', role: 'hidden', value: (p: Project) => p.started },
-          { key: 'due', label: 'Due', kind: 'date', role: 'hidden', value: (p: Project) => p.due },
-          { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: (p: Project) => p.state, tone: (p: Project) => tones[p.state] },
+          // A row marks a project done; an active one, most of them, wears
+          // no chip.
+          { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: (p: Project) => (p.state === 'active' ? null : p.state), tone: (p: Project) => tones[p.state] },
+          { key: 'due', label: 'Due', kind: 'date', role: 'meta', value: (p: Project) => p.due },
         ],
-        look: { layout: 'gallery', cards: ['circle', 'progress', 'budget'], lanes: { state: ['active', 'done'] } },
+        // As Linear lists its projects: by circle, the soonest due first.
+        look: { layout: 'list', by: 'circle', sort: { field: 'due', dir: 'asc' }, cards: ['circle', 'progress', 'budget'], lanes: { state: ['active', 'done'] } },
       },
       page: {
         comment: Comments,

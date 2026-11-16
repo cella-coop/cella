@@ -19,12 +19,15 @@ export const app: App = {
         create: Create,
         columns: [
           { key: 'title', label: 'Motion', kind: 'title', role: 'title', value: (d: Motion) => d.title },
-          { key: 'id', label: 'Id', kind: 'mono', role: 'sub', value: (d: Motion) => d.id },
+          { key: 'id', label: 'Id', kind: 'mono', role: 'hidden', value: (d: Motion) => d.id },
           { key: 'circle', label: 'Circle', kind: 'circle', role: 'meta', value: (d: Motion) => d.circle },
           { key: 'method', label: 'Method', role: 'hidden', value: (d: Motion) => d.method },
           { key: 'procedure', label: 'Procedure', kind: 'badge', role: 'hidden', value: (d: Motion) => d.procedure },
           { key: 'deadline', label: 'Deadline', kind: 'date', role: 'meta', value: (d: Motion) => d.deadline },
         ],
+        // By circle, the nearest deadline first; membership-motion's state
+        // makes it a board.
+        look: { by: 'circle', sort: { field: 'deadline', dir: 'asc' } },
       },
       page: {
         eyebrow: 'Motion',

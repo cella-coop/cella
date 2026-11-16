@@ -13,12 +13,14 @@ export const app: App = {
         caption: 'The journal: every transaction in order',
         icon: icons.ArrowsLeftRight,
         columns: [
-          { key: 'id', label: 'Entry', kind: 'mono', role: 'title', value: (e: Journaled) => e.id },
-          { key: 'label', label: 'Label', role: 'sub', value: (e: Journaled) => e.label },
+          { key: 'label', label: 'Label', kind: 'title', role: 'title', value: (e: Journaled) => e.label },
+          { key: 'id', label: 'Entry', kind: 'mono', role: 'hidden', value: (e: Journaled) => e.id },
           { key: 'corrects', label: 'Corrects', kind: 'mono', role: 'hidden', value: (e: Journaled) => e.corrects },
           { key: 'date', label: 'Date', kind: 'date', role: 'meta', value: (e: Journaled) => e.date },
           { key: 'amount', label: 'Amount', kind: 'money', role: 'meta', value: (e: Journaled) => e.amount },
         ],
+        // Read by what happened, month by month, the latest first.
+        look: { by: 'date', sort: { field: 'date', dir: 'desc' } },
       },
       page: {
         eyebrow: 'Transaction',

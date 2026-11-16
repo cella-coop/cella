@@ -27,9 +27,12 @@ export const app: App = {
           { key: 'billable', label: 'Kind', kind: 'badge', role: 'hidden', value: (e: Listed) => e.billable },
           { key: 'month', label: 'Month', kind: 'badge', role: 'hidden', value: (e: Listed) => e.month },
           { key: 'state', label: 'Timesheet', kind: 'badge', role: 'meta', value: (e: Listed) => e.state, tone: (e: Listed) => tones[e.state] },
-          { key: 'member', label: 'Member', kind: 'person', role: 'hidden', value: (e: Listed) => e.member },
+          { key: 'member', label: 'Worker', kind: 'person', role: 'sub', value: (e: Listed) => e.member },
+          { key: 'circle', label: 'Circle', kind: 'circle', role: 'hidden', value: (e: Listed) => e.circle },
         ],
-        look: { layout: 'table', lanes: { state: ['open', 'submitted', 'approved'] } },
+        // The approval queue: grouped by where each month stands, the
+        // latest day first; the month and the circle stay in the drawer.
+        look: { layout: 'table', by: 'state', sort: { field: 'day', dir: 'desc' }, hide: ['month', 'circle'], lanes: { state: ['open', 'submitted', 'approved'] } },
         dashboard: [
           { kind: 'kpi', title: 'Hours', measure: { op: 'sum', field: 'hours' } },
           { kind: 'kpi', title: 'Billable hours', measure: { op: 'sum', field: 'hours' }, where: [{ field: 'billable', is: ['billable'] }] },

@@ -55,8 +55,9 @@ trigger on the expenses.
 
 ## Shell
 
-Adds the claimant's name to each expense, on the board's cards and its
-page with who decided it. A person's expenses are a jump in their page's
+Adds the claimant's name to each expense, which the text filter finds,
+and to its page with who decided it; the board's cards show the member
+as a person, the expense's own field. A person's expenses are a jump in their page's
 Related, by the expense's member.
 
 ## Lanterne

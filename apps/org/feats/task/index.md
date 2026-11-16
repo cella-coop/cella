@@ -1,6 +1,6 @@
 +++
 title = "Task"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 Assignable work items: the atomic unit of the co-op's work. A task stands
@@ -134,8 +134,8 @@ resolve, setting the root resolved on the entry's day or reopening it.
 ## Shell
 
 The `tasks` collection opens as a board grouped by status, its columns
-backlog, todo, doing and done, each card naming its assignee, project,
-priority and due day. Dragging a card into backlog, todo or doing is the
+backlog, todo, doing and done, each card naming its priority, due day,
+assignee, a person, and project. Dragging a card into backlog, todo or doing is the
 `move`, into done the `complete`, posted with the column entered and
 signed as the acting member; a refused move leaves the card where it
 was. The board also groups by priority, assignee or project. A task's

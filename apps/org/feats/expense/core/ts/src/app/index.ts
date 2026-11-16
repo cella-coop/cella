@@ -21,7 +21,7 @@ export const app: App = {
         create: Capture,
         columns: [
           { key: 'label', label: 'Expense', kind: 'title', role: 'title', value: (e: Expense) => e.label },
-          { key: 'id', label: 'Id', kind: 'mono', role: 'sub', value: (e: Expense) => e.id },
+          { key: 'id', label: 'Id', kind: 'mono', role: 'hidden', value: (e: Expense) => e.id },
           { key: 'category', label: 'Category', kind: 'badge', role: 'hidden', value: (e: Expense) => e.category },
           { key: 'day', label: 'Spent on', kind: 'date', role: 'meta', value: (e: Expense) => e.day },
           { key: 'total', label: 'Amount', kind: 'money', role: 'meta', value: (e: Expense) => e.total },
@@ -30,8 +30,11 @@ export const app: App = {
           { key: 'vat', label: 'VAT', kind: 'money', role: 'hidden', value: (e: Expense) => e.vat },
           { key: 'decided', label: 'Decided', kind: 'date', role: 'hidden', value: (e: Expense) => e.decided },
           { key: 'member', label: 'Member', kind: 'person', role: 'hidden', value: (e: Expense) => e.member },
+          { key: 'circle', label: 'Circle', kind: 'circle', role: 'hidden', value: (e: Expense & { circle?: string | null }) => e.circle },
         ],
-        look: { layout: 'board', by: 'status', lanes: { status: [...statuses] }, cards: ['total', 'day'] },
+        // A board by status, whose moves are the writes; the latest spent
+        // first, each card naming who spent it, how much and when.
+        look: { layout: 'board', by: 'status', sort: { field: 'day', dir: 'desc' }, lanes: { status: [...statuses] }, cards: ['member', 'total', 'day'] },
         shifts: [
           { by: 'status', to: ['submitted'], action: 'submit' },
           { by: 'status', to: ['approved'], action: 'approve' },

@@ -30,11 +30,16 @@ export const app: App = {
           { key: 'standing', label: 'Status', kind: 'badge', role: 'meta', value: (b: Listed) => b.standing, tone: (b: Listed) => tones[b.standing] },
           { key: 'net', label: 'Before VAT', kind: 'money', role: 'hidden', value: (b: Listed) => b.net },
           { key: 'vat', label: 'VAT', kind: 'money', role: 'hidden', value: (b: Listed) => b.vat },
+          { key: 'issued', label: 'Dated', kind: 'date', role: 'hidden', value: (b: Listed) => b.issued },
           { key: 'recorded', label: 'Recorded', kind: 'date', role: 'hidden', value: (b: Listed) => b.recorded },
+          { key: 'circle', label: 'Circle', kind: 'circle', role: 'hidden', value: (b: Listed & { circle?: string | null }) => b.circle },
         ],
+        // The approval queue first: grouped by standing, the soonest due
+        // first.
+        look: { by: 'standing', sort: { field: 'due', dir: 'asc' }, lanes: { standing: ['overdue', 'recorded', 'approved', 'paid'] } },
         dashboard: [
-          { kind: 'kpi', title: 'To approve', measure: { op: 'sum', field: 'total' }, where: [{ field: 'status', is: ['recorded'] }] },
-          { kind: 'kpi', title: 'To pay', measure: { op: 'sum', field: 'total' }, where: [{ field: 'status', is: ['approved'] }] },
+          { kind: 'kpi', title: 'To approve', measure: { op: 'sum', field: 'total' }, where: [{ field: 'standing', is: ['recorded'] }] },
+          { kind: 'kpi', title: 'To pay', measure: { op: 'sum', field: 'total' }, where: [{ field: 'standing', is: ['approved'] }] },
           { kind: 'kpi', title: 'Overdue', measure: { op: 'sum', field: 'total' }, where: [{ field: 'standing', is: ['overdue'] }] },
           { kind: 'chart', title: 'By month', measure: { op: 'sum', field: 'total' }, by: 'issued' },
           { kind: 'chart', title: 'By category', measure: { op: 'sum', field: 'total' }, by: 'category' },

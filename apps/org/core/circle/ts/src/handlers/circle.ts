@@ -1,7 +1,7 @@
 import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
-import type { Amend, Amended, Create, Created, Terms } from '../models/circle.ts'
+import type { Amend, Amended, Arrange, Arranged, Create, Created, Terms } from '../models/circle.ts'
 
 type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
@@ -24,13 +24,11 @@ export async function create(input: Create, deps: Deps): Out<'circle:circle:crea
   })
 }
 
-const terms = ['name', 'purpose', 'procedure', 'features'] as const
+const terms = ['name', 'purpose', 'procedure'] as const
 
 // Amends a circle, citing the motion that changes it: its name, its
-// purpose or its procedure from the verdict date, its id never, and its
-// features, replaced by the listing the motion gives. Its entry carries
-// each term it changed and what it was, features as `circle.features`
-// spells them.
+// purpose or its procedure from the verdict date, its id never. Its
+// entry carries each term it changed and what it was.
 export async function amend(input: Amend, deps: Deps): Out<'circle:circle:amend', Amended> {
   const given: Terms = Object.fromEntries(terms.filter((t) => input[t] !== undefined && input[t] !== null).map((t) => [t, input[t]]))
   return write(deps, {
@@ -38,7 +36,7 @@ export async function amend(input: Amend, deps: Deps): Out<'circle:circle:amend'
     request: input,
     state: async (tx) => {
       const { rows } = await tx.query<Required<Terms>>(
-        `SELECT name, purpose, procedure, circle.features(id) AS features FROM circle.circle WHERE id = $1 FOR UPDATE`,
+        `SELECT name, purpose, procedure FROM circle.circle WHERE id = $1 FOR UPDATE`,
         [input.circle],
       )
       const was: Terms = Object.fromEntries(Object.keys(given).map((t) => [t, rows[0]?.[t as keyof Terms] ?? null]))
@@ -46,17 +44,32 @@ export async function amend(input: Amend, deps: Deps): Out<'circle:circle:amend'
         `UPDATE circle.circle SET name = coalesce($2, name), purpose = coalesce($3, purpose), procedure = coalesce($4, procedure) WHERE id = $1`,
         [input.circle, given.name ?? null, given.purpose ?? null, given.procedure ?? null],
       )
-      if (given.features !== undefined) {
-        await tx.query(`DELETE FROM circle.feature WHERE circle = $1`, [input.circle])
-        await tx.query(
-          `INSERT INTO circle.feature (circle, feat, position, "group")
-           SELECT $1, l.feat, l.position, l."group" FROM circle.listed($2) l
-           ON CONFLICT DO NOTHING`,
-          [input.circle, given.features],
-        )
-      }
       return { circle: input.circle, was }
     },
     payload: (v) => ({ circle: v.circle, ...given, was: v.was, motion: input.motion }),
+  })
+}
+
+// Arranges a circle's features, replaced by the listing given: citing the
+// motion that arranges them, `circle:circle:arrange`, or, citing none, at
+// once by the actor's own power over the circle, `circle:feature:arrange`.
+// Its entry carries the listing and the one it replaced, each as
+// `circle.features` spells them, so a motion's and a holder's fold alike.
+export async function arrange(input: Arrange, deps: Deps): Out<'circle:circle:arrange' | 'circle:feature:arrange', Arranged> {
+  return write(deps, {
+    op: (input.motion ? 'circle:circle:arrange' : 'circle:feature:arrange') satisfies Action,
+    request: input,
+    state: async (tx) => {
+      const { rows } = await tx.query<{ was: string }>(`SELECT circle.features(id) AS was FROM circle.circle WHERE id = $1 FOR UPDATE`, [input.circle])
+      await tx.query(`DELETE FROM circle.feature WHERE circle = $1`, [input.circle])
+      await tx.query(
+        `INSERT INTO circle.feature (circle, feat, position, "group")
+         SELECT $1, l.feat, l.position, l."group" FROM circle.listed($2) l
+         ON CONFLICT DO NOTHING`,
+        [input.circle, input.features],
+      )
+      return { circle: input.circle, was: rows[0]?.was ?? '' }
+    },
+    payload: (v) => ({ circle: v.circle, features: input.features, was: v.was, ...(input.motion ? { motion: input.motion } : {}) }),
   })
 }

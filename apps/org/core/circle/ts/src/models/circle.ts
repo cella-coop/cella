@@ -87,15 +87,12 @@ export interface Create {
 }
 
 // What a circle may be changed in, by the motion that amends it: its
-// name, its purpose, its procedure and its features, each left as it is
-// where none is given. Its features are one listing, in the circle's
-// order, an accordion's run after its name and a colon, the runs
-// separated by semicolons: `Books: account, transaction; contact`.
+// name, its purpose and its procedure, each left as it is where none is
+// given. Its features are arranged apart (`Arrange`).
 export interface Terms {
   name?: string | null
   purpose?: string | null
   procedure?: Procedure | null
-  features?: string | null
 }
 
 // A circle to amend, by the motion that changes it, which the write cites.
@@ -108,6 +105,23 @@ export interface Amend extends Terms {
 export interface Amended {
   circle: string
   was: Terms
+}
+
+// A circle's features arranged, replaced by one listing, in the circle's
+// order, an accordion's run after its name and a colon, the runs
+// separated by semicolons: `Books: account, transaction; contact`. By
+// the motion it cites, of a circle holding `arrange-features` over it,
+// or, with none, at once by a holder of it over the circle.
+export interface Arrange {
+  circle: string
+  features: string
+  motion?: string
+}
+
+// The circle arranged and the listing its features replaced.
+export interface Arranged {
+  circle: string
+  was: string
 }
 
 // What a role may be changed in, by the motion that amends it: its name,

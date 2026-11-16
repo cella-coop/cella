@@ -6,7 +6,7 @@
 import type { Slice } from '@cella/org-db'
 import { circle, circles, listing, mandate, mandating } from '../drivers/circle.ts'
 
-export { amend, create } from '../handlers/circle.ts'
+export { amend, arrange, create } from '../handlers/circle.ts'
 export { make, remake } from '../handlers/role.ts'
 export { add, remove, seatRole, seating, unseatRole } from '../handlers/seat.ts'
 export { circle, circles, lenses, mandate, sitting } from '../drivers/circle.ts'

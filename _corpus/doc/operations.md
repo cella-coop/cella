@@ -364,22 +364,24 @@ of each verifies.
 The demo serves each visitor a scope of their own, a copy of its
 template, so what they do changes only what they see, and nobody signs
 up. `cella demo serve` is its front, the one address the host serves
-(`tools/demo-serve.mjs`), and the module's `demo.visitors` runs it in
-place of the demo's single server; `demo.visitors = null` serves one
-copy to everyone, as above. A visitor arriving without a copy is shown
-a page saying their co-op is being prepared, and the page's script asks
-the front for one by a POST from the same origin, so a crawler, which
-runs no script, makes none. The front then copies the template into a
-database of its own (`CREATE DATABASE … TEMPLATE`, about 0.2 s), marks
-it `a copy of <template>: <label>` as `cella demo copy` does, gives it a
-login role of the same name, `<database>_v_<16 hex digits>`, and starts
-its server, the built shell as `cella-server` runs it, with
-`CELLA_DEMO`, on a Unix socket of its own in the unit's runtime
-directory; the page goes on to it once it
-answers. The cookie, `cella-visitor`, is 32 random bytes and nothing
-else, never the copy's name; the front keeps in memory alone which copy
-it names and when its visitor was last seen, and records nothing about
-a visitor, no address, no name. It brings the visitor back to the same
+(`tools/demo-serve.mjs`), which the module runs for a demo in place of
+its single server; `demo.shared = true` serves one copy to everyone, as
+above, made afresh each night at `demo.resetAt` (04:00), the fallback
+for a demo a presenter leads. A visitor arriving without a copy is
+shown a page saying their co-op is being prepared, and the page's
+script asks the front for one by a POST from the same origin, so a
+crawler, which runs no script, makes none; refused, the page asks again
+a few seconds later. The front then copies the template into a database
+of its own (`CREATE DATABASE … TEMPLATE`, about 0.2 s), marks it `a copy
+of <template>: <label>` as `cella demo copy` does, gives it a login role
+of the same name, `<database>_v_<16 hex digits>`, and starts its server,
+the built shell as `cella-server` runs it, with `CELLA_DEMO`, on a Unix
+socket of its own in the unit's runtime directory; the page goes on to
+it once it answers. The cookie, `__Host-cella-visitor`, always `Secure`,
+is 32 random bytes and nothing else, never the copy's name; the front
+keeps in memory alone which copy it names, when its visitor was last
+seen and the address it was made for, and records nothing about a
+visitor, no address, no name. It brings the visitor back to the same
 copy, and the front passes each of their requests to that copy's server
 and to no other, the cookie itself stripped from what the server is
 handed.
@@ -403,53 +405,94 @@ database is Postgres, not the front:
   it owns it, a copy it made, and checks the name and the copy's mark
   before it does. The setup makes the role and grants it, after the
   template is built.
-- Each copy's role holds `demo.connections` connections at most (10;
-  its server's pools take eight) and 128 MB of temporary files.
 - The front's unit, as a user of its own (`cella-visitors`), reaches no
   address but localhost and holds no capability: no copy sends mail or
-  calls anything outside the host. Its memory is `demo.visitors` times
-  `demo.memory` (256 MiB) and 384 MiB more, and a copy whose server
-  holds more than `demo.memory` resident ends.
-- Copies are made at most `demo.perIp` (5) for one address in ten
-  minutes, by the last `x-forwarded-for` hop the host's proxy sets,
-  `demo.perMinute` (20) across the host, and three at a time.
+  calls anything outside the host.
+
+### Its limits
+
+Each limit is an option of the module's `demo`, its default set for a
+room full of people arriving at once behind one NAT address:
+
+- **How many copies** (`visitors`): unset, the front derives it from the
+  host's memory as it starts, (RAM − `reserve`) / `footprint`, the
+  reserve 1536 MiB for Postgres's shared buffers, the proxy, the site
+  and the rest, and the footprint 160 MiB, a copy's server (127 MiB
+  resident, measured on the demo's sign-in and a write) and its
+  Postgres connections. That is **6 copies per GiB of RAM** past the
+  reserve: about 15 on a cx23 (4 GiB, of which the kernel keeps a
+  little), 40 on a cx33 (8 GiB), 90 on a cx43 (16 GiB). Twenty to forty people arriving at once want 8 GiB.
+- **How long a copy lives**: two hours with no request (`idle`), and two
+  hours after it was made however busy (`lifetime`), so no visitor
+  holds one for good; the banner counts down to whichever comes first.
+  At the cap, a newcomer ends the copy idle longest if idle 5 minutes
+  (`evictAfter`), else the oldest if 10 minutes old (`minAge`), and is
+  otherwise asked to come back in a minute.
+- **What one address may take**: 40 copies held at once (`perAddress`)
+  and 80 made in ten minutes (`perAddressRate`), an IPv6 address
+  counted by its /64; 60 made a minute across the host (`perMinute`),
+  4 at once (`concurrent`). Only a copy made counts: a refused or
+  failed attempt costs the address nothing, so a page asking again
+  locks no one out. A public demo with no room to host lowers
+  `perAddress`, to 2 say, so no one client holds every copy.
+- **What a copy may hold**: its server 192 MiB resident (`memory`),
+  past which it ends; 10 connections (`connections`) and 128 MB of
+  temporary files; a request's body 2 MB (`upload`), so a file too,
+  answered 413 past it, with a length or without; 64 MiB stored past
+  its template (`storage`), by `pg_database_size`, past which it takes
+  no write and says so, *Your copy holds as much as a demo copy may;
+  Reset now for a fresh one*, and past twice which it ends. While the
+  disk holding `/var/lib` has less than 1 GiB free (`diskFloor`), no
+  copy is made and the copy storing most ends, one each check.
+
+The front checks every copy each 30 s, or a quarter of `idle` where
+that is shorter, and a copy's storage again before a write once its
+last reading is two seconds old.
+
+The address is the last hop of `X-Forwarded-For`, so the host's proxy
+must **set** that header to the client's address, never append to what
+the client sent (Caddy: `header_up X-Forwarded-For {remote_host}`);
+else a client names any address it likes. A CDN or another proxy in
+front of the host makes every visitor its own few addresses, which the
+per-address limits then count together: with one, raise `perAddress`
+or take the client's address from the CDN's own header in the proxy.
 
 A visitor's copy is a scope spawned on demand, the first form of how a
 host spawns a scope per co-op: a database made from a template, a role
 and a server of its own, and an end.
 
-A copy ends after two hours with no request from its visitor
-(`demo.idle`, 7200 s): its server stopped, its database dropped with
-its role. The host caps how many copies run at once (`demo.visitors`,
-10 unless the host says otherwise, what a cx23 holds beside the site);
-a visitor who would pass the cap ends the copy idle longest first, if
-it has been idle `demo.evictAfter` seconds (300), and otherwise is told
-every copy is in use and to come back in a few minutes, so a burst of
-newcomers cannot end copies in use. A visitor whose copy ended is
-prepared a fresh one, the page saying their earlier copy was reset.
-Reset now ends a visitor's copy and prepares a fresh one at once, under
-a new cookie; a copy less than 20 s old is kept. The front starts by
-ending every copy an earlier run left, and a stopped front ends its
-copies before it goes, so an upgrade, which builds the template again,
-leaves no copy older than it.
+A copy that ends has its server stopped and its database dropped with
+its role. A visitor whose copy ended is prepared a fresh one, the page
+saying their earlier copy was reset. Reset now ends a visitor's copy
+and prepares a fresh one at once, under a new cookie; a copy less than
+20 s old is kept. The front starts by ending every copy an earlier run
+left, and a stopped front ends its copies before it goes, so an
+upgrade, which builds the template again, leaves no copy older than it.
 
 Every page of a visitor's copy wears the demo's banner, never
 dismissed, at the content's foot as every demo page does and atop the
 sign-in's panel: the operator's notice, "This is a prototype
 environment for demo purposes and can't be used for real work.", that
 its co-op is Lanterne, a mock, and this copy is the visitor's own, that
-it resets after two hours idle and how long is left (`CELLA_DEMO_IDLE`,
-which the front hands each server), and its Reset now, a form posting
-to the front. A demo that is no visitor's copy carries the same notice.
-Nobody signs up or sets a password: the sign-in offers Lanterne's
-members, as the demo's always does. The org app sends no mail, in a
-demo or a scope, and a demo's unit reaches nothing outside its host.
+it resets after two hours idle or when its time runs out and how long
+is left (`CELLA_DEMO_IDLE` and `CELLA_DEMO_ENDS`, which the front hands
+each server), and its Reset now, a form posting to the front. A demo
+that is no visitor's copy carries the same notice. Nobody signs up or
+sets a password: the sign-in offers Lanterne's members, as the demo's
+always does. The org app sends no mail, in a demo or a scope, and a
+demo's unit reaches nothing outside its host.
 
 `checks.visitors` boots a demo serving each visitor a copy, the cap at
-two and the idle span at 90 s. A request with no cookie makes no copy;
-two visitors get two, and one's write reaches neither the other's nor
-the template; a copy's role reaches its own database alone, over the
-socket; Reset now drops a copy for a fresh one with the template's log;
-at the cap the idlest ends; one address is refused past its rate; an
-idle copy ends leaving no database, role, server or socket; and a front
-killed outright has its copies ended by the next.
+two, the idle span 90 s, the lifetime 150 s, storage 4 MiB and one copy
+to an address. A request with no cookie makes no copy; two visitors get
+two, and one's write reaches neither the other's nor the template; a
+copy's role reaches its own database alone, over the socket; the unit
+reaches no address but localhost; an address past its copies is
+refused, and its refusals cost it nothing; Reset now drops a copy for a
+fresh one with the template's log; at the cap the idlest ends; a body
+past 2 MB is refused, with a length or without; a copy past its storage
+refuses a write, saying why, and past twice it ends; an IPv6 address
+counts by its /64; an idle copy ends leaving no database, role, server
+or socket; a copy kept busy ends at its lifetime; and a front killed
+outright has its copies ended by the next. `checks.demo` serves a
+shared demo.

@@ -16,7 +16,8 @@ export const app: App = {
     circles: {
       view: {
         title: 'Circles',
-        icon: icons.CirclesThree,
+        // A group, as each circle is; a person wears one person.
+        icon: icons.Users,
         look: { layout: 'gallery', cards: ['purpose', 'procedure'] },
         columns: [
           { key: 'name', label: 'Circle', kind: 'title', role: 'title', value: (c: Circle) => c.name },

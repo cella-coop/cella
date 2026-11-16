@@ -18,7 +18,6 @@ export const app: App = {
       page: {
         properties: (p: Proposing | null) => (p ? [{ label: 'Decided by', value: p.decider.name, href: `/circles/${p.decider.id}` }] : []),
         related: (p: Proposing | null) => (p?.open ?? []).map((o) => ({ label: o.title, sub: `open until ${o.deadline}`, href: `/motions/${o.motion}` })),
-        tabs: [{ id: 'policies', label: 'Policies' }],
         blocks: [
           { tab: 'policies', block: Policies },
           { tab: 'policies', block: OpenBooks },

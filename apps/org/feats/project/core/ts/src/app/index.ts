@@ -12,10 +12,10 @@ const tones: Record<State, Tone> = { active: 'accent', done: 'positive' }
 const progress = (p: Project) => (p.total ? `${p.completed} / ${p.total}` : 'none')
 
 // The feat's client side: the projects as a gallery of cards, a new
-// project, and a project's page, its summary under its title, its
-// milestones and its budget in tabs of their own after its Overview; the
-// grafts that join a project's tasks, time, expenses and invoices add
-// theirs.
+// project, and a project's page, its summary under its title, and after
+// its Overview three tabs: its Tasks, which the graft joining tasks
+// fills; its Milestones; and its Budget, beside which the grafts joining
+// time, expenses, invoices and members' shares set what each spends of it.
 export const app: App = {
   name: 'project',
   collections: {
@@ -58,6 +58,7 @@ export const app: App = {
         ],
         tabs: [
           { id: 'overview', label: 'Overview' },
+          { id: 'tasks', label: 'Tasks' },
           { id: 'milestones', label: 'Milestones' },
           { id: 'budget', label: 'Budget' },
         ],

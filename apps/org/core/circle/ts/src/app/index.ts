@@ -40,11 +40,15 @@ export const app: App = {
           ...c.issuers.map((k) => ({ label: k.name, sub: 'issued its mandates', href: `/circles/${k.id}` })),
           ...c.issued.map((k) => ({ label: k.name, sub: 'holds mandates it issued', href: `/circles/${k.id}` })),
         ],
-        // Its purpose first, then its roles and their mandates in a tab of
-        // their own; its seats and policies are the tabs its extenders add.
+        // Its purpose first, then its roles and their mandates, with the
+        // seats membership fills them by; the policies in force, and its
+        // settings, its terms and the roles a motion makes, which the
+        // extenders fill.
         tabs: [
           { id: 'overview', label: 'Overview' },
           { id: 'roles', label: 'Roles' },
+          { id: 'policies', label: 'Policies' },
+          { id: 'settings', label: 'Settings' },
         ],
         blocks: [{ tab: 'roles', block: Structure }],
       },

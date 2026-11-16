@@ -19,7 +19,6 @@ export const app: App = {
     contacts: {
       page: {
         properties: (ps: Commissioned[]) => [{ label: 'Projects', value: ps.length, kind: 'number' }],
-        tabs: [{ id: 'projects', label: 'Projects' }],
         blocks: [{ tab: 'projects', block: Projects }],
       },
     },

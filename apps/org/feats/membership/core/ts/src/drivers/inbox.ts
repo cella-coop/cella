@@ -6,7 +6,7 @@ export const inbox: Read = {
   sql: `SELECT 'invitation/' || m.address AS id, 'invitation' AS kind,
                'Take up your invitation to join' AS what, 'your membership' AS about,
                to_char(m.invited, 'YYYY-MM-DD') AS since, NULL AS due,
-               '/people/' || m.address || '?tab=joining' AS href
+               '/people/' || m.address || '?tab=membership' AS href
         FROM membership.member m WHERE m.address = cella.reader() AND m.status = 'invited'`,
   order: 'id',
 }

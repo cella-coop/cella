@@ -54,11 +54,18 @@ export const app: App = {
         title: (p: Person) => p.name,
         subtitle: (p: Person) => p.address,
         properties: (p: Person) => [{ label: 'Address', value: p.address }],
+        // Four tabs, which the feats and grafts on a person fill: their
+        // membership, joining and what they own and decide; their work,
+        // employment, timesheets, payslips and records on file; and their
+        // authority, seats, powers and the devices that sign for them.
+        // Their tasks, expenses and the rest are jumps in Related.
         tabs: [
           { id: 'overview', label: 'Overview' },
-          { id: 'devices', label: 'Devices' },
+          { id: 'membership', label: 'Membership' },
+          { id: 'work', label: 'Work' },
+          { id: 'authority', label: 'Authority' },
         ],
-        blocks: [{ tab: 'devices', block: Devices }],
+        blocks: [{ tab: 'authority', block: Devices }],
         actions: Profile,
       },
     },

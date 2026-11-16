@@ -83,16 +83,20 @@ The theme is light, dark or the system's, a cookie the server writes into
 
 The dev server alone serves a specimen of the shell in the brand's inks,
 `/specimens/ink`, a page of no slice that reads nothing, drawn by
-`Inks`, proposing where the site's five pentad inks (`--p0` to `--p4`)
-go in a working tool. Ink
-marks identity and the one primary action, and never fills a surface:
-the primary button as a cell solid in its ink, as the site's actions
-are, and a secondary action as a wash of it; the selected navigation row
-and the focus ring; a collection's icon tinted by its area's ink, and a
-record chip's icon by its collection's; a circle's or a person's avatar
-in an ink seeded by its name, as the site seeds its lists. Beside each,
-the same thing as the shell draws it today, and what stays neutral:
-tables, body text, forms and panels. The semantic tones keep their
+`Inks`, where the operator approved landing the site's five pentad
+inks (`--p0` to `--p4`) in the working tool (09:50, 14 Nov). Ink marks
+identity and the one primary action, and never fills a surface: the
+primary button solid in its ink (`styles/base.css`'s `--primary-fill`,
+`Button`'s alone, so a secondary action, a checkbox and a date field's
+selection stay as they were); a feature's run of collections in its
+own ink, in the sidebar's turn (`Shell`); a record chip's icon or dot
+in its own, even drawn as a badge (`Cell`, `Badge`); a group's header
+bar the same (`Group`); and a circle's or a person's avatar seeded by
+its name (`Avatar`), as the site seeds its lists — every one landed,
+across the app. A secondary action as a wash of the lead ink, the
+selected navigation row and the focus ring stay candidates, laid over
+the specimen alone until they land too. What stays neutral: tables,
+body text, forms and panels. The semantic tones keep their
 meanings, so no ink is a state's. The page shows both themes side by
 side, and each text on ink states its contrast, every one at least WCAG
 AA's 4.5:1 (3:1 for an icon or a ring). The inks are handed out in the
@@ -142,7 +146,9 @@ draws.
   name and a caret, flat, never nested, a dot on a shut one whose
   collections hold rows waiting on the acting member, whole whatever
   the lens as the Inbox is; open, its collections hang from a guide
-  line. The features under none are listed flat in their place. Nothing
+  line, each collection's icon in the run's own ink, the turn's, as the
+  ink specimen's nav proposes (`nth`). The features under none are
+  listed flat in their place, in the turn too. Nothing
   the circle has not enabled is shown, nor a count of what another
   circle holds; the command menu still reaches every collection. Last
   in the middle, More…, quiet and right-aligned with a + before it,
@@ -356,8 +362,15 @@ draws.
   view's sort runs, a row with no value for the field in a last group,
   None, and the view's order within each; so a page of a hundred continues
   the group the last one ended in, under its header again, and each
-  header's count is the group's whole, read with the page. A board and
-  a calendar place every row the view keeps. The feed draws each row as one line of who did what and when,
+  header's count is the group's whole, read with the page. A group's
+  header is a bar across the row's width, as Linear's: a subtle
+  gradient in the value's own ink where it names a record, as a
+  project's, its icon in the same ink, even drawn as a badge, kept at
+  an enumeration's tone instead, which keeps its meaning; a chevron
+  collapses its own rows alone, the other groups' kept as they are;
+  and, where the collection offers New, a + opens it, the same dialog
+  as the header's own (`Group`, `models/query.ts`'s `groupTint`). A
+  board and a calendar place every row the view keeps. The feed draws each row as one line of who did what and when,
   as a record's Activity reads: its first person column as their chip,
   then its title, linked, then its first date, and the time links to
   the row's own page where the view links its title elsewhere; it is

@@ -121,7 +121,7 @@ eachBrowser((name, launch) => {
       await page.keyboard.press('Escape')
 
       // A file of the co-op's own.
-      await page.goto(`${base}/files`)
+      await page.goto(`${base}/files`, { waitUntil: 'networkidle' })
       await page.getByRole('button', { name: 'New' }).click()
       const upload = page.locator('form').filter({ has: page.getByRole('button', { name: 'Upload' }) })
       await catching(upload, 'file')

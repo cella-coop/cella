@@ -10,7 +10,9 @@ use std::time::Instant;
 use crate::cli::Test;
 use crate::db::{self, Dev};
 use crate::fold;
+use crate::overlap;
 use crate::pruned;
+use crate::reach;
 use crate::repo::Repo;
 use crate::run::{Fail, Result, Steps, quiet};
 use crate::shell;
@@ -38,7 +40,7 @@ impl Worker {
     }
 }
 
-pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>) -> Result {
+pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>, since: Option<&str>) -> Result {
     match only {
         None => {
             rust(repo, steps, "guards", "cella-guards")?;
@@ -47,7 +49,7 @@ pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>) -> Result {
             tools(repo, steps)?;
             pruned::serve(repo, steps)?;
             slices(repo, steps, None)?;
-            e2e(repo, steps, None, None)
+            e2e(repo, steps, None, None, since, false)
         }
         Some(Test::Guards) => rust(repo, steps, "guards", "cella-guards"),
         Some(Test::Cli) => rust(repo, steps, "cli", "cella-cli"),
@@ -55,7 +57,19 @@ pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>) -> Result {
         Some(Test::Tools) => tools(repo, steps),
         Some(Test::Pruned) => pruned::serve(repo, steps),
         Some(Test::Slice { name }) => slices(repo, steps, name.as_deref()),
-        Some(Test::E2e { name, jobs }) => e2e(repo, steps, name.as_deref(), jobs),
+        Some(Test::E2e {
+            name,
+            jobs,
+            since,
+            overlap,
+        }) => e2e(
+            repo,
+            steps,
+            name.as_deref(),
+            jobs,
+            since.as_deref(),
+            overlap,
+        ),
         Some(Test::Scale {
             members,
             years,
@@ -321,8 +335,17 @@ fn slices(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
 /// Lanterne, through the handlers on the dev cluster: one at a time on this
 /// process at one worker, else across workers at once, each a child of
 /// this binary running one scenario at a time on its own database
-/// (`WORKER`).
-fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>, jobs: Option<usize>) -> Result {
+/// (`WORKER`). Given `since`, only those the diff from it reaches
+/// ([`reach`]); given `overlaps`, every one traced and the overlaps written
+/// ([`overlap`]).
+fn e2e(
+    repo: &Repo,
+    steps: &Steps,
+    only: Option<&str>,
+    jobs: Option<usize>,
+    since: Option<&str>,
+    overlaps: bool,
+) -> Result {
     let mut files: Vec<PathBuf> = tests(repo)?
         .into_iter()
         .filter(|(k, _)| matches!(k, Kind::E2e))
@@ -342,14 +365,29 @@ fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>, jobs: Option<usize>) -> R
             known.join(", ")
         )));
     }
+    let chosen = match since {
+        Some(rev) => reached(repo, rev, chosen)?,
+        None => chosen,
+    };
+    if chosen.is_empty() {
+        println!(
+            "{:<22} the diff from {} reaches no scenario",
+            "e2e",
+            since.unwrap_or("")
+        );
+        return Ok(());
+    }
     let dev = Dev::new(repo);
     dev.up()?;
     // A worker's child runs the one scenario it is handed, on its worker's
     // databases, the shell its parent built.
     if let Some(w) = std::env::var(WORKER).ok().and_then(|w| w.parse().ok()) {
         let (name, file) = chosen[0];
-        return scenario(repo, steps, &dev, &Worker::new(w), name, file);
+        let trace = std::env::var_os(overlap::DIR).map(PathBuf::from);
+        let worker = Worker::new(w);
+        return scenario(repo, steps, &dev, &worker, name, file, trace.as_deref());
     }
+    let trace = overlaps.then(|| overlap::dir(repo)).transpose()?;
     // A scenario may drive the shell as a browser would, through its built
     // server; the build is the production one.
     shell::build(repo, steps)?;
@@ -386,16 +424,64 @@ fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>, jobs: Option<usize>) -> R
         drop_templates(&dev, steps)?;
         return Err(e);
     }
+    let trace = trace.as_deref();
     let ran = if jobs == 1 {
         let worker = Worker::new(1);
         chosen
             .iter()
-            .try_for_each(|(name, file)| scenario(repo, steps, &dev, &worker, name, file))
+            .try_for_each(|(name, file)| scenario(repo, steps, &dev, &worker, name, file, trace))
     } else {
-        workers(repo, steps, &chosen, jobs)
+        workers(repo, steps, &chosen, jobs, trace)
     };
+    // The overlaps are written only from a whole run that passed, the
+    // relations a read may name read from the seeded template.
+    let written = match (&ran, trace) {
+        (Ok(()), Some(dir)) => overlap::write(repo, &dev, TEMPLATE, dir),
+        _ => Ok(()),
+    };
+    if let Some(dir) = trace {
+        let _ = fs::remove_dir_all(dir);
+    }
     let cleaned = drop_templates(&dev, steps);
-    ran.and(cleaned)
+    ran.and(written).and(cleaned)
+}
+
+/// The scenarios the diff from `rev` reaches, each printed with why it
+/// runs or is left out.
+fn reached<'a>(
+    repo: &Repo,
+    rev: &str,
+    chosen: Vec<&'a (String, PathBuf)>,
+) -> Result<Vec<&'a (String, PathBuf)>> {
+    let files = reach::diff(&repo.root, rev)?;
+    let mut trees: BTreeMap<PathBuf, reach::Tree> = BTreeMap::new();
+    let mut kept = Vec::new();
+    let mut left = 0;
+    for pair in chosen {
+        let (name, file) = pair;
+        // The app a scenario sits in, `<app>/ts/_e2e/<name>.test.ts`.
+        let app = file.ancestors().nth(3).unwrap_or(&repo.root).to_path_buf();
+        let tree = trees
+            .entry(app.clone())
+            .or_insert_with(|| reach::tree(&app));
+        match reach::reaches(&files, &reach::scenario(file, tree)?, tree) {
+            Ok(why) => {
+                println!("{:<22} {why}", format!("reached e2e/{name}"));
+                kept.push(pair);
+            }
+            Err(why) => {
+                println!("{:<22} {why}", format!("left out e2e/{name}"));
+                left += 1;
+            }
+        }
+    }
+    println!(
+        "{:<22} {} files since {rev} reach {} scenarios, {left} left out",
+        "e2e",
+        files.len(),
+        kept.len()
+    );
+    Ok(kept)
 }
 
 fn drop_templates(dev: &Dev, steps: &Steps) -> Result {
@@ -464,7 +550,8 @@ const SPREAD: u16 = 100;
 
 /// One scenario on a worker's database cloned from the run's seeded
 /// template, then its log folded into the worker's fold database and
-/// compared, unless its file says why not.
+/// compared, unless its file says why not. Given a trace directory, what
+/// it reaches is traced there ([`overlap`]).
 fn scenario(
     repo: &Repo,
     steps: &Steps,
@@ -472,6 +559,7 @@ fn scenario(
     worker: &Worker,
     name: &str,
     file: &PathBuf,
+    trace: Option<&Path>,
 ) -> Result {
     let cloning = Instant::now();
     {
@@ -479,6 +567,8 @@ fn scenario(
         dev.clone_test(steps, TEMPLATE, &worker.db)?;
     }
     println!("clone e2e/{name}: {:.1}s", cloning.elapsed().as_secs_f64());
+    // The seed's last entry, past which the scenario's own begin.
+    let seeded = trace.map(|_| overlap::last(dev, &worker.db)).transpose()?;
     // A browser scenario drives its browsers at once, unless its file says
     // why they would meet, in a line `// browsers: one at a time: <why>`.
     let mut test = node_test(dev, steps, &worker.db, &[file]);
@@ -489,7 +579,14 @@ fn scenario(
         println!("{:<22} {why}", format!("apart e2e/{name}"));
         test.env(APART, "1");
     }
+    if let Some(dir) = trace {
+        overlap::trace(repo, &mut test, dir, name);
+    }
+    let began = Instant::now();
     steps.run(&format!("e2e {name}"), &mut [test], tap)?;
+    if let (Some(dir), Some(seeded)) = (trace, seeded) {
+        overlap::logged(dev, &worker.db, seeded, dir, name, began.elapsed())?;
+    }
     // What the scenario wrote, folded from its log into a fresh database,
     // matches it row for row, every slice folded, so a write whose entry
     // carries less than it changed fails the day it is written
@@ -525,7 +622,13 @@ fn scenario(
 /// their end, and the run fails naming each that failed. A scenario whose
 /// file has a line `// alone: <why>` disturbs what every worker shares, the
 /// cluster or the build, so it runs after the others, by itself.
-fn workers(repo: &Repo, steps: &Steps, chosen: &[&(String, PathBuf)], jobs: usize) -> Result {
+fn workers(
+    repo: &Repo,
+    steps: &Steps,
+    chosen: &[&(String, PathBuf)],
+    jobs: usize,
+    trace: Option<&Path>,
+) -> Result {
     let mut times = Times::read();
     let mut order: Vec<&(String, PathBuf)> = chosen.to_vec();
     // A scenario no run has timed goes first, the largest file first.
@@ -556,6 +659,7 @@ fn workers(repo: &Repo, steps: &Steps, chosen: &[&(String, PathBuf)], jobs: usiz
         me: &me,
         repo,
         steps,
+        trace,
         ended: Mutex::new(Vec::new()),
         failed: Mutex::new(Vec::new()),
     };
@@ -587,6 +691,8 @@ struct Pool<'a> {
     me: &'a Path,
     repo: &'a Repo,
     steps: &'a Steps,
+    /// Where each child traces what its scenario reaches, given `--overlap`.
+    trace: Option<&'a Path>,
     /// Each scenario that passed, and the seconds it took.
     ended: Mutex<Vec<(String, f64)>>,
     failed: Mutex<Vec<String>>,
@@ -625,6 +731,9 @@ impl Pool<'_> {
             .env("CELLA_ANALYTICS_PORT", analytics.to_string());
         if self.steps.verbose {
             child.arg("--verbose");
+        }
+        if let Some(dir) = self.trace {
+            child.env(overlap::DIR, dir);
         }
         child.args(["test", "e2e", name]);
         let begun = Instant::now();

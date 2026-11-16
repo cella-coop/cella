@@ -7,6 +7,7 @@
 // their objects from the database, and a slice whose schema the database
 // lacks, or a schema no slice owns, fails. What Lanterne leaves empty
 // denies nothing, and is named unproven. Run by `cella test e2e denial`.
+// covers: all
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

@@ -1,7 +1,8 @@
 # The lanes' gates (apps/org/rs/index.md, Gates): what a lane runs before
 # it lands a change, at its commit (`corpus flow run gates --at <sha>`), so
 # the run is logged over the commit that merges. The org's check, then
-# `cella test`, and the site's check, each kept by what it reads;
+# `cella test` on the e2e scenarios the change reaches, `--since` main,
+# and the site's check, each kept by what it reads;
 # `manual`, so a push does not run it twice beside `test`.
 on = ["manual"]
 goals = ["cella-check", "cella-test", "site-check"]

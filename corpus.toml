@@ -37,8 +37,23 @@ reads = ["**", "!apps/site/src", "!apps/site/public", "!apps/site/test", "!apps/
 # made: it is started on ports of the run's own, so lanes gating at once
 # on the box never meet on one, and stopped after, pass or fail, since
 # the checkout it lives in is removed when the run ends.
+#
+# A lane's `cella-test` runs the e2e scenarios its change reaches
+# (apps/org/rs/index.md, Gates): `--since` main as the lane fetched it,
+# `origin/main`, or `main` where the checkout has no remote, so the diff
+# from where the branch leaves main picks them; a checkout with neither
+# runs them all. `cella-test-all` is the whole suite, under a name of its
+# own so a selected pass is never kept for it: the integrator's `merge`
+# needs it, and the `test` flow a push runs.
 [[op]]
 name = "cella-test"
+run = ["nix", "develop", "-c", "sh", "-c", "export CELLA_PGPORT=$((20000 + $$ % 20000)) CELLA_ANALYTICS_PORT=$((40000 + $$ % 20000)); base=$(git rev-parse -q --verify origin/main || git rev-parse -q --verify main); cella db start && cella test ${base:+--since $base}; status=$?; cella db stop; exit $status"]
+kind = "check"
+needs = ["cella-check"]
+reads = ["**", "!apps/site/src", "!apps/site/public", "!apps/site/test", "!apps/site/index.md", "!apps/site/astro.config.mjs", "!apps/site/tsconfig.json", "!apps/site/.prettierrc.json", "!packages/diagrams/src", "!packages/diagrams/index.md", "!packages/diagrams/tsconfig.json"]
+
+[[op]]
+name = "cella-test-all"
 run = ["nix", "develop", "-c", "sh", "-c", "export CELLA_PGPORT=$((20000 + $$ % 20000)) CELLA_ANALYTICS_PORT=$((40000 + $$ % 20000)); cella db start && cella test; status=$?; cella db stop; exit $status"]
 kind = "check"
 needs = ["cella-check"]
@@ -66,10 +81,12 @@ kind = "check"
 
 # The integrator's pass (apps/org/rs/index.md, Gates): `merge` is corpus's
 # own merge pass, an action run by its name (`corpus flow run merge`), and
-# its needs are what it judges each version by over its train, the three
-# ops of main's gates, so a version merges only where the ops a lane gates
-# it by pass over it composed with the versions ahead of it.
+# its needs are what it judges each version by over its train: the org's
+# check, the whole suite, `cella-test-all`, in place of the lane's
+# selected `cella-test`, and the site's check, so a version merges only
+# where every scenario passes over it composed with the versions ahead of
+# it.
 [[op]]
 name = "merge"
 kind = "action"
-needs = ["cella-check", "cella-test", "site-check"]
+needs = ["cella-check", "cella-test-all", "site-check"]

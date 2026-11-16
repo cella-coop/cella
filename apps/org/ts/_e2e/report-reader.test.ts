@@ -9,6 +9,7 @@
 // the assembly's alone, as before. Each report reads what the expenses'
 // page shows its reader, and no more. Run by `cella test e2e
 // report-reader`.
+// covers: expense membership-motion motion report
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

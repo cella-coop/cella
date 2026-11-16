@@ -8,6 +8,7 @@
 // expense taking its cost off the margin and onto the income statement;
 // a custom report saved, run and refused; and the pages, through the
 // built server. Run by `cella test` on a fresh database.
+// covers: account-transaction expense expense-project expense-transaction invoice-project project project-timesheet report
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

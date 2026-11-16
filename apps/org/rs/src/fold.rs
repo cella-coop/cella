@@ -76,7 +76,7 @@ fn mb(kb: u64) -> String {
 }
 
 /// psql on a database of the dev cluster, one value per field, tab apart.
-fn psql(dev: &Dev, db: &str, sql: &str) -> Result<String> {
+pub fn psql(dev: &Dev, db: &str, sql: &str) -> Result<String> {
     let mut cmd = dev.on(db, "psql");
     cmd.args([
         "-X",

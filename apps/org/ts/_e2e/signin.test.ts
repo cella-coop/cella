@@ -7,6 +7,7 @@
 // request with no session, a write signed by another device than the
 // session's, a proof posted to someone else's write and a revoked device
 // are refused. Each browser takes up its own invitation.
+// covers: membership
 
 import { after, before, describe, it } from 'node:test'
 import assert from 'node:assert/strict'

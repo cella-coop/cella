@@ -12,6 +12,7 @@
 // powers, too many across them all, once Issued by keeps one circle's,
 // and only the powers that circle's mandates hold. `SHOTS` names where
 // its screenshots go. Nothing is written. Run by `cella test e2e filter`.
+// covers: expense file
 
 import { after, before, test } from 'node:test'
 import { mkdirSync } from 'node:fs'

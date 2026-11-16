@@ -13,6 +13,7 @@
 // the assembly by the participant role her seat brings, which Thomas,
 // with no seat in Marketing, lacks there, and Inès proposes in Web. Run by
 // `cella test e2e participation`.
+// covers: employment-project-timesheet membership-motion motion project-timesheet timesheet
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

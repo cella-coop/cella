@@ -9,6 +9,7 @@
 // begins the minutes, a document opening on the meeting's card, which he
 // writes in the block editor. Run by `cella test e2e meetings`, on the
 // built shell; `SHOTS` names where its screenshots go.
+// covers: document document-meeting meeting meeting-membership meeting-motion motion
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

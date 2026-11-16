@@ -22,6 +22,7 @@
 // whoever runs it, through the analytics shell;
 // and a server logging in as the superuser reads as the app role all the
 // same. Run by `cella test e2e reading`.
+// covers: account account-membership account-membership-patronage-transaction account-transaction bill contact-invoice document document-membership document-motion employment-membership employment-membership-motion expense expense-membership expense-project invoice invoice-project meeting-membership membership-motion membership-project motion motion-patronage patronage-payslip patronage-timesheet payslip project project-task project-timesheet report timesheet transaction
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

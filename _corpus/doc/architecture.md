@@ -1515,7 +1515,26 @@ file anywhere else fails `cella test`:
   `cella_analytics`.
 - an **e2e test** is a scenario across slices, from an app root's `_e2e/`.
   `cella test e2e [NAME]` runs each on a database migrated whole and
-  seeded with Lanterne, through the handlers. The `fold` scenario is
+  seeded with Lanterne, through the handlers. A scenario reaches the
+  slices whose packages it imports, itself or through the helpers beside
+  it in `_e2e/`, and those a line `// covers: <slice> …` in its file
+  names; `// covers: all` reaches every slice, as `denial` reads every
+  slice's tables, and so does an import of the shell's source, whose
+  registry holds them all, while `// covers: core` names the core's
+  alone. A scenario that drives the shell, by a browser or through its
+  server, names in its `covers` line the slices whose pages and calls it
+  drives, since its imports do not say; the feat check refuses a `covers`
+  line naming a slice the tree lacks, and a scenario driving the shell
+  with none. `cella test e2e --since <rev>` runs the scenarios the diff
+  from where `<rev>` and the commit part reaches: one reaching a slice
+  that shares a feat with a slice the diff touches, as a graft shares
+  the feats it joins and a nested feat its parent, since a graft reacts
+  to and guards its feats' commands; and every scenario where the diff
+  touches a file outside a slice's package that a scenario may read: the
+  app's core, the shell, the CLI, the notary, the fixtures, the tools,
+  a scenario's helper, a manifest, a lockfile or the flake. A markdown
+  doc, the records, the research, the agents' settings, the site and the
+  diagrams reach none. The `fold` scenario is
   Lanterne's year: from its seed it writes a year through the handlers,
   every action the tree declares at least once, an admission, a close
   carrying its effects and one refusing one, invoices, a payroll, a

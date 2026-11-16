@@ -20,6 +20,7 @@
 // names where its screenshots go. A motion suspending Chloé and Sofia, closed after Chloé's suspension, forgoes hers with its
 // reason and carries Sofia's, the close standing. Run by `cella test e2e
 // effects`.
+// covers: account account-membership-transaction account-motion membership membership-motion motion
 
 import { after, before, test } from 'node:test'
 import { mkdirSync } from 'node:fs'

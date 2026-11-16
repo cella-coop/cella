@@ -10,6 +10,7 @@
 // `aria-sort`, a view saved with it restores it, and the address alone
 // draws it. `SHOTS` names where its screenshots go. Nothing is
 // written. Run by `cella test e2e order`.
+// covers: expense file
 
 import { after, before, test } from 'node:test'
 import { mkdirSync } from 'node:fs'

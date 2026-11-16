@@ -1,5 +1,7 @@
-# What a push runs: the same three ops as the gates, in place of the
-# `cargo test`, `cargo clippy`, `cargo fmt --check` and `npm test` corpus
-# would infer, which gate nothing `cella check` and `cella test` do not.
+# What a push runs: the org's check, the whole suite and the site's
+# check, in place of the `cargo test`, `cargo clippy`, `cargo fmt --check`
+# and `npm test` corpus would infer, which gate nothing `cella check` and
+# `cella test` do not. The whole suite, `cella-test-all`, not the lanes'
+# selected `cella-test`, so a push of main is judged by every scenario.
 on = ["push"]
-goals = ["cella-check", "cella-test", "site-check"]
+goals = ["cella-check", "cella-test-all", "site-check"]

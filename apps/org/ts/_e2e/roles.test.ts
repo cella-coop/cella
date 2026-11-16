@@ -22,6 +22,7 @@
 // lifting the Editor's cap carries, and the role reads uncapped, its entry
 // carrying the cap as none. `SHOTS` names where its screenshots go. Run
 // by `cella test e2e roles`.
+// covers: membership-motion motion
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

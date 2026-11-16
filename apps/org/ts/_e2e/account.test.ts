@@ -10,6 +10,7 @@
 // hers opens a motion. `SHOTS` names where its screenshots go. Run by
 // `cella test e2e account`.
 // browsers: one at a time: each browser renames Camille, whose row the others read back and whose name their pages show
+// covers: core
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'

@@ -19,6 +19,7 @@
 // and walks again, the revocation's page and the refusal it leaves.
 // `SHOTS` names where its screenshots go. Run by `cella test e2e
 // authority-walk`.
+// covers: bill bill-transaction membership-motion motion
 
 import { test as runTest } from 'node:test'
 import { createStory } from './story.ts'

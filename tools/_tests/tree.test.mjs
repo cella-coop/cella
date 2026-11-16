@@ -337,3 +337,26 @@ test('a package\'s imports stay inside it', () => {
   const errors = tree({ files: { [`${membership}/package.json`]: manifest('membership', {}, { imports: { '#party/*': '../../../../core/ts/src/*' } }) } })
   assert.match(errors, /membership\/core\/ts\/package\.json: imports #party\/\* as \.\.\/\.\.\/\.\.\/\.\.\/core\/ts\/src\/\*, outside its package/)
 })
+
+test('an e2e scenario covers slices the tree holds, and one driving the shell names them', () => {
+  const e2e = 'apps/org/ts/_e2e'
+  const errors = tree({
+    grafts: { 'membership-motion': { at: org, by: 'membership', deps: ['motion', 'membership', 'party'] } },
+    files: {
+      [`${e2e}/browser.ts`]: '// the browsers\n',
+      [`${e2e}/walk.ts`]: "import { open } from './browser.ts'\n",
+      [`${e2e}/admit.test.ts`]: "// covers: membership-motion motion party\n\nimport { open } from './browser.ts'\n",
+      [`${e2e}/sign.test.ts`]: "// covers: core\n\nimport { open } from './browser.ts'\n",
+      [`${e2e}/every.test.ts`]: '// covers: all\n',
+      [`${e2e}/plain.test.ts`]: "import { a } from '@t/motion'\n",
+      [`${e2e}/bad.test.ts`]: "// covers: motion payroll\n\nimport { a } from '@t/motion'\n",
+      [`${e2e}/bare.test.ts`]: "import { open } from './browser.ts'\n",
+      [`${e2e}/through.test.ts`]: "import { walk } from './walk.ts'\n",
+    },
+  })
+  assert.deepEqual(errors.trim().split('\n').sort(), [
+    `feat check: ${e2e}/bad.test.ts: covers payroll, a slice apps/org lacks`,
+    `feat check: ${e2e}/bare.test.ts: drives the shell and has no \`// covers: <slice> …\` line naming the slices whose pages it drives`,
+    `feat check: ${e2e}/through.test.ts: drives the shell and has no \`// covers: <slice> …\` line naming the slices whose pages it drives`,
+  ])
+})

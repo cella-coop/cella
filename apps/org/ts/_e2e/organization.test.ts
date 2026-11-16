@@ -13,6 +13,7 @@
 // with the new seat, replacing those in force with their protection, and
 // is decided by the extraordinary assembly. `SHOTS` names where its
 // screenshots go. Run by `cella test e2e organization`.
+// covers: motion
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'

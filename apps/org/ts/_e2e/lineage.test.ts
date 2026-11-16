@@ -8,6 +8,7 @@
 // browser, light and dark, the walk is clicked through from Brand's page
 // to the root and down again; `SHOTS` names where its screenshots go.
 // Run by `cella test e2e lineage`.
+// covers: core
 
 import { after, before, test } from 'node:test'
 import { mkdirSync } from 'node:fs'

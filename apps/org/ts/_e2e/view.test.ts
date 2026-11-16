@@ -9,6 +9,7 @@
 // meetings, a calendar, Group by is its date and span. Light and dark,
 // `SHOTS` names where its screenshots go. Nothing is written. Run by
 // `cella test e2e view`.
+// covers: all
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'

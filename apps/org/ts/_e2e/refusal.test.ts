@@ -6,6 +6,7 @@
 // last a mandate revoked, by a motion proposed from a circle's page and
 // closed from its own. Run by `cella test`, which builds the shell first,
 // on a fresh database.
+// covers: contact invoice membership-motion motion project
 
 import { test as runTest } from 'node:test'
 import { createStory } from './story.ts'

@@ -11,7 +11,9 @@ mod data;
 mod db;
 pub mod fold;
 mod key;
+mod overlap;
 mod pruned;
+mod reach;
 mod repo;
 pub mod run;
 mod scaffold;
@@ -84,7 +86,7 @@ pub fn dispatch(command: Command, verbose: bool) -> Result {
         Command::Preview { command } => shell::preview(&Repo::find()?, &steps, command),
         Command::Brand => check::brand(&Repo::find()?, &steps),
         Command::Site { command } => site::run(&Repo::find()?, &steps, command),
-        Command::Test { only } => test::run(&Repo::find()?, &steps, only),
+        Command::Test { only, since } => test::run(&Repo::find()?, &steps, only, since.as_deref()),
         Command::Fold {
             db,
             into,

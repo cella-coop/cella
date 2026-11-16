@@ -10,6 +10,7 @@
 // as a settings page does, read through its own query. The sign-in and
 // an invitation's link read through theirs before anyone signs in.
 // Run by `cella test e2e boundary`.
+// covers: document motion project project-task
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

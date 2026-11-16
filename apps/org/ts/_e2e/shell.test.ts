@@ -3,6 +3,7 @@
 // browser posts them, each signed by the signed-in member's own device,
 // their fixture device held by the test as their browser holds it. Run
 // by `cella test`, which builds the shell first, on a fresh database.
+// covers: all
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

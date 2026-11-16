@@ -6,6 +6,7 @@
 // server's cap at two (`CELLA_PENDING`), Hugo's write fails while
 // Camille's and Malik's wait, and starts once theirs give up. Run by
 // `cella test e2e pending`.
+// covers: core
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

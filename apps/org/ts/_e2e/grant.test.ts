@@ -14,6 +14,7 @@
 // page proposes a grant wider than its parent and shows the refusal, and
 // the revocation's page shows what it revoked; `SHOTS` names where its
 // screenshots go. Run by `cella test e2e grant`.
+// covers: membership-motion motion
 
 import { test as runTest } from 'node:test'
 import { createStory } from './story.ts'

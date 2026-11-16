@@ -6,6 +6,7 @@
 // proof reaches her run before it gives up, which takes three seconds
 // here (`CELLA_PATIENCE`), so her write settles once the rows let go. Run
 // by `cella test e2e reserve`.
+// covers: core
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

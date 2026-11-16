@@ -18,6 +18,7 @@
 // test does. Run by `cella test e2e crowd`.
 
 // browsers: one at a time: each browser restarts the one shell and renames the same ten people, whose names and waiting writes the others assert
+// covers: core
 
 import { after, before, describe, test } from 'node:test'
 import assert from 'node:assert/strict'

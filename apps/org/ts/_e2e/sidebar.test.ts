@@ -8,6 +8,7 @@
 // Brand from the selector and stays on the page she chose on; through
 // Web, its features, flat, and its rows; More… opens Web's features page. `SHOTS` names where its screenshots go. It
 // writes nothing to the log. Run by `cella test e2e sidebar`.
+// covers: all
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

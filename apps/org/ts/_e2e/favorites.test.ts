@@ -8,6 +8,7 @@
 // reads and after a reload, the view across circles opening on the rows
 // of both from any of them. `SHOTS` names where its screenshots go. It
 // writes nothing to the log. Run by `cella test e2e favorites`.
+// covers: task
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

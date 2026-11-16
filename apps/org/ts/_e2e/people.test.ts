@@ -12,6 +12,7 @@
 // join; a year on, he applies by his right from his own page, which
 // opens his candidacy and puts the motion to admit him to the assembly.
 // Run by `cella test e2e people`.
+// covers: document-membership employment employment-membership expense membership membership-motion motion project-timesheet timesheet
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

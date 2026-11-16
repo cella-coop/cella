@@ -11,6 +11,7 @@
 // light and dark, Camille's tab is opened and its commit's line clicked
 // through; `SHOTS` names where its screenshots go. Run by `cella test e2e
 // powers`.
+// covers: membership
 
 import { test as runTest } from 'node:test'
 import { createStory } from './story.ts'

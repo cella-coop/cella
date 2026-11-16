@@ -7,6 +7,7 @@
 // name. At Odile's request Camille erases her: her contact's data and her
 // contact details in core go, and Maison Ferrand keeps its own. The log
 // verifies throughout. Run by `cella test e2e contacts`.
+// covers: contact
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

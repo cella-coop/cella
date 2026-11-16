@@ -13,6 +13,7 @@
 // task done before the switch left out. Every run is recorded with what
 // each line came to, and `cella import` runs the same import from the
 // command line. Run by `cella test e2e import`.
+// covers: account account-transaction contact import invoice invoice-transaction membership project project-task project-timesheet task timesheet transaction
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

@@ -1,8 +1,8 @@
 // A circle's roles made and changed by motion, end to end on a seeded
 // Lanterne. Through the handlers, the proposals to make or change a role
 // are refused at the proposal, each naming the role, the value read and
-// the fix: a circle there is not, a term no role has, an id given, which
-// the make takes from the name, no name, a name another role of the circle has, a cap
+// the fix: a circle there is not, a term no role has,
+// no name, a name another role of the circle has, a cap
 // that is no whole count above none, a cap below the role's holders on
 // the day, `participant`, a change that changes nothing, lifting the cap
 // of a role with none among them, Web making its own role, and
@@ -10,7 +10,11 @@
 // an Editor role in Web and seats Léa in it by the same motion, and a
 // Brand role, whose key the Brand circle holds, made as brand-2, then
 // changes the Editor's duty and cap, each entry saying what it carried
-// and what it was. Then in every browser, light and dark, through the
+// and what it was. One motion creates a Press circle, makes a Scribe
+// role in Brand, a Scribe in Web, which takes scribe-2 and seats Léa, a
+// Press role in Web, press-2, and a Trésorier, tresorier, each id given
+// at the proposal; of two motions making Archivist, the second carried
+// is refused, its id taken since. Then in every browser, light and dark, through the
 // dev server: Camille opens Web's Settings tab, presses Add a role…, and
 // in the dialog, which asks for no id, types a new role's name, its duty
 // and its cap, and proposes it to the assembly: one motion making the
@@ -110,7 +114,6 @@ test('a role made or changed is refused at its proposal, naming the role, the va
   const change = (args: Record<string, string | number | null>) => ({ kind: 'amend-role', args })
   assert.match(await refused([make({ circle: 'nowhere' })]), /no circle nowhere: a role is made in a circle there is, by its id, or in every working circle, \*/)
   assert.match(await refused([make({ circle: 'web', seats: 2 })]), /a role is made with its circle, name, duty and cap, not its seats/)
-  assert.match(await refused([make({ id: 'editor' })]), /a role is made with its circle, name, duty and cap, not its id, which it takes from its name/)
   assert.match(await refused([{ kind: 'role', args: { circle: 'web' } }]), /a role is made with no name: give it a name/)
   assert.match(await refused([make({ name: ' ' })]), /the new role is given a blank name: give it a name/)
   assert.match(
@@ -186,6 +189,65 @@ test('the assembly makes an Editor role in Web and seats Léa in it by one motio
   )
 })
 
+test('a role\'s id is given at its proposal, past the motion\'s earlier actions, and an id taken since refuses the make', async () => {
+  const keys = await all<{ k: string }>(
+    `SELECT circle.keyed(n) AS k FROM unnest(ARRAY['Trésorier', 'Ørsted Æble', 'Straße', 'Łódź', 'Đorđe', 'Þórr', '  Print buyer! ', '2nd editor', '会计']) n`,
+  )
+  assert.deepEqual(
+    keys.map((r) => r.k),
+    ['tresorier', 'orsted-aeble', 'strasse', 'lodz', 'dorde', 'thorr', 'print-buyer', 'nd-editor', 'role'],
+    'a name\'s key drops its accents and spells out ø, æ, ß, ł, đ and þ',
+  )
+
+  const { motion } = settled(
+    await moving([
+      { kind: 'circle', args: { id: 'press', name: 'Press', purpose: 'the studio\'s printed work' } },
+      { kind: 'role', args: { circle: 'brand', name: 'Scribe', id: 'mine' } },
+      { kind: 'role', args: { circle: 'web', name: 'Scribe' } },
+      { kind: 'seat', args: { circle: 'web', member: lea, role: 'scribe-2' } },
+      { kind: 'role', args: { circle: 'web', name: 'Press' } },
+      { kind: 'role', args: { circle: 'web', name: 'Trésorier' } },
+    ]),
+  ) as { motion: string }
+  assert.deepEqual(
+    (await all<{ id: string }>(`SELECT args ->> 'id' AS id FROM motion.action WHERE motion = $1 AND kind = 'role' ORDER BY n`, [motion])).map((r) => r.id),
+    ['scribe', 'scribe-2', 'press-2', 'tresorier'],
+    'each role is given its id at the proposal, past the circle and the role made before it, whatever id was named',
+  )
+  const out = await decided(motion)
+  assert.deepEqual(
+    states(out).map(([op, state]) => [op, state]),
+    [
+      ['circle:circle:create', 'settled'],
+      ['circle:role:make', 'settled'],
+      ['circle:role:make', 'settled'],
+      ['circle:seat:add', 'settled'],
+      ['circle:role:make', 'settled'],
+      ['circle:role:make', 'settled'],
+    ],
+  )
+  assert.deepEqual(
+    await all(`SELECT id, circle FROM circle.role WHERE id IN ('scribe', 'scribe-2', 'press-2', 'tresorier') ORDER BY id`),
+    [
+      { id: 'press-2', circle: 'web' },
+      { id: 'scribe', circle: 'brand' },
+      { id: 'scribe-2', circle: 'web' },
+      { id: 'tresorier', circle: 'web' },
+    ],
+  )
+  assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM circle.seat WHERE circle = 'web' AND member = $1 AND role = 'scribe-2'`, [lea])).n, 1, 'Léa sits as the second Scribe')
+
+  // Two motions each give Archivist's key, as neither is made; the first
+  // carried makes it, and the second's make is refused, never renamed.
+  const first = settled(await moving([{ kind: 'role', args: { circle: 'web', name: 'Archivist' } }])) as { motion: string }
+  const second = settled(await moving([{ kind: 'role', args: { circle: 'web', name: 'Archivist!' } }])) as { motion: string }
+  assert.deepEqual(states(await decided(first.motion)), [['circle:role:make', 'settled', '']])
+  const late = await decided(second.motion)
+  assert.equal(late[0].state, 'refused')
+  assert.match(late[0].reason ?? '', /a role archivist is there already, made since the motion gave the new role that id: propose the role again for another/)
+  assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM circle.role WHERE name = 'Archivist!'`)).n, 0, 'no role was made in its place')
+})
+
 eachBrowser((name, launch) => {
   test(`${name}: Camille proposes a new role from Web's Settings tab, and sees a cap below the Member role's holders refused, light and dark`, async () => {
     mkdirSync(shots, { recursive: true })
@@ -224,8 +286,8 @@ eachBrowser((name, launch) => {
           await fresh.waitFor({ state: 'hidden' })
           assert.deepEqual(
             await all(`SELECT d.circle, d.title, m.args FROM motion.motion d JOIN motion.action m ON m.motion = d.id WHERE m.kind = 'role' AND m.args ->> 'name' = $1`, [role]),
-            [{ circle: 'ag', title: `Make the ${role} role in Web`, args: { circle: 'web', name: role, duty: 'grants access to the studio\'s tools', holders: 1 } }],
-            `${at}: one motion of the assembly makes the role in Web, its name, duty and cap, and no id`,
+            [{ circle: 'ag', title: `Make the ${role} role in Web`, args: { circle: 'web', id, name: role, duty: 'grants access to the studio\'s tools', holders: 1 } }],
+            `${at}: one motion of the assembly makes the role in Web, its name, duty and cap, and the id its name gives`,
           )
           proposed.push({ role, id })
 

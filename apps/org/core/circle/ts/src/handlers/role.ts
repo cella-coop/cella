@@ -7,20 +7,25 @@ type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
 // Makes a role in a circle, or a `*` role every working circle has,
-// citing the motion that makes it: its name, duty and cap, its id taken
-// from its name as it is made (`circle.role_key`), holding nothing until a
-// motion grants it a mandate. Its entry carries the id it took and all
-// three, so its fold makes the same role.
+// citing the motion that makes it: its id, which the motion's proposal
+// took from its name (`circle.role_key`), its name, duty and cap, holding
+// nothing until a motion grants it a mandate. An id a circle or a role
+// has taken since is refused (`circle.free`), never swapped for another.
+// Its entry carries all four.
 export async function make(input: Make, deps: Deps): Out<'circle:role:make', { role: string }> {
   return write(deps, {
     op: 'circle:role:make' satisfies Action,
     request: input,
     state: async (tx) => {
-      const { rows } = await tx.query<{ id: string }>(
-        `INSERT INTO circle.role (id, circle, name, duty, holders) VALUES (circle.role_key($2), $1, $2, $3, $4) RETURNING id`,
-        [input.circle, input.name, input.duty, input.holders],
-      )
-      return { role: rows[0].id }
+      await tx.query('SELECT circle.free($1)', [input.id])
+      await tx.query(`INSERT INTO circle.role (id, circle, name, duty, holders) VALUES ($1, $2, $3, $4, $5)`, [
+        input.id,
+        input.circle,
+        input.name,
+        input.duty,
+        input.holders,
+      ])
+      return { role: input.id }
     },
     payload: (v) => ({ role: v.role, circle: input.circle, name: input.name, duty: input.duty, holders: input.holders, motion: input.motion }),
   })

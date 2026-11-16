@@ -397,11 +397,11 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
 -- A role a motion makes, carried out by core's circle:role:make, and one
 -- it changes, by core's circle:role:amend, both under the collective
 -- mandate `amend-circle`: a new role's circle, `*` for every working
--- circle, its name, duty and cap, its id taken from the name as it is
--- made; a role changed by its id, and any
+-- circle, its name, duty and cap, its id taken from the name at the
+-- proposal; a role changed by its id, and any
 -- of its new name, duty and cap. A later `seat` of the same motion may
--- name a role an earlier `role` action makes, by the id its name gives
--- (`circle.role_key`).
+-- name a role an earlier `role` action makes, by the id the proposal
+-- gave it (`circle.role_key`).
 SELECT motion.register_cite('circle:role:make', 'amend-circle', 'membership-motion');
 SELECT motion.register_cite('circle:role:amend', 'amend-circle', 'membership-motion');
 SELECT motion.register_carries('role', 'Make a role', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "name", "label": "Name", "type": "text"}, {"name": "duty", "label": "Duty", "type": "text", "optional": true}, {"name": "holders", "label": "Cap", "type": "number", "optional": true}]', 'circle:role:make', 'membership-motion');
@@ -428,7 +428,7 @@ BEGIN ATOMIC
       THEN 'the ' || p.label || ' role is held by ' || h.held || ' in ' || h.circle || ' on ' || to_char(cella.verdict_date(), 'YYYY-MM-DD')
         || ': give it a cap of ' || h.held || ' or more, or end a tenure of it first'
   END
-  FROM (SELECT coalesce(duty_terms.self, CASE WHEN duty_terms.args ->> 'name' ~ '\S' THEN circle.role_key(duty_terms.args ->> 'name') END, 'new') AS label,
+  FROM (SELECT coalesce(duty_terms.self, CASE WHEN duty_terms.args ->> 'name' ~ '\S' THEN duty_terms.args ->> 'id' END, 'new') AS label,
                CASE WHEN jsonb_typeof(duty_terms.args -> 'holders') = 'number' THEN (duty_terms.args ->> 'holders')::numeric END AS cap) p
   LEFT JOIN LATERAL (
     SELECT y.id, y.name, y.circle FROM circle.role y
@@ -451,9 +451,13 @@ END;
 -- The terms of a role made, `args` as the motion carries them, judged at
 -- the proposal and again as it is written, where `made` is the role the
 -- write made, aside: it names a circle there is, or `*` for every working
--- circle, and nothing but its circle, name, duty and cap, no id, since the
--- make takes one from its name (`circle.role_key`); it has a name; and its
--- name and cap do (`duty_terms`). `motion` and `n` are the action's.
+-- circle, and nothing but its circle, id, name, duty and cap; it has a
+-- name; at the proposal, its id is the one its name gives
+-- (`circle.role_key`) past every circle and role there is and those the
+-- motion's earlier actions make, `n` being its own, which the proposal
+-- gives it, so no reader chooses it; and its name and cap do
+-- (`duty_terms`). As it is written the make refuses an id taken since
+-- (`circle.free`).
 CREATE FUNCTION membership_motion.make_terms(motion text, n int, args jsonb, made text) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -462,16 +466,24 @@ BEGIN ATOMIC
       THEN 'no circle ' || coalesce(p.circle, 'is named') || ': a role is made in a circle there is, by its id, or in every working circle, *'
     WHEN x.key IS NOT NULL
       THEN 'a role is made with its circle, name, duty and cap, not its ' || x.key
-        || CASE x.key WHEN 'id' THEN ', which it takes from its name' ELSE '' END
     WHEN NOT (make_terms.args ? 'name')
       THEN 'a role is made with no name: give it a name'
+    WHEN make_terms.made IS NULL AND p.id IS DISTINCT FROM k.id
+      THEN 'the role named ' || (make_terms.args ->> 'name') || ' takes the id ' || k.id || ' from its name, not ' || coalesce(p.id, 'none')
+        || ': propose it by its name alone'
   END, membership_motion.duty_terms(make_terms.made, p.circle, make_terms.args))
-  FROM (SELECT make_terms.args ->> 'circle' AS circle) p
+  FROM (SELECT make_terms.args ->> 'circle' AS circle, make_terms.args ->> 'id' AS id) p
   LEFT JOIN circle.circle c ON c.id = p.circle
   LEFT JOIN LATERAL (
     SELECT k.key FROM jsonb_object_keys(make_terms.args) k(key)
-    WHERE k.key NOT IN ('circle', 'name', 'duty', 'holders') ORDER BY k.key LIMIT 1
-  ) x ON true;
+    WHERE k.key NOT IN ('circle', 'id', 'name', 'duty', 'holders') ORDER BY k.key LIMIT 1
+  ) x ON true
+  CROSS JOIN LATERAL (
+    SELECT circle.role_key(make_terms.args ->> 'name', ARRAY(
+      SELECT o.args ->> 'id' FROM motion.action o
+      WHERE o.motion = make_terms.motion AND o.n < make_terms.n AND o.kind IN ('circle', 'role') AND o.args ? 'id'
+    )) AS id
+  ) k;
 END;
 
 -- The terms of a role's amendment, `args` as the motion carries them,
@@ -525,8 +537,8 @@ BEGIN ATOMIC
       END,
       CASE WHEN NOT motion.decides(d.circle, w.circle) THEN
         CASE WHEN w.circle = '*'
-          THEN 'a role of every working circle is the assembly''s alone: put the ' || coalesce(m.args ->> 'role', circle.role_key(m.args ->> 'name')) || ' role to it'
-          ELSE d.circle || ' may not decide about ' || w.circle || ': put the ' || coalesce(m.args ->> 'role', circle.role_key(m.args ->> 'name')) || ' role to the assembly, or to another circle holding amend-circle'
+          THEN 'a role of every working circle is the assembly''s alone: put the ' || coalesce(m.args ->> 'id', m.args ->> 'role') || ' role to it'
+          ELSE d.circle || ' may not decide about ' || w.circle || ': put the ' || coalesce(m.args ->> 'id', m.args ->> 'role') || ' role to the assembly, or to another circle holding amend-circle'
         END
       END
     ) AS r
@@ -543,7 +555,7 @@ BEGIN ATOMIC
 END;
 
 -- circle:role:make — the role the write made is one the cited motion
--- makes, by its circle, name, duty and cap, on the terms
+-- makes, by its circle, id, name, duty and cap, on the terms
 -- `make_terms` judges.
 CREATE FUNCTION membership_motion.makes(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
@@ -561,7 +573,7 @@ BEGIN ATOMIC
   LEFT JOIN motion.motion d ON d.id = p.motion
   LEFT JOIN LATERAL (
     SELECT o.n, o.args FROM motion.action o
-    WHERE o.motion = d.id AND o.kind = 'role' AND o.args ->> 'circle' = r.circle
+    WHERE o.motion = d.id AND o.kind = 'role' AND o.args ->> 'id' = r.id AND o.args ->> 'circle' = r.circle
       AND o.args ->> 'name' = r.name AND coalesce(o.args ->> 'duty', '') = r.duty
       AND (o.args ->> 'holders')::int IS NOT DISTINCT FROM r.holders
     ORDER BY o.n

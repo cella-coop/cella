@@ -355,7 +355,7 @@ and on the assembly's those every working circle has but `participant`,
 a term's edit, as it commits, opening the dialog proposing an
 `amend-role` motion of that one term. Below the roles, Add a role…
 opens a dialog composing a new role whole (`Compose`, [settings](../../core/ui/index.md#settings)):
-its name, its duty and its cap, with no id, which the role's make
+its name, its duty and its cap, with no id, which the proposal
 takes from its name ([circle](../../core/circle/index.md#actions)), proposed to the deciding circle as one
 `role` motion carrying them all, its title "Make the Editor role in
 Web"; the guard judges it, and a refusal stays in the dialog, saying

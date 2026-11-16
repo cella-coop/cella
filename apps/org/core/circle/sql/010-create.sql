@@ -45,13 +45,13 @@ GRANT UPDATE (name, duty, holders) ON circle.role TO cella_app;
 
 -- The key a name gives a role: in lower case, its accents dropped (é as
 -- e) and the letters with no accent to drop spelt out (ø as o, æ as ae,
--- ß as ss, ł as l, đ as d, þ as th), each run of anything but a letter
--- or a digit one hyphen, from its first letter, as `tresorier` from
+-- œ as oe, ß as ss, ł as l, đ as d, þ as th), each run of anything but a
+-- letter or a digit one hyphen, from its first letter, as `tresorier` from
 -- Trésorier; `role` where it has none.
 CREATE FUNCTION circle.keyed(name text) RETURNS text
 LANGUAGE sql IMMUTABLE
 RETURN coalesce(nullif(regexp_replace(regexp_replace(regexp_replace(regexp_replace(
-  normalize(translate(replace(replace(replace(lower(coalesce(keyed.name, '')), 'æ', 'ae'), 'ß', 'ss'), 'þ', 'th'), 'øłđ', 'old'), NFD),
+  normalize(translate(replace(replace(replace(replace(lower(coalesce(keyed.name, '')), 'æ', 'ae'), 'œ', 'oe'), 'ß', 'ss'), 'þ', 'th'), 'øłđ', 'old'), NFD),
   '[̀-ͯ]', '', 'g'), '[^a-z0-9]+', '-', 'g'), '^[^a-z]+', ''), '-+$', ''), ''), 'role');
 
 -- The id a role named `name` takes: its key (`circle.keyed`), with `-2`,
@@ -74,6 +74,8 @@ BEGIN ATOMIC
   ORDER BY k.n
   LIMIT 1;
 END;
+REVOKE EXECUTE ON FUNCTION circle.role_key(text, text[]) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION circle.role_key(text, text[]) TO cella_app, cella_guards;
 
 -- Refuses a new role's id where a circle or a role holds it already, as
 -- one made since the motion gave it, saying which: the make never takes

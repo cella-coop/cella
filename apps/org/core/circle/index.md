@@ -840,7 +840,7 @@ and `revoking`. Creating a circle places it nowhere: circles never nest.
 - **role.make** makes a role in a circle, or a `*` role every working
   circle has, by the motion it cites: its name, duty and cap, and its
   id, which the motion's proposal took from its name: in lower case,
-  its accents dropped and ø, æ, ß, ł, đ and þ spelt o, ae, ss, l, d and
+  its accents dropped and ø, æ, œ, ß, ł, đ and þ spelt o, ae, oe, ss, l, d and
   th, each run of anything but a letter or a digit one hyphen, with
   `-2`, `-3` and on after it where a circle or a role already holds
   that key or an earlier action of the motion makes it; a name with no

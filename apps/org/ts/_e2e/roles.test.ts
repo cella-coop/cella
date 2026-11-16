@@ -191,12 +191,12 @@ test('the assembly makes an Editor role in Web and seats Léa in it by one motio
 
 test('a role\'s id is given at its proposal, past the motion\'s earlier actions, and an id taken since refuses the make', async () => {
   const keys = await all<{ k: string }>(
-    `SELECT circle.keyed(n) AS k FROM unnest(ARRAY['Trésorier', 'Ørsted Æble', 'Straße', 'Łódź', 'Đorđe', 'Þórr', '  Print buyer! ', '2nd editor', '会计']) n`,
+    `SELECT circle.keyed(n) AS k FROM unnest(ARRAY['Trésorier', 'Ørsted Æble', 'Straße', 'Łódź', 'Đorđe', 'Þórr', 'Œuvre', '  Print buyer! ', '2nd editor', '会计']) n`,
   )
   assert.deepEqual(
     keys.map((r) => r.k),
-    ['tresorier', 'orsted-aeble', 'strasse', 'lodz', 'dorde', 'thorr', 'print-buyer', 'nd-editor', 'role'],
-    'a name\'s key drops its accents and spells out ø, æ, ß, ł, đ and þ',
+    ['tresorier', 'orsted-aeble', 'strasse', 'lodz', 'dorde', 'thorr', 'oeuvre', 'print-buyer', 'nd-editor', 'role'],
+    'a name\'s key drops its accents and spells out ø, æ, œ, ß, ł, đ and þ',
   )
 
   const { motion } = settled(

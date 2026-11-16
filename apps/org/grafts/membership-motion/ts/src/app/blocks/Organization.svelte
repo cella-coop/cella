@@ -55,6 +55,6 @@
 </Section>
 <Section title="Scope">
   <Explained
-    items={hosted.map((h) => ({ key: h.key, label: h.label, values: [{ label: 'Set to', value: h.value ?? 'Unset' }], badge: { label: 'Set by a host', tone: 'neutral' as const }, text: h.text }))}
+    items={hosted.map((h) => ({ key: h.key, label: h.label, values: [{ label: 'Set to', value: h.value ?? 'Unset' }], who: { kind: 'host' as const, label: 'Set by a host', text: h.text } }))}
   />
 </Section>

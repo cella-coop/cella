@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte'
   import DateField from './DateField.svelte'
   import Select from './Select.svelte'
   import { useForm } from '../hooks/useForm.ts'
@@ -16,6 +17,7 @@
     list,
     wide = false,
     accept,
+    hint,
   }: {
     label: string
     name: string
@@ -30,6 +32,8 @@
     wide?: boolean
     // For a file, the media types it offers to pick, such as image/*.
     accept?: string
+    // What the field says beside its label, as who changes it.
+    hint?: Snippet
   } = $props()
 
   const id = $props.id()
@@ -41,7 +45,11 @@
 <!-- Its label names the field by its id, never by wrapping it, so a press
      inside a select's list or a date's calendar is no press on the label. -->
 <div class="field" class:wide>
-  <label class="label" for={id} id="{id}-label">{label}</label>
+  {#if hint}
+    <div class="head"><label class="label" for={id} id="{id}-label">{label}</label>{@render hint()}</div>
+  {:else}
+    <label class="label" for={id} id="{id}-label">{label}</label>
+  {/if}
   {#if options}
     <Select {id} labelledby="{id}-label" name={posted} {options} {placeholder} {required} bind:value={() => String(value ?? ''), (v) => (value = v)} />
   {:else if type === 'date'}
@@ -70,6 +78,11 @@
   }
   .wide {
     grid-column: 1 / -1;
+  }
+  .head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
   }
   .label {
     font-size: var(--text-xs);

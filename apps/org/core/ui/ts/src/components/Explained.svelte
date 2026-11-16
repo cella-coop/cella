@@ -1,15 +1,18 @@
 <script lang="ts">
   import type { Tone } from '../models/view.ts'
+  import type { Who as Changer } from '../models/settings.ts'
   import Badge from './Badge.svelte'
+  import Who from './Who.svelte'
 
   // Settings, each said in full: its label and what bounds it, its value
   // now and the one proposed, a badge saying how it bears, and below them
-  // a sentence saying what it means, which wraps, never cut off. In a
+  // a sentence saying what it means, which wraps, never cut off, or, where
+  // it says who sets it, an icon beside its label whose tooltip says why. In a
   // section it sits at the section's inset.
   let {
     items,
   }: {
-    items: { key: string; label: string; sub?: string; values: { label: string; value: string }[]; badge?: { label: string; tone: Tone }; text: string }[]
+    items: { key: string; label: string; sub?: string; values: { label: string; value: string }[]; badge?: { label: string; tone: Tone }; who?: Changer; text?: string }[]
   } = $props()
 </script>
 
@@ -18,6 +21,7 @@
     <div class="item">
       <dt>
         <span class="label">{item.label}</span>
+        {#if item.who}<Who who={item.who} />{/if}
         {#if item.sub}<span class="sub">{item.sub}</span>{/if}
       </dt>
       <dd class="values">
@@ -26,7 +30,7 @@
         {/each}
         {#if item.badge}<Badge tone={item.badge.tone}>{item.badge.label}</Badge>{/if}
       </dd>
-      <dd class="text">{item.text}</dd>
+      {#if item.text}<dd class="text">{item.text}</dd>{/if}
     </div>
   {/each}
 </dl>

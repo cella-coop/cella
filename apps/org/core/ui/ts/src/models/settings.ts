@@ -61,12 +61,28 @@ export interface Proposal {
 // Whether the reader's own write saves a setting.
 export const direct = (s: Setting) => !!s.write && !s.refused
 
-// What changes a setting, as its quiet line says it.
-export function changer(s: Setting, decider: Decider | null): string {
+// Who changes a setting, as the icon beside its label says it: a circle
+// by motion, the reader's change waiting among the changes to propose to
+// it, a host, or nothing the reader may write; in a few words, its name,
+// and in its tooltip why. None where the reader's own write saves it,
+// which the field says by saving.
+export interface Who {
+  kind: 'motion' | 'proposed' | 'host' | 'locked'
+  label: string
+  text?: string
+}
+
+export function who(s: Setting, decider: Decider | null, proposed = false): Who | null {
   if (direct(s)) {
-    return 'You change it here'
+    return null
   }
-  return s.motion && decider ? `${decider.name} changes it by motion` : 'Nothing you may write changes it'
+  if (!s.motion || !decider) {
+    return { kind: 'locked', label: 'Nothing you may write changes this', ...(s.refused ? { text: s.refused } : {}) }
+  }
+  if (proposed) {
+    return { kind: 'proposed', label: `Proposed to ${decider.name}`, text: `Your change waits among the changes to propose to ${decider.name}, in the sidebar, until you propose or discard it.` }
+  }
+  return { kind: 'motion', label: `${decider.name} changes this by motion`, ...(s.refused ? { text: s.refused } : {}) }
 }
 
 // What a setting's write posts: each setting of the form that the same

@@ -621,9 +621,18 @@ styled as the rest.
 
 
 A settings page is a plain form, `Settings`, one `Setting` a row: its
-label, its current value in its field, and under it in a quiet line
-what changes it, a write the reader makes or a motion of the circle
-that decides it. Every field is editable, whoever reads it, and the
+label, beside it who changes it where the reader's own write does not,
+and its current value in its field. Who changes it is one quiet icon,
+`Who` (`who` in `models/settings.ts`): the motions' scales where a
+circle changes it by motion, named in its tooltip ("Assembly changes
+this by motion") with why, in the guard's words; the same in the accent
+where the reader's change waits among the changes to propose; a host's
+drives where a host sets it; a lock where nothing the reader may write
+changes it. A field the reader saves wears none. The icon is a button
+the keyboard reaches, its name the few words and its tooltip, shown as
+the pointer rests on it or it takes the focus and hidden by Escape, its
+description, so assistive technology reads both; no line under the
+field repeats it. Every field is editable, whoever reads it, and the
 form has no Save: each setting commits as its field does. A pick, from
 a select, a checkbox, a radio or a calendar, commits as it is made; a
 typed value commits when focus leaves the field or on Enter (Ctrl or
@@ -681,7 +690,7 @@ it saves that differ from their values in force (`posted`), so one
 left as it is never posts and a contact detail never set stays unset.
 Each write has one post in flight at a time: a commit made while it
 posts waits for it to settle, then sends the values as they stand.
-Beside the field, in its quiet line, a mark says how the commit went,
+Under the field, in a quiet line, a mark says how the commit went,
 announced as it changes (`aria-live`): Saving… while it posts, a brief
 Saved once it settles, or Not saved and the refusal's reason, the
 field keeping what was typed; the shell shows the outcome as for any
@@ -740,8 +749,8 @@ edit, as it commits, opens the dialog proposing a motion of the
 assembly, the value its own field, which carries Adopt a policy
 replacing the particulars with it, its procedure the one their
 protection fixes; and under the form,
-read-only, the scope's address and its timezone, each saying a host
-sets it ([the notary](../notary/index.md#settings)). Membership-motion
+read-only, the scope's address and its timezone, each with the host icon beside
+its label, its tooltip saying a host sets it and why ([the notary](../notary/index.md#settings)). Membership-motion
 serves it, as the graft that proposes the assembly's motions
 ([membership-motion](../../grafts/membership-motion/index.md#shell-of-the-roll)).
 

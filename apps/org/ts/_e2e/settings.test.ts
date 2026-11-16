@@ -63,8 +63,8 @@ eachBrowser((name, launch) => {
         const at = `${name}, ${scheme}`
 
         const form = page.locator('form.settings')
-        assert.match((await form.textContent()) ?? '', /You change it here.*Assembly changes it by motion/s, `${at}: each setting says what changes it`)
-        assert.equal(await form.getByRole('button').count(), 0, `${at}: the form has no Save`)
+        assert.equal(await form.getByRole('button', { name: 'Assembly changes this by motion' }).count(), 1, `${at}: a setting only a motion changes says so by an icon beside its label`)
+        assert.equal(await form.getByRole('button', { name: /Save/ }).count(), 0, `${at}: the form has no Save`)
         const own = form.getByLabel('Your name')
         await own.fill('Camille Martin')
         await own.press('Enter')

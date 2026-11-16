@@ -156,10 +156,10 @@ pkgs.testers.runNixOSTest {
           return made[0], page
 
       def password(db):
-          for pid in host.succeed("pgrep -u cella-visitors node || true").split():
+          for pid in host.succeed("cat /sys/fs/cgroup/system.slice/cella-${scope}.service/cgroup.procs").split():
               env = host.succeed(f"tr '\\0' '\\n' < /proc/{pid}/environ || true")
-              found = re.search(r"^PGPASSWORD=(.*)$", env, re.M)
-              if found and re.search(rf"^PGDATABASE={db}$", env, re.M):
+              found = re.search(rf"^DATABASE_URL=postgresql://{db}:([^@]+)@/{db}\?", env, re.M)
+              if found:
                   return found.group(1), pid
           raise Exception(f"no server serves {db}")
 
@@ -207,11 +207,17 @@ pkgs.testers.runNixOSTest {
           host.succeed("""${psql "postgres" "SELECT bool_and(NOT rolsuper AND NOT rolcreatedb AND NOT rolcreaterole AND NOT rolbypassrls) FROM pg_roles WHERE rolname ~ '^demo_v_'"} | grep -qx t""")
           host.succeed("""${psql "postgres" "SELECT rolconnlimit FROM pg_roles WHERE rolname = '{a}'"} | grep -qx 10""".replace("{a}", a))
 
-      with subtest("the front's unit holds no address but localhost, no capability, and a memory limit"):
-          show = host.succeed("systemctl show cella-${scope}.service -p IPAddressDeny -p IPAddressAllow -p CapabilityBoundingSet -p MemoryMax -p User")
+      with subtest("the front's unit, and every copy's server in it, reaches no address but localhost, and holds no capability and a memory limit"):
+          show = host.succeed("systemctl show cella-${scope}.service -p CapabilityBoundingSet -p MemoryMax")
           print(show)
-          assert "IPAddressDeny=0.0.0.0/0 ::/0" in show, "the front reaches the network"
+          assert "CapabilityBoundingSet=\n" in show + "\n", "the front holds a capability"
           assert "MemoryMax=infinity" not in show, "no memory limit"
+          ip = host.succeed("ip -4 -o addr show eth1 | awk '{ print $4 }' | cut -d/ -f1").strip()
+          host.succeed(f"systemd-run --unit listen-{ip.replace('.', '-')} node -e \"require('http').createServer((q, s) => s.end('ok')).listen(8099, '{ip}')\"")
+          host.wait_until_succeeds(f"curl -sf --max-time 5 http://{ip}:8099/", timeout=60)
+          inside = lambda url: host.execute(f"sh -c 'echo $$ > /sys/fs/cgroup/system.slice/cella-${scope}.service/cgroup.procs && exec curl -sf --max-time 5 {url}'")[0]
+          assert inside(f"{front}/_demo/health") == 0, "the unit cannot reach localhost"
+          assert inside(f"http://{ip}:8099/") != 0, "the unit reaches an address beyond localhost"
 
       with subtest("Reset now drops the copy and makes a fresh one, the earlier cookie naming none"):
           old = cookie("/tmp/a")
@@ -243,7 +249,7 @@ pkgs.testers.runNixOSTest {
       with subtest("a copy idle past its span ends, leaving no database, role, server or socket"):
           host.wait_until_succeeds("""${psql "postgres" "SELECT count(*) FROM pg_database WHERE datname ~ '^demo_v_'"} | grep -qx 0""", timeout=240)
           assert roles() == [], roles()
-          host.succeed("test $(pgrep -u cella-visitors -c node) -eq 1")
+          host.succeed("test $(wc -l < /sys/fs/cgroup/system.slice/cella-${scope}.service/cgroup.procs) -eq 1")
           host.succeed("test -z \"$(ls /run/cella-${scope})\"")
           page = host.succeed(f"curl -sf -b /tmp/c {front}/")
           assert "Your earlier copy was reset." in page

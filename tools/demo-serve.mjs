@@ -230,10 +230,9 @@ async function start(cookie) {
         env: {
           PATH: process.env.PATH ?? '',
           SOCKET_PATH: socket,
-          PGHOST: process.env.PGHOST ?? '/run/postgresql',
-          PGDATABASE: name,
-          PGUSER: name,
-          PGPASSWORD: password,
+          // The server takes a URL's role as it is, where with none it names
+          // `cella_app`, whom this role may act as and never log in as.
+          DATABASE_URL: `postgresql://${name}:${password}@/${name}?host=${encodeURIComponent(process.env.PGHOST ?? '/run/postgresql')}`,
           CELLA_DEMO: '1',
           CELLA_DEMO_IDLE: String(config.idle),
           PROTOCOL_HEADER: 'x-forwarded-proto',

@@ -633,14 +633,16 @@ does nothing. A slice declares each setting with the write that
 changes it directly, if any, and the motion kind that changes it
 otherwise, its arguments filled from the field (`models/settings.ts`).
 A setting's field is one `Field` draws, or an arrangement, `Arrange`,
-where it declares its `choices`: a fieldset of every choice with a
-toggle, those on first in their order, each under its accordion where
-it has one, and the rest after them; each choice on moves up or down
-past its neighbour in its accordion, an ungrouped one past the choice
-or the accordion beside it, and an accordion as a whole; a choice's
-accordion is named in a field of its own, which moves it into the
-accordion of that name or makes one, and an accordion's heading renames
-it. Its value is one listing (`models/arrange.ts`): the choices on, in
+where it declares its `choices`: a fieldset of the tree of choices on
+show, in their order, each at the top level or in an accordion, and
+under it those not shown. Where a choice sits is all there is to say of
+it, with no toggle and no field naming its accordion: it is dragged,
+by the pointer or the keyboard (`placing`), into an accordion or out of
+one, along the tree, or down among those not shown, and an accordion
+is dragged as a whole, or among those not shown with all its choices.
+An accordion's heading renames it, and New accordion makes an empty
+one to drag choices into, which the listing holds once one is in it.
+Its value is one listing (`models/arrange.ts`): the choices on, in
 order, separated by commas, an accordion's run after its name and a
 colon, the runs separated by semicolons, as a circle's features are
 written ([features](../circle/index.md#features)).
@@ -792,14 +794,14 @@ this circle reads the lens. `useSection` hands a `Section`'s title down, so an e
 ## Dragging
 
 Every list that reorders, reorders by dragging; the ui check refuses up
-and down arrow buttons that move things. The primitives:
+and down arrow or caret buttons that move things. The primitives:
 
 - `models/drag.ts`: a drag as plain data (the list, the item lifted, the
   index it would take, pointer or keyboard) and its moves: `start`,
   `over`, `step`, `drop` (the move, none when it lands where it began),
   `cancel`, `slot` (where the indicator goes) and `reorder` over a list
-  of any type. Nesting would add a target list to `to`; nothing nests
-  yet.
+  of any type; a list that nests lands its items on places instead
+  (`placing`).
 - `DragState` and `useDrag()`: the page's one drag as state, so any
   component shows where an item will land (`before(list, i)`) and dims
   the lifted one, with the announcement for assistive technology.
@@ -816,9 +818,25 @@ and down arrow buttons that move things. The primitives:
   drop.
 - `DragHandle` (a labelled grip) and `DropIndicator`, the one line where
   an item will land, from the tokens.
+- `placing(drag, { list, lift, describe, onplace })`, an attachment for a
+  list whose items land on places it names, not only between its items,
+  as an arrangement's choices land in an accordion or out of one, at the
+  top level or among those not shown, and its accordions as a whole. Its
+  items carry `data-drag-item` and `data-drag-key`, each handle
+  `data-drag-handle`; while one is lifted the list draws its places, a
+  line each (`data-drop-place`), indented as deep as the item would
+  sit, or an area (`data-drop-zone`) that takes it anywhere inside. The
+  pointer aims at the zone under it or the nearest line, the one as deep
+  as the preview's left edge where two lie together, as the end of an
+  accordion and the top level after it do; the keyboard lifts with Space
+  or Enter, steps through the places with the arrows and drops with
+  Space or Enter, each place announced in the list's own words
+  (`describe`), Escape cancelling either. `DragState` holds the lifted
+  item's key beside its drag (`placing`, `aiming`, `holding`).
 
 Dashboard widgets, a table's columns in the View panel's Display popover, the viewer's own
-view tabs, a document's blocks and a meeting's agenda reorder this way;
+view tabs, a document's blocks and a meeting's agenda reorder this way, and an
+arrangement (`Arrange`) places its choices so;
 `Popover`, `DragHandle`, `Ordered`, `sortable` and `useDrag` are
 exported for slices to compose.
 

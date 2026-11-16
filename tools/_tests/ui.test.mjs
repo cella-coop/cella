@@ -148,6 +148,11 @@ test('reorder buttons with up and down arrows are refused; dragging reorders', (
   const found = problems('apps/org/core/ui/ts/src/components/Widgets.svelte', arrows, true)
   assert.equal(found.length, 2, `${found}`)
   assert.match(found[0], /reorders with ArrowUp buttons; items reorder by dragging/)
+  const carets = component(
+    "  import CaretUp from 'phosphor-svelte/lib/CaretUp'",
+    '<li>{name}<button aria-label="Move {name} up" onclick={() => set(moved(items, at, -1))}><Icon icon={CaretUp} /></button></li>',
+  )
+  assert.match(problems('apps/org/core/ui/ts/src/components/Arrange.svelte', carets, true)[0], /reorders with CaretUp buttons/, 'a caret moving a choice is an arrow too')
   const disclosure = component("  import CaretDown from 'phosphor-svelte/lib/CaretDown'", '<summary>Menu <Icon icon={CaretDown} /></summary>')
   assert.deepEqual(problems('apps/org/core/ui/ts/src/components/Shell.svelte', disclosure, true), [])
   const sorted = component("  import { sortable } from '../attachments/sortable.ts'", '<ol {@attach sortable(drag, { list: "w", label, onmove })}><li data-drag-item="w" data-drag-index={0}><DragHandle label="Owed" /></li></ol>')

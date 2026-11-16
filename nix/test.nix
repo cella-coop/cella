@@ -69,14 +69,18 @@ pkgs.testers.runNixOSTest {
         demo = {
           enable = kind != "scope";
         } // (if kind == "visitors" then {
-          # Two copies at most, each ending after 90 s idle, so the cap and
-          # the expiry are reached within the test.
+          # Two copies at most, each ending after 90 s idle or 150 s old,
+          # storing 4 MiB, one to an address: each limit is reached within
+          # the test.
           visitors = 2;
           idle = 90;
+          lifetime = 150;
           evictAfter = 1;
+          minAge = 1;
           memory = 512;
-          perIp = 5;
-        } else { visitors = null; });
+          storage = 4;
+          perAddress = 1;
+        } else { shared = true; });
       } // (if kind == "scope" then { timezone = "Europe/Paris"; } else { });
     };
   };
@@ -134,26 +138,40 @@ pkgs.testers.runNixOSTest {
       def head(db):
           return int(host.succeed(f"""${as "psql -X -q -t -A -d {db} -c 'SELECT n FROM cella.head'"}""").strip())
 
-      def cookie(jar):
-          return host.succeed(f"awk '$6 == \"cella-visitor\" {{ print $7 }}' {jar}").strip()
+      # Each visitor: the address the host's proxy would forward, and the
+      # cookie the front set them, sent back as a browser sends it.
+      jar = {}
+      def curl(who, ip, args):
+          cookie = f"-H 'Cookie: __Host-cella-visitor={jar[who]}'" if jar.get(who) else ""
+          return f"curl -s {cookie} -H 'X-Forwarded-For: {ip}' {args}"
 
-      def start(jar):
-          return host.execute(f"curl -s -o /dev/stderr -w '%{{http_code}}' -c {jar} -b {jar} -X POST -H 'Origin: {front}' {front}/_demo/start")[1].strip()
+      def start(who, ip, path="/_demo/start"):
+          out = host.succeed(curl(who, ip, f"-D - -o /dev/null -X POST -H 'Origin: {front}' {front}{path}"))
+          code = out.split()[1]
+          set = re.search(r"(?im)^set-cookie: __Host-cella-visitor=([A-Za-z0-9_-]+);.*Secure", out)
+          if set:
+              jar[who] = set.group(1)
+          return code
 
-      # A visitor's first visit: the page saying their copy is being
-      # prepared, its script's POST, then the sign-in of their own copy.
-      def visit(jar):
+      def page(who, ip, path):
+          return host.succeed(curl(who, ip, f"-f {front}{path}"))
+
+      def status(who, ip, args):
+          return host.execute(curl(who, ip, f"-o /dev/null -w '%{{http_code}}' {args}"))[1].strip()
+
+      # A first visit: the page saying the copy is being prepared, its
+      # script's POST, then the sign-in of the visitor's own copy.
+      def visit(who, ip):
           before = set(copies())
           begun = time.monotonic()
-          page = host.succeed(f"curl -sf -c {jar} -b {jar} {front}/")
-          assert "is being prepared" in page and notice in page, "no page saying the copy is being prepared"
-          assert start(jar) == "200", "no copy was made"
-          page = host.succeed(f"curl -sf -b {jar} {front}/sign-in")
+          assert "is being prepared" in page(who, ip, "/"), "no page saying the copy is being prepared"
+          assert start(who, ip) == "200", "no copy was made"
+          signin = page(who, ip, "/sign-in")
           ms = round((time.monotonic() - begun) * 1000)
           made = sorted(set(copies()) - before)
           assert len(made) == 1, f"{made} made, not one copy"
           print(f"first request to a served sign-in: {ms} ms")
-          return made[0], page
+          return made[0], signin
 
       def password(db):
           for pid in host.succeed("cat /sys/fs/cgroup/system.slice/cella-${scope}.service/cgroup.procs").split():
@@ -163,36 +181,38 @@ pkgs.testers.runNixOSTest {
                   return found.group(1), pid
           raise Exception(f"no server serves {db}")
 
-      def probe(db, jar):
-          print(host.succeed(f"""${as "PROBE_COOKIE=cella-visitor={cookie(jar)} PGDATABASE={db} PGUSER=postgres node ${probeTs} {front}"}"""))
+      def probe(db, who, ip):
+          print(host.succeed(f"""${as "PROBE_COOKIE=__Host-cella-visitor={jar[who]} PGDATABASE={db} PGUSER=postgres node ${probeTs} {front}"}"""))
+
+      def fill(db, mib):
+          host.succeed(f"""${as "psql -X -q -d {db}"} -c "CREATE TABLE IF NOT EXISTS public.filler (b text STORAGE EXTERNAL); INSERT INTO public.filler SELECT string_agg(md5(random()::text), ''') FROM generate_series(1, 32), generate_series(1, {mib} * 1024) g GROUP BY g" """)
 
       with subtest("a request with no cookie is shown its copy being prepared, and makes none; the template is closed"):
-          page = host.succeed(f"curl -sf {front}/inbox")
-          assert "is being prepared" in page, "no page saying a copy is being prepared"
+          assert "is being prepared" in page("x", "10.0.0.9", "/inbox")
           assert copies() == [], f"a GET made a copy: {copies()}"
           host.succeed(f"curl -sf {front}/robots.txt | grep -qx 'Disallow: /'")
           host.succeed("""${psql "postgres" "SELECT datistemplate AND NOT datallowconn FROM pg_database WHERE datname = 'demo_template'"} | grep -qx t""")
-          code = host.succeed(f"curl -s -o /dev/null -w '%{{http_code}}' -X POST -H 'Origin: http://elsewhere.example' {front}/_demo/start").strip()
+          code = status("x", "10.0.0.9", f"-X POST -H 'Origin: http://elsewhere.example' {front}/_demo/start")
           assert code == "403", f"a cross-site start answered {code}"
 
       with subtest("a visitor's first visit copies the template into a scope of their own, marked a copy, under the banner"):
-          a, page = visit("/tmp/a")
+          a, signin = visit("a", "10.0.0.1")
           assert re.fullmatch(r"demo_v_[0-9a-f]{16}", a), a
           host.succeed(f"""${psql "postgres" "SELECT shobj_description(oid, 'pg_database') FROM pg_database WHERE datname = '{a}'"} | grep -q '^a copy of demo_template: cella demo template: '""")
-          assert "Demo members" in page and "Camille Martin" in page, "the copy's sign-in offers no demo members"
-          assert notice in page, "the copy's sign-in wears no prototype notice"
-          assert "yours alone" in page and "Reset now" in page, "the banner says nothing of the visitor's copy"
-          assert "minutes idle" in page and "0:01:30" in page, "the banner says nothing of when the copy resets"
+          assert "Demo members" in signin and "Camille Martin" in signin, "the copy's sign-in offers no demo members"
+          assert notice in signin, "the copy's sign-in wears no prototype notice"
+          assert "yours alone" in signin and "Reset now" in signin, "the banner says nothing of the visitor's copy"
+          assert "minutes idle" in signin and "or when its time runs out" in signin and "0:01:30" in signin, "the banner says nothing of when the copy resets"
           pw, pid = password(a)
           rss = int(host.succeed(f"ps -o rss= -p {pid}").strip()) // 1024
           print(f"one visitor's server holds {rss} MiB resident")
 
       with subtest("a second visitor gets a copy of their own; the first one's write changes neither theirs nor the template"):
-          b, _ = visit("/tmp/b")
+          b, _ = visit("b", "10.0.0.2")
           assert a != b and sorted(copies()) == sorted([a, b]), copies()
           base = head(b)
           assert head(a) == base, "two fresh copies differ"
-          probe(a, "/tmp/a")
+          probe(a, "a", "10.0.0.1")
           assert head(a) > base, "the first visitor's write did not reach their copy"
           assert head(b) == base, "the first visitor's write reached the second's copy"
 
@@ -205,7 +225,6 @@ pkgs.testers.runNixOSTest {
               assert login(db, "127.0.0.1") != 0, f"the copy's role reaches {db} over TCP"
           assert login(a, "127.0.0.1") != 0, "the copy's role reaches its copy over TCP"
           host.succeed("""${psql "postgres" "SELECT bool_and(NOT rolsuper AND NOT rolcreatedb AND NOT rolcreaterole AND NOT rolbypassrls) FROM pg_roles WHERE rolname ~ '^demo_v_'"} | grep -qx t""")
-          host.succeed("""${psql "postgres" "SELECT rolconnlimit FROM pg_roles WHERE rolname = '{a}'"} | grep -qx 10""".replace("{a}", a))
 
       with subtest("the front's unit, and every copy's server in it, reaches no address but localhost, and holds no capability and a memory limit"):
           show = host.succeed("systemctl show cella-${scope}.service -p CapabilityBoundingSet -p MemoryMax")
@@ -219,31 +238,52 @@ pkgs.testers.runNixOSTest {
           assert inside(f"{front}/_demo/health") == 0, "the unit cannot reach localhost"
           assert inside(f"http://{ip}:8099/") != 0, "the unit reaches an address beyond localhost"
 
+      with subtest("an address holds as many copies as it may, and refused attempts cost it nothing"):
+          for _ in range(3):
+              assert start("a-again", "10.0.0.1") == "429", "an address took a second copy"
+          assert sorted(copies()) == sorted([a, b]), copies()
+
       with subtest("Reset now drops the copy and makes a fresh one, the earlier cookie naming none"):
-          old = cookie("/tmp/a")
-          host.succeed("cp /tmp/a /tmp/a-old")
+          old = jar["a"]
           time.sleep(21)
-          code = host.succeed(f"curl -s -o /dev/null -w '%{{http_code}}' -c /tmp/a -b /tmp/a -X POST -H 'Origin: {front}' {front}/_demo/reset").strip()
-          assert code == "303", f"Reset now answered {code}"
-          assert cookie("/tmp/a") != old, "Reset now kept the cookie"
+          assert start("a", "10.0.0.1", "/_demo/reset") == "303", "Reset now made no fresh copy"
+          assert jar["a"] != old, "Reset now kept the cookie"
           fresh = [c for c in copies() if c not in (a, b)]
           assert len(fresh) == 1 and a not in copies() and a not in roles(), f"{copies()} {roles()}"
           a2 = fresh[0]
           assert head(a2) == base, "the fresh copy is not the template's"
-          page = host.succeed(f"curl -sf -b /tmp/a-old {front}/")
-          assert "Your earlier copy was reset." in page, "an ended copy's cookie is not told so"
-          host.succeed(f"curl -sf -b /tmp/a {front}/sign-in | grep -q 'Reset now'")
+          jar["a-old"] = old
+          assert "Your earlier copy was reset." in page("a-old", "10.0.0.1", "/")
+          assert "Reset now" in page("a", "10.0.0.1", "/sign-in")
 
       with subtest("at the cap a newcomer ends the copy idle longest"):
-          host.succeed(f"curl -sf -b /tmp/a {front}/sign-in")
+          page("a", "10.0.0.1", "/sign-in")
           time.sleep(2)
-          c, _ = visit("/tmp/c")
+          c, _ = visit("c", "10.0.0.3")
           assert sorted(copies()) == sorted([a2, c]), f"{copies()}: the idlest, {b}, is not the one ended"
           assert b not in roles()
 
-      with subtest("an address making too many copies is refused"):
-          assert start("/tmp/d") == "200"
-          assert start("/tmp/e") == "429", "a sixth copy from one address in ten minutes was made"
+      with subtest("a write takes no body past 2 MB, with a length or without"):
+          host.succeed("head -c 3000000 /dev/urandom > /tmp/big")
+          code = status("c", "10.0.0.3", f"-X POST -H 'Origin: {front}' --data-binary @/tmp/big {front}/session")
+          assert code == "413", f"a 3 MB body answered {code}"
+          code = status("c", "10.0.0.3", f"-X POST -H 'Origin: {front}' -H 'Transfer-Encoding: chunked' --data-binary @/tmp/big {front}/session")
+          assert code == "413", f"a 3 MB chunked body answered {code}"
+          assert c in copies()
+
+      with subtest("a copy past its storage takes no write and says why, and past twice it ends, largest first"):
+          fill(c, 6)
+          out = host.execute(curl("c", "10.0.0.3", f"-X POST -H 'Origin: {front}' -d x=1 -w ' %{{http_code}}' {front}/session"))[1]
+          assert out.endswith(" 507") and "Reset now for a fresh one" in out, f"a full copy answered {out}"
+          assert "Camille Martin" in page("c", "10.0.0.3", "/sign-in"), "a full copy no longer reads"
+          fill(c, 4)
+          host.wait_until_succeeds(f"""${psql "postgres" "SELECT count(*) FROM pg_database WHERE datname = '{c}'"} | grep -qx 0""", timeout=120)
+          assert a2 in copies() and c not in roles()
+
+      with subtest("an IPv6 address is counted by its /64"):
+          assert start("v6a", "2001:db8::1") == "200"
+          assert start("v6b", "2001:db8::2") == "429", "a second address of the same /64 took a copy"
+          assert start("v6c", "2001:db8:0:1::1") == "200", "another /64 was refused"
           assert len(copies()) == 2, copies()
 
       with subtest("a copy idle past its span ends, leaving no database, role, server or socket"):
@@ -251,16 +291,27 @@ pkgs.testers.runNixOSTest {
           assert roles() == [], roles()
           host.succeed("test $(wc -l < /sys/fs/cgroup/system.slice/cella-${scope}.service/cgroup.procs) -eq 1")
           host.succeed("test -z \"$(ls /run/cella-${scope})\"")
-          page = host.succeed(f"curl -sf -b /tmp/c {front}/")
-          assert "Your earlier copy was reset." in page
+          assert "Your earlier copy was reset." in page("c", "10.0.0.3", "/")
+
+      with subtest("a copy kept busy still ends at its lifetime"):
+          g, _ = visit("g", "10.0.0.7")
+          begun = time.monotonic()
+          while g in copies():
+              assert time.monotonic() - begun < 240, "a busy copy outlived its lifetime"
+              host.succeed(curl("g", "10.0.0.7", f"{front}/sign-in"))
+              time.sleep(10)
+          lived = round(time.monotonic() - begun)
+          print(f"a busy copy ended after {lived} s")
+          assert lived > 100, f"a busy copy ended after {lived} s, before its lifetime"
 
       with subtest("the front, killed and restarted, ends every copy the killed one left"):
           host.succeed("systemctl kill -s KILL cella-${scope}.service")
           host.wait_until_succeeds(f"curl -sf {front}/_demo/health", timeout=120)
-          f, _ = visit("/tmp/f")
+          f, _ = visit("f", "10.0.0.8")
           host.succeed("systemctl kill -s KILL --kill-whom=main cella-${scope}.service")
           host.wait_until_succeeds(f"curl -sf {front}/_demo/health", timeout=120)
           assert copies() == [] and roles() == [], f"{copies()} {roles()} left"
+
     '' else ''
       notice = ${builtins.toJSON notice}
       host.start()

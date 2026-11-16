@@ -387,6 +387,13 @@ args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: crea
 kind = "policy"
 args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: amend-circle}, to change a circle's name, purpose or procedure, by motion", takes = "scop-sarl-fr:amend-circle" }
 
+# Which features a circle shows is decided apart from its name, purpose
+# and procedure: the assembly arranges any circle's by motion, and may
+# grant a circle the power over its own (m-2026-018).
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: arrange-features}, to arrange any circle's features, by motion", takes = "scop-sarl-fr:arrange-features" }
+
 # Reading, the last of the founding motion: every seat reads its own
 # circle's records and the assembly's, the whole co-op's, and Lanterne
 # keeps open books, so every member reads every circle's records, and
@@ -979,3 +986,211 @@ at = 2026-10-21
 member = "amina@lanterne.example"
 stance = "consent"
 at = 2026-10-22
+
+# The assembly lets each circle arrange its own features: every circle
+# but Hiring holds the power over itself, so its own motion changes what
+# its sidebar shows, and coordination holds it over Hiring. Each
+# circle's lead arranges their own circle's at once. It closed with the
+# annual assembly, so statutes@2 reads it.
+[[motion]]
+id = "m-2026-018"
+circle = "ag"
+proposer = "malik@lanterne.example"
+title = "Each circle arranges its own features"
+procedure = "consent"
+proposed = 2026-06-06
+deadline = 2026-06-20
+closed = 2026-06-20
+body = """
+What a circle shows in its sidebar is its own business. Each circle
+arranges its own features by its own motion, and its lead may arrange
+them at once; coordination arranges Hiring's.
+"""
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: coordination} circle holds {power: arrange-features}, to arrange the features of its {scope: own} circle, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: web} circle holds {power: arrange-features}, to arrange the features of its {scope: own} circle, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: brand} circle holds {power: arrange-features}, to arrange the features of its {scope: own} circle, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: marketing} circle holds {power: arrange-features}, to arrange the features of its {scope: own} circle, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: operations} circle holds {power: arrange-features}, to arrange the features of its {scope: own} circle, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: clients} circle holds {power: arrange-features}, to arrange the features of its {scope: own} circle, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: care} circle holds {power: arrange-features}, to arrange the features of its {scope: own} circle, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: tools} circle holds {power: arrange-features}, to arrange the features of its {scope: own} circle, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: coordination} circle holds {power: arrange-features}, to arrange the features of the {scope: hiring} circle, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: lead} role holds {power: arrange-features}, to arrange the features of its {scope: own} circle" }
+
+[[motion.vote]]
+member = "malik@lanterne.example"
+stance = "consent"
+at = 2026-06-08
+
+[[motion.vote]]
+member = "camille@lanterne.example"
+stance = "consent"
+at = 2026-06-08
+
+[[motion.vote]]
+member = "yusuf@lanterne.example"
+stance = "consent"
+at = 2026-06-08
+
+[[motion.vote]]
+member = "hugo@lanterne.example"
+stance = "consent"
+at = 2026-06-08
+
+[[motion.vote]]
+member = "julien@lanterne.example"
+stance = "consent"
+at = 2026-06-08
+
+[[motion.vote]]
+member = "chloe@lanterne.example"
+stance = "consent"
+at = 2026-06-08
+
+# Clients' own motion, open: each client gets one named person in Clients.
+[[motion]]
+id = "m-2026-019"
+circle = "clients"
+proposer = "thomas@lanterne.example"
+title = "Every client has one named contact in Clients"
+procedure = "consent"
+proposed = 2026-10-19
+deadline = 2026-11-02
+body = """
+Each client we work for has one person in Clients who answers them,
+named in the client's record, from the brief to the end of care.
+"""
+
+[[motion.vote]]
+member = "thomas@lanterne.example"
+stance = "consent"
+at = 2026-10-19
+
+[[motion.vote]]
+member = "malik@lanterne.example"
+stance = "consent"
+at = 2026-10-20
+
+[[motion.vote]]
+member = "camille@lanterne.example"
+stance = "consent"
+at = 2026-10-21
+
+# Hiring's, passed: two junior roles open for 2027.
+[[motion]]
+id = "m-2026-020"
+circle = "hiring"
+proposer = "lea@lanterne.example"
+title = "Open two junior roles for 2027"
+procedure = "consent"
+proposed = 2026-10-02
+deadline = 2026-10-16
+closed = 2026-10-16
+body = """
+Open a junior developer role in Web and a junior designer role in Brand,
+both from February 2027, with a member of each circle as mentor.
+"""
+
+[[motion.vote]]
+member = "lea@lanterne.example"
+stance = "consent"
+at = 2026-10-02
+
+[[motion.vote]]
+member = "julien@lanterne.example"
+stance = "consent"
+at = 2026-10-05
+
+[[motion.vote]]
+member = "camille@lanterne.example"
+stance = "consent"
+at = 2026-10-07
+
+[[motion.vote]]
+member = "amina@lanterne.example"
+stance = "consent"
+at = 2026-10-09
+
+# Care's, open: a quiet first hour every morning.
+[[motion]]
+id = "m-2026-021"
+circle = "care"
+proposer = "sofia@lanterne.example"
+title = "A quiet first hour every morning"
+procedure = "consent"
+proposed = 2026-10-20
+deadline = 2026-11-03
+body = """
+No meetings and no calls before ten, so everyone starts the day with an
+hour of focused work.
+"""
+
+[[motion.vote]]
+member = "sofia@lanterne.example"
+stance = "consent"
+at = 2026-10-20
+
+[[motion.vote]]
+member = "hugo@lanterne.example"
+stance = "consent"
+at = 2026-10-21
+
+[[motion.vote]]
+member = "lea@lanterne.example"
+stance = "consent"
+at = 2026-10-21
+
+# Tools', passed: a password manager for everyone.
+[[motion]]
+id = "m-2026-022"
+circle = "tools"
+proposer = "yusuf@lanterne.example"
+title = "A password manager seat for everyone"
+procedure = "consent"
+proposed = 2026-09-30
+deadline = 2026-10-14
+closed = 2026-10-14
+body = """
+Every worker gets a seat in the studio's password manager, and the shared
+client logins move into it from the spreadsheet.
+"""
+
+[[motion.vote]]
+member = "yusuf@lanterne.example"
+stance = "consent"
+at = 2026-09-30
+
+[[motion.vote]]
+member = "thomas@lanterne.example"
+stance = "consent"
+at = 2026-10-01

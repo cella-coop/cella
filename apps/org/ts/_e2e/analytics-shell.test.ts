@@ -156,7 +156,7 @@ test('the web shell serves a published query through the port, as its reader rea
   const web = await through(ines)
   assert.ok(web.some((p) => p.startsWith('web/')), 'Inès, in Web, reads Web\'s projects')
   assert.ok(!web.some((p) => p.startsWith('marketing/')), 'and none of Marketing\'s')
-  assert.deepEqual(web, all.filter((p) => /^(web|ag)\//.test(p)), 'only the rows of the circles she reads it in, as the report reads them')
+  assert.deepEqual(web, all.filter((p) => /^(web|care|tools|ag)\//.test(p)), 'only the rows of the circles she reads it in, as the report reads them')
   assert.deepEqual(await through(camille), all, 'Camille reads every circle\'s by open books')
 
   // A shared view reads whole, by its declared names; a person's name only

@@ -57,14 +57,44 @@ The lead role is a member of coordination, which meets weekly, so each
 circle's lead sits there by their tenure, and Camille sits there as a
 member. A capped role, as the manager's or a circle's lead, is held by
 one person at a time. No circle sits in another: the assembly is one
-circle beside coordination and the four working circles.
+circle beside coordination, the four working circles, and four that
+look after the co-op itself, Clients, Hiring, Care and Tools, which
+have no lead. Each of the eleven people sits in three to five
+circles, the assembly among them for a member, so a lens and View as
+this circle show each circle's own slice.
 
 | Circle | Members | Lead |
 |---|---|---|
-| Web | Yusuf Demir, Léa Bernard, Thomas Nguyen, Amina Diallo | Yusuf |
+| Web | Yusuf Demir, Léa Bernard, Thomas Nguyen, Amina Diallo, Inès Haddad | Yusuf |
 | Brand | Camille Martin, Hugo Lefèvre, Sofia Rossi | Hugo |
 | Marketing | Malik Benali, Chloé Moreau | Malik |
 | Operations | Julien Petit | Julien |
+| Clients | Camille Martin, Yusuf Demir, Thomas Nguyen, Malik Benali, Chloé Moreau | — |
+| Hiring | Camille Martin, Julien Petit, Léa Bernard, Amina Diallo | — |
+| Care | Hugo Lefèvre, Léa Bernard, Sofia Rossi, Amina Diallo, Chloé Moreau, Inès Haddad | — |
+| Tools | Yusuf Demir, Thomas Nguyen, Inès Haddad | — |
+
+| Person | Circles |
+|---|---|
+| Camille | Assembly, Coordination, Brand, Clients, Hiring |
+| Yusuf | Assembly, Coordination, Web, Clients, Tools |
+| Hugo | Assembly, Coordination, Brand, Care |
+| Julien | Assembly, Coordination, Operations, Hiring |
+| Malik | Assembly, Coordination, Marketing, Clients |
+| Léa | Assembly, Web, Hiring, Care |
+| Thomas | Assembly, Web, Clients, Tools |
+| Amina | Assembly, Web, Hiring, Care |
+| Chloé | Assembly, Marketing, Clients, Care |
+| Sofia | Assembly, Brand, Care |
+| Inès | Web, Care, Tools |
+
+Each of Clients, Hiring, Care and Tools owns a project, tasks, a motion,
+a meeting to come, a document, an hour a day of someone's time in the
+last week of October and an expense: Clients' renewals for 2027 and its
+open motion on one named contact per client; Hiring's two junior hires
+and its passed motion opening them; Care's workload review and its open
+motion on a quiet first hour; Tools' hosting move and its passed motion
+on a password manager.
 
 Each circle enables the features its work uses
 ([features](../../core/circle/index.md#features)), the founding's
@@ -77,7 +107,15 @@ payments, invoices, bills, expenses and payslips, with contacts and
 employment; Web its projects, tasks, timesheets, files and contacts;
 Brand its projects, tasks, timesheets, files and the print and paper
 bills Sofia approves; Marketing its projects, tasks, timesheets,
-contacts and documents.
+contacts and documents; Clients its contacts, projects, tasks and
+documents, and its governance; Hiring its tasks, documents and
+employment, and its governance; Care its tasks, meetings, documents and
+motions; Tools its projects, tasks, timesheets, expenses and files.
+Which features a circle shows is `arrange-features`'s: the assembly
+grants it to every circle but Hiring over itself by m-2026-018, on 20
+June 2026, and to coordination over Hiring, so a circle's own motion
+arranges them, and each lead's at once; the assembly holds it over
+every circle from the founding.
 
 Camille is the manager, by a tenure from 20 June 2024 until 20 June 2028, with a mandate to
 sign contracts and commit up to 20 000 €. Julien holds the finance role: he
@@ -181,16 +219,16 @@ assembly, and no one opens a candidacy for another.
   by the extraordinary assembly's procedure: only a motion decided by it,
   or by a stricter one, replaces or ends them. `m-2021-001/76`, `The
   {circle: ag} circle holds {power: create-circle}, to create a circle,
-  by motion`, is how a circle is made, and the policy after it, `The {circle: ag} circle holds {power: amend-circle}, to change a circle's name, purpose or procedure, by motion`, how one is changed, and a circle the assembly creates
+  by motion`, is how a circle is made, and the policy after it, `The {circle: ag} circle holds {power: amend-circle}, to change a circle's name, purpose or procedure, by motion`, how one is changed, and `/78`, `The {circle: ag} circle holds {power: arrange-features}, to arrange any circle's features, by motion`, how its features are, and a circle the assembly creates
   holds Lanterne's default bundle from that day, the mandates on the
   participant, lead and secretary roles. The last three of the founding
-  motion, `m-2021-001/78` to `/80`, are how Lanterne reads: `The {role:
+  motion, `m-2021-001/79` to `/81`, are how Lanterne reads: `The {role:
   participant} role holds {power: read}, to read the records of its
   {scope: own} circle`, and of the `{scope: ag}` circle, the whole
   co-op's; and open books, `The {role: member} role holds {power: read},
   to read every circle's records`. Every seat reads its own circle's
   records and the assembly's, and every member every circle's, so Inès,
-  employed, no member and seated in Web alone, reads Web's expenses and
+  employed, no member and seated in Web, Care and Tools, reads Web's expenses and
   the statutes she would join under, and not Marketing's expenses;
   Chloé, in Marketing, reads every circle's expenses and the books, and
   her own pay and not Yusuf's, since `read` opens no one's pay. A power
@@ -207,7 +245,7 @@ assembly, and no one opens a candidacy for another.
   floors on the surplus, `m-2021-001/72`, at least `{work_share: 25 % |
   more is stricter}` to all the employees, and `/73`, at least
   `{reserve_share: 15 % | more is stricter}` to the reserves, named for no
-  feat. Its last, `m-2021-001/81`, is open books' disclosure rule, the
+  feat. Its last, `m-2021-001/82`, is open books' disclosure rule, the
   disclosure study's defaults, copied by core into `circle.disclosure`:
   a total of members' own figures is shared with every member where at
   least `{disclosure_contributors: 5 | more is stricter}` people put into
@@ -228,8 +266,8 @@ assembly, and no one opens a candidacy for another.
   each policy that is one names it (`takes = "scop-sarl-fr:ordinary"`),
   worded and protected as it reads. They are its six procedures, the
   participant's mandates (`/45`, `/46`), the assembly's collective
-  mandates (`/47` to `/55` but `/50`, `/76`, `/77`), its rights (`/10`, `/50`, `/60` to `/71`, `/74`, `/75`) and the
-  floors on the surplus (`/72`, `/73`): 36 policies. Its role mandates,
+  mandates (`/47` to `/55` but `/50`, `/76` to `/78`), its rights (`/10`, `/50`, `/60` to `/71`, `/74`, `/75`) and the
+  floors on the surplus (`/72`, `/73`): 37 policies. Its role mandates,
   coordination's collective mandates and its capital and work share terms
   are its own. It has left none of the defaults, so its statutes say they
   leave none.
@@ -251,7 +289,9 @@ assembly, and no one opens a candidacy for another.
 - **Working texts (confluent).** Each working circle keeps one of its
   own: Web's accessibility checklist, which embeds its motion on
   accessibility, Brand's print specifications, Marketing's newsletter
-  style guide and Operations' month-end close.
+  style guide and Operations' month-end close; and Clients' client
+  handover, Hiring's onboarding guide, Care's charter and Tools' studio
+  stack.
 - **Invoices (bounded).** Fifteen invoices in the series F-2026, 0041 to
   0055; the next is 0056, each the circle's whose project it bills, Web's,
   Brand's or Marketing's. Clients owe 57 180 €. Compagnie Mauve Horizon's

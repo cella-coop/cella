@@ -41,7 +41,7 @@
     <Settings {settings} decider={amending.decider} />
   </Section>
   <Section title="Features">
-    <Note text="What {amending.name} shows in the sidebar, in its order, under its accordions, which a motion of {amending.decider.name} changes." />
+    <Note text="What {amending.name} shows in the sidebar, in its order, under its accordions, which {amending.arranger} arranges." />
     <Button href="/settings/features/{amending.circle}">Choose its features</Button>
   </Section>
   <Section title="Rules">

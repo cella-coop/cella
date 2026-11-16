@@ -7,6 +7,7 @@ SELECT cella.lets_follow('motion:motion:close', 'motion:policy:adopt', 'membersh
 SELECT cella.lets_follow('motion:motion:close', 'motion:policy:end', 'membership-motion');
 SELECT cella.lets_follow('motion:motion:close', 'circle:circle:create', 'membership-motion');
 SELECT cella.lets_follow('motion:motion:close', 'circle:circle:amend', 'membership-motion');
+SELECT cella.lets_follow('motion:motion:close', 'circle:circle:arrange', 'membership-motion');
 SELECT cella.lets_follow('motion:motion:close', 'circle:role:make', 'membership-motion');
 SELECT cella.lets_follow('motion:motion:close', 'circle:role:amend', 'membership-motion');
 SELECT cella.lets_follow('motion:motion:close', 'circle:seat:add', 'membership-motion');

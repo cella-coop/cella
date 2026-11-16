@@ -21,16 +21,15 @@ END
 $$;
 
 -- circle:circle:amend: the circle its entry names, its name, purpose or
--- procedure changed to the values it carries, and its features replaced
--- by the listing it carries, each from what the entry says it was, the
--- features as `circle.features` spells them (`012-features.sql`).
+-- procedure changed to the values it carries, each from what the entry
+-- says it was.
 CREATE FUNCTION circle.fold_amend(entry jsonb) RETURNS void
 LANGUAGE plpgsql AS $$
 DECLARE
   p jsonb := entry -> 'payload';
   was jsonb;
 BEGIN
-  SELECT jsonb_build_object('name', c.name, 'purpose', c.purpose, 'procedure', c.procedure, 'features', circle.features(c.id)) INTO was
+  SELECT jsonb_build_object('name', c.name, 'purpose', c.purpose, 'procedure', c.procedure) INTO was
   FROM circle.circle c WHERE c.id = p ->> 'circle';
   IF was IS NULL THEN
     RAISE EXCEPTION 'circle: entry % amends %, which the fold has no circle of', entry ->> 'n', p ->> 'circle';
@@ -41,12 +40,31 @@ BEGIN
   UPDATE circle.circle
   SET name = coalesce(p ->> 'name', name), purpose = coalesce(p ->> 'purpose', purpose), procedure = coalesce(p ->> 'procedure', procedure)
   WHERE id = p ->> 'circle';
-  IF p ? 'features' THEN
-    DELETE FROM circle.feature WHERE circle = p ->> 'circle';
-    INSERT INTO circle.feature (circle, feat, position, "group")
-    SELECT p ->> 'circle', l.feat, l.position, l."group" FROM circle.listed(p ->> 'features') l
-    ON CONFLICT DO NOTHING;
+END
+$$;
+
+-- circle:circle:arrange and circle:feature:arrange: the circle its entry
+-- names, its features replaced by the listing it carries, from what the
+-- entry says they were, as `circle.features` spells them
+-- (`012-features.sql`): a motion's arrangement and a holder's own fold
+-- the same.
+CREATE FUNCTION circle.fold_arrange(entry jsonb) RETURNS void
+LANGUAGE plpgsql AS $$
+DECLARE
+  p jsonb := entry -> 'payload';
+  was text;
+BEGIN
+  SELECT circle.features(c.id) INTO was FROM circle.circle c WHERE c.id = p ->> 'circle';
+  IF was IS NULL THEN
+    RAISE EXCEPTION 'circle: entry % arranges %, which the fold has no circle of', entry ->> 'n', p ->> 'circle';
   END IF;
+  IF was IS DISTINCT FROM p ->> 'was' THEN
+    RAISE EXCEPTION 'circle: entry % says the features of % were %, where the fold has %', entry ->> 'n', p ->> 'circle', p ->> 'was', was;
+  END IF;
+  DELETE FROM circle.feature WHERE circle = p ->> 'circle';
+  INSERT INTO circle.feature (circle, feat, position, "group")
+  SELECT p ->> 'circle', l.feat, l.position, l."group" FROM circle.listed(p ->> 'features') l
+  ON CONFLICT DO NOTHING;
 END
 $$;
 
@@ -144,6 +162,8 @@ $$;
 
 SELECT cella.lets_fold('circle:circle:create', 1, 'circle.fold_create(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:circle:amend', 1, 'circle.fold_amend(jsonb)', 'circle');
+SELECT cella.lets_fold('circle:circle:arrange', 1, 'circle.fold_arrange(jsonb)', 'circle');
+SELECT cella.lets_fold('circle:feature:arrange', 1, 'circle.fold_arrange(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:role:make', 1, 'circle.fold_role_make(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:role:amend', 1, 'circle.fold_role_amend(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:seat:add', 1, 'circle.fold_seat_add(jsonb)', 'circle');

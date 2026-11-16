@@ -3,7 +3,7 @@ import { took } from '../post.ts'
 import type { WriteState } from './WriteState.svelte.ts'
 
 // Something new while it is composed in its dialog: what was typed in
-// each field, by name, the rest following what was typed; the dialog,
+// each field, by name; the dialog,
 // whether its proposal is posting, and why it was not proposed, as its
 // refusal says. Proposed, the dialog closes empty; refused, it stays open
 // saying why, with what was typed.

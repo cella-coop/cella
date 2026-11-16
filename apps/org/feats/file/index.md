@@ -1,6 +1,6 @@
 +++
 title = "File"
-updated = 2026-11-13
+updated = 2026-11-16
 +++
 
 The files the co-op keeps: its own papers, members' receipts, workers'

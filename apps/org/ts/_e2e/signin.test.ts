@@ -71,7 +71,7 @@ eachBrowser((name, launch) => {
       assert.ok(await page.getByRole('heading', { name: 'Join Lanterne' }).isVisible())
       await page.getByLabel('This device').fill('laptop')
       await page.getByRole('button', { name: 'Take up the invitation' }).click()
-      await page.waitForURL(`${base}/people/${encodeURIComponent(sam)}?tab=joining`)
+      await page.waitForURL(`${base}/people/${encodeURIComponent(sam)}?tab=membership`)
       await page.waitForLoadState('networkidle')
 
       const device = await one<{ key: string; label: string; enrolled_by: string | null }>(

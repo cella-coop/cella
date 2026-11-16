@@ -196,7 +196,28 @@ draws.
   buttons, Cancel and the one that confirms. A modal is no page: it
   confirms what it holds. Cancel, Escape and a click outside it cancel
   it alike; whoever opens it holds the element and decides what a
-  cancel takes back.
+  cancel takes back. It holds forms of their own where its opener hands
+  it no submit, as New does a collection's create forms, each ending in
+  its own confirming button and Cancel.
+- New: every collection's create, the header's New and its `c`, opens
+  the one `Dialog` titled for the collection ("New in Tasks"), holding
+  the create form the collection or its extensions declare, each under
+  its title where there are several, mounted only while it is open, so
+  each New starts empty (`CreateState`, `useCreate`). A `Form` under it
+  is a create form: its fields and its write are its slice's, and it
+  ends in Cancel and its confirming button (Create task, Propose). A
+  write that settles closes the dialog, the rows read again with the new
+  one among them; a refusal keeps it open with what was typed and the
+  guard's reason inside it, above its buttons; Cancel, Escape or a click
+  outside closes it with nothing written. While it is open the rows
+  behind it take no key. **A modal is not a page**: it holds one task
+  and ends in the buttons that confirm it (create, save, propose) and
+  one that cancels; **a page holds no create form**. The ui check
+  refuses a component that imports a create form a slice's app declares,
+  and the UI core drawing a collection's creates outside its Dialog
+  ([enforcement](../../../../_corpus/doc/enforcement.md)); a block
+  drawing a form that creates a record of another kind on its own page
+  no tool sees, and review holds it.
 - `Frame` (`PageFrame.svelte`): the one page frame, its header one
   compact row as Linear's, spanning the content and the drawer: on an
   item, a quiet caret back to its collection, on a collection its icon as
@@ -211,7 +232,12 @@ draws.
   at most 16rem wide. A form a header's popover opens is no part of
   the row: its fields show their labels and its choices take its width.
   Under it, the content and the drawer, which
-  scrolls down and never across. The toggle, or `]` anywhere, shows and
+  scrolls down and never across. Where the window cannot hold the
+  sidebar, the content at its least width and the drawer side by side,
+  the drawer lies over the content's right edge at its own width,
+  raised as a floating thing is, and its toggle, `]` or Escape shuts
+  it; nothing wraps under the content, and the header stays its one
+  row, its tabs scrolling in their strip. The toggle, or `]` anywhere, shows and
   hides the drawer on every page at once; a cookie keeps the viewer's
   choice, so the server renders it. One tab per panel, the open one
   marked even when alone: a collection's View, an item's Details.
@@ -364,7 +390,7 @@ draws.
   only a page of rows; a collection page renders nothing else, which the ui
   check enforces on the shell's `[collection]` page. Keyboard
   first: `j`/`k` move, Enter opens, `/` filters (opening the drawer), `c`
-  opens New. The row `j`/`k` moves to takes the focus, one row in the
+  opens New's dialog. The row `j`/`k` moves to takes the focus, one row in the
   tab order at a time (a roving `tabindex`, the row's link out of it),
   so a screen reader reads it and the ring shows where the keyboard is;
   Tab leaves the rows from it and comes back to it, moving past the last
@@ -401,21 +427,43 @@ draws.
   them (`stamps`), the dates and actors of its first and latest
   entries, which the item's read gives beside its data, but those its
   slices' properties already name, as a task's Created; and under them
-  Related; nothing in the drawer is boxed. A record whose structured
+  Related; nothing in the drawer is boxed. Related lists first its
+  jumps: each other collection whose rows name the record, by the
+  collection's icon and name and how many of its rows the reader sees
+  that name it, through their lens, counted in the core read's one
+  statement as any other count is; the line opens that collection
+  filtered to the record, the condition in the address (`?where=`) and
+  the view panel's Filter showing it. A row names a person by a person
+  column's address, a circle by a circle column's id, and any other
+  record by a column that says it is `of` that record's collection, as
+  a task's hidden project id is a project's; never by who created or
+  last updated it, nor in a collection of home or Settings, and a
+  collection holding none of its rows is no jump. Then the records its
+  slices link to (`related`). A record whose structured
   data is central to it puts that data in a tab of its own after the
   first (`tabs`): a motion's Stances and Effects, a meeting's Agenda, a
-  circle's Roles, Seats and Policies, a document's Versions, a report's
-  Figures, an invoice's Lines, a period's Entries, a project's
-  Milestones and Budget, a contact's Invoices, a person's Employment; the first tab is the
+  circle's Roles, Policies and Settings, a document's Versions, a report's
+  Figures, an invoice's Lines, a period's Entries, a project's Tasks,
+  Milestones and Budget, a contact's Projects and Invoices, a person's
+  Membership, Work and Authority; the first tab is the
   content and its Activity, and a kind with no free-form content shows
   its overview's blocks there. The header's crumb names the record by
   its kind and reference (`subtitle`, its id), never a sentence about
   it, which its properties and content say. Tabs show as
   pills in the header when there are two or more, the open one in the
-  URL (`?tab=`); a block sits in the tab it names (`{ tab, block }`), a
-  bare one in the first, and an extension's blocks join the owner's
-  tabs or add their own. A tab earns its place only as a genuinely
-  different view. Every collection's item page is drawn by `Detail`
+  URL (`?tab=`). **A page shows at most four tabs, and the slice that
+  owns the record's collection chooses them and their order**: only the
+  owner's page declares `tabs`, and an extension's blocks, a core
+  feat's, a feat's or a graft's alike, sit in a tab the owner names
+  (`{ tab, block }`), a bare one in the first; a tab past the first
+  that holds no block, as one whose filler is pruned, is not shown. An
+  extender the owner gives no tab is a jump in Related, as a person's
+  tasks and expenses are. A tab earns its place only as a genuinely
+  different view of the record, as a project's tasks are. The tabs
+  check (`tools/tabs.mjs`, run by `cella check feats`) refuses a page
+  declaring a fifth tab, an extension declaring a tab, and a block in a
+  tab its owner does not name, each by the slice, the record and what
+  would fix it. Every collection's item page is drawn by `Detail`
   alone, and the ui check refuses an item page that frames itself. Esc
   goes back to the collection.
 - `Card` (a borderless card raised on the panel, in the drawer or the
@@ -440,7 +488,9 @@ draws.
   `Button`, `Form` (a write, posting to the route's `write` form for a
   named write, files and all, through `post`, its fields bound to it; `ready` false keeps its button disabled while
   there is nothing to post; the fields a refused write names as `spent`,
-  written before it stopped, are emptied),
+  written before it stopped, are emptied; in New's dialog it ends in
+  Cancel, closes the dialog once settled and says a refusal's reason
+  itself),
   `Hidden` (a value a form posts that no one types, named through the
   form it is in),
   `Field` (text, a number, a date, a time, an address, an email or a
@@ -542,7 +592,9 @@ and its project `projects`; a property, by an `href` that is a record's
 own, `/<collection>/<id>`; a `person` is always one of `people`. The
 icon is the one that collection's view declares, which `Cell` reads
 from the sidebar's navigation the shell hands `useShell`, so no slice
-imports another's to find it. It stands at the value's size, quieter
+imports another's to find it. A person wears one person (Phosphor
+`User`), as core person's `people` declares, and a circle a group
+(`Users`), as core circle's `circles` declares. It stands at the value's size, quieter
 than its text, and is hidden from assistive technology, since the text
 names the record. A collection that declares no icon, or that the shell
 does not mount, leaves the value bare; an enumeration, as a task's
@@ -653,8 +705,8 @@ Something new that only a motion makes, as a circle's role, is no
 setting: it is composed whole and proposed as one motion. `Compose` is
 a quiet button, as Add a role…, opening a `Dialog` of its fields, each
 an argument of the motion's one action (`Composed`,
-`models/compose.ts`), a field that follows another until it is typed,
-as a role's id follows its name; above them, why a motion makes it, in
+`models/compose.ts`), none of them a key the write can take itself,
+as a role's id is taken from its name; above them, why a motion makes it, in
 its guard's words. Its primary action, Propose to the deciding circle,
 posts the motions' New form to the page's `propose`: the circle that
 decides it, the title its slice words from what was typed, the
@@ -720,12 +772,12 @@ exported.
 ## State
 
 A component holds no state of its own: the collection's filter and row,
-the command menu, the dismissed outcome, the drawer's opening, the
-lens and the people's names, what a date field holds typed and says of
-it and the day its calendar is on, and whether a select is open and the
-option its keyboard is on, are state classes in `hooks/`
-(`CollectionState`, `CommandState`, `ShellState`, `DateState`,
-`SelectState`), and the sign-in and
+whether its New is open, the command menu, the dismissed outcome, the
+drawer's opening, the lens and the people's names, what a date field
+holds typed and says of it and the day its calendar is on, and whether
+a select is open and the option its keyboard is on, are state classes in
+`hooks/` (`CollectionState`, `CreateState`, `CommandState`,
+`ShellState`, `DateState`, `SelectState`), and the sign-in and
 an invitation taken up (`SignInState`, `JoinState`), each reached through
 its `use*` hook, as [architecture](../../../../_corpus/doc/architecture.md#client-state)
 describes. `ShellState` imports no router: the shell hands its `follow` the

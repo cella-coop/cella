@@ -13,8 +13,8 @@ export const app: App = {
       page: {
         related: (a: Account) => (a.subscribed ? [{ label: a.subscribed, sub: 'subscribed the capital', href: `/transactions/${a.subscribed}` }] : []),
         blocks: [
-          { tab: 'rights', block: Paid },
-          { tab: 'rights', block: Draws },
+          { tab: 'membership', block: Paid },
+          { tab: 'membership', block: Draws },
         ],
       },
     },

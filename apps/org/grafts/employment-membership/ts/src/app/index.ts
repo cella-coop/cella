@@ -26,7 +26,7 @@ export const app: App = {
         },
       ],
       page: {
-        blocks: [{ tab: 'joining', block: PathBlock }],
+        blocks: [{ tab: 'membership', block: PathBlock }],
         activity: events,
       },
     },

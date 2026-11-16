@@ -38,7 +38,7 @@ const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sq
 // A tab of a person's page, as text, its tags gone, read by whoever is
 // signed in, the person themselves unless another is named.
 const tab = async (member: string, by = member) => {
-  const { status, text } = await shell.page(`/people/${member}?tab=powers`, by)
+  const { status, text } = await shell.page(`/people/${member}?tab=authority`, by)
   assert.equal(status, 200)
   return { html: text, text: text.replace(/<[^>]+>/g, ' ').replace(/&#39;|&rsquo;|’/g, "'").replace(/\s+/g, ' ') }
 }
@@ -138,14 +138,14 @@ unseeded('in every browser, light and dark, Camille\'s Powers tab opens and its 
         const errors: string[] = []
         page.on('pageerror', (e) => errors.push(e.message))
         for (const [who, name] of [[camille, 'camille'], [hugo, 'hugo'], [ines, 'ines']]) {
-          await page.goto(`${dev.base}/people/${encodeURIComponent(who)}?tab=powers`)
+          await page.goto(`${dev.base}/people/${encodeURIComponent(who)}?tab=authority`)
           await page.waitForLoadState('networkidle')
           // Powers, its count after it, not Powers held, which shares the tab.
           const section = page.locator('section', { has: page.getByRole('heading', { name: /^Powers\s*\d*$/ }) })
           assert.match((await section.textContent()) ?? '', /every person's right/, `${engine}, ${scheme}: ${name}'s tab lists their rights`)
           await page.screenshot({ path: `${shots}/powers-${name}-${engine}-${scheme}.png`, fullPage: true })
         }
-        await page.goto(`${dev.base}/people/${encodeURIComponent(camille)}?tab=powers`)
+        await page.goto(`${dev.base}/people/${encodeURIComponent(camille)}?tab=authority`)
         await page.waitForLoadState('networkidle')
         const line = page.locator(`a[href="/mandates/${commit}"]`).first()
         await line.scrollIntoViewIfNeeded()

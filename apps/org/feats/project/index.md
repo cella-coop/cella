@@ -1,6 +1,6 @@
 +++
 title = "Project"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 The co-op's initiatives: a piece of work a client commissioned, or one of
@@ -124,11 +124,13 @@ root picks these fields, which come from three slices). A project's page,
 its header's crumb its id, holds its summary under its title, then
 whom it is for (`contact-project`) and its Activity; its circle, its
 milestones done of all and the next, its budget and its days are its
-properties. The data central to it is in tabs after the first:
-Milestones, completing one and adding the next; Budget, its budget, what
-is spent and left of it, and its shares (`membership-project`); Tasks
-(`project-task`); Time (`project-timesheet`); Expenses
-(`expense-project`); and Invoices (`invoice-project`). Archive is the
+properties. The data central to it is in three tabs after the first,
+which this feat chooses: Tasks, which `project-task` fills; Milestones,
+completing one and adding the next; and Budget, its budget, what is
+spent and left of it, and beside it its shares (`membership-project`),
+its time (`project-timesheet`), its expenses (`expense-project`) and
+its invoices (`invoice-project`). Its tasks and its time are jumps in
+Related too, each collection filtered to it. Archive is the
 header's write. Its Overview opens on its body, edited live over core
 body's session and saved by each editor's browser, and its threads sit
 under its Activity, a mention of a person waiting in their Inbox until

@@ -11,7 +11,7 @@ export const app: App = {
     expenses: {
       create: Capture,
       columns: [{ key: 'receipts', label: 'Receipts', kind: 'number', role: 'hidden', value: (r: { receipts: number }) => r.receipts }],
-      page: { tabs: [{ id: 'receipts', label: 'Receipts' }], blocks: [{ tab: 'receipts', block: Receipts }] },
+      page: { blocks: [{ tab: 'receipts', block: Receipts }] },
     },
   },
 }

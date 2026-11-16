@@ -13,7 +13,7 @@ type Row = Partial<Pick<Worker, 'job' | 'start' | 'until' | 'hours' | 'employed'
 // employment, member or not, a chip to filter and group by, with their
 // job and contract; the people collection's New form, a hire with the
 // worker's first device; and on a person's page their contract, and the
-// Employment tab the grafts joining employment fill.
+// Work tab the grafts joining employment fill.
 export const app: App = {
   name: 'employment',
   extends: {
@@ -53,7 +53,6 @@ export const app: App = {
                 ...(w.hired !== w.start ? [{ at: w.hired, text: 'hire recorded' }] : []),
               ]
             : [],
-        tabs: [{ id: 'employment', label: 'Employment' }],
       },
     },
   },

@@ -1,6 +1,6 @@
 +++
 title = "account-membership-patronage"
-updated = 2026-11-02
+updated = 2026-11-16
 +++
 
 What of a worker's part of the work share buys shares: the split of each
@@ -40,7 +40,7 @@ frozen, or who is no member, is paid it all.
 ## Shell
 
 Adds to a statement its member by name, and to a person's page, under
-Own and decide, how the work share divides and what of it buys shares,
+Membership, how the work share divides and what of it buys shares,
 read back as a sentence from the patronage terms in force.
 
 ## Lanterne

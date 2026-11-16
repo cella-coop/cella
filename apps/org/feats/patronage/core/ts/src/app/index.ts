@@ -52,6 +52,7 @@ export const app: App = {
         tabs: [
           { id: 'overview', label: 'Overview' },
           { id: 'split', label: 'Split' },
+          { id: 'return', label: 'Return' },
         ],
         related: (d: Detail) => (d.approved ? [{ label: `${d.year} statements`, sub: 'each worker’s part', href: '/statements' }] : []),
         blocks: [{ tab: 'split', block: Shares }],
@@ -118,6 +119,7 @@ export const app: App = {
         tabs: [
           { id: 'overview', label: 'Overview' },
           { id: 'basis', label: 'By basis' },
+          { id: 'employed', label: 'Employed' },
         ],
         blocks: [{ tab: 'basis', block: Basis }],
       },

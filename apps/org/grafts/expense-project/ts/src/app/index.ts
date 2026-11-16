@@ -4,7 +4,8 @@ import Project from './blocks/Project.svelte'
 import Spent from './blocks/Spent.svelte'
 
 // The graft's client side: the project an expense is billed on to, in the
-// list and on its page, and what each project's members spent for it.
+// list and on its page, and what each project's members spent for it, on
+// the project's Budget tab.
 export const app: App = {
   name: 'expense-project',
   extends: {
@@ -16,7 +17,7 @@ export const app: App = {
       },
     },
     projects: {
-      page: { blocks: [{ tab: 'expenses', block: Spent }], tabs: [{ id: 'expenses', label: 'Expenses' }] },
+      page: { blocks: [{ tab: 'budget', block: Spent }] },
     },
   },
 }

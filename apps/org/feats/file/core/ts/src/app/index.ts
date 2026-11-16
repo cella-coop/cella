@@ -28,6 +28,7 @@ export const app: App = {
           { key: 'uploaded', label: 'Uploaded', kind: 'date', role: 'meta', value: (f: File) => f.uploaded },
           { key: 'type', label: 'Type', kind: 'mono', role: 'hidden', value: (f: File) => f.type },
           { key: 'uploader', label: 'By', kind: 'person', role: 'hidden', value: (f: File) => f.uploader },
+          { key: 'subject', label: 'Concerns', kind: 'person', role: 'hidden', of: 'people', value: (f: File) => f.subject },
         ],
         dashboard: [
           { kind: 'kpi', title: 'Files', measure: { op: 'count' } },

@@ -1,6 +1,6 @@
 +++
 title = "project-task"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 Which project a task is in, and which of its milestones. A task in no
@@ -56,7 +56,9 @@ the task's. A creation that names no project writes nothing here.
 
 Adds to each task its project's title, a field the tasks' board shows on
 its cards and may group by; to a task's Details, its project and milestone
-and the form that files it. On a project's page it adds the Tasks tab:
+and the form that files it; and its project's id, a hidden field by
+which a project's page jumps in Related to its tasks. On a project's
+page it fills the Tasks tab its owner gives it:
 the project's tasks, open ones first, read through the query `tasks` as
 the shell serves it, and a new task already in the project, under one of
 its open milestones if chosen.

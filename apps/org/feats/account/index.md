@@ -1,6 +1,6 @@
 +++
 title = "Account"
-updated = 2026-11-13
+updated = 2026-11-16
 +++
 
 The co-op's accounts and what its members own: the chart of accounts,
@@ -341,7 +341,8 @@ statements are the `report` feat's, drawn in the rubrics and over the
 spans this feat publishes.
 Printed, a page drops the shell and reads as a document. Balances, the trial
 balance, each account's ledger and each period's entries are
-`account-transaction`'s, in a tab of the page's own; the
+`account-transaction`'s, in the Ledger and Entries tabs this feat gives
+an account's and a period's page; the
 motion that adopted a terms' rule, `account-motion`'s.
 
 ## Lanterne

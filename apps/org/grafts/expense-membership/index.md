@@ -1,6 +1,6 @@
 +++
 title = "expense-membership"
-updated = 2026-11-11
+updated = 2026-11-16
 +++
 
 Whose an expense is, by name. The expense feat holds the claimant's
@@ -56,7 +56,8 @@ trigger on the expenses.
 ## Shell
 
 Adds the claimant's name to each expense, on the board's cards and its
-page with who decided it; and to a person's page, in an Expenses tab, their expenses.
+page with who decided it. A person's expenses are a jump in their page's
+Related, by the expense's member.
 
 ## Lanterne
 

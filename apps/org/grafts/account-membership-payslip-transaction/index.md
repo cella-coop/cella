@@ -1,6 +1,6 @@
 +++
 title = "account-membership-payslip-transaction"
-updated = 2026-11-11
+updated = 2026-11-16
 +++
 
 An associate's subscription paid in monthly instalments withheld from
@@ -112,7 +112,7 @@ A plan and what each run withheld read as the member's capital account does, for
 
 ## Shell
 
-Adds to a person's Own and decide tab their instalments from pay: how many, each, since
+Adds to a person's Membership tab their instalments from pay: how many, each, since
 when, and what each month's pay withheld; and, on their own page while
 they owe some, the form spreading it. Adds to a payslip's Lines tab what
 its pay withheld for capital, beside the net pay and what the bank paid.

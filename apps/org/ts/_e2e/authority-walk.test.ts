@@ -265,7 +265,7 @@ unseeded('before any close: the chain, Sofia\'s powers and refusals, Brand\'s Pr
     assert.match((await section(w.page(), 'Chain').textContent()) ?? '', /this one/, `${w.at}: the chain is drawn`)
     await w.shot('1-chain')
 
-    await w.open(`/people/${encodeURIComponent(sofia)}?tab=powers`)
+    await w.open(`/people/${encodeURIComponent(sofia)}?tab=authority`)
     assert.match((await section(w.page(), 'Powers').textContent()) ?? '', /Approve bill/, `${w.at}: her powers list approve-bill`)
     await w.shot('2-powers')
 

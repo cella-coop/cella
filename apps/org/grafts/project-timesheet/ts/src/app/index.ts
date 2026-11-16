@@ -4,13 +4,16 @@ import Time from './blocks/Time.svelte'
 
 // The graft's client side: each entry's project, and the hours by project
 // on the timesheets' dashboard; what each project's time spent of its
-// budget; and on a project's page, its own tab of time, a table by member
-// and entry the overview has no room for, with logging time against it.
+// budget; and on a project's Budget tab, its time, a table by member and
+// entry the overview has no room for, with logging time against it.
 export const app: App = {
   name: 'project-timesheet',
   extends: {
     timesheets: {
-      columns: [{ key: 'project', label: 'Project', kind: 'badge', role: 'meta', record: 'projects', value: (r: { project?: string }) => r.project }],
+      columns: [
+        { key: 'project', label: 'Project', kind: 'badge', role: 'meta', record: 'projects', value: (r: { project?: string }) => r.project },
+        { key: 'project_id', label: 'Project id', kind: 'mono', role: 'hidden', of: 'projects', value: (r: { project_id?: string }) => r.project_id },
+      ],
       dashboard: [{ kind: 'chart', title: 'Hours by project', measure: { op: 'sum', field: 'hours' }, by: 'project' }],
     },
     projects: {
@@ -23,8 +26,7 @@ export const app: App = {
           { label: 'Hours', value: t.hours, kind: 'number' },
           { label: 'Spent', value: t.spent, kind: 'money' },
         ],
-        tabs: [{ id: 'time', label: 'Time' }],
-        blocks: [{ tab: 'time', block: Time }],
+        blocks: [{ tab: 'budget', block: Time }],
       },
     },
   },

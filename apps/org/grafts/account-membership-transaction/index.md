@@ -1,6 +1,6 @@
 +++
 title = "account-membership-transaction"
-updated = 2026-11-13
+updated = 2026-11-16
 +++
 
 Members' capital in the books: what a member subscribes on joining and
@@ -204,7 +204,7 @@ Subscriptions, payments in, draws, withdrawals and repayments read as the member
 
 ## Shell
 
-Adds to a person's Own and decide tab their subscription, what they paid in, from the
+Adds to a person's Membership tab their subscription, what they paid in, from the
 bank or their pay, and what is left, with the form recording a payment
 while some is; once they left, their repayments, each with its day and
 whether it is paid, and the button paying the next; their capital in the

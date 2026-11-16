@@ -43,7 +43,7 @@ after(async () => {
 test('every main page renders on the seed', async () => {
   const pages: [string, string][] = [
     ['/people', 'Camille Martin'],
-    [`/people/${camille}?tab=powers`, 'Powers held'],
+    [`/people/${camille}?tab=authority`, 'Powers held'],
     ['/circles', 'Assembly'],
     ['/circles/ag?tab=roles', 'Manager'],
     ['/motions', 'Admit Inès Haddad'],

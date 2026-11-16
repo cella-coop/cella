@@ -31,7 +31,7 @@ export async function motions(db: Db): Promise<Motion[]> {
 // deliberation in the order received, the defaults its actions left, and
 // what its close carried.
 export async function motion(db: Db, id: string): Promise<Detail | null> {
-  const found = await db.query<Omit<Detail, 'terms' | 'leaves' | 'close' | 'effects'>>(`SELECT ${columns}, body, cutoff::int AS cutoff FROM motion.motion WHERE id = $1`, [id])
+  const found = await db.query<Omit<Detail, 'terms' | 'leaves' | 'close' | 'effects' | 'seated' | 'tally'>>(`SELECT ${columns}, body, cutoff::int AS cutoff FROM motion.motion WHERE id = $1`, [id])
   if (!found.rows[0]) {
     return null
   }
@@ -46,6 +46,14 @@ export async function motion(db: Db, id: string): Promise<Detail | null> {
   const given = await db.query<Given>(
     `SELECT receipt::text AS id, receipt::int AS receipt, member, stance, to_char(at, 'YYYY-MM-DD') AS at
      FROM motion.vote WHERE motion = $1 ORDER BY receipt DESC`,
+    [id],
+  )
+  // Whether the reader is on the roll, and what the motion counts so
+  // far, by its own `motion.roll` and `motion.tally`: no graft needed to
+  // say where and how one votes.
+  const seated = await db.query<{ seated: boolean }>(`SELECT EXISTS (SELECT FROM motion.roll r WHERE r.motion = $1 AND r.member = cella.reader()) AS seated`, [id])
+  const tally = await db.query<{ passes: boolean | null; counted: number | null; given: number | null; quorate: boolean | null }>(
+    `SELECT passes, counted::int AS counted, given::int AS given, quorate FROM motion.tally($1)`,
     [id],
   )
   const actions = await db.query<Labelled>(
@@ -66,6 +74,8 @@ export async function motion(db: Db, id: string): Promise<Detail | null> {
     actions: actions.rows,
     messages: messages.rows,
     leaves: await leftBy(db, id),
+    seated: seated.rows[0]?.seated ?? false,
+    tally: tally.rows[0] ?? { passes: null, counted: null, given: null, quorate: null },
     ...(await effects(db, found.rows[0].cutoff)),
   }
 }

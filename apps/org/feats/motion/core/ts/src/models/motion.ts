@@ -99,6 +99,12 @@ export interface Detail extends Motion {
   messages: Message[]
   // The default policies of a legal form its actions left.
   leaves: Left[]
+  // Whether the acting member is on the motion's roll, by its own
+  // `motion.roll`, no graft needed.
+  seated: boolean
+  // What it counts, by `motion.tally`: null, all of it, while a secret
+  // ballot stays sealed.
+  tally: { passes: boolean | null; counted: number | null; given: number | null; quorate: boolean | null }
   // The log entry of its close, and the effects its close carried, in
   // the order logged; none while it is open.
   close: number | null

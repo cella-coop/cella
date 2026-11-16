@@ -5,10 +5,12 @@ import Create from './blocks/Create.svelte'
 import Discussion from './blocks/Discussion.svelte'
 import Effects from './blocks/Effects.svelte'
 import Proposal from './blocks/Proposal.svelte'
+import Vote from './blocks/Vote.svelte'
 
 // The feat's client side: the motions, open first, a new one with what
-// it decides, and a motion's page with its proposal, the stances given
-// and its close, with what it does and what the close carried.
+// it decides, and a motion's page with where and how one votes first,
+// then its proposal, the stances given and its close, with what it does
+// and what the close carried.
 export const app: App = {
   name: 'motion',
   collections: {
@@ -54,7 +56,7 @@ export const app: App = {
           { id: 'discussion', label: 'Discussion' },
           { id: 'effects', label: 'Effects' },
         ],
-        blocks: [Proposal, { tab: 'discussion', block: Discussion }, { tab: 'effects', block: Effects }],
+        blocks: [Vote, Proposal, { tab: 'discussion', block: Discussion }, { tab: 'effects', block: Effects }],
         actions: Close,
       },
     },

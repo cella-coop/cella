@@ -2,8 +2,9 @@
 // host serves for its demo. Each visitor is served a copy of the template
 // of their own: a database made from it by CREATE DATABASE … TEMPLATE, a
 // login role that reaches that database alone, and a server of its own,
-// `cella-server` on a Unix socket, which the front starts as a child and
-// passes that visitor's requests to, and no one else's.
+// the built shell, as `cella-server` runs it, on a Unix socket, which the
+// front starts as a child and passes that visitor's requests to, and no
+// one else's.
 //
 // The visitor is known by a cookie holding 32 random bytes and nothing
 // else; the front keeps, in memory alone, which copy it names and when
@@ -27,7 +28,7 @@
 // database only where it owns it, a copy it made, and it checks each
 // name and comment before it does.
 //
-//   node tools/demo-serve.mjs --template NAME --server PATH [--port 3000]
+//   node tools/demo-serve.mjs --template NAME --server DIR [--port 3000]
 //     [--host 127.0.0.1] [--prefix NAME_v] [--sockets DIR] [--cap 10]
 //     [--idle 7200] [--evict-after 300] [--memory 256] [--connections 10]
 //     [--per-ip 5] [--per-ip-window 600] [--per-minute 20] [--tick 30]
@@ -57,7 +58,7 @@ const IDENT = /^[a-z_][a-z0-9_]{0,40}$/
 const template = flag('--template')
 const server = flag('--server')
 if (!template || !IDENT.test(template) || !server) {
-  throw new Error('demo serve: --template NAME (the template database) and --server PATH (cella-server)')
+  throw new Error('demo serve: --template NAME (the template database) and --server DIR (the built shell, apps/org/ts/build)')
 }
 const prefix = flag('--prefix', `${template.replace(/_template$/, '')}_v`)
 if (!IDENT.test(prefix)) {
@@ -225,7 +226,7 @@ async function start(cookie) {
       rmSync(socket, { force: true })
       // Its server knows its database, its role's password and its socket,
       // and nothing of the front's or any other copy's.
-      copy.child = spawn(server, [], {
+      copy.child = spawn(process.execPath, [server], {
         env: {
           PATH: process.env.PATH ?? '',
           SOCKET_PATH: socket,

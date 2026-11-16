@@ -441,7 +441,7 @@ in
               "--per-ip ${toString s.demo.perIp}"
               "--per-minute ${toString s.demo.perMinute}"
               "--trust-proxy"
-              "--server ${cfg.package}/bin/cella-server"
+              "--server ${cfg.package}/share/cella/apps/org/ts/build"
               "--sockets /run/cella-${name}"
             ];
             Restart = "on-failure";

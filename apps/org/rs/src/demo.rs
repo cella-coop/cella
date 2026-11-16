@@ -75,8 +75,9 @@ fn tool(repo: &Repo, url: &str) -> std::process::Command {
 /// The demo's front, `tools/demo-serve.mjs`, in place of this process, so
 /// a host's unit stops it, and it ends every copy, by signalling it alone.
 /// Each visitor is served a copy of the template of their own and a server
-/// on it, `cella-server` on a socket of its own, which the front starts,
-/// passes the visitor's requests to and ends after it is idle.
+/// on it, the built shell as `cella-server` runs it, on a socket of its
+/// own, which the front starts, passes the visitor's requests to and
+/// ends after it is idle.
 fn serve(repo: &Repo, how: &Demo) -> Result {
     use std::os::unix::process::CommandExt;
     let Demo::Serve {
@@ -100,16 +101,7 @@ fn serve(repo: &Repo, how: &Demo) -> Result {
     };
     let server = match server {
         Some(s) => s.clone(),
-        None if repo.packaged => repo
-            .root
-            .join("../../bin/cella-server")
-            .display()
-            .to_string(),
-        None => {
-            return Err(Fail::new(
-                "demo serve: --server names the server each copy runs, outside the package",
-            ));
-        }
+        None => repo.shell_dir().join("build").display().to_string(),
     };
     let mut cmd = repo.node("demo-serve.mjs");
     cmd.args(["--template", template, "--server", &server]);

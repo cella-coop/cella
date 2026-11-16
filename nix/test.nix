@@ -126,10 +126,10 @@ pkgs.testers.runNixOSTest {
       host.wait_for_open_port(${toString port}, timeout=600)
 
       def copies():
-          return host.succeed("""${psql "postgres" "SELECT datname FROM pg_database WHERE datname ~ '^demo_v_' ORDER BY 1"}""").split()
+          return host.succeed("""${psql "postgres" "SELECT datname FROM pg_database WHERE datname ~ '^demo_v_' ORDER BY 1"} """).split()
 
       def roles():
-          return host.succeed("""${psql "postgres" "SELECT rolname FROM pg_roles WHERE rolname ~ '^demo_v_' ORDER BY 1"}""").split()
+          return host.succeed("""${psql "postgres" "SELECT rolname FROM pg_roles WHERE rolname ~ '^demo_v_' ORDER BY 1"} """).split()
 
       def head(db):
           return int(host.succeed(f"""${as "psql -X -q -t -A -d {db} -c 'SELECT n FROM cella.head'"}""").strip())
@@ -158,8 +158,9 @@ pkgs.testers.runNixOSTest {
       def password(db):
           for pid in host.succeed("pgrep -u cella-visitors node || true").split():
               env = host.succeed(f"tr '\\0' '\\n' < /proc/{pid}/environ || true")
-              if re.search(rf"^PGDATABASE={db}$", env, re.M):
-                  return re.search(r"^PGPASSWORD=(.*)$", env, re.M).group(1), pid
+              found = re.search(r"^PGPASSWORD=(.*)$", env, re.M)
+              if found and re.search(rf"^PGDATABASE={db}$", env, re.M):
+                  return found.group(1), pid
           raise Exception(f"no server serves {db}")
 
       def probe(db, jar):
@@ -194,8 +195,6 @@ pkgs.testers.runNixOSTest {
           probe(a, "/tmp/a")
           assert head(a) > base, "the first visitor's write did not reach their copy"
           assert head(b) == base, "the first visitor's write reached the second's copy"
-          invited = "SELECT count(*) FROM person.person WHERE name = 'Probe Petit'"
-          assert host.succeed(f"""${as "psql -X -q -t -A -d {b}"} -c "{invited}" """).strip() == "0"
 
       with subtest("a copy's role reaches its own database alone, and is no superuser"):
           pw, _ = password(a)

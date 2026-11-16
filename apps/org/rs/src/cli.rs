@@ -449,8 +449,8 @@ pub enum Demo {
         #[arg(long)]
         trust_proxy: bool,
 
-        /// The server each copy runs; the package's `cella-server` unset
-        #[arg(long, value_name = "PATH")]
+        /// The built shell each copy runs, as `cella-server` runs it; apps/org/ts/build unset
+        #[arg(long, value_name = "DIR")]
         server: Option<String>,
 
         /// Where each copy's server listens, a socket of its own; `RUNTIME_DIRECTORY` unset

@@ -373,8 +373,9 @@ runs no script, makes none. The front then copies the template into a
 database of its own (`CREATE DATABASE … TEMPLATE`, about 0.2 s), marks
 it `a copy of <template>: <label>` as `cella demo copy` does, gives it a
 login role of the same name, `<database>_v_<16 hex digits>`, and starts
-its server, `cella-server` with `CELLA_DEMO`, on a Unix socket of its
-own in the unit's runtime directory; the page goes on to it once it
+its server, the built shell as `cella-server` runs it, with
+`CELLA_DEMO`, on a Unix socket of its own in the unit's runtime
+directory; the page goes on to it once it
 answers. The cookie, `cella-visitor`, is 32 random bytes and nothing
 else, never the copy's name; the front keeps in memory alone which copy
 it names and when its visitor was last seen, and records nothing about

@@ -1,6 +1,6 @@
 // The favorites scenario, in every browser, on a seeded Lanterne through
-// the dev server: Inès, in Web and no member, reads the tasks of Web and
-// of the assembly and of no other circle. In Web, the tasks are Web's
+// the dev server: Inès, in Web, Care and Tools and no member, reads the
+// tasks of those circles and of the assembly and of no other circle. In Web, the tasks are Web's
 // own; she chooses Every circle in the View panel and saves the view,
 // which reads the rows of both circles she reads and none of the
 // others', and counts them so on its tab. She pins it and the tasks'
@@ -54,7 +54,7 @@ eachBrowser((engine, launch) => {
     const owner = new Map((await su.query<{ id: string; circle: string }>(`SELECT id::text, circle FROM task.task`)).rows.map((r) => [r.id, r.circle]))
     const holding = [...new Set(owner.values())].sort()
     const assembly = (await su.query<{ id: string }>(`SELECT id FROM circle.circle WHERE assembly`)).rows[0]!.id
-    const reads = [assembly, 'web'].sort()
+    const reads = [assembly, 'care', 'tools', 'web'].sort()
     assert.ok(holding.some((c) => !reads.includes(c)), 'some circle Inès does not read holds tasks')
     const browser = await launch()
     const dev = await serve()

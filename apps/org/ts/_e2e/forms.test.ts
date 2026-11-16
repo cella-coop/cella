@@ -83,7 +83,7 @@ test('Lanterne\'s policies show which are the SCOP SARL\'s defaults, and its sta
   const page = await circles.proposing(reader(app, camille), 'ag')
   assert.ok(page)
   const taking = page.policies.filter((p) => p.takes)
-  assert.equal(taking.length, 36)
+  assert.equal(taking.length, 37)
   assert.ok(taking.every((p) => p.takes?.startsWith('scop-sarl-fr:') && !p.outdated))
   assert.equal(page.policies.find((p) => p.id === 'm-2021-001/5')?.takes, 'scop-sarl-fr:ordinary')
   // Its role mandates and its terms are its own.
@@ -154,7 +154,7 @@ test('an ordinary assembly\'s motion leaving two defaults marks each left, by it
   const s = await standing()
   assert.deepEqual(s.get('scop-sarl-fr:suspend-member'), { id: 'scop-sarl-fr:suspend-member', standing: 'left', left_by: `${motion}/1`, left_on: '2026-11-21' })
   assert.deepEqual(s.get('scop-sarl-fr:work-share'), { id: 'scop-sarl-fr:work-share', standing: 'left', left_by: `${motion}/2`, left_on: '2026-11-21' })
-  assert.equal([...s.values()].filter((d) => d.standing === 'taken').length, 34)
+  assert.equal([...s.values()].filter((d) => d.standing === 'taken').length, 35)
 
   const page = await detail(reader(app, camille), motion)
   assert.deepEqual(

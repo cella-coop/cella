@@ -225,11 +225,14 @@
     <span class="value" class:placeholder={!shown}>{shown?.label ?? placeholder ?? ''}</span>
     {#if !disabled}<span class="chevron"><Icon icon={CaretUpDown} /></span>{/if}
   </button>
-  {#if name !== undefined}
+  {#if name !== undefined && !required}
+    <input type="hidden" {name} value={current} />
+  {:else if name !== undefined}
     <!-- What the form posts, unseen and out of the tab order; required, it
          holds the form back while none is chosen and sends the focus to
          the button. -->
     <input
+
       class="proxy"
       tabindex="-1"
       aria-hidden="true"

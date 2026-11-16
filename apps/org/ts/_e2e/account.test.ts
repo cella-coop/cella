@@ -17,6 +17,7 @@ import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
 import pg from 'pg'
 import { eachBrowser, serve, signIn } from './browser.ts'
+import { choose, chosen } from './controls.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-account-shots'
 const camille = 'camille@lanterne.example'
@@ -57,18 +58,19 @@ eachBrowser((name, launch) => {
         const form = page.locator('form.settings')
         const was = await form.getByLabel('Name').inputValue()
         assert.match(was, /^Camille/, `${at}: her name in force`)
-        assert.equal(await form.getByLabel('Theme').inputValue(), 'system', `${at}: the system's theme, as no cookie says otherwise`)
+        assert.equal(await chosen(form.getByLabel('Theme')), 'system', `${at}: the system's theme, as no cookie says otherwise`)
         assert.doesNotMatch((await form.textContent()) ?? '', /by motion/, `${at}: no field of hers opens a motion`)
         const devices = page.locator('section', { has: page.getByRole('heading', { name: 'Devices' }) })
         assert.match((await devices.textContent()) ?? '', /, this device/, `${at}: the device she signs with is marked`)
         await page.screenshot({ path: `${shots}/account-${name}-${scheme}.png`, fullPage: true })
 
-        assert.equal(await form.getByRole('button').count(), 0, `${at}: the form has no Save`)
+        assert.equal(await form.getByRole('button', { name: /save/i }).count(), 0, `${at}: the form has no Save`)
         await form.getByLabel('Name').fill(renamed)
         await form.getByLabel('Name').press('Enter')
         await page.getByRole('status').filter({ hasText: /Settled/ }).waitFor()
         await form.getByText('Saved', { exact: true }).waitFor()
-        await form.getByLabel('Theme').selectOption(other)
+        await choose(form.getByLabel('Theme'), other)
+
         await page.waitForFunction((t) => document.documentElement.dataset.theme === t, other)
         assert.equal(await form.getByLabel('Name').inputValue(), renamed, `${at}: the field shows the name saved`)
         assert.doesNotMatch((await form.textContent()) ?? '', /Not saved/, `${at}: every field saved`)
@@ -79,7 +81,7 @@ eachBrowser((name, launch) => {
         await page.reload()
         await page.waitForLoadState('networkidle')
         assert.equal(await page.locator('html').getAttribute('data-theme'), other, `${at}: the theme stands after a reload`)
-        assert.equal(await form.getByLabel('Theme').inputValue(), other)
+        assert.equal(await chosen(form.getByLabel('Theme')), other)
         assert.equal(await form.getByLabel('Name').inputValue(), renamed, `${at}: the name stands after a reload`)
         assert.match((await account.textContent()) ?? '', new RegExp(renamed.replace(/[()]/g, '\\$&')), `${at}: the account menu names her by it`)
         assert.deepEqual(errors, [], `${at}: the page threw nothing`)

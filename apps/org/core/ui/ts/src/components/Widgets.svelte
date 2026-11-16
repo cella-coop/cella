@@ -6,11 +6,14 @@
   import { reorder } from '../models/drag.ts'
   import { sortable } from '../attachments/sortable.ts'
   import { useDashboard } from '../hooks/useDashboard.ts'
+  import type { Draft } from '../hooks/DashboardState.svelte.ts'
   import { useDrag } from '../hooks/useDrag.ts'
   import Button from './Button.svelte'
+  import Checkbox from './Checkbox.svelte'
   import DragHandle from './DragHandle.svelte'
   import DropIndicator from './DropIndicator.svelte'
   import Icon from './Icon.svelte'
+  import Select from './Select.svelte'
 
   // The dashboard's part of the View panel, its Display popover: its widgets in order, each
   // dragged into place, edited or removed, and a new one to add. A change
@@ -30,11 +33,13 @@
     onchange: (ws: Widget[] | null) => void
   } = $props()
 
+  const id = $props.id()
   const state = useDashboard()
   const drag = useDrag()
   const numbers = $derived(fields.filter(numeric))
   const groups = $derived(fields.filter((f) => f.type === 'enum' || f.type === 'date'))
   const on = $derived(fields.find((f) => f.key === state.draft.on))
+  const as = (fs: Field[], month = false) => fs.map((f) => ({ value: f.key, label: `${f.label}${month && f.type === 'date' ? ', by month' : ''}` }))
 
   function save(e: SubmitEvent) {
     e.preventDefault()
@@ -75,59 +80,60 @@
   {#if state.editing !== null}
     <form class="editor" onsubmit={save}>
       <label>Title <input bind:value={state.draft.title} placeholder={state.draft.kind === 'kpi' ? 'Owed' : 'Amounts by month'} /></label>
-      <label>
-        Shows
-        <select bind:value={state.draft.kind}>
-          <option value="kpi">a figure</option>
-          <option value="chart">a chart</option>
-        </select>
-      </label>
-      <label>
-        Measure
-        <select bind:value={state.draft.op}>
-          {#each ops as op (op)}
-            <option value={op} disabled={op !== 'count' && !numbers.length}>{op}</option>
-          {/each}
-        </select>
-      </label>
+      <div class="row">
+        <span id="{id}-shows">Shows</span>
+        <Select
+          labelledby="{id}-shows"
+          options={[
+            { value: 'kpi', label: 'a figure' },
+            { value: 'chart', label: 'a chart' },
+          ]}
+          bind:value={() => state.draft.kind, (v) => (state.draft.kind = v as Draft['kind'])}
+        />
+      </div>
+      <div class="row">
+        <span id="{id}-measure">Measure</span>
+        <Select
+          labelledby="{id}-measure"
+          options={ops.map((op) => ({ value: op, label: op, disabled: op !== 'count' && !numbers.length }))}
+          bind:value={() => state.draft.op, (v) => (state.draft.op = v as Draft['op'])}
+        />
+      </div>
       {#if state.draft.op !== 'count'}
-        <label>
-          Of
-          <select bind:value={state.draft.field}>
-            {#each numbers as f (f.key)}<option value={f.key}>{f.label}</option>{/each}
-          </select>
-        </label>
+        <div class="row">
+          <span id="{id}-of">Of</span>
+          <Select labelledby="{id}-of" options={as(numbers)} bind:value={state.draft.field} />
+        </div>
       {/if}
       {#if state.draft.kind === 'chart'}
-        <label>
-          By
-          <select bind:value={state.draft.by}>
-            {#each groups as f (f.key)}<option value={f.key}>{f.label}{f.type === 'date' ? ', by month' : ''}</option>{/each}
-          </select>
-        </label>
+        <div class="row">
+          <span id="{id}-by">By</span>
+          <Select labelledby="{id}-by" options={as(groups, true)} bind:value={state.draft.by} />
+        </div>
       {/if}
-      <label>
-        Where
-        <select bind:value={state.draft.on}>
-          <option value="">every row</option>
-          {#each groups as f (f.key)}<option value={f.key}>{f.label}</option>{/each}
-        </select>
-      </label>
+      <div class="row">
+        <span id="{id}-where">Where</span>
+        <Select labelledby="{id}-where" options={[{ value: '', label: 'every row' }, ...as(groups)]} bind:value={state.draft.on} />
+      </div>
       {#if on?.type === 'enum'}
         <fieldset class="values">
           <legend class="hidden">{on.label} is</legend>
           {#each values[on.key] ?? [] as v (v)}
-            <label class="check"><input type="checkbox" checked={state.draft.is.includes(v)} onchange={() => state.toggle(v)} />{v}</label>
+            <Checkbox bind:checked={() => state.draft.is.includes(v), () => state.toggle(v)}>{v}</Checkbox>
           {/each}
         </fieldset>
       {:else if on?.type === 'date'}
-        <label>
-          Within
-          <select bind:value={state.draft.within}>
-            <option value="month">this month</option>
-            <option value="year">this year</option>
-          </select>
-        </label>
+        <div class="row">
+          <span id="{id}-within">Within</span>
+          <Select
+            labelledby="{id}-within"
+            options={[
+              { value: 'month', label: 'this month' },
+              { value: 'year', label: 'this year' },
+            ]}
+            bind:value={() => state.draft.within, (v) => (state.draft.within = v as Draft['within'])}
+          />
+        </div>
       {/if}
       <div class="buttons">
         <Button tone="primary" type="submit">{state.editing === -1 ? 'Add' : 'Save'}</Button>
@@ -200,14 +206,14 @@
     border-radius: var(--radius-control);
     background: var(--panel);
   }
-  .editor > label {
+  .editor > label,
+  .editor > .row {
     display: grid;
     gap: 2px;
     font-size: var(--text-xs);
     color: var(--text-muted);
   }
-  .editor input,
-  .editor select {
+  .editor input {
     color: var(--text);
     font-size: var(--text-sm);
   }
@@ -218,18 +224,6 @@
     margin: 0;
     padding: 0;
     border: none;
-  }
-  .check {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    font-size: var(--text-sm);
-  }
-  .check input {
-    width: auto;
-    min-height: 0;
-    margin: 0;
-    accent-color: var(--accent-fill);
   }
   .buttons {
     display: flex;

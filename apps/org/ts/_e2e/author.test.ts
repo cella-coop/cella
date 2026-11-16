@@ -18,6 +18,7 @@ import type { Propose } from '@cella/org-motion/models'
 import type { Deps } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
 import { inBrowsers, serve, signIn } from './browser.ts'
+import { choose, chosen, said } from './controls.ts'
 
 const su = new pg.Client()
 let app: pg.Client
@@ -98,11 +99,12 @@ unseeded('the New form puts a motion as a held role or as its circle, and the pa
             await page.waitForLoadState('networkidle')
             await page.getByRole('button', { name: 'New' }).click()
             const form = page.locator('form').filter({ has: page.getByRole('button', { name: 'Propose' }) })
-            await form.locator('select[name^="f.circle["]').selectOption('ag')
-            const putBy = form.locator('select[name^="f.author["]')
-            assert.equal(await putBy.inputValue(), '', 'the circle is the default')
-            if (author) await putBy.selectOption(author)
-            assert.equal(await putBy.locator('option:checked').textContent(), author ? name : 'The circle')
+            await choose(form.locator('[role=combobox][data-name^="f.circle["]'), 'ag')
+            const putBy = form.locator('[role=combobox][data-name^="f.author["]')
+            assert.equal(await chosen(putBy), '', 'the circle is the default')
+            if (author) await choose(putBy, author)
+            assert.equal(await said(putBy), author ? name : 'The circle')
+
             const title = `Author from form ${engine} ${author || 'circle'} ${scheme}`
             await form.getByLabel('Title').fill(title)
             await form.getByLabel('Deadline').fill('07/11/2026')

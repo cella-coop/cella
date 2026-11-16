@@ -73,9 +73,10 @@ ink. Components read roles, never shades:
   (`--shadow-float`);
 - focus: one ring, `--focus`, on whatever the keyboard reaches, a field
   as much as a button; a focused field keeps the ring with its accent
-  border, a select drawing it as an outline (`--focus-outline`), since
-  WebKit's native menu list drops a shadow; and nothing sets `outline:
-  none` without drawing the ring.
+  border, a table's cell drawing it as an outline (`--focus-outline`),
+  where a shadow would be clipped; and nothing sets `outline: none`
+  without drawing the ring.
+
 
 The theme is light, dark or the system's, a cookie the server writes into
 `<html data-theme>` before any script runs.
@@ -493,13 +494,23 @@ draws.
   `Hidden` (a value a form posts that no one types, named through the
   form it is in),
   `Field` (text, a number, a date, a time, an address, an email or a
-  file; a date is typed in the app's locale and posts as an ISO day, the
-  browser's own calendar a button beside it (`DateField`); a day typed
+  file, or a choice among `options`, drawn by `Select`; its label names
+  it by its id and never wraps it; a date is typed in the app's locale
+  and posts as an ISO day, its own calendar a button beside it
+  (`DateField`): a month of days in the top layer, anchored to the
+  field and flipped to stay in the viewport, opening on the field's day
+  or today, today ringed and the day chosen filled with ink, a grid the
+  arrows move a day or a week in, Home and End to the week's ends, Page
+  Up and Down a month, with Shift a year, Enter or a press picking and
+  Escape closing it, the focus back on its button; a day typed
   that names none keeps the form from posting and says how to write
   one, until a valid day is typed or one is picked from the calendar,
   which replaces what is typed and drops the complaint; which `accept` narrows to the media types it offers; a
-  select with a `placeholder` offers it as a disabled first choice,
-  never a blank), `Ordered` (a list a slice's writes reorder, as an
+  select with a `placeholder` shows it, muted, until a choice is made,
+  never a blank; a text area wears no grip of the browser's, growing
+  with what is written from its rows to most of the window where the
+  browser sizes a field by its content, and scrolling past its rows
+  where it does not), `Ordered` (a list a slice's writes reorder, as an
   agenda: each row numbered, with its grip and its columns, what the
   slice puts at its end and a quiet removal when the slice offers one;
   `fixed` drops both once the list may not change), `Prose`, `Note` (a quiet line), `Message` (one message of a thread:
@@ -529,6 +540,35 @@ draws.
   the body font, Inter (`--font-ui`), headings and all, wherever the
   editor or its reader stands. Core body's components name its classes
   and draw nothing of their own.
+- `Select`: the one select, a combobox and its listbox as WAI-ARIA's
+  select-only combobox. The button keeps the focus throughout, naming
+  the option the keyboard is on as its active descendant, and shows the
+  chosen option's icon and label, or its placeholder, muted, while none
+  is chosen; its list opens in the top layer, as wide as the button at
+  least, anchored to it and flipped to stay in the viewport, placed by
+  `models/place.ts` where a browser lacks anchor positioning. The arrows,
+  Page Up and Down, Home and End move among the options past the
+  disabled ones; typing a label's first letters reaches it, a letter
+  again cycling those it starts; Enter or Space chooses and closes, as a
+  press does, Escape closes it choosing nothing, and Tab closes it and
+  moves on, the focus on the button all along, so it returns there by
+  never leaving. The chosen option wears a check; an option may carry an
+  icon, be disabled, sit under a heading with the others of its `group`,
+  and one may be marked, quietly, as the `default`, which a reader hears
+  as ", the default". With a `name` it posts its value in its form, a
+  `required` one holding the form back while none is chosen; with no
+  placeholder and no value of its own it reads as its first option, as
+  the browser's did. Its options are plain data (`Option`,
+  `models/select.ts`, whose moves its tests run without a browser), its
+  state `SelectState`. A choice is handed to `onchange` and fired as a
+  `change` from the button, so a setting commits as it is made; `fit`
+  sizes it to what it shows, up to 11rem, as in the View panel.
+- `Checkbox`: the one checkbox and the one switch, one button that says
+  whether it is on (`aria-checked`), its box and the text naming it
+  inside it, or named by its `label` where it has no text; Space or a
+  press anywhere on it turns it once, fired as a `change`. A checkbox is a small box, filled with ink and checked once
+  on; a switch (`role="switch"`), a track its knob crosses, filled once
+  on. With a `name` it posts its value while on.
 - `icons`: the Phosphor icons slices may name.
 
 A view whose rows are not its own items links each where its `href`
@@ -560,7 +600,22 @@ names the record. A collection that declares no icon, or that the shell
 does not mount, leaves the value bare; an enumeration, as a task's
 priority, names no record and wears none.
 
+## Never native
+
+**Never native components.** Every control is the UI core's own,
+on-brand and accessible by keyboard and assistive technology alike in
+every browser, never the browser's: a choice is a `Select`, a day a
+date `Field` with its own calendar, a box to tick or a toggle a
+`Checkbox`, a choice among a few a group of buttons (`role="radio"`, as
+the icons a saved view may wear). The ui check refuses, by name, a
+`<select>` and an `<input>` of type date, datetime-local, month, week,
+checkbox or radio in any `.svelte` file of the org app, its UI core's
+among them ([enforcement](../../../../_corpus/doc/enforcement.md)). The
+time of day and a file to upload are still the browser's own fields,
+styled as the rest.
+
 ## Settings
+
 
 A settings page is a plain form, `Settings`, one `Setting` a row: its
 label, its current value in its field, and under it in a quiet line
@@ -717,9 +772,12 @@ exported.
 ## State
 
 A component holds no state of its own: the collection's filter and row,
-whether its New is open, the command menu, the dismissed outcome, the drawer's opening, the
-lens and the people's names, and what a date field holds typed and says of it, are state classes in
-`hooks/` (`CollectionState`, `CreateState`, `CommandState`, `ShellState`, `DateState`), and the sign-in and
+whether its New is open, the command menu, the dismissed outcome, the
+drawer's opening, the lens and the people's names, what a date field
+holds typed and says of it and the day its calendar is on, and whether
+a select is open and the option its keyboard is on, are state classes in
+`hooks/` (`CollectionState`, `CreateState`, `CommandState`,
+`ShellState`, `DateState`, `SelectState`), and the sign-in and
 an invitation taken up (`SignInState`, `JoinState`), each reached through
 its `use*` hook, as [architecture](../../../../_corpus/doc/architecture.md#client-state)
 describes. `ShellState` imports no router: the shell hands its `follow` the

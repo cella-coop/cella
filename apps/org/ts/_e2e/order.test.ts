@@ -20,6 +20,7 @@ import type { Locator, Page } from 'playwright-core'
 import { page as read, type Sort, type Source } from '@cella/org-db'
 import { source } from '#lib/server/slices.ts'
 import { eachBrowser, serve, signIn } from './browser.ts'
+import { choose, chosen } from './controls.ts'
 
 const julien = 'julien@lanterne.example'
 const shots = process.env.SHOTS ?? '/tmp/cella-order-shots'
@@ -119,7 +120,7 @@ eachBrowser((browserName, launch) => {
         const select = view.getByLabel('Order by')
         for (const field of fields) {
           const dir = sort()?.startsWith('-') ? 'desc' : 'asc'
-          await select.selectOption(field)
+          await choose(select, field)
           await sorted(`${dir === 'desc' ? '-' : ''}${field}`)
           await follows(page, name, layout, await expected(name, { field, dir }), `${browserName} ${name} ${layout} by ${field}, ${dir}`)
           await view.getByRole('button', { name: dir === 'desc' ? 'Descending' : 'Ascending' }).click()
@@ -170,7 +171,8 @@ eachBrowser((browserName, launch) => {
       await page.getByTitle(/^View Largest first /).click()
       await sorted('-total')
       await follows(page, 'expenses', 'table', await expected('expenses', { field: 'total', dir: 'desc' }), `${browserName}: the saved view`)
-      assert.equal(await panel(page).getByLabel('Order by').inputValue(), 'total', `${browserName}: Order by names the saved view's field`)
+      assert.equal(await chosen(panel(page).getByLabel('Order by')), 'total',
+ `${browserName}: Order by names the saved view's field`)
 
       // The address alone draws the order, from the server.
       await visit('/expenses?view=table&sort=-day')

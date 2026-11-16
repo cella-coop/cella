@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
   import { useForm } from '../hooks/useForm.ts'
+  import Select from './Select.svelte'
 
   // A grid of figures to type into, as a week of time: a row per thing,
   // a column per day, each cell showing what it holds and taking what is
@@ -87,9 +88,7 @@
         {#if pick}
           <td class="pick">
             {#if pick.options(r.key).length}
-              <select name={form.name(pick.name(r.key))} aria-label="{r.label}: {pick.label}">
-                {#each pick.options(r.key) as o (o.value)}<option value={o.value}>{o.label}</option>{/each}
-              </select>
+              <span class="choice"><Select name={form.name(pick.name(r.key))} label="{r.label}: {pick.label}" options={pick.options(r.key)} /></span>
             {/if}
           </td>
         {/if}
@@ -201,8 +200,8 @@
   th.pick {
     text-align: start;
   }
-  .pick select {
-    height: 2.2rem;
+  .choice {
+    display: block;
     min-width: 8rem;
     max-width: 12rem;
     font-size: var(--text-sm);

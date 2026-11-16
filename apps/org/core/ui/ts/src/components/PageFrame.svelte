@@ -236,7 +236,7 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
-  .actions :global(select:not(.popover *)) {
+  .actions :global(.select:not(.popover *)) {
     max-width: 16rem;
   }
   /* The quiet icon group: the drawer's panel tabs, then its toggle; the

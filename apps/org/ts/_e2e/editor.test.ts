@@ -19,6 +19,7 @@ import pg from 'pg'
 import type { Browser, BrowserContext, Page } from 'playwright-core'
 import { createDoc, edits, type Fragment, type Run } from '@cella/org-body/models'
 import { eachBrowser, serve, signIn } from './browser.ts'
+import { choose } from './controls.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-editor-shots'
 const camille = 'camille@lanterne.example'
@@ -303,7 +304,7 @@ eachBrowser((name, launch) => {
       const menu = a.locator('[role=listbox][aria-label="Turn into"]')
       await menu.waitFor()
       await a.keyboard.press('Enter')
-      await a.locator('select[aria-label="Which motion this block shows"]').selectOption('m-2026-007')
+      await choose(a.getByRole('combobox', { name: 'Which motion this block shows' }), 'm-2026-007')
       const r = await rows()
       assert.equal(r[2].kind, 'embed')
       assert.deepEqual(r[2].props, { embed: 'motion', ref: 'm-2026-007' })
@@ -784,25 +785,20 @@ eachBrowser((name, launch) => {
       await a.keyboard.type('/motion')
       await a.locator('[role=listbox][aria-label="Turn into"]').waitFor()
       await a.keyboard.press('Enter')
-      const picker = a.locator('select[aria-label="Which motion this block shows"]')
-      await picker.focus()
+      const picker = a.getByRole('combobox', { name: 'Which motion this block shows' })
+      assert.ok(await picker.evaluate((el) => el === document.activeElement), 'the picker takes the focus')
+      // The arrows open its list and move among the motions, picking none.
+      await a.keyboard.press('ArrowDown')
       await a.keyboard.press('ArrowDown')
       await settle()
       let r = await rows()
       assert.equal(r[2].kind, 'embed')
       assert.equal(r[2].props.ref, undefined, 'an arrow only browses')
-      if (name === 'chromium') {
-        // Chromium moves a closed select by its arrows; Enter picks there.
-        const browsed = await picker.inputValue()
-        assert.ok(browsed)
-        await a.keyboard.press('Enter')
-        r = await rows()
-        assert.equal(r[2].props.ref, browsed)
-      } else {
-        await picker.selectOption('m-2026-007')
-        r = await rows()
-        assert.equal(r[2].props.ref, 'm-2026-007')
-      }
+      const browsed = await picker.evaluate((el) => document.getElementById(el.getAttribute('aria-activedescendant') ?? '')?.dataset.value)
+      assert.ok(browsed, 'the arrows reach a motion, the active descendant')
+      await a.keyboard.press('Enter')
+      r = await rows()
+      assert.equal(r[2].props.ref, browsed, 'Enter picks what the arrows reached')
       assert.equal((await caret()).id, r[3].id, 'the caret is in the paragraph after it')
       await a.keyboard.type('Then')
       assert.deepEqual([(await rows())[3].kind, (await rows())[3].text], ['paragraph', 'Then'])
@@ -1007,7 +1003,8 @@ eachBrowser((name, launch) => {
         assert.notEqual(expected.shadow, 'none')
         for (const [field, at] of [
           ['text field', form.locator('input[name^="f.title["]')],
-          ['select', form.locator('select[name^="f.circle["]')],
+          ['select', form.locator('[role=combobox][data-name^="f.circle["]')],
+
           ['textarea', form.locator('textarea[name^="f.body["]')],
         ] as const) {
           // Reached by Tab from the control before it, as a person does.

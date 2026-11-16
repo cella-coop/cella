@@ -189,6 +189,31 @@ test('a route\'s server load or actions, or a universal load, is refused; an end
   assert.deepEqual(problems('apps/org/ts/src/lib/server/load.ts', 'export const load = () => ({})\n', false), [], 'only a route file is a route')
 })
 
+test('never native components: a native select, date input, checkbox or radio in the org app is refused by name; the UI core\'s pass', () => {
+  for (const [markup, what] of [
+    ['<select name="kind"><option>a</option></select>', /draws a native <select>; never native components: compose the UI core's Select/],
+    ['<input name="due" type="date" required />', /draws a native date input; never native components/],
+    ['<input type=datetime-local name="at">', /draws a native date input/],
+    ['<input type="checkbox" checked aria-label="Done" />', /draws a native checkbox or radio; never native components: compose the UI core's Checkbox/],
+    ['<input\n  role="switch"\n  type="checkbox"\n/>', /draws a native checkbox or radio/],
+    ['<input type="radio" name="a" />', /draws a native checkbox or radio/],
+  ]) {
+    const found = problems(block, component('', markup), false)
+    assert.equal(found.length, 1, `${markup}: ${found}`)
+    assert.match(found[0], what)
+  }
+  // The UI core is held to it as any slice.
+  assert.match(problems('apps/org/core/ui/ts/src/components/Field.svelte', component('', '<select {id}></select>'), true)[0], /draws a native <select>/)
+  const composed = component(
+    "  import { Select, Checkbox, Field } from '@cella/org-ui'",
+    '<Select label="Kind" options={kinds} bind:value />\n<Checkbox label="Done" bind:checked />\n<Field label="Due" name="due" type="date" />\n<input type="hidden" name="a" />\n<input class="selected" />\n<!-- <select> in a comment -->',
+  )
+  assert.deepEqual(problems(block, composed, false), [])
+  // A select in a script's string, or outside the org app, is not drawn here.
+  assert.deepEqual(problems(block, component("  const html = '<select>'"), false), [])
+  assert.deepEqual(problems('apps/site/src/components/Form.svelte', component('', '<select></select>'), false).filter((p) => /native/.test(p)), [])
+})
+
 test('a create form drawn inline on a page is refused by name; New opens it in the Dialog', () => {
   const app = {
     path: 'apps/org/feats/task/core/ts/src/app/index.ts',

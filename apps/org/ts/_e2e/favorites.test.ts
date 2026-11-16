@@ -16,6 +16,7 @@ import { mkdirSync } from 'node:fs'
 import pg from 'pg'
 import type { Page } from 'playwright-core'
 import { eachBrowser, serve, signIn } from './browser.ts'
+import { choose, chosen } from './controls.ts'
 
 const su = new pg.Client()
 
@@ -74,8 +75,9 @@ eachBrowser((engine, launch) => {
 
       // Every circle, saved as her own view.
       const circles = page.getByRole('combobox', { name: 'Circles' })
-      assert.equal(await circles.inputValue(), 'this', `${engine}: the view reads this circle`)
-      await circles.selectOption('every')
+      assert.equal(await chosen(circles), 'this', `${engine}: the view reads this circle`)
+      await choose(circles, 'every')
+
       await page.waitForURL(/[?&]across=1/)
       await page.waitForLoadState('networkidle')
       await page.getByText("Across circles: every circle's tasks you read.").waitFor()

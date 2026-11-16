@@ -25,6 +25,7 @@ import { statuses } from '@cella/org-expense/models'
 import { people } from '@cella/org-person/api'
 import { source } from '#lib/server/slices.ts'
 import { eachBrowser, serve, signIn } from './browser.ts'
+import { choose, chosen } from './controls.ts'
 
 const julien = 'julien@lanterne.example'
 const shots = process.env.SHOTS ?? '/tmp/cella-group-shots'
@@ -161,10 +162,15 @@ eachBrowser((browserName, launch) => {
         assert.equal(await view.getByRole('button', { name: layout[0].toUpperCase() + layout.slice(1), exact: true }).getAttribute('aria-pressed'), 'true', `${browserName}: ${name} in a ${layout}`)
         const by = view.getByRole('combobox', { name: 'Group by' })
         if (layout !== 'board') {
-          assert.equal(await by.inputValue(), '', `${browserName}: ${name}'s ${layout} groups by nothing at first`)
+          assert.equal(await chosen(by), '', `${browserName}: ${name}'s ${layout} groups by nothing at first`)
         }
-        await by.selectOption({ label: field.label })
-        await page.waitForURL((u) => u.searchParams.get('by') === field.key)
+        // A board already grouped by the field keeps it: choosing it again
+        // changes nothing, as the browser's own select did not.
+        if ((await chosen(by)) !== field.key) {
+          await choose(by, { label: field.label })
+          await page.waitForURL((u) => u.searchParams.get('by') === field.key)
+        }
+
         await view.getByRole('heading', { name: 'View', exact: true }).hover()
         await groups(page, name, layout, want, `${browserName} ${name} ${layout} by ${field.key}`)
       }
@@ -218,7 +224,8 @@ eachBrowser((browserName, launch) => {
       await page.screenshot({ path: `${shots}/files-${browserName}.png` })
 
       // None draws the rows as one again.
-      await panel(page).getByRole('combobox', { name: 'Group by' }).selectOption({ label: 'None' })
+      await choose(panel(page).getByRole('combobox', { name: 'Group by' }), { label: 'None' })
+
       await page.waitForURL((u) => !u.searchParams.has('by'))
       for (let tries = 0; tries < 60 && (await drawn(page, 'files', 'feed')).length > 0; tries++) {
         await page.waitForTimeout(250)

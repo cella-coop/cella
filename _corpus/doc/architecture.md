@@ -1887,7 +1887,10 @@ Svelte or SvelteKit form: `on:event`, `<slot>`, `use:`, `{@const}`,
 made by `createContext` alone and reached through a `use<Name>` hook,
 `$app/stores`, `$lib`, `$env` or `invalidateAll`, nor `{@html}`; and no
 rule of a stylesheet or a `<style>` sets `outline: none` without drawing
-`--focus` as its box-shadow. No route of the shell has a
+`--focus` as its box-shadow; and, never native components, no `.svelte`
+file of the org app draws the browser's own `<select>`, nor an `<input>`
+of type date, datetime-local, month, week, checkbox or radio, which the
+UI core's `Select`, date field and `Checkbox` replace. No route of the shell has a
 `+page.server.ts` or a `+layout.server.ts`, nor a `load` in a
 `+page.ts` or `+layout.ts`: a page reads through queries and writes
 through forms, a redirect is the server hook's, and what stays on the
@@ -2140,7 +2143,11 @@ scope's timezone ([the notary](../../apps/org/core/notary/index.md#settings)).
 
 The UI core, `@cella/org-ui`, holds the tokens and every component the
 slices compose ([its doc](../../apps/org/core/ui/index.md)); a slice's
-blocks style nothing themselves.
+blocks style nothing themselves. **Never native components**: every
+control is the UI core's own, on-brand and accessible by keyboard and
+assistive technology in every browser alike, never the browser's select,
+date picker or checkbox.
+
 
 ### The lens
 

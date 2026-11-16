@@ -21,6 +21,7 @@ import { page as read, type Source } from '@cella/org-db'
 import { period } from '@cella/org-ui/models'
 import { source } from '#lib/server/slices.ts'
 import { eachBrowser, serve, signIn } from './browser.ts'
+import { choose, chosen } from './controls.ts'
 
 const camille = 'camille@lanterne.example'
 const shots = process.env.SHOTS ?? '/tmp/cella-colour-shots'
@@ -142,8 +143,8 @@ eachBrowser((browserName, launch) => {
         // Colour by the circle in the View panel: the address takes it.
         const view = panel(page)
         const by = view.getByRole('combobox', { name: 'Colour by' })
-        assert.equal(await by.inputValue(), '', `${at}: the calendar is coloured by nothing at first`)
-        await by.selectOption({ label: 'Circle' })
+        assert.equal(await chosen(by), '', `${at}: the calendar is coloured by nothing at first`)
+        await choose(by, { label: 'Circle' })
         await page.waitForURL((u) => u.searchParams.get('by') === 'circle')
         assert.equal(page.url().includes('at=2026-10-01'), true, `${at}: where the viewer is stays`)
 
@@ -170,11 +171,12 @@ eachBrowser((browserName, launch) => {
         // A reload of the address draws the same.
         await page.reload()
         await page.waitForLoadState('networkidle')
-        assert.equal(await panel(page).getByRole('combobox', { name: 'Colour by' }).inputValue(), 'circle', `${at}: the reload keeps the grouping`)
+        assert.equal(await chosen(panel(page).getByRole('combobox', { name: 'Colour by' })), 'circle', `${at}: the reload keeps the grouping`)
         await check('reloaded')
 
         // None takes the colours away.
-        await panel(page).getByRole('combobox', { name: 'Colour by' }).selectOption({ label: 'None' })
+        await choose(panel(page).getByRole('combobox', { name: 'Colour by' }), { label: 'None' })
+
         await page.waitForURL((u) => !u.searchParams.has('by'))
         for (let tries = 0; tries < 60 && (await page.locator('.calendar .legend').count()) > 0; tries++) {
           await page.waitForTimeout(250)

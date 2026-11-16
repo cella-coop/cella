@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Column } from '../models/view.ts'
-  import { opens, under } from '../models/query.ts'
+  import { opens, under, type Grouping } from '../models/query.ts'
   import { focused, scroller } from '../models/keys.ts'
   import { useSection } from '../hooks/useSection.ts'
   import SortAscending from 'phosphor-svelte/lib/SortAscending'
@@ -39,7 +39,7 @@
     sorted?: { key: string; dir: 'ascending' | 'descending' } | null
     onsort?: (key: string) => void
     empty?: string
-    group?: { by: Column; counts: Record<string, number>; month?: boolean }
+    group?: Grouping
   } = $props()
 
   const section = useSection()
@@ -70,29 +70,42 @@
       <tbody>
         {#each rows as row, i (row.id)}
           {const link = $derived(href?.(row))}
+          {const value = $derived(group ? under(row, group.by.key, group.month) : '')}
           {#if group && opens(rows, i, group.by.key, group.month)}
-            {const value = $derived(under(row, group.by.key, group.month))}
             <tr class="group">
-              <th colspan={columns.length} scope="colgroup"><Group by={group.by} {row} {value} month={group.month} count={group.counts[value] ?? 0} /></th>
+              <th colspan={columns.length} scope="colgroup">
+                <Group
+                  by={group.by}
+                  {row}
+                  {value}
+                  month={group.month}
+                  count={group.counts[value] ?? 0}
+                  collapsed={group.collapsed.has(value)}
+                  oncollapse={() => group.oncollapse(value)}
+                  oncreate={group.oncreate}
+                />
+              </th>
             </tr>
           {/if}
-          <tr
-            class:active={i === active}
-            class:linked={link}
-            tabindex={stop < 0 ? undefined : i === stop ? 0 : -1}
-            onfocusin={() => onfocusrow?.(i)}
-            {@attach focused(i === active)}
-          >
-            {#each columns as c, j (c.key)}
-              <td class:end={end(c)}>
-                {#if link && j === 0}
-                  <a href={link} class="stretched" tabindex={stop < 0 ? undefined : -1}><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} /></a>
-                {:else}
-                  <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} />
-                {/if}
-              </td>
-            {/each}
-          </tr>
+          {#if !group || !group.collapsed.has(value)}
+            <tr
+              class:active={i === active}
+              class:linked={link}
+              tabindex={stop < 0 ? undefined : i === stop ? 0 : -1}
+              onfocusin={() => onfocusrow?.(i)}
+              {@attach focused(i === active)}
+            >
+              {#each columns as c, j (c.key)}
+                <td class:end={end(c)}>
+                  {#if link && j === 0}
+                    <a href={link} class="stretched" tabindex={stop < 0 ? undefined : -1}><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} /></a>
+                  {:else}
+                    <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} />
+                  {/if}
+                </td>
+              {/each}
+            </tr>
+          {/if}
         {/each}
       </tbody>
     </table>

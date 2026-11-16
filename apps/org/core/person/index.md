@@ -1,6 +1,6 @@
 +++
 title = "Person"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 Everyone the co-op knows, by the address they sign with, and their
@@ -295,12 +295,16 @@ The `people` collection in Governance: everyone the co-op knows, by name.
 Each feat that holds what a person holds adds its chip, a badge column to filter and group by: Member,
 the membership's status, and Worker, employed or left. The New form is the
 feats': an invitation and a hire, each under its title. A person's
-page holds their address on Overview and their devices on a tab of
-their own, Devices, with the profile write on it; the
-feats add their membership's and employment's properties and tabs
-(Joining, Own and decide, Powers, Employment), and the grafts joining
-them the rest, each in the tab of the slice it joins or in one of its
-own: Records, Tasks and Expenses. The
+page has four tabs, which this core chooses and the feats and grafts
+on a person fill ([record pages](../ui/index.md#components)): Overview,
+their address and the properties every slice adds; Membership, the
+steps joining asks and what a member owns and decides; Work, their
+employment, timesheets, payslips and records on file; and Authority,
+their seats, every power they hold and by what, and their devices, with
+the profile write in the header. A tab no slice fills, as Work in a
+scope without employment, is not shown. Their tasks, expenses and every
+other collection whose rows name them are jumps in Related, each
+opening that collection filtered to them. The
 `devices` collection, in Settings under Personal, lists every device,
 current ones first. On a person's
 own page the device their session signs with is marked as this device,

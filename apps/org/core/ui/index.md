@@ -400,21 +400,43 @@ draws.
   them (`stamps`), the dates and actors of its first and latest
   entries, which the item's read gives beside its data, but those its
   slices' properties already name, as a task's Created; and under them
-  Related; nothing in the drawer is boxed. A record whose structured
+  Related; nothing in the drawer is boxed. Related lists first its
+  jumps: each other collection whose rows name the record, by the
+  collection's icon and name and how many of its rows the reader sees
+  that name it, through their lens, counted in the core read's one
+  statement as any other count is; the line opens that collection
+  filtered to the record, the condition in the address (`?where=`) and
+  the view panel's Filter showing it. A row names a person by a person
+  column's address, a circle by a circle column's id, and any other
+  record by a column that says it is `of` that record's collection, as
+  a task's hidden project id is a project's; never by who created or
+  last updated it, nor in a collection of home or Settings, and a
+  collection holding none of its rows is no jump. Then the records its
+  slices link to (`related`). A record whose structured
   data is central to it puts that data in a tab of its own after the
   first (`tabs`): a motion's Stances and Effects, a meeting's Agenda, a
-  circle's Roles, Seats and Policies, a document's Versions, a report's
-  Figures, an invoice's Lines, a period's Entries, a project's
-  Milestones and Budget, a contact's Invoices, a person's Employment; the first tab is the
+  circle's Roles, Policies and Settings, a document's Versions, a report's
+  Figures, an invoice's Lines, a period's Entries, a project's Tasks,
+  Milestones and Budget, a contact's Projects and Invoices, a person's
+  Membership, Work and Authority; the first tab is the
   content and its Activity, and a kind with no free-form content shows
   its overview's blocks there. The header's crumb names the record by
   its kind and reference (`subtitle`, its id), never a sentence about
   it, which its properties and content say. Tabs show as
   pills in the header when there are two or more, the open one in the
-  URL (`?tab=`); a block sits in the tab it names (`{ tab, block }`), a
-  bare one in the first, and an extension's blocks join the owner's
-  tabs or add their own. A tab earns its place only as a genuinely
-  different view. Every collection's item page is drawn by `Detail`
+  URL (`?tab=`). **A page shows at most four tabs, and the slice that
+  owns the record's collection chooses them and their order**: only the
+  owner's page declares `tabs`, and an extension's blocks, a core
+  feat's, a feat's or a graft's alike, sit in a tab the owner names
+  (`{ tab, block }`), a bare one in the first; a tab past the first
+  that holds no block, as one whose filler is pruned, is not shown. An
+  extender the owner gives no tab is a jump in Related, as a person's
+  tasks and expenses are. A tab earns its place only as a genuinely
+  different view of the record, as a project's tasks are. The tabs
+  check (`tools/tabs.mjs`, run by `cella check feats`) refuses a page
+  declaring a fifth tab, an extension declaring a tab, and a block in a
+  tab its owner does not name, each by the slice, the record and what
+  would fix it. Every collection's item page is drawn by `Detail`
   alone, and the ui check refuses an item page that frames itself. Esc
   goes back to the collection.
 - `Card` (a borderless card raised on the panel, in the drawer or the

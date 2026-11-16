@@ -1,6 +1,6 @@
 +++
 title = "Lanterne"
-updated = 2026-11-14
+updated = 2026-11-16
 +++
 
 # Lanterne
@@ -374,7 +374,7 @@ buyer's grant and change below.
    2 000 € to hers, 1 200 € on Brand's bills, each link saying how it
    narrows the one above; each link opens its own page, the root's
    listing what was issued under it.
-2. **A person's powers.** As Sofia, her own page's Powers tab: every
+2. **A person's powers.** As Sofia, her own page's Authority tab: every
    power she holds and by what, Approve bill by her tenure of the print
    buyer, up to 1 200 € over Brand's, each mandate's line opening its
    page; and her rights as a member, an employee and a person.

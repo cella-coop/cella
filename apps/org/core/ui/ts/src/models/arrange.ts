@@ -84,80 +84,139 @@ export function toggled(items: Placed[], value: string, on: boolean): Placed[] {
   return on ? [...without, { value, group: null }] : without
 }
 
-// Where a choice may move by `by`, -1 up or 1 down: past its neighbour in
-// its accordion, and a choice under none past the choice or the whole
-// accordion beside it; none where it is at the end of either.
-function target(items: Placed[], at: number, by: -1 | 1): number | null {
-  const p = items[at]
-  const next = at + by
-  if (!p || next < 0 || next >= items.length) {
-    return null
+// What a drag lifts in an arrangement: one choice, on show or not, or an
+// accordion with its choices.
+export type Lifted = { kind: 'choice'; value: string } | { kind: 'accordion'; group: string }
+
+// Where a lifted thing may land: at an index of the choices left once it
+// is lifted, under an accordion or none, or among the choices not shown.
+// One gap may be two places, the end of an accordion and the top level
+// just after it, which the depth tells apart.
+export type Target = { kind: 'at'; group: string | null; index: number } | { kind: 'off' }
+// A row the arrangement draws, in order: a place a lifted thing may land
+// on (`at`, its index among the targets), an accordion's head, which is
+// `empty` while it was just made and holds nothing, or a choice on show,
+// in an accordion or at the top level.
+export type Row =
+  | { kind: 'place'; at: number; target: Target; depth: 0 | 1 }
+  | { kind: 'head'; group: string; empty: boolean }
+  | { kind: 'choice'; placed: Placed; depth: 0 | 1 }
+
+// The arrangement as it is drawn, its places among its rows while
+// something is lifted, and the places a lifted thing may land on, in the
+// order drawn, with the one it was lifted from. A choice lands before any
+// choice, at the end of any accordion, between the runs at the top level,
+// in an accordion just made and still empty (`empty`, drawn last), or
+// among those not shown, the last target; an accordion lands between the
+// runs at the top level, or among those not shown, which turns all its
+// choices off. A choice alone in its accordion keeps that accordion as a
+// place while it is lifted, so it may be dropped back.
+export function drawn(items: Placed[], lifted: Lifted | null, empty: string[] = []): { rows: Row[]; targets: Target[]; from: number } {
+  const rows: Row[] = []
+  const out: Target[] = []
+  let from = -1
+  let idx = 0
+  const place = (t: Target & { kind: 'at' }) => {
+    if (!lifted) {
+      return
+    }
+    const last = out.at(-1)
+    if (!(last?.kind === 'at' && last.group === t.group && last.index === t.index)) {
+      rows.push({ kind: 'place', at: out.length, target: t, depth: t.group === null ? 0 : 1 })
+      out.push(t)
+    }
   }
-  if (p.group !== null) {
-    return items[next]!.group === p.group ? next : null
+  const choosing = lifted?.kind === 'choice' ? lifted.value : null
+  for (const run of runs(items)) {
+    if (run.group === null) {
+      const p = run.items[0]!.placed
+      if (p.value !== choosing) {
+        place({ kind: 'at', group: null, index: idx })
+        idx += 1
+      }
+      rows.push({ kind: 'choice', placed: p, depth: 0 })
+      continue
+    }
+    const whole = lifted?.kind === 'accordion' && lifted.group === run.group
+    if (whole) {
+      from = out.length
+    }
+    place({ kind: 'at', group: null, index: idx })
+    rows.push({ kind: 'head', group: run.group, empty: false })
+    for (const { placed } of run.items) {
+      if (placed.value === choosing) {
+        from = out.length
+      }
+      if (lifted?.kind !== 'accordion') {
+        place({ kind: 'at', group: run.group, index: idx })
+      }
+      rows.push({ kind: 'choice', placed, depth: 1 })
+      if (placed.value !== choosing && !whole) {
+        idx += 1
+      }
+    }
+    if (lifted?.kind !== 'accordion') {
+      place({ kind: 'at', group: run.group, index: idx })
+    }
   }
-  const beside = items[next]!.group
-  if (beside === null) {
-    return next
+  place({ kind: 'at', group: null, index: idx })
+  if (choosing !== null) {
+    const at = items.findIndex((p) => p.value === choosing)
+    if (at >= 0 && items[at]!.group === null) {
+      // A choice at the top level was where the gap it leaves is.
+      from = out.findIndex((t) => t.kind === 'at' && t.group === null && t.index === at)
+    }
   }
-  let end = next
-  while (items[end + by]?.group === beside) {
-    end += by
+  for (const g of empty) {
+    if (!items.some((p) => p.group === g)) {
+      rows.push({ kind: 'head', group: g, empty: true })
+      if (choosing !== null) {
+        place({ kind: 'at', group: g, index: idx })
+      }
+    }
   }
-  return end
+  if (lifted) {
+    out.push({ kind: 'off' })
+  }
+  return { rows, targets: out, from: from < 0 ? out.length - 1 : from }
 }
 
-export const movable = (items: Placed[], at: number, by: -1 | 1): boolean => target(items, at, by) !== null
+// The places a lifted thing may land on, as `drawn` draws them, and the
+// one it was lifted from.
+export function targets(items: Placed[], lifted: Lifted, empty: string[] = []): { targets: Target[]; from: number } {
+  const d = drawn(items, lifted, empty)
+  return { targets: d.targets, from: d.from }
+}
 
-// A choice moved up or down, as `movable` allows.
-export function moved(items: Placed[], at: number, by: -1 | 1): Placed[] {
-  const to = target(items, at, by)
-  if (to === null) {
-    return items
+// The arrangement once the lifted thing lands on a target: a choice at
+// its index under the target's accordion, or off; an accordion's choices
+// together at the index, or all off.
+export function landed(items: Placed[], lifted: Lifted, target: Target): Placed[] {
+  const moving = lifted.kind === 'choice' ? [{ value: lifted.value, group: null }] : items.filter((p) => p.group === lifted.group)
+  const keys = new Set(moving.map((p) => p.value))
+  const rest = items.filter((p) => !keys.has(p.value))
+  if (target.kind === 'off') {
+    return rest
   }
-  const out = items.filter((_, i) => i !== at)
-  out.splice(to, 0, items[at]!)
-  return out
+  const placed = lifted.kind === 'choice' ? [{ value: lifted.value, group: target.group }] : moving
+  return gathered([...rest.slice(0, target.index), ...placed, ...rest.slice(target.index)])
 }
 
-// The bounds of a run, its first choice and its last.
-function bounds(rs: Run[], i: number): [number, number] {
-  const r = rs[i]!
-  return [r.items[0]!.at, r.items.at(-1)!.at]
-}
-
-export const shiftable = (items: Placed[], group: string, by: -1 | 1): boolean => {
-  const rs = runs(items)
-  const i = rs.findIndex((r) => r.group === group)
-  return i >= 0 && i + by >= 0 && i + by < rs.length
-}
-
-// An accordion moved as a whole past the run beside it.
-export function shifted(items: Placed[], group: string, by: -1 | 1): Placed[] {
-  const rs = runs(items)
-  const i = rs.findIndex((r) => r.group === group)
-  if (!shiftable(items, group, by)) {
-    return items
+// A target in words, as a keyboard drag announces it: in which accordion
+// and where, at the top level after what, or not shown.
+export function described(items: Placed[], lifted: Lifted, target: Target, named: (value: string) => string): string {
+  if (target.kind === 'off') {
+    return lifted.kind === 'choice' ? 'Not shown' : `Not shown, with every feature of ${lifted.group}`
   }
-  const [a, b] = by < 0 ? [i - 1, i] : [i, i + 1]
-  const [s, m] = bounds(rs, a)
-  const [n, e] = bounds(rs, b)
-  return [...items.slice(0, s), ...items.slice(n, e + 1), ...items.slice(s, m + 1), ...items.slice(e + 1)]
-}
-
-// A choice put under the accordion named, at its end, or, where there is
-// none of that name, into one of its own where it stands, or under none
-// where the name is blank.
-export function regrouped(items: Placed[], at: number, name: string): Placed[] {
-  const group = name.trim() || null
-  const p = items[at]
-  if (!p) {
-    return items
+  const keys = new Set(lifted.kind === 'choice' ? [lifted.value] : items.filter((p) => p.group === lifted.group).map((p) => p.value))
+  const rest = items.filter((p) => !keys.has(p.value))
+  if (target.group !== null) {
+    const first = rest.findIndex((p) => p.group === target.group)
+    const count = rest.filter((p) => p.group === target.group).length
+    return `In ${target.group}, position ${first < 0 ? 1 : target.index - first + 1} of ${count + 1}`
   }
-  const rest = items.filter((_, i) => i !== at)
-  const last = group === null ? -1 : rest.findLastIndex((q) => q.group === group)
-  const out = last < 0 ? items.map((q, i) => (i === at ? { ...q, group } : q)) : [...rest.slice(0, last + 1), { ...p, group }, ...rest.slice(last + 1)]
-  return gathered(out)
+  const before = rest[target.index - 1]
+  return before ? `At the top level, after ${before.group ?? named(before.value)}` : 'At the top level, first'
 }
 
 // An accordion renamed on each of its choices, or dissolved where the
@@ -166,3 +225,9 @@ export function renamed(items: Placed[], group: string, name: string): Placed[] 
   const to = name.trim() || null
   return gathered(items.map((p) => (p.group === group ? { ...p, group: to } : p)))
 }
+
+// A lifted thing by the key its row carries: `c:` a choice's value, `a:`
+// an accordion's name.
+export const keyOf = (l: Lifted) => (l.kind === 'choice' ? `c:${l.value}` : `a:${l.group}`)
+export const unkeyed = (key: string | null): Lifted | null =>
+  key?.startsWith('c:') ? { kind: 'choice', value: key.slice(2) } : key?.startsWith('a:') ? { kind: 'accordion', group: key.slice(2) } : null

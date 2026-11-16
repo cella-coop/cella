@@ -27,6 +27,25 @@ export class DragState {
   drag: Drag = $state(idle())
   carry: Carry = $state(empty())
   announcement = $state('')
+  // The key of the item lifted, where its list lands it on places it
+  // names (`placing`) rather than between its items.
+  key: string | null = $state(null)
+
+  // Whether a list that lands its items on places is carrying one.
+  placing(list: string) {
+    return this.drag.list === list && this.key !== null
+  }
+
+  // Whether this list's lifted item would land on place `i`, somewhere
+  // other than where it was.
+  aiming(list: string, i: number) {
+    return this.placing(list) && this.drag.to === i && this.drag.to !== this.drag.from
+  }
+
+  holding(list: string, key: string) {
+    return this.placing(list) && this.key === key
+  }
+
 
   // Whether a carried item would land in this list.
   aimed(group: string, list: string) {

@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   import { browser } from '$app/env'
   import { page as here } from '$app/state'
-  import { Failed, Frame, Skeleton, useWrites } from '@cella/org-ui'
+  import { Basket, Failed, Frame, ProposeBasket, Skeleton, icons, useBasket, useShell, useWrites, type Panel } from '@cella/org-ui'
   import { page as read } from '#lib/remote/settings.remote.ts'
   import { settings } from '#lib/slices.ts'
   import { onSettings } from '#lib/writes.ts'
@@ -13,6 +14,15 @@
   // Its writes are posted to the page's, and a save that took or reached
   // a verdict reads the page again.
   useWrites().serve(() => onSettings(() => name, true, () => id))
+  // The changes to propose, gathered across the settings pages and kept
+  // in the session's cookie, which the browser alone reads; the sidebar
+  // opens on them as one is gathered.
+  const shell = useShell()
+  const basket = useBasket(
+    () => ({ page: name, id }),
+    () => shell.choose('basket'),
+  )
+  onMount(() => basket.load())
   // What the skeleton names while the page loads.
   const opening = $derived(settings(name))
   // The page as its slice reads it for the signed-in person.
@@ -23,19 +33,27 @@
   <Skeleton title={opening?.title} />
 {/snippet}
 
+{#snippet gathered()}
+  <Basket />
+{/snippet}
+
 <!-- A settings page in the one page frame, drawn by its slice's block,
-     as the data names it, never the address. -->
+     as the data names it, never the address; while changes wait to be
+     proposed, the sidebar beside it holds them, and Review proposes a
+     circle's as one motion. -->
 <svelte:boundary pending={browser ? loading : undefined}>
   {#snippet failed(error)}
     <Failed {error} />
   {/snippet}
   {const data = $derived(await one)}
   {const shown = $derived(settings(data.name))}
+  {const panels = $derived<Panel[]>(basket.count ? [{ id: 'basket', label: 'Changes to propose', icon: icons.Scales, body: gathered }] : [])}
   {#if shown}
     {#key `${data.name}/${data.id}`}
-      <Frame title={shown.title} icon={shown.icon} caption={shown.caption}>
+      <Frame title={shown.title} icon={shown.icon} caption={shown.caption} {panels}>
         <shown.block data={data.data} viewer={data.viewer} theme={data.theme} />
       </Frame>
     {/key}
   {/if}
 </svelte:boundary>
+<ProposeBasket />

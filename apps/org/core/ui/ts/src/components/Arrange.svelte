@@ -1,101 +1,139 @@
 <script lang="ts">
-  import CaretDown from 'phosphor-svelte/lib/CaretDown'
-  import CaretUp from 'phosphor-svelte/lib/CaretUp'
-  import { listed, movable, moved, regrouped, renamed, runs, shiftable, shifted, spell, toggled, type Placed } from '../models/arrange.ts'
-  import Checkbox from './Checkbox.svelte'
+  import type { Snippet } from 'svelte'
+  import Plus from 'phosphor-svelte/lib/Plus'
+  import { drawn, keyOf, landed, listed, described, renamed, spell, unkeyed, type Lifted } from '../models/arrange.ts'
+  import { placing } from '../attachments/placing.ts'
+  import { useArrange } from '../hooks/useArrange.ts'
+  import { useDrag } from '../hooks/useDrag.ts'
+  import DragHandle from './DragHandle.svelte'
   import Icon from './Icon.svelte'
 
-  // An arrangement, a setting's field where it declares its choices: every
-  // choice with a toggle, those on first in their order, each under its
-  // accordion where it has one, and the rest after them. A choice on moves
-  // up or down, its accordion is named in a field of its own, and an
-  // accordion's heading renames it and moves it as a whole. Its value is
-  // one listing (`models/arrange.ts`), handed back by `onchange`.
+  // An arrangement, a setting's field where it declares its choices: the
+  // tree of those on show, in their order, each at the top level or in an
+  // accordion, and under it the choices not shown. Where a choice sits is
+  // all there is to say of it: it is dragged into an accordion or out of
+  // one, along the tree, or among those not shown, and an accordion is
+  // dragged as a whole, by the pointer or by the keyboard (`placing`).
+  // An accordion's name is its heading, which renames it; New accordion
+  // makes an empty one to drag choices into. Its value is one listing
+  // (`models/arrange.ts`), handed back by `onchange` once a drop lands.
   let {
     label,
     value,
     choices,
     onchange,
+    hint,
   }: {
     label: string
     value: string
     choices: { value: string; label: string }[]
     onchange: (value: string) => void
+    // What the setting says beside its label, as who changes it.
+    hint?: Snippet
   } = $props()
 
   const id = $props.id()
+  const list = `arrange-${id}`
+  const drag = useDrag()
+  const state = useArrange()
   const items = $derived(listed(value))
-  const shown = $derived(runs(items))
+  const lifted = $derived(drag.placing(list) ? unkeyed(drag.key) : null)
+  const layout = $derived(drawn(items, lifted, state.empty))
   const off = $derived(choices.filter((c) => !items.some((p) => p.value === c.value)))
+  const groups = $derived([...new Set(items.flatMap((p) => (p.group === null ? [] : [p.group])))])
   const named = (v: string) => choices.find((c) => c.value === v)?.label ?? v
-  const set = (next: Placed[]) => onchange(spell(next))
+  const called = (l: Lifted) => (l.kind === 'choice' ? named(l.value) : `the ${l.group} accordion`)
+
+  function lift(key: string) {
+    const l = unkeyed(key)!
+    const d = drawn(items, l, state.empty)
+    return { from: d.from, length: d.targets.length, label: called(l) }
+  }
+
+  function describe(to: number) {
+    const l = lifted
+    const t = l && layout.targets[to]
+    return l && t ? described(items, l, t, named) : ''
+  }
+
+  function onplace(key: string, to: number) {
+    const l = unkeyed(key)!
+    const t = drawn(items, l, state.empty).targets[to]
+    if (!t) {
+      return
+    }
+    if (t.kind === 'at' && t.group !== null) {
+      state.filled(t.group)
+    }
+    onchange(spell(landed(items, l, t)))
+  }
+
+  const offAt = $derived(layout.targets.length - 1)
 </script>
 
-{#snippet on(placed: Placed, at: number)}
-  {const name = $derived(named(placed.value))}
-  <li class="choice">
-    <span class="toggle"><Checkbox role="switch" bind:checked={() => true, () => set(toggled(items, placed.value, false))}>{name}</Checkbox></span>
-    <input
-      class="group"
-      aria-label="Accordion of {name}"
-      placeholder="No accordion"
-      value={placed.group ?? ''}
-      onchange={(e) => set(regrouped(items, at, e.currentTarget.value))}
-    />
-    <span class="moves">
-      <button type="button" aria-label="Move {name} up" title="Move {name} up" disabled={!movable(items, at, -1)} onclick={() => set(moved(items, at, -1))}>
-        <Icon icon={CaretUp} />
-      </button>
-      <button type="button" aria-label="Move {name} down" title="Move {name} down" disabled={!movable(items, at, 1)} onclick={() => set(moved(items, at, 1))}>
-        <Icon icon={CaretDown} />
-      </button>
-    </span>
-  </li>
-{/snippet}
-
-<fieldset class="arrange" aria-describedby="{id}-how">
-  <legend class="label">{label}</legend>
-  <p class="how" id="{id}-how">Those on show in this order, each under its accordion where it names one.</p>
-  {#if items.length}
-    <ul class="on">
-      {#each shown as run (run.group ?? `-${run.items[0]?.placed.value}`)}
-        {#if run.group === null}
-          {@render on(run.items[0]!.placed, run.items[0]!.at)}
-        {:else}
-          {const group = run.group}
-          <li class="accordion">
-            <div class="head">
-              <input class="name" aria-label="Accordion {group}" value={group} onchange={(e) => set(renamed(items, group, e.currentTarget.value))} />
-              <span class="moves">
-                <button type="button" aria-label="Move the {group} accordion up" title="Move the {group} accordion up" disabled={!shiftable(items, group, -1)} onclick={() => set(shifted(items, group, -1))}>
-                  <Icon icon={CaretUp} />
-                </button>
-                <button type="button" aria-label="Move the {group} accordion down" title="Move the {group} accordion down" disabled={!shiftable(items, group, 1)} onclick={() => set(shifted(items, group, 1))}>
-                  <Icon icon={CaretDown} />
-                </button>
-              </span>
-            </div>
-            <ul>
-              {#each run.items as item (item.placed.value)}
-                {@render on(item.placed, item.at)}
-              {/each}
-            </ul>
-          </li>
-        {/if}
-      {/each}
-    </ul>
-  {:else}
-    <p class="none">None on.</p>
-  {/if}
-  {#if off.length}
-    <ul class="off">
-      {#each off as c (c.value)}
-        <li class="choice">
-          <span class="toggle"><Checkbox role="switch" bind:checked={() => false, () => set(toggled(items, c.value, true))}>{c.label}</Checkbox></span>
+<fieldset
+  class="arrange"
+  aria-describedby="{id}-how"
+  {@attach placing(drag, { list, lift, describe, onplace })}
+>
+  <legend class="label"><span>{label}</span>{@render hint?.()}</legend>
+  <p class="how" id="{id}-how">Drag a feature by its grip, or press Space on it and move it with the arrow keys: into an accordion or out of one, along the list, or down to those not shown.</p>
+  <ul class="tree" aria-label="{label} on show">
+    {#each layout.rows as row, i (row.kind === 'place' ? `p${row.at}` : row.kind === 'head' ? `h:${row.group}` : `c:${row.placed.value}`)}
+      {#if row.kind === 'place'}
+        <li class="place" class:inner={row.depth === 1} class:on={drag.aiming(list, row.at)} data-drop-place={row.at} aria-hidden="true"></li>
+      {:else if row.kind === 'head'}
+        {const group = $derived(row.group)}
+        <li
+          class="row head"
+          data-drag-item={row.empty ? undefined : list}
+          data-drag-key={row.empty ? undefined : keyOf({ kind: 'accordion', group })}
+          class:lifted={drag.holding(list, keyOf({ kind: 'accordion', group }))}
+        >
+          {#if !row.empty}<DragHandle label="the {group} accordion" />{:else}<span class="grip"></span>{/if}
+          <input
+            class="name"
+            aria-label="Name of the {group} accordion"
+            value={group}
+            onchange={(e) => (row.empty ? state.rename(group, e.currentTarget.value) : onchange(spell(renamed(items, group, e.currentTarget.value))))}
+          />
+          {#if row.empty}<span class="hollow">Empty: drag a feature here</span>{/if}
         </li>
-      {/each}
-    </ul>
-  {/if}
+      {:else}
+        {const v = $derived(row.placed.value)}
+        <li
+          class="row choice"
+          class:inner={row.depth === 1}
+          class:lifted={drag.holding(list, keyOf({ kind: 'choice', value: v })) || (lifted?.kind === 'accordion' && lifted.group === row.placed.group)}
+          data-drag-item={list}
+          data-drag-key={keyOf({ kind: 'choice', value: v })}
+         
+        >
+          <DragHandle label={named(v)} />
+          <span class="text">{named(v)}</span>
+          {#if row.placed.group}<span class="visually-hidden">, in {row.placed.group}</span>{/if}
+        </li>
+      {/if}
+    {:else}
+      <li class="none">None on show: drag a feature up here.</li>
+    {/each}
+  </ul>
+  <button type="button" class="make" onclick={() => state.make(groups)}><Icon icon={Plus} /> New accordion</button>
+  <div class="off" class:on={drag.aiming(list, offAt)} data-drop-zone={lifted ? offAt : undefined}>
+    <p class="caption" id="{id}-off">Not shown</p>
+    {#if off.length}
+      <ul aria-labelledby="{id}-off">
+        {#each off as c (c.value)}
+          <li class="row choice" data-drag-item={list} data-drag-key={keyOf({ kind: 'choice', value: c.value })} class:lifted={drag.holding(list, keyOf({ kind: 'choice', value: c.value }))}>
+            <DragHandle label={c.label} />
+            <span class="text">{c.label}</span>
+          </li>
+        {/each}
+      </ul>
+    {:else}
+      <p class="none">Every feature is on show.</p>
+    {/if}
+  </div>
 </fieldset>
 
 <style>
@@ -108,12 +146,16 @@
     min-width: 0;
   }
   .label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
     padding: 0;
     font-size: var(--text-xs);
     color: var(--text-muted);
   }
   .how,
-  .none {
+  .none,
+  .hollow {
     margin: 0;
     font-size: var(--text-xs);
     color: var(--text-subtle);
@@ -123,66 +165,101 @@
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 2px;
   }
-  .off {
-    padding-top: var(--space-2);
-    border-top: 1px solid var(--line);
-  }
-  .accordion {
-    display: grid;
-    gap: 2px;
-  }
-  .accordion > ul {
-    margin-inline-start: var(--space-3);
-    padding-inline-start: var(--space-2);
-    border-inline-start: 1px solid var(--line);
-  }
-  .head,
-  .choice {
+  .row {
     display: flex;
     align-items: center;
     gap: var(--space-2);
     min-height: 2rem;
-  }
-  .toggle {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
+    padding-inline: var(--space-1);
+    border-radius: var(--radius-control);
     font-size: var(--text-sm);
+    background: var(--surface, transparent);
+  }
+  .row:hover {
+    background: var(--hover);
+  }
+  .row.inner {
+    margin-inline-start: var(--space-4);
+    padding-inline-start: var(--space-2);
+    border-inline-start: 1px solid var(--line);
+    border-radius: 0 var(--radius-control) var(--radius-control) 0;
+  }
+  .row.lifted {
+    opacity: 0.4;
+  }
+  .head .name {
+    flex: 1;
+    min-width: 0;
+    padding: 2px var(--space-1);
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    background: none;
+    font: inherit;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .head .name:hover {
+    border-color: var(--line);
+  }
+  .grip {
+    width: 1.25rem;
+  }
+  .text {
+    flex: 1;
     min-width: 0;
   }
-  .name {
-    flex: 1;
-    font-size: var(--text-sm);
-    font-weight: 600;
+  /* A place a lifted thing may land: no room until it is the one aimed
+     at, then the one line, indented as deep as it would sit. */
+  .place {
+    height: 0;
+    margin: 0;
+    position: relative;
   }
-  .group {
-    width: 9rem;
-    font-size: var(--text-xs);
+  .place.on::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: -1px;
+    height: 2px;
+    border-radius: var(--radius-pill);
+    background: var(--accent-border);
   }
-  .moves {
-    display: flex;
+  .place.inner {
+    margin-inline-start: var(--space-4);
   }
-  .moves button {
-    display: grid;
-    place-items: center;
-    width: 1.6rem;
-    height: 1.6rem;
-    padding: 0;
+  .make {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 2px var(--space-2);
     border: none;
     border-radius: var(--radius-control);
     background: none;
+    font-size: var(--text-xs);
     color: var(--text-muted);
     cursor: pointer;
   }
-  .moves button:hover:not(:disabled) {
+  .make:hover {
     background: var(--hover);
     color: var(--text);
   }
-  .moves button:disabled {
-    opacity: 0.3;
-    cursor: default;
+  .off {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-2);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius-control);
+  }
+  .off.on {
+    border-color: var(--accent-border);
+    background: var(--hover);
+  }
+  .caption {
+    margin: 0;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--text-muted);
   }
 </style>

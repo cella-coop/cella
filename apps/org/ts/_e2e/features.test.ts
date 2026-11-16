@@ -1,22 +1,25 @@
 // The features scenario, in every browser, light and dark, on a seeded
 // Lanterne through the dev server: Léa, a member of Web, opens Web's
 // Settings tab and follows it to Web's features page,
-// `/settings/features/web`, every installed feature with a toggle, Web's
-// on in its order, and no Save button. She turns Invoice on, and the
-// dialog offers the motion at once; Cancel takes the change back. She
-// turns it on again; the dialog says why no write of hers changes Web's
-// features and offers Web's own `arrange-features` motion, since Web
-// holds the power over itself, carrying the listing with Invoice at its
-// end. She proposes it, every member of Web consents, and on its
-// deadline she closes it: after a reload the page reads Web's new set;
-// and Operations' page shows its features under its accordions. Then
-// Yusuf, Web's lead, who holds `arrange-features` over Web by his seat,
-// turns Invoice off on the same page, which saves at once, with no
-// motion. `SHOTS` names where its screenshots go. Run by `cella test
-// e2e features`.
+// `/settings/features/web`: the tree of Web's features in its order, the
+// rest not shown, no toggle, no field naming an accordion and no Save
+// button, and beside the label the motion icon naming Web. By the
+// keyboard she lifts Invoice from those not shown with Space, moves it up
+// with an arrow, each place announced, and drops it at the end of the
+// tree: no dialog opens, and the change joins the changes to propose to
+// Web, since Web holds `arrange-features` over itself. She reviews it,
+// the diff marking Invoice added, and proposes Web's own motion carrying
+// the listing with Invoice at its end, whose page shows the diff on its
+// Overview; every member of Web consents, and on its deadline she closes
+// it: its Effects show the diff from what the close replaced, and the
+// page reads Web's new set; and Operations' page shows its features under its accordions.
+// Then Yusuf, Web's lead, who holds `arrange-features` over Web by his
+// seat, drags Invoice by the pointer down among those not shown, which
+// saves at once, with no motion. `SHOTS` names where its screenshots go.
+// Run by `cella test e2e features`.
 
 // browsers: one at a time: each browser changes Web's features by Web's motion and the scope's clock, which the others read
-// covers: membership-motion motion
+// covers: membership-motion motion core
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -28,7 +31,7 @@ import { carried, close } from '@cella/org-graft-membership-motion/api'
 import type { Deps, Done } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
 import { eachBrowser, serve, signIn } from './browser.ts'
-import { chosen } from './controls.ts'
+import { basket, chosen, review } from './controls.ts'
 
 const su = new pg.Client()
 let app: pg.Client | undefined
@@ -74,9 +77,23 @@ async function decided(motion: string) {
 
 // The features the page shows on, in its order, once it has drawn them.
 async function shown(page: Page) {
-  const on = page.locator('fieldset.arrange ul.on')
-  await on.getByRole('switch').first().waitFor()
-  return (await on.getByRole('switch').evaluateAll((els) => els.map((e) => e.textContent?.trim() ?? ''))).join(', ')
+  const tree = page.locator('fieldset.arrange ul.tree')
+  await tree.locator('li.choice').first().waitFor()
+  return (await tree.locator('li.choice .text').allTextContents()).map((t) => t.trim()).join(', ')
+}
+
+// Drags a feature's grip by the pointer onto a target, in small steps,
+// as a person's hand moves.
+async function drag(page: Page, feature: string, target: ReturnType<Page['locator']>) {
+  const grip = page.getByRole('button', { name: `Reorder ${feature}` })
+  const from = (await grip.boundingBox())!
+  const to = (await target.boundingBox())!
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2)
+  await page.mouse.down()
+  for (let i = 1; i <= 12; i++) {
+    await page.mouse.move(from.x + ((to.x + to.width / 2 - from.x) * i) / 12, from.y + ((to.y + to.height / 2 - from.y) * i) / 12)
+  }
+  await page.mouse.up()
 }
 
 before(async () => {
@@ -113,32 +130,35 @@ eachBrowser((name, launch) => {
           assert.equal(await page.getByRole('link', { name: 'Back to app' }).count(), 1, `${at}: Settings' sidebar stands`)
           const form = page.locator('form.settings')
           assert.equal(await shown(page), 'Project, Task, Timesheet, File, Contact', `${at}: Web's features on, in its order`)
-          assert.equal(await form.getByRole('switch', { name: 'Invoice' }).isChecked(), false, `${at}: an installed feature Web has not enabled is off`)
-          assert.equal(await form.getByRole('switch', { name: 'Circle' }).isChecked(), false, `${at}: core's collections are features too`)
-          assert.equal(await form.getByText('Web changes it by motion').count(), 1, `${at}: Web's own motion changes them`)
-          assert.equal(await form.getByRole('button', { name: 'Move Project up' }).isDisabled(), true, `${at}: the first moves up no further`)
+          const off = form.locator('fieldset.arrange .off')
+          assert.match((await off.textContent()) ?? '', /Not shown.*Invoice/s, `${at}: an installed feature Web does not show is among those not shown`)
+          assert.match((await off.textContent()) ?? '', /Circle/, `${at}: core's collections are features too`)
+          assert.equal(await form.getByRole('switch').count(), 0, `${at}: no toggles`)
+          assert.equal(await form.getByLabel(/^Accordion of/).count(), 0, `${at}: no field names a feature's accordion`)
+          assert.equal(await form.getByRole('button', { name: 'Web changes this by motion' }).count(), 1, `${at}: Web's own motion changes them, says the icon`)
+          assert.equal(await form.getByRole('button', { name: /^Move/ }).count(), 0, `${at}: no arrows`)
           await page.screenshot({ path: `${shots}/features-${name}-${scheme}.png`, fullPage: true })
 
           assert.equal(await page.getByRole('button', { name: /^Save/ }).count(), 0, `${at}: the page has no Save button`)
-          await form.getByRole('switch', { name: 'Invoice' }).click()
-          const dialog = page.getByRole('dialog', { name: 'Web changes it by motion' })
-          await dialog.waitFor()
-          assert.equal(await dialog.getByLabel('Title').inputValue(), 'Enable Invoice for Web', `${at}: a toggle, made, offers the motion`)
-          await dialog.getByRole('button', { name: 'Cancel' }).click()
-          await dialog.waitFor({ state: 'hidden' })
-          assert.equal(await form.getByRole('switch', { name: 'Invoice' }).isChecked(), false, `${at}: Cancel takes the change back`)
-          await form.getByRole('switch', { name: 'Invoice' }).click()
-          await dialog.waitFor()
+          // By the keyboard: Invoice lifted from those not shown, up one
+          // place to the end of the tree, and dropped.
+          const grip = form.getByRole('button', { name: 'Reorder Invoice' })
+          await grip.focus()
+          await grip.press('Space')
+          await page.locator('fieldset.arrange .place[data-drop-place]').first().waitFor({ state: 'attached' })
+          await grip.press('ArrowUp')
+          await page.getByText('At the top level, after Contact').first().waitFor({ state: 'attached' })
+          await grip.press('Space')
+          await basket(page, 'Web').waitFor()
+          assert.equal(await page.getByRole('dialog').count(), 0, `${at}: a drop opens no dialog`)
           assert.equal(await shown(page), 'Project, Task, Timesheet, File, Contact, Invoice', `${at}: Invoice on at the end`)
-          assert.ok(
-            ((await dialog.textContent()) ?? '').includes("Web's features change only by a motion of Web, which holds arrange-features over itself: your own write does not change them"),
-            `${at}: the dialog says why her write changes nothing`,
-          )
+          assert.equal(await form.getByRole('button', { name: 'Proposed to Web' }).count(), 1, `${at}: the icon says it waits to be proposed`)
+          const dialog = await review(page, 'Web')
+          assert.match((await dialog.locator('figure.diff').textContent()) ?? '', /Invoice\s*added/, `${at}: the diff marks Invoice added`)
           assert.equal(await dialog.getByLabel('Title').inputValue(), 'Enable Invoice for Web', `${at}: its title says the change`)
           assert.equal(await chosen(dialog.getByLabel('Circle')), 'web', `${at}: put to Web itself, not the assembly`)
-          assert.equal(await dialog.getByLabel('New features').inputValue(), arranged, `${at}: the listing as she arranged it`)
           await page.screenshot({ path: `${shots}/features-propose-${name}-${scheme}.png` })
-          await dialog.getByRole('button', { name: 'Propose to Web' }).click()
+          await dialog.getByRole('button', { name: 'Propose it to Web' }).click()
           await dialog.waitFor({ state: 'hidden' })
 
           const { motion } = await one<{ motion: string }>(
@@ -152,9 +172,21 @@ eachBrowser((name, launch) => {
             `${at}: Web's own motion changes Web's features`,
           )
           assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, web, `${at}: nothing changes until the motion carries`)
+          // The motion's page shows what it changes as the tree's diff, on
+          // its Overview while open and on its Effects once closed.
+          const diffOn = async (path: string, heading: string) => {
+            await page.goto(`${dev.base}${path}`)
+            await page.waitForLoadState('networkidle')
+            const section = page.locator('section', { has: page.getByRole('heading', { name: heading }) })
+            await section.waitFor()
+            return (await section.locator('figure.diff').textContent()) ?? ''
+          }
+          assert.match(await diffOn(`/motions/${motion}`, 'What it changes'), /Web's features.*Contact.*Invoice\s*added/s, `${at}: the Overview shows the diff`)
+          await page.screenshot({ path: `${shots}/features-motion-${name}-${scheme}.png`, fullPage: true })
           assert.deepEqual(states(await decided(motion)), [['circle:circle:arrange', 'settled', '']], `${at}: its close changes Web's features`)
+          assert.match(await diffOn(`/motions/${motion}?tab=effects`, 'What it changed'), /Invoice\s*added/, `${at}: Effects shows it from what the close replaced`)
 
-          await page.reload()
+          await page.goto(`${dev.base}/settings/features/web`)
           await page.waitForLoadState('networkidle')
           assert.equal(await shown(page), 'Project, Task, Timesheet, File, Contact, Invoice', `${at}: the page reads Web's new set after a reload`)
           await page.screenshot({ path: `${shots}/features-carried-${name}-${scheme}.png`, fullPage: true })
@@ -166,9 +198,8 @@ eachBrowser((name, launch) => {
             'Account, Transaction, Report, Import, Invoice, Bill, Expense, Payslip, Contact, Employment',
             `${at}: Operations' features in its order`,
           )
-          assert.equal(await page.getByLabel('Accordion Books').inputValue(), 'Books', `${at}: under its accordions`)
-          assert.equal(await page.getByLabel('Accordion of Invoice').inputValue(), 'Payments', `${at}: each feature naming its own`)
-          assert.equal(await page.getByRole('button', { name: 'Move the Books accordion up' }).isDisabled(), true, `${at}: the first accordion moves up no further`)
+          assert.equal(await page.getByLabel('Name of the Books accordion').inputValue(), 'Books', `${at}: under its accordions`)
+          assert.match((await page.locator('li.choice', { hasText: 'Invoice' }).textContent()) ?? '', /in Payments/, `${at}: each feature in its own`)
           await page.screenshot({ path: `${shots}/features-operations-${name}-${scheme}.png`, fullPage: true })
           assert.deepEqual(errors, [], `${at}: the page threw nothing`)
 
@@ -177,7 +208,7 @@ eachBrowser((name, launch) => {
         }
 
         // Yusuf, Web's lead, holds arrange-features over Web by his seat:
-        // the page saves his toggle at once, with no motion.
+        // the page saves his drop at once, with no motion.
         const lead = await browser.newContext({ viewport: { width: 1280, height: 900 }, colorScheme: scheme, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
         try {
           await signIn(lead, dev.base, yusuf)
@@ -185,9 +216,9 @@ eachBrowser((name, launch) => {
           await page.goto(`${dev.base}/settings/features/web`)
           await page.waitForLoadState('networkidle')
           const form = page.locator('form.settings')
-          assert.equal(await form.getByText('You change it here').count(), 1, `${at}: Web's lead changes them himself`)
+          assert.equal(await form.getByRole('button', { name: /changes this by motion/ }).count(), 0, `${at}: Web's lead changes them himself, and the field wears no icon`)
           const motions = (await one<{ n: number }>(`SELECT count(*)::int AS n FROM motion.motion`)).n
-          await form.getByRole('switch', { name: 'Invoice' }).click()
+          await drag(page, 'Invoice', form.locator('fieldset.arrange .off'))
           for (let i = 0; i < 50 && (await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f !== web; i++) {
             await page.waitForTimeout(100)
           }

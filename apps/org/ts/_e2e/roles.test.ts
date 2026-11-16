@@ -269,7 +269,7 @@ eachBrowser((name, launch) => {
 
           const editor = page.locator('section.section', { has: page.getByRole('heading', { name: 'Editor', exact: true }) })
           assert.equal(await editor.getByLabel('Cap').inputValue(), '2', `${at}: the Editor role's cap in force`)
-          assert.equal(await editor.getByText('Assembly changes it by motion').count(), 3, `${at}: each term is the assembly's motion's to change`)
+          assert.equal(await editor.getByRole('button', { name: 'Assembly changes this by motion' }).count(), 3, `${at}: each term wears the assembly's motion icon`)
           await page.getByRole('button', { name: 'Add a role…' }).click()
           const fresh = page.getByRole('dialog', { name: 'New role in Web' })
           await fresh.waitFor()

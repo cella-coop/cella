@@ -9,6 +9,7 @@ import { close } from '../handlers/close.ts'
 import { propose } from '../handlers/propose.ts'
 import { put } from '../handlers/put.ts'
 import { roll, turnout } from '../drivers/roll.ts'
+import { changes } from '../drivers/changes.ts'
 import { amending, appointing, featuring, organization, ruling, standing } from '../drivers/asking.ts'
 import { stances } from '../drivers/asks.ts'
 import * as forms from './forms.ts'
@@ -22,6 +23,8 @@ export type { Founded, Founding } from '../models/founding.ts'
 export { propose } from '../handlers/propose.ts'
 export { put } from '../handlers/put.ts'
 export { roll, turnout } from '../drivers/roll.ts'
+export { changes } from '../drivers/changes.ts'
+export type { Shown } from '../models/changes.ts'
 export { amending, appointing, featuring, organization, ruling, standing } from '../drivers/asking.ts'
 export { stances } from '../drivers/asks.ts'
 
@@ -41,7 +44,12 @@ export const slice: Slice = {
   extends: {
     motions: {
       list: turnout,
-      item: roll,
+      // Its roll and outcome, and what its actions change, each as its diff
+      // shows it.
+      item: async (db, motion, actor) => {
+        const r = await roll(db, motion, actor)
+        return r && { ...r, changes: await changes(db, motion) }
+      },
       actions: {
         propose: action('motion:motion:propose', (form, _, deps) => motionForms.propose(form, deps.db), propose),
         close: action('motion:motion:close', (_, id) => ({ motion: id ?? '' }), close),
@@ -78,12 +86,15 @@ export const slice: Slice = {
   // assembly's motion replaces, and the scope's address and timezone; and
   // each circle's features page, a page of the circle, whose features a
   // holder of `arrange-features` over it arranges at once, and anyone
-  // else proposes to the circle whose motion arranges them.
+  // else proposes to the circle whose motion arranges them; and on each,
+  // the changes to propose gathered across them, proposed as one motion
+  // (`basket`).
   settings: {
     organization: {
       read: (db) => organization(db),
       actions: {
         propose: action('motion:motion:propose', (form, _, deps) => forms.particulars(form, deps.db), propose),
+        basket: action('motion:motion:propose', (form, _, deps) => forms.basket(form, deps.db), propose),
       },
     },
     features: {
@@ -91,12 +102,14 @@ export const slice: Slice = {
       actions: {
         arrange: action('circle:feature:arrange', (form, circle) => ({ circle: circle ?? '', features: form.get('features') }), arrange),
         propose: action('motion:motion:propose', (form, _, deps) => motionForms.propose(form, deps.db), propose),
+        basket: action('motion:motion:propose', (form, _, deps) => forms.basket(form, deps.db), propose),
       },
     },
     rules: {
       read: async (db, _, circle) => (circle ? ruling(db, circle) : null),
       actions: {
         propose: action('motion:motion:propose', (form, circle, deps) => forms.settings(form, circle ?? '', deps.db), propose),
+        basket: action('motion:motion:propose', (form, _, deps) => forms.basket(form, deps.db), propose),
       },
     },
   },

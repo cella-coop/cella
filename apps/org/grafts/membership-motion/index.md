@@ -334,6 +334,16 @@ subscription it requires among them: a subscription refused at the
 close shows forgone with its reason, under the admission it forgoes,
 itself forgone with its own, which names the refusal it follows.
 
+Under the outcome on its Overview, and again on its Effects, it fills
+the motion's diff slot for the kinds it carries out whose change reads
+as one (`changes`, read with the roll): an `arrange-features` as the
+circle's features drawn as their tree, marked added, moved or reordered
+and those dropped struck through; an `amend-circle` or an `amend-role`
+as each term it changes, from the value it replaces to the new. While
+the motion is open it compares with the values in force; once closed,
+with what its effect's entry says it replaced (`was`), and where no
+effect of it stands, as a forgone one, it shows the new value alone.
+
 In the acting person's inbox, each open motion whose roll they are on,
 their seat counting, that they have given no stance on, by its deadline, linking to
 its Stances tab.
@@ -371,12 +381,10 @@ in force, read from core's row (`circle.particulars()`) with the
 procedure protecting the policy they are; the assembly, which alone
 adopts them; and the scope's address and timezone, which a host sets.
 No write of anyone's saves a particular, so a value's edit, as it
-commits, opens the dialog proposing a motion of the assembly, the
-value its own field (New seat, New VAT number), posted to the page's
-`propose`. It words the particulars again as the founding words them,
-the value typed in place of the one in force and the rest as they
-stand, and proposes a
-motion carrying one `policy` action: a `rule` replacing the
+commits, joins the changes to propose to the assembly (below). It
+words the particulars again as the founding words them,
+every value changed in place of the one in force and the rest as
+they stand, as one `policy` action: a `rule` replacing the
 particulars in force, with the protection they had. The guard judges
 it as it judges any proposal, so a SIREN that is not nine digits is
 refused in the dialog before anything is proposed. The e2e scenario
@@ -391,11 +399,11 @@ installed (`circle.installed`), whether the reader holds
 and otherwise the circle whose motion arranges them
 (`circle.arranger`), the circle itself where it holds the power over
 itself, with why the reader's own write changes nothing. A holder's
-change saves at once, posted to the page's `arrange`, core's
-`circle:feature:arrange`; anyone else's proposes an `arrange-features`
-motion of that circle carrying the listing as arranged, posted to the
-page's `propose` as the circle's Settings tab posts one, so the guard
-judges the listing there before anything is proposed. The e2e scenario
+drop saves at once, posted to the page's `arrange`, core's
+`circle:feature:arrange`; anyone else's joins the changes to propose to
+that circle, proposed as an `arrange-features` action carrying the
+listing as arranged, so the guard judges the listing there before
+anything is proposed. The e2e scenario
 `features` has Léa enable a feature of Web by Web's own motion, and
 Yusuf, its lead, disable it at once, light and dark; `amend` judges
 the arrangements' refusals and coordination arranging Hiring's.
@@ -406,9 +414,25 @@ which the circle's Settings tab links to beside its features: each
 setting core circle registers, `on` or `off`, with the value in force
 for the circle (`circle.setting_of`) and whether the circle set it, the
 assembly did, or it is the default. No write of anyone's saves one, so
-Save proposes a motion carrying one `policy` action: a `rule` marking
+a change joins the changes to propose to the circle that decides, each
+proposed as one `policy` action: a `rule` marking
 the setting and its value, and the circle where the circle that decides
 is the assembly, replacing the rule that set the circle's value where
 one stands. The circle that decides is the circle itself where it holds
 `adopt-policy`, else the assembly. The e2e scenario `reactions` turns
 reactions off for Web there.
+
+On each of these pages it serves `basket`, the write the changes to
+propose post ([settings](../../core/ui/index.md#settings)): one motion
+of the circle that decides them, its title, deadline and proposal as
+the dialog gives them, carrying every change gathered across the
+settings pages, each named by its page, the circle the page is of and
+its setting, with its value (`forms.basket`). It turns each into the
+action its page proposes and never takes an action the client names:
+the co-op's particulars, all those changed, as one `rule` replacing
+them; a circle's features as one `arrange-features` of that circle; a
+circle's settings as a `rule` each. Its command is
+`motion:motion:propose`, judged by the same guards as any proposal, a
+change of one kind refused as that page's own proposal is. The e2e
+scenario `basket` gathers changes to the particulars and to a circle's
+settings on two pages and proposes them as one motion of the assembly.

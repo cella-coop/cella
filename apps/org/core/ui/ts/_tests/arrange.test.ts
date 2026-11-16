@@ -1,13 +1,13 @@
 // An arrangement, alone: a listing read into its choices and spelt back
 // as `circle.spell` spells a circle's features; a choice turned on and
-// off, moved past its neighbour in its accordion, a choice under none
-// moved past a whole accordion, an accordion moved as a whole, a choice
-// put under an accordion and an accordion renamed, its choices always
-// together. Run by `cella test slice ui`.
+// off; the places a lifted choice or accordion may land, in an accordion,
+// at the top level or off, and the arrangement once it lands there; and
+// an accordion renamed, its choices always together. Run by `cella test
+// slice ui`.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { gathered, listed, movable, moved, regrouped, renamed, runs, shiftable, shifted, spell, toggled } from '../src/models/arrange.ts'
+import { described, gathered, landed, listed, renamed, runs, spell, targets, toggled } from '../src/models/arrange.ts'
 
 const operations = 'Books: account, transaction, report; Payments: invoice, bill; contact, employment'
 const items = listed(operations)
@@ -37,31 +37,54 @@ test('a choice turned on joins the end under none, and off leaves', () => {
   assert.equal(spell(toggled(items, 'invoice', true)), operations.replace('invoice, ', '') + ', invoice', 'turned on again it moves to the end')
 })
 
-test('a choice moves past its neighbour in its accordion, and no further', () => {
-  assert.equal(spell(moved(items, 1, -1)), 'Books: transaction, account, report; Payments: invoice, bill; contact, employment')
-  assert.equal(movable(items, 0, -1), false, 'the first of an accordion moves up no further')
-  assert.equal(movable(items, 2, 1), false, 'the last of an accordion moves down no further')
-  assert.equal(moved(items, 2, 1), items)
+test('a lifted choice may land in any accordion, at the top level between runs, or off', () => {
+  const t = targets(items, { kind: 'choice', value: 'transaction' })
+  assert.deepEqual(
+    t.targets.map((x) => (x.kind === 'off' ? 'off' : `${x.group ?? '-'}@${x.index}`)),
+    ['-@0', 'Books@0', 'Books@1', 'Books@2', '-@2', 'Payments@2', 'Payments@3', 'Payments@4', '-@4', '-@5', '-@6', 'off'],
+    'the end of an accordion and the top level after it are two places',
+  )
+  assert.equal(t.from, 2, 'it was lifted from its own place')
+  const lifted = { kind: 'choice', value: 'transaction' } as const
+  assert.equal(spell(landed(items, lifted, t.targets[t.from]!)), operations, 'dropped where it was, nothing changes')
+  assert.equal(spell(landed(items, lifted, t.targets[6]!)), 'Books: account, report; Payments: invoice, transaction, bill; contact, employment')
+  assert.equal(spell(landed(items, lifted, t.targets[8]!)), 'Books: account, report; Payments: invoice, bill; transaction, contact, employment')
+  assert.equal(spell(landed(items, lifted, { kind: 'off' })), 'Books: account, report; Payments: invoice, bill; contact, employment')
+  assert.equal(described(items, lifted, t.targets[6]!, (v) => v), 'In Payments, position 2 of 3')
+  assert.equal(described(items, lifted, t.targets[8]!, (v) => v), 'At the top level, after Payments')
+  assert.equal(described(items, lifted, { kind: 'off' }, (v) => v), 'Not shown')
 })
 
-test('a choice under none moves past the choice or the whole accordion beside it', () => {
-  assert.equal(spell(moved(items, 5, -1)), 'Books: account, transaction, report; contact; Payments: invoice, bill; employment')
-  assert.equal(spell(moved(items, 6, -1)), 'Books: account, transaction, report; Payments: invoice, bill; employment, contact')
-  assert.equal(movable(items, 6, 1), false, 'the last moves down no further')
+test('a choice at the top level moves into an accordion, and back where it was is no change', () => {
+  const lifted = { kind: 'choice', value: 'contact' } as const
+  const t = targets(items, lifted)
+  assert.deepEqual(t.targets[t.from], { kind: 'at', group: null, index: 5 })
+  assert.equal(spell(landed(items, lifted, t.targets[t.from]!)), operations)
+  assert.equal(spell(landed(items, lifted, t.targets[4]!)), 'Books: account, transaction, report, contact; Payments: invoice, bill; employment')
 })
 
-test('an accordion moves as a whole past the run beside it', () => {
-  assert.equal(spell(shifted(items, 'Payments', -1)), 'Payments: invoice, bill; Books: account, transaction, report; contact, employment')
-  assert.equal(spell(shifted(items, 'Payments', 1)), 'Books: account, transaction, report; contact; Payments: invoice, bill; employment')
-  assert.equal(shiftable(items, 'Books', -1), false, 'the first moves up no further')
-  assert.equal(shiftable(items, 'Nowhere', 1), false)
+test('an accordion moves as a whole between the runs, or off with all its choices', () => {
+  const lifted = { kind: 'accordion', group: 'Payments' } as const
+  const t = targets(items, lifted)
+  assert.deepEqual(
+    t.targets.map((x) => (x.kind === 'off' ? 'off' : `${x.group ?? '-'}@${x.index}`)),
+    ['-@0', '-@3', '-@4', '-@5', 'off'],
+  )
+  assert.equal(t.from, 1)
+  assert.equal(spell(landed(items, lifted, t.targets[0]!)), 'Payments: invoice, bill; Books: account, transaction, report; contact, employment')
+  assert.equal(spell(landed(items, lifted, t.targets[3]!)), 'Books: account, transaction, report; contact, employment; Payments: invoice, bill')
+  assert.equal(spell(landed(items, lifted, { kind: 'off' })), 'Books: account, transaction, report; contact, employment')
 })
 
-test('a choice put under an accordion joins it, or makes one, and accordions stay together', () => {
-  assert.equal(spell(regrouped(items, 5, 'Books')), 'Books: account, transaction, report, contact; Payments: invoice, bill; employment')
-  assert.equal(spell(regrouped(items, 6, 'People')), 'Books: account, transaction, report; Payments: invoice, bill; contact; People: employment')
-  assert.equal(spell(regrouped(items, 0, ' ')), 'account; Books: transaction, report; Payments: invoice, bill; contact, employment', 'a blank name puts it under none')
-  assert.equal(spell(regrouped(items, 1, 'Payments')), 'Books: account, report; Payments: invoice, bill, transaction; contact, employment')
+test('a choice alone in its accordion keeps it while lifted; one not shown lands in a new accordion', () => {
+  const alone = listed('Work: project; file')
+  const t = targets(alone, { kind: 'choice', value: 'project' })
+  assert.deepEqual(t.targets[t.from], { kind: 'at', group: 'Work', index: 0 })
+  assert.equal(spell(landed(alone, { kind: 'choice', value: 'project' }, t.targets[t.from]!)), 'Work: project; file')
+  const off = targets(items, { kind: 'choice', value: 'payslip' }, ['People'])
+  assert.equal(off.from, off.targets.length - 1, 'a choice not shown was lifted from off')
+  assert.deepEqual(off.targets.at(-2), { kind: 'at', group: 'People', index: 7 })
+  assert.equal(spell(landed(items, { kind: 'choice', value: 'payslip' }, off.targets.at(-2)!)), `${operations}; People: payslip`)
 })
 
 test('an accordion renamed renames each of its choices, joining another of that name', () => {

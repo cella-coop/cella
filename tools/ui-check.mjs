@@ -254,10 +254,10 @@ export function problems(path, text, ui) {
   for (const selector of ringless(path, text)) {
     out.push(`${path}: ${selector} sets outline: none and draws no ring; draw box-shadow: var(--focus) with it, or leave focus to :focus-visible`)
   }
-  // An up or down arrow on a control that moves something is a reorder
+  // An up or down arrow or caret on a control that moves something is a reorder
   // button, which dragging replaces.
   for (const spec of imports(text)) {
-    if (/^phosphor-svelte\/lib\/Arrow(Fat|Line)?(Up|Down)$/.test(spec) && /move/i.test(text.replace(/<script[\s\S]*?<\/script>/g, ''))) {
+    if (/^phosphor-svelte\/lib\/(Arrow(Fat|Line)?|Caret)(Up|Down)$/.test(spec) && /move/i.test(text.replace(/<script[\s\S]*?<\/script>/g, ''))) {
       out.push(`${path}: reorders with ${spec.split('/').pop()} buttons; items reorder by dragging, with the UI core's sortable`)
     }
   }

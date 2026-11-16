@@ -7,7 +7,7 @@
 // times. A file field's own input stays in the form, hidden, so
 // `setInputFiles` on it picks a file as the dialog would.
 
-import type { Locator } from 'playwright-core'
+import type { Locator, Page } from 'playwright-core'
 
 // The listbox a select's combobox opens, found by the id it controls.
 const listOf = async (select: Locator) => select.page().locator(`[id="${await select.getAttribute('aria-controls')}"]`)
@@ -56,6 +56,20 @@ export async function pick(button: Locator, day: string) {
 
 // What a select shows: its chosen option's label, or its placeholder.
 export const said = async (select: Locator) => ((await select.locator('.value').textContent()) ?? '').trim()
+
+// The changes to propose to a circle, in the settings pages' sidebar:
+// its section, headed by how many wait.
+export const basket = (page: Page, circle: string) =>
+  page.getByRole('complementary', { name: 'Changes to propose' }).locator('section', { has: page.getByRole('heading', { name: new RegExp(`to propose to ${circle}$`) }) })
+
+// Opens the one motion proposing a circle's changes to propose, by its
+// Review and propose, and hands back its dialog.
+export async function review(page: Page, circle: string): Promise<Locator> {
+  await basket(page, circle).getByRole('button', { name: 'Review and propose' }).click()
+  const dialog = page.getByRole('dialog', { name: `Propose to ${circle}` })
+  await dialog.waitFor()
+  return dialog
+}
 
 // Picks a time from a time field's list, `button` its Choose a time:
 // opens it and presses the time, which closes it.

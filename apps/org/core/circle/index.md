@@ -1187,24 +1187,26 @@ A circle's page has a Settings tab, a `Settings` form ([settings](../ui/index.md
 Each circle has a features page in Settings, `/settings/features/<id>`,
 which its Settings tab links to under its terms: a `Settings` form of
 one setting, the circle's features ([features](#features)), drawn as an
-arrangement ([settings](../ui/index.md#settings)). Every feature the
-co-op installed (`circle.installed`) has a toggle, by its name: those
-the circle enabled first, in its order, each under its accordion where
-it has one, and the rest after them. An enabled feature moves up or
-down past its neighbour in its accordion, an ungrouped one past the
-feature or the accordion beside it, and an accordion moves as a whole;
-naming a feature's accordion moves it into that accordion, or makes
-one, and renaming an accordion renames it on each of its features. A
-reader holding `arrange-features` over the circle by a seat, as its
-lead, saves each change at once, and the page says they change it
-here. Anyone else is offered one `arrange-features` motion of the
-circle whose motion arranges them (`circle.arranger`), the circle
+arrangement ([settings](../ui/index.md#settings)): the tree of the
+features the circle shows, in its order, each at the top level or in an
+accordion, and under it every other feature the co-op installed
+(`circle.installed`), not shown. Where a feature sits is all there is
+to say of it, with no toggle and no field naming its accordion: it is
+dragged, by the pointer or the keyboard, into an accordion or out of
+one, along the tree, or down among those not shown; an accordion is
+dragged as a whole, its heading renames it, and New accordion makes one
+to drag features into. A reader holding `arrange-features` over the
+circle by a seat, as its lead, saves each drop at once, and the field
+wears no icon. For anyone else the drop joins the changes to propose to
+the circle whose motion arranges them (`circle.arranger`), the circle
 itself where it holds the power over itself, never the assembly for
-that alone, carrying the listing as arranged, its title saying what it
-enables and disables, or that it rearranges the circle's features
-where it does neither; the dialog says why their own write changes
-nothing ([features](#features)). Once the motion passes the page reads
-the new set. The Settings tab says which circle arranges them. Membership-motion serves it
+that alone, as one `arrange-features` action carrying the listing as
+arranged, its title saying what it enables and disables, or that it
+rearranges the circle's features where it does neither; the icon beside
+the field names that circle and its tooltip says why their own write
+changes nothing ([features](#features)), and the dialog proposing the
+basket shows the change as the tree with its marks. Once the motion
+passes the page reads the new set. The Settings tab says which circle arranges them. Membership-motion serves it
 ([membership-motion](../../grafts/membership-motion/index.md#shell-of-the-roll)).
 
 Who sits in a circle is the membership feat's, which names people.

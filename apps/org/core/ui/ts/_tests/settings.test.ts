@@ -8,7 +8,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { changer, direct, posted, proposal, type Decider, type Setting } from '../src/models/settings.ts'
+import { direct, who, posted, proposal, type Decider, type Setting } from '../src/models/settings.ts'
 
 const refusal = 'camille@lanterne.example holds no amend-circle in coordination: only a motion of Assembly renames it'
 const assembly: Decider = { circle: 'ag', name: 'Assembly', deadline: '2026-11-23' }
@@ -62,9 +62,10 @@ test('with no motion declared, or no circle to decide it, nothing is offered', (
   assert.equal(proposal(settings[3], 'Operations', null), null)
 })
 
-test('each setting says what changes it: the reader\'s write, a motion of the deciding circle, or nothing they may write', () => {
+test('each setting says who changes it beside its label: no one but the reader, a motion of the deciding circle, a change waiting to be proposed, or nothing they may write', () => {
   assert.deepEqual(settings.map(direct), [true, true, true, false, false, false])
-  assert.equal(changer(settings[0], assembly), 'You change it here')
-  assert.equal(changer(settings[3], assembly), 'Assembly changes it by motion')
-  assert.equal(changer(settings[5], assembly), 'Nothing you may write changes it')
+  assert.equal(who(settings[0], assembly), null, 'a field the reader saves wears no icon')
+  assert.deepEqual([who(settings[3], assembly)?.kind, who(settings[3], assembly)?.label], ['motion', 'Assembly changes this by motion'])
+  assert.equal(who(settings[3], assembly, true)?.label, 'Proposed to Assembly')
+  assert.equal(who(settings[5], assembly)?.kind, 'locked')
 })

@@ -216,7 +216,7 @@ eachBrowser((name, launch) => {
           const form = page.locator('form.settings').first()
           assert.equal(await form.getByLabel('Name').inputValue(), was, `${at}: its name in force`)
           assert.equal(await chosen(form.getByLabel('Decides by')), 'consent', `${at}: its procedure in force`)
-          assert.equal(await form.getByText('Assembly changes it by motion').count(), 3, `${at}: each term is the assembly's motion's to change`)
+          assert.equal(await form.getByRole('button', { name: 'Assembly changes this by motion' }).count(), 3, `${at}: each term wears the assembly's motion icon`)
           await page.screenshot({ path: `${shots}/amend-${name}-${scheme}.png`, fullPage: true })
 
           await form.getByLabel('Name').fill('Brand')

@@ -2,8 +2,8 @@
 // the dev server: Léa reacts 👍 to Amina's comment on the go-live
 // checklist, a task of Web's, and takes it back, then gives it again.
 // Camille opens Web's rules page, `/settings/rules/web`, from Web's
-// Settings tab, turns reactions off and Saves; the dialog offers the
-// assembly's motion carrying the rule, every member consents, and on its
+// Settings tab, turns reactions off, which joins the changes to propose
+// to the assembly, and reviews and proposes the motion carrying the rule; every member consents, and on its
 // deadline she closes it: Web's comments take no reactions, the thread
 // draws none, and a reaction posted through the handler is refused,
 // naming the circle and the rule. Camille then turns them on again from
@@ -25,7 +25,7 @@ import { react } from '@cella/org-task/api'
 import type { Deps, Done } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
 import { eachBrowser, serve, signIn } from './browser.ts'
-import { choose, chosen } from './controls.ts'
+import { choose, chosen, review } from './controls.ts'
 
 const su = new pg.Client()
 let app: pg.Client | undefined
@@ -126,16 +126,12 @@ eachBrowser((name, launch) => {
       const form = page.locator('form.settings')
       await choose(form.getByLabel(/Reactions on comments/), value)
       await page.screenshot({ path: `${shots}/rules-${value}-${name}.png`, fullPage: true })
-      const dialog = page.getByRole('dialog', { name: 'Assembly changes it by motion' })
-      await dialog.waitFor()
-      assert.ok(
-        ((await dialog.textContent()) ?? '').includes("Web's settings change only by a rule a motion of Assembly adopts: no one's own write changes them"),
-        `${name}: the dialog says why her write changes nothing`,
-      )
+      const dialog = await review(page, 'Assembly')
+      assert.match((await dialog.locator('figure.diff').textContent()) ?? '', new RegExp(`Web · Reactions on comments.*${value === 'off' ? 'On' : 'Off'}\\s*to\\s*${value === 'off' ? 'Off' : 'On'}`), `${name}: the dialog shows the change`)
       assert.equal(await dialog.getByLabel('Title').inputValue(), `Turn reactions on comments ${value} in Web`, `${name}: its title says the change`)
       assert.equal(await chosen(dialog.getByLabel('Circle')), 'ag',
  `${name}: put to the assembly`)
-      await dialog.getByRole('button', { name: 'Propose to Assembly' }).click()
+      await dialog.getByRole('button', { name: 'Propose it to Assembly' }).click()
       await dialog.waitFor({ state: 'hidden' })
       const { motion } = await one<{ motion: string }>(
         `SELECT motion FROM motion.action WHERE kind = 'policy' AND args ->> 'wording' = $1 AND motion <> ALL ($2::text[]) ORDER BY motion DESC LIMIT 1`,

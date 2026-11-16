@@ -4,9 +4,9 @@
 
   // Settings' Organization page: the co-op's particulars in force, none
   // saved by anyone's write, since only a motion of the assembly adopts
-  // them: a value's edit, as it commits, opens the dialog proposing one,
-  // the value its own field; and the scope's address and timezone, which a
-  // host sets.
+  // them: a value's edit, as it commits, joins the changes to propose to
+  // the assembly; and the scope's address and timezone, which a host
+  // sets, each with the host icon beside its label.
   let { data }: { data: Organization } = $props()
 
   const labels: Record<Particular, string> = {
@@ -48,13 +48,13 @@
 
 <Section title="Particulars">
   {#if data.particulars}
-    <Settings {settings} decider={data.decider} />
+    <Settings {settings} decider={data.decider} where="The co-op" />
   {:else}
     <Note text="No particulars stand yet: the founding motion adopts them." />
   {/if}
 </Section>
 <Section title="Scope">
   <Explained
-    items={hosted.map((h) => ({ key: h.key, label: h.label, values: [{ label: 'Set to', value: h.value ?? 'Unset' }], badge: { label: 'Set by a host', tone: 'neutral' as const }, text: h.text }))}
+    items={hosted.map((h) => ({ key: h.key, label: h.label, values: [{ label: 'Set to', value: h.value ?? 'Unset' }], who: { kind: 'host' as const, label: 'Set by a host', text: h.text } }))}
   />
 </Section>

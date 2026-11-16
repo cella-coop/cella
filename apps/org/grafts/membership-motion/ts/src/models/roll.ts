@@ -1,3 +1,5 @@
+import type { Shown } from './changes.ts'
+
 // A member on a motion's roll, their latest stance received before its
 // cutoff, and whether the close counted them.
 export interface Voter {
@@ -69,4 +71,7 @@ export interface Roll {
   // stance by receipt, the counted one once closed.
   me: { address: string; seated: boolean; stance: { stance: string; receipt: number; at: string } | null } | null
   voters: Voter[]
+  // What its actions change, each as its diff shows it, of the kinds this
+  // graft carries out (`changes`).
+  changes?: Shown[]
 }

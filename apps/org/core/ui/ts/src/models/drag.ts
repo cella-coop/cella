@@ -3,8 +3,8 @@
 // keyboard carries it. `to` is the index the item will have once moved,
 // so dropping where it was is no move at all. The UI core's DragState
 // holds one of these as state; `sortable` drives it from the DOM. Any
-// list of any item type: only indexes move here. Nesting would add a
-// target list to `to`; nothing nests yet.
+// list of any item type: only indexes move here. A list that nests lands
+// its items on places instead (`placing`).
 
 export type Mode = 'pointer' | 'keyboard'
 

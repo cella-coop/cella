@@ -210,6 +210,20 @@ draws.
   cancel takes back. It holds forms of their own where its opener hands
   it no submit, as New does a collection's create forms, each ending in
   its own confirming button and Cancel.
+- `Diff`: a change shown in its own terms, never a programmer's text
+  diff (`models/diff.ts`), the one view of a change wherever it is
+  shown, a motion's dialog and its page alike, one shape a kind of
+  change. An arrangement, as a circle's features, is drawn as its tree
+  once changed: each choice marked added, moved from the accordion or
+  the top level it left, or reordered within its own, the fewest marked
+  as reordered that keep the rest in order; an accordion new to it
+  marked; and those it no longer shows listed under it, struck through.
+  A plain value is the one in force struck through, an arrow and the
+  new one. Each mark is a word as well as a colour. Where what it
+  replaces is not known, the new value stands alone, unmarked. A policy's
+  text, compared as rich text, is the next shape.
+- `Who`: who changes a setting, one quiet icon beside its label
+  ([settings](#settings)), its tooltip in the top layer.
 - New: every collection's create, the header's New and its `c`, opens
   the one `Dialog` titled for the collection ("New in Tasks"), holding
   the create form the collection or its extensions declare, each under
@@ -672,9 +686,18 @@ for the form to post
 
 
 A settings page is a plain form, `Settings`, one `Setting` a row: its
-label, its current value in its field, and under it in a quiet line
-what changes it, a write the reader makes or a motion of the circle
-that decides it. Every field is editable, whoever reads it, and the
+label, beside it who changes it where the reader's own write does not,
+and its current value in its field. Who changes it is one quiet icon,
+`Who` (`who` in `models/settings.ts`): the motions' scales where a
+circle changes it by motion, named in its tooltip ("Assembly changes
+this by motion") with why, in the guard's words; the same in the accent
+where the reader's change waits among the changes to propose; a host's
+drives where a host sets it; a lock where nothing the reader may write
+changes it. A field the reader saves wears none. The icon is a button
+the keyboard reaches, its name the few words and its tooltip, shown as
+the pointer rests on it or it takes the focus and hidden by Escape, its
+description, so assistive technology reads both; no line under the
+field repeats it. Every field is editable, whoever reads it, and the
 form has no Save: each setting commits as its field does. A pick, from
 a select, a checkbox, a radio or a calendar, commits as it is made; a
 typed value commits when focus leaves the field or on Enter (Ctrl or
@@ -684,14 +707,16 @@ does nothing. A slice declares each setting with the write that
 changes it directly, if any, and the motion kind that changes it
 otherwise, its arguments filled from the field (`models/settings.ts`).
 A setting's field is one `Field` draws, or an arrangement, `Arrange`,
-where it declares its `choices`: a fieldset of every choice with a
-toggle, those on first in their order, each under its accordion where
-it has one, and the rest after them; each choice on moves up or down
-past its neighbour in its accordion, an ungrouped one past the choice
-or the accordion beside it, and an accordion as a whole; a choice's
-accordion is named in a field of its own, which moves it into the
-accordion of that name or makes one, and an accordion's heading renames
-it. Its value is one listing (`models/arrange.ts`): the choices on, in
+where it declares its `choices`: a fieldset of the tree of choices on
+show, in their order, each at the top level or in an accordion, and
+under it those not shown. Where a choice sits is all there is to say of
+it, with no toggle and no field naming its accordion: it is dragged,
+by the pointer or the keyboard (`placing`), into an accordion or out of
+one, along the tree, or down among those not shown, and an accordion
+is dragged as a whole, or among those not shown with all its choices.
+An accordion's heading renames it, and New accordion makes an empty
+one to drag choices into, which the listing holds once one is in it.
+Its value is one listing (`models/arrange.ts`): the choices on, in
 order, separated by commas, an accordion's run after its name and a
 colon, the runs separated by semicolons, as a circle's features are
 written ([features](../circle/index.md#features)).
@@ -730,14 +755,43 @@ it saves that differ from their values in force (`posted`), so one
 left as it is never posts and a contact detail never set stays unset.
 Each write has one post in flight at a time: a commit made while it
 posts waits for it to settle, then sends the values as they stand.
-Beside the field, in its quiet line, a mark says how the commit went,
+Under the field, in a quiet line, a mark says how the commit went,
 announced as it changes (`aria-live`): Saving… while it posts, a brief
 Saved once it settles, or Not saved and the refusal's reason, the
 field keeping what was typed; the shell shows the outcome as for any
 `Form`, the write's that names one, as the theme's cookie names none.
 A setting the reader may not change, since its write needs a mandate
-they lack, or since only a motion changes it, never posts a write: its
-commit opens `ProposeInstead`, a `Dialog`, one a commit, which says plainly that the change needs a motion of
+they lack, or since only a motion changes it, never posts a write. On
+the settings pages its commit puts the change among **the changes to
+propose**, a basket for each circle that decides, since one motion goes
+to one circle (`BasketState`, `useBasket`, `models/basket.ts`): the
+field keeps the value typed, its icon turns to the accent (Proposed to
+Assembly), and a quiet line under it shows the value in force struck
+through. A change back to the value in force takes it out. The basket
+gathers across the settings pages, a change named by its page, the
+thing the page is of and its setting, and is kept for the session in a
+cookie, `cella-basket`, which the browser alone reads as the page
+mounts and a sign-in or a sign-out clears; nothing of it is written
+before it is proposed. While any change waits, the settings pages'
+sidebar holds them (`Basket`), standing in the drawer and opening on
+them as one is gathered: for each circle, "3 changes to propose to
+Assembly", each change in a line, from what to what, with its own
+removal, and Review and propose and Discard. Review opens one `Dialog`
+(`ProposeBasket`) showing every change as its diff (`Diff`): the tree
+of an arrangement with its marks, a plain value from the one in force,
+struck through, to the new. Under them the motions' New form,
+prefilled: its title, the one change's or each one's joined, the
+circle, the deadline it asks for, and the proposal. Propose posts it to
+the `basket` write of the page the first change was made on, with each
+change's page, thing, setting and value, which the server turns into
+the actions, never those a client names; a refusal keeps the dialog
+open, saying why, and once proposed the basket empties. A page mixing
+the two kinds saves what the reader may change at once and gathers the
+rest.
+
+A settings form with no basket above it, as a record's page draws for
+one field, offers the motion at once: its commit opens
+`ProposeInstead`, a `Dialog`, one a commit, which says plainly that the change needs a motion of
 the circle that decides it, shows the change from the value in force
 to the one typed, and says why in the guard's own words, the refusal
 its write's guard gives as early as it can, with the values it read
@@ -785,12 +839,12 @@ name, legal form, capital, seat, SIREN, trade register and VAT number,
 none saved by anyone's write, since only a motion of the assembly
 adopts them ([the co-op's
 particulars](../circle/index.md#the-co-ops-particulars)). A value's
-edit, as it commits, opens the dialog proposing a motion of the
-assembly, the value its own field, which carries Adopt a policy
-replacing the particulars with it, its procedure the one their
+edit, as it commits, joins the changes to propose to the assembly, and
+the motion proposing them carries one Adopt a policy replacing the
+particulars with every value changed, its procedure the one their
 protection fixes; and under the form,
-read-only, the scope's address and its timezone, each saying a host
-sets it ([the notary](../notary/index.md#settings)). Membership-motion
+read-only, the scope's address and its timezone, each with the host icon beside
+its label, its tooltip saying a host sets it and why ([the notary](../notary/index.md#settings)). Membership-motion
 serves it, as the graft that proposes the assembly's motions
 ([membership-motion](../../grafts/membership-motion/index.md#shell-of-the-roll)).
 
@@ -846,14 +900,14 @@ this circle reads the lens. `useSection` hands a `Section`'s title down, so an e
 ## Dragging
 
 Every list that reorders, reorders by dragging; the ui check refuses up
-and down arrow buttons that move things. The primitives:
+and down arrow or caret buttons that move things. The primitives:
 
 - `models/drag.ts`: a drag as plain data (the list, the item lifted, the
   index it would take, pointer or keyboard) and its moves: `start`,
   `over`, `step`, `drop` (the move, none when it lands where it began),
   `cancel`, `slot` (where the indicator goes) and `reorder` over a list
-  of any type. Nesting would add a target list to `to`; nothing nests
-  yet.
+  of any type; a list that nests lands its items on places instead
+  (`placing`).
 - `DragState` and `useDrag()`: the page's one drag as state, so any
   component shows where an item will land (`before(list, i)`) and dims
   the lifted one, with the announcement for assistive technology.
@@ -870,9 +924,25 @@ and down arrow buttons that move things. The primitives:
   drop.
 - `DragHandle` (a labelled grip) and `DropIndicator`, the one line where
   an item will land, from the tokens.
+- `placing(drag, { list, lift, describe, onplace })`, an attachment for a
+  list whose items land on places it names, not only between its items,
+  as an arrangement's choices land in an accordion or out of one, at the
+  top level or among those not shown, and its accordions as a whole. Its
+  items carry `data-drag-item` and `data-drag-key`, each handle
+  `data-drag-handle`; while one is lifted the list draws its places, a
+  line each (`data-drop-place`), indented as deep as the item would
+  sit, or an area (`data-drop-zone`) that takes it anywhere inside. The
+  pointer aims at the zone under it or the nearest line, the one as deep
+  as the preview's left edge where two lie together, as the end of an
+  accordion and the top level after it do; the keyboard lifts with Space
+  or Enter, steps through the places with the arrows and drops with
+  Space or Enter, each place announced in the list's own words
+  (`describe`), Escape cancelling either. `DragState` holds the lifted
+  item's key beside its drag (`placing`, `aiming`, `holding`).
 
 Dashboard widgets, a table's columns in the View panel's Display popover, the viewer's own
-view tabs, a document's blocks and a meeting's agenda reorder this way;
+view tabs, a document's blocks and a meeting's agenda reorder this way, and an
+arrangement (`Arrange`) places its choices so;
 `Popover`, `DragHandle`, `Ordered`, `sortable` and `useDrag` are
 exported for slices to compose.
 

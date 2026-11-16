@@ -1,22 +1,29 @@
 <script lang="ts">
-  import { changer, type Setting } from '../models/settings.ts'
+  import { who, type Setting } from '../models/settings.ts'
   import { useSettings } from '../hooks/useSettings.ts'
   import { committing } from '../attachments/committing.ts'
   import Arrange from './Arrange.svelte'
   import Field from './Field.svelte'
+  import Who from './Who.svelte'
 
-  // One setting: its label, its value in force in its field, editable
-  // whoever reads it, and under it, quietly, what changes it and how its
-  // last commit went, announced as it changes. A pick commits as it is
-  // made, a typed value on leaving the field or on Enter, and Escape
-  // takes a typed edit back; one declaring choices is an arrangement,
-  // each change of it a commit. A number field emptied reads as empty,
-  // never as null.
+  // One setting: its label, beside it who changes it where the reader's
+  // own write does not (`Who`), its value in its field, editable whoever
+  // reads it, and under it, quietly, how its last commit went, announced
+  // as it changes. A pick commits as it is made, a typed value on leaving
+  // the field or on Enter, and Escape takes a typed edit back; one
+  // declaring choices is an arrangement, each drop a commit. A number
+  // field emptied reads as empty, never as null.
   let { setting }: { setting: Setting } = $props()
 
   const state = useSettings()
   const mark = $derived(state.marks[setting.name])
+  const waiting = $derived(state.waiting(setting))
+  const changer = $derived(who(setting, state.decider, !!waiting))
 </script>
+
+{#snippet hint()}
+  {#if changer}<Who who={changer} />{/if}
+{/snippet}
 
 <div class="setting" {@attach committing({ commit: () => state.commit(setting), revert: () => state.revert(setting) })}>
   {#if setting.choices}
@@ -24,6 +31,7 @@
       label={setting.label}
       value={state.value(setting)}
       choices={setting.choices}
+      {hint}
       onchange={(v) => {
         state.type(setting, v)
         state.commit(setting)
@@ -36,12 +44,16 @@
       type={setting.type}
       options={setting.options}
       rows={setting.rows}
+      hint={changer ? hint : undefined}
       bind:value={() => state.value(setting), (v) => state.type(setting, v === null || v === undefined ? '' : String(v))}
     />
   {/if}
-  <p class="how">
-    {changer(setting, state.decider)}<span class="mark" data-state={mark?.state} aria-live="polite"
-      >{#if mark?.state === 'saving'}Saving…{:else if mark?.state === 'saved'}Saved{:else if mark?.state === 'proposed'}Proposed{:else if mark?.state === 'refused'}Not saved: {mark.reason}{/if}</span
+  {#if waiting && !setting.choices}
+    <p class="was">In force <s>{waiting.shown?.was ?? (waiting.was || 'Empty')}</s>, proposed to {state.decider?.name}</p>
+  {/if}
+  <p class="how" aria-live="polite">
+    <span class="mark" data-state={mark?.state}
+      >{#if mark?.state === 'saving'}Saving…{:else if mark?.state === 'saved'}Saved{:else if mark?.state === 'proposed'}Proposed{:else if mark?.state === 'gathered'}Added to the changes to propose{:else if mark?.state === 'refused'}Not saved: {mark.reason}{/if}</span
     >
   </p>
 </div>
@@ -59,8 +71,17 @@
     font-size: var(--text-xs);
     color: var(--text-subtle);
   }
+  .was {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+  }
+  .was s {
+    color: var(--text-subtle);
+  }
   .mark[data-state='saved'],
-  .mark[data-state='proposed'] {
+  .mark[data-state='proposed'],
+  .mark[data-state='gathered'] {
     color: var(--positive-text);
   }
   .mark[data-state='refused'] {

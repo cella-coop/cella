@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 # Architecture
@@ -2034,6 +2034,23 @@ nests in, and two extensions replacing one write, as the shell loads
 (`lib/server/slices.ts`); no check sees them before it runs. An extension's write replaces the
 owner's of the same name: `invoice-transaction`'s issue, which posts the
 invoice in the same transaction, replaces the invoice feat's.
+
+- *enforced* (the tabs check, `tools/tabs.mjs` run by `feat-check`,
+  `tabs.test.mjs`): **a record's page shows at most four tabs, and the
+  slice owning its collection chooses them.** Only the owner's page
+  declares tabs, in order; every extension, a core feat's, a feat's or
+  a graft's, places its blocks in a tab the owner names, and declares
+  none of its own. An extender the owner gives no tab is a jump in the
+  drawer's Related: each collection whose rows name the record, by a
+  person's address, a circle's id or a column `of` the record's
+  collection, counted as the reader sees it and opening that collection
+  filtered to the record. A tab no slice fills, as one whose filler is
+  pruned, is not shown, so an owner may name a tab for a slice it may
+  not depend on. The check reads each `App` literal's syntax and refuses
+  a fifth tab, an extension's tab, and a block in a tab its owner does
+  not name, each by the slice, the record and what would fix it; the
+  type of an extension's page leaves `tabs` out too
+  ([record pages](../../apps/org/core/ui/index.md#components)).
 
 The shell writes no SQL and re-implements no guard: `tools/writes.mjs`
 refuses a write of a table and a call of the notary in its TypeScript,

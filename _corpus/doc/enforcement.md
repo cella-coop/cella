@@ -1,6 +1,6 @@
 +++
 title = "Enforcement"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 # Enforcement
@@ -17,7 +17,7 @@ negative tests.
 
 `cella check` runs the checks: `cella check feats` runs
 `tools/feat-check.mjs`, which calls `tools/sql-check.mjs`,
-`tools/powers.mjs`, `tools/writes.mjs` and `tools/ui-check.mjs`;
+`tools/powers.mjs`, `tools/writes.mjs`, `tools/ui-check.mjs` and `tools/tabs.mjs`;
 `cella check fixtures` runs `tools/fixture-check.mjs`, and `cella check
 pruned` builds core alone by `tools/prune.mjs`. `cella migrate` refuses
 by `tools/migrations.mjs` as it runs. `cella test tools`
@@ -88,6 +88,7 @@ Short names: fc `tools/feat-check.mjs`, sc `tools/sql-check.mjs`, pw
 | A route has no server load or actions; the web shell reads through a slice's calls | [remote functions](architecture.md#remote-functions) | ui | `T/ui.test.mjs`: a route's server load or actions, or a universal load |
 | A graft extends only the collections of the feats it joins | [the shell](architecture.md#the-shell) | the shell's registry as it loads, `apps/org/ts/src/lib/server/slices.ts`; no check sees it before | none |
 | A collection has one owner, a write one extension replacing it, and an address one command | [the shell](architecture.md#the-shell), [remote functions](architecture.md#remote-functions) | the shell's registry as it loads, `apps/org/ts/src/lib/server/slices.ts`; no check sees it before | none |
+| A record's page shows at most four tabs, its owner's, an extension placing its blocks in them and declaring none | [the shell](architecture.md#the-shell) | fc, by `tools/tabs.mjs` on each `App` literal; the type of an extension's page leaves `tabs` out | `T/tabs.test.mjs`: a page declaring five tabs, and an extension placing a block in a tab of its own, each refused by name |
 | The site's text is the operator's | [whose words](../../apps/site/index.md#whose-words) | `.claude/settings.json` and `tools/site-text-guard.mjs` on an agent's calls; `cella check`, by a commit's author (`tools/site-text-check.mjs`), against accidents and not attackers | `T/site-text-guard.test.mjs`; `T/site-text-check.test.mjs`: a commit to the text by another author, refused by name, and the operator's passing; another author's merge whose resolution changes the text, refused, and one that only brings the operator's commits in, passing |
 | A test file sits in a slice's `_tests/` or an app's `_e2e/` | [tests](architecture.md#tests) | `cella test`, by where each file sits | `apps/org/rs/src/test.rs`: `a_test_file_elsewhere_is_refused`, run by `cella test cli` |
 | Docs are present-tense, and a feat's change updates its doc's `updated` | [AGENTS.md](../../AGENTS.md#rules) | no tool can see the tense; nothing checks `updated` | none |

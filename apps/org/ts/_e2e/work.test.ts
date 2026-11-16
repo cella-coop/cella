@@ -144,7 +144,7 @@ const offered = (html: string, name: string) =>
 
 test('Thomas logs time against the shop for Web, its circle, which the page offers him first', async () => {
   const { text } = await shell.page('/projects/halles-shop?tab=budget', thomas)
-  assert.deepEqual(offered(text, 'circle'), ['web', 'ag'], 'the shop is Web\'s, offered before the assembly he also sits in')
+  assert.deepEqual(offered(text, 'circle'), ['web', 'ag', 'clients', 'tools'], 'the shop is Web\'s, offered before the assembly, Clients and Tools he also sits in')
   const logged = await shell.act('/projects/halles-shop', 'log', { day: '2026-10-24', hours: '2,5', billable: 'billable', circle: 'web', note: 'Checkout audit' }, thomas)
   assert.equal(logged.state, 'settled', logged.reason)
   const booked = await one<{ project: string; circle: string }>(
@@ -165,8 +165,8 @@ test('Thomas logs his week from the form, each row naming the circle its time is
   await app.end()
   assert.equal(now.monday, '2026-10-19')
   const circles = (project: string) => now.rows.find((r) => r.project === project)?.circles.map((c) => c.id)
-  assert.deepEqual(circles('halles-shop'), ['web', 'ag'])
-  assert.deepEqual(circles(''), ['ag', 'web'])
+  assert.deepEqual(circles('halles-shop'), ['web', 'ag', 'clients', 'tools'])
+  assert.deepEqual(circles(''), ['ag', 'clients', 'tools', 'web'])
   const week: [string, string][] = [
     ['row', 'halles-shop'],
     ['row', '_'],

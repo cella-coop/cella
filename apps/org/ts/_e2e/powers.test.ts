@@ -5,7 +5,7 @@
 // page it is. Camille's tab names the manager's tenure,
 // 2024 to 2028, and its 20 000 € commit; Hugo's, Brand's lead, the lead's
 // approve-expense within 1 000 € a month, its budget unchecked; and
-// Inès's, Web's participant's mandates and her rights as a person and an
+// Inès's, the participant's mandates of Web, Care and Tools, and her rights as a person and an
 // employee, read as herself; and a non-member reading another's tab finds
 // no right on it. Each mandate's line opens its page. Then, in every browser,
 // light and dark, Camille's tab is opened and its commit's line clicked
@@ -101,10 +101,11 @@ test('Hugo, Brand\'s lead, approves expenses within 1 000 € a month, its budge
   }
 })
 
-test('Inès, no member, holds Web\'s participant mandates by her seat there, and a person\'s and an employee\'s rights', async () => {
+test('Inès, no member, holds the participant mandates of Web, Care and Tools by her seats there, and a person\'s and an employee\'s rights', async () => {
   const listed = await seats.powers(reader(app, ines), ines)
   const seated = listed.filter((p) => p.mandate !== null)
-  assert.ok(seated.length > 0 && seated.every((p) => p.circle === 'web' && p.tenure === null), 'every mandate of hers is by her seat in Web')
+  assert.ok(seated.length > 0 && seated.every((p) => ['web', 'care', 'tools'].includes(p.circle) && p.tenure === null), 'every mandate of hers is by a seat with no role, in Web, Care or Tools')
+  assert.deepEqual([...new Set(seated.map((p) => p.circle))].sort(), ['care', 'tools', 'web'])
   assert.deepEqual([...new Set(listed.map((p) => p.right).filter((r) => r !== null))].sort(), ['employee', 'person'])
   assert.ok(listed.some((p) => p.power === 'log-time' && p.right === 'employee'))
   const { text } = await tab(ines)

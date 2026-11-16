@@ -35,7 +35,6 @@
     left: var(--space-4);
     bottom: var(--space-3);
     max-width: min(36rem, calc(100% - 2 * var(--space-4)));
-    z-index: 1;
     pointer-events: none;
   }
 </style>

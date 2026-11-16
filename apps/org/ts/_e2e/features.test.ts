@@ -72,7 +72,7 @@ async function decided(motion: string) {
 async function shown(page: Page) {
   const on = page.locator('fieldset.arrange ul.on')
   await on.getByRole('switch').first().waitFor()
-  return (await on.getByRole('switch').evaluateAll((els) => els.map((e) => e.closest('label')?.textContent?.trim() ?? ''))).join(', ')
+  return (await on.getByRole('switch').evaluateAll((els) => els.map((e) => e.textContent?.trim() ?? ''))).join(', ')
 }
 
 before(async () => {

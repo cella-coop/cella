@@ -513,10 +513,10 @@ draws.
   state `SelectState`. A choice is handed to `onchange` and fired as a
   `change` from the button, so a setting commits as it is made; `fit`
   sizes it to what it shows, up to 11rem, as in the View panel.
-- `Checkbox`: the one checkbox and the one switch, a button that says
-  whether it is on (`aria-checked`), named by the text beside it in its
-  label or by its `label`; Space or a press turns it, fired as a
-  `change`. A checkbox is a small box, filled with ink and checked once
+- `Checkbox`: the one checkbox and the one switch, one button that says
+  whether it is on (`aria-checked`), its box and the text naming it
+  inside it, or named by its `label` where it has no text; Space or a
+  press anywhere on it turns it once, fired as a `change`. A checkbox is a small box, filled with ink and checked once
   on; a switch (`role="switch"`), a track its knob crosses, filled once
   on. With a `name` it posts its value while on.
 - `icons`: the Phosphor icons slices may name.

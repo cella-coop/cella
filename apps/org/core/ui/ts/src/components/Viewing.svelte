@@ -235,7 +235,7 @@
     <ul>
       {#each choices as c (c.key)}
         <li>
-          <Checkbox bind:checked={() => showing.has(c.key), (on) => card(c.key, on)}>{c.label}</Checkbox>
+          <Checkbox checked={showing.has(c.key)} onchange={(on) => card(c.key, on)}>{c.label}</Checkbox>
         </li>
       {/each}
     </ul>
@@ -363,7 +363,7 @@
                   <DropIndicator show={drag.before('columns', i)} />
                   <li data-drag-item="columns" data-drag-index={i}>
                     <DragHandle label={c.label} />
-                    <Checkbox bind:checked={() => c === titled || !hidden.has(c.key), (on) => hide(c.key, !on)} disabled={c === titled}>{c.label}</Checkbox>
+                    <Checkbox checked={c === titled || !hidden.has(c.key)} disabled={c === titled} onchange={(on) => hide(c.key, !on)}>{c.label}</Checkbox>
                   </li>
                 {/each}
                 <DropIndicator show={drag.before('columns', ordered.length)} />

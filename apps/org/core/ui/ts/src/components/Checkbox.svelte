@@ -3,14 +3,16 @@
   import Check from 'phosphor-svelte/lib/Check'
   import Icon from './Icon.svelte'
 
-  // The one checkbox and the one switch, never the browser's: a button
-  // that says whether it is on (`aria-checked`), Space or a press turning
-  // it, its text beside it in the label that names it, or, with none, its
-  // `label`. A switch (`role="switch"`) wears a track and a knob, a
-  // checkbox a box with a check. With a `name` it posts `value` while on,
-  // as a form's checkbox does. A turn is handed to `onchange` and
-  // announced to what holds it as a `change` event, so a setting commits
-  // as it is made.
+  // The one checkbox and the one switch, never the browser's: one button
+  // that says whether it is on (`aria-checked`), Space or a press anywhere
+  // on it turning it once, its box and the text that names it inside it,
+  // or, with no text, named by its `label`. A switch (`role="switch"`)
+  // wears a track and a knob, a checkbox a box with a check. With a
+  // `name` it posts `value` while on, as a form's checkbox does. Given
+  // `checked`, it turns at once and follows the value as it changes, as
+  // where the address follows it; bound, it reads only what holds it
+  // says. A turn is handed to `onchange` and announced to what holds it
+  // as a `change` event, so a setting commits as it is made.
   let {
     checked = $bindable(false),
     role = 'checkbox',
@@ -40,18 +42,11 @@
   }
 </script>
 
-{#snippet control()}
-  <button type="button" class="box {role}" {role} aria-checked={checked} aria-label={label} {disabled} {onclick}>
-    {#if role === 'checkbox' && checked}<Icon icon={Check} size="0.8em" />{/if}
-  </button>
-  {#if name && checked}<input type="hidden" {name} {value} />{/if}
-{/snippet}
-
-{#if children}
-  <label class="check" class:disabled>{@render control()}<span class="text">{@render children()}</span></label>
-{:else}
-  {@render control()}
-{/if}
+<button type="button" class="check {role}" class:bare={!children} {role} aria-checked={checked} aria-label={label} {disabled} {onclick}>
+  <span class="box">{#if role === 'checkbox' && checked}<Icon icon={Check} size="0.8em" />{/if}</span>
+  {#if children}<span class="text">{@render children()}</span>{/if}
+</button>
+{#if name && checked}<input type="hidden" {name} {value} />{/if}
 
 <style>
   .check {
@@ -59,10 +54,15 @@
     align-items: center;
     gap: var(--space-2);
     min-width: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--text);
     font-size: var(--text-sm);
+    text-align: start;
     cursor: pointer;
   }
-  .check.disabled {
+  .check:disabled {
     cursor: default;
     color: var(--text-muted);
   }
@@ -70,39 +70,36 @@
     min-width: 0;
   }
   .box {
+    position: relative;
     display: inline-grid;
     place-items: center;
     flex: none;
-    padding: 0;
     border: 1px solid var(--line);
     background: var(--sunk);
     color: var(--on-accent);
-    cursor: pointer;
     transition:
       background var(--fast) var(--ease),
       border-color var(--fast) var(--ease);
   }
-  .box:disabled {
-    cursor: default;
+  .check:disabled .box {
     opacity: 0.6;
   }
-  .checkbox {
+  .checkbox .box {
     width: 1rem;
     height: 1rem;
     border-radius: 4px;
   }
-  .checkbox[aria-checked='true'] {
+  .checkbox[aria-checked='true'] .box {
     border-color: var(--accent-fill);
     background: var(--accent-fill);
   }
   /* A switch: a track the knob crosses, filled with ink once on. */
-  .switch {
-    position: relative;
+  .switch .box {
     width: 1.75rem;
     height: 1rem;
     border-radius: var(--radius-pill);
   }
-  .switch::after {
+  .switch .box::after {
     content: '';
     position: absolute;
     top: 1px;
@@ -115,18 +112,18 @@
       translate var(--fast) var(--ease),
       background var(--fast) var(--ease);
   }
-  .switch[aria-checked='true'] {
+  .switch[aria-checked='true'] .box {
     border-color: var(--accent-fill);
     background: var(--accent-fill);
   }
-  .switch[aria-checked='true']::after {
+  .switch[aria-checked='true'] .box::after {
     translate: 0.75rem 0;
     background: var(--on-accent);
   }
-  .checkbox:focus-visible {
+  .bare.checkbox:focus-visible {
     border-radius: 4px;
   }
-  .switch:focus-visible {
+  .bare.switch:focus-visible {
     border-radius: var(--radius-pill);
   }
 </style>

@@ -79,6 +79,7 @@
     }
   }
   const hide = () => {
+    s.close()
     if (list.matches(':popover-open')) {
       list.hidePopover()
     }

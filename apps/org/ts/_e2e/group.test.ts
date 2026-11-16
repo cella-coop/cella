@@ -164,8 +164,13 @@ eachBrowser((browserName, launch) => {
         if (layout !== 'board') {
           assert.equal(await chosen(by), '', `${browserName}: ${name}'s ${layout} groups by nothing at first`)
         }
-        await choose(by, { label: field.label })
-        await page.waitForURL((u) => u.searchParams.get('by') === field.key)
+        // A board already grouped by the field keeps it: choosing it again
+        // changes nothing, as the browser's own select did not.
+        if ((await chosen(by)) !== field.key) {
+          await choose(by, { label: field.label })
+          await page.waitForURL((u) => u.searchParams.get('by') === field.key)
+        }
+
         await view.getByRole('heading', { name: 'View', exact: true }).hover()
         await groups(page, name, layout, want, `${browserName} ${name} ${layout} by ${field.key}`)
       }

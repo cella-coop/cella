@@ -72,7 +72,15 @@ eachBrowser((name, launch) => {
       await choose.focus()
       await page.keyboard.press('Enter')
       const list = page.getByRole('listbox', { name: 'Times' })
-      await list.waitFor()
+      // The list takes the focus once it opens, on its next frame.
+      const opened = async () => {
+        await list.waitFor()
+        await list.evaluate((el) => new Promise<void>((done) => {
+          const tick = () => (el === document.activeElement ? done() : requestAnimationFrame(tick))
+          tick()
+        }))
+      }
+      await opened()
       // The time the keyboard is on, waited for as the date field's test
       // waits for its day: the list answers a key on its next frame.
       const at = async () => {
@@ -97,7 +105,7 @@ eachBrowser((name, launch) => {
       assert.equal(await time.inputValue(), '14:00')
       assert.ok(await choose.evaluate((el) => el === document.activeElement), 'a pick gives the focus back to its button')
       await page.keyboard.press('Enter')
-      await list.waitFor()
+      await opened()
       await page.keyboard.press('End')
       assert.equal(await on('23:45'), '23:45', 'End reaches the day\'s last time')
       await page.keyboard.press('Escape')

@@ -59,16 +59,18 @@ analytics start --url URL` runs it, the URL logging in as
 readable by its user alone; the shell's server reads that file as
 `CELLA_ANALYTICS_TOKEN_FILE`, so both run as one user, or the token is
 copied to the server's with the same care as a key. It listens on
-localhost alone and is never exposed: the org app's server is its one
+127.0.0.1 alone (`quack:127.0.0.1:<port>`) and is never exposed: the org app's server is its one
 client.
 
 On a NixOS host the flake's module runs it as `cella-<name>-analytics`
 ([the module](#the-module)), started after the scope's setup and before
 its server, as the `cella` user, which logs in as `cella_analytics` over
 Postgres's socket; the shell backgrounds itself, so the unit forks, and
-its token and pid are in the scope's `<stateDir>/<name>/.data`.
+its token and pid are in the scope's `<stateDir>/<name>/.data`. It runs
+hardened as the server does: no new privileges, the system read-only
+but for the scope's `<stateDir>/<name>`, a private `/tmp`.
 
-The server's unit sets `CELLA_ANALYTICS=quack:localhost:<port>`,
+The server's unit sets `CELLA_ANALYTICS=quack:127.0.0.1:<port>`,
 `CELLA_ANALYTICS_TOKEN_FILE` and `CELLA_DUCKDB_EXTENSIONS` as `cella
 serve --prod` does. The shell holds no state of its own: a restart, or a
 migration that publishes the views again, loses nothing, and a backup
@@ -292,7 +294,20 @@ each port behind its own proxy, which terminates TLS and sets
 
 Since the notary's key is the cluster's, every scope on a host is signed
 by one key: the module refuses a host mixing a demo's scope with a
-co-op's, so a demo's keys are the demo's own.
+co-op's, so a demo's keys are the demo's own. Every scope's server and
+shell run as the one `cella` user, so a demo host serves demos only, and
+a co-op's scope is never on a host anyone may sign in to as a demo.
+
+The module refuses as well two scopes naming one database, counting a
+demo's `<database>_template` among them, and a scope's `environment`
+setting `CELLA_DEMO`, `CELLA_DEV` or `HOST`: only `demo.enable` makes a
+demo, and a server listens on 127.0.0.1 alone. A demo never drops a
+database that is not its own: `cella demo template` renews only a
+database its comment marks a template `cella demo template` made, and
+`cella demo copy --replace` drops only one its comment marks a copy of
+that template, each refusing any other, so turning a co-op's scope into
+a demo by its `demo.enable` fails its setup and leaves its database as
+it was.
 
 ## The demo
 

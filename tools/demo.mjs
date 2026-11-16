@@ -36,14 +36,28 @@ const db = new pg.Client({ ...at, database: 'postgres' })
 await db.connect()
 const id = (name) => db.escapeIdentifier(name)
 const exists = async (name) => (await db.query('SELECT 1 FROM pg_database WHERE datname = $1', [name])).rowCount > 0
+// What a template's comment opens with, from its making on.
+const TEMPLATE = 'cella demo template: '
+// Refuses to drop a database that is not what its comment must say it is,
+// a demo's template or a copy of it, so no co-op's database is ever
+// dropped for a demo's.
+const refuse = async (name, marker, what) => {
+  const made = (await db.query("SELECT coalesce(shobj_description(oid, 'pg_database'), '') AS made FROM pg_database WHERE datname = $1", [name])).rows[0]?.made ?? ''
+  if (!made.startsWith(marker)) {
+    throw new Error(`demo: ${name} is not ${what}, as its comment would say, so it is never dropped for a demo's; name a database of the demo's own`)
+  }
+}
 
 try {
   if (verb === 'renew') {
     if (await exists(template)) {
+      await refuse(template, TEMPLATE, 'a template cella demo template built')
       await db.query(`ALTER DATABASE ${id(template)} WITH IS_TEMPLATE false`)
       await db.query(`DROP DATABASE ${id(template)} WITH (FORCE)`)
     }
     await db.query(`CREATE DATABASE ${id(template)}`)
+    // Marked at once, so a build cut off is a template's to renew still.
+    await db.query(`COMMENT ON DATABASE ${id(template)} IS ${db.escapeLiteral(`${TEMPLATE}building`)}`)
     console.log(`demo: ${template} made afresh`)
   } else if (verb === 'label') {
     const row = (await db.query("SELECT coalesce(shobj_description(oid, 'pg_database'), '') AS made, datistemplate FROM pg_database WHERE datname = $1", [template])).rows[0]
@@ -74,9 +88,12 @@ try {
       if (!rest.includes('--replace')) {
         throw new Error(`demo copy: ${name} exists; --replace drops it first`)
       }
+      await refuse(name, `a copy of ${template}:`, `a copy of ${template}`)
       await db.query(`DROP DATABASE ${id(name)} WITH (FORCE)`)
     }
     await db.query(`CREATE DATABASE ${id(name)} TEMPLATE ${id(template)}`)
+    // Marked at once, so a copy cut off is a copy to replace still.
+    await db.query(`COMMENT ON DATABASE ${id(name)} IS ${db.escapeLiteral(`a copy of ${template}: ${source.made}`)}`)
     // What the template's database and its roles there are set to, as the
     // seed set the scope's address, its timezone and the story's clock:
     // pg_db_role_setting is the cluster's, keyed by database, so a copy
@@ -95,7 +112,6 @@ try {
         await db.query(`ALTER ${on} SET ${key.split('.').map(id).join('.')} = ${db.escapeLiteral(value)}`)
       }
     }
-    await db.query(`COMMENT ON DATABASE ${id(name)} IS ${db.escapeLiteral(`a copy of ${template}: ${source.made}`)}`)
     console.log(`demo: ${name} copied from ${template}`)
   } else {
     throw new Error('demo: renew, close --made-by TEXT, or copy NAME [--replace]')

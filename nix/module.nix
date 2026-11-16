@@ -22,6 +22,8 @@ let
   template = s: "${s.database}_template";
   home = name: "${cfg.stateDir}/${name}";
   databases = lib.concatMap (s: [ s.database ] ++ lib.optional s.demo.enable (template s)) (lib.attrValues cfg.scopes);
+  # What a scope's environment may not set: the module's own.
+  reserved = [ "CELLA_DEMO" "CELLA_DEV" "HOST" ];
   ports = lib.concatMap (s: [ s.port s.analyticsPort ]) (lib.attrValues cfg.scopes);
   # A database's comment, which labels a template with what built it and a
   # copy with the template it was made from.
@@ -176,7 +178,15 @@ in
         assertion = lib.versions.major pg.version == "18";
         message = "services.cella: the notary is built for Postgres 18, and services.postgresql.package is ${pg.version}";
       }
-    ];
+      {
+        # A demo's template is `<database>_template`, so it counts too.
+        assertion = lib.length databases == lib.length (lib.unique databases);
+        message = "services.cella: every scope's database, and a demo's `<database>_template`, is its own: ${lib.concatStringsSep ", " databases}";
+      }
+    ] ++ lib.mapAttrsToList (name: s: {
+      assertion = lib.intersectLists reserved (lib.attrNames s.environment) == [ ];
+      message = "services.cella: scopes.${name}.environment sets none of ${lib.concatStringsSep ", " reserved}: only demo.enable makes a demo, and a server listens on 127.0.0.1 alone";
+    }) cfg.scopes;
 
     users.users.cella = {
       isSystemUser = true;
@@ -269,7 +279,10 @@ in
           requires = [ "cella-${name}-setup.service" ];
           before = [ "cella-${name}.service" ];
           wantedBy = [ "multi-user.target" ];
-          environment.CELLA_DATA = data;
+          environment = {
+            CELLA_DATA = data;
+            HOME = home name;
+          };
           serviceConfig = {
             Type = "forking";
             User = "cella";
@@ -279,6 +292,11 @@ in
             ExecStop = "${cella} analytics stop --port ${toString s.analyticsPort}";
             PIDFile = "${data}/analytics/${toString s.analyticsPort}/pid";
             Restart = "on-failure";
+            NoNewPrivileges = true;
+            PrivateTmp = true;
+            ProtectSystem = "strict";
+            ProtectHome = true;
+            ReadWritePaths = [ (home name) ];
           };
         };
 
@@ -297,7 +315,7 @@ in
             PGDATABASE = db;
             PGUSER = "cella_app";
             CELLA_SESSION_KEY_FILE = "${home name}/session.key";
-            CELLA_ANALYTICS = "quack:localhost:${toString s.analyticsPort}";
+            CELLA_ANALYTICS = "quack:127.0.0.1:${toString s.analyticsPort}";
             CELLA_ANALYTICS_TOKEN_FILE = token;
           }
           // lib.optionalAttrs s.demo.enable { CELLA_DEMO = "1"; }

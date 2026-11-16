@@ -86,9 +86,9 @@
             {#each columns as c, j (c.key)}
               <td class:end={end(c)}>
                 {#if link && j === 0}
-                  <a href={link} class="stretched" tabindex={stop < 0 ? undefined : -1}><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} /></a>
+                  <a href={link} class="stretched" tabindex={stop < 0 ? undefined : -1}><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} /></a>
                 {:else}
-                  <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} />
+                  <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} />
                 {/if}
               </td>
             {/each}

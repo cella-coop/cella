@@ -1,6 +1,6 @@
 +++
 title = "Person"
-updated = 2026-11-13
+updated = 2026-11-15
 +++
 
 Everyone the co-op knows, by the address they sign with, and their
@@ -295,7 +295,8 @@ The `people` collection in Governance: everyone the co-op knows, by name.
 Each feat that holds what a person holds adds its chip, a badge column to filter and group by: Member,
 the membership's status, and Worker, employed or left. The New form is the
 feats': an invitation and a hire, each under its title. A person's
-page holds their address and devices, with the profile write on it; the
+page holds their address on Overview and their devices on a tab of
+their own, Devices, with the profile write on it; the
 feats add their membership's and employment's properties and tabs
 (Joining, Own and decide, Powers, Employment), and the grafts joining
 them the rest, each in the tab of the slice it joins or in one of its

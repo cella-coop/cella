@@ -72,8 +72,8 @@ test('a proposal naming no author is the circle\'s', async () => {
   const { motion, author } = settled(await propose(proposal('The assembly asks itself'), as(julien)))
   assert.equal(author, 'ag')
   assert.equal(await authorOf(motion), 'ag')
-  assert.equal((await read(as(julien).db, motion))?.authorName, 'General assembly')
-  assert.equal((await summaries(as(julien).db)).find((s) => s.id === motion)?.authorName, 'General assembly')
+  assert.equal((await read(as(julien).db, motion))?.authorName, 'Assembly')
+  assert.equal((await summaries(as(julien).db)).find((s) => s.id === motion)?.authorName, 'Assembly')
 })
 
 unseeded('the New form puts a motion as a held role or as its circle, and the page names that author in light and dark', async () => {
@@ -84,7 +84,7 @@ unseeded('the New form puts a motion as a held role or as its circle, and the pa
     try {
       for (const [who, author, name] of [
         [camille, 'manager', 'Manager'],
-        [julien, '', 'General assembly'],
+        [julien, '', 'Assembly'],
       ]) {
         for (const scheme of ['light', 'dark'] as const) {
           const context = await browser.newContext({ colorScheme: scheme, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })

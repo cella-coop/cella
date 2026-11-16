@@ -32,7 +32,7 @@ before(async () => {
     `INSERT INTO meeting.meeting (id, circle, title, at, place) VALUES
        ('coordination-2026-10-19', 'coordination', 'Coordination', '2026-10-19 10:00', 'Studio'),
        ('coordination-2026-10-26', 'coordination', 'Coordination', '2026-10-26 10:00', 'Studio'),
-       ('ag-2026-10-31', 'ag', 'General assembly', '2026-10-31 10:00', 'Studio')`,
+       ('ag-2026-10-31', 'ag', 'Assembly', '2026-10-31 10:00', 'Studio')`,
   )
   await db.query(
     `INSERT INTO meeting.item (meeting, pos, title, presenter, minutes) VALUES

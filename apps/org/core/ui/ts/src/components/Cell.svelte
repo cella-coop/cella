@@ -1,26 +1,49 @@
 <script lang="ts">
   import type { Kind, Tone } from '../models/view.ts'
   import { show } from '../models/format.ts'
-  import Badge from './Badge.svelte'
-  import Person from './Person.svelte'
   import { useShell } from '../hooks/useShell.ts'
+  import Badge from './Badge.svelte'
+  import Icon from './Icon.svelte'
+  import Person from './Person.svelte'
 
-  let { value, kind = 'text', tone }: { value: unknown; kind?: Kind; tone?: Tone } = $props()
+  // A value as a cell, a card's field or a property draws it. One that
+  // names a record, of the collection `record` names, wears that
+  // collection's icon before it; a person is always one of `people`.
+  let { value, kind = 'text', tone, record }: { value: unknown; kind?: Kind; tone?: Tone; record?: string } = $props()
   const text = $derived(show(value, kind))
-  // A circle's id is drawn as its name, where the member reads it.
   const shell = useShell()
+  // A circle's id is drawn as its name, where the member reads it.
   const shown = $derived(kind === 'circle' ? (shell.circle(text) ?? text) : text)
+  const icon = $derived(text === '—' ? undefined : shell.icon(record ?? (kind === 'person' ? 'people' : undefined)))
 </script>
 
+{#snippet mark()}
+  {#if icon}<span class="mark"><Icon {icon} size="1em" /></span>{/if}
+{/snippet}
+
 {#if kind === 'badge' && text !== '—'}
-  <Badge tone={tone ?? 'neutral'}>{text}</Badge>
+  <Badge tone={tone ?? 'neutral'} {icon}>{text}</Badge>
 {:else if kind === 'person' && text !== '—'}
-  <Person address={text} />
+  <span class="record">{@render mark()}<Person address={text} /></span>
+{:else if icon}
+  <span class="record">{@render mark()}<span class="cell {kind}" class:toned={tone} data-tone={tone}>{shown}</span></span>
 {:else}
   <span class="cell {kind}" class:empty={text === '—'} class:toned={tone} data-tone={tone}>{shown}</span>
 {/if}
 
 <style>
+  .record {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-width: 0;
+    max-width: 100%;
+  }
+  .mark {
+    display: inline-flex;
+    flex: none;
+    color: var(--text-muted);
+  }
   .cell {
     overflow: hidden;
     text-overflow: ellipsis;

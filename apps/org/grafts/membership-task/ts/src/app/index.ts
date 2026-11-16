@@ -10,7 +10,7 @@ export const app: App = {
   name: 'membership-task',
   extends: {
     tasks: {
-      columns: [{ key: 'assignee', label: 'Assignee', kind: 'badge', role: 'meta', value: (r: { assignee?: string }) => r.assignee }],
+      columns: [{ key: 'assignee', label: 'Assignee', kind: 'badge', role: 'meta', record: 'people', value: (r: { assignee?: string }) => r.assignee }],
       page: {
         properties: (a: Assigned) => [
           { label: 'Assignee', value: a.assignee?.name ?? 'no one', href: a.assignee ? `/people/${a.assignee.address}` : undefined },

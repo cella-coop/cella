@@ -10,7 +10,7 @@ const db = new pg.Client()
 
 before(async () => {
   await db.connect()
-  await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'General assembly', true) ON CONFLICT DO NOTHING`)
+  await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'Assembly', true) ON CONFLICT DO NOTHING`)
 })
 
 after(async () => {
@@ -31,7 +31,7 @@ test('a setting names a circle that exists, and a quorum between 1 and 100 %', a
 
 test('a meeting is a circle\'s that exists, the root\'s where it names none', async () => {
   await db.query('BEGIN')
-  const { rows } = await db.query(`INSERT INTO meeting.meeting (id, title, at) VALUES ('ag-2026-11-28', 'General assembly', '2026-10-31 10:00') RETURNING circle`)
+  const { rows } = await db.query(`INSERT INTO meeting.meeting (id, title, at) VALUES ('ag-2026-11-28', 'Assembly', '2026-10-31 10:00') RETURNING circle`)
   assert.deepEqual(rows, [{ circle: 'ag' }])
   await db.query('ROLLBACK')
   await assert.rejects(

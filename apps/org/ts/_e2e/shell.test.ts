@@ -42,8 +42,8 @@ after(async () => {
 test('every main page renders on the seed', async () => {
   const pages: [string, string][] = [
     ['/people', 'Camille Martin'],
-    [`/people/${camille}`, 'Powers held'],
-    ['/circles', 'General assembly'],
+    [`/people/${camille}?tab=powers`, 'Powers held'],
+    ['/circles', 'Assembly'],
     ['/circles/ag?tab=roles', 'Manager'],
     ['/motions', 'Admit Inès Haddad'],
     ['/motions/m-2026-012', 'passes by consent'],
@@ -83,7 +83,7 @@ test('the sidebar names the co-op as the database does, and its menus open in th
   assert.equal((sidebar.match(/popover="auto"/g) ?? []).length, 2, 'the co-op menu and the account menu are popovers')
 })
 
-test('the co-op selector lists the assembly first, and any other circle chosen is the lens its trigger names until the assembly clears it', async () => {
+test('the co-op selector lists the circles the member sits in, and the one chosen is the lens its trigger names until the co-op clears it', async () => {
   const session = await shell.signIn(camille)
   const logged = async () => (await one<{ n: number }>('SELECT count(*)::int AS n FROM cella.log')).n
   const before = await logged()
@@ -103,13 +103,17 @@ test('the co-op selector lists the assembly first, and any other circle chosen i
   const checked = (text: string) => [...text.matchAll(/aria-checked="true"[^>]*name="lens" value="([^"]*)"/g)].map((m) => m[1])
 
   const whole = await seen()
-  const menu = whole.slice(whole.indexOf('action="/lens"'))
-  const order = ['General assembly', 'Brand', 'Coordination', '<hr', 'Marketing', 'Operations', 'Web']
+  const menu = whole.slice(whole.indexOf('action="/lens"'), whole.indexOf('</form>', whole.indexOf('action="/lens"')))
+  const order = ['Lanterne', 'Circles', 'Brand', 'Coordination']
   const at = order.map((s) => menu.indexOf(s))
   assert.ok(at.every((i) => i >= 0), `the menu holds ${order.join(', ')}`)
-  assert.deepEqual([...at].sort((a, b) => a - b), at, 'the assembly first, then the circles Camille sits in, then the rest')
-  assert.ok(!menu.includes('All circles'), 'no row lists all circles')
-  assert.deepEqual(checked(whole), [''], 'with no lens, the assembly is checked, its row clearing the lens')
+  assert.deepEqual([...at].sort((a, b) => a - b), at, 'the co-op first, then the circles Camille sits in')
+  assert.ok(!menu.includes('All circles') && !menu.includes('Yours') && !menu.includes('Others'), 'no All circles and no groups: the co-op itself clears the lens')
+  assert.ok(!menu.includes('Assembly'), 'the assembly is the co-op row, not a circle of its own')
+  for (const other of ['Marketing', 'Operations', 'Web']) {
+    assert.ok(!menu.includes(other), `${other}, a circle Camille does not sit in, is not listed`)
+  }
+  assert.deepEqual(checked(whole), [''], 'with no lens, the co-op is checked')
   assert.ok(!whole.includes('Co-op: Lanterne / '), 'and the trigger names the co-op alone')
 
   const set = await lensing('web')
@@ -130,7 +134,7 @@ test('the co-op selector lists the assembly first, and any other circle chosen i
 
   const cleared = await lensing('')
   assert.equal(cleared.status, 303)
-  assert.match(cleared.cookie, /^cella-lens=;.*Max-Age=0/i, 'the assembly clears the lens')
+  assert.match(cleared.cookie, /^cella-lens=;.*Max-Age=0/i, 'the co-op clears the lens')
   assert.equal(await logged(), before, 'and nothing of it enters the log')
 })
 
@@ -162,6 +166,22 @@ test('a lensed collection lists only its circle’s rows, and a registry says th
   assert.ok(counted(chart) > 0, 'the chart of accounts holds rows')
   assert.equal(counted(chart), counted(unlensed), 'and keeps every one of them under the lens')
   assert.ok(!unlensed.includes('leaves Accounts whole'), 'with no lens it says nothing')
+})
+
+test('an accordion the viewer shut or opened stays so across page loads, by its cookie', async () => {
+  const session = await shell.signIn(camille)
+  const seen = async (sections?: string) => {
+    const cookie = sections ? `${session}; cella-sections=${encodeURIComponent(sections)}` : session
+    const res = await fetch(`${shell.base}/projects`, { headers: { accept: 'text/html', cookie } })
+    assert.equal(res.status, 200)
+    return res.text()
+  }
+  const open = (html: string, name: string) =>
+    new RegExp(`<button class="head[^"]*"[^>]*aria-expanded="true"[^>]*>(?:(?!</button>).)*?${name}`, 's').test(html)
+  const key = encodeURIComponent('feature:Governance')
+  assert.ok(open(await seen(`${key}:1`), 'Governance'), 'an accordion opened stays open')
+  assert.ok(!open(await seen(`${key}:0`), 'Governance'), 'an accordion shut stays shut')
+  assert.ok(!open(await seen(`${key}:1;;`), 'Governance'), 'a malformed cookie is ignored')
 })
 
 test('the sidebar’s counts narrow with the lens, and the Inbox and a shut accordion’s dot stay whole', async () => {
@@ -401,7 +421,7 @@ test('closed on 31 October, m-2026-012 admits Inès and seats her in the close\'
   const subscribed = await one<{ op: string; actor: string }>('SELECT op, actor FROM cella.log WHERE n = $1', [closed.then[0].then[0].entry])
   assert.deepEqual(subscribed, { op: 'account:capital:subscribe', actor: camille })
   const { text } = await page(`/people/${ines}`)
-  assert.ok(text.includes('active') && text.includes('General assembly') && text.includes('phone'))
+  assert.ok(text.includes('active') && text.includes('Assembly') && text.includes('phone'))
   assert.ok((await page('/motions/m-2026-012')).text.includes('passed by consent'))
 })
 

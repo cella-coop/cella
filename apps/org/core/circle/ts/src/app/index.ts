@@ -2,6 +2,7 @@ import { icons, power, type App } from '@cella/org-ui'
 import type { Circle, Detail, Standing, Provenance } from '../models/circle.ts'
 import Chain from './blocks/Chain.svelte'
 import Structure from './blocks/Structure.svelte'
+import View from './blocks/View.svelte'
 import { cap, covers, tones } from '../bindings/words.ts'
 
 // The feat's client side: the circles, none within another, and a
@@ -25,6 +26,7 @@ export const app: App = {
       },
       page: {
         eyebrow: 'Circle',
+        actions: View,
         title: (c: Detail) => c.name,
         subtitle: (c: Detail) => c.id,
         summary: (c: Detail) => c.purpose,

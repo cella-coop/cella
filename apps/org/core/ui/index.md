@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -107,13 +107,14 @@ draws.
   scrolls. Its top is the co-op selector, the co-op's mark and name,
   followed by the circle's name where the member is in one but the
   assembly, "Lanterne / Web", so a lens is never hidden. Its menu lists
-  the scopes the shell serves (one today) with their legal names, then
-  the circles the member reads: the assembly first, the co-op's root
-  and the same place as the co-op, which clears the lens and is checked
-  where there is none, then the circles the member sits in, then the
-  rest; nothing lists all circles at once. A circle chosen there is the
-  circle the member is in, their **lens**, which every collection reads
-  through ([architecture](../../../../_corpus/doc/architecture.md#the-lens)):
+  the scopes the shell serves (one today) with their legal names; the
+  co-op row, whose root is the assembly, is checked where the member has
+  no lens and clears it, and below it come the circles the member sits
+  in, with the lens's own where they do not; nothing lists all circles
+  at once, and a rule sets Settings apart below them. A circle chosen
+  there is the circle the member is in, their **lens**, which every
+  collection reads through
+  ([architecture](../../../../_corpus/doc/architecture.md#the-lens)):
   a cookie of the scope's, written by `/lens` as `/theme` writes the
   theme, so the server renders the lensed page and nothing of it enters
   the log; a lens naming a circle the member no longer reads, or the
@@ -149,9 +150,12 @@ draws.
   member, in the lensed circle where there is a lens, the count its
   page heads with, in a small quiet pill. Several accordions may be
   open at once: one the viewer never touched is open while it holds the
-  page, and one they opened or shut stays so. The foot is the command menu,
+  page, and one they opened or shut stays so across page loads, a cookie
+  keeping it as it keeps the drawer, so the server renders the
+  accordions as they left them. The foot is the command menu,
   then the account menu, the signed-in member, whose menu holds their
-  address, Settings, Sign out and the theme. Settings is its own
+  address, Settings and Sign out, beside one icon button for the theme,
+  which cycles system, light and dark and shows the current one. Settings is its own
   sidebar, one for the member and the co-op as Linear's, in place of
   the top and the features while one of its pages is open: Back to app,
   which returns to the last page left, then the `platform` collections
@@ -185,6 +189,13 @@ draws.
   its values. The ui
   check refuses a layer floated by hand (`position: absolute` with a
   `z-index`) anywhere else.
+- `Dialog`: the one modal, a native `dialog` in the top layer, what
+  lies behind it dimmed: its title naming it, what it says above its
+  form, the form's fields, why the last submit was refused, and two
+  buttons, Cancel and the one that confirms. A modal is no page: it
+  confirms what it holds. Cancel, Escape and a click outside it cancel
+  it alike; whoever opens it holds the element and decides what a
+  cancel takes back.
 - `Frame` (`PageFrame.svelte`): the one page frame, its header one
   compact row as Linear's, spanning the content and the drawer: on an
   item, a quiet caret back to its collection, on a collection its icon as
@@ -312,7 +323,9 @@ draws.
   it shows is where the viewer is, not part of the view: `at` in the
   address, today when absent, which its arrows and Today link to and
   a change to the view keeps
-  (`models/calendar.ts`). A view, its extensions overriding it part by
+  (`models/calendar.ts`). It draws that month or week, its header and
+  arrows with it, even where no row falls in it; only a view that keeps
+  no row at all says it is empty. A view, its extensions overriding it part by
   part, declares its `look`: its default layout, its board's grouping
   and columns' order (`lanes`), its cards' fields, its calendar's date
   (`on`) and span, and the columns a table hides until a view shows
@@ -476,14 +489,33 @@ by default can be put in a list's meta. A look's cards' fields are its
 cards', not a list's or a feed's: either shows its own default until
 the view chooses otherwise.
 
+A value that names a record wears its collection's icon before it,
+wherever `Cell` draws it: in a card's field, a list's or a table's
+cell and the drawer's Properties. A column names the collection its
+value is a record of by `record`, as a task's assignee names `people`
+and its project `projects`; a property, by an `href` that is a record's
+own, `/<collection>/<id>`; a `person` is always one of `people`. The
+icon is the one that collection's view declares, which `Cell` reads
+from the sidebar's navigation the shell hands `useShell`, so no slice
+imports another's to find it. It stands at the value's size, quieter
+than its text, and is hidden from assistive technology, since the text
+names the record. A collection that declares no icon, or that the shell
+does not mount, leaves the value bare; an enumeration, as a task's
+priority, names no record and wears none.
+
 ## Settings
 
 A settings page is a plain form, `Settings`, one `Setting` a row: its
 label, its current value in its field, and under it in a quiet line
 what changes it, a write the reader makes or a motion of the circle
-that decides it. Every field is editable, whoever reads it; Save posts
-only the fields changed. A slice declares each setting with the write
-that changes it directly, if any, and the motion kind that changes it
+that decides it. Every field is editable, whoever reads it, and the
+form has no Save: each setting commits as its field does. A pick, from
+a select, a checkbox, a radio or a calendar, commits as it is made; a
+typed value commits when focus leaves the field or on Enter (Ctrl or
+Cmd with Enter in a text area), and Escape takes a typed edit back
+(the `committing` attachment). A value committed as it was in force
+does nothing. A slice declares each setting with the write that
+changes it directly, if any, and the motion kind that changes it
 otherwise, its arguments filled from the field (`models/settings.ts`).
 A setting's field is one `Field` draws, or an arrangement, `Arrange`,
 where it declares its `choices`: a fieldset of every choice with a
@@ -515,34 +547,54 @@ the one it replaces, those the reader may change before proposing
 labelled as the New form labels them and the rest carried as they are,
 and the words its title says the change in. The form is handed the
 circle that decides its motions and the deadline asked for, as its
-slice reads them. `plan` splits the fields changed into each write,
-posted once with all its fields, one after the other until one does not
-settle, and one motion: the kind of the first field changed that its
-reader may not write, which every other field of that kind joins, its
-arguments merged and its titles joined. A field of another kind waits
-for the next Save, marked not saved, as does one no motion is declared
-to change. The dev server alone serves a specimen of a form mixing the
-two kinds, `/specimens/settings`, a page of no slice that reads nothing
-and has no actions, for the browser test to see the dialog on.
+slice reads them. The dev server alone serves a specimen of a form
+mixing the two kinds, `/specimens/settings`, a page of no slice that
+reads nothing and has no actions, for the browser test to see the
+dialog on.
 
-A field the reader may change saves by its write, and the form shows
-the outcome as any `Form` does: the last write's that names one, as
-the theme's cookie names none. A field they may not change, since its
-write needs a mandate they lack, or since only a motion changes it,
-does not save: Save opens `ProposeInstead`, a dialog in the top layer
-as `Popover` is, which says why in the guard's own words, the refusal
-its write's guard gives as early as it can, with the values it read,
-and offers to propose the change instead. Its form is the motions'
-New form, prefilled: the circle that decides it (`motion.decider`),
-its title saying the change ("Rename Coordination to Operations"),
-the action it carries with its arguments, from the value typed and the
-one it replaces, and the deadline the procedure its requirements fix
-asks for. The reader may edit any of it before proposing; Propose posts
-it to the page slice's own `propose` action, and the outcome names the
-log entry that proposes the
-motion. Closing the dialog keeps what was typed, and the field marks
-the change as not saved. A form whose fields mix the two saves the one
-kind and offers the motion for the other, in one go.
+A setting the reader may change saves by its write as it commits,
+through the page's writes as any form's: the write posts the fields
+it saves that differ from their values in force (`posted`), so one
+left as it is never posts and a contact detail never set stays unset.
+Each write has one post in flight at a time: a commit made while it
+posts waits for it to settle, then sends the values as they stand.
+Beside the field, in its quiet line, a mark says how the commit went,
+announced as it changes (`aria-live`): Saving… while it posts, a brief
+Saved once it settles, or Not saved and the refusal's reason, the
+field keeping what was typed; the shell shows the outcome as for any
+`Form`, the write's that names one, as the theme's cookie names none.
+A setting the reader may not change, since its write needs a mandate
+they lack, or since only a motion changes it, never posts a write: its
+commit opens `ProposeInstead`, a `Dialog`, one a commit, which says plainly that the change needs a motion of
+the circle that decides it, shows the change from the value in force
+to the one typed, and says why in the guard's own words, the refusal
+its write's guard gives as early as it can, with the values it read
+(`proposal`). Its form is the motions' New form, prefilled: the circle
+that decides it (`motion.decider`), its title saying the change
+("Rename Coordination to Operations"), the action it carries with its
+arguments, from the value typed and the one it replaces, and the
+deadline the procedure its requirements fix asks for. The reader may
+edit any of it before proposing; its primary action, Propose to the
+deciding circle, posts it to the page slice's own `propose` action,
+the outcome naming the log entry that proposes the motion, and the
+field, marked Proposed, shows the value in force again, the change now
+the motion's to make. A refused proposal keeps the dialog open, saying
+why. Cancel, Escape or a click outside it takes the change back, the
+field showing the value in force. A setting no motion is declared to
+change, or with no circle to decide it, is marked Not saved.
+
+Something new that only a motion makes, as a circle's role, is no
+setting: it is composed whole and proposed as one motion. `Compose` is
+a quiet button, as Add a role…, opening a `Dialog` of its fields, each
+an argument of the motion's one action (`Composed`,
+`models/compose.ts`), a field that follows another until it is typed,
+as a role's id follows its name; above them, why a motion makes it, in
+its guard's words. Its primary action, Propose to the deciding circle,
+posts the motions' New form to the page's `propose`: the circle that
+decides it, the title its slice words from what was typed, the
+deadline the circle asks, and the action's arguments, typed and fixed.
+The guard judges it: a refusal keeps the dialog open with what was
+typed, saying why; a proposal closes it empty.
 
 The Settings section opens on Account, the acting person's own
 settings at `/settings/account`, which the account menu at the
@@ -559,10 +611,11 @@ Organization, the co-op's own, comes first under Organization at
 name, legal form, capital, seat, SIREN, trade register and VAT number,
 none saved by anyone's write, since only a motion of the assembly
 adopts them ([the co-op's
-particulars](../circle/index.md#the-co-ops-particulars)). Save opens
-the dialog proposing a motion of the assembly, each value changed its
-own field, which carries Adopt a policy replacing the particulars with
-them, its procedure the one their protection fixes; and under the form,
+particulars](../circle/index.md#the-co-ops-particulars)). A value's
+edit, as it commits, opens the dialog proposing a motion of the
+assembly, the value its own field, which carries Adopt a policy
+replacing the particulars with it, its procedure the one their
+protection fixes; and under the form,
 read-only, the scope's address and its timezone, each saying a host
 sets it ([the notary](../notary/index.md#settings)). Membership-motion
 serves it, as the graft that proposes the assembly's motions
@@ -605,7 +658,10 @@ lens and the people's names, and what a date field holds typed and says of it, a
 `hooks/` (`CollectionState`, `CommandState`, `ShellState`, `DateState`), and the sign-in and
 an invitation taken up (`SignInState`, `JoinState`), each reached through
 its `use*` hook, as [architecture](../../../../_corpus/doc/architecture.md#client-state)
-describes. `useSection` hands a `Section`'s title down, so an empty
+describes. `ShellState` imports no router: the shell hands its `follow` the
+router's `afterNavigate`, so the class stays plain TypeScript where a
+slice's block reaches it through `useShell`, as a circle's View as
+this circle reads the lens. `useSection` hands a `Section`'s title down, so an empty
 `Table` in it says "No roles" in one quiet line, with no headers.
 
 ## Dragging

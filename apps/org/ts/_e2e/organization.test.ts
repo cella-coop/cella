@@ -2,16 +2,17 @@
 // seeded Lanterne through the dev server: Camille opens Settings from the
 // co-op menu and lands on Organization, `/settings/organization`, first
 // under Organization: the co-op's particulars in force, each changed by a
-// motion of the General assembly, and under them the scope's address and
-// timezone, each set by a host. She types a new seat and a SIREN of five
-// digits and Saves; the dialog says why no write of hers changes them and
-// offers the assembly's motion, prefilled, each value its own field, whose
-// proposal the guard refuses there before anything is proposed. She
-// mends the SIREN in the dialog and proposes it: the assembly's motion
-// carries one policy, the particulars worded again with the new seat,
-// replacing those in force with their protection, and is decided by the
-// extraordinary assembly. `SHOTS` names where its screenshots go. Run by
-// `cella test e2e organization`.
+// motion of the Assembly, and under them the scope's address and
+// timezone, each set by a host. The form has no Save. She types a SIREN
+// of five digits and presses Enter; the dialog says the change needs a
+// motion of the assembly and why no write of hers makes it, and offers
+// the motion, prefilled, whose proposal the guard refuses there before
+// anything is proposed; she cancels, and the SIREN in force shows again.
+// She types a new seat and leaves the field, and proposes the motion the
+// dialog offers: it carries one policy, the particulars worded again
+// with the new seat, replacing those in force with their protection, and
+// is decided by the extraordinary assembly. `SHOTS` names where its
+// screenshots go. Run by `cella test e2e organization`.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -56,7 +57,7 @@ eachBrowser((name, launch) => {
           assert.equal(await form.getByLabel('Name', { exact: true }).inputValue(), 'Lanterne', `${at}: its name in force`)
           assert.equal(await form.getByLabel('Seat').inputValue(), montreuil, `${at}: its seat in force`)
           assert.equal(await form.getByLabel('SIREN').inputValue(), '000000000', `${at}: its SIREN in force`)
-          assert.equal(await form.getByText('A motion of General assembly changes it').count(), 8, `${at}: each particular is the assembly's motion's to change`)
+          assert.equal(await form.getByText('Assembly changes it by motion').count(), 8, `${at}: each particular is the assembly's motion's to change`)
           const scope = page.locator('section', { has: page.getByRole('heading', { name: 'Scope' }) })
           const hosted = (await scope.textContent()) ?? ''
           assert.match(hosted, /lanterne\.example/, `${at}: the scope's address`)
@@ -65,30 +66,37 @@ eachBrowser((name, launch) => {
           await page.screenshot({ path: `${shots}/organization-${name}-${scheme}.png`, fullPage: true })
           await scope.screenshot({ path: `${shots}/organization-scope-${name}-${scheme}.png` })
 
-          await form.getByLabel('Seat').fill(seat)
+          assert.equal(await form.getByRole('button').count(), 0, `${at}: the form has no Save`)
           await form.getByLabel('SIREN').fill('12345')
-          await form.getByRole('button', { name: 'Save' }).click()
-          const dialog = page.getByRole('dialog', { name: 'Propose it instead' })
+          await form.getByLabel('SIREN').press('Enter')
+          const dialog = page.getByRole('dialog', { name: 'Assembly changes it by motion' })
           await dialog.waitFor()
           assert.ok(
-            ((await dialog.textContent()) ?? '').includes("The co-op's particulars change only by a motion of General assembly, which adopts them as a policy: no one's own write changes them"),
+            ((await dialog.textContent()) ?? '').includes("The co-op's particulars change only by a motion of Assembly, which adopts them as a policy: no one's own write changes them"),
             `${at}: the dialog says why no write of hers changes them`,
           )
-          assert.equal(await dialog.getByLabel('Title').inputValue(), `Change the co-op's seat to ${seat}; Change the co-op's SIREN to 12345`, `${at}: its title says the change`)
+          assert.match((await dialog.locator('.change').textContent()) ?? '', /SIREN\s*000000000\s*→\s*to\s*12345/, `${at}: it shows the change`)
+          assert.equal(await dialog.getByLabel('Title').inputValue(), "Change the co-op's SIREN to 12345", `${at}: its title says the change`)
           assert.equal(await dialog.getByLabel('Circle').inputValue(), 'ag', `${at}: put to the assembly`)
-          assert.equal(await dialog.getByLabel('New seat').inputValue(), seat, `${at}: the seat typed, its own field`)
-          await dialog.getByRole('button', { name: 'Propose' }).click()
+          assert.equal(await dialog.getByLabel('New SIREN').inputValue(), '12345', `${at}: the SIREN typed, its own field`)
+          await dialog.getByRole('button', { name: 'Propose to Assembly' }).click()
           await dialog.getByRole('alert').filter({ hasText: /a SIREN is nine digits, as \{particulars_siren: 123 456 789\}, not 12345/ }).waitFor()
           assert.equal(
-            (await one<{ n: number }>(`SELECT count(*)::int AS n FROM motion.action WHERE kind = 'policy' AND args ->> 'wording' LIKE $1`, [`%${seat}%`])).n,
+            (await one<{ n: number }>(`SELECT count(*)::int AS n FROM motion.action WHERE kind = 'policy' AND args ->> 'wording' LIKE $1`, ['%{particulars_siren: 12345}%'])).n,
             0,
             `${at}: refused before anything is proposed`,
           )
           await page.screenshot({ path: `${shots}/organization-refused-${name}-${scheme}.png` })
+          await dialog.getByRole('button', { name: 'Cancel' }).click()
+          await dialog.waitFor({ state: 'hidden' })
+          assert.equal(await form.getByLabel('SIREN').inputValue(), '000000000', `${at}: cancelled, the SIREN in force shows again`)
 
-          await dialog.getByLabel('New SIREN').fill('000000000')
+          await form.getByLabel('Seat').fill(seat)
+          await form.getByLabel('Seat').press('Tab')
+          await dialog.waitFor()
+          assert.equal(await dialog.getByLabel('New seat').inputValue(), seat, `${at}: the seat typed, its own field`)
           await dialog.getByLabel('Title').fill(`Move the seat to ${seat}`)
-          await dialog.getByRole('button', { name: 'Propose' }).click()
+          await dialog.getByRole('button', { name: 'Propose to Assembly' }).click()
           await dialog.waitFor({ state: 'hidden' })
           const { motion } = await one<{ motion: string }>(`SELECT motion FROM motion.action WHERE kind = 'policy' AND args ->> 'wording' LIKE $1`, [`%${seat}%`])
           const proposed = await one<{ circle: string; title: string; procedure: string; args: Record<string, string> }>(

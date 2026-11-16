@@ -3,6 +3,10 @@
   import Cell from './Cell.svelte'
 
   let { items }: { items: Prop[] } = $props()
+
+  // The collection a property's link is a record of, where it is one:
+  // `/<collection>/<id>`, whose icon its value wears.
+  const record = (href: string | undefined) => href?.match(/^\/([\w-]+)\/[^/?#]+$/)?.[1]
 </script>
 
 <dl class="props">
@@ -10,7 +14,7 @@
     <dt>{p.label}</dt>
     <dd>
       {#if p.href}
-        <a href={p.href}><Cell value={p.value} kind={p.kind} tone={p.tone} /></a>
+        <a href={p.href}><Cell value={p.value} kind={p.kind} tone={p.tone} record={record(p.href)} /></a>
       {:else}
         <Cell value={p.value} kind={p.kind} tone={p.tone} />
       {/if}

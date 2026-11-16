@@ -199,7 +199,7 @@ test('each member’s inbox holds what waits on them, counted in the sidebar', a
   // Malik: a stance on Inès's admission and the two meetings ahead; Julien,
   // in finance, three expenses to approve as well.
   const malik1 = (await shell.page('/inbox', malik)).text
-  for (const what of ['Admit Inès Haddad as a member', 'Say whether you will come: Coordination', 'Say whether you will come: General assembly']) {
+  for (const what of ['Admit Inès Haddad as a member', 'Say whether you will come: Coordination', 'Say whether you will come: Assembly']) {
     assert.ok(malik1.includes(what), what)
   }
   const julien1 = (await shell.page('/inbox', julien)).text

@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
+  import { afterNavigate } from '$app/navigation'
   import { page } from '$app/state'
   import '../styles/tokens.css'
   import '../styles/base.css'
@@ -8,6 +9,9 @@
   import CaretRight from 'phosphor-svelte/lib/CaretRight'
   import CaretUpDown from 'phosphor-svelte/lib/CaretUpDown'
   import Check from 'phosphor-svelte/lib/Check'
+  import Desktop from 'phosphor-svelte/lib/Desktop'
+  import Moon from 'phosphor-svelte/lib/Moon'
+  import Sun from 'phosphor-svelte/lib/Sun'
   import type { Jump, Nav, Person, Theme } from '../models/view.ts'
   import { listed, runs } from '../models/arrange.ts'
   import type { Outcome as Done } from '../models/outcome.ts'
@@ -22,6 +26,7 @@
   import { typing } from '../models/keys.ts'
   import { worn } from '../models/theme.ts'
   import { TestTube } from '../icons.ts'
+  import favicon from '@cella/brand/favicon.svg?url'
 
   // The shell: the sidebar and the content beside it; the last write's
   // outcome floats above. ] shows or hides every page's drawer. The
@@ -40,6 +45,7 @@
     outcome,
     source,
     drawer,
+    kept = '',
     people,
     circles = [],
     lens = null,
@@ -55,6 +61,8 @@
     // What the command menu searches, read by the shell's query.
     source: Search
     drawer: boolean
+    // The sidebar accordions the viewer opened or shut, as their cookie holds them.
+    kept?: string
     // The names of the people the co-op knows, by address.
     people: Record<string, string>
     // The circles the member reads, the assembly first, then those they
@@ -65,7 +73,7 @@
     children: Snippet
   } = $props()
 
-  const state = useShell(() => outcome, () => drawer, () => people, () => lens, () => circles)
+  const state = useShell(() => outcome, () => drawer, () => people, () => lens, () => circles, () => nav, () => kept)
   const favorites = useFavorites()
 
   function onkeydown(e: KeyboardEvent) {
@@ -90,6 +98,14 @@
   // A collection's own icon, as the sidebar draws it, for a pin of a
   // preset that names no mark of its own.
   const owner = (collection: string) => nav.flatMap((g) => g.items).find((i) => i.href === `/${collection}`)?.icon
+  // The circles the selector lists: those the member sits in, and the lens's
+  // own where they do not, so the lens shows checked and can be cleared; the
+  // assembly is the co-op's own row.
+  const sat = $derived(circles.filter((c) => !c.assembly && (c.sits || c.id === lens?.id)))
+  // The theme button cycles system, light, dark; its icon is the current one.
+  const cycle = { system: 'light', light: 'dark', dark: 'system' } as const
+  const marks = { system: Desktop, light: Sun, dark: Moon } as const
+  const next = $derived(cycle[theme])
 
   // The circle the member is in: their lens, or the assembly where they
   // lensed none, which reads whole.
@@ -126,10 +142,15 @@
   const opens = (area: string) => (parts('platform').find((p) => p.sub === area) ?? parts('platform')[0])?.items[0]?.href
   const personal = $derived(opens('Personal'))
   const organization = $derived(opens('Organization'))
-  state.follow(() => back, () => settings)
+  state.follow(() => back, () => settings, afterNavigate)
 </script>
 
 <svelte:window {onkeydown} />
+
+<!-- The brand's mark, as the site wears it, on every page of the app. -->
+<svelte:head>
+  <link rel="icon" type="image/svg+xml" href={favicon} />
+</svelte:head>
 
 <!-- Collections, each its icon, its title and its count where it has one. -->
 {#snippet links(items: Items)}
@@ -170,34 +191,38 @@
       <Popover label="Co-op: {scope.name}{lens ? ` / ${lens.name}` : ''}">
         {#snippet trigger()}
           <span class="mark" aria-hidden="true">{scope.name.slice(0, 1).toUpperCase()}</span>
-          <b class="name">{scope.name}{#if lens}<span class="lensed"> / {lens.name}</span>{/if}</b>
+          <!-- Through a circle, the circle is the name and the co-op its
+               eyebrow. -->
+          {#if lens}
+            <span class="names"><span>{scope.name}</span><b class="name">{lens.name}</b></span>
+          {:else}
+            <b class="name">{scope.name}</b>
+          {/if}
           <Icon icon={CaretUpDown} size="0.9em" />
         {/snippet}
-        <button role="menuitemradio" aria-checked="true" class="item">
-          <span class="mark small">{scope.name.slice(0, 1).toUpperCase()}</span>
-          <span class="names">
-            <b>{scope.name}</b>
-            <span>{scope.legal ?? scope.address}</span>
-          </span>
-          <Icon icon={Check} />
-        </button>
-        {#if circles.length}
-          <!-- The circles: the assembly first, the co-op's root, which clears
-               the lens; any other chosen is the member's lens, which every
-               collection reads through. -->
-          <p class="label">Circles</p>
-          <form method="post" action="/lens" class="list" role="group" aria-label="Circles">
-            <input type="hidden" name="back" value={back} />
-            {#each circles as c, i (c.id)}
-              {const on = $derived(c.assembly ? !lens : lens?.id === c.id)}
-              {#if i > 0 && !c.sits && (circles[i - 1]?.sits || circles[i - 1]?.assembly)}<hr />{/if}
-              <button role="menuitemradio" aria-checked={on} class="item" name="lens" value={c.assembly ? '' : c.id}>
-                {c.name}{#if on}<Icon icon={Check} />{/if}
+        <!-- The co-op and its circles are one radio group: the co-op, whose
+             root is the assembly, clears the member's lens, a circle sets it,
+             and every collection reads through the one chosen. -->
+        <form method="post" action="/lens" class="list" role="group" aria-label="Co-op">
+          <input type="hidden" name="back" value={back} />
+          <button role="menuitemradio" aria-checked={!lens} class="item" name="lens" value="">
+            <span class="mark small">{scope.name.slice(0, 1).toUpperCase()}</span>
+            <span class="names">
+              <b>{scope.name}</b>
+              <span>{scope.legal ?? scope.address}</span>
+            </span>
+            {#if !lens}<Icon icon={Check} />{/if}
+          </button>
+          {#if sat.length}
+            <p class="label">Circles</p>
+            {#each sat as c (c.id)}
+              <button role="menuitemradio" aria-checked={lens?.id === c.id} class="item" name="lens" value={c.id}>
+                {c.name}{#if lens?.id === c.id}<Icon icon={Check} />{/if}
               </button>
             {/each}
-          </form>
-        {/if}
-        {#if organization}<a class="item" role="menuitem" href={organization}>Settings</a>{/if}
+          {/if}
+        </form>
+        {#if organization}<hr /><a class="item" role="menuitem" href={organization}>Settings</a>{/if}
       </Popover>
     </div>
 
@@ -260,8 +285,18 @@
           </span>
           <Icon icon={CaretUpDown} size="0.9em" />
         {/snippet}
+        <!-- The menu's head: who is signed in, and the theme as one button
+             that cycles system, light and dark. -->
+        <div class="head-row">
+          <p class="label">{actor ? 'Signed in' : 'Theme'}</p>
+          <form method="post" action="/theme" class="theme">
+            <input type="hidden" name="back" value={back} />
+            <button name="theme" value={next} title="Theme: {theme}. Switch to {next}" aria-label="Theme: {theme}. Switch to {next}">
+              <Icon icon={marks[theme]} />
+            </button>
+          </form>
+        </div>
         {#if actor}
-          <p class="label">Signed in</p>
           <p class="hint">{actor.address}, on this device</p>
           <div class="list">
             {#if personal}<a class="item" role="menuitem" href={personal}>Settings</a>{/if}
@@ -270,13 +305,6 @@
             </form>
           </div>
         {/if}
-        <p class="label">Theme</p>
-        <form method="post" action="/theme" class="themes">
-          <input type="hidden" name="back" value={back} />
-          {#each ['system', 'light', 'dark'] as t (t)}
-            <button role="menuitemradio" aria-checked={theme === t} name="theme" value={t} class:on={theme === t}>{t}</button>
-          {/each}
-        </form>
       </Popover>
     </div>
     </div>
@@ -335,6 +363,7 @@
   }
   .top {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-2);
     padding-bottom: var(--space-4);
   }
@@ -367,8 +396,11 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  /* One column no wider than the sidebar: a long name truncates rather
+     than widen it. */
   .foot {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-3);
     padding-top: var(--space-2);
   }
@@ -470,9 +502,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .lensed {
-    color: var(--text-muted);
-  }
   .names {
     display: grid;
     flex: 1;
@@ -496,13 +525,12 @@
   .list {
     display: grid;
   }
-  .list hr {
+  hr {
     margin: var(--space-1) var(--space-2);
     border: none;
     border-top: 1px solid var(--line);
   }
-  .item,
-  .themes button {
+  .item {
     display: flex;
     align-items: center;
     gap: var(--space-2);
@@ -515,30 +543,32 @@
     cursor: pointer;
   }
   .item:hover,
-  .item:focus-visible,
-  .themes button:hover {
+  .item:focus-visible {
     background: var(--hover);
   }
   .item :global(svg:last-child) {
     margin-inline-start: auto;
     color: var(--accent-text);
   }
-  /* A segmented control: a sunk well, the chosen segment lifted out. */
-  .themes {
+  .head-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+  .theme button {
     display: grid;
-    grid-auto-flow: column;
-    background: var(--sunk);
+    place-items: center;
+    padding: var(--space-1);
+    border: none;
     border-radius: var(--radius-control);
-    padding: 2px;
-  }
-  .themes button {
-    justify-content: center;
-    text-transform: capitalize;
-    border-radius: calc(var(--radius-control) - 2px);
+    background: none;
     color: var(--text-muted);
+    cursor: pointer;
   }
-  .themes button.on {
-    background: var(--selected);
+  .theme button:hover,
+  .theme button:focus-visible {
+    background: var(--hover);
     color: var(--text);
   }
   .avatar {

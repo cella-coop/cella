@@ -352,8 +352,15 @@ circle's terms read with the procedures in force on the day
 (`membership_motion.procedures`) and the circle that decides an
 amendment, and its roles, each with the circle that decides about it,
 and on the assembly's those every working circle has but `participant`,
-each dialog posting to `propose` as the New form does; a new role's id
-is its name typed in lower case, which the dialog may change. On a
+a term's edit, as it commits, opening the dialog proposing an
+`amend-role` motion of that one term. Below the roles, Add a role…
+opens a dialog composing a new role whole (`Compose`, [settings](../../core/ui/index.md#settings)):
+its name, its id, which follows the name in lower case until it is
+typed, its duty and its cap, proposed to the deciding circle as one
+`role` motion carrying them all, its title "Make the Editor role in
+Web"; the guard judges it, and a refusal stays in the dialog, saying
+why. Each dialog posts to `propose` as the New form does. The e2e
+scenario `roles` proposes a new role there and lifts a role's cap. On a
 mandate's page, the motion feat's Change… and Revoke…, whose write,
 `put`, it serves too.
 
@@ -362,11 +369,12 @@ It serves Settings' Organization page, `/settings/organization`
 in force, read from core's row (`circle.particulars()`) with the
 procedure protecting the policy they are; the assembly, which alone
 adopts them; and the scope's address and timezone, which a host sets.
-No write of anyone's saves a particular, so Save opens the dialog
-proposing a motion of the assembly, each value changed its own field
-(New seat, New VAT number), posted to the page's `propose`. It words
-the particulars again as the founding words them, the values typed in
-place of those in force and the rest as they stand, and proposes a
+No write of anyone's saves a particular, so a value's edit, as it
+commits, opens the dialog proposing a motion of the assembly, the
+value its own field (New seat, New VAT number), posted to the page's
+`propose`. It words the particulars again as the founding words them,
+the value typed in place of the one in force and the rest as they
+stand, and proposes a
 motion carrying one `policy` action: a `rule` replacing the
 particulars in force, with the protection they had. The guard judges
 it as it judges any proposal, so a SIREN that is not nine digits is

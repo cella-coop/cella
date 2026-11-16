@@ -235,7 +235,8 @@ under Joining, whether they sit in the assembly and in a working
 circle; and under Own and decide, what they decide read back as
 sentences: where they sit, how each of those circles decides, and the
 mandates they act by, each as its policy reads, its limit in it; and
-under Powers, every power they hold and by what ([shell](#shell)).
+under Powers, their seats and every power they hold and by what
+([shell](#shell)).
 
 ## Grafts
 

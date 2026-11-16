@@ -245,13 +245,13 @@ test('Inès\'s member page lists what joining asks of her and reads back what sh
 })
 
 test('a member\'s page lists every mandate may grants them: Inès\'s the participant\'s in Web and none of the assembly\'s, Chloé\'s the assembly\'s beside her member role\'s', async () => {
-  const theirs = await tab(ines, 'overview', ines)
+  const theirs = await tab(ines, 'powers', ines)
   for (const says of ['Powers held', 'Propose', 'Discuss', 'participant in Web']) {
     assert.ok(theirs.includes(says), `Inès's page says ${says}`)
   }
-  assert.ok(!theirs.includes('in General assembly'), 'she sits nowhere but Web')
-  const chloes = await tab('chloe@lanterne.example', 'overview', camille)
-  for (const says of ['participant in General assembly', 'member in General assembly', 'participant in Marketing']) {
+  assert.ok(!theirs.includes('in Assembly'), 'she sits nowhere but Web')
+  const chloes = await tab('chloe@lanterne.example', 'powers', camille)
+  for (const says of ['participant in Assembly', 'member in Assembly', 'participant in Marketing']) {
     assert.ok(chloes.includes(says), `Chloé's page says ${says}`)
   }
   // For every person and power, may answers on the day exactly where
@@ -303,15 +303,15 @@ test('once m-2026-012 admits her, every step of joining is done, Web her working
   settled(await close({ motion: 'm-2026-012' }, reacting(as(camille))))
   const joining = await tab(ines, 'joining', ines)
   assert.equal(joining.match(/to do/g), null, 'nothing is left to join')
-  for (const says of ['20 shares of 50,00', 'phone, enrolled 1 Oct 2026 when the invitation was taken up', 'General assembly', 'Web']) {
+  for (const says of ['20 shares of 50,00', 'phone, enrolled 1 Oct 2026 when the invitation was taken up', 'Assembly', 'Web']) {
     assert.ok(joining.includes(says), `joining says ${says}`)
   }
   const rights = await tab(ines, 'rights', ines)
   for (const says of [
     'Inès has been a member since 31 Oct 2026',
     'Inès holds 20 shares of 50,00',
-    'General assembly as Member',
-    'General assembly and Web decide by consent',
+    'Assembly as Member',
+    'Assembly and Web decide by consent',
     'Through these seats Inès may',
     'invite someone to join, with their first device',
   ]) {
@@ -387,11 +387,11 @@ test('Malik revokes his phone from his laptop on his own page; the device signin
   const laptop = await fixture(malik, 'laptop')
   const phone = await fixture(malik, 'phone')
   await shell.signIn(malik, laptop)
-  const own = await tab(malik, 'overview', malik)
+  const own = await tab(malik, 'devices', malik)
   assert.match(own, /laptop, this device/)
   assert.match(own, /Revoke phone/)
   assert.doesNotMatch(own, /Revoke laptop/)
-  assert.doesNotMatch(await tab(camille, 'overview', malik), /Revoke/, 'nothing to revoke on someone else\'s page')
+  assert.doesNotMatch(await tab(camille, 'devices', malik), /Revoke/, 'nothing to revoke on someone else\'s page')
   const itself = await shell.act(`/people/${malik}`, 'revoke', { key: laptop.key }, malik)
   assert.notEqual(itself.state, 'settled', 'a device never revokes itself')
   const theirs = await shell.act(`/people/${camille}`, 'revoke', { key: (await fixture(camille, 'phone')).key }, malik)
@@ -402,7 +402,7 @@ test('Malik revokes his phone from his laptop on his own page; the device signin
     await all(`SELECT label, revoked IS NOT NULL AS revoked FROM person.device WHERE address = $1 ORDER BY label`, [malik]),
     [{ label: 'laptop', revoked: false }, { label: 'phone', revoked: true }],
   )
-  const after = await tab(malik, 'overview', malik)
+  const after = await tab(malik, 'devices', malik)
   assert.doesNotMatch(after, /Revoke/)
   assert.match(after, /This is your only current device/)
 })

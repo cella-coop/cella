@@ -9,8 +9,9 @@
 // close replacing them in order, under their accordions. Then in every browser, light and
 // dark, through the dev server: Camille opens Web's Settings tab, its
 // name, purpose and procedure in force, each changed by a motion of the
-// General assembly; she types Brand's name and Saves, and the dialog
-// says why her write changes nothing and offers the motion, whose
+// Assembly; she types Brand's name and presses Enter, and the
+// dialog says the change needs a motion of the assembly, why her write
+// changes nothing, and offers the motion, whose
 // proposal the guard refuses there, before anything is proposed; she
 // types a name of Web's own in the dialog and proposes it, every member
 // consents, and on its deadline she closes it: its close renames Web,
@@ -165,27 +166,27 @@ eachBrowser((name, launch) => {
           const form = page.locator('form.settings').first()
           assert.equal(await form.getByLabel('Name').inputValue(), was, `${at}: its name in force`)
           assert.equal(await form.getByLabel('Decides by').inputValue(), 'consent', `${at}: its procedure in force`)
-          assert.equal(await form.getByText('A motion of General assembly changes it').count(), 3, `${at}: each term is the assembly's motion's to change`)
+          assert.equal(await form.getByText('Assembly changes it by motion').count(), 3, `${at}: each term is the assembly's motion's to change`)
           await page.screenshot({ path: `${shots}/amend-${name}-${scheme}.png`, fullPage: true })
 
           await form.getByLabel('Name').fill('Brand')
-          await form.getByRole('button', { name: 'Save' }).click()
-          const dialog = page.getByRole('dialog', { name: 'Propose it instead' })
+          await form.getByLabel('Name').press('Enter')
+          const dialog = page.getByRole('dialog', { name: 'Assembly changes it by motion' })
           await dialog.waitFor()
           assert.ok(
-            ((await dialog.textContent()) ?? '').includes(`${was}'s name, purpose and procedure change only by a motion of General assembly`),
+            ((await dialog.textContent()) ?? '').includes(`${was}'s name, purpose and procedure change only by a motion of Assembly`),
             `${at}: the dialog says why her write changes nothing`,
           )
           assert.equal(await dialog.getByLabel('Title').inputValue(), `Rename ${was} to Brand`, `${at}: its title says the change`)
           assert.equal(await dialog.getByLabel('Circle').inputValue(), 'ag', `${at}: put to the assembly`)
-          await dialog.getByRole('button', { name: 'Propose' }).click()
+          await dialog.getByRole('button', { name: 'Propose to Assembly' }).click()
           await dialog.getByRole('alert').filter({ hasText: /brand is named Brand already: give web a name no other circle has/ }).waitFor()
           assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM motion.action WHERE kind = 'amend-circle' AND args ->> 'name' = 'Brand'`)).n, 0, `${at}: refused before anything is proposed`)
           await page.screenshot({ path: `${shots}/amend-refused-${name}-${scheme}.png` })
 
           await dialog.getByLabel('New name').fill(renamed)
           await dialog.getByLabel('Title').fill(`Rename ${was} to ${renamed}`)
-          await dialog.getByRole('button', { name: 'Propose' }).click()
+          await dialog.getByRole('button', { name: 'Propose to Assembly' }).click()
           await dialog.waitFor({ state: 'hidden' })
           const { motion } = await one<{ motion: string }>(`SELECT motion FROM motion.action WHERE kind = 'amend-circle' AND args ->> 'name' = $1`, [renamed])
           assert.deepEqual(
@@ -198,10 +199,10 @@ eachBrowser((name, launch) => {
           await page.goto(`${dev.base}/circles/web`)
           await page.waitForLoadState('networkidle')
           assert.equal(await page.locator('h1.record').textContent().then((t) => t?.trim()), renamed, `${at}: the circle's page names it so`)
-          await page.locator('.coop button.trigger').click()
-          const circles = page.getByRole('group', { name: 'Circles' })
-          await circles.waitFor()
-          assert.ok((await circles.getByRole('menuitemradio').allTextContents()).map((t) => t.trim()).includes(renamed), `${at}: the co-op selector names it so`)
+          // Seen through it, the selector names the circle as it is now.
+          await page.getByRole('button', { name: 'View as this circle' }).click()
+          await page.waitForLoadState('networkidle')
+          assert.equal(await page.locator('.coop .name').textContent().then((t) => t?.trim()), renamed, `${at}: the co-op selector names it so`)
           await page.screenshot({ path: `${shots}/amended-${name}-${scheme}.png` })
           assert.deepEqual(errors, [], `${at}: the page threw nothing`)
         } finally {

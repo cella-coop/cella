@@ -1,12 +1,14 @@
 <script lang="ts">
-  import { Section, Settings, type Declared } from '@cella/org-ui'
+  import { Compose, Section, Settings, type Composed, type Declared } from '@cella/org-ui'
   import type { Duty, OnCircle } from '../../models/asking.ts'
 
   // The roles on a circle's Settings tab, below its terms: each its name,
-  // duty and cap, and a row to make a new one. None saves directly, since
-  // only a motion makes or changes a role: Save opens the dialog proposing
-  // an `amend-role` or `role` motion of the circle that decides about it,
-  // prefilled with what was typed.
+  // duty and cap, and Add a role… to make a new one. None saves directly,
+  // since only a motion makes or changes a role: a term's edit, as it
+  // commits, opens the dialog proposing an `amend-role` motion of the
+  // circle that decides about it, prefilled with what was typed; a new
+  // role is composed whole in a dialog, its name, id, duty and cap, and
+  // proposed as one `role` motion.
   let { data }: { data: OnCircle | null; id: string } = $props()
 
   const amending = $derived(data?.amending)
@@ -39,30 +41,14 @@
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^[^a-z]+|-+$/g, '')
 
-  // A term of the new role, which a `role` motion makes in this circle.
-  const fresh = (circle: string, refused: string, name: Term, says: (value: string) => string): Declared =>
-    shape(name, {
-      name,
-      label: labels[name],
-      value: '',
-      refused,
-      motion: {
-        kind: 'role',
-        args: (value) => ({ circle, ...(name === 'name' ? { id: id(value) } : {}), [name]: value }),
-        labels: name === 'name' ? { id: 'Id', name: 'Name' } : { [name]: labels[name] },
-        says,
-      },
-    })
-
-  const made = $derived(
-    amending
-      ? [
-          fresh(amending.circle, amending.making, 'name', (name) => `Make the ${name} role in ${amending.name}`),
-          fresh(amending.circle, amending.making, 'duty', (duty) => `its duty: ${duty}`),
-          fresh(amending.circle, amending.making, 'holders', (cap) => `held by ${cap} at most`),
-        ]
-      : [],
-  )
+  // The new role's terms, which one `role` motion makes in this circle;
+  // its id follows its name until it is typed.
+  const fresh: Composed[] = [
+    { name: 'name', label: 'Name' },
+    { name: 'id', label: 'Id', from: (typed) => id(typed.name ?? '') },
+    { name: 'duty', label: 'Duty', rows: 2 },
+    { name: 'holders', label: 'Cap', type: 'number' },
+  ]
 </script>
 
 {#if amending}
@@ -78,7 +64,14 @@
       />
     </Section>
   {/each}
-  <Section title="New role">
-    <Settings settings={made} decider={amending.decider} />
-  </Section>
+  <Compose
+    label="Add a role…"
+    title="New role in {amending.name}"
+    decider={amending.decider}
+    kind="role"
+    fields={fresh}
+    args={{ circle: amending.circle }}
+    says={(v) => `Make the ${v.name} role in ${amending.name}`}
+    why={amending.making}
+  />
 {/if}

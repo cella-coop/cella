@@ -1,7 +1,7 @@
 // A settings page's model: each setting with its current value, the
 // write that saves it directly, if any, and the motion that changes it
-// otherwise; and what a Save of the fields changed does, the writes it
-// posts and the motion it offers to propose instead.
+// otherwise; the fields a write posts as a setting saves, and the motion
+// offered for a change no write of the reader's makes.
 
 // The motion that changes a setting: its kind, the arguments it carries,
 // from the value typed and the one it replaces, those the reader may
@@ -41,10 +41,11 @@ export interface Decider {
   deadline: string
 }
 
-// A motion offered instead of a write, the motions' New form prefilled:
-// its circle, its title, its deadline and the one action it carries, with
-// why no write of the reader's makes the change, and the fields it is
-// about.
+// The motion offered for a change no write of the reader's makes, the
+// motions' New form prefilled: its circle, its title, its deadline and
+// the one action it carries; why the change needs it, in the guard's own
+// words where a write would be refused; and the change it proposes, the
+// setting's label, its value in force and the one typed.
 export interface Proposal {
   circle: string
   name: string
@@ -52,18 +53,9 @@ export interface Proposal {
   deadline: string
   kind: string
   args: { name: string; label: string | null; value: string }[]
-  reasons: string[]
-  fields: string[]
-}
-
-// What a Save does: each write it posts with the fields it saves, the
-// motion it offers, and the fields changed it does neither for, left
-// marked not saved: those of another kind of motion than the one offered,
-// for a Save after it, or those no motion is declared to change.
-export interface Plan {
-  saves: { write: string; fields: Record<string, string> }[]
-  proposal: Proposal | null
-  left: string[]
+  reason: string
+  field: string
+  change: { label: string; was: string; value: string }
 }
 
 // Whether the reader's own write saves a setting.
@@ -74,44 +66,33 @@ export function changer(s: Setting, decider: Decider | null): string {
   if (direct(s)) {
     return 'You change it here'
   }
-  return s.motion && decider ? `A motion of ${decider.name} changes it` : 'Nothing you may write changes it'
+  return s.motion && decider ? `${decider.name} changes it by motion` : 'Nothing you may write changes it'
 }
 
-// Splits the fields changed, `typed` by name, into the writes that save
-// them and the one motion that proposes the rest: the first changed
-// field's kind, which every other changed field of that kind joins, its
-// arguments merged and its titles joined.
-export function plan(settings: Setting[], typed: Record<string, string>, decider: Decider | null): Plan {
-  const changed = settings.filter((s) => s.name in typed && typed[s.name] !== s.value)
-  const saves = new Map<string, Record<string, string>>()
-  for (const s of changed.filter(direct)) {
-    saves.set(s.write!, { ...saves.get(s.write!), [s.name]: typed[s.name] })
+// What a setting's write posts: each setting of the form that the same
+// write saves directly and that differs from its value in force, with
+// its value as typed. One left as it is never posts, so a write logs
+// only what it changes, and a contact detail never set stays unset.
+export function posted(settings: Setting[], s: Setting, value: (s: Setting) => string): Record<string, string> {
+  return Object.fromEntries(settings.filter((o) => direct(o) && o.write === s.write && value(o) !== o.value).map((o) => [o.name, value(o)]))
+}
+
+// The motion proposing a setting's change to `value`, or none where no
+// motion is declared to change it or no circle decides it.
+export function proposal(s: Setting, value: string, decider: Decider | null): Proposal | null {
+  if (!s.motion || !decider) {
+    return null
   }
-  const moved = changed.filter((s) => !direct(s))
-  const kind = decider ? moved.find((s) => s.motion)?.motion?.kind : undefined
-  const joining = moved.filter((s) => kind && s.motion?.kind === kind)
-  const args = new Map<string, Proposal['args'][number]>()
-  for (const s of joining) {
-    for (const [name, value] of Object.entries(s.motion!.args(typed[s.name], s.value))) {
-      args.set(name, { name, label: s.motion!.labels?.[name] ?? null, value })
-    }
-  }
-  const says = (s: Setting) => s.motion!.says?.(typed[s.name], s.value) ?? `Change ${s.label.toLowerCase()} from “${s.value}” to “${typed[s.name]}”`
-  const proposal: Proposal | null = kind && decider
-    ? {
-        circle: decider.circle,
-        name: decider.name,
-        title: joining.map(says).join('; '),
-        deadline: decider.deadline,
-        kind,
-        args: [...args.values()],
-        reasons: [...new Set(joining.map((s) => s.refused ?? `${s.label} has no write of its own: only a motion of ${decider.name} changes it`))],
-        fields: joining.map((s) => s.name),
-      }
-    : null
+  const m = s.motion
   return {
-    saves: [...saves].map(([write, fields]) => ({ write, fields })),
-    proposal,
-    left: moved.filter((s) => !joining.includes(s)).map((s) => s.name),
+    circle: decider.circle,
+    name: decider.name,
+    title: m.says?.(value, s.value) ?? `Change ${s.label.toLowerCase()} from “${s.value}” to “${value}”`,
+    deadline: decider.deadline,
+    kind: m.kind,
+    args: Object.entries(m.args(value, s.value)).map(([name, v]) => ({ name, label: m.labels?.[name] ?? null, value: v })),
+    reason: s.refused ?? `${s.label} has no write of its own: ${decider.name} changes it by motion`,
+    field: s.name,
+    change: { label: s.label, was: s.value, value },
   }
 }

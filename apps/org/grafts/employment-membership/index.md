@@ -1,6 +1,6 @@
 +++
 title = "employment-membership"
-updated = 2026-11-11
+updated = 2026-11-13
 +++
 
 The way from employee to member: a worker's candidacy, the probation
@@ -89,7 +89,7 @@ for one who has not applied.
 ## Shell
 
 Adds to each person their stage on the way to membership, a hidden column
-of the people collection; and to a person's page, their path to
+of the people collection; and to a person's page, under Joining, their path to
 membership, step by step, the day they were hired and the day they
 applied. The application itself is offered by membership-motion.
 

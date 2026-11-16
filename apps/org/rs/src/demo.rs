@@ -1,7 +1,7 @@
 use crate::cli::Demo;
 use crate::data;
 use crate::repo::Repo;
-use crate::run::{Result, Steps, last_line};
+use crate::run::{Fail, Result, Steps, last_line};
 
 /// The mock co-op every demo is founded as.
 const FIXTURE: &str = "lanterne";
@@ -27,6 +27,7 @@ pub fn run(repo: &Repo, steps: &Steps, command: Demo) -> Result {
             }
             steps.run(&format!("copy {name}"), &mut [cmd], last_line)
         }
+        how @ Demo::Serve { .. } => serve(repo, &how),
     }
 }
 
@@ -69,4 +70,69 @@ fn tool(repo: &Repo, url: &str) -> std::process::Command {
     let mut cmd = repo.node("demo.mjs");
     cmd.env("DATABASE_URL", url);
     cmd
+}
+
+/// The demo's front, `tools/demo-serve.mjs`, in place of this process, so
+/// a host's unit stops it, and it ends every copy, by signalling it alone.
+/// Each visitor is served a copy of the template of their own and a server
+/// on it, `cella-server` on a socket of its own, which the front starts,
+/// passes the visitor's requests to and ends after it is idle.
+fn serve(repo: &Repo, how: &Demo) -> Result {
+    use std::os::unix::process::CommandExt;
+    let Demo::Serve {
+        template,
+        port,
+        cap,
+        idle,
+        evict_after,
+        memory,
+        connections,
+        per_ip,
+        per_ip_window,
+        per_minute,
+        tick,
+        trust_proxy,
+        server,
+        sockets,
+    } = how
+    else {
+        unreachable!("serve is handed Demo::Serve")
+    };
+    let server = match server {
+        Some(s) => s.clone(),
+        None if repo.packaged => repo
+            .root
+            .join("../../bin/cella-server")
+            .display()
+            .to_string(),
+        None => {
+            return Err(Fail::new(
+                "demo serve: --server names the server each copy runs, outside the package",
+            ));
+        }
+    };
+    let mut cmd = repo.node("demo-serve.mjs");
+    cmd.args(["--template", template, "--server", &server]);
+    for (name, value) in [
+        ("--port", u32::from(*port)),
+        ("--cap", *cap),
+        ("--idle", *idle),
+        ("--evict-after", *evict_after),
+        ("--memory", *memory),
+        ("--connections", *connections),
+        ("--per-ip", *per_ip),
+        ("--per-ip-window", *per_ip_window),
+        ("--per-minute", *per_minute),
+        ("--tick", *tick),
+    ] {
+        cmd.args([name, &value.to_string()]);
+    }
+    if let Some(dir) = sockets {
+        cmd.args(["--sockets", dir]);
+    }
+    if *trust_proxy {
+        cmd.arg("--trust-proxy");
+    }
+    let e = cmd.exec();
+    Err(Fail::new(format!("demo serve: {e}")))
 }

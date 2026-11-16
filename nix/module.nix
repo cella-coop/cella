@@ -20,6 +20,12 @@ let
   demos = lib.filterAttrs (_: s: s.demo.enable) cfg.scopes;
   kept = lib.filterAttrs (_: s: !s.demo.enable) cfg.scopes;
   template = s: "${s.database}_template";
+  # A demo serving each visitor a copy of its own (`demo.visitors`): its
+  # front's role, and the name every copy and its role share.
+  visiting = s: s.demo.enable && s.demo.visitors != null;
+  visited = lib.filterAttrs (_: visiting) cfg.scopes;
+  front = s: "${s.database}_front";
+  copies = s: "/^${s.database}_v_[0-9a-f]{16}\$";
   home = name: "${cfg.stateDir}/${name}";
   databases = lib.concatMap (s: [ s.database ] ++ lib.optional s.demo.enable (template s)) (lib.attrValues cfg.scopes);
   ports = lib.concatMap (s: [ s.port s.analyticsPort ]) (lib.attrValues cfg.scopes);
@@ -156,6 +162,48 @@ in
               default = "authority-walk";
               description = "The e2e scenario whose story the template plays on Lanterne.";
             };
+            visitors = mkOption {
+              type = types.nullOr types.ints.positive;
+              default = 10;
+              description = ''
+                How many visitors' copies run at once, each a copy of the template
+                and a server of its own that `cella demo serve`, the demo's front
+                on `port`, makes at the visitor's first visit and ends after it is
+                idle; a visitor past it ends the copy idle longest. 10 is what a
+                cx23 holds beside the site. null serves one copy to everyone, the
+                scope's own `database`, as `cella serve --prod --demo` does.
+              '';
+            };
+            idle = mkOption {
+              type = types.ints.positive;
+              default = 7200;
+              description = "Seconds with no request before a visitor's copy ends: its server stopped, its database and role dropped.";
+            };
+            evictAfter = mkOption {
+              type = types.ints.positive;
+              default = 300;
+              description = "Seconds a copy is idle before a newcomer at the cap may end it; while every copy is busier, the newcomer is asked to come back.";
+            };
+            memory = mkOption {
+              type = types.ints.positive;
+              default = 256;
+              description = "MiB a copy's server may hold resident before its copy ends; the front's unit holds `visitors` times it, and a little more.";
+            };
+            connections = mkOption {
+              type = types.ints.positive;
+              default = 10;
+              description = "Connections a copy's role may hold to its database; its server's pools take eight.";
+            };
+            perIp = mkOption {
+              type = types.ints.positive;
+              default = 5;
+              description = "Copies one address may make in ten minutes, by the last `x-forwarded-for` hop the host's proxy sets.";
+            };
+            perMinute = mkOption {
+              type = types.ints.positive;
+              default = 20;
+              description = "Copies the host makes in a minute, whoever asks.";
+            };
           };
         };
       }));
@@ -184,6 +232,13 @@ in
       home = cfg.stateDir;
     };
     users.groups.cella = { };
+    # A visiting demo's front and the copies' servers it starts, apart from
+    # `cella`, which holds a scope's session key and analytics token.
+    users.users.cella-visitors = mkIf (visited != { }) {
+      isSystemUser = true;
+      group = "cella-visitors";
+    };
+    users.groups.cella-visitors = mkIf (visited != { }) { };
 
     environment.systemPackages = [ cfg.package ];
 
@@ -202,14 +257,27 @@ in
       # The server logs in as `cella_app` and the analytics shell as
       # `cella_analytics`, both as the `cella` user; a demo's story, as
       # its seed plays it, as `cella_app` from `postgres`.
+      # A visiting demo's front logs in as its own role to `postgres` alone,
+      # and each copy's role, by the password only its server holds, to its
+      # own database alone, never over TCP; whatever else either asks is
+      # refused before any line after.
       authentication = lib.optionalString (databases != [ ]) ''
         local ${lib.concatStringsSep "," databases} cella_app,cella_analytics peer map=cella
-      '';
+      '' + lib.concatStrings (lib.mapAttrsToList (_: s: ''
+        local postgres ${front s} peer map=cellavisitors
+        local all ${front s} reject
+        host all ${front s} all reject
+        local sameuser ${copies s} scram-sha-256
+        local all ${copies s} reject
+        host all ${copies s} all reject
+      '') visited);
       identMap = ''
         cella cella    cella_app
         cella cella    cella_analytics
         cella postgres cella_app
-      '';
+      '' + lib.concatStrings (lib.mapAttrsToList (_: s: ''
+        cellavisitors cella-visitors ${front s}
+      '') visited);
     };
 
     systemd.tmpfiles.rules =
@@ -245,7 +313,22 @@ in
             TimeoutStartSec = "30min";
           };
           script =
-            if s.demo.enable then ''
+            if visiting s then ''
+              ${cella} demo template --url ${url "postgres" (template s)} --scenario ${lib.escapeShellArg s.demo.scenario}
+              # The front's role: it makes databases from the template and
+              # roles that may act as `cella_app`, and sets the settings a
+              # copy carries, but is never `cella_app` itself, nor a superuser.
+              psql -X -q -v ON_ERROR_STOP=1 -d postgres <<'SQL'
+              DO $do$ BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${front s}') THEN
+                  CREATE ROLE "${front s}";
+                END IF;
+              END $do$;
+              ALTER ROLE "${front s}" LOGIN CREATEDB CREATEROLE NOSUPERUSER NOBYPASSRLS NOREPLICATION CONNECTION LIMIT 8;
+              GRANT cella_app TO "${front s}" WITH ADMIN TRUE, INHERIT FALSE, SET FALSE;
+              GRANT SET ON PARAMETER cella.clock, cella.scope, cella.timezone, temp_file_limit TO "${front s}";
+              SQL
+            '' else if s.demo.enable then ''
               ${cella} demo template --url ${url "postgres" (template s)} --scenario ${lib.escapeShellArg s.demo.scenario}
               made=$(${comment (template s)})
               if [ "$(${comment db})" != "a copy of ${template s}: $made" ]; then
@@ -261,6 +344,7 @@ in
             '';
         };
 
+      } // lib.optionalAttrs (!visiting s) {
         # Its analytics shell, DuckDB over quack on localhost, reading the
         # views the slices publish as `cella_analytics`.
         "cella-${name}-analytics" = {
@@ -320,6 +404,77 @@ in
             ProtectSystem = "strict";
             ProtectHome = true;
             ReadWritePaths = [ (home name) ];
+          };
+        };
+      } // lib.optionalAttrs (visiting s) {
+        # A visiting demo's front, `cella demo serve` on the scope's port:
+        # each visitor's copy of the template made at their first visit,
+        # with a role reaching it alone and a server of its own on a socket
+        # in the unit's runtime directory, ended after it is idle. The
+        # front and every copy's server share this unit's limits: no
+        # address but localhost, no outbound network, so no mail and no
+        # call outside the host, and memory for `visitors` copies.
+        "cella-${name}" = {
+          description = "cella: the ${name} demo's front, a copy for each visitor";
+          after = [ "cella-${name}-setup.service" ];
+          requires = [ "cella-${name}-setup.service" ];
+          wantedBy = [ "multi-user.target" ];
+          environment = {
+            PGHOST = socket;
+            PGUSER = front s;
+            PGDATABASE = "postgres";
+          };
+          serviceConfig = {
+            User = "cella-visitors";
+            Group = "cella-visitors";
+            RuntimeDirectory = "cella-${name}";
+            RuntimeDirectoryMode = "0700";
+            WorkingDirectory = "/run/cella-${name}";
+            ExecStart = lib.concatStringsSep " " [
+              "${cella} demo serve --template ${template s}"
+              "--port ${toString s.port}"
+              "--cap ${toString s.demo.visitors}"
+              "--idle ${toString s.demo.idle}"
+              "--evict-after ${toString s.demo.evictAfter}"
+              "--memory ${toString s.demo.memory}"
+              "--connections ${toString s.demo.connections}"
+              "--per-ip ${toString s.demo.perIp}"
+              "--per-minute ${toString s.demo.perMinute}"
+              "--trust-proxy"
+              "--server ${cfg.package}/bin/cella-server"
+              "--sockets /run/cella-${name}"
+            ];
+            Restart = "on-failure";
+            # The front alone is signalled, and ends every copy before it
+            # goes; what is left after a minute is killed.
+            KillMode = "mixed";
+            TimeoutStopSec = 60;
+            UMask = "0077";
+            MemoryMax = "${toString (s.demo.visitors * s.demo.memory + 384)}M";
+            TasksMax = s.demo.visitors * 32 + 64;
+            LimitNOFILE = 8192;
+            IPAddressDeny = "any";
+            IPAddressAllow = "localhost";
+            RestrictAddressFamilies = [ "AF_UNIX" "AF_INET" "AF_INET6" ];
+            NoNewPrivileges = true;
+            CapabilityBoundingSet = "";
+            AmbientCapabilities = "";
+            PrivateTmp = true;
+            PrivateDevices = true;
+            ProtectSystem = "strict";
+            ProtectHome = true;
+            ProtectProc = "invisible";
+            ProtectKernelTunables = true;
+            ProtectKernelModules = true;
+            ProtectKernelLogs = true;
+            ProtectControlGroups = true;
+            ProtectClock = true;
+            ProtectHostname = true;
+            RestrictNamespaces = true;
+            RestrictRealtime = true;
+            RestrictSUIDSGID = true;
+            LockPersonality = true;
+            SystemCallArchitectures = "native";
           };
         };
       }) cfg.scopes

@@ -46,22 +46,32 @@ export interface Sort {
   dir: 'asc' | 'desc'
 }
 
-// How a view groups its rows: by one field's value, its `values` first in
-// the order given, as a board's columns take them, any other after them
-// as it orders, and a row with none last.
+// How a view groups its rows: by one field's value, a date's by its
+// month (`month`), `YYYY-MM`, its `values` first in the order given, as a
+// board's columns take them, any other after them as it orders, the way
+// `dir` says, as the view's sort runs, and a row with none last.
 export interface Group {
   field: string
   values: string[]
+  month?: boolean
+  dir?: 'asc' | 'desc'
+}
+
+// A row's group under `group`, as text, the empty one where it has none.
+const grouped = (st: Statement, group: Group) => {
+  const value = `coalesce(row->>${st.p(group.field)}, '')`
+  return group.month ? `left(${value}, 7)` : value
 }
 
 // Which rows a read keeps: those meeting every condition and, where there
 // is a text filter, holding it in one of `keys`, case aside; and the
-// order it reads them in, by its group, then its sort, where it names
-// them.
+// order it reads them in, by its group, then its sort, then the
+// collection's own tiebreak, `then`, where it names them.
 export interface Keep {
   where: Condition[]
   q?: { text: string; keys: string[] }
   sort?: Sort
+  then?: Sort
   group?: Group
 }
 
@@ -92,7 +102,7 @@ export const logged = ['created', 'updated', 'created_by', 'updated_by'] as cons
 // condition, the text filter, a sort, a group, a value or a widget, so they
 // are read for every row rather than for the rows a page draws.
 const asking = (keys: string[]) => keys.some((k) => (logged as readonly string[]).includes(k))
-const named = (k: Keep) => [...k.where.map((c) => c.field), ...(k.q?.text.trim() ? k.q.keys : []), ...(k.sort ? [k.sort.field] : []), ...(k.group ? [k.group.field] : [])]
+const named = (k: Keep) => [...k.where.map((c) => c.field), ...(k.q?.text.trim() ? k.q.keys : []), ...(k.sort ? [k.sort.field] : []), ...(k.then ? [k.then.field] : []), ...(k.group ? [k.group.field] : [])]
 
 // A row's logged fields, from `cella.made` over the ids of `rows`, a
 // relation of `row`s: what the log holds of the rows read, so only of
@@ -157,17 +167,20 @@ function kept(st: Statement, k: Keep): string {
 // the order given, any other after them, a row with none last; then a
 // sort's field, by the value the row holds under its key as JSON orders
 // it, a number as a number and a date, `YYYY-MM-DD`, as its text, a row
-// with none last either way; then the collection's own order, which
-// breaks their ties.
-function sorting(st: Statement, sort: Sort | undefined, group: Group | undefined): string {
+// with none last either way; then the tiebreak a collection declares, as
+// the inbox's since; then the collection's own order, which breaks
+// what ties remain.
+function sorting(st: Statement, sort: Sort | undefined, group: Group | undefined, then?: Sort): string {
   const by: string[] = []
   if (group) {
-    const value = `coalesce(row->>${st.p(group.field)}, '')`
+    const value = grouped(st, group)
     const given = `array_position(${st.p(group.values)}::text[], ${value})`
-    by.push(`${value} = ''`, `${given} IS NULL`, given, value)
+    by.push(`${value} = ''`, `${given} IS NULL`, given, `${value}${group.dir === 'desc' ? ' DESC' : ''}`)
   }
-  if (sort) {
-    by.push(`nullif(nullif(row->${st.p(sort.field)}, 'null'::jsonb), '""'::jsonb) ${sort.dir === 'desc' ? 'DESC' : 'ASC'} NULLS LAST`)
+  for (const s of [sort, then]) {
+    if (s) {
+      by.push(`nullif(nullif(row->${st.p(s.field)}, 'null'::jsonb), '""'::jsonb) ${s.dir === 'desc' ? 'DESC' : 'ASC'} NULLS LAST`)
+    }
   }
   return [...by, 'src, at'].join(', ')
 }
@@ -219,7 +232,7 @@ export async function read(
   const parts: string[] = []
   const every = asking([...(a.keep ? named(a.keep) : []), ...(a.counts ?? []).flatMap(named), ...(a.values ?? []), ...(a.few?.keys ?? []), ...(a.few?.keep ? named(a.few.keep) : [])])
   if (a.keep) {
-    const order = sorting(st, a.keep.sort, a.keep.group)
+    const order = sorting(st, a.keep.sort, a.keep.group, a.keep.then)
     const where = kept(st, a.keep)
     const bounds = `${a.limit === undefined ? '' : ` LIMIT ${st.p(a.limit)}`}${a.offset ? ` OFFSET ${st.p(a.offset)}` : ''}`
     const drawn = `(SELECT src, at, row FROM r WHERE ${where} ORDER BY ${order}${bounds})`
@@ -229,7 +242,7 @@ export async function read(
         : `(WITH p AS ${drawn} SELECT coalesce(json_agg(${dated} || p.row ORDER BY ${order}), '[]') FROM p LEFT JOIN ${making('p')} m ON m.id = p.row->>'id') AS rows`,
     )
     if (a.keep.group) {
-      const value = `coalesce(row->>${st.p(a.keep.group.field)}, '')`
+      const value = grouped(st, a.keep.group)
       parts.push(`(SELECT coalesce(json_object_agg(g, n), '{}') FROM (SELECT ${value} AS g, count(*) AS n FROM r WHERE ${where} GROUP BY 1) c) AS groups`)
     }
   }

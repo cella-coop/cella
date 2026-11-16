@@ -293,29 +293,36 @@ export const sorting = (raw: string | null, fs: Field[]): Sort | null => {
 }
 export const sortKey = (s: Sort | null): string => (s ? `${s.dir === 'desc' ? '-' : ''}${s.field}` : '')
 
-// What a view groups its rows by: an enumeration, a person or a circle.
-export const groupable = (f: Field) => f.type === 'enum' || f.type === 'person' || f.type === 'circle'
+// What a view groups its rows by: an enumeration, a person, a circle, or
+// a date, by its month; and what a board's columns are, never months.
+export const groupable = (f: Field) => f.type === 'enum' || f.type === 'person' || f.type === 'circle' || f.type === 'date'
+export const laned = (f: Field) => groupable(f) && f.type !== 'date'
 
-// The field a view groups its rows by: its own, else, on a board, which
-// always groups, the one the collection's look names, else the first
-// enumeration, else the first person or circle; none elsewhere, for a
-// look's is its board's.
+// The field a view groups its rows by: its own, which the collection's
+// look gives it until a view changes it (`spec`), in every layout; a
+// board, which always groups, and never by a month, takes else the one
+// the look names, else the first enumeration, else the first person or
+// circle.
 export const grouping = (s: Pick<Spec, 'layout' | 'by'>, fs: Field[], look: Look = {}): Field | undefined => {
-  const named = (key: string | null | undefined) => fs.find((f) => f.key === key && groupable(f))
-  return named(s.by) ?? (s.layout === 'board' ? (named(look.by) ?? fs.find((f) => f.type === 'enum') ?? fs.find(groupable)) : undefined)
+  if (s.layout !== 'board') {
+    return fs.find((f) => f.key === s.by && groupable(f))
+  }
+  const named = (key: string | null | undefined) => fs.find((f) => f.key === key && laned(f))
+  return named(s.by) ?? named(look.by) ?? fs.find((f) => f.type === 'enum') ?? fs.find(laned)
 }
 
 // The group a row falls under: the value it holds under the field's key,
-// as text, the empty one where it holds none, as the server groups it.
-export const under = (row: Record<string, unknown>, key: string): string => {
+// as text, a date's its month, `YYYY-MM`, the empty one where it holds
+// none, as the server groups it.
+export const under = (row: Record<string, unknown>, key: string, month = false): string => {
   const v = row[key]
-  return v === null || v === undefined ? '' : String(v)
+  return v === null || v === undefined || v === '' ? '' : month ? String(v).slice(0, 7) : String(v)
 }
 
 // Whether the `i`th of rows read group by group opens a group: the first,
 // or one under another value than the row before it.
-export const opens = (rows: Record<string, unknown>[], i: number, key: string): boolean =>
-  i === 0 || under(rows[i] ?? {}, key) !== under(rows[i - 1] ?? {}, key)
+export const opens = (rows: Record<string, unknown>[], i: number, key: string, month = false): boolean =>
+  i === 0 || under(rows[i] ?? {}, key, month) !== under(rows[i - 1] ?? {}, key, month)
 
 // How a collection is looked at: its layout, the conditions on its rows,
 // the text filter, the table's hidden columns and its columns' order (the
@@ -345,7 +352,9 @@ export interface Spec {
 }
 
 // How a collection looks before a view changes it, as it declares: its
-// layout, the enumeration its board groups by and its cards' fields, each
+// layout, the field every layout groups its rows by (a date by its
+// month; a board's columns, and a calendar's colours) and the order it
+// sorts them in, its cards' fields, each
 // enumeration's values in the order its board's columns take, an empty
 // column included, the date its calendar places the rows by and its
 // span, and the columns its table hides until a view shows them.
@@ -353,6 +362,10 @@ export interface Look {
   layout?: Layout
   hide?: string[]
   by?: string
+  sort?: Sort
+  // What breaks the ties of any sort, before the collection's read order,
+  // as the inbox's since: never the view's, always the collection's.
+  then?: Sort
   cards?: string[]
   lanes?: Record<string, string[]>
   on?: string
@@ -409,7 +422,7 @@ export interface Custom {
   spec: Spec
 }
 
-// A view pinned to Favorites, the same in every circle: the collection
+// A view pinned under Pinned, the same in every circle: the collection
 // and the view it pins, a preset's id or the viewer's own, with the name,
 // mark and address it was last drawn with.
 export interface Pin {
@@ -560,8 +573,8 @@ export const spec = (p?: Preset, look: Look = {}): Spec => ({
   q: '',
   hide: p?.hide ?? look.hide ?? [],
   order: p?.order ?? [],
-  sort: p?.sort ?? null,
-  by: p?.by ?? null,
+  sort: p?.sort ?? look.sort ?? null,
+  by: p?.by ?? look.by ?? null,
   cards: p?.cards ?? look.cards ?? [],
   on: p?.on ?? look.on ?? null,
   span: p?.span ?? look.span ?? 'month',

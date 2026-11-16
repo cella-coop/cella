@@ -28,6 +28,8 @@ export const app: App = {
           { key: 'kind', label: 'Kind', kind: 'badge', role: 'hidden', value: (a: Account) => a.kind },
           { key: 'cash', label: 'Cash', kind: 'badge', role: 'hidden', value: (a: Charted) => a.cash },
         ],
+        // Balances compared down a table, by kind, in the chart's order.
+        look: { layout: 'table', by: 'kind', hide: ['cash', 'debit', 'credit'], lanes: { kind: ['asset', 'liability', 'equity', 'income', 'expense'] } },
       },
       page: {
         eyebrow: 'Account',
@@ -55,6 +57,8 @@ export const app: App = {
           { key: 'closed', label: 'Closed on', kind: 'date', role: 'meta', value: (p: Period) => p.closed },
           { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: (p: Listed<Period>) => p.state, tone: (p: Period) => (p.closed ? 'neutral' : 'accent') },
         ],
+        // Which months can still take entries, the latest first.
+        look: { by: 'state', lanes: { state: ['open', 'closed'] } },
       },
       page: {
         eyebrow: 'Period',

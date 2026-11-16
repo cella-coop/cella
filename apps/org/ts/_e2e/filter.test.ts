@@ -153,7 +153,9 @@ eachBrowser((browserName, launch) => {
       assert.ok(busiest && status, 'Lanterne has expenses')
       assert.ok((await held('expenses', 'status')).length > 1, 'expenses stand in more than one status')
       for (const layout of ['list', 'table', 'gallery', 'board', 'calendar']) {
-        await visit(`/expenses?view=${layout}${layout === 'calendar' ? `&at=${busiest}` : ''}`)
+        // Grouped by nothing and in the collection's own order, which the
+        // rows kept are worked out in.
+        await visit(`/expenses?view=${layout}&by=&sort=${layout === 'calendar' ? `&at=${busiest}` : ''}`)
         assert.equal(await panel(page).getByRole('button', { name: layout[0].toUpperCase() + layout.slice(1), exact: true }).getAttribute('aria-pressed'), 'true', `${browserName}: expenses in a ${layout}`)
         await filtering('expenses', layout, { key: 'status', label: 'Status' }, status, status)
       }
@@ -164,7 +166,7 @@ eachBrowser((browserName, launch) => {
       const names = Object.fromEntries((await people(app)).map((p) => [p.address, p.name]))
       const uploader = uploaders[0]
       for (const layout of ['feed', 'list']) {
-        await visit(`/files?view=${layout}`)
+        await visit(`/files?view=${layout}&by=&sort=`)
         await filtering('files', layout, { key: 'uploader', label: 'By' }, uploader, names[uploader] ?? uploader)
       }
 
@@ -174,17 +176,17 @@ eachBrowser((browserName, launch) => {
       const issuer = issuers[0]
       const named = (await app.query<{ name: string }>('SELECT name FROM circle.circle WHERE id = $1', [issuer])).rows[0]?.name ?? issuer
       for (const layout of ['board', 'list']) {
-        await visit(`/mandates?view=${layout}`)
+        await visit(`/mandates?view=${layout}&by=&sort=`)
         await filtering('mandates', layout, { key: 'issuer', label: 'Issued by' }, issuer, named)
       }
 
       // A view saved with its condition restores it from its tab.
       const want = (await rows('mandates', [{ field: 'issuer', is: [issuer] }])).map((r) => r.id)
-      await panel(page).getByRole('button', { name: 'Save as view' }).click()
+      await panel(page).getByRole('button', { name: 'Save', exact: true }).click()
       await panel(page).getByLabel('View name').fill('Issued by one')
       await panel(page).getByRole('button', { name: 'Save view' }).click()
       await page.waitForURL((u) => u.searchParams.get('v')?.startsWith('c-') ?? false)
-      await visit('/mandates?view=list')
+      await visit('/mandates?view=list&by=&sort=')
       assert.deepEqual(condition(), [])
       await page.getByTitle(/^View Issued by one /).click()
       await page.waitForURL((u) => u.searchParams.has('where'))
@@ -192,7 +194,7 @@ eachBrowser((browserName, launch) => {
       await keeps(page, 'mandates', 'list', want, `${browserName}: the saved view`)
 
       // The address alone draws the condition, from the server.
-      await visit(`/mandates?view=table&where=${encodeURIComponent(JSON.stringify([{ field: 'issuer', is: [issuer] }]))}`)
+      await visit(`/mandates?view=table&by=&sort=&where=${encodeURIComponent(JSON.stringify([{ field: 'issuer', is: [issuer] }]))}`)
       await keeps(page, 'mandates', 'table', want, `${browserName}: the address`)
       assert.match(await panel(page).locator('.chips').innerText(), new RegExp(`Issued by: ${named}`))
       mkdirSync(shots, { recursive: true })

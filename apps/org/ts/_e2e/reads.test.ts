@@ -285,7 +285,8 @@ test('a page of fifty thousand time entries is read in SQL: a hundred rows drawn
      SELECT $1, date '2026-10-01' + (i % 23), 15, i % 3 <> 0, 'load ' || i FROM generate_series(1, 50000) i`,
     [camille],
   )
-  const rows = (html: string) => (html.match(/<tr\b/g) ?? []).length - 1
+  // The table's rows, past its header and the groups' headers.
+  const rows = (html: string) => (html.match(/<tr\b(?![^>]*\bgroup\b)/g) ?? []).length - 1
   const started = performance.now()
   const first = await shell.page('/timesheets', julien)
   const took = performance.now() - started
@@ -320,7 +321,8 @@ test('a page of fifty thousand time entries is read in SQL: a hundred rows drawn
     'the given value first, across the page boundary',
   )
   assert.ok((grouped.groups.internal ?? 0) >= 16666 && (grouped.groups.billable ?? 0) >= 33333, `each group counted whole: ${JSON.stringify(grouped.groups)}`)
-  const byKind = await shell.page('/timesheets?by=billable', julien)
+  // In the read's own order, so the groups run from billable.
+  const byKind = await shell.page('/timesheets?by=billable&sort=', julien)
   assert.equal((byKind.text.match(/<tr class="group/g) ?? []).length, 1, 'a page within one group heads it once')
   assert.match(byKind.text, new RegExp(`>${grouped.groups.billable}</span>`), 'its header counts the whole group')
 

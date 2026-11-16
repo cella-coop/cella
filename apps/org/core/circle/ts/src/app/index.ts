@@ -18,7 +18,7 @@ export const app: App = {
         title: 'Circles',
         // A group, as each circle is; a person wears one person.
         icon: icons.Users,
-        look: { layout: 'gallery', cards: ['purpose', 'procedure'] },
+        look: { layout: 'gallery', cards: ['purpose'] },
         columns: [
           { key: 'name', label: 'Circle', kind: 'title', role: 'title', value: (c: Circle) => c.name },
           { key: 'purpose', label: 'Purpose', role: 'sub', value: (c: Circle) => c.purpose },
@@ -62,11 +62,13 @@ export const app: App = {
         columns: [
           { key: 'power', label: 'Power', kind: 'title', role: 'title', value: (m: Standing) => power(m.power) },
           { key: 'granteeName', label: 'Granted to', role: 'sub', value: (m: Standing) => m.granteeName },
-          { key: 'cap', label: 'Cap', value: (m: Standing) => cap(m) },
+          { key: 'cap', label: 'Cap', role: 'meta', value: (m: Standing) => cap(m) },
           { key: 'scope', label: 'Covers', value: (m: Standing) => covers(m) },
           { key: 'issuer', label: 'Issued by', kind: 'circle', value: (m: Standing) => m.issuer },
           { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: (m: Standing) => m.state, tone: (m: Standing) => tones[m.state] },
         ],
+        // Read as the chain: grouped by the circle that issued them.
+        look: { by: 'issuer', sort: { field: 'power', dir: 'asc' } },
       },
       page: {
         eyebrow: 'Mandate',

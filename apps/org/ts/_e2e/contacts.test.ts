@@ -70,12 +70,13 @@ test('a person contact added by address brings a core person in, in the same wri
 
 test('she is one entry in People, with no chip, holding nothing, and her contact\'s page links her there', async () => {
   const people = (await shell.page('/people', camille)).text
-  // Her row in People: her name, and an empty cell where each chip would be.
+  // Her row in People, grouped by the path: her name, and no chip, as
+  // the group's header says whether one is a member or a worker.
   const rows = people.split('<li').filter((r) => /href="\/people\/odile\.laurent(@|%40)maison-ferrand\.example"/.test(r))
   assert.equal(rows.length, 1, 'People lists her once')
   assert.ok(rows[0].includes('Odile Laurent'))
   assert.ok(!/class="badge /.test(rows[0]), 'her row shows no chip')
-  assert.equal(rows[0].match(/cell badge [^"]*empty/g)?.length, 2, 'neither Member nor Worker')
+  assert.equal(rows[0].match(/cell badge/g), null, 'neither Member nor Worker')
   assert.equal(
     (await one<{ n: string }>(
       `SELECT (SELECT count(*) FROM membership.member WHERE address = $1) + (SELECT count(*) FROM employment.worker WHERE address = $1) + (SELECT count(*) FROM person.device WHERE address = $1) AS n`,

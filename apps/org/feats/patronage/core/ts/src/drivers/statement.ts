@@ -6,9 +6,9 @@ const columns = `s.id, s.distribution, s.year, s.worker, s.amount::float8 AS amo
   s.hours::float8 AS hours, s.equal::float8 AS equal`
 
 // The statements as the collection lists them, the latest year first,
-// the largest part first.
+// the largest part first, each named by its worker.
 export const parts: Read = {
-  sql: `SELECT ${columns}, s.circle FROM patronage.statement s`,
+  sql: `SELECT ${columns}, coalesce((SELECT n.name FROM person.person n WHERE n.address = s.worker), s.worker) AS name, s.circle FROM patronage.statement s`,
   order: 'year DESC, amount DESC, worker',
 }
 

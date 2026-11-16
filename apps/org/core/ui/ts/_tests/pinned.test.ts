@@ -1,4 +1,4 @@
-// A view across circles and the pins of Favorites, alone: `across` in a
+// A view across circles and the pins of Pinned, alone: `across` in a
 // view's address and back, and the store a browser keeps read back, its
 // pins kept where each is one, under its collection on this origin, and
 // dropped otherwise. Run by `cella test slice ui`.

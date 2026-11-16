@@ -45,11 +45,11 @@ someone reassigns them; nothing reassigns them by itself.
 
 ## Shell
 
-Adds to each task its assignee's name, a field the tasks' board shows on
-its cards and may group by; to a task's Details, the assignee and the form
-that gives it to someone; and the assignee's address, a hidden person
-field, by which a person's page jumps in its Related to the tasks they
-do, the tasks collection filtered to them.
+Adds to each task its assignee, a person field by their address, which
+the tasks' board shows as their chip on its cards and may group by, and
+by which a person's page jumps in its Related to the tasks they do, the
+tasks collection filtered to them; and to a task's Details, the assignee
+and the form that gives it to someone.
 
 ## Lanterne
 

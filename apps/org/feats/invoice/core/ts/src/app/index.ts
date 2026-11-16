@@ -30,13 +30,15 @@ export const app: App = {
           { key: 'bill_to', label: 'Bills', role: 'sub', value: (i: Listed) => i.bill_to },
           { key: 'label', label: 'Label', role: 'sub', value: (i: Listed) => i.label },
           { key: 'issued', label: 'Issued', kind: 'date', role: 'hidden', value: (i: Listed) => i.issued },
+          { key: 'total', label: 'Total', kind: 'money', role: 'hidden', value: (i: Listed) => i.total },
+          { key: 'owed', label: 'Owed', kind: 'money', role: 'meta', value: (i: Listed) => i.owed },
           { key: 'due', label: 'Due', kind: 'date', role: 'meta', value: (i: Listed) => i.due },
-          { key: 'total', label: 'Total', kind: 'money', role: 'meta', value: (i: Listed) => i.total },
-          { key: 'owed', label: 'Owed', kind: 'money', role: 'hidden', value: (i: Listed) => i.owed },
           { key: 'state', label: 'Standing', kind: 'badge', role: 'meta', value: (i: Listed) => i.state, tone: (i: Listed) => tones[i.state] },
+          { key: 'circle', label: 'Circle', kind: 'circle', role: 'hidden', value: (i: Listed & { circle?: string }) => i.circle },
         ],
-        // Its calendar places each invoice on the day it is due.
-        look: { on: 'due' },
+        // Grouped by standing, overdue first, what someone acts on; the
+        // soonest due first. Its calendar places each on the day it is due.
+        look: { by: 'state', sort: { field: 'due', dir: 'asc' }, on: 'due', lanes: { state: ['overdue', 'partial', 'unpaid', 'paid', 'overpaid', 'voided'] } },
       },
       page: {
         eyebrow: 'Invoice',

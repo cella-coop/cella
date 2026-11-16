@@ -60,7 +60,11 @@ const rows = async (name: string, lens: string | null = null) =>
 
 test('each board groups by the lanes the fixture check reads, and every lane it finds held shows', async () => {
   for (const name of collections.filter((n) => !listed[n]?.none)) {
-    const lanes = look(name).lanes ?? {}
+    // A board's lanes, and those the fixture check reads; a list's
+    // groups take their order from the look's lanes too, which a value
+    // may leave empty, as a person's path may hold no candidate.
+    const own = look(name)
+    const lanes = Object.fromEntries(Object.entries(own.lanes ?? {}).filter(([k]) => own.layout === 'board' || k in (declared[name] ?? {})))
     assert.deepEqual(lanes, declared[name] ?? {}, `${name}'s board groups by the lanes tools/fixture/rich.mjs reads`)
     const held = await values(app, source(name) as Source, Object.keys(lanes))
     for (const [lane, all] of Object.entries(lanes)) {

@@ -9,7 +9,7 @@ export const app: App = {
   name: 'employment-payslip',
   extends: {
     payslips: {
-      columns: [{ key: 'name', label: 'Worker', role: 'sub', value: (r: { name?: string }) => r.name ?? '' }],
+      columns: [{ key: 'name', label: 'Worker name', role: 'hidden', value: (r: { name?: string }) => r.name ?? '' }],
     },
     people: {
       columns: [{ key: 'salary', label: 'Gross salary', kind: 'money', role: 'hidden', value: (r: { salary?: number }) => r.salary ?? null }],

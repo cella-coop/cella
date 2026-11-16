@@ -39,7 +39,7 @@
     sorted?: { key: string; dir: 'ascending' | 'descending' } | null
     onsort?: (key: string) => void
     empty?: string
-    group?: { by: Column; counts: Record<string, number> }
+    group?: { by: Column; counts: Record<string, number>; month?: boolean }
   } = $props()
 
   const section = useSection()
@@ -70,10 +70,10 @@
       <tbody>
         {#each rows as row, i (row.id)}
           {const link = $derived(href?.(row))}
-          {#if group && opens(rows, i, group.by.key)}
-            {const value = $derived(under(row, group.by.key))}
+          {#if group && opens(rows, i, group.by.key, group.month)}
+            {const value = $derived(under(row, group.by.key, group.month))}
             <tr class="group">
-              <th colspan={columns.length} scope="colgroup"><Group by={group.by} {row} empty={value === ''} count={group.counts[value] ?? 0} /></th>
+              <th colspan={columns.length} scope="colgroup"><Group by={group.by} {row} {value} month={group.month} count={group.counts[value] ?? 0} /></th>
             </tr>
           {/if}
           <tr

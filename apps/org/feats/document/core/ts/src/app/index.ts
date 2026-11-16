@@ -19,7 +19,8 @@ export const app: App = {
         create: Create,
         columns: [
           { key: 'title', label: 'Document', kind: 'title', role: 'title', value: (d: Listed) => d.title },
-          { key: 'id', label: 'Id', kind: 'mono', role: 'sub', value: (d: Listed) => d.id },
+          { key: 'id', label: 'Id', kind: 'mono', role: 'hidden', value: (d: Listed) => d.id },
+          { key: 'circle', label: 'Circle', kind: 'circle', role: 'hidden', value: (d: Listed) => d.circle },
           { key: 'versions', label: 'Versions', kind: 'number', role: 'hidden', value: (d: Listed) => d.versions },
           { key: 'edited', label: 'Edited', kind: 'date', role: 'meta', value: (d: Listed) => d.edited },
           {
@@ -31,6 +32,8 @@ export const app: App = {
             tone: (d: Listed) => (d.adopted && d.adopted !== 'not adopted' ? 'positive' : 'neutral'),
           },
         ],
+        // Each circle's own texts, the latest edited first.
+        look: { by: 'circle', sort: { field: 'edited', dir: 'desc' } },
       },
       page: {
         eyebrow: 'Document',

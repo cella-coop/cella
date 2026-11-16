@@ -17,7 +17,7 @@ export const app: App = {
         icon: icons.Money,
         create: Prepare,
         columns: [
-          { key: 'label', label: 'Payslip', kind: 'title', role: 'title', value: (p: Payslip & { label: string }) => p.label },
+          { key: 'label', label: 'Worker', kind: 'title', role: 'title', value: (p: Payslip & { label: string }) => p.label },
           { key: 'month', label: 'Month', kind: 'badge', role: 'hidden', value: (p: Payslip) => p.month },
           { key: 'member', label: 'Member', kind: 'person', role: 'hidden', value: (p: Payslip) => p.member },
           { key: 'hours', label: 'Hours', kind: 'number', role: 'hidden', value: (p: Payslip) => p.hours },
@@ -28,7 +28,9 @@ export const app: App = {
           { key: 'cost', label: 'Cost', kind: 'money', role: 'hidden', value: (p: Payslip) => p.cost },
           { key: 'state', label: 'Run', kind: 'badge', role: 'meta', value: (p: Payslip) => p.state, tone: (p: Payslip) => tones[p.state] },
         ],
-        look: { layout: 'table', lanes: { state: [...states] } },
+        // A pay run is a month: grouped by it, the latest first, each
+        // worker's slip in it by name.
+        look: { layout: 'list', by: 'month', sort: { field: 'month', dir: 'desc' }, lanes: { state: [...states] } },
         dashboard: [
           { kind: 'kpi', title: 'Gross pay', measure: { op: 'sum', field: 'gross' } },
           { kind: 'kpi', title: 'Net pay', measure: { op: 'sum', field: 'net' } },

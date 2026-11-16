@@ -9,17 +9,19 @@
   import Check from 'phosphor-svelte/lib/Check'
   import SortAscending from 'phosphor-svelte/lib/SortAscending'
   import SortDescending from 'phosphor-svelte/lib/SortDescending'
+  import PushPin from 'phosphor-svelte/lib/PushPin'
+  import PushPinSlash from 'phosphor-svelte/lib/PushPinSlash'
   import type { Column } from '../models/view.ts'
   import { spans } from '../models/calendar.ts'
   import { show } from '../models/format.ts'
-  import { arranged, filtering, groupable, type Custom, type Field, type Layout, type Pin, type Result, type Spec, type Where, type Widget } from '../models/query.ts'
+  import { arranged, filtering, groupable, laned, type Custom, type Field, type Layout, type Pin, type Result, type Spec, type Where, type Widget } from '../models/query.ts'
   import { reorder } from '../models/drag.ts'
   import { marks } from '../marks.ts'
   import { sortable } from '../attachments/sortable.ts'
   import { useCollection } from '../hooks/useCollection.ts'
   import { useDrag } from '../hooks/useDrag.ts'
   import { useShell } from '../hooks/useShell.ts'
-  import { useFavorites } from '../hooks/useFavorites.ts'
+  import { usePinned } from '../hooks/usePinned.ts'
   import { useViews } from '../hooks/useViews.ts'
   import Button from './Button.svelte'
   import Checkbox from './Checkbox.svelte'
@@ -39,7 +41,7 @@
   // a popover of what is shown, and Circles, whether the view reads the
   // lens's circle or every circle the reader reads; then saving what is
   // shown as the viewer's own view, or, on one of theirs, its name, its
-  // changes and its removal, and pinning the open view to Favorites. What
+  // changes and its removal, and pinning the open view under Pinned. What
   // the collection offers lives only inside the dropdowns and popovers,
   // and a row the layout has no use for is disabled, never dropped. A
   // change hands the whole spec on to the collection, which puts it in
@@ -57,6 +59,7 @@
     grouped,
     placing,
     declared = null,
+    opened,
     custom,
     dirty,
     pin = null,
@@ -83,11 +86,12 @@
     // The date a calendar places the rows by.
     placing?: string
     // The field the collection's read orders by first, and which way,
-    // what Order by's default names.
+    // and what the view showed as it was opened: Order by's default.
     declared?: { key: string; dir: 'ascending' | 'descending' } | null
+    opened?: Spec
     custom?: Custom
     dirty: boolean
-    // The open view as Favorites pins it, and whether the lens leaves the
+    // The open view as Pinned holds it, and whether the lens leaves the
     // collection whole, its rows naming no circle that owns them.
     pin?: Pin | null
     whole?: boolean
@@ -100,11 +104,12 @@
   const state = useCollection()
   const views = useViews(() => name)
   const shell = useShell()
-  const favorites = useFavorites()
+  const pinned = usePinned()
   // Circles chooses only where a lens narrows the rows.
   const narrowed = $derived(!!shell.lens && !whole)
 
   const groups = $derived(fields.filter(groupable))
+  const lanes = $derived(fields.filter(laned))
   const dates = $derived(fields.filter((f) => f.type === 'date'))
   // A board only where a field is one it groups by, an enumeration, a
   // person or a circle, a calendar only where one is a date, and a feed
@@ -120,7 +125,7 @@
       { id: 'dashboard' as const, label: 'Dashboard', icon: ChartBar },
     ].filter(
       (l) =>
-        (l.id !== 'board' || groups.length > 0) &&
+        (l.id !== 'board' || lanes.length > 0) &&
         (l.id !== 'calendar' || dates.length > 0) &&
         (l.id !== 'feed' || (dates.length > 0 && columns.some((c) => c.kind === 'person'))),
     ),
@@ -130,13 +135,25 @@
   const ordered = $derived(arranged(columns, spec.order))
   const drag = useDrag()
 
-  // Order by's default, the collection's own order, named by the field
-  // and direction its read leads with where it leads with one.
-  const own = $derived.by(() => {
-    const c = declared && columns.find((c) => c.key === declared.key)
-    return c ? `Default: ${c.label}, ${declared?.dir}` : 'Default'
-  })
-  const descending = $derived(spec.sort?.dir === 'desc')
+  // Order by's default, marked quietly in its options: the order the
+  // view opened with, else the field the collection's read leads with,
+  // else the rows as listed. The select names only the field; the button
+  // before it, which way.
+  const fallback = $derived(declared && columns.some((c) => c.key === declared.key) ? { field: declared.key, dir: declared.dir === 'descending' ? ('desc' as const) : ('asc' as const) } : null)
+  const initial = $derived(opened?.sort ?? null)
+  const standing = $derived(initial ?? fallback)
+  const sorted = $derived(spec.sort ?? fallback)
+  const descending = $derived(sorted?.dir === 'desc')
+  const orders = $derived([
+    ...(fallback ? [] : [{ value: '', label: 'As listed', default: !standing }]),
+    ...columns.map((c) => ({ value: c.key, label: c.label, default: c.key === standing?.field })),
+  ])
+  // A field chosen keeps the direction the toggle shows; the collection's
+  // own order, where the view opened with no sort of its own, is no sort.
+  function order(key: string) {
+    const dir = sorted?.dir ?? 'asc'
+    change({ sort: !key || (!initial && key === fallback?.field && dir === fallback.dir) ? null : { field: key, dir } })
+  }
 
   // What a condition may be put on: a date, or any field with a handful
   // of values to choose from, a person's and a circle's among them; each
@@ -157,8 +174,9 @@
 
   const change = (s: Partial<Spec>) => onchange({ ...spec, q: state.filter, ...s })
 
-  // Fields and columns as a select's options.
-  const as = (fs: { key: string; label: string }[]) => fs.map((f) => ({ value: f.key, label: f.label }))
+  // Fields and columns as a select's options; a date groups by its
+  // month.
+  const as = (fs: { key: string; label: string; type?: string }[]) => fs.map((f) => ({ value: f.key, label: f.type === 'date' ? `${f.label}, by month` : f.label }))
   const none = { value: '', label: 'None' }
 
   function card(key: string, on: boolean) {
@@ -252,7 +270,7 @@
   </div>
 
   <div class="filter">
-    <input bind:this={state.search} bind:value={state.filter} placeholder="Filter" aria-label="Filter" />
+    <input bind:this={state.search} bind:value={state.filter} placeholder="Search" aria-label="Search" />
     <kbd>/</kbd>
   </div>
 
@@ -260,7 +278,7 @@
     <span class="label" id="{id}-group">Group by</span>
     <div class="control">
       {#if spec.layout === 'board'}
-        <Select fit labelledby="{id}-group" options={as(groups)} bind:value={() => grouped ?? '', (v) => change({ by: v })} />
+        <Select fit labelledby="{id}-group" options={as(lanes)} bind:value={() => grouped ?? '', (v) => change({ by: v })} />
       {:else if spec.layout === 'calendar'}
         <Select fit labelledby="{id}-group" options={as(dates)} bind:value={() => placing ?? '', (v) => change({ on: v })} />
         <Select
@@ -269,7 +287,7 @@
           options={spans.map((s) => ({ value: s, label: s === 'month' ? 'Month' : 'Week' }))}
           bind:value={() => spec.span ?? '', (v) => change({ span: v as Spec['span'] })}
         />
-        <Select fit label="Colour by" options={[none, ...as(groups)]} bind:value={() => spec.by ?? '', (v) => change({ by: v || null })} />
+        <Select fit label="Colour by" options={[none, ...as(lanes)]} bind:value={() => spec.by ?? '', (v) => change({ by: v || null })} />
       {:else if spec.layout === 'dashboard'}
         <Select fit labelledby="{id}-group" options={[none]} disabled />
       {:else}
@@ -278,23 +296,19 @@
     </div>
 
     <span class="label" id="{id}-order">Order by</span>
-    <div class="control">
-      <Select
-        fit
-        labelledby="{id}-order"
-        options={[{ value: '', label: own }, ...as(columns)]}
-        disabled={spec.layout === 'dashboard'}
-        bind:value={() => spec.sort?.field ?? '', (key) => change({ sort: key ? { field: key, dir: spec.sort?.dir ?? 'asc' } : null })}
-      />
+    <!-- The direction before the field, so every control ends on the
+         panel's one right edge; the two never wrap apart. -->
+    <div class="control order">
       <button
         class="direction"
         aria-label={descending ? 'Descending' : 'Ascending'}
         title={descending ? 'Descending' : 'Ascending'}
-        disabled={!spec.sort || spec.layout === 'dashboard'}
-        onclick={() => spec.sort && change({ sort: { field: spec.sort.field, dir: descending ? 'asc' : 'desc' } })}
+        disabled={!sorted || spec.layout === 'dashboard'}
+        onclick={() => sorted && change({ sort: { field: sorted.field, dir: descending ? 'asc' : 'desc' } })}
       >
         <Icon icon={descending ? SortDescending : SortAscending} />
       </button>
+      <Select fit labelledby="{id}-order" options={orders} disabled={spec.layout === 'dashboard'} bind:value={() => sorted?.field ?? '', (key) => order(key)} />
     </div>
 
     <span class="label" id="{id}-filter">Filter</span>
@@ -398,21 +412,17 @@
     </div>
   </div>
 
+  <!-- The foot, one row: Save, only once the view differs from what it
+       opened as, which keeps a viewer's own view's changes or, on a
+       preset, names a new view of the viewer's; then Pin, which pins the
+       open view under Pinned in the sidebar, or unpins it; and, on a view
+       of the viewer's own, its removal. Its name edits above them. -->
   <div class="saving">
     {#if custom}
       <label class="option">
         <span class="label">Name</span>
         <input value={custom.name} onchange={(e) => views.rename(custom.id, e.currentTarget.value)} aria-label="View name" />
       </label>
-      <div class="buttons">
-        {#if dirty}
-          <Button tone="primary" onclick={() => views.update(custom.id, { ...spec, q: state.filter })}>Save changes</Button>
-        {/if}
-        <Button onclick={() => (views.naming = true)}>Save as new view</Button>
-        <Button tone="danger" onclick={onremove}>Delete view</Button>
-      </div>
-    {:else if !views.naming}
-      <Button onclick={() => (views.naming = true)}>Save as view</Button>
     {/if}
     {#if views.naming}
       <form class="naming" onsubmit={save}>
@@ -430,10 +440,21 @@
           <Button onclick={() => (views.naming = false)}>Cancel</Button>
         </div>
       </form>
-    {/if}
-    {#if pin}
-      {const on = $derived(favorites.pinned(pin.collection, pin.view))}
-      <Button onclick={() => pin && (on ? favorites.unpin(pin.collection, pin.view) : favorites.pin(pin))}>{on ? 'Unpin from Favorites' : 'Pin to Favorites'}</Button>
+    {:else}
+      <div class="foot">
+        {#if dirty}
+          <Button tone="primary" onclick={() => (custom ? views.update(custom.id, { ...spec, q: state.filter }) : (views.naming = true))}>Save</Button>
+        {/if}
+        {#if pin}
+          {const on = $derived(pinned.pinned(pin.collection, pin.view))}
+          <Button onclick={() => pin && (on ? pinned.unpin(pin.collection, pin.view) : pinned.pin(pin))}>
+            <Icon icon={on ? PushPinSlash : PushPin} />{on ? 'Unpin' : 'Pin'}
+          </Button>
+        {/if}
+        {#if custom}
+          <span class="end"><Button tone="danger" onclick={onremove}>Delete</Button></span>
+        {/if}
+      </div>
     {/if}
   </div>
 </Card>
@@ -469,6 +490,10 @@
     justify-content: flex-end;
     gap: var(--space-1);
     min-width: 0;
+  }
+  /* The direction and the field never wrap apart; the field gives way. */
+  .order {
+    flex-wrap: nowrap;
   }
   .direction {
     display: grid;
@@ -602,6 +627,15 @@
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
+  }
+  /* The foot's one row: Save and Pin, and a view's Delete at its end. */
+  .foot {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .end {
+    margin-inline-start: auto;
   }
   .marks {
     display: flex;

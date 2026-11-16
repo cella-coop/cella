@@ -118,9 +118,11 @@ reopened; the reaction on or off.
 
 ## Shell
 
-The `projects` collection opens as a gallery, each card naming its contact,
-its milestones done of all, its budget and what its time spent of it (the
-root picks these fields, which come from three slices). A project's page,
+The `projects` collection opens as a list grouped by circle, the soonest
+due first, each row naming its contact, its milestones done of all, its
+due day and its state; its gallery cards name its contact,
+its milestones, its budget and what its time spent of it (the root picks
+these fields, which come from three slices). A project's page,
 its header's crumb its id, holds its summary under its title, then
 whom it is for (`contact-project`) and its Activity; its circle, its
 milestones done of all and the next, its budget and its days are its

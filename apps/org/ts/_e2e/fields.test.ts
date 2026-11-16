@@ -1,8 +1,8 @@
 // A view chooses the fields it shows in every layout but the dashboard,
 // in every browser: signed in as Julien on the dev server, the files in
-// a list show their id under each row's title and their kind, size and
-// day after it, by their columns' roles; Display hides the size and the
-// id and shows the type, a column the table alone shows by default,
+// a list grouped by nothing show who uploaded them under each row's title and their kind, size and
+// day after it, by their columns' roles; Display hides the size and who
+// uploaded them and shows the type, a column the table alone shows by default,
 // after the title, and the address keeps the choice as `cards`. In a
 // feed the files show nothing after each line's title but what Display
 // chooses, offering every field but the title, who and when; it shows
@@ -86,37 +86,38 @@ eachBrowser((browserName, launch) => {
         await panel(page).getByRole('button', { name: new RegExp(`(^|\\s)${want.split(',').length} fields$`) }).waitFor()
       }
       const save = async (name: string) => {
-        await panel(page).getByRole('button', { name: 'Save as view' }).click()
+        await panel(page).getByRole('button', { name: 'Save', exact: true }).click()
         await panel(page).getByLabel('View name').fill(name)
         await panel(page).getByRole('button', { name: 'Save view' }).click()
         await page.waitForURL((u) => u.searchParams.get('v')?.startsWith('c-') ?? false)
       }
 
-      // A list: by the columns' roles, then as Display chooses.
-      await visit('/files?view=list')
-      await draws(page, 'list', { sub: 1, meta: 3, mono: 1 }, `${browserName}: a list shows its columns by their roles`)
+      // A list, grouped by nothing: by the columns' roles, then as Display
+      // chooses.
+      await visit('/files?view=list&by=')
+      await draws(page, 'list', { sub: 1, meta: 3, mono: 0 }, `${browserName}: a list shows its columns by their roles`)
       await panel(page).getByRole('button', { name: '4 fields' }).click()
       await display().waitFor()
       assert.deepEqual(
         await display().getByRole('checkbox').evaluateAll((bs) => bs.map((b) => b.getAttribute('aria-checked') === 'true')),
-        [true, true, true, true, false, false, false, false, false, false, false],
+        [false, true, true, true, true, false, false, false, false, false, false],
         `${browserName}: a list's Display offers every field but the title, the logged ones last, those its roles show checked`,
       )
-      await field('Size', false, 'id,class,uploaded')
-      await field('Type', true, 'id,class,uploaded,type')
-      await field('Id', false, 'class,uploaded,type')
+      await field('Size', false, 'uploader,class,uploaded')
+      await field('Type', true, 'uploader,class,uploaded,type')
+      await field('By', false, 'class,uploaded,type')
       await page.keyboard.press('Escape')
       const listed = { sub: 0, meta: 3, mono: 1 }
       await draws(page, 'list', listed, `${browserName}: the list shows the kind, the day and the type after the title`)
       mkdirSync(shots, { recursive: true })
       await page.screenshot({ path: `${shots}/files-list-${browserName}.png` })
       await save('Chosen fields')
-      await visit('/files?view=list')
-      await draws(page, 'list', { sub: 1, meta: 3, mono: 1 }, `${browserName}: the list's default is back`)
+      await visit('/files?view=list&by=')
+      await draws(page, 'list', { sub: 1, meta: 3, mono: 0 }, `${browserName}: the list's default is back`)
       await page.getByTitle(/^View Chosen fields /).click()
       await page.waitForURL((u) => cards(u) === 'class,uploaded,type')
       await draws(page, 'list', listed, `${browserName}: the saved view restores the list's fields`)
-      await visit('/files?view=list&cards=class,uploaded,type')
+      await visit('/files?view=list&by=&cards=class,uploaded,type')
       await draws(page, 'list', listed, `${browserName}: the address alone draws the list's fields`)
 
       // A feed: nothing after its title, then as Display chooses.

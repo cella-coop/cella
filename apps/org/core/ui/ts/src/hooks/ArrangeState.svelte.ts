@@ -14,10 +14,11 @@ export class ArrangeState {
     this.empty.push(name)
   }
 
-  // An empty accordion renamed, or dropped where the name is blank.
+  // An empty accordion renamed, or dropped where the name is blank or
+  // another empty one's, which it joins.
   rename(group: string, name: string) {
     const to = name.trim()
-    this.empty = to ? this.empty.map((g) => (g === group ? to : g)) : this.empty.filter((g) => g !== group)
+    this.empty = to && (to === group || !this.empty.includes(to)) ? this.empty.map((g) => (g === group ? to : g)) : this.empty.filter((g) => g !== group)
   }
 
   // An accordion a choice now fills, which no longer waits empty.

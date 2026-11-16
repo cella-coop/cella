@@ -16,17 +16,11 @@
   <div class="basket">
     {#each basket.baskets as b (b.circle)}
       <section class="circle" aria-labelledby="basket-{b.circle}">
-        <h2 id="basket-{b.circle}">
-          {b.changes.length}
-          {b.changes.length === 1 ? 'change' : 'changes'} to propose to {b.name}
-        </h2>
+        <h2 id="basket-{b.circle}">{`${b.changes.length} ${b.changes.length === 1 ? 'change' : 'changes'} to propose to ${b.name}`}</h2>
         <ul>
           {#each b.changes as c (`${c.page}/${c.id}/${c.field}`)}
             <li>
-              <span class="what"
-                >{#if c.where}<span class="where">{c.where} ·</span>{/if}
-                {c.label}</span
-              >
+              <span class="what">{#if c.where}<span class="where">{c.where} · </span>{/if}{c.label}</span>
               {#if c.shape === 'value'}
                 <span class="line"><s>{c.shown?.was ?? (c.was || 'Empty')}</s> → {c.shown?.value ?? (c.value || 'Empty')}</span>
               {:else}

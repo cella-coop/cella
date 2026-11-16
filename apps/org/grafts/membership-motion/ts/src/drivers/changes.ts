@@ -6,9 +6,10 @@ import type { Shown } from '../models/changes.ts'
 // features arranged, as the tree from the one it replaces; a circle's
 // terms and a role's amended, each term from the one in force. What each
 // replaces is the value in force while the motion is open, and once it
-// closed the one its effect's entry says it replaced (`was`), or none
-// where no effect of it stands, as a forgone one. A policy's text is no
-// change of these: its diff is the policy register's to draw.
+// closed the one its effect's entry says it replaced (`was`), as
+// `cella.disclosed` opens it to every reader since it commits to no one,
+// or none where no effect of it stands, as a forgone one. A policy's text
+// is no change of these: its diff is the policy register's to draw.
 export async function changes(db: Db, motion: string): Promise<Shown[]> {
   const { rows } = await db.query<{
     n: number
@@ -20,11 +21,13 @@ export async function changes(db: Db, motion: string): Promise<Shown[]> {
     name: string | null
   }>(
     `SELECT m.n::int AS n, m.kind, m.args, d.closed IS NULL AS open,
-            (SELECT l.payload -> 'was' FROM cella.log l
-             WHERE l.op = CASE m.kind WHEN 'arrange-features' THEN 'circle:circle:arrange' WHEN 'amend-circle' THEN 'circle:circle:amend' ELSE 'circle:role:amend' END
-               AND l.payload ->> 'motion' = d.id
-               AND coalesce(l.payload ->> 'role', l.payload ->> 'circle') = coalesce(m.args ->> 'role', m.args ->> 'circle')
-             ORDER BY l.n LIMIT 1) AS was,
+            CASE WHEN d.closed IS NOT NULL THEN (
+              SELECT o -> 'was' FROM cella.log l, LATERAL (SELECT cella.disclosed(l.n) AS o) x
+              WHERE l.n > coalesce((SELECT c.n FROM cella.log c WHERE c.receipt = d.cutoff AND c.op = 'motion:motion:close'), 0)
+                AND l.op = CASE m.kind WHEN 'arrange-features' THEN 'circle:circle:arrange' WHEN 'amend-circle' THEN 'circle:circle:amend' ELSE 'circle:role:amend' END
+                AND o ->> 'motion' = d.id
+                AND coalesce(o ->> 'role', o ->> 'circle') = coalesce(m.args ->> 'role', m.args ->> 'circle')
+              ORDER BY l.n LIMIT 1) END AS was,
             CASE m.kind
               WHEN 'arrange-features' THEN (SELECT json_build_object('features', circle.features(c.id)) FROM circle.circle c WHERE c.id = m.args ->> 'circle')
               WHEN 'amend-circle' THEN (SELECT json_build_object('name', c.name, 'purpose', c.purpose, 'procedure', c.procedure) FROM circle.circle c WHERE c.id = m.args ->> 'circle')

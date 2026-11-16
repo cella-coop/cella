@@ -5,16 +5,14 @@ import type { Decider } from './settings.ts'
 // and what the motion carries as it is.
 
 // A field of what is composed: the argument it fills, its label, its
-// type and, for a text area, its rows; and, where it follows what else
-// is typed until the reader types in it, its value from those, as a new
-// role's id follows its name.
+// type and, for a text area, its rows. None is a key the write can take
+// itself, as a role's id is taken from its name.
 export interface Composed {
   name: string
   label: string
   type?: 'text' | 'number' | 'date' | 'email' | 'url'
   rows?: number
   wide?: boolean
-  from?: (typed: Record<string, string>) => string
 }
 
 // The motion composed: the circle that decides it, its kind, the fields
@@ -28,9 +26,9 @@ export interface Composing {
   says: (values: Record<string, string>) => string
 }
 
-// A field's value: as typed, or, untyped, as it follows the others.
+// Each field's value as typed, empty where it was not.
 export function valued(fields: Composed[], typed: Record<string, string>): Record<string, string> {
-  return Object.fromEntries(fields.map((f) => [f.name, typed[f.name] ?? f.from?.(typed) ?? '']))
+  return Object.fromEntries(fields.map((f) => [f.name, typed[f.name] ?? '']))
 }
 
 // What the motions' New form posts for it: its circle, title and

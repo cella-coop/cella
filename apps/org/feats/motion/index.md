@@ -1,6 +1,6 @@
 +++
 title = "Motion"
-updated = 2026-11-13
+updated = 2026-11-16
 +++
 
 How a circle acts as a whole: motions, proposed, voted on and closed, each carrying the actions it decides beyond its text, or none. A passed motion is a decision in plain speech; the code keeps no row and no name called decision. An outcome is computed from the signed votes, never claimed; each member's latest vote counts once. Each action a passed motion carries is an effect in the close's transaction, citing it, its actor whoever closed it, judged by its own guards, and what follows it, such as the capital a departure moves, is the reaction of the graft that knows it ([trust](../../../../_corpus/doc/trust.md#three-kinds-of-action)). A motion may adopt a policy, a sentence its circle binds itself by, which the register in org's core keeps ([policies](../../../../_corpus/doc/architecture.md#policies)).
@@ -372,6 +372,11 @@ so is a right. It reads as its reader, so it shows the actions of the motions it
   of each stands at a time, replaces the one in force on days its own
   meet, which the refusal names, and is the motion's only one of its
   kind on those days (`circle.overlap_flaw`, `motion.standing_rules`).
+  A rule marking a setting marks it soundly, for the motion's circle
+  or, from the assembly, another, replaces the rule in force on days its
+  own meet for that setting and circle (`circle_policy.setting_flaw`),
+  and is the motion's only one for that setting and circle on those
+  days (`motion.setting_rules`).
   And the policies the motion adopts, replaces and ends leave the
   assembly, once it is carried out, a collective `adopt-policy` mandate
   in force on the verdict date with no `until` (`circle.sovereignty`),

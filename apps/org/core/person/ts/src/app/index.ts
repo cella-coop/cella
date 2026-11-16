@@ -43,7 +43,8 @@ export const app: App = {
       view: {
         title: 'People',
         caption: 'Everyone the co-op knows: its members and its workers, each by the address they sign with.',
-        icon: icons.Users,
+        // One person, as each record of it is; a circle wears a group.
+        icon: icons.User,
         columns: [
           { key: 'name', label: 'Name', kind: 'title', role: 'title', value: (p: Person) => p.name },
           { key: 'address', label: 'Address', kind: 'text', role: 'sub', value: (p: Person) => p.address },

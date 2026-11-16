@@ -274,6 +274,25 @@ BEGIN ATOMIC
     AND (k.marked ? 'publish' OR EXISTS (SELECT FROM jsonb_object_keys(k.marked) x WHERE x LIKE 'disclosure\_%' OR x = ANY (circle.particular_names())));
 END;
 
+-- The rules a motion would adopt that mark a setting, each with the
+-- setting, the circle it is for (the one it marks, or else the motion's)
+-- and the days it would apply were the motion closed at its deadline;
+-- none whose days are not written YYYY-MM-DD, which `motion.asks`
+-- refuses.
+CREATE FUNCTION motion.setting_rules(motion text) RETURNS TABLE (n integer, setting text, circle text, day date, until date)
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT m.n, btrim(k.marked ->> 'setting'), coalesce(btrim(k.marked ->> 'circle'), d.circle),
+         coalesce((m.args ->> 'from')::date, d.deadline), (m.args ->> 'until')::date
+  FROM motion.action m
+  JOIN motion.motion d ON d.id = m.motion
+  CROSS JOIN LATERAL (SELECT coalesce(motion.marked(m.args ->> 'wording'), '{}') AS marked) k
+  WHERE m.motion = setting_rules.motion AND m.kind = 'policy' AND m.args ->> 'kind' = 'rule'
+    AND coalesce(m.args ->> 'from', '') ~ '^([0-9]{4}-[0-9]{2}-[0-9]{2})?$'
+    AND coalesce(m.args ->> 'until', '') ~ '^([0-9]{4}-[0-9]{2}-[0-9]{2})?$'
+    AND k.marked ? 'setting';
+END;
+
 -- motion:motion:propose — each action of these kinds names what it
 -- applies to, and the motion's circle may decide it: for a mandate
 -- policy, whose values core's circles holds sound (`circle_policy.mandate_flaw`),
@@ -297,7 +316,10 @@ END;
 -- (`circle.overlap_flaw`), and a motion adopts no two of a kind whose
 -- days meet. A rule marking a setting marks it soundly, for the motion's
 -- circle or, from the assembly, another, and replaces the rule its days
--- meet for that setting and circle (`circle_policy.setting_flaw`).
+-- meet for that setting and circle (`circle_policy.setting_flaw`); one
+-- rule sets a setting for a circle at a time, so a motion adopts no two
+-- for the same setting and circle whose days meet
+-- (`motion.setting_rules`).
 CREATE FUNCTION motion.circle_asks(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -389,6 +411,13 @@ BEGIN ATOMIC
        ORDER BY o.n LIMIT 1)
     )
     FROM motion.standing_rules(payload ->> 'motion') s
+    UNION ALL
+    SELECT 'actions ' || o.n || ' and ' || s.n || ' of ' || (payload ->> 'motion') || ' both set ' || s.setting
+         || ' for ' || s.circle || ' on days that meet: one rule sets a setting for a circle at a time, so a motion adopts one'
+    FROM motion.setting_rules(payload ->> 'motion') s
+    JOIN motion.setting_rules(payload ->> 'motion') o
+      ON o.setting = s.setting AND o.circle = s.circle AND o.n < s.n
+     AND (s.until IS NULL OR o.day < s.until) AND (o.until IS NULL OR s.day < o.until)
   ) x
   WHERE r IS NOT NULL
   LIMIT 1;

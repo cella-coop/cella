@@ -245,13 +245,13 @@ in
               description = "MiB free on `/var/lib`'s disk below which no copy is made and the copy storing most ends, one each check.";
             };
             perAddress = mkOption {
-              type = types.ints.positive;
-              default = 40;
-              description = "Copies one address, an IPv6 one by its /64, holds at once: a room full of people behind one NAT address.";
+              type = types.nullOr types.ints.positive;
+              default = null;
+              description = "Copies one address, an IPv6 one by its /64, holds at once; null, all but four of the cap, so a room behind one NAT address fills most of it and leaves room for others.";
             };
             perAddressRate = mkOption {
               type = types.ints.positive;
-              default = 80;
+              default = 30;
               description = "Copies one address makes in ten minutes; only a copy made counts, never a refused attempt.";
             };
             perMinute = mkOption {
@@ -534,12 +534,12 @@ in
               "--trust-proxy"
               "--disk /var/lib"
             ] ++ lib.optional (s.demo.visitors != null) "--cap ${toString s.demo.visitors}"
+            ++ lib.optional (s.demo.perAddress != null) "--per-address ${toString s.demo.perAddress}"
             ++ lib.mapAttrsToList (flag: value: "--${flag} ${toString value}") {
               inherit (s.demo) reserve footprint idle lifetime memory connections upload storage concurrent;
               evict-after = s.demo.evictAfter;
               min-age = s.demo.minAge;
               disk-floor = s.demo.diskFloor;
-              per-address = s.demo.perAddress;
               per-address-rate = s.demo.perAddressRate;
               per-minute = s.demo.perMinute;
             });

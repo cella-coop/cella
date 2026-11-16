@@ -10,7 +10,7 @@
 import { after, before, it } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { random, sha256 } from '@cella/org-sign'
+import { fixture, random, sha256 } from '@cella/org-sign'
 import { Shell } from './serve.ts'
 
 const su = new pg.Client()
@@ -30,7 +30,11 @@ after(async () => {
 it('a demo build offers every fixture member at its sign-in, each marked as a demo member, under the demo banner', async () => {
   await shell.start('2026-10-24', { CELLA_DEMO: '1' })
   const { text } = await shell.page('/sign-in')
-  const members = (await su.query<{ n: number }>('SELECT count(DISTINCT address)::int AS n FROM person.device WHERE revoked IS NULL')).rows[0]!.n
+  // The members whose device in force is a fixture's, its key derived from
+  // their address and its label, as the sign-in offers them.
+  const devices = (await su.query<{ address: string; label: string; key: string }>("SELECT address, label, encode(key, 'hex') AS key FROM person.device WHERE revoked IS NULL")).rows
+  const derived = await Promise.all(devices.map(async (d) => ((await fixture(d.address, d.label)).key === d.key ? d.address : null)))
+  const members = new Set(derived.filter((a) => a !== null)).size
   assert.ok(members > 0, 'Lanterne enrols its members’ fixture devices')
   assert.match(text, /Demo members/)
   assert.equal(text.split('demo member</span>').length - 1, members, 'each member offered is marked as a demo member')

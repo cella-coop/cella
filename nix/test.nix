@@ -69,21 +69,21 @@ pkgs.testers.runNixOSTest {
       host.wait_for_open_port(${toString port}, timeout=600)
 
       with subtest("nobody is served the template, closed to every connection"):
-          host.succeed("${psql "postgres" "SELECT datistemplate AND NOT datallowconn FROM pg_database WHERE datname = 'demo_template'"} | grep -qx t")
-          host.succeed("${psql "postgres" "SELECT shobj_description(oid, 'pg_database') FROM pg_database WHERE datname = 'demo'"} | grep -q '^a copy of demo_template: cella demo template: '")
+          host.succeed("""${psql "postgres" "SELECT datistemplate AND NOT datallowconn FROM pg_database WHERE datname = 'demo_template'"} | grep -qx t""")
+          host.succeed("""${psql "postgres" "SELECT shobj_description(oid, 'pg_database') FROM pg_database WHERE datname = 'demo'"} | grep -q '^a copy of demo_template: cella demo template: '""")
 
       with subtest("the demo's sign-in offers Lanterne's members, each marked as a demo member, under its banner"):
           page = host.succeed("curl -sf http://127.0.0.1:${toString port}/sign-in")
-          members = int(host.succeed("${psql "demo" "SELECT count(DISTINCT address) FROM person.device WHERE revoked IS NULL"}").strip())
+          members = int(host.succeed("""${psql "demo" "SELECT count(DISTINCT address) FROM person.device WHERE revoked IS NULL"}""").strip())
           assert "Demo members" in page, "the sign-in offers no demo members"
           assert "Camille Martin" in page, "Camille is not offered"
           assert page.count("demo member</span>") == members, f"{page.count('demo member</span>')} marked, of {members} members"
           assert "Nothing here is real." in page, "the sign-in wears no demo banner"
 
       with subtest("a demo member signs in with their derived key and signs a write"):
-          head = int(host.succeed("${psql "demo" "SELECT n FROM cella.head"}").strip())
+          head = int(host.succeed("""${psql "demo" "SELECT n FROM cella.head"}""").strip())
           print(host.succeed("${probe "demo" port}"))
-          after = int(host.succeed("${psql "demo" "SELECT n FROM cella.head"}").strip())
+          after = int(host.succeed("""${psql "demo" "SELECT n FROM cella.head"}""").strip())
           assert after > head, f"the log's head stayed at {head}"
           host.succeed("${as "${cella} log verify --url '${url "demo"}'"}")
 

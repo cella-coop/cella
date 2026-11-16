@@ -21,6 +21,7 @@
     submit,
     tone = 'primary',
     inline = false,
+    end = false,
     reset = true,
     ready = true,
     children,
@@ -29,6 +30,9 @@
     submit: string
     tone?: 'primary' | 'quiet' | 'danger'
     inline?: boolean
+    // The button alone, at its corner, where nothing else balances it,
+    // as a create form's Cancel does.
+    end?: boolean
     reset?: boolean
     // Whether there is anything to post yet.
     ready?: boolean
@@ -96,14 +100,15 @@
     <div class="fields">{@render children()}</div>
   {/if}
   {#if form.problem}<p class="problem" role="alert">{form.problem}</p>{/if}
-  <div class="submit" class:ends={!!create}>
+  <div class="submit" class:ends={!!create || end}>
     {#if create}<Button onclick={() => create.close()}>Cancel</Button>{/if}
     <Button type="submit" {tone} busy={form.pending} disabled={!ready}>{submit}</Button>
   </div>
 </form>
 
 <style>
-  /* A create form ends as a dialog does: Cancel, then its button. */
+  /* A create form ends as a dialog does: Cancel, then its button; `end`
+     asks the same of a lone button with nothing to balance it against. */
   .ends {
     display: flex;
     justify-content: end;

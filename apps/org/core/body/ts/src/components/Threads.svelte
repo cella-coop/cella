@@ -47,7 +47,7 @@
     <Button onclick={() => box.drop()}>Not a reply</Button>
   {/if}
   <div data-box>
-    <Form action={post} submit={answering ? 'Reply' : 'Comment'} ready={posted.text.trim() !== ''}>
+    <Form action={post} submit={answering ? 'Reply' : 'Comment'} ready={posted.text.trim() !== ''} end>
       <Hidden name="parent" value={answering?.id ?? ''} />
       <Hidden name="text" value={posted.text} />
       <Field label="Comment" name="typed" rows={3} placeholder="Say what you think; @ mentions someone" wide bind:value={box.typed} />

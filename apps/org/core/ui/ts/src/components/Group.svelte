@@ -3,9 +3,10 @@
   import CaretRight from 'phosphor-svelte/lib/CaretRight'
   import Plus from 'phosphor-svelte/lib/Plus'
   import type { Column } from '../models/view.ts'
-  import { monthName } from '../models/format.ts'
+  import { monthName, show } from '../models/format.ts'
   import { groupTint } from '../models/query.ts'
   import { inked } from '../models/ink.ts'
+  import { useShell } from '../hooks/useShell.ts'
   import Cell from './Cell.svelte'
   import Icon from './Icon.svelte'
 
@@ -44,7 +45,15 @@
   } = $props()
 
   const label = $derived(value === '' ? 'None' : month ? monthName(value) : String(by.value(row) ?? value))
-  const tint = $derived(groupTint(by, value, month))
+  const shell = useShell()
+  // The bar's ink is the one `Cell` gives the value's icon: seeded by what
+  // it draws, a circle's name rather than its id, so the two always agree.
+  const drawn = $derived.by(() => {
+    if (value === '') return ''
+    const text = show(by.value(row), by.kind)
+    return by.kind === 'circle' ? (shell.circle(text) ?? text) : text
+  })
+  const tint = $derived(groupTint(by, drawn, month))
   const tone = $derived(by.kind === 'badge' ? by.tone?.(row) : undefined)
 </script>
 

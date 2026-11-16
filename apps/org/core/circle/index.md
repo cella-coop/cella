@@ -179,7 +179,7 @@ each action is carried out ([motion](../../feats/motion/index.md#circles)).
 | `seat-member` | giving and ending a seat (`circle:seat:add`, `:remove`) |
 | `create-circle` | creating a circle (`circle:circle:create`) |
 | `amend-circle` | changing a circle's name, purpose or procedure (`circle:circle:amend`), and making and changing its roles (`circle:role:make`, `:amend`) |
-| `arrange-features` | arranging a circle's features (`circle:circle:arrange`) where the mandate's scope covers the circle, its own for `{scope: own}`, so unlike every power above a circle may hold it over itself ([features](#features)) |
+| `arrange-features` | arranging a circle's features by motion (`circle:circle:arrange`), or at once by a holder on a seat (`circle:feature:arrange`), where the mandate's scope covers the circle, its own for `{scope: own}`, so unlike every power above a circle may hold it over itself ([features](#features)) |
 
 Whom a circle's motion decides about is `motion.decides`, and
 never where a circle sits, since none nests: the assembly decides about
@@ -576,6 +576,10 @@ purpose, procedure and roles (`motion.decides`): a circle holding
   judges it at the proposal and again as it is written
   ([membership-motion](../../grafts/membership-motion/index.md)).
 
+A motion adopted later replaces the whole listing, so it overwrites an
+instant save made between its proposal and its close; its entry carries
+the listing it replaced, so the log keeps what it overwrote.
+
 Either way `circle.listing_flaw(circle, listing, was)` judges the
 listing: each feature installed, none twice, each accordion named and
 its features listed together, and a change from `was`. Both fold by
@@ -835,7 +839,7 @@ tenure changes who holds the role, never what it holds.
 | `POST /api/circle/create` | ordered | a new circle, by motion |
 | `POST /api/circle/amend` | ordered | a circle's name, purpose or procedure, by motion |
 | `POST /api/circle/arrange` | ordered | a circle's features, by motion |
-| `POST /api/circle/feature.arrange` | confluent | a circle's features, at once, by whoever holds `arrange-features` over it |
+| `POST /api/circle/feature.arrange` | ordered | a circle's features, at once, by whoever holds `arrange-features` over it |
 | `POST /api/circle/role.make` | ordered | a new role in a circle, by motion |
 | `POST /api/circle/role.amend` | ordered | a role's name, duty or cap, by motion |
 | `POST /api/circle/seat.add` | ordered | who holds which role |
@@ -865,7 +869,8 @@ and `revoking`. Creating a circle places it nowhere: circles never nest.
 - **arrange** replaces a circle's features by the listing given, by the
   motion it cites, ordered as what a motion carries is; and
   **feature.arrange** the same at once, citing no motion, by the
-  actor's own `arrange-features` over the circle, confluent. Both
+  actor's own `arrange-features` over the circle, ordered too, since
+  two arrangements do not commute. Both
   commit the listing and the one it replaced, as `circle.features`
   spells it ([features](#features)).
 - **role.make** makes a role in a circle, or a `*` role every working

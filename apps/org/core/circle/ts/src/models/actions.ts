@@ -1,4 +1,4 @@
-import { confluent, ordered, type Actions } from '@cella/org-actions'
+import { ordered, type Actions } from '@cella/org-actions'
 
 // A mandate has no action of its own: it is granted and revoked as its
 // policy is adopted and ended, the motion feat's actions, which the motion
@@ -17,8 +17,9 @@ export const actions = {
   // what a motion carries is
   'circle:circle:arrange': ordered({ power: 'arrange-features' }),
   // a circle's features, at once, by whoever holds `arrange-features`
-  // over it by a seat; confluent, since it waits on no motion
-  'circle:feature:arrange': confluent({ power: 'arrange-features' }),
+  // over it by a seat; ordered, since it replaces the whole listing from
+  // the one its entry says it was, so two saves at once do not commute
+  'circle:feature:arrange': ordered({ power: 'arrange-features' }),
   // a new role in a circle, or a `*` role every working circle has, by the
   // motion it cites; ordered, since the same motion's later actions seat
   // people in it

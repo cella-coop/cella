@@ -24,3 +24,46 @@ project = "terres-report"
 member = "camille@lanterne.example"
 amount = 300000
 granted = 2026-10-12
+
+# Who runs each client project day to day, Linear's lead and members,
+# independent of who edited it: the studio's own, un-crewed.
+
+[[crew]]
+project = "halles-shop"
+lead = "yusuf@lanterne.example"
+members = ["thomas@lanterne.example", "amina@lanterne.example"]
+
+[[crew]]
+project = "clairval-site"
+lead = "thomas@lanterne.example"
+members = ["yusuf@lanterne.example", "lea@lanterne.example"]
+
+[[crew]]
+project = "nuvola-retainer"
+lead = "malik@lanterne.example"
+members = ["chloe@lanterne.example"]
+
+[[crew]]
+project = "mauve-posters"
+lead = "hugo@lanterne.example"
+members = ["camille@lanterne.example", "sofia@lanterne.example"]
+
+[[crew]]
+project = "velo-identity"
+lead = "camille@lanterne.example"
+members = ["hugo@lanterne.example"]
+
+[[crew]]
+project = "ferrand-packaging"
+lead = "sofia@lanterne.example"
+members = ["hugo@lanterne.example", "camille@lanterne.example"]
+
+[[crew]]
+project = "terres-report"
+lead = "hugo@lanterne.example"
+members = ["sofia@lanterne.example"]
+
+[[crew]]
+project = "ondine-shop"
+lead = "thomas@lanterne.example"
+members = ["yusuf@lanterne.example"]

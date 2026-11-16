@@ -7,8 +7,17 @@ export interface Granted {
   granted: string
 }
 
+// Who runs the project, Linear's lead or one of its members: an active
+// member, by address and name.
+export interface Crewed {
+  address: string
+  name: string
+}
+
 // A project's pot: its budget, what was shared from it and what is left,
-// with the shares and the members one may go to.
+// with the shares and the members one may go to; and its crew, the lead
+// and the rest, independent of who edits the project, with the active
+// members one may set either from.
 export interface Pot {
   budget: number | null
   shared: number
@@ -16,6 +25,8 @@ export interface Pot {
   shares: Granted[]
   members: { address: string; name: string }[]
   archived: boolean
+  lead: Crewed | null
+  crew: Crewed[]
 }
 
 // A member's shares, across projects.

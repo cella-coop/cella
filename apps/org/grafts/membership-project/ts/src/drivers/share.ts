@@ -20,6 +20,14 @@ export async function pot(db: Db, project: string): Promise<Pot> {
   const { rows: members } = await db.query<{ address: string; name: string }>(
     `SELECT m.address, p.name FROM membership.member m JOIN person.person p ON p.address = m.address WHERE membership.active(m.address, cella.verdict_date()) ORDER BY p.name`,
   )
+  const { rows: leads } = await db.query<{ address: string; name: string }>(
+    `SELECT l.member AS address, p.name FROM membership_project.lead l JOIN person.person p ON p.address = l.member WHERE l.project = $1`,
+    [project],
+  )
+  const { rows: crew } = await db.query<{ address: string; name: string }>(
+    `SELECT m.member AS address, p.name FROM membership_project.member m JOIN person.person p ON p.address = m.member WHERE m.project = $1 ORDER BY p.name`,
+    [project],
+  )
   const r = rows[0]
   const n = (x: string | null | undefined) => (x === null || x === undefined ? null : Number(x))
   return {
@@ -29,6 +37,8 @@ export async function pot(db: Db, project: string): Promise<Pot> {
     shares: shares.map((s) => ({ ...s, amount: Number(s.amount) })),
     members,
     archived: r?.archived ?? false,
+    lead: leads[0] ?? null,
+    crew,
   }
 }
 

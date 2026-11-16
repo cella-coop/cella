@@ -321,7 +321,8 @@ test('a page of fifty thousand time entries is read in SQL: a hundred rows drawn
     'the given value first, across the page boundary',
   )
   assert.ok((grouped.groups.internal ?? 0) >= 16666 && (grouped.groups.billable ?? 0) >= 33333, `each group counted whole: ${JSON.stringify(grouped.groups)}`)
-  const byKind = await shell.page('/timesheets?by=billable', julien)
+  // In the read's own order, so the groups run from billable.
+  const byKind = await shell.page('/timesheets?by=billable&sort=', julien)
   assert.equal((byKind.text.match(/<tr class="group/g) ?? []).length, 1, 'a page within one group heads it once')
   assert.match(byKind.text, new RegExp(`>${grouped.groups.billable}</span>`), 'its header counts the whole group')
 

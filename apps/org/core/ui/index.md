@@ -145,7 +145,8 @@ draws.
   line. The features under none are listed flat in their place. Nothing
   the circle has not enabled is shown, nor a count of what another
   circle holds; the command menu still reaches every collection. Last
-  in the middle, More… opens the circle's features page in Settings
+  in the middle, More…, quiet and right-aligned with a + before it,
+  opens the circle's features page in Settings
   ([the circle's shell](../circle/index.md#shell)). A collection the
   view declares `counted` shows how many rows it holds for the acting
   member, in the lensed circle where there is a lens, the count its
@@ -159,10 +160,12 @@ draws.
   which cycles system, light and dark and shows the current one. Settings is its own
   sidebar, one for the member and the co-op as Linear's, in place of
   the top and the features while one of its pages is open: Back to app,
-  which returns to the last page left, then the `platform` collections
-  in two groups, each under its heading, as each collection's
-  `subgroup` names: Personal, the member's own (Devices), then
-  Organization, the co-op's (Imports). The account menu's Settings opens
+  which returns to the last page left, then Settings' own heading, the
+  sidebar's title, above the `platform` collections in two groups, each
+  under a small, dim label naming its `subgroup`: Personal, the
+  member's own (Devices), then Organization, the co-op's (Imports,
+  and Features, the circle the member is in, the same page More…
+  opens). The account menu's Settings opens
   it at Personal's first page, the co-op menu's at Organization's. In
   dev mode a faint upright "prototype" with a test tube sits at the
   content's bottom right. The last write's outcome floats above.

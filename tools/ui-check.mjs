@@ -24,6 +24,11 @@
 // - Svelte 5 and SvelteKit 3 only: none of the legacy forms below, which
 //   still compile but are what code written from older knowledge reaches
 //   for, and no `{@html}`, which would render text as markup.
+// - Never native components: no `.svelte` file in the org app draws the
+//   browser's own select, date field, checkbox or radio (`<select>`, an
+//   `<input>` of type date, datetime-local, month, week, checkbox or
+//   radio); it composes the UI core's Select, date field and Checkbox,
+//   which are on-brand and accessible in every browser alike.
 // - No route loads or acts: no `+page.server.ts` or `+layout.server.ts`
 //   under a package's `src/routes/`, and no `load` in a `+page.ts` or
 //   `+layout.ts`; a page reads through queries and writes through forms,
@@ -143,6 +148,16 @@ const bounded = new Set(['svelte:boundary', 'Skeleton', 'Failed'])
 const tags = (text) =>
   [...text.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<!--[\s\S]*?-->/g, '').matchAll(/<([A-Za-z][\w.:-]*)/g)].map((m) => m[1])
 
+// The browser's own controls, which the UI core's replace: in an org
+// app's markup, past its scripts, styles and comments.
+const org = /^apps\/org\//
+const natives = [
+  [/<select[\s>/]/, 'a native <select>', "the UI core's Select"],
+  [/<input\b[^>]*\stype\s*=\s*["']?(date|datetime-local|month|week)["'\s/>]/, 'a native date input', "the UI core's Field of type date"],
+  [/<input\b[^>]*\stype\s*=\s*["']?(checkbox|radio)["'\s/>]/, 'a native checkbox or radio', "the UI core's Checkbox, or a button group"],
+]
+const markupOf = (text) => text.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<style[\s\S]*?<\/style>/g, '').replace(/<!--[\s\S]*?-->/g, '')
+
 // A route's server load or actions, and a universal load.
 const routed = /(^|\/)src\/routes\/(.*\/)?\+(page|layout)(\.server)?\.ts$/
 const loads = /^\s*export\s+(const|let|var|(async\s+)?function)\s+load\b|^\s*export\s*\{[^}]*\bload\b[^}]*\}/m
@@ -174,6 +189,14 @@ export function problems(path, text, ui) {
     out.push(`${path}: is a route's server load or actions; read through a query and write through a form in src/lib/remote, redirect in the server hook, or serve a +server.ts endpoint`)
   } else if (route && loads.test(text)) {
     out.push(`${path}: exports a load; read through a query in src/lib/remote, awaited under a boundary`)
+  }
+  if (svelte && org.test(path)) {
+    const drawn = markupOf(text)
+    for (const [re, what, instead] of natives) {
+      if (re.test(drawn)) {
+        out.push(`${path}: draws ${what}; never native components: compose ${instead}`)
+      }
+    }
   }
   for (const selector of ringless(path, text)) {
     out.push(`${path}: ${selector} sets outline: none and draws no ring; draw box-shadow: var(--focus) with it, or leave focus to :focus-visible`)

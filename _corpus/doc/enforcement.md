@@ -1,6 +1,6 @@
 +++
 title = "Enforcement"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 # Enforcement
@@ -85,7 +85,9 @@ Short names: fc `tools/feat-check.mjs`, sc `tools/sql-check.mjs`, pw
 | The client keeps its state in hooks, its style in UI core, and no module-level state or server import | [client state](architecture.md#client-state) | ui | `T/ui.test.mjs` |
 | A report reads only the views the slices publish, through the port, and joins slices in the analytics shell alone | [the analytics shell](architecture.md#the-analytics-shell) | the port at run time, `apps/org/core/analytics/ts/src/check.ts`; a server reading past the port is review's, as [reading](architecture.md#reading) says | `_e2e/analytics-shell.test.ts`: the port refuses a report that reads past the catalog; a running shell is refused for another database |
 | The shell writes no SQL | [the shell](architecture.md#the-shell) | wr, a write of a table or a call of the notary in the shell's TypeScript; a read in SQL no tool can see | `T/writes.test.mjs`: the shell's TypeScript that writes a table or calls the notary |
-| A route has no server load or actions; the web shell reads through a slice's calls | [remote functions](architecture.md#remote-functions) | ui | `T/ui.test.mjs`: a route's server load or actions, or a universal load |
+| Never native components: no select, date input, checkbox or radio of the browser's in the org app | [the shell](architecture.md#the-shell), [the UI core](../../apps/org/core/ui/index.md#never-native) | ui, "never native components", on an org `.svelte` file's markup | `T/ui.test.mjs`: a native `<select>`, a date and a datetime-local input, a checkbox, a switch and a radio, each refused by name; the UI core's `Select`, `Checkbox` and date `Field` passing |
+| A route has no server load or actions; the web shell reads through a slice's calls |
+ [remote functions](architecture.md#remote-functions) | ui | `T/ui.test.mjs`: a route's server load or actions, or a universal load |
 | A graft extends only the collections of the feats it joins | [the shell](architecture.md#the-shell) | the shell's registry as it loads, `apps/org/ts/src/lib/server/slices.ts`; no check sees it before | none |
 | A collection has one owner, a write one extension replacing it, and an address one command | [the shell](architecture.md#the-shell), [remote functions](architecture.md#remote-functions) | the shell's registry as it loads, `apps/org/ts/src/lib/server/slices.ts`; no check sees it before | none |
 | The site's text is the operator's | [whose words](../../apps/site/index.md#whose-words) | `.claude/settings.json` and `tools/site-text-guard.mjs` on an agent's calls; `cella check`, by a commit's author (`tools/site-text-check.mjs`), against accidents and not attackers | `T/site-text-guard.test.mjs`; `T/site-text-check.test.mjs`: a commit to the text by another author, refused by name, and the operator's passing; another author's merge whose resolution changes the text, refused, and one that only brings the operator's commits in, passing |

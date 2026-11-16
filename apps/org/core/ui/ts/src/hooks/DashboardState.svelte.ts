@@ -13,10 +13,24 @@ export interface Draft {
 }
 
 // The dashboard's editor in the View panel's Display popover: which widget is open, a new
-// one being -1, and its draft until it is saved into the address.
+// one being -1, and its draft until it is saved into the address, in the
+// shared Dialog, which follows `editing`: shown modal while a widget is
+// added or edited, closed once it is confirmed or cancelled.
 export class DashboardState {
   editing: number | null = $state(null)
   draft: Draft = $state(blank())
+  dialog: HTMLDialogElement | undefined = $state()
+
+  constructor() {
+    $effect(() => {
+      const d = this.dialog
+      if (d && this.editing !== null && !d.open) {
+        d.showModal()
+      } else if (d && this.editing === null && d.open) {
+        d.close()
+      }
+    })
+  }
 
   open(i: number, w: Widget | undefined, fs: Field[]) {
     const where = w?.where?.[0]
@@ -35,6 +49,14 @@ export class DashboardState {
 
   close() {
     this.editing = null
+  }
+
+  // The dialog's close event, which a browser may fire after it was
+  // opened again: only a dialog that is shut closes the editor.
+  closed() {
+    if (!this.dialog?.open) {
+      this.editing = null
+    }
   }
 
   toggle(value: string) {

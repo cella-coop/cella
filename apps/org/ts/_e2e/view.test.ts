@@ -159,3 +159,55 @@ eachBrowser((name, launch) => {
     }
   })
 })
+
+eachBrowser((name, launch) => {
+  test(`${name}: a dashboard widget is added and edited through the shared Dialog, each cancelled first`, async () => {
+    const { base, stop } = await serve()
+    const browser = await launch()
+    try {
+      const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
+      await signIn(context, base, 'camille@lanterne.example')
+      const page = await context.newPage()
+      await page.goto(`${base}/invoices?view=dashboard`)
+      await page.waitForLoadState('networkidle')
+      await page.getByRole('button', { name: /widgets$/ }).click()
+      const dialog = page.locator('dialog[open]')
+
+      // Cancel while adding changes nothing: the widget's form draws no
+      // inline Save, only the shared Dialog.
+      await page.getByRole('button', { name: 'Add widget' }).click()
+      await dialog.getByLabel('Title').fill('Should not appear')
+      await dialog.getByRole('button', { name: 'Cancel' }).click()
+      await dialog.waitFor({ state: 'hidden' })
+      assert.equal(await page.getByText('Should not appear').count(), 0, 'Cancel adds nothing')
+
+      // Add widget opens the Dialog, ending in Add.
+      await page.getByRole('button', { name: 'Add widget' }).click()
+      await dialog.getByLabel('Title').fill('E2E widget')
+      await dialog.getByRole('button', { name: 'Add', exact: true }).click()
+      await dialog.waitFor({ state: 'hidden' })
+      await page.getByText('E2E widget', { exact: true }).waitFor()
+
+      // Cancel while editing changes nothing.
+      await page.getByRole('button', { name: 'Edit E2E widget' }).click()
+      await dialog.getByLabel('Title').fill('Should not save')
+      await dialog.getByRole('button', { name: 'Cancel' }).click()
+      await dialog.waitFor({ state: 'hidden' })
+      assert.equal(await page.getByText('Should not save').count(), 0, 'Cancel saves nothing')
+      await page.getByText('E2E widget', { exact: true }).waitFor()
+
+      // A widget's edit opens the Dialog too, ending in Save.
+      await page.getByRole('button', { name: 'Edit E2E widget' }).click()
+      await dialog.getByLabel('Title').fill('E2E edited')
+      await dialog.getByRole('button', { name: 'Save', exact: true }).click()
+      await dialog.waitFor({ state: 'hidden' })
+      await page.getByText('E2E edited', { exact: true }).waitFor()
+      assert.equal(await page.getByText('E2E widget', { exact: true }).count(), 0, 'the edit replaces the old title')
+
+      await context.close()
+    } finally {
+      await browser.close()
+      await stop()
+    }
+  })
+})

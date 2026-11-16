@@ -20,6 +20,45 @@ export const date = (iso: unknown) => {
   return Number.isNaN(d.getTime()) ? String(iso) : days.format(d)
 }
 
+const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
+const aMinute = 60_000
+const anHour = 60 * aMinute
+const aDay = 24 * anHour
+const aMonth = 30 * aDay
+const aYear = 365 * aDay
+
+// A day or a moment, read beside what happened then, as Activity's
+// timeline does: close ones in minutes or hours, far ones in days,
+// months or years, never the day itself.
+export const relative = (iso: unknown) => {
+  if (!iso) {
+    return '—'
+  }
+  const s = String(iso)
+  const d = new Date(s.length <= 10 ? `${s}T00:00:00Z` : s)
+  if (Number.isNaN(d.getTime())) {
+    return s
+  }
+  const ms = d.getTime() - Date.now()
+  const abs = Math.abs(ms)
+  if (abs < aMinute) {
+    return rtf.format(0, 'second')
+  }
+  if (abs < anHour) {
+    return rtf.format(Math.round(ms / aMinute), 'minute')
+  }
+  if (abs < aDay) {
+    return rtf.format(Math.round(ms / anHour), 'hour')
+  }
+  if (abs < aMonth) {
+    return rtf.format(Math.round(ms / aDay), 'day')
+  }
+  if (abs < aYear) {
+    return rtf.format(Math.round(ms / aMonth), 'month')
+  }
+  return rtf.format(Math.round(ms / aYear), 'year')
+}
+
 const months = new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric', timeZone: 'UTC' })
 
 // A `YYYY-MM` month, as a chart's axis reads it.

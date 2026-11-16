@@ -5,7 +5,7 @@
   import type { Column } from '../models/view.ts'
   import { monthName, show } from '../models/format.ts'
   import { groupTint } from '../models/query.ts'
-  import { inked } from '../models/ink.ts'
+  import { inked, inkOf } from '../models/ink.ts'
   import { useShell } from '../hooks/useShell.ts'
   import Cell from './Cell.svelte'
   import Icon from './Icon.svelte'
@@ -53,8 +53,10 @@
     const text = show(by.value(row), by.kind)
     return by.kind === 'circle' ? (shell.circle(text) ?? text) : text
   })
-  const tint = $derived(groupTint(by, drawn, month))
   const tone = $derived(by.kind === 'badge' ? by.tone?.(row) : undefined)
+  // A state whose tone has no colour of its own wears its chip's ink.
+  const plain = $derived(by.kind === 'badge' && value !== '' && !month && (!tone || tone === 'neutral' || tone === 'accent'))
+  const tint = $derived(plain ? inkOf(drawn) : groupTint(by, drawn, month))
 </script>
 
 {#snippet inner()}
@@ -71,7 +73,7 @@
 {#if compact}
   <span class="group">{@render inner()}</span>
 {:else}
-  <div class="bar" class:inked={tint !== null} data-tone={tone} style={tint !== null ? inked(tint) : undefined}>
+  <div class="bar" class:inked={tint !== null} data-tone={tint === null ? tone : undefined} style={tint !== null ? inked(tint) : undefined}>
     {#if oncollapse}
       <button type="button" class="chevron" aria-expanded={!collapsed} aria-label="{collapsed ? 'Show' : 'Hide'} {label}" onclick={oncollapse}>
         <Icon icon={collapsed ? CaretRight : CaretDown} size="0.8rem" />
@@ -96,18 +98,16 @@
     border-radius: var(--radius-control);
     background: var(--raised);
   }
-  /* An enumeration keeps its tone, a soft fill of it, never an ink. */
-  .bar[data-tone='accent'] {
-    background: var(--accent-soft);
-  }
+  /* A state with a tone of its own: the same faint breath as an ink's,
+     of its soft tone, fading into the plain ground. */
   .bar[data-tone='positive'] {
-    background: var(--positive-soft);
+    background: linear-gradient(to right, color-mix(in oklch, var(--positive-soft) 50%, var(--raised)), var(--raised) 60%);
   }
   .bar[data-tone='negative'] {
-    background: var(--negative-soft);
+    background: linear-gradient(to right, color-mix(in oklch, var(--negative-soft) 50%, var(--raised)), var(--raised) 60%);
   }
   .bar[data-tone='warning'] {
-    background: var(--warning-soft);
+    background: linear-gradient(to right, color-mix(in oklch, var(--warning-soft) 50%, var(--raised)), var(--raised) 60%);
   }
   /* A record's group: a faint breath of its ink at the start, fading
      into the plain ground (the operator, 16 Nov: much more subtle). The

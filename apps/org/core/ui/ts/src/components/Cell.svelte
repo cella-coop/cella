@@ -18,6 +18,9 @@
   const shown = $derived(kind === 'circle' ? (shell.circle(text) ?? text) : text)
   const icon = $derived(text === '—' ? undefined : shell.icon(record ?? (kind === 'person' ? 'people' : undefined)))
   const tint = $derived(icon && record ? inkOf(shown) : null)
+  // A chip always shows a colour: its record's ink, its tone's where the
+  // tone has one, else an ink seeded by its value (the operator, 16 Nov).
+  const chip = $derived(record ? inkOf(shown) : !tone || tone === 'neutral' || tone === 'accent' ? inkOf(text) : undefined)
 </script>
 
 {#snippet mark()}
@@ -25,7 +28,7 @@
 {/snippet}
 
 {#if kind === 'badge' && text !== '—'}
-  <Badge tone={tone ?? 'neutral'} {icon} ink={record ? inkOf(shown) : undefined}>{text}</Badge>
+  <Badge tone={tone ?? 'neutral'} {icon} ink={chip}>{text}</Badge>
 {:else if kind === 'person' && text !== '—'}
   <span class="record">{@render mark()}<Person address={text} /></span>
 {:else if icon}

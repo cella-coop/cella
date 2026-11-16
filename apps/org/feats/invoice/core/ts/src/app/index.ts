@@ -67,6 +67,7 @@ export const app: App = {
         tabs: [
           { id: 'overview', label: 'Overview' },
           { id: 'lines', label: 'Lines' },
+          { id: 'postings', label: 'Postings' },
         ],
         blocks: [{ tab: 'lines', block: Lines }],
         actions: Send,

@@ -35,7 +35,8 @@
 // exports are its public surface, each export's target in the layer it
 // names, that nothing re-exports another package of the tree, that only a
 // node's root, a shell, imports a slice's app,
-// through ui-check.mjs the client layers' rules, that a feat's or graft's
+// through ui-check.mjs the client layers' rules, through tabs.mjs that a
+// record's page shows at most four tabs, its owner's, that a feat's or graft's
 // actions are named for it and declared only in its models/actions.ts,
 // through sql-check.mjs every sql/ file's boundaries,
 // through writes.mjs that no feat, graft or core library writes a table it
@@ -56,6 +57,7 @@ import { basename, dirname, join, relative, resolve } from 'node:path'
 import { checkSql, placed, schemaName, undeclared, unowned, unread, definers, unshared } from './sql-check.mjs'
 import { agree, covered, declared, granted, mandates, unfolded, unfollowed, whole } from './powers.mjs'
 import { checkUi } from './ui-check.mjs'
+import { checkTabs } from './tabs.mjs'
 import { refuse, scanTs } from './writes.mjs'
 
 const args = process.argv.slice(2)
@@ -378,6 +380,11 @@ for (const dir of byName.values()) {
 // by a client one, no legacy Svelte or SvelteKit form.
 const onTree = [...byName.values()].filter((d) => !shared.includes(d) && !sites.includes(d))
 errors.push(...checkUi(repo, onTree))
+
+// A record's page shows at most four tabs, which the slice owning its
+// collection chooses; an extension places its blocks in them and
+// declares none of its own.
+errors.push(...checkTabs(repo, onTree))
 
 // A package's exports are its public surface: a library's `.`, a slice's
 // `./models`, `./api` (its writes, reads and server slice), `./bindings`

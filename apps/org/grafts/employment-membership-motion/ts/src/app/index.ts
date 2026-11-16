@@ -7,6 +7,6 @@ import Admission from './blocks/Admission.svelte'
 export const app: App = {
   name: 'employment-membership-motion',
   extends: {
-    people: { page: { blocks: [{ tab: 'joining', block: Admission }] } },
+    people: { page: { blocks: [{ tab: 'membership', block: Admission }] } },
   },
 }

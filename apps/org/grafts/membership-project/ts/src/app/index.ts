@@ -17,7 +17,7 @@ export const app: App = {
       },
     },
     people: {
-      page: { blocks: [{ tab: 'rights', block: Held }] },
+      page: { blocks: [{ tab: 'membership', block: Held }] },
     },
   },
 }

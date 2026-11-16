@@ -58,7 +58,6 @@ export const app: App = {
     circles: {
       page: {
         actions: Appoint,
-        tabs: [{ id: 'settings', label: 'Settings' }],
         blocks: [
           { tab: 'settings', block: Terms },
           { tab: 'settings', block: Roles },

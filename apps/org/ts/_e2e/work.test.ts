@@ -57,12 +57,12 @@ test('the work pages render, each collection in its own layout', async () => {
     ['/projects', 'Les Halles Paysannes, online shop'],
     ['/projects/halles-shop?tab=milestones', 'Care and handover'],
     ['/projects/halles-shop?tab=tasks', 'Fix VAT display on mixed baskets'],
-    ['/projects/halles-shop?tab=time', 'Spent of the budget'],
+    ['/projects/halles-shop?tab=budget', 'Spent of the budget'],
     ['/tasks', 'Press check at the printer'],
     ['/tasks/t-6', 'Fix VAT display on mixed baskets'],
     ['/timesheets', 'Shop: VAT fixes'],
     ['/timesheets?view=dashboard', 'Hours by project'],
-    [`/people/${yusuf}?tab=employment`, 'Timesheets'],
+    [`/people/${yusuf}?tab=work`, 'Timesheets'],
     ['/contacts/halles?tab=projects', 'Les Halles Paysannes, online shop'],
     ['/invoices/F-2026-0054', 'Les Halles Paysannes, online shop'],
   ]
@@ -95,12 +95,15 @@ test('the work pages render, each collection in its own layout', async () => {
     assert.ok(dashboard.text.includes(says), `the timesheets' dashboard says ${says}`)
   }
   const tabs = await shell.page('/projects/halles-shop', thomas)
-  for (const tab of ['Overview', 'Milestones', 'Budget', 'Tasks', 'Time', 'Expenses', 'Invoices']) {
+  for (const tab of ['Overview', 'Tasks', 'Milestones', 'Budget']) {
     assert.ok(tabs.text.includes(`>${tab}<`), `a project's page has its ${tab} tab`)
   }
+  for (const tab of ['time', 'expenses', 'invoices']) {
+    assert.ok(!tabs.text.includes(`?tab=${tab}"`), `a project's page has no ${tab} tab, its Budget holding it`)
+  }
   assert.ok(!tabs.text.includes('href="/invoices/F-2026-0054"'),'its overview leaves its invoices to their tab')
-  const invoiced = await shell.page('/projects/halles-shop?tab=invoices', thomas)
-  assert.ok(/>Net<\/dt>.*?36\s000,00\s€/s.test(invoiced.text) && invoiced.text.includes('F-2026-0054'), 'its Invoices tab lists what it invoiced, the net as a figure')
+  const invoiced = await shell.page('/projects/halles-shop?tab=budget', thomas)
+  assert.ok(/>Net<\/dt>.*?36\s000,00\s€/s.test(invoiced.text) && invoiced.text.includes('F-2026-0054'), 'its Budget tab lists what it invoiced, the net as a figure')
 })
 
 test('Thomas creates a task; Yusuf gives it to him and files it under the shop\'s care', async () => {
@@ -140,7 +143,7 @@ const offered = (html: string, name: string) =>
   [...(html.split(`name="f.${name}[]/`)[1]?.split('</select>')[0] ?? '').matchAll(/<option value="([^"]*)"/g)].map((m) => m[1])
 
 test('Thomas logs time against the shop for Web, its circle, which the page offers him first', async () => {
-  const { text } = await shell.page('/projects/halles-shop?tab=time', thomas)
+  const { text } = await shell.page('/projects/halles-shop?tab=budget', thomas)
   assert.deepEqual(offered(text, 'circle'), ['web', 'ag'], 'the shop is Web\'s, offered before the assembly he also sits in')
   const logged = await shell.act('/projects/halles-shop', 'log', { day: '2026-10-24', hours: '2,5', billable: 'billable', circle: 'web', note: 'Checkout audit' }, thomas)
   assert.equal(logged.state, 'settled', logged.reason)
@@ -229,7 +232,7 @@ test('in November Yusuf, Web\'s lead, approves Thomas\'s October for Web, all of
   const self = await shell.act(`/people/${yusuf}`, 'approve', { month: '2026-10/web' }, yusuf)
   assert.equal(self.state, 'refused')
   assert.match(self.reason ?? '', /yusuf@lanterne.example may not approve their own time/)
-  const { text } = await shell.page(`/people/${thomas}?tab=employment`, thomas)
+  const { text } = await shell.page(`/people/${thomas}?tab=work`, thomas)
   assert.ok(text.includes('Yusuf Demir'), 'his page names who approved his month')
 })
 

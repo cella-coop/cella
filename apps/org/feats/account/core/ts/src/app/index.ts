@@ -14,7 +14,7 @@ const adopted = (t: Terms) => (t.adopted ? 'adopted' : 'drafted')
 
 // The feat's client side: the chart of accounts, the periods of the books
 // and a period's close, and the statutes' capital clauses. An account's
-// ledger and a period's entries are the tabs its extenders add.
+// ledger and a period's entries are the tabs its extenders fill.
 export const app: App = {
   name: 'account',
   collections: {
@@ -39,7 +39,10 @@ export const app: App = {
           { label: 'Holder', value: a.holder },
           { label: 'Frozen', value: a.frozen ? 'yes' : 'no' },
         ],
-        tabs: [{ id: 'overview', label: 'Overview' }],
+        tabs: [
+          { id: 'overview', label: 'Overview' },
+          { id: 'ledger', label: 'Ledger' },
+        ],
       },
     },
     periods: {
@@ -60,7 +63,10 @@ export const app: App = {
           { label: 'State', value: open(p), kind: 'badge', tone: p.closed ? 'neutral' : 'accent' },
           { label: 'Closed on', value: p.closed, kind: 'date' },
         ],
-        tabs: [{ id: 'overview', label: 'Overview' }],
+        tabs: [
+          { id: 'overview', label: 'Overview' },
+          { id: 'entries', label: 'Entries' },
+        ],
         actions: Close,
       },
     },

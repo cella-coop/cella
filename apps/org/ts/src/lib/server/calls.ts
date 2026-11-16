@@ -1,6 +1,6 @@
 import { ask as asking, counts, made, ordered, read, texts, today, type Db, type Source } from '@cella/org-db'
 import { scoped } from '@cella/org-analytics'
-import { anchor, defaults, fields, grouping, limits, period, resolve, wheres, widgets, type Field, type Spec } from '@cella/org-ui/models'
+import { anchor, defaults, fields, grouping, limits, logged, period, resolve, wheres, widgets, type Field, type Spec } from '@cella/org-ui/models'
 import { named } from '@cella/org-log/api'
 import { people, person } from '@cella/org-person/api'
 import { lensed, lensing } from '#lib/server/lens.ts'
@@ -8,7 +8,7 @@ import { drawn, keeping, run } from '#lib/server/reads.ts'
 import { port } from '#lib/server/analytics.ts'
 import { published } from '#lib/server/published.ts'
 import { mounted, queried, slices, source } from '#lib/server/slices.ts'
-import { columns, counted, dashboard, look, views } from '#lib/slices.ts'
+import { collection as owned, columns, counted, dashboard, look, views } from '#lib/slices.ts'
 
 // The shell's queries over the slices' reads, as the slice registry
 // mounts them: framework-free, each with the schema its argument is
@@ -157,8 +157,52 @@ export const item = {
       m.extensions.filter((e) => e.extension.item).map(async (e) => [e.slice.name, await e.extension.item?.(db, id, who.actor)] as const),
     )
     const viewer = who.session && { actor: who.session.actor, device: who.session.device }
-    return { name, id, item: found, added: Object.fromEntries(added), viewer, made: (await made(db, [id]))[id] ?? null }
+    return {
+      name,
+      id,
+      item: found,
+      added: Object.fromEntries(added),
+      viewer,
+      made: (await made(db, [id]))[id] ?? null,
+      jumps: await jumps(db, name, id, who),
+    }
   },
+}
+
+// The column of collection `from` whose value names a record of
+// `collection`: the first that says it is `of` it, else the first holding
+// a person's address for `people` or a circle's id for `circles`; never
+// one the log adds, who created or last updated the row.
+const naming = (from: string, collection: string): string | undefined => {
+  const own = columns(from).filter((c) => !logged.includes(c))
+  const kind = collection === 'people' ? 'person' : collection === 'circles' ? 'circle' : undefined
+  return (own.find((c) => c.of === collection) ?? own.find((c) => kind && c.kind === kind))?.key
+}
+
+// Where a record's page jumps to, the drawer's Related: every other
+// collection whose rows name it, by the column that does, with how many
+// of them the reader sees through their lens, as that collection's page
+// filtered to the record shows them, each counted in the core read's one
+// statement; a collection holding none is no jump, nor one of home or
+// Settings, what waits on the reader and their own.
+async function jumps(db: Db, name: string, id: string, who: Reader) {
+  const lens = await lensed(db, who.cookies, who.actor)
+  const found = await Promise.all(
+    slices
+      .flatMap((s) => Object.keys(s.collections ?? {}))
+      .filter((c) => c !== name && !owned(c)?.view.group)
+      .map(async (c) => {
+        const key = naming(c, name)
+        const from = key ? source(c, lens) : undefined
+        if (!key || !from) {
+          return null
+        }
+        const where = [{ field: key, is: [id] }]
+        const [count = 0] = await counts(db, from, [{ where }])
+        return count ? { collection: c, count, href: `/${c}?${new URLSearchParams({ where: JSON.stringify(where) })}` } : null
+      }),
+  )
+  return found.filter((j) => j !== null)
 }
 
 // Every item the command menu can jump to, from each collection's index.

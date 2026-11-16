@@ -24,7 +24,6 @@ export const app: App = {
       ],
       page: {
         properties: (b: Bill[]) => [{ label: 'Owes', value: b.reduce((s, x) => s + x.owed, 0), kind: 'money' }],
-        tabs: [{ id: 'invoices', label: 'Invoices' }],
         blocks: [{ tab: 'invoices', block: Bills }],
       },
     },

@@ -1,6 +1,6 @@
 +++
 title = "Employment"
-updated = 2026-11-13
+updated = 2026-11-16
 +++
 
 A person's employment, member or not: the job, the contract, the days it
@@ -144,7 +144,7 @@ employed or left, to filter and group by, with the job, the contract and
 the day employed beside it; the New form gains a hire with the worker's
 first device, under "Hire". A person's page gains their contract, the
 days it runs and the time it asks, and its days in the activity, and an
-Employment tab, which the grafts joining employment fill: their months
+Work tab, which the grafts joining employment fill: their months
 (`employment-timesheet`), their payslips (`employment-payslip`) and
 their employment records (`employment-file`).
 

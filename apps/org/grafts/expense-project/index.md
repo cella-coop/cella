@@ -1,6 +1,6 @@
 +++
 title = "expense-project"
-updated = 2026-11-13
+updated = 2026-11-16
 +++
 
 The project an expense was spent for, to bill on to its client; an
@@ -43,8 +43,8 @@ expense folds filed under its entry's project, the last filing winning.
 ## Shell
 
 Adds an expense's project to the list, the co-op where it is under none,
-and to its page, with the form to file it; and to a project's page, an
-Expenses tab of what was spent for it.
+and to its page, with the form to file it; and to a project's Budget
+tab, what was spent for it.
 
 ## Lanterne
 

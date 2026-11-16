@@ -1,6 +1,6 @@
 +++
 title = "membership-task"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 Who does a task. A task without an assignee is unassigned, not invalid.
@@ -47,8 +47,9 @@ someone reassigns them; nothing reassigns them by itself.
 
 Adds to each task its assignee's name, a field the tasks' board shows on
 its cards and may group by; to a task's Details, the assignee and the form
-that gives it to someone; to a person's page, in a Tasks tab, the tasks they do that
-are not done.
+that gives it to someone; and the assignee's address, a hidden person
+field, by which a person's page jumps in its Related to the tasks they
+do, the tasks collection filtered to them.
 
 ## Lanterne
 

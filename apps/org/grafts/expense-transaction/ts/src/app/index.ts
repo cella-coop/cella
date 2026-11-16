@@ -11,7 +11,6 @@ export const app: App = {
       page: {
         related: (p: Posted[]) =>
           [...new Map(p.map((x) => [x.entry, x])).values()].map((x) => ({ label: x.entry, sub: x.event, href: `/transactions/${x.entry}` })),
-        tabs: [{ id: 'postings', label: 'Postings' }],
         blocks: [{ tab: 'postings', block: Books }],
       },
     },

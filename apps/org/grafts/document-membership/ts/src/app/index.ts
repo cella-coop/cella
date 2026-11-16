@@ -7,7 +7,7 @@ export const app: App = {
   name: 'document-membership',
   extends: {
     people: {
-      page: { blocks: [{ tab: 'joining', block: Texts }] },
+      page: { blocks: [{ tab: 'membership', block: Texts }] },
     },
   },
 }

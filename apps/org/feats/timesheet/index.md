@@ -1,6 +1,6 @@
 +++
 title = "Timesheet"
-updated = 2026-11-13
+updated = 2026-11-16
 +++
 
 Time worked, by worker and day, member or not, and each worker's

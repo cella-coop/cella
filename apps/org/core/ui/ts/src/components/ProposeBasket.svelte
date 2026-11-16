@@ -86,7 +86,6 @@
   }
   .changes {
     display: grid;
-    gap: var(--space-2);
     max-height: 40vh;
     overflow: auto;
   }

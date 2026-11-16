@@ -1,0 +1,66 @@
+import type { Db } from '@cella/org-db'
+import type { Shown } from '../models/changes.ts'
+
+// The changes a motion's actions make, each as its diff shows it, for the
+// kinds this graft carries out whose change reads as one: a circle's
+// features arranged, as the tree from the one it replaces; a circle's
+// terms and a role's amended, each term from the one in force. What each
+// replaces is the value in force while the motion is open, and once it
+// closed the one its effect's entry says it replaced (`was`), or none
+// where no effect of it stands, as a forgone one. A policy's text is no
+// change of these: its diff is the policy register's to draw.
+export async function changes(db: Db, motion: string): Promise<Shown[]> {
+  const { rows } = await db.query<{
+    n: number
+    kind: 'arrange-features' | 'amend-circle' | 'amend-role'
+    args: Record<string, string | number | null>
+    open: boolean
+    was: unknown
+    now: Record<string, string | null> | null
+    name: string | null
+  }>(
+    `SELECT m.n::int AS n, m.kind, m.args, d.closed IS NULL AS open,
+            (SELECT l.payload -> 'was' FROM cella.log l
+             WHERE l.op = CASE m.kind WHEN 'arrange-features' THEN 'circle:circle:arrange' WHEN 'amend-circle' THEN 'circle:circle:amend' ELSE 'circle:role:amend' END
+               AND l.payload ->> 'motion' = d.id
+               AND coalesce(l.payload ->> 'role', l.payload ->> 'circle') = coalesce(m.args ->> 'role', m.args ->> 'circle')
+             ORDER BY l.n LIMIT 1) AS was,
+            CASE m.kind
+              WHEN 'arrange-features' THEN (SELECT json_build_object('features', circle.features(c.id)) FROM circle.circle c WHERE c.id = m.args ->> 'circle')
+              WHEN 'amend-circle' THEN (SELECT json_build_object('name', c.name, 'purpose', c.purpose, 'procedure', c.procedure) FROM circle.circle c WHERE c.id = m.args ->> 'circle')
+              ELSE (SELECT json_build_object('name', r.name, 'duty', r.duty, 'holders', r.holders::text) FROM circle.role r WHERE r.id = m.args ->> 'role')
+            END AS now,
+            CASE WHEN m.kind = 'amend-role' THEN (SELECT r.name FROM circle.role r WHERE r.id = m.args ->> 'role')
+                 ELSE (SELECT c.name FROM circle.circle c WHERE c.id = m.args ->> 'circle') END AS name
+     FROM motion.action m JOIN motion.motion d ON d.id = m.motion
+     WHERE m.motion = $1 AND m.kind IN ('arrange-features', 'amend-circle', 'amend-role')
+     ORDER BY m.n`,
+    [motion],
+  )
+  const terms: Record<string, string> = { name: 'name', purpose: 'purpose', procedure: 'procedure', duty: 'duty', holders: 'cap' }
+  const text = (v: unknown) => (v === null || v === undefined ? '' : String(v))
+  return rows.flatMap((r): Shown[] => {
+    const who = r.name ?? String(r.args.circle ?? r.args.role ?? '')
+    const before = (term: string): string | null => {
+      if (r.open) {
+        return r.now ? text(r.now[term]) : null
+      }
+      if (r.was === null || r.was === undefined) {
+        return null
+      }
+      return typeof r.was === 'object' ? text((r.was as Record<string, unknown>)[term]) : text(r.was)
+    }
+    if (r.kind === 'arrange-features') {
+      return [{ key: `${r.n}`, shape: 'arrangement', label: `${who}'s features`, was: before('features'), value: text(r.args.features) }]
+    }
+    return Object.keys(terms)
+      .filter((t) => t in r.args && !['circle', 'role'].includes(t))
+      .map((t) => ({
+        key: `${r.n}.${t}`,
+        shape: 'value' as const,
+        label: `${r.kind === 'amend-role' ? `The ${who} role` : who}'s ${terms[t]}`,
+        was: before(t),
+        value: r.args[t] === null ? 'none' : text(r.args[t]),
+      }))
+  })
+}

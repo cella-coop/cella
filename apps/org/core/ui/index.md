@@ -202,6 +202,20 @@ draws.
   cancel takes back. It holds forms of their own where its opener hands
   it no submit, as New does a collection's create forms, each ending in
   its own confirming button and Cancel.
+- `Diff`: a change shown in its own terms, never a programmer's text
+  diff (`models/diff.ts`), the one view of a change wherever it is
+  shown, a motion's dialog and its page alike, one shape a kind of
+  change. An arrangement, as a circle's features, is drawn as its tree
+  once changed: each choice marked added, moved from the accordion or
+  the top level it left, or reordered within its own, the fewest marked
+  as reordered that keep the rest in order; an accordion new to it
+  marked; and those it no longer shows listed under it, struck through.
+  A plain value is the one in force struck through, an arrow and the
+  new one. Each mark is a word as well as a colour. Where what it
+  replaces is not known, the new value stands alone, unmarked. A policy's
+  text, compared as rich text, is the next shape.
+- `Who`: who changes a setting, one quiet icon beside its label
+  ([settings](#settings)), its tooltip in the top layer.
 - New: every collection's create, the header's New and its `c`, opens
   the one `Dialog` titled for the collection ("New in Tasks"), holding
   the create form the collection or its extensions declare, each under

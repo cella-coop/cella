@@ -9,6 +9,7 @@ import { close } from '../handlers/close.ts'
 import { propose } from '../handlers/propose.ts'
 import { put } from '../handlers/put.ts'
 import { roll, turnout } from '../drivers/roll.ts'
+import { changes } from '../drivers/changes.ts'
 import { amending, appointing, featuring, organization, ruling, standing } from '../drivers/asking.ts'
 import { stances } from '../drivers/asks.ts'
 import * as forms from './forms.ts'
@@ -22,6 +23,8 @@ export type { Founded, Founding } from '../models/founding.ts'
 export { propose } from '../handlers/propose.ts'
 export { put } from '../handlers/put.ts'
 export { roll, turnout } from '../drivers/roll.ts'
+export { changes } from '../drivers/changes.ts'
+export type { Shown } from '../models/changes.ts'
 export { amending, appointing, featuring, organization, ruling, standing } from '../drivers/asking.ts'
 export { stances } from '../drivers/asks.ts'
 
@@ -41,7 +44,12 @@ export const slice: Slice = {
   extends: {
     motions: {
       list: turnout,
-      item: roll,
+      // Its roll and outcome, and what its actions change, each as its diff
+      // shows it.
+      item: async (db, motion, actor) => {
+        const r = await roll(db, motion, actor)
+        return r && { ...r, changes: await changes(db, motion) }
+      },
       actions: {
         propose: action('motion:motion:propose', (form, _, deps) => motionForms.propose(form, deps.db), propose),
         close: action('motion:motion:close', (_, id) => ({ motion: id ?? '' }), close),

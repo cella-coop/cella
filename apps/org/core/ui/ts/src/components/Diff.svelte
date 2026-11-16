@@ -21,16 +21,18 @@
   }: {
     shape: 'arrangement' | 'value'
     label: string
-    was: string
+    // The value it replaces, or none where that is not known: then the
+    // new one alone, unmarked.
+    was: string | null
     value: string
     named?: (value: string) => string
   } = $props()
 
-  const tree = $derived(shape === 'arrangement' ? arranged(was, value) : null)
+  const tree = $derived(shape === 'arrangement' ? arranged(was ?? value, value) : null)
 </script>
 
 <figure class="diff">
-  <figcaption>{label}</figcaption>
+  <figcaption>{label}{#if was === null}<span class="unknown">, as it carries it</span>{/if}</figcaption>
   {#if tree}
     <ul class="tree">
       {#each tree.lines as line, i (line.kind === 'head' ? `h:${line.group}` : `c:${line.value}:${i}`)}
@@ -66,7 +68,7 @@
     {/if}
   {:else}
     <p class="value">
-      <s class="was">{was || 'Empty'}</s>
+      {#if was !== null}<s class="was">{was || 'Empty'}</s>{:else}<span class="was">Set</span>{/if}
       <span class="to"><Icon icon={ArrowRight} size="0.85rem" /><span class="visually-hidden">to</span></span>
       <span class="now">{value || 'Empty'}</span>
     </p>
@@ -78,11 +80,18 @@
     display: grid;
     gap: var(--space-1);
     margin: 0;
+    margin-inline: var(--inset, 0);
     padding: var(--space-2) var(--space-3);
     border: 1px solid var(--line);
     border-radius: var(--radius-control);
     background: var(--sunk);
     min-width: 0;
+  }
+  .diff:not(:last-child) {
+    margin-block-end: var(--space-2);
+  }
+  .unknown {
+    font-weight: 400;
   }
   figcaption {
     font-size: var(--text-xs);

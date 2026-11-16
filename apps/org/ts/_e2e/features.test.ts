@@ -9,9 +9,10 @@
 // tree: no dialog opens, and the change joins the changes to propose to
 // Web, since Web holds `arrange-features` over itself. She reviews it,
 // the diff marking Invoice added, and proposes Web's own motion carrying
-// the listing with Invoice at its end; every member of Web consents, and
-// on its deadline she closes it: after a reload the page reads Web's new
-// set; and Operations' page shows its features under its accordions.
+// the listing with Invoice at its end, whose page shows the diff on its
+// Overview; every member of Web consents, and on its deadline she closes
+// it: its Effects show the diff from what the close replaced, and the
+// page reads Web's new set; and Operations' page shows its features under its accordions.
 // Then Yusuf, Web's lead, who holds `arrange-features` over Web by his
 // seat, drags Invoice by the pointer down among those not shown, which
 // saves at once, with no motion. `SHOTS` names where its screenshots go.
@@ -171,9 +172,21 @@ eachBrowser((name, launch) => {
             `${at}: Web's own motion changes Web's features`,
           )
           assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, web, `${at}: nothing changes until the motion carries`)
+          // The motion's page shows what it changes as the tree's diff, on
+          // its Overview while open and on its Effects once closed.
+          const diffOn = async (path: string, heading: string) => {
+            await page.goto(`${dev.base}${path}`)
+            await page.waitForLoadState('networkidle')
+            const section = page.locator('section', { has: page.getByRole('heading', { name: heading }) })
+            await section.waitFor()
+            return (await section.locator('figure.diff').textContent()) ?? ''
+          }
+          assert.match(await diffOn(`/motions/${motion}`, 'What it changes'), /Web's features.*Contact.*Invoice\s*added/s, `${at}: the Overview shows the diff`)
+          await page.screenshot({ path: `${shots}/features-motion-${name}-${scheme}.png`, fullPage: true })
           assert.deepEqual(states(await decided(motion)), [['circle:circle:arrange', 'settled', '']], `${at}: its close changes Web's features`)
+          assert.match(await diffOn(`/motions/${motion}?tab=effects`, 'What it changed'), /Invoice\s*added/, `${at}: Effects shows it from what the close replaced`)
 
-          await page.reload()
+          await page.goto(`${dev.base}/settings/features/web`)
           await page.waitForLoadState('networkidle')
           assert.equal(await shown(page), 'Project, Task, Timesheet, File, Contact, Invoice', `${at}: the page reads Web's new set after a reload`)
           await page.screenshot({ path: `${shots}/features-carried-${name}-${scheme}.png`, fullPage: true })

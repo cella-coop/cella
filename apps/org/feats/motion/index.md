@@ -630,7 +630,8 @@ Of its outcome, this feat reads only whether and when a motion closed.
 
 A motion's page, its header's crumb its id, has four tabs: Overview,
 the proposal in full under its deadline and what the grafts say is
-decided (whom it admits, the version it adopts, the outcome), and under
+decided (whom it admits, the version it adopts, the outcome), what
+its actions change, each as its diff, and under
 them its Activity, the stances given in time order, their one home;
 Stances, the roll and the acting member's stance; Discussion, its
 deliberation, each message under the one it answers, a mention drawn by
@@ -638,7 +639,12 @@ deliberation, each message under the one it answers, a mention drawn by
 `document` embed, and while it is open a message as the acting member,
 or a reply to the one chosen; and Effects, what its actions do to the
 mandates and, once closed, the effects its close carried, or that it
-carries them at its close. Who put it, by what procedure and in which
+carries them at its close. Its diffs fill one slot by the kind of action:
+the graft that carries a kind out shows each change it makes as the UI
+core draws a change (`Diff`, [the UI](../../core/ui/index.md#components)),
+on the Overview and again on Effects, a circle's features as their tree
+with its marks and a circle's or a role's terms from the value they
+replace, by `membership-motion`; a policy's text is the next. Who put it, by what procedure and in which
 circle are its properties.
 
 A motion drawn elsewhere is one card, the feat's `Card` (`./bindings`, since only a shell imports its `./app`):

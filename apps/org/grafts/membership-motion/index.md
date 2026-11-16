@@ -334,6 +334,16 @@ subscription it requires among them: a subscription refused at the
 close shows forgone with its reason, under the admission it forgoes,
 itself forgone with its own, which names the refusal it follows.
 
+Under the outcome on its Overview, and again on its Effects, it fills
+the motion's diff slot for the kinds it carries out whose change reads
+as one (`changes`, read with the roll): an `arrange-features` as the
+circle's features drawn as their tree, marked added, moved or reordered
+and those dropped struck through; an `amend-circle` or an `amend-role`
+as each term it changes, from the value it replaces to the new. While
+the motion is open it compares with the values in force; once closed,
+with what its effect's entry says it replaced (`was`), and where no
+effect of it stands, as a forgone one, it shows the new value alone.
+
 In the acting person's inbox, each open motion whose roll they are on,
 their seat counting, that they have given no stance on, by its deadline, linking to
 its Stances tab.

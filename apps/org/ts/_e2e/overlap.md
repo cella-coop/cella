@@ -12,7 +12,7 @@ Each scenario whose commands, queries and routes another holds whole, most minut
 | `filter` | 0.64 | `group` |
 | `order` | 0.62 | `filter`, `group` |
 | `colour` | 0.46 | `fields`, `logged`, `view` |
-| `favorites` | 0.31 | `fields`, `view` |
+| `pinned` | 0.31 | `fields`, `view` |
 | `lenses` | 0.17 | `a11y`, `reads`, `view` |
 | `withheld` | 0.17 | `a11y`, `authority-walk`, `lineage` |
 | `date-field` | 0.14 | `a11y`, `view` |
@@ -105,7 +105,7 @@ What each reaches, and what it alone reaches, which no other scenario covers.
 | `drag` | 0.00 | 0 | 0 | 0 |  |
 | `editor` | 2.43 | 3 | 76 | 15 |  |
 | `effects` | 1.07 | 11 | 46 | 8 |  |
-| `favorites` | 0.31 | 0 | 22 | 7 |  |
+| `pinned` | 0.31 | 0 | 22 | 7 |  |
 | `features` | 1.28 | 4 | 28 | 11 |  |
 | `fields` | 0.57 | 0 | 26 | 9 |  |
 | `files` | 0.05 | 5 | 59 | 9 | `route GET /files/:id/content` |

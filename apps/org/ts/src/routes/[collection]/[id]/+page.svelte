@@ -81,12 +81,15 @@
       ...added.flatMap((a) => (a.page.actions ? [{ block: a.page.actions as Block, data: a.data }] : [])),
     ]
     // Its slices' properties, then when and by whom it was created and last
-    // updated, as the log has it, but what they already name.
+    // updated, as the log has it, but what they already name; a page too
+    // crowded for them keeps them out, in their own History instead.
     const properties = all(page?.properties, (p) => p.properties)
+    const stamped = stamps(data.made, properties)
     return {
       mounted,
       page,
-      properties: [...properties, ...stamps(data.made, properties)],
+      properties: page?.history === false ? properties : [...properties, ...stamped],
+      history: page?.history === false ? stamped : [],
       // Its jumps, each collection holding rows that name it, by its
       // name, then the records its slices link to.
       related: [
@@ -151,6 +154,7 @@
       tabs={v.tabs}
       tab={v.tab}
       properties={v.properties}
+      history={v.history}
       related={v.related}
       activity={v.activity}
       actions={v.writes.length ? header : undefined}

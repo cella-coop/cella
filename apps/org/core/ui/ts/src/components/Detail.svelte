@@ -31,6 +31,7 @@
     tabs = [],
     tab,
     properties = [],
+    history = [],
     related = [],
     activity = [],
     actions,
@@ -50,6 +51,9 @@
     tabs?: Tab[]
     tab?: string
     properties?: Prop[]
+    // The log's four, Created, Updated and by whom, where a crowded page
+    // keeps them out of its properties: its own History, at the foot.
+    history?: Prop[]
     related?: Link[]
     activity?: Event[]
     actions?: Snippet
@@ -81,6 +85,12 @@
     <section class="related" aria-labelledby="{id}-related">
       <h2 id="{id}-related">Related<span class="count">{related.length}</span></h2>
       <Related items={related} />
+    </section>
+  {/if}
+  {#if history.length}
+    <section class="history" aria-labelledby="{id}-history">
+      <h2 id="{id}-history">History</h2>
+      <Properties items={history} />
     </section>
   {/if}
 {/snippet}
@@ -154,5 +164,18 @@
   .related:not(:first-child) {
     padding-top: var(--space-4);
     border-top: 1px solid var(--line);
+  }
+  /* Who touched the record, quieter than what it is: the drawer's last
+     word, never its first. */
+  .history {
+    display: grid;
+    gap: var(--space-2);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+  }
+  .history h2 {
+    color: var(--text-subtle);
   }
 </style>

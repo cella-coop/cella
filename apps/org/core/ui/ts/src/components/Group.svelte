@@ -109,14 +109,11 @@
   .bar[data-tone='warning'] {
     background: var(--warning-soft);
   }
-  /* A record's group: solid in its ink through the name, fading toward
-     the plain ground where the count and the controls sit, so their
-     usual quiet colours keep their own contrast. */
+  /* A record's group: a faint breath of its ink at the start, fading
+     into the plain ground (the operator, 16 Nov: much more subtle). The
+     name keeps the usual text colour; its icon carries the ink. */
   .bar.inked {
-    background: linear-gradient(to right, var(--wash) 45%, var(--raised) 90%);
-  }
-  .bar.inked .group {
-    color: var(--on-wash);
+    background: linear-gradient(to right, color-mix(in oklch, var(--wash) 30%, var(--raised)), var(--raised) 60%);
   }
   .chevron,
   .create {

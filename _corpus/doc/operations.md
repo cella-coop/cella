@@ -438,7 +438,7 @@ room full of people arriving at once behind one NAT address:
 - **What a copy may hold**: its server 192 MiB resident (`memory`),
   past which it ends; 10 connections (`connections`) and 128 MB of
   temporary files; a request's body 2 MB (`upload`), so a file too,
-  answered 413 past it, with a length or without; 64 MiB stored past
+  answered 413 past it, and none of no stated length (411); 64 MiB stored past
   its template (`storage`), by `pg_database_size`, past which it takes
   no write and says so, *Your copy holds as much as a demo copy may;
   Reset now for a fresh one*, and past twice which it ends. While the
@@ -490,7 +490,7 @@ copy's role reaches its own database alone, over the socket; the unit
 reaches no address but localhost; an address past its copies is
 refused, and its refusals cost it nothing; Reset now drops a copy for a
 fresh one with the template's log; at the cap the idlest ends; a body
-past 2 MB is refused, with a length or without; a copy past its storage
+past 2 MB is refused, and one of no stated length; a copy past its storage
 refuses a write, saying why, and past twice it ends; an IPv6 address
 counts by its /64; an idle copy ends leaving no database, role, server
 or socket; a copy kept busy ends at its lifetime; and a front killed

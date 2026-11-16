@@ -263,12 +263,12 @@ pkgs.testers.runNixOSTest {
           assert sorted(copies()) == sorted([a2, c]), f"{copies()}: the idlest, {b}, is not the one ended"
           assert b not in roles()
 
-      with subtest("a write takes no body past 2 MB, with a length or without"):
+      with subtest("a write takes no body past 2 MB, nor one of no stated length"):
           host.succeed("head -c 3000000 /dev/urandom > /tmp/big")
           code = status("c", "10.0.0.3", f"-X POST -H 'Origin: {front}' --data-binary @/tmp/big {front}/session")
           assert code == "413", f"a 3 MB body answered {code}"
           code = status("c", "10.0.0.3", f"-X POST -H 'Origin: {front}' -H 'Transfer-Encoding: chunked' --data-binary @/tmp/big {front}/session")
-          assert code == "413", f"a 3 MB chunked body answered {code}"
+          assert code == "411", f"a chunked body answered {code}"
           assert c in copies()
 
       with subtest("a copy past its storage takes no write and says why, and past twice it ends, largest first"):

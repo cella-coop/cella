@@ -687,15 +687,21 @@ async function handle(req, res) {
     req.resume()
     return prepare(res, true)
   }
-  // A write: no body past `--upload` MiB, and none at all once the copy
-  // stores past `--storage` MiB, measured afresh where the last reading is
-  // two seconds old.
+  // A write: no body past `--upload` MiB, nor of no stated length, and
+  // none at all once the copy stores past `--storage` MiB, measured afresh
+  // where the last reading is two seconds old.
   const limit = config.upload * MiB
   const writes = !['GET', 'HEAD', 'OPTIONS'].includes(req.method ?? 'GET')
   if (writes) {
     if (Number(req.headers['content-length'] ?? 0) > limit) {
       req.resume()
       return plain(res, 413, `A demo takes files up to ${config.upload} MB.`, { connection: 'close' })
+    }
+    // A body of no stated length, which no page of the app sends, is
+    // refused before any of it reaches the server.
+    if (req.headers['transfer-encoding'] && req.headers['content-length'] === undefined) {
+      req.resume()
+      return plain(res, 411, 'A demo takes a body of a stated length.', { connection: 'close' })
     }
     if (Date.now() - copy.measured > 2000) {
       await measure([copy]).catch((e) => log(`${copy.name} could not be measured: ${e.message}`))

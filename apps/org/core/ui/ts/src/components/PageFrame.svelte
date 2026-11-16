@@ -5,7 +5,7 @@
   import SidebarSimple from 'phosphor-svelte/lib/SidebarSimple'
   import type { Panel, Tone } from '../models/view.ts'
   import { useShell } from '../hooks/useShell.ts'
-  import { scroller } from '../models/keys.ts'
+  import { scroller, typing } from '../models/keys.ts'
   import Badge from './Badge.svelte'
   import Icon from './Icon.svelte'
 
@@ -62,7 +62,26 @@
     shell.choose(panel)
     shell.show(true)
   }
+
+  // Where the window cannot hold the sidebar, the content at its least
+  // width and the drawer side by side, the drawer lies over the content,
+  // and Escape shuts it before anything else on the page hears the key.
+  // The width is the style's `over` query below.
+  const over = '(max-width: 75.5rem)'
+  function onkeydown(e: KeyboardEvent) {
+    if (e.key !== 'Escape' || !open || !shell.drawer || typing(e) || !window.matchMedia(over).matches) {
+      return
+    }
+    if (document.querySelector('dialog[open], :popover-open')) {
+      return
+    }
+    shell.show(false)
+    e.preventDefault()
+    e.stopImmediatePropagation()
+  }
 </script>
+
+<svelte:window onkeydowncapture={onkeydown} />
 
 <div class="frame" class:drawn={open && shell.drawer}>
   <header class="top">
@@ -262,6 +281,7 @@
   .content {
     --inset: var(--space-3);
     grid-column: 1;
+    grid-row: 2;
     overflow-y: auto;
     padding: var(--space-4);
     display: grid;
@@ -286,6 +306,7 @@
      spaced as the content's blocks are. It scrolls down, never across. */
   .drawer {
     grid-column: 2;
+    grid-row: 2;
     overflow-x: hidden;
     overflow-y: auto;
     min-width: 0;
@@ -297,19 +318,25 @@
     gap: var(--space-4);
     min-width: 0;
   }
-  @media (max-width: 900px) {
-    .frame,
+  /* Where the window cannot hold the sidebar (15rem), the content at its
+     least width (40rem) and the drawer (20rem) side by side, the drawer
+     lies over the content's right edge at its own width, raised as a
+     floating thing is; nothing wraps under the content, and the header
+     keeps its one row. The script's `over` is the same width. */
+  @media (max-width: 75.5rem) {
     .drawn {
       grid-template-columns: minmax(0, 1fr);
-      grid-template-rows: auto auto auto;
-      overflow-y: auto;
-    }
-    .content {
-      overflow: visible;
     }
     .drawer {
       grid-column: 1;
-      overflow: visible;
+      grid-row: 2;
+      justify-self: end;
+      z-index: 2;
+      width: min(var(--drawer), 100%);
+      height: 100%;
+      border-left: 1px solid var(--line);
+      background: var(--float);
+      box-shadow: var(--shadow-float);
     }
   }
 </style>

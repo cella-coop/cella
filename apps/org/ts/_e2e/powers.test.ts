@@ -104,7 +104,7 @@ test('Hugo, Brand\'s lead, approves expenses within 1 000 € a month, its budge
 test('Inès, no member, holds the participant mandates of Web, Care and Tools by her seats there, and a person\'s and an employee\'s rights', async () => {
   const listed = await seats.powers(reader(app, ines), ines)
   const seated = listed.filter((p) => p.mandate !== null)
-  assert.ok(seated.length > 0 && seated.every((p) => ['web', 'care', 'tools'].includes(p.circle) && p.tenure === null), 'every mandate of hers is by a seat with no role, in Web, Care or Tools')
+  assert.ok(seated.length > 0 && seated.every((p) => ['web', 'care', 'tools'].includes(p.circle ?? '') && p.tenure === null), 'every mandate of hers is by a seat with no role, in Web, Care or Tools')
   assert.deepEqual([...new Set(seated.map((p) => p.circle))].sort(), ['care', 'tools', 'web'])
   assert.deepEqual([...new Set(listed.map((p) => p.right).filter((r) => r !== null))].sort(), ['employee', 'person'])
   assert.ok(listed.some((p) => p.power === 'log-time' && p.right === 'employee'))

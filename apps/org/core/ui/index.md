@@ -248,7 +248,12 @@ draws.
   and the UI core drawing a collection's creates outside its Dialog
   ([enforcement](../../../../_corpus/doc/enforcement.md)); a block
   drawing a form that creates a record of another kind on its own page
-  no tool sees, and review holds it.
+  no tool sees, and review holds it. **No page draws a Save button**
+  either: a document's New version and a dashboard widget's Add or
+  Save confirm in the one `Dialog`, never an inline form. The ui check
+  refuses a `Form` drawn on a page, outside a `Dialog` or
+  `ProposeInstead`, whose submit starts with Save
+  ([enforcement](../../../../_corpus/doc/enforcement.md)).
 - `Frame` (`PageFrame.svelte`): the one page frame, its header one
   compact row as Linear's, spanning the content and the drawer: on an
   item, a quiet caret back to its collection, on a collection its icon as
@@ -980,7 +985,12 @@ rest as SQL aggregates over the collection's rows (`measures` in
 `Dashboard` draws, a line through every month from the first. `Dashboard` draws the results: figures as text, bars with their
 values beside them, a line with its months and values in a table for
 assistive technology and each month's tooltip. `Widgets`, in the View
-panel's Display popover, adds, edits, reorders and removes them.
+panel's Display popover, reorders and removes them inline; Add widget
+opens the shared Dialog with the widget's form (field, measure,
+filter) ending in Add and Cancel, and an edit opens it the same way,
+ending in Save and Cancel; confirming saves the view's widgets and
+closes the dialog, and Cancel, Escape or a click outside it changes
+nothing.
 
 ## Accessibility
 

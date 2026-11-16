@@ -42,6 +42,9 @@
 //   collection's `creates` only inside its one Dialog. A form a block
 //   draws on its own page that creates a record of another kind no tool
 //   sees; review holds it.
+// - No page draws a Save button: a `Form` whose `submit` starts with
+//   Save is drawn only inside the shared `Dialog` or `ProposeInstead`;
+//   a page's own Save is refused by name, wherever it is drawn.
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, normalize, relative, sep } from 'node:path'
@@ -324,6 +327,38 @@ const inDialog = (markup, at) => {
   return (before.match(/<Dialog[\s>]/g) ?? []).length > (before.match(/<\/Dialog>/g) ?? []).length
 }
 
+// Whether `at` sits inside an unclosed `<tag>` of the markup; a
+// self-closing `<tag … />` opens nothing.
+const enclosedIn = (markup, at, tag) => {
+  const before = markup.slice(0, at)
+  const opens = [...before.matchAll(new RegExp(`<${tag}\\b[^>]*?(/?)>`, 'g'))].filter((m) => m[1] !== '/').length
+  const closes = (before.match(new RegExp(`</${tag}>`, 'g')) ?? []).length
+  return opens > closes
+}
+
+// A `Form` whose `submit` starts with Save, drawn anywhere but inside
+// the shared `Dialog` or `ProposeInstead`: a page holds no Save button,
+// only a modal confirms. A declared create form is exempt throughout
+// its file: `inlineCreates` already refuses it drawn anywhere but in
+// the Dialog behind New, wherever its own confirming button is named.
+// `sources` are every file's `{ path, text }`.
+export function pageSaves(sources) {
+  const out = []
+  const forms = declared(sources)
+  for (const { path, text } of sources) {
+    if (!path.endsWith('.svelte') || forms.has(path)) {
+      continue
+    }
+    const markup = text.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<!--[\s\S]*?-->/g, '')
+    for (const m of markup.matchAll(/<Form\b[^>]*\bsubmit\s*=\s*(["'])(Save[^"']*)\1/g)) {
+      if (!enclosedIn(markup, m.index, 'Dialog') && !enclosedIn(markup, m.index, 'ProposeInstead')) {
+        out.push(`${path}: draws a Form submitting "${m[2]}" on a page; a page holds no Save button, only a modal confirms`)
+      }
+    }
+  }
+  return out
+}
+
 // A create form drawn anywhere but in New's Dialog: a component importing
 // one a slice's app declares, and a UI core component drawing a
 // collection's `creates` outside its Dialog. `sources` are every file's
@@ -392,5 +427,6 @@ export function checkUi(repo, dirs) {
     }
   }
   out.push(...inlineCreates(sources, (path) => core.has(path)))
+  out.push(...pageSaves(sources))
   return out
 }

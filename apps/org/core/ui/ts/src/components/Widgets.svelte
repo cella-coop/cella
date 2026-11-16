@@ -10,15 +10,17 @@
   import { useDrag } from '../hooks/useDrag.ts'
   import Button from './Button.svelte'
   import Checkbox from './Checkbox.svelte'
+  import Dialog from './Dialog.svelte'
   import DragHandle from './DragHandle.svelte'
   import DropIndicator from './DropIndicator.svelte'
   import Icon from './Icon.svelte'
   import Select from './Select.svelte'
 
-  // The dashboard's part of the View panel, its Display popover: its widgets in order, each
-  // dragged into place, edited or removed, and a new one to add. A change
-  // hands the whole list on, which the collection puts in the address;
-  // null goes back to the defaults.
+  // The dashboard's part of the View panel, its Display popover: its
+  // widgets in order, each dragged into place, edited or removed in the
+  // shared Dialog, and a new one added the same way. A change hands the
+  // whole list on, which the collection puts in the address; null goes
+  // back to the defaults.
   let {
     widgets,
     fields,
@@ -77,6 +79,15 @@
     <DropIndicator show={drag.before('widgets', widgets.length)} />
   </ol>
 
+  <div class="buttons">
+    <Button onclick={() => state.open(-1, undefined, fields)}><Icon icon={Plus} />Add widget</Button>
+    {#if custom}
+      <Button onclick={() => onchange(null)}>Reset</Button>
+    {/if}
+  </div>
+</div>
+
+<Dialog bind:dialog={state.dialog} title={state.editing === -1 ? 'Add widget' : 'Edit widget'} oncancel={() => state.close()} onclose={() => state.closed()}>
   {#if state.editing !== null}
     <form class="editor" onsubmit={save}>
       <label>Title <input bind:value={state.draft.title} placeholder={state.draft.kind === 'kpi' ? 'Owed' : 'Amounts by month'} /></label>
@@ -140,15 +151,8 @@
         <Button onclick={() => state.close()}>Cancel</Button>
       </div>
     </form>
-  {:else}
-    <div class="buttons">
-      <Button onclick={() => state.open(-1, undefined, fields)}><Icon icon={Plus} />Add widget</Button>
-      {#if custom}
-        <Button onclick={() => onchange(null)}>Reset</Button>
-      {/if}
-    </div>
   {/if}
-</div>
+</Dialog>
 
 <style>
   .widgets {
@@ -202,9 +206,6 @@
   .editor {
     display: grid;
     gap: var(--space-2);
-    padding: var(--space-2);
-    border-radius: var(--radius-control);
-    background: var(--panel);
   }
   .editor > label,
   .editor > .row {

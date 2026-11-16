@@ -1,6 +1,6 @@
 +++
 title = "account-membership"
-updated = 2026-11-09
+updated = 2026-11-16
 +++
 
 Members' capital accounts: who holds each, the value of a share, what each
@@ -83,10 +83,10 @@ A member's draw limit reads as their capital account does: for the member and fo
 ## Shell
 
 Adds each member's subscribed capital to the members list, and to their
-page their draw limit and, under Own and decide, their capital (subscribed, shares, share value, account, open or
+page their draw limit and, under Membership, their capital (subscribed, shares, share value, account, open or
 frozen); under Joining, the capital an associate
 subscribes, at least the statutes' minimum at the share's value, or the
-shares they hold; under Own and decide, what the member owns read back as
+shares they hold; under Membership, what the member owns read back as
 sentences from their capital and the statutes' capital terms in force:
 their shares, and how capital is repaid to one who leaves; and to the
 chart each capital account's holder.

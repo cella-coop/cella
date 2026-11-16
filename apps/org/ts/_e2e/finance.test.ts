@@ -98,7 +98,7 @@ test('beyond Hugo\'s 1 000 € a month, an approval is refused; beyond the manag
   const plotter = await capture({ member: sofia, day: '2026-10-24', label: 'Plotter repair', category: '606', net: 800_00, vat: 160_00, receipt: null }, as(sofia))
   assert.equal(plotter.state, 'settled')
   const id = plotter.state === 'settled' ? plotter.value.expense : ''
-  assert.equal(id, 'ex-0008')
+  assert.equal(id, 'ex-0012')
   assert.equal((await claim({ expense: id }, as(sofia))).state, 'settled')
   const over = await approveExpense({ expense: id }, as(hugo))
   assert.equal(over.state, 'refused')
@@ -139,7 +139,7 @@ test('October\'s run waits for every worker\'s approved month', async () => {
   await on('2026-11-02')
   const early = await generate({ month: '2026-10' }, as(julien))
   assert.equal(early.state, 'refused')
-  assert.match(reason(early), /2026-10 in web is open, not approved: the run waits for it/)
+  assert.match(reason(early), /2026-10 in [a-z]+ is open, not approved: the run waits for it/)
 })
 
 test('once every October is approved, Julien prepares the run from the approved time, Inès\'s with the members\'', async () => {

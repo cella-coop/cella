@@ -120,3 +120,20 @@ export function legend(rows: any[], key: string, order: string[]): Key[] {
   const none = held.get('')
   return none ? [...keys, { value: '', ink: null, count: none.length, row: none[0] }] : keys
 }
+
+// A date field's calendar moves over ISO days: by days, the arrows and a
+// week's ends, and by months, held at the month's last day, as 31 Jan
+// a month on is 28 Feb.
+export const shifted = (at: string, n: number) => day(plus(utc(at), n))
+
+export function monthed(at: string, n: number): string {
+  const d = utc(at)
+  const last = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + n + 1, 0)).getUTCDate()
+  return day(new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + n, Math.min(d.getUTCDate(), last))))
+}
+
+// The Monday or Sunday of a day's week.
+export const weekEdge = (at: string, which: 'start' | 'end') => day(plus(monday(utc(at)), which === 'start' ? 0 : 6))
+
+// Whether a text is an ISO day that names one.
+export const isDay = (raw: string) => iso.test(raw) && !Number.isNaN(utc(raw).getTime())

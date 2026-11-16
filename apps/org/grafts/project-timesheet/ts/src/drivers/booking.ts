@@ -3,8 +3,9 @@ import { offering } from '@cella/org-circle/models'
 import { sitting } from '@cella/org-circle/api'
 import type { Time } from '../models/booking.ts'
 
-// Each entry's project, by entry, which the dashboard groups hours by.
-export const projectOf = 'SELECT b.entry::text AS id, p.title AS project FROM project_timesheet.booking b JOIN project.project p ON p.id = b.project'
+// Each entry's project, by entry, which the dashboard groups hours by,
+// and its id, by which the project's page jumps to its time.
+export const projectOf = 'SELECT b.entry::text AS id, p.title AS project, b.project AS project_id FROM project_timesheet.booking b JOIN project.project p ON p.id = b.project'
 
 // What each project's time spent of its budget, by project, nothing where
 // it has no time.

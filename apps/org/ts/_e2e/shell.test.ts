@@ -43,7 +43,7 @@ after(async () => {
 test('every main page renders on the seed', async () => {
   const pages: [string, string][] = [
     ['/people', 'Camille Martin'],
-    [`/people/${camille}?tab=powers`, 'Powers held'],
+    [`/people/${camille}?tab=authority`, 'Powers held'],
     ['/circles', 'Assembly'],
     ['/circles/ag?tab=roles', 'Manager'],
     ['/motions', 'Admit Inès Haddad'],
@@ -261,7 +261,8 @@ test('a motion is open, passed or rejected, as the database reads it', async () 
 test('the stance form starts at the acting member\'s latest stance, and is not offered off the roll', async () => {
   const as = async (path: string, actor: string) => (await page(path, actor)).text
   const hugos = await as('/motions/m-2026-012?tab=stances', hugo)
-  assert.match(hugos, /<option value="consent"[^>]*selected/, 'Hugo\'s select holds his latest stance, consent')
+  assert.match(hugos, /aria-selected="true" data-value="consent"/, 'Hugo\'s select holds his latest stance, consent')
+
   assert.ok(hugos.includes('Change stance'), 'and offers to change it')
   assert.ok(hugos.includes('Now: consent · receipt 57'), 'saying which receipt it is')
   assert.ok((await as('/motions/m-2026-012?tab=stances', ines)).includes("Not on this motion's roll."), 'Inès, invited, reads the assembly\'s motion as every seat does, and is on no roll')

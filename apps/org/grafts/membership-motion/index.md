@@ -1,6 +1,6 @@
 +++
 title = "membership-motion"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 What a motion decides of a membership: admitting someone invited,
@@ -166,7 +166,7 @@ as entry 1.
 - `membership_motion.seating`: the seats motions give and end: an
   admission's, in the motion's circle as `member`, and those the
   `seat` and `unseat` actions name, kinds this graft registers by
-  `motion.register_carries` (`circle`, `member`, `role`, none for a plain seat), carried out by `circle:seat:add` and `:remove`, which it registers by `motion.register_cite` with their power, `seat-member`. The `seat-role` and `unseat-role` actions, which it registers too (`circle`, `role`), seat a role in another circle, so whoever holds it sits there, and end that seat, carried out by core's `circle:role:seat` and `:unseat` with the same power; they are no row of `seating`, which is people's seats. The `circle` action, which this graft registers too (`id`, `name`, `purpose`), creates a circle, carried out by core's `circle:circle:create` with its power, `create-circle`; a later `seat` of the same motion may name it. The `amend-circle` action, which it registers too (`circle`, and any of `name`, `purpose`, `procedure` and `features`, a listing of the circle's features), changes a circle, carried out by core's `circle:circle:amend` with its power, `amend-circle`, its guard judging it at the proposal and again as it is written ([circle](../../core/circle/index.md#powers)). The `role` and `amend-role` actions, which it registers too (`circle`, `id`, `name`, `duty`, `holders`; and `role` with any of `name`, `duty` and `holders`), make and change a role, carried out by core's `circle:role:make` and `:amend` with the same power, an `amend-role` giving `holders` as none lifting the role's cap and one leaving it out keeping it; a later `seat` of the same motion may name a role an earlier `role` action makes.
+  `motion.register_carries` (`circle`, `member`, `role`, none for a plain seat), carried out by `circle:seat:add` and `:remove`, which it registers by `motion.register_cite` with their power, `seat-member`. The `seat-role` and `unseat-role` actions, which it registers too (`circle`, `role`), seat a role in another circle, so whoever holds it sits there, and end that seat, carried out by core's `circle:role:seat` and `:unseat` with the same power; they are no row of `seating`, which is people's seats. The `circle` action, which this graft registers too (`id`, `name`, `purpose`), creates a circle, carried out by core's `circle:circle:create` with its power, `create-circle`; a later `seat` of the same motion may name it. The `amend-circle` action, which it registers too (`circle`, and any of `name`, `purpose` and `procedure`), changes a circle, carried out by core's `circle:circle:amend` with its power, `amend-circle`, its guard judging it at the proposal and again as it is written ([circle](../../core/circle/index.md#powers)); one giving `features` is refused, naming `arrange-features`. The `arrange-features` action, which it registers too (`circle`, `features`, a listing of the circle's features), arranges a circle's features, carried out by core's `circle:circle:arrange` with its power, `arrange-features`: `membership_motion.arrange_asks` judges it at the proposal and `membership_motion.arranges` again as it is written, that the motion's circle holds the power over the circle (`circle.arranges`), itself among them, naming the circle that does (`circle.arranger`) where it does not, and that the listing is sound (`circle.listing_flaw`) ([features](../../core/circle/index.md#features)). The `role` and `amend-role` actions, which it registers too (`circle`, `id`, `name`, `duty`, `holders`; and `role` with any of `name`, `duty` and `holders`), make and change a role, carried out by core's `circle:role:make` and `:amend` with the same power, an `amend-role` giving `holders` as none lifting the role's cap and one leaving it out keeping it; a later `seat` of the same motion may name a role an earlier `role` action makes.
 
 A roll fixed at the proposal is closer to a ballot list than one read at
 the close, and a member seated or admitted later does not vote on it.
@@ -355,12 +355,13 @@ and on the assembly's those every working circle has but `participant`,
 a term's edit, as it commits, opening the dialog proposing an
 `amend-role` motion of that one term. Below the roles, Add a role…
 opens a dialog composing a new role whole (`Compose`, [settings](../../core/ui/index.md#settings)):
-its name, its id, which follows the name in lower case until it is
-typed, its duty and its cap, proposed to the deciding circle as one
+its name, its duty and its cap, with no id, which the proposal
+takes from its name ([circle](../../core/circle/index.md#actions)), proposed to the deciding circle as one
 `role` motion carrying them all, its title "Make the Editor role in
 Web"; the guard judges it, and a refusal stays in the dialog, saying
 why. Each dialog posts to `propose` as the New form does. The e2e
-scenario `roles` proposes a new role there and lifts a role's cap. On a
+scenario `roles` proposes a new role there by its name alone, sees it
+made under the id taken from it, and lifts a role's cap. On a
 mandate's page, the motion feat's Change… and Revoke…, whose write,
 `put`, it serves too.
 
@@ -385,13 +386,19 @@ It serves each circle's features page, `/settings/features/<id>`
 ([the circle's shell](../../core/circle/index.md#shell)), a page of one
 circle, which the circle's Settings tab links to: the circle's features
 spelt as a listing (`circle.features`), every feature the co-op
-installed (`circle.installed`), and the circle that decides an
-amendment, with why no write of the reader's changes them. Its Save
-proposes an `amend-circle` motion carrying the listing as arranged,
-posted to the page's `propose` as the circle's Settings tab posts one,
-so the guard judges the listing there before anything is proposed. The
-e2e scenario `features` enables a feature of Web and moves one, by the
-assembly's motion, light and dark.
+installed (`circle.installed`), whether the reader holds
+`arrange-features` over the circle by a seat (`circle_person.may`),
+and otherwise the circle whose motion arranges them
+(`circle.arranger`), the circle itself where it holds the power over
+itself, with why the reader's own write changes nothing. A holder's
+change saves at once, posted to the page's `arrange`, core's
+`circle:feature:arrange`; anyone else's proposes an `arrange-features`
+motion of that circle carrying the listing as arranged, posted to the
+page's `propose` as the circle's Settings tab posts one, so the guard
+judges the listing there before anything is proposed. The e2e scenario
+`features` has Léa enable a feature of Web by Web's own motion, and
+Yusuf, its lead, disable it at once, light and dark; `amend` judges
+the arrangements' refusals and coordination arranging Hiring's.
 
 It serves each circle's rules page, `/settings/rules/<id>`
 ([settings](../../core/circle/index.md#settings)), a page of one circle,

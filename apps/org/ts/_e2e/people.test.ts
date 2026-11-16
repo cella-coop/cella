@@ -95,8 +95,8 @@ test('every worker has a contract, the members who work and Inès, who is employ
   }
 })
 
-test('Inès, seated in Web and no member, logs her own time and books it to a Web project, none before her hire; the assembly seats no one who is no member', async () => {
-  assert.deepEqual(await all('SELECT circle, role FROM circle.seat WHERE member = $1 AND until IS NULL', [ines]), [{ circle: 'web', role: null }])
+test('Inès, seated in Web, Care and Tools and no member, logs her own time and books it to a Web project, none before her hire; the assembly seats no one who is no member', async () => {
+  assert.deepEqual(await all('SELECT circle, role FROM circle.seat WHERE member = $1 AND until IS NULL ORDER BY circle', [ines]), [{ circle: 'care', role: null }, { circle: 'tools', role: null }, { circle: 'web', role: null }])
   const counts = await all<{ circle: string; counts: boolean }>(
     `SELECT c.id AS circle, circle_person.counts($1, c.id, '2026-10-24') AS counts FROM circle.circle c WHERE c.id IN ('ag', 'web') ORDER BY c.id`,
     [ines],
@@ -113,7 +113,7 @@ test('Inès, seated in Web and no member, logs her own time and books it to a We
   assert.match(reason(forHer), /thomas@lanterne\.example may not log time for ines@lanterne\.example/)
   const assembly = await put({ kind: 'seat', args: { circle: 'ag', member: ines }, deadline: '2026-11-07', body: '' }, as(camille))
   assert.match(reason(assembly), /ines@lanterne\.example may not sit in ag: its seats are its active members'/)
-  const shown = await shell.page('/people/ines@lanterne.example?tab=employment', ines)
+  const shown = await shell.page('/people/ines@lanterne.example?tab=work', ines)
   assert.ok(shown.text.includes('Timesheets') && shown.text.includes('2026-10'), 'her page lists her months')
 })
 
@@ -215,7 +215,7 @@ test('a hire needs the manager\'s power and carries a first device; Camille hire
 })
 
 test('Inès\'s member page lists what joining asks of her and reads back what she would own and decide', async () => {
-  const joining = await tab(ines, 'joining', ines)
+  const joining = await tab(ines, 'membership', ines)
   for (const says of [
     'Invited to join',
     'Admitted by the assembly',
@@ -231,27 +231,28 @@ test('Inès\'s member page lists what joining asks of her and reads back what sh
   ]) {
     assert.ok(joining.includes(says), `joining says ${says}`)
   }
-  const rights = await tab(ines, 'rights', ines)
+  const rights = await tab(ines, 'membership', ines)
   for (const says of [
     'Inès is invited to join',
     'one vote in the assembly',
     'Inès holds no shares yet',
     'the work share goes to the workers, 100 % by pay, and 50 % of each associate\'s part buys them shares, blocked five years',
     'the first repayment 12 months after they leave, in 3 yearly repayments',
-    'Inès sits in Web.',
-    'Web decides by consent',
+    'Inès sits in ',
+    'Web',
+    'decide by consent',
   ]) {
     assert.ok(rights.includes(says), `owning and deciding says ${says}`)
   }
 })
 
 test('a member\'s page lists every mandate may grants them: Inès\'s the participant\'s in Web and none of the assembly\'s, Chloé\'s the assembly\'s beside her member role\'s', async () => {
-  const theirs = await tab(ines, 'powers', ines)
+  const theirs = await tab(ines, 'authority', ines)
   for (const says of ['Powers held', 'Propose', 'Discuss', 'participant in Web']) {
     assert.ok(theirs.includes(says), `Inès's page says ${says}`)
   }
   assert.ok(!theirs.includes('in Assembly'), 'she sits nowhere but Web')
-  const chloes = await tab('chloe@lanterne.example', 'powers', camille)
+  const chloes = await tab('chloe@lanterne.example', 'authority', camille)
   for (const says of ['participant in Assembly', 'member in Assembly', 'participant in Marketing']) {
     assert.ok(chloes.includes(says), `Chloé's page says ${says}`)
   }
@@ -266,11 +267,11 @@ test('a member\'s page lists every mandate may grants them: Inès\'s the partici
   assert.ok(asked.filter((a) => a.may).length > 0)
 })
 
-test('Inès, no member, reads her own seat in Web and the mandates her seat holds, and none of the assembly\'s, no other seat and no policy; Chloé, a member, reads the whole structure', async () => {
+test('Inès, no member, reads her own seats in Web, Care and Tools and the mandates they hold, and none of the assembly\'s, no other seat and no policy; Chloé, a member, reads the whole structure', async () => {
   const read = async <R>(actor: string, sql: string) => (await as(actor).db.query<R>(sql)).rows
   const seats = await read<{ circle: string; member: string }>(ines, 'SELECT circle, member FROM circle.seat ORDER BY circle')
-  assert.deepEqual(seats, [{ circle: 'web', member: ines }], 'her own seat and no one else\'s')
-  assert.deepEqual(await read(ines, 'SELECT id FROM circle.circle ORDER BY id'), [{ id: 'web' }], 'the circle she sits in and no other')
+  assert.deepEqual(seats, [{ circle: 'care', member: ines }, { circle: 'tools', member: ines }, { circle: 'web', member: ines }], 'her own seats and no one else\'s')
+  assert.deepEqual(await read(ines, 'SELECT id FROM circle.circle ORDER BY id'), [{ id: 'care' }, { id: 'tools' }, { id: 'web' }], 'the circles she sits in and no other')
   const mandates = await read<{ grantee: string }>(ines, 'SELECT DISTINCT grantee FROM circle.mandate ORDER BY grantee')
   assert.deepEqual(mandates, [{ grantee: 'participant' }], 'the participant\'s, which her seat holds, and not the member role\'s, the manager\'s or the assembly\'s')
   for (const table of ['circle.right', 'circle.disclosure', 'circle.tenure', 'policy.policy', 'policy.wording', 'policy.value']) {
@@ -293,26 +294,26 @@ test('Inès marks the internal rules and the statutes read, her own reading and 
   assert.match(forLea.reason ?? '', /ines@lanterne\.example may mark only their own reading/)
   const read = await shell.act(`/people/${ines}`, 'read', { version: 'internal-rules@3' }, ines)
   assert.deepEqual([read.op, read.state], ['document-membership:version:read', 'settled'])
-  assert.ok((await tab(ines, 'joining', ines)).includes('internal-rules@3, read 24 Oct 2026'))
+  assert.ok((await tab(ines, 'membership', ines)).includes('internal-rules@3, read 24 Oct 2026'))
   const statutes = await shell.act(`/people/${ines}`, 'read', { version: 'statutes@2' }, ines)
   assert.deepEqual([statutes.op, statutes.state], ['document-membership:version:read', 'settled'])
-  assert.ok((await tab(ines, 'joining', ines)).includes('statutes@2, read 24 Oct 2026'))
+  assert.ok((await tab(ines, 'membership', ines)).includes('statutes@2, read 24 Oct 2026'))
 })
 
 test('once m-2026-012 admits her, every step of joining is done, Web her working circle since her hire, and her page reads back her shares, her seats and her powers', async () => {
   await on('2026-10-31')
   settled(await close({ motion: 'm-2026-012' }, reacting(as(camille))))
-  const joining = await tab(ines, 'joining', ines)
+  const joining = await tab(ines, 'membership', ines)
   assert.equal(joining.match(/to do/g), null, 'nothing is left to join')
   for (const says of ['20 shares of 50,00', 'phone, enrolled 1 Oct 2026 when the invitation was taken up', 'Assembly', 'Web']) {
     assert.ok(joining.includes(says), `joining says ${says}`)
   }
-  const rights = await tab(ines, 'rights', ines)
+  const rights = await tab(ines, 'membership', ines)
   for (const says of [
     'Inès has been a member since 31 Oct 2026',
     'Inès holds 20 shares of 50,00',
     'Assembly as Member',
-    'Assembly and Web decide by consent',
+    'decide by consent',
     'Through these seats Inès may',
     'invite someone to join, with their first device',
   ]) {
@@ -339,7 +340,7 @@ test('Bastien, employed eight months, is refused applying and opening his own ca
   const byCamille = await open({ worker: bastien, shares: 20 }, as(camille))
   assert.match(reason(byCamille), /camille@lanterne\.example may not open bastien@lanterne\.example's candidacy: only their own, on their application/)
   await assert.rejects(apply({ member: thomas, shares: 20, deadline: '2027-07-16', body: '' }, as(thomas)), /thomas@lanterne\.example is or was a member, or has applied already/)
-  const { text } = await shell.page(`/people/${bastien}?tab=joining`, camille)
+  const { text } = await shell.page(`/people/${bastien}?tab=membership`, camille)
   assert.ok(!text.includes('Apply to join'), 'the application is offered on his own page alone')
   assert.equal((await one<{ stage: string }>('SELECT stage FROM employment_membership.path WHERE address = $1', [bastien])).stage, 'employee')
 })
@@ -377,7 +378,7 @@ test('a year on, Bastien applies by his right: his candidacy opens, and the moti
   const entry = await one<{ op: string; actor: string }>(`SELECT op, actor FROM cella.log WHERE n = $1`, [applied.entry])
   assert.deepEqual(entry, { op: 'membership:member:apply', actor: bastien }, 'one write of his own, no motion proposed by anyone else')
   assert.equal((await one<{ stage: string; applied: string }>(`SELECT stage, to_char(applied, 'YYYY-MM-DD') AS applied FROM employment_membership.path WHERE address = $1`, [bastien])).applied, '2027-11-02')
-  const after = await tab(bastien, 'joining', bastien)
+  const after = await tab(bastien, 'membership', bastien)
   assert.match(after, /moves to admit Bastien; it is open until 16 Nov 2027/)
   assert.ok(!(await shell.page(`/people/${bastien}`, bastien)).text.includes('Apply to join'), 'no second application while it is open')
   await assert.rejects(apply({ member: bastien, shares: 20, deadline: '2027-11-30', body: '' }, as(bastien)), /bastien@lanterne\.example is or was a member, or has applied already: one applies once/)
@@ -388,11 +389,11 @@ test('Malik revokes his phone from his laptop on his own page; the device signin
   const laptop = await fixture(malik, 'laptop')
   const phone = await fixture(malik, 'phone')
   await shell.signIn(malik, laptop)
-  const own = await tab(malik, 'devices', malik)
+  const own = await tab(malik, 'authority', malik)
   assert.match(own, /laptop, this device/)
   assert.match(own, /Revoke phone/)
   assert.doesNotMatch(own, /Revoke laptop/)
-  assert.doesNotMatch(await tab(camille, 'devices', malik), /Revoke/, 'nothing to revoke on someone else\'s page')
+  assert.doesNotMatch(await tab(camille, 'authority', malik), /Revoke/, 'nothing to revoke on someone else\'s page')
   const itself = await shell.act(`/people/${malik}`, 'revoke', { key: laptop.key }, malik)
   assert.notEqual(itself.state, 'settled', 'a device never revokes itself')
   const theirs = await shell.act(`/people/${camille}`, 'revoke', { key: (await fixture(camille, 'phone')).key }, malik)
@@ -403,7 +404,7 @@ test('Malik revokes his phone from his laptop on his own page; the device signin
     await all(`SELECT label, revoked IS NOT NULL AS revoked FROM person.device WHERE address = $1 ORDER BY label`, [malik]),
     [{ label: 'laptop', revoked: false }, { label: 'phone', revoked: true }],
   )
-  const after = await tab(malik, 'devices', malik)
+  const after = await tab(malik, 'authority', malik)
   assert.doesNotMatch(after, /Revoke/)
   assert.match(after, /This is your only current device/)
 })

@@ -550,3 +550,127 @@ text = "Chase every invoice past its due date"
 [[document.version.block]]
 type = "numbered"
 text = "Close the period, once the books balance"
+
+[[document]]
+id = "client-handover"
+circle = "clients"
+title = "Client handover"
+
+[[document.version]]
+id = "client-handover@1"
+saved = 2026-10-16
+
+[[document.version.block]]
+type = "heading"
+level = 1
+text = "Client handover"
+
+[[document.version.block]]
+text = "What a client is given when their site or identity is done."
+
+[[document.version.block]]
+type = "numbered"
+text = "The logins, moved into their own password manager"
+
+[[document.version.block]]
+type = "numbered"
+text = "A short guide to editing what they will edit"
+
+[[document.version.block]]
+type = "numbered"
+text = "The care contract we offer, and what it covers"
+
+[[document.version.block]]
+type = "numbered"
+text = "One name in Clients to call"
+
+[[document]]
+id = "onboarding-guide"
+circle = "hiring"
+title = "Onboarding guide"
+
+[[document.version]]
+id = "onboarding-guide@1"
+saved = 2026-10-09
+
+[[document.version.block]]
+type = "heading"
+level = 1
+text = "Onboarding guide"
+
+[[document.version.block]]
+text = "A new worker's first month at Lanterne."
+
+[[document.version.block]]
+type = "bullet"
+text = "A mentor from their circle, named before they start"
+
+[[document.version.block]]
+type = "bullet"
+text = "A seat in Web, Brand or Marketing, and in Care if they wish"
+
+[[document.version.block]]
+type = "bullet"
+text = "The internal rules and the statutes, read in the first week"
+
+[[document.version.block]]
+type = "bullet"
+text = "A review with their mentor at one month"
+
+[[document]]
+id = "care-charter"
+circle = "care"
+title = "Care charter"
+
+[[document.version]]
+id = "care-charter@1"
+saved = 2026-10-02
+
+[[document.version.block]]
+type = "heading"
+level = 1
+text = "Care charter"
+
+[[document.version.block]]
+text = "How we look after each other."
+
+[[document.version.block]]
+type = "bullet"
+text = "Anyone may ask Care for help, and it stays between them and Care"
+
+[[document.version.block]]
+type = "bullet"
+text = "No one works more than the 35-hour week for two weeks running"
+
+[[document.version.block]]
+type = "bullet"
+text = "A conflict goes to Care before it goes to a meeting"
+
+[[document]]
+id = "studio-stack"
+circle = "tools"
+title = "Studio stack"
+
+[[document.version]]
+id = "studio-stack@1"
+saved = 2026-10-21
+
+[[document.version.block]]
+type = "heading"
+level = 1
+text = "Studio stack"
+
+[[document.version.block]]
+text = "What the studio runs on, and who keeps each part."
+
+[[document.version.block]]
+type = "bullet"
+text = "Hosting: a co-operative host, moving one environment at a time"
+
+[[document.version.block]]
+type = "bullet"
+text = "Passwords: one manager, a seat for everyone"
+
+[[document.version.block]]
+type = "bullet"
+text = "Domains: every one listed with its renewal date"

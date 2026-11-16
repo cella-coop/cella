@@ -20,6 +20,7 @@ import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
 import pg from 'pg'
 import { eachBrowser, serve, signIn } from './browser.ts'
+import { chosen } from './controls.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-organization-shots'
 const camille = 'camille@lanterne.example'
@@ -53,6 +54,12 @@ eachBrowser((name, launch) => {
           await page.waitForLoadState('networkidle')
           const nav = page.getByRole('navigation', { name: 'Main' })
           assert.equal(await nav.locator('a[aria-current="page"]').textContent().then((t) => t?.trim()), 'Organization', `${at}: the sidebar marks it`)
+          assert.equal(await nav.locator('p.heading').textContent().then((t) => t?.trim()), 'Settings', `${at}: Settings stands apart as the sidebar's own heading`)
+          assert.deepEqual(
+            (await nav.locator('p.group', { hasText: 'Organization' }).locator('xpath=following-sibling::ul[1]').locator('a').allTextContents()).map((t) => t.trim()),
+            ['Organization', 'Imports', 'Features'],
+            `${at}: Organization lists Features beside Imports`,
+          )
 
           const form = page.locator('form.settings')
           assert.equal(await form.getByLabel('Name', { exact: true }).inputValue(), 'Lanterne', `${at}: its name in force`)
@@ -78,7 +85,8 @@ eachBrowser((name, launch) => {
           )
           assert.match((await dialog.locator('.change').textContent()) ?? '', /SIREN\s*000000000\s*→\s*to\s*12345/, `${at}: it shows the change`)
           assert.equal(await dialog.getByLabel('Title').inputValue(), "Change the co-op's SIREN to 12345", `${at}: its title says the change`)
-          assert.equal(await dialog.getByLabel('Circle').inputValue(), 'ag', `${at}: put to the assembly`)
+          assert.equal(await chosen(dialog.getByLabel('Circle')), 'ag',
+ `${at}: put to the assembly`)
           assert.equal(await dialog.getByLabel('New SIREN').inputValue(), '12345', `${at}: the SIREN typed, its own field`)
           await dialog.getByRole('button', { name: 'Propose to Assembly' }).click()
           await dialog.getByRole('alert').filter({ hasText: /a SIREN is nine digits, as \{particulars_siren: 123 456 789\}, not 12345/ }).waitFor()

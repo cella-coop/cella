@@ -1,7 +1,8 @@
 import { step, stop } from '../models/keys.ts'
 
 // What a collection's page holds while it is looked at: the text filter
-// as typed, the row the keyboard is on, and whether the New form is open.
+// as typed and the row the keyboard is on; whether New is open is its
+// dialog's, `CreateState`.
 // The rows are the server's: the page of them the address asks for, kept
 // by the view and its filter in SQL. A filter typed goes into the address
 // once the typing pauses, and "Show more" asks for the next page there, so
@@ -15,7 +16,6 @@ export class CollectionState {
     void this.#filter
     return -1
   })
-  creating = $state(false)
   // The field the View panel adds a condition on, while its popover picks
   // the first value it keeps.
   adding: string | null = $state(null)
@@ -70,10 +70,6 @@ export class CollectionState {
   // The row in the tab order.
   get stop() {
     return stop(this.active, this.shown.length)
-  }
-
-  toggle() {
-    this.creating = !this.creating
   }
 
   clear() {

@@ -4,7 +4,7 @@ import Payslips from './blocks/Payslips.svelte'
 
 // The graft's client side: whose each payslip is, each worker's salary,
 // and a worker's salary on their page and their payslips in its
-// Employment tab.
+// Work tab.
 export const app: App = {
   name: 'employment-payslip',
   extends: {
@@ -15,7 +15,7 @@ export const app: App = {
       columns: [{ key: 'salary', label: 'Gross salary', kind: 'money', role: 'hidden', value: (r: { salary?: number }) => r.salary ?? null }],
       page: {
         properties: (p: Pay) => (p.salary ? [{ label: 'Gross salary', value: p.salary, kind: 'money' }] : []),
-        blocks: [{ tab: 'employment', block: Payslips }],
+        blocks: [{ tab: 'work', block: Payslips }],
       },
     },
   },

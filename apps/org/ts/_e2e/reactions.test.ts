@@ -25,6 +25,7 @@ import { react } from '@cella/org-task/api'
 import type { Deps, Done } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
 import { eachBrowser, serve, signIn } from './browser.ts'
+import { choose, chosen } from './controls.ts'
 
 const su = new pg.Client()
 let app: pg.Client | undefined
@@ -123,7 +124,7 @@ eachBrowser((name, launch) => {
       await page.waitForURL(`${dev.base}/settings/rules/web`)
       await page.waitForLoadState('networkidle')
       const form = page.locator('form.settings')
-      await form.getByLabel(/Reactions on comments/).selectOption(value)
+      await choose(form.getByLabel(/Reactions on comments/), value)
       await page.screenshot({ path: `${shots}/rules-${value}-${name}.png`, fullPage: true })
       const dialog = page.getByRole('dialog', { name: 'Assembly changes it by motion' })
       await dialog.waitFor()
@@ -132,7 +133,8 @@ eachBrowser((name, launch) => {
         `${name}: the dialog says why her write changes nothing`,
       )
       assert.equal(await dialog.getByLabel('Title').inputValue(), `Turn reactions on comments ${value} in Web`, `${name}: its title says the change`)
-      assert.equal(await dialog.getByLabel('Circle').inputValue(), 'ag', `${name}: put to the assembly`)
+      assert.equal(await chosen(dialog.getByLabel('Circle')), 'ag',
+ `${name}: put to the assembly`)
       await dialog.getByRole('button', { name: 'Propose to Assembly' }).click()
       await dialog.waitFor({ state: 'hidden' })
       const { motion } = await one<{ motion: string }>(

@@ -7,13 +7,17 @@ type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
 // Makes a role in a circle, or a `*` role every working circle has,
-// citing the motion that makes it: its id, name, duty and cap, holding
-// nothing until a motion grants it a mandate. Its entry carries all four.
+// citing the motion that makes it: its id, which the motion's proposal
+// took from its name (`circle.role_key`), its name, duty and cap, holding
+// nothing until a motion grants it a mandate. An id a circle or a role
+// has taken since is refused (`circle.free`), never swapped for another.
+// Its entry carries all four.
 export async function make(input: Make, deps: Deps): Out<'circle:role:make', { role: string }> {
   return write(deps, {
     op: 'circle:role:make' satisfies Action,
     request: input,
     state: async (tx) => {
+      await tx.query('SELECT circle.free($1)', [input.id])
       await tx.query(`INSERT INTO circle.role (id, circle, name, duty, holders) VALUES ($1, $2, $3, $4, $5)`, [
         input.id,
         input.circle,

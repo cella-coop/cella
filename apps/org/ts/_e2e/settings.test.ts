@@ -18,6 +18,7 @@ import { mkdirSync } from 'node:fs'
 import { parse, stringify } from 'devalue'
 import type { Page } from 'playwright-core'
 import { eachBrowser, serve, signIn } from './browser.ts'
+import { chosen } from './controls.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-settings-shots'
 const refusal = 'camille@lanterne.example holds no amend-circle in coordination: only a motion of Assembly renames it'
@@ -85,7 +86,8 @@ eachBrowser((name, launch) => {
         assert.match((await dialog.locator('.change').textContent()) ?? '', /Circle name\s*Coordination\s*→\s*to\s*Operations/, `${at}: the dialog shows the change`)
         assert.equal((await dialog.locator('.why').textContent())?.trim(), refusal, `${at}: the reason is the guard's words`)
         assert.equal(await dialog.getByLabel('Title').inputValue(), 'Rename Coordination to Operations')
-        assert.equal(await dialog.locator('select[name="circle"]').inputValue(), 'ag')
+        assert.equal(await chosen(dialog.getByLabel('Circle')), 'ag')
+
         assert.equal(await dialog.getByLabel('Deadline').inputValue(), '23/11/2026')
         assert.equal(await dialog.getByLabel('New name').inputValue(), 'Operations')
         await page.screenshot({ path: `${shots}/settings-dialog-${name}-${scheme}.png` })

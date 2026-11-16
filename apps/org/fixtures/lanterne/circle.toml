@@ -1,5 +1,7 @@
 # The co-op's units, none in another. The general assembly is every member; coordination is the
-# circle leads and the manager; four working circles beside them. What
+# circle leads and the manager; four working circles beside them, and
+# four more that look after the co-op itself: its clients, its hiring,
+# its people's care and its own tools. What
 # each role may do is a mandate, a policy the founding assembly adopted
 # (`motion.toml`).
 
@@ -34,6 +36,26 @@ id = "operations"
 name = "Operations"
 purpose = "finance, administration, contracts and tools"
 
+[[circle]]
+id = "clients"
+name = "Clients"
+purpose = "client relationships: briefs, proposals, renewals and care after launch"
+
+[[circle]]
+id = "hiring"
+name = "Hiring"
+purpose = "recruitment, onboarding and the path to membership"
+
+[[circle]]
+id = "care"
+name = "Care"
+purpose = "wellbeing, workload, conflict and peer support"
+
+[[circle]]
+id = "tools"
+name = "Tools"
+purpose = "the studio's own stack: hosting, accounts, licences and internal tooling"
+
 # The features each circle enabled, in its order, an accordion's run
 # after its name and a colon (`apps/org/core/circle/index.md#features`).
 
@@ -60,6 +82,22 @@ features = "project, task, timesheet, contact, document"
 [[feature]]
 circle = "operations"
 features = "Books: account, transaction, report, import; Payments: invoice, bill, expense, payslip; contact, employment"
+
+[[feature]]
+circle = "clients"
+features = "contact, project, task, document; Governance: motion, meeting"
+
+[[feature]]
+circle = "hiring"
+features = "task, document, employment; Governance: motion, meeting"
+
+[[feature]]
+circle = "care"
+features = "task, meeting, document, motion"
+
+[[feature]]
+circle = "tools"
+features = "project, task, timesheet, expense, file"
 
 [[role]]
 id = "member"
@@ -111,7 +149,9 @@ holders = 1
 
 
 # Who is in which circle and who holds which role. Every member holds the
-# assembly's member role and is a member of one working circle; each
+# assembly's member role and is a member of one working circle, and most
+# of one or two of Clients, Hiring, Care and Tools besides, so each person
+# sits in three to five circles; each
 # working circle's lead holds its lead role, which is a member of
 # coordination, so every lead sits there; Camille, the manager, sits there
 # as a member.
@@ -208,6 +248,82 @@ since = 2025-09-01
 [[member]]
 circle = "coordination"
 person = "camille@lanterne.example"
+
+# Clients, Hiring, Care and Tools have no lead: each decides by its
+# members' motions, and none sits on coordination by them.
+[[member]]
+circle = "clients"
+person = "camille@lanterne.example"
+
+[[member]]
+circle = "clients"
+person = "yusuf@lanterne.example"
+
+[[member]]
+circle = "clients"
+person = "thomas@lanterne.example"
+
+[[member]]
+circle = "clients"
+person = "malik@lanterne.example"
+
+[[member]]
+circle = "clients"
+person = "chloe@lanterne.example"
+
+[[member]]
+circle = "hiring"
+person = "camille@lanterne.example"
+
+[[member]]
+circle = "hiring"
+person = "julien@lanterne.example"
+
+[[member]]
+circle = "hiring"
+person = "lea@lanterne.example"
+
+[[member]]
+circle = "hiring"
+person = "amina@lanterne.example"
+
+[[member]]
+circle = "care"
+person = "hugo@lanterne.example"
+
+[[member]]
+circle = "care"
+person = "lea@lanterne.example"
+
+[[member]]
+circle = "care"
+person = "sofia@lanterne.example"
+
+[[member]]
+circle = "care"
+person = "amina@lanterne.example"
+
+[[member]]
+circle = "care"
+person = "chloe@lanterne.example"
+
+[[member]]
+circle = "care"
+person = "ines@lanterne.example"
+since = 2025-09-01
+
+[[member]]
+circle = "tools"
+person = "yusuf@lanterne.example"
+
+[[member]]
+circle = "tools"
+person = "thomas@lanterne.example"
+
+[[member]]
+circle = "tools"
+person = "ines@lanterne.example"
+since = 2025-09-01
 
 [[member]]
 circle = "coordination"

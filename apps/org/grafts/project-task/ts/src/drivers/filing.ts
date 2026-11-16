@@ -4,8 +4,9 @@ import type { Filed, Listed, Tasks } from '../models/filing.ts'
 // A place as a form's value: a project, or a project and a milestone.
 export const place = (project: string, milestone?: number | null) => (milestone ? `${project}#${milestone}` : project)
 
-// Each task's project, by task, which a board may group by.
-export const projectOf = 'SELECT f.task AS id, p.title AS project FROM project_task.filing f JOIN project.project p ON p.id = f.project'
+// Each task's project, by task, which a board may group by, and its id,
+// by which the project's page jumps to its tasks.
+export const projectOf = 'SELECT f.task AS id, p.title AS project, f.project AS project_id FROM project_task.filing f JOIN project.project p ON p.id = f.project'
 
 export async function filed(db: Db, task: string): Promise<Filed> {
   const { rows } = await db.query<{ project: string; title: string; milestone: number | null; phase: string | null }>(

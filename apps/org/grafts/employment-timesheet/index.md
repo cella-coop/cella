@@ -1,6 +1,6 @@
 +++
 title = "employment-timesheet"
-updated = 2026-11-09
+updated = 2026-11-16
 +++
 
 Whose time is, by one's employment. A worker logs, corrects and submits
@@ -37,7 +37,7 @@ members, and the guard on the feat's log. Whose the actor is, the
 ## Shell
 
 Adds each entry's worker by name to the timesheets collection, and the
-hours by worker to the dashboard; to a person's Employment tab, their months, a
+hours by worker to the dashboard; to a person's Work tab, their months, a
 row for each circle's, submitting their own and approving someone
 else's, the timesheet feat's writes. Its forms name a month as its row
 is keyed, `YYYY-MM/<circle>`, so a write names the month's circle.

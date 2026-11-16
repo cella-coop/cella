@@ -33,7 +33,7 @@ export class JoinState {
         ['label', device.label],
       ])
       if (took(result)) {
-        location.assign(`/people/${encodeURIComponent(this.member())}?tab=joining`)
+        location.assign(`/people/${encodeURIComponent(this.member())}?tab=membership`)
         return
       }
       this.problem = ('done' in result ? result.done?.reason : undefined) ?? 'the invitation could not be taken up'

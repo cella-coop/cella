@@ -5,7 +5,7 @@ import Project from './blocks/Project.svelte'
 
 // The graft's client side: the project an invoice bills and the form that
 // names it; what each project invoiced, and a project's invoices in its
-// Invoices tab.
+// Budget tab.
 export const app: App = {
   name: 'invoice-project',
   extends: {
@@ -21,8 +21,7 @@ export const app: App = {
       columns: [{ key: 'invoiced', label: 'Invoiced', kind: 'money', role: 'hidden', value: (r: { invoiced: number }) => r.invoiced }],
       page: {
         properties: (i: Invoiced) => [{ label: 'Invoiced', value: i.net, kind: 'money' }],
-        tabs: [{ id: 'invoices', label: 'Invoices' }],
-        blocks: [{ tab: 'invoices', block: Invoices }],
+        blocks: [{ tab: 'budget', block: Invoices }],
       },
     },
   },

@@ -233,6 +233,31 @@ test('a publication or a disclosure rule proposed replaces the one standing on d
   }
 })
 
+test('a motion proposes one rule setting a setting for a circle on days that meet', async () => {
+  const sets = (value: string) => `Comments take {setting: reactions} {value: ${value}}`
+  const asks = async (...actions: object[]) => {
+    await db.query('BEGIN')
+    try {
+      for (const [i, args] of actions.entries()) {
+        await db.query(`INSERT INTO motion.action (motion, n, kind, args) VALUES ('m-2026-014', $1, 'policy', $2)`, [3 + i, args])
+      }
+      return (await db.query<{ r: string | null }>(`SELECT motion.circle_asks('{"motion": "m-2026-014"}') AS r`)).rows[0].r
+    } finally {
+      await db.query('ROLLBACK')
+    }
+  }
+  assert.equal(await asks({ kind: 'rule', wording: sets('off') }), null)
+  assert.match(
+    (await asks({ kind: 'rule', wording: sets('off') }, { kind: 'rule', wording: sets('on'), from: '2026-12-01' })) ?? '',
+    /^actions 3 and 4 of m-2026-014 both set reactions for ag on days that meet: one rule sets a setting for a circle at a time, so a motion adopts one$/,
+  )
+  assert.equal(
+    await asks({ kind: 'rule', wording: sets('off'), until: '2026-12-01' }, { kind: 'rule', wording: sets('on'), from: '2026-12-01' }),
+    null,
+    'one after the other',
+  )
+})
+
 test('a policy replaces only the one in force the day it would apply, and replaced by no other', async () => {
   const asks = async (args: object) => {
     await db.query(`UPDATE motion.action SET args = $1 WHERE motion = 'm-2026-016'`, [args])

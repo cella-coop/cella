@@ -36,7 +36,12 @@
 
   // Events from inside a field of the editor's chrome, the link's address,
   // are the field's.
-  const ours = (e: Event) => !(e.target as HTMLElement).closest('input, textarea, select, [popover]')
+  // A to-do's box takes its own keys; a selection over it is the editor's.
+  const ours = (e: Event) => {
+    const t = e.target as HTMLElement
+    return !t.closest('input, textarea, select, [popover], [role="combobox"]') && !(e instanceof KeyboardEvent && t.closest('[role="checkbox"]'))
+  }
+
 
   // Chosen blocks mirror themselves in the page's selection, which
   // Chromium may settle outside the editor, before it: their copy and cut
@@ -44,7 +49,7 @@
   // them; text selected elsewhere on the page copies as itself.
   const outside = (e: ClipboardEvent, cut: boolean) => {
     const t = e.target
-    if (ed.chosen.mirrored() && ed.root && !(t instanceof Node && ed.root.contains(t)) && !(t instanceof Element && t.closest('input, textarea, select, [contenteditable]'))) {
+    if (ed.chosen.mirrored() && ed.root && !(t instanceof Node && ed.root.contains(t)) && !(t instanceof Element && t.closest('input, textarea, select, [contenteditable], [role="combobox"]'))) {
       ed.clip.copy(e, cut)
     }
   }

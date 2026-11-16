@@ -24,13 +24,24 @@
 // - Svelte 5 and SvelteKit 3 only: none of the legacy forms below, which
 //   still compile but are what code written from older knowledge reaches
 //   for, and no `{@html}`, which would render text as markup.
+// - Never native components: no `.svelte` file in the org app draws the
+//   browser's own select, date field, checkbox or radio (`<select>`, an
+//   `<input>` of type date, datetime-local, month, week, checkbox or
+//   radio); it composes the UI core's Select, date field and Checkbox,
+//   which are on-brand and accessible in every browser alike.
 // - No route loads or acts: no `+page.server.ts` or `+layout.server.ts`
 //   under a package's `src/routes/`, and no `load` in a `+page.ts` or
 //   `+layout.ts`; a page reads through queries and writes through forms,
 //   and what stays on a route's server is a `+server.ts` endpoint.
+// - A create form opens only in New's Dialog: no component imports a
+//   create form a slice's app declares (`create:` in its `app/index.ts`),
+//   so no page or block draws one inline, and the UI core draws a
+//   collection's `creates` only inside its one Dialog. A form a block
+//   draws on its own page that creates a record of another kind no tool
+//   sees; review holds it.
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative, sep } from 'node:path'
+import { dirname, join, normalize, relative, sep } from 'node:path'
 
 const client = /(^|\/)src\/(app|hooks|components)\//
 const server = /(^|\/)(api|drivers|handlers|interfaces)(\/|\.ts$|$)/
@@ -143,6 +154,16 @@ const bounded = new Set(['svelte:boundary', 'Skeleton', 'Failed'])
 const tags = (text) =>
   [...text.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<!--[\s\S]*?-->/g, '').matchAll(/<([A-Za-z][\w.:-]*)/g)].map((m) => m[1])
 
+// The browser's own controls, which the UI core's replace: in an org
+// app's markup, past its scripts, styles and comments.
+const org = /^apps\/org\//
+const natives = [
+  [/<select[\s>/]/, 'a native <select>', "the UI core's Select"],
+  [/<input\b[^>]*\stype\s*=\s*["']?(date|datetime-local|month|week)["'\s/>]/, 'a native date input', "the UI core's Field of type date"],
+  [/<input\b[^>]*\stype\s*=\s*["']?(checkbox|radio)["'\s/>]/, 'a native checkbox or radio', "the UI core's Checkbox, or a button group"],
+]
+const markupOf = (text) => text.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<style[\s\S]*?<\/style>/g, '').replace(/<!--[\s\S]*?-->/g, '')
+
 // A route's server load or actions, and a universal load.
 const routed = /(^|\/)src\/routes\/(.*\/)?\+(page|layout)(\.server)?\.ts$/
 const loads = /^\s*export\s+(const|let|var|(async\s+)?function)\s+load\b|^\s*export\s*\{[^}]*\bload\b[^}]*\}/m
@@ -174,6 +195,14 @@ export function problems(path, text, ui) {
     out.push(`${path}: is a route's server load or actions; read through a query and write through a form in src/lib/remote, redirect in the server hook, or serve a +server.ts endpoint`)
   } else if (route && loads.test(text)) {
     out.push(`${path}: exports a load; read through a query in src/lib/remote, awaited under a boundary`)
+  }
+  if (svelte && org.test(path)) {
+    const drawn = markupOf(text)
+    for (const [re, what, instead] of natives) {
+      if (re.test(drawn)) {
+        out.push(`${path}: draws ${what}; never native components: compose ${instead}`)
+      }
+    }
   }
   for (const selector of ringless(path, text)) {
     out.push(`${path}: ${selector} sets outline: none and draws no ring; draw box-shadow: var(--focus) with it, or leave focus to :focus-visible`)
@@ -224,6 +253,61 @@ export function problems(path, text, ui) {
   return out
 }
 
+// The create forms the slices' apps declare, by the file each is, and the
+// app that declares it: `create: Name`, `Name` imported from a component.
+const declared = (sources) => {
+  const out = new Map()
+  for (const { path, text } of sources) {
+    if (!/(^|\/)src\/app\/index\.ts$/.test(path)) {
+      continue
+    }
+    const from = new Map([...text.matchAll(/^import\s+([\w$]+)\s+from\s+['"](\.[^'"]+\.svelte)['"]/gm)].map((m) => [m[1], m[2]]))
+    for (const [, name] of text.matchAll(/\bcreate:\s*([\w$]+)/g)) {
+      if (from.has(name)) {
+        out.set(normalize(join(dirname(path), from.get(name))), path)
+      }
+    }
+  }
+  return out
+}
+
+// Whether `{#each creates` at `at` sits inside a `<Dialog>` of the markup.
+const inDialog = (markup, at) => {
+  const before = markup.slice(0, at)
+  return (before.match(/<Dialog[\s>]/g) ?? []).length > (before.match(/<\/Dialog>/g) ?? []).length
+}
+
+// A create form drawn anywhere but in New's Dialog: a component importing
+// one a slice's app declares, and a UI core component drawing a
+// collection's `creates` outside its Dialog. `sources` are every file's
+// `{ path, text }`, paths relative to the repository; `ui` says whether a
+// path sits in the UI core.
+export function inlineCreates(sources, ui = (path) => /(^|\/)core\/ui\/ts\//.test(path)) {
+  const out = []
+  const forms = declared(sources)
+  for (const { path, text } of sources) {
+    if (!path.endsWith('.svelte')) {
+      continue
+    }
+    for (const spec of imports(text)) {
+      const file = spec.startsWith('.') && normalize(join(dirname(path), spec))
+      if (file && forms.has(file)) {
+        out.push(`${path}: draws ${file.split('/').pop()}, the create form ${forms.get(file)} declares, inline; a create form opens only in the Dialog behind New`)
+      }
+    }
+    if (ui(path)) {
+      const markup = text.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<!--[\s\S]*?-->/g, '')
+      for (const m of markup.matchAll(/\{#each\s+creates\b/g)) {
+        if (!inDialog(markup, m.index)) {
+          out.push(`${path}: draws a collection's create forms outside its Dialog; New opens them in the one Dialog`)
+          break
+        }
+      }
+    }
+  }
+  return out
+}
+
 const walk = (repo, dir, out = []) => {
   for (const name of readdirSync(join(repo, dir))) {
     const path = join(dir, name)
@@ -243,14 +327,23 @@ const walk = (repo, dir, out = []) => {
 // `<node>/core/ui/ts`.
 export function checkUi(repo, dirs) {
   const out = []
+  const sources = []
+  const core = new Set()
   for (const dir of dirs) {
     if (!existsSync(join(repo, dir, 'src'))) {
       continue
     }
     const ui = dir.split(sep).slice(-3).join('/') === 'core/ui/ts'
     for (const file of walk(repo, join(dir, 'src'))) {
-      out.push(...problems(relative(repo, join(repo, file)), readFileSync(join(repo, file), 'utf8'), ui))
+      const path = relative(repo, join(repo, file))
+      const text = readFileSync(join(repo, file), 'utf8')
+      out.push(...problems(path, text, ui))
+      sources.push({ path, text })
+      if (ui) {
+        core.add(path)
+      }
     }
   }
+  out.push(...inlineCreates(sources, (path) => core.has(path)))
   return out
 }

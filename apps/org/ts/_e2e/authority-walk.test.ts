@@ -36,6 +36,7 @@ import { approve } from '@cella/org-graft-bill-transaction/api'
 import type { Deps } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
 import { inBrowsers, serve, signIn } from './browser.ts'
+import { choose } from './controls.ts'
 
 const su = new pg.Client()
 let app: pg.Client | undefined
@@ -264,7 +265,7 @@ unseeded('before any close: the chain, Sofia\'s powers and refusals, Brand\'s Pr
     assert.match((await section(w.page(), 'Chain').textContent()) ?? '', /this one/, `${w.at}: the chain is drawn`)
     await w.shot('1-chain')
 
-    await w.open(`/people/${encodeURIComponent(sofia)}?tab=powers`)
+    await w.open(`/people/${encodeURIComponent(sofia)}?tab=authority`)
     assert.match((await section(w.page(), 'Powers').textContent()) ?? '', /Approve bill/, `${w.at}: her powers list approve-bill`)
     await w.shot('2-powers')
 
@@ -278,9 +279,10 @@ unseeded('before any close: the chain, Sofia\'s powers and refusals, Brand\'s Pr
     await w.as(camille)
     await w.open('/circles/brand')
     await w.page().getByRole('button', { name: 'Propose…' }).click()
-    const form = w.page().locator('form', { has: w.page().locator('select[name^="f.kind["] option[value="change"]') })
-    await form.getByLabel('Proposes to').selectOption('grant')
-    await form.getByLabel('Grantee').selectOption('role:print-buyer')
+    const form = w.page().locator('form', { has: w.page().locator('[role=option][data-value="change"]') })
+    await choose(form.getByLabel('Proposes to'), 'grant')
+    await choose(form.getByLabel('Grantee'), 'role:print-buyer')
+
     await form.getByLabel('Power', { exact: true }).fill('record-bill')
     await form.getByLabel('Grants', { exact: true }).fill('record the print and paper bills of Brand')
     assert.match((await form.getByText(/^It will read:/).textContent()) ?? '', /The print-buyer role holds record-bill, to record the print and paper bills of Brand/, `${w.at}: the sentence as it will read`)

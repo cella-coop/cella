@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Select } from '@cella/org-ui'
   import Text from '../Text.svelte'
   import { useEditor } from '../../hooks/useEditor.ts'
   import type { View } from '../../hooks/EditorState.svelte.ts'
@@ -9,10 +10,13 @@
 </script>
 
 <div class="code">
-  <select class="language" aria-label="Language" value={view.props.language ?? 'text'} onchange={(e) => ed.setKind(view.id, 'code', { language: e.currentTarget.value })}>
-    {#each languages as l (l)}
-      <option value={l}>{l}</option>
-    {/each}
-  </select>
+  <span class="language">
+    <Select
+      fit
+      label="Language"
+      options={languages.map((l) => ({ value: l, label: l }))}
+      bind:value={() => view.props.language ?? 'text', (language) => ed.setKind(view.id, 'code', { language })}
+    />
+  </span>
   <Text id={view.id} placeholder="Code" />
 </div>

@@ -73,9 +73,10 @@ ink. Components read roles, never shades:
   (`--shadow-float`);
 - focus: one ring, `--focus`, on whatever the keyboard reaches, a field
   as much as a button; a focused field keeps the ring with its accent
-  border, a select drawing it as an outline (`--focus-outline`), since
-  WebKit's native menu list drops a shadow; and nothing sets `outline:
-  none` without drawing the ring.
+  border, a table's cell drawing it as an outline (`--focus-outline`),
+  where a shadow would be clipped; and nothing sets `outline: none`
+  without drawing the ring.
+
 
 The theme is light, dark or the system's, a cookie the server writes into
 `<html data-theme>` before any script runs.
@@ -144,7 +145,8 @@ draws.
   line. The features under none are listed flat in their place. Nothing
   the circle has not enabled is shown, nor a count of what another
   circle holds; the command menu still reaches every collection. Last
-  in the middle, More… opens the circle's features page in Settings
+  in the middle, More…, quiet and right-aligned with a + before it,
+  opens the circle's features page in Settings
   ([the circle's shell](../circle/index.md#shell)). A collection the
   view declares `counted` shows how many rows it holds for the acting
   member, in the lensed circle where there is a lens, the count its
@@ -158,10 +160,12 @@ draws.
   which cycles system, light and dark and shows the current one. Settings is its own
   sidebar, one for the member and the co-op as Linear's, in place of
   the top and the features while one of its pages is open: Back to app,
-  which returns to the last page left, then the `platform` collections
-  in two groups, each under its heading, as each collection's
-  `subgroup` names: Personal, the member's own (Devices), then
-  Organization, the co-op's (Imports). The account menu's Settings opens
+  which returns to the last page left, then Settings' own heading, the
+  sidebar's title, above the `platform` collections in two groups, each
+  under a small, dim label naming its `subgroup`: Personal, the
+  member's own (Devices), then Organization, the co-op's (Imports,
+  and Features, the circle the member is in, the same page More…
+  opens). The account menu's Settings opens
   it at Personal's first page, the co-op menu's at Organization's. In
   dev mode a faint upright "prototype" with a test tube sits at the
   content's bottom right. A demo build's banner (`DemoBanner`) floats
@@ -203,7 +207,28 @@ draws.
   buttons, Cancel and the one that confirms. A modal is no page: it
   confirms what it holds. Cancel, Escape and a click outside it cancel
   it alike; whoever opens it holds the element and decides what a
-  cancel takes back.
+  cancel takes back. It holds forms of their own where its opener hands
+  it no submit, as New does a collection's create forms, each ending in
+  its own confirming button and Cancel.
+- New: every collection's create, the header's New and its `c`, opens
+  the one `Dialog` titled for the collection ("New in Tasks"), holding
+  the create form the collection or its extensions declare, each under
+  its title where there are several, mounted only while it is open, so
+  each New starts empty (`CreateState`, `useCreate`). A `Form` under it
+  is a create form: its fields and its write are its slice's, and it
+  ends in Cancel and its confirming button (Create task, Propose). A
+  write that settles closes the dialog, the rows read again with the new
+  one among them; a refusal keeps it open with what was typed and the
+  guard's reason inside it, above its buttons; Cancel, Escape or a click
+  outside closes it with nothing written. While it is open the rows
+  behind it take no key. **A modal is not a page**: it holds one task
+  and ends in the buttons that confirm it (create, save, propose) and
+  one that cancels; **a page holds no create form**. The ui check
+  refuses a component that imports a create form a slice's app declares,
+  and the UI core drawing a collection's creates outside its Dialog
+  ([enforcement](../../../../_corpus/doc/enforcement.md)); a block
+  drawing a form that creates a record of another kind on its own page
+  no tool sees, and review holds it.
 - `Frame` (`PageFrame.svelte`): the one page frame, its header one
   compact row as Linear's, spanning the content and the drawer: on an
   item, a quiet caret back to its collection, on a collection its icon as
@@ -218,7 +243,12 @@ draws.
   at most 16rem wide. A form a header's popover opens is no part of
   the row: its fields show their labels and its choices take its width.
   Under it, the content and the drawer, which
-  scrolls down and never across. The toggle, or `]` anywhere, shows and
+  scrolls down and never across. Where the window cannot hold the
+  sidebar, the content at its least width and the drawer side by side,
+  the drawer lies over the content's right edge at its own width,
+  raised as a floating thing is, and its toggle, `]` or Escape shuts
+  it; nothing wraps under the content, and the header stays its one
+  row, its tabs scrolling in their strip. The toggle, or `]` anywhere, shows and
   hides the drawer on every page at once; a cookie keeps the viewer's
   choice, so the server renders it. One tab per panel, the open one
   marked even when alone: a collection's View, an item's Details.
@@ -371,7 +401,7 @@ draws.
   only a page of rows; a collection page renders nothing else, which the ui
   check enforces on the shell's `[collection]` page. Keyboard
   first: `j`/`k` move, Enter opens, `/` filters (opening the drawer), `c`
-  opens New. The row `j`/`k` moves to takes the focus, one row in the
+  opens New's dialog. The row `j`/`k` moves to takes the focus, one row in the
   tab order at a time (a roving `tabindex`, the row's link out of it),
   so a screen reader reads it and the ring shows where the keyboard is;
   Tab leaves the rows from it and comes back to it, moving past the last
@@ -408,21 +438,43 @@ draws.
   them (`stamps`), the dates and actors of its first and latest
   entries, which the item's read gives beside its data, but those its
   slices' properties already name, as a task's Created; and under them
-  Related; nothing in the drawer is boxed. A record whose structured
+  Related; nothing in the drawer is boxed. Related lists first its
+  jumps: each other collection whose rows name the record, by the
+  collection's icon and name and how many of its rows the reader sees
+  that name it, through their lens, counted in the core read's one
+  statement as any other count is; the line opens that collection
+  filtered to the record, the condition in the address (`?where=`) and
+  the view panel's Filter showing it. A row names a person by a person
+  column's address, a circle by a circle column's id, and any other
+  record by a column that says it is `of` that record's collection, as
+  a task's hidden project id is a project's; never by who created or
+  last updated it, nor in a collection of home or Settings, and a
+  collection holding none of its rows is no jump. Then the records its
+  slices link to (`related`). A record whose structured
   data is central to it puts that data in a tab of its own after the
   first (`tabs`): a motion's Stances and Effects, a meeting's Agenda, a
-  circle's Roles, Seats and Policies, a document's Versions, a report's
-  Figures, an invoice's Lines, a period's Entries, a project's
-  Milestones and Budget, a contact's Invoices, a person's Employment; the first tab is the
+  circle's Roles, Policies and Settings, a document's Versions, a report's
+  Figures, an invoice's Lines, a period's Entries, a project's Tasks,
+  Milestones and Budget, a contact's Projects and Invoices, a person's
+  Membership, Work and Authority; the first tab is the
   content and its Activity, and a kind with no free-form content shows
   its overview's blocks there. The header's crumb names the record by
   its kind and reference (`subtitle`, its id), never a sentence about
   it, which its properties and content say. Tabs show as
   pills in the header when there are two or more, the open one in the
-  URL (`?tab=`); a block sits in the tab it names (`{ tab, block }`), a
-  bare one in the first, and an extension's blocks join the owner's
-  tabs or add their own. A tab earns its place only as a genuinely
-  different view. Every collection's item page is drawn by `Detail`
+  URL (`?tab=`). **A page shows at most four tabs, and the slice that
+  owns the record's collection chooses them and their order**: only the
+  owner's page declares `tabs`, and an extension's blocks, a core
+  feat's, a feat's or a graft's alike, sit in a tab the owner names
+  (`{ tab, block }`), a bare one in the first; a tab past the first
+  that holds no block, as one whose filler is pruned, is not shown. An
+  extender the owner gives no tab is a jump in Related, as a person's
+  tasks and expenses are. A tab earns its place only as a genuinely
+  different view of the record, as a project's tasks are. The tabs
+  check (`tools/tabs.mjs`, run by `cella check feats`) refuses a page
+  declaring a fifth tab, an extension declaring a tab, and a block in a
+  tab its owner does not name, each by the slice, the record and what
+  would fix it. Every collection's item page is drawn by `Detail`
   alone, and the ui check refuses an item page that frames itself. Esc
   goes back to the collection.
 - `Card` (a borderless card raised on the panel, in the drawer or the
@@ -447,17 +499,29 @@ draws.
   `Button`, `Form` (a write, posting to the route's `write` form for a
   named write, files and all, through `post`, its fields bound to it; `ready` false keeps its button disabled while
   there is nothing to post; the fields a refused write names as `spent`,
-  written before it stopped, are emptied),
+  written before it stopped, are emptied; in New's dialog it ends in
+  Cancel, closes the dialog once settled and says a refusal's reason
+  itself),
   `Hidden` (a value a form posts that no one types, named through the
   form it is in),
   `Field` (text, a number, a date, a time, an address, an email or a
-  file; a date is typed in the app's locale and posts as an ISO day, the
-  browser's own calendar a button beside it (`DateField`); a day typed
+  file, or a choice among `options`, drawn by `Select`; its label names
+  it by its id and never wraps it; a date is typed in the app's locale
+  and posts as an ISO day, its own calendar a button beside it
+  (`DateField`): a month of days in the top layer, anchored to the
+  field and flipped to stay in the viewport, opening on the field's day
+  or today, today ringed and the day chosen filled with ink, a grid the
+  arrows move a day or a week in, Home and End to the week's ends, Page
+  Up and Down a month, with Shift a year, Enter or a press picking and
+  Escape closing it, the focus back on its button; a day typed
   that names none keeps the form from posting and says how to write
   one, until a valid day is typed or one is picked from the calendar,
   which replaces what is typed and drops the complaint; which `accept` narrows to the media types it offers; a
-  select with a `placeholder` offers it as a disabled first choice,
-  never a blank), `Ordered` (a list a slice's writes reorder, as an
+  select with a `placeholder` shows it, muted, until a choice is made,
+  never a blank; a text area wears no grip of the browser's, growing
+  with what is written from its rows to most of the window where the
+  browser sizes a field by its content, and scrolling past its rows
+  where it does not), `Ordered` (a list a slice's writes reorder, as an
   agenda: each row numbered, with its grip and its columns, what the
   slice puts at its end and a quiet removal when the slice offers one;
   `fixed` drops both once the list may not change), `Prose`, `Note` (a quiet line), `Message` (one message of a thread:
@@ -487,6 +551,35 @@ draws.
   the body font, Inter (`--font-ui`), headings and all, wherever the
   editor or its reader stands. Core body's components name its classes
   and draw nothing of their own.
+- `Select`: the one select, a combobox and its listbox as WAI-ARIA's
+  select-only combobox. The button keeps the focus throughout, naming
+  the option the keyboard is on as its active descendant, and shows the
+  chosen option's icon and label, or its placeholder, muted, while none
+  is chosen; its list opens in the top layer, as wide as the button at
+  least, anchored to it and flipped to stay in the viewport, placed by
+  `models/place.ts` where a browser lacks anchor positioning. The arrows,
+  Page Up and Down, Home and End move among the options past the
+  disabled ones; typing a label's first letters reaches it, a letter
+  again cycling those it starts; Enter or Space chooses and closes, as a
+  press does, Escape closes it choosing nothing, and Tab closes it and
+  moves on, the focus on the button all along, so it returns there by
+  never leaving. The chosen option wears a check; an option may carry an
+  icon, be disabled, sit under a heading with the others of its `group`,
+  and one may be marked, quietly, as the `default`, which a reader hears
+  as ", the default". With a `name` it posts its value in its form, a
+  `required` one holding the form back while none is chosen; with no
+  placeholder and no value of its own it reads as its first option, as
+  the browser's did. Its options are plain data (`Option`,
+  `models/select.ts`, whose moves its tests run without a browser), its
+  state `SelectState`. A choice is handed to `onchange` and fired as a
+  `change` from the button, so a setting commits as it is made; `fit`
+  sizes it to what it shows, up to 11rem, as in the View panel.
+- `Checkbox`: the one checkbox and the one switch, one button that says
+  whether it is on (`aria-checked`), its box and the text naming it
+  inside it, or named by its `label` where it has no text; Space or a
+  press anywhere on it turns it once, fired as a `change`. A checkbox is a small box, filled with ink and checked once
+  on; a switch (`role="switch"`), a track its knob crosses, filled once
+  on. With a `name` it posts its value while on.
 - `icons`: the Phosphor icons slices may name.
 
 A view whose rows are not its own items links each where its `href`
@@ -510,13 +603,30 @@ and its project `projects`; a property, by an `href` that is a record's
 own, `/<collection>/<id>`; a `person` is always one of `people`. The
 icon is the one that collection's view declares, which `Cell` reads
 from the sidebar's navigation the shell hands `useShell`, so no slice
-imports another's to find it. It stands at the value's size, quieter
+imports another's to find it. A person wears one person (Phosphor
+`User`), as core person's `people` declares, and a circle a group
+(`Users`), as core circle's `circles` declares. It stands at the value's size, quieter
 than its text, and is hidden from assistive technology, since the text
 names the record. A collection that declares no icon, or that the shell
 does not mount, leaves the value bare; an enumeration, as a task's
 priority, names no record and wears none.
 
+## Never native
+
+**Never native components.** Every control is the UI core's own,
+on-brand and accessible by keyboard and assistive technology alike in
+every browser, never the browser's: a choice is a `Select`, a day a
+date `Field` with its own calendar, a box to tick or a toggle a
+`Checkbox`, a choice among a few a group of buttons (`role="radio"`, as
+the icons a saved view may wear). The ui check refuses, by name, a
+`<select>` and an `<input>` of type date, datetime-local, month, week,
+checkbox or radio in any `.svelte` file of the org app, its UI core's
+among them ([enforcement](../../../../_corpus/doc/enforcement.md)). The
+time of day and a file to upload are still the browser's own fields,
+styled as the rest.
+
 ## Settings
+
 
 A settings page is a plain form, `Settings`, one `Setting` a row: its
 label, its current value in its field, and under it in a quiet line
@@ -606,8 +716,8 @@ Something new that only a motion makes, as a circle's role, is no
 setting: it is composed whole and proposed as one motion. `Compose` is
 a quiet button, as Add a role…, opening a `Dialog` of its fields, each
 an argument of the motion's one action (`Composed`,
-`models/compose.ts`), a field that follows another until it is typed,
-as a role's id follows its name; above them, why a motion makes it, in
+`models/compose.ts`), none of them a key the write can take itself,
+as a role's id is taken from its name; above them, why a motion makes it, in
 its guard's words. Its primary action, Propose to the deciding circle,
 posts the motions' New form to the page's `propose`: the circle that
 decides it, the title its slice words from what was typed, the
@@ -673,9 +783,12 @@ exported.
 ## State
 
 A component holds no state of its own: the collection's filter and row,
-the command menu, the dismissed outcome, the drawer's opening, the
-lens and the people's names, and what a date field holds typed and says of it, are state classes in
-`hooks/` (`CollectionState`, `CommandState`, `ShellState`, `DateState`), and the sign-in and
+whether its New is open, the command menu, the dismissed outcome, the
+drawer's opening, the lens and the people's names, what a date field
+holds typed and says of it and the day its calendar is on, and whether
+a select is open and the option its keyboard is on, are state classes in
+`hooks/` (`CollectionState`, `CreateState`, `CommandState`,
+`ShellState`, `DateState`, `SelectState`), and the sign-in and
 an invitation taken up (`SignInState`, `JoinState`), each reached through
 its `use*` hook, as [architecture](../../../../_corpus/doc/architecture.md#client-state)
 describes. `ShellState` imports no router: the shell hands its `follow` the

@@ -1,6 +1,6 @@
 +++
 title = "account-membership-patronage-transaction"
-updated = 2026-11-13
+updated = 2026-11-16
 +++
 
 The work share employed in the associates' capital: once a year's
@@ -110,7 +110,7 @@ Adds to a statement, in an Employed tab once its year is distributed,
 what the part became:
 owed in cash, until a write pays it out, in shares and how many,
 blocked until when, and the capital account's movements with the
-balance after each. Adds to a person's Own and decide tab, for the member alone, their
+balance after each. Adds to a person's Membership tab, for the member alone, their
 work share statements: each year's part, what it buys in shares and
 what it pays, as credited once distributed. Finance reads every
 statement in the `statements` collection, and a member their own. Adds

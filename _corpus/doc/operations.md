@@ -363,33 +363,92 @@ of each verifies.
 
 The demo serves each visitor a scope of their own, a copy of its
 template, so what they do changes only what they see, and nobody signs
-up. `cella demo serve` is its front, the one address the host serves.
-A visitor arriving without the demo's cookie is shown a page saying
-their co-op is being prepared, while the front copies the template into
-a database of their own (`CREATE DATABASE … TEMPLATE`, about 0.2 s) and
-starts a server on it, `cella serve --prod --demo` on a port of its own
-with the demo's keys, never a real scope's; the page goes on to it once
-it answers. The cookie names the copy by a random id and nothing else,
-and brings the visitor back to the same copy; the front passes each of
-their requests to its server and to no other. No copy reads another's
-database, and the template is never written.
+up. `cella demo serve` is its front, the one address the host serves
+(`tools/demo-serve.mjs`), and the module's `demo.visitors` runs it in
+place of the demo's single server; `demo.visitors = null` serves one
+copy to everyone, as above. A visitor arriving without a copy is shown
+a page saying their co-op is being prepared, and the page's script asks
+the front for one by a POST from the same origin, so a crawler, which
+runs no script, makes none. The front then copies the template into a
+database of its own (`CREATE DATABASE … TEMPLATE`, about 0.2 s), marks
+it `a copy of <template>: <label>` as `cella demo copy` does, gives it a
+login role of the same name, `<database>_v_<16 hex digits>`, and starts
+its server, `cella-server` with `CELLA_DEMO`, on a Unix socket of its
+own in the unit's runtime directory; the page goes on to it once it
+answers. The cookie, `cella-visitor`, is 32 random bytes and nothing
+else, never the copy's name; the front keeps in memory alone which copy
+it names and when its visitor was last seen, and records nothing about
+a visitor, no address, no name. It brings the visitor back to the same
+copy, and the front passes each of their requests to that copy's server
+and to no other, the cookie itself stripped from what the server is
+handed.
+
+The front is a single process, not a unit per visitor: one unit's
+limits hold every copy, and the front needs no right to start units.
+Each copy is still a process of its own, so what one visitor's server
+holds, its memory, its pools, its sessions, is no other's, and the
+server is the same one every scope runs. What keeps a copy to its own
+database is Postgres, not the front:
+
+- A copy's role logs in only by a password its server alone is handed,
+  over the socket, to its own database: the cluster's `pg_hba.conf`
+  lets `<database>_v_…` reach the database of its own name and refuses
+  it everywhere else and over TCP. Its database grants `CONNECT` to it
+  alone, never to `PUBLIC`. It is no superuser, makes no database or
+  role, and may act as `cella_app`, so the row-level policies hold.
+- The front logs in as `<database>_front` to `postgres` alone, a role
+  that may make databases and roles and grant `cella_app`, but is never
+  `cella_app` itself, nor a superuser: it drops a database only where
+  it owns it, a copy it made, and checks the name and the copy's mark
+  before it does. The setup makes the role and grants it, after the
+  template is built.
+- Each copy's role holds `demo.connections` connections at most (10;
+  its server's pools take eight) and 128 MB of temporary files.
+- The front's unit, as a user of its own (`cella-visitors`), reaches no
+  address but localhost and holds no capability: no copy sends mail or
+  calls anything outside the host. Its memory is `demo.visitors` times
+  `demo.memory` (256 MiB) and 384 MiB more, and a copy whose server
+  holds more than `demo.memory` resident ends.
+- Copies are made at most `demo.perIp` (5) for one address in ten
+  minutes, by the last `x-forwarded-for` hop the host's proxy sets,
+  `demo.perMinute` (20) across the host, and three at a time.
 
 A visitor's copy is a scope spawned on demand, the first form of how a
-host spawns a scope per co-op: a database made from a template, a
-server and a port of its own, and an end.
+host spawns a scope per co-op: a database made from a template, a role
+and a server of its own, and an end.
 
-A copy ends after two hours with no request from its visitor: its
-server stopped, its database dropped. The host caps how many copies run
-at once (the module's `demo.visitors`, 10 unless the host says
-otherwise, what a cx23 holds beside the site); a visitor who would pass
-the cap ends the copy idle longest first. A visitor whose copy ended
-is prepared a fresh one, the page saying their earlier copy was reset.
-Reset now ends a visitor's copy and prepares a fresh one at once.
+A copy ends after two hours with no request from its visitor
+(`demo.idle`, 7200 s): its server stopped, its database dropped with
+its role. The host caps how many copies run at once (`demo.visitors`,
+10 unless the host says otherwise, what a cx23 holds beside the site);
+a visitor who would pass the cap ends the copy idle longest first, if
+it has been idle `demo.evictAfter` seconds (300), and otherwise is told
+every copy is in use and to come back in a few minutes, so a burst of
+newcomers cannot end copies in use. A visitor whose copy ended is
+prepared a fresh one, the page saying their earlier copy was reset.
+Reset now ends a visitor's copy and prepares a fresh one at once, under
+a new cookie; a copy less than 20 s old is kept. The front starts by
+ending every copy an earlier run left, and a stopped front ends its
+copies before it goes, so an upgrade, which builds the template again,
+leaves no copy older than it.
 
-Every page of a visitor's copy wears a banner fixed above the shell,
-never dismissed: that this is a prototype, that its co-op is Lanterne,
-a mock, and this copy is the visitor's own, that it resets after two
-hours idle and how long is left, and its Reset now. Nobody signs up or
-sets a password: the sign-in offers Lanterne's members, as the demo's
-always does. A demo build sends no mail and calls nothing outside its
-host: what would send mail is kept in the copy alone.
+Every page of a visitor's copy wears the demo's banner, never
+dismissed, at the content's foot as every demo page does and atop the
+sign-in's panel: the operator's notice, "This is a prototype
+environment for demo purposes and can't be used for real work.", that
+its co-op is Lanterne, a mock, and this copy is the visitor's own, that
+it resets after two hours idle and how long is left (`CELLA_DEMO_IDLE`,
+which the front hands each server), and its Reset now, a form posting
+to the front. A demo that is no visitor's copy carries the same notice.
+Nobody signs up or sets a password: the sign-in offers Lanterne's
+members, as the demo's always does. The org app sends no mail, in a
+demo or a scope, and a demo's unit reaches nothing outside its host.
+
+`checks.visitors` boots a demo serving each visitor a copy, the cap at
+two and the idle span at 90 s. A request with no cookie makes no copy;
+two visitors get two, and one's write reaches neither the other's nor
+the template; a copy's role reaches its own database alone, over the
+socket; Reset now drops a copy for a fresh one with the template's log;
+at the cap the idlest ends; one address is refused past its rate; an
+idle copy ends leaving no database, role, server or socket; and a front
+killed outright has its copies ended by the next.

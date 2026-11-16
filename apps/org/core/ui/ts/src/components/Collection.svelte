@@ -466,9 +466,11 @@
        title where there are several, mounted only while it is open. A
        page draws no create form. -->
   {#if creates.length}
-    <Dialog bind:dialog={create.dialog} title="New in {title}" oncancel={() => create.close()} onclose={() => create.close()}>
+    <Dialog bind:dialog={create.dialog} title="New in {title}" oncancel={() => create.close()} onclose={() => create.closed()}>
       {#if create.open}
-        {#each creates as c (c)}
+        <!-- Keyed by the form, which stays as the rows read again, so a
+             refused form keeps what was typed. -->
+        {#each creates as c (c.form)}
           {const Create = $derived(c.form)}
           {#if creates.length > 1}<h3 class="creates">{c.title ?? 'New'}</h3>{/if}
           <Create {rows} {about} />

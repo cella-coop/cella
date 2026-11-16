@@ -27,4 +27,12 @@ export class CreateState {
   close() {
     this.open = false
   }
+
+  // The dialog's close event, which a browser may fire after it was
+  // opened again: only a dialog that is shut closes New.
+  closed() {
+    if (!this.dialog?.open) {
+      this.open = false
+    }
+  }
 }

@@ -6,7 +6,7 @@ members = ["apps/**/rs"]
 [workspace.package]
 version = "0.1.0-alpha"
 edition = "2024"
-license = "AGPL-3.0-or-later"
+license = "MPL-2.0"
 authors = ["Matan Bendix Shenhav <matan@shenhav.fyi>"]
 repository = "https://codeberg.org/cella/cella"
 

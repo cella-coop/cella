@@ -110,8 +110,12 @@ eachBrowser((browserName, launch) => {
         await page.screenshot({ path: `${shots}/contacts-calendar-${browserName}-${scheme}.png`, fullPage: true })
 
         // A list of them, who created each and when, once Display shows
-        // them: contacts hold neither by default.
-        await layout('List')
+        // them: contacts hold neither by default. List is already the
+        // collection's own layout, so choosing it leaves `view` out of
+        // the address; `layout`'s wait for it would never resolve.
+        await panel(page).getByRole('button', { name: 'List', exact: true }).click()
+        await page.waitForLoadState('networkidle')
+        await until(() => panel(page).getByRole('button', { name: 'List', exact: true }).getAttribute('aria-pressed'), (p) => p === 'true', `${at}: List is drawn`)
         await panel(page).getByRole('button', { name: /^\d+ fields$/ }).click()
         const display = page.getByRole('dialog', { name: 'Display' })
         await display.waitFor()

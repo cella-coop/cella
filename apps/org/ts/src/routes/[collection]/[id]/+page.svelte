@@ -141,7 +141,7 @@
 
     {#snippet commenting()}
       {#if v.comment}
-        <v.comment.block data={v.comment.data} id={data.id} viewer={data.viewer} />
+        <v.comment.block data={v.comment.data} id={data.id} embeds={v.embeds} viewer={data.viewer} />
       {/if}
     {/snippet}
 

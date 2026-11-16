@@ -278,6 +278,17 @@ test('a motion\'s overview says what is decided in full; its stances are their o
   assert.ok(stances.text.includes('Latest stance') && !stances.text.includes('>Proposal<'), 'the stances tab holds the roll alone')
 })
 
+test('a motion lands with its vote panel in view, above its body, and discussion is no tab of its own', async () => {
+  const { text } = await page('/motions/m-2026-012')
+  const at = (needle: string) => text.indexOf(needle)
+  assert.ok(at('data-write="vote"') > 0, 'the vote write is on the page as it lands, needing no click to a tab')
+  assert.ok(at('data-write="vote"') < at('>Proposal<'), 'the vote panel sits above the proposal, its body')
+  assert.ok(!text.includes('Discussion'), 'Discussion is no tab and no block of its own')
+  // Asking for the tab it used to hold reads the overview instead, not a
+  // tab that no longer exists.
+  assert.ok((await page('/motions/m-2026-012?tab=discussion')).text.includes('>Proposal<'), 'tab=discussion now reads as the overview')
+})
+
 test('a card dropped on a closed column is the close write; refused before the deadline, it stays open', async () => {
   const shifts = [{ by: 'state', from: ['open'], to: ['passed', 'rejected'], action: 'close' }]
   assert.equal(drag.shift(shifts, 'state', 'open', 'rejected')?.action, 'close')

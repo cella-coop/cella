@@ -102,8 +102,16 @@
     min-height: 1.55em;
     padding: 2px 0;
     caret-color: var(--accent-border);
+    /* A block's own ring would box each line as it is typed in,
+       cramped beside the next; the caret stands out in its place,
+       wide enough to read without it (progressive: plain where a
+       browser does not draw a shaped caret yet). */
+    caret-shape: block;
     flex: 1;
     min-width: 0;
+  }
+  .blocks :global(.text:focus-visible) {
+    box-shadow: none;
   }
   /* An empty block says how a block is added where the caret is in it,
      and so does the last one, empty, wherever the caret is. */

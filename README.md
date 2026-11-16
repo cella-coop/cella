@@ -53,3 +53,7 @@ cella serve       # the shell on http://localhost:5173, acting as a Lanterne mem
 cella log verify  # recheck the dev database's log
 cella db stop
 ```
+
+## Licence
+
+Cella is licensed under the MPL-2.0, see [LICENSE](LICENSE).

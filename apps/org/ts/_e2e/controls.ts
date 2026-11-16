@@ -3,7 +3,9 @@
 // Playwright's `selectOption`, `inputValue` on a select and a date
 // input's `fill` have nothing to act on. A select is a combobox button
 // whose list of options opens in the top layer; a date field's calendar
-// is a popover of day buttons.
+// is a popover of day buttons, and a time field's list a popover of
+// times. A file field's own input stays in the form, hidden, so
+// `setInputFiles` on it picks a file as the dialog would.
 
 import type { Locator } from 'playwright-core'
 
@@ -54,3 +56,13 @@ export async function pick(button: Locator, day: string) {
 
 // What a select shows: its chosen option's label, or its placeholder.
 export const said = async (select: Locator) => ((await select.locator('.value').textContent()) ?? '').trim()
+
+// Picks a time from a time field's list, `button` its Choose a time:
+// opens it and presses the time, which closes it.
+export async function pickTime(button: Locator, time: string) {
+  await button.click()
+  const list = button.page().locator(`[id="${await button.getAttribute('popovertarget')}"]`)
+  await list.waitFor()
+  await list.locator(`[role=option][data-value="${time}"]`).click()
+  await list.waitFor({ state: 'hidden' })
+}

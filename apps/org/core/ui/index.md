@@ -145,7 +145,8 @@ draws.
   line. The features under none are listed flat in their place. Nothing
   the circle has not enabled is shown, nor a count of what another
   circle holds; the command menu still reaches every collection. Last
-  in the middle, More… opens the circle's features page in Settings
+  in the middle, More…, quiet and right-aligned with a + before it,
+  opens the circle's features page in Settings
   ([the circle's shell](../circle/index.md#shell)). A collection the
   view declares `counted` shows how many rows it holds for the acting
   member, in the lensed circle where there is a lens, the count its
@@ -159,10 +160,12 @@ draws.
   which cycles system, light and dark and shows the current one. Settings is its own
   sidebar, one for the member and the co-op as Linear's, in place of
   the top and the features while one of its pages is open: Back to app,
-  which returns to the last page left, then the `platform` collections
-  in two groups, each under its heading, as each collection's
-  `subgroup` names: Personal, the member's own (Devices), then
-  Organization, the co-op's (Imports). The account menu's Settings opens
+  which returns to the last page left, then Settings' own heading, the
+  sidebar's title, above the `platform` collections in two groups, each
+  under a small, dim label naming its `subgroup`: Personal, the
+  member's own (Devices), then Organization, the co-op's (Imports,
+  and Features, the circle the member is in, the same page More…
+  opens). The account menu's Settings opens
   it at Personal's first page, the co-op menu's at Organization's. In
   dev mode a faint upright "prototype" with a test tube sits at the
   content's bottom right. The last write's outcome floats above.
@@ -527,7 +530,26 @@ draws.
   Escape closing it, the focus back on its button; a day typed
   that names none keeps the form from posting and says how to write
   one, until a valid day is typed or one is picked from the calendar,
-  which replaces what is typed and drops the complaint; which `accept` narrows to the media types it offers; a
+  which replaces what is typed and drops the complaint; a time is typed
+  on the 24-hour clock, as Lanterne writes it, 9:30, 930 and 9h30 all
+  reading as one, and posts as `HH:MM`, its own list a button beside it
+  (`TimeField`): a time every quarter of an hour in the top layer,
+  anchored and flipped as the calendar is, opening on the field's time,
+  else the one before it, else 09:00, the focus on the list, naming the
+  time the keyboard is on as its active descendant; the arrows move a
+  quarter, Page Up and Down an hour, Home and End to the day's ends,
+  figures typed reach the time they start (14 reaches 14:00, 9 09:00),
+  Enter, Space or a press picks and Escape closes it, the focus back on
+  its button; a time typed that names none keeps the form from posting
+  and says how to write one; a file is chosen with a button, Choose
+  file, that opens the browser's dialog (`FilePicker`), and the file
+  chosen shows beside it by its name and size, read aloud as it is
+  chosen, with a quiet button that clears it; the whole is a place a
+  file may be dropped on, and the file input it keeps hidden inside is
+  what the form posts; `accept` narrows the dialog to the media types it
+  offers and refuses a dropped file it does not take, saying what it
+  does, and a `required` one empty holds the form back, says Choose a
+  file and sends the focus to its button; a
   select with a `placeholder` shows it, muted, until a choice is made,
   never a blank; a text area wears no grip of the browser's, growing
   with what is written from its rows to most of the window where the
@@ -627,14 +649,16 @@ priority, names no record and wears none.
 **Never native components.** Every control is the UI core's own,
 on-brand and accessible by keyboard and assistive technology alike in
 every browser, never the browser's: a choice is a `Select`, a day a
-date `Field` with its own calendar, a box to tick or a toggle a
-`Checkbox`, a choice among a few a group of buttons (`role="radio"`, as
-the icons a saved view may wear). The ui check refuses, by name, a
-`<select>` and an `<input>` of type date, datetime-local, month, week,
-checkbox or radio in any `.svelte` file of the org app, its UI core's
-among them ([enforcement](../../../../_corpus/doc/enforcement.md)). The
-time of day and a file to upload are still the browser's own fields,
-styled as the rest.
+date `Field` with its own calendar, a time of day a time `Field` with
+its own list of times, a file to upload a file `Field`, the UI core's
+picker, a box to tick or a toggle a `Checkbox`, a choice among a few a
+group of buttons (`role="radio"`, as the icons a saved view may wear).
+The ui check refuses, by name, a `<select>` and an `<input>` of type
+date, datetime-local, month, week, time, checkbox, radio or file in any
+`.svelte` file of the org app, its UI core's among them; a file input
+carrying `hidden` passes, as the picker's own, which it keeps unseen
+for the form to post
+([enforcement](../../../../_corpus/doc/enforcement.md)).
 
 ## Settings
 
@@ -796,10 +820,13 @@ exported.
 A component holds no state of its own: the collection's filter and row,
 whether its New is open, the command menu, the dismissed outcome, the
 drawer's opening, the lens and the people's names, what a date field
-holds typed and says of it and the day its calendar is on, and whether
-a select is open and the option its keyboard is on, are state classes in
-`hooks/` (`CollectionState`, `CreateState`, `CommandState`,
-`ShellState`, `DateState`, `SelectState`), and the sign-in and
+holds typed and says of it and the day its calendar is on, what a time
+field holds typed and whether its list is open and the time its
+keyboard is on, the file a picker holds and why it refused one, and
+whether a select is open and the option its keyboard is on, are state
+classes in `hooks/` (`CollectionState`, `CreateState`, `CommandState`,
+`ShellState`, `DateState`, `TimeState`, `FileState`, `SelectState`),
+and the sign-in and
 an invitation taken up (`SignInState`, `JoinState`), each reached through
 its `use*` hook, as [architecture](../../../../_corpus/doc/architecture.md#client-state)
 describes. `ShellState` imports no router: the shell hands its `follow` the

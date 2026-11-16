@@ -42,12 +42,14 @@ reads = ["**", "!apps/site/src", "!apps/site/public", "!apps/site/test", "!apps/
 # (apps/org/rs/index.md, Gates): `--since` main as the lane fetched it,
 # `origin/main`, or `main` where the checkout has no remote, so the diff
 # from where the branch leaves main picks them; a checkout with neither
-# runs them all. `cella-test-all` is the whole suite, under a name of its
-# own so a selected pass is never kept for it: the integrator's `merge`
-# needs it, and the `test` flow a push runs.
+# runs them all. It drives Chromium alone (`BROWSERS=chromium`), the
+# version's own check before review; `cella-test-all` is the whole suite
+# in every browser, under a name of its own so a selected pass is never
+# kept for it: the integrator's `merge` needs it, and the `test` flow a
+# push runs, so main is still guarded in Chromium, Firefox and WebKit.
 [[op]]
 name = "cella-test"
-run = ["nix", "develop", "-c", "sh", "-c", "export CELLA_PGPORT=$((20000 + $$ % 20000)) CELLA_ANALYTICS_PORT=$((40000 + $$ % 20000)); base=$(git rev-parse -q --verify origin/main || git rev-parse -q --verify main); cella db start && cella test ${base:+--since $base}; status=$?; cella db stop; exit $status"]
+run = ["nix", "develop", "-c", "sh", "-c", "export CELLA_PGPORT=$((20000 + $$ % 20000)) CELLA_ANALYTICS_PORT=$((40000 + $$ % 20000)) BROWSERS=chromium; base=$(git rev-parse -q --verify origin/main || git rev-parse -q --verify main); cella db start && cella test ${base:+--since $base}; status=$?; cella db stop; exit $status"]
 kind = "check"
 needs = ["cella-check"]
 reads = ["**", "!apps/site/src", "!apps/site/public", "!apps/site/test", "!apps/site/index.md", "!apps/site/astro.config.mjs", "!apps/site/tsconfig.json", "!apps/site/.prettierrc.json", "!packages/diagrams/src", "!packages/diagrams/index.md", "!packages/diagrams/tsconfig.json"]
@@ -82,10 +84,11 @@ kind = "check"
 # The integrator's pass (apps/org/rs/index.md, Gates): `merge` is corpus's
 # own merge pass, an action run by its name (`corpus flow run merge`), and
 # its needs are what it judges each version by over its train: the org's
-# check, the whole suite, `cella-test-all`, in place of the lane's
-# selected `cella-test`, and the site's check, so a version merges only
-# where every scenario passes over it composed with the versions ahead of
-# it.
+# check, the whole suite in Chromium, Firefox and WebKit, `cella-test-all`,
+# in place of the lane's Chromium-only `cella-test`, and the site's check,
+# so a version merges only where every scenario passes in every browser,
+# composed with the versions ahead of it; a WebKit or Firefox red stops
+# the train though the lane's own gates ran green.
 [[op]]
 name = "merge"
 kind = "action"

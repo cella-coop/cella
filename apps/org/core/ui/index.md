@@ -210,7 +210,12 @@ draws.
   at most 16rem wide. A form a header's popover opens is no part of
   the row: its fields show their labels and its choices take its width.
   Under it, the content and the drawer, which
-  scrolls down and never across. The toggle, or `]` anywhere, shows and
+  scrolls down and never across. Where the window cannot hold the
+  sidebar, the content at its least width and the drawer side by side,
+  the drawer lies over the content's right edge at its own width,
+  raised as a floating thing is, and its toggle, `]` or Escape shuts
+  it; nothing wraps under the content, and the header stays its one
+  row, its tabs scrolling in their strip. The toggle, or `]` anywhere, shows and
   hides the drawer on every page at once; a cookie keeps the viewer's
   choice, so the server renders it. One tab per panel, the open one
   marked even when alone: a collection's View, an item's Details.
@@ -502,7 +507,9 @@ and its project `projects`; a property, by an `href` that is a record's
 own, `/<collection>/<id>`; a `person` is always one of `people`. The
 icon is the one that collection's view declares, which `Cell` reads
 from the sidebar's navigation the shell hands `useShell`, so no slice
-imports another's to find it. It stands at the value's size, quieter
+imports another's to find it. A person wears one person (Phosphor
+`User`), as core person's `people` declares, and a circle a group
+(`Users`), as core circle's `circles` declares. It stands at the value's size, quieter
 than its text, and is hidden from assistive technology, since the text
 names the record. A collection that declares no icon, or that the shell
 does not mount, leaves the value bare; an enumeration, as a task's
@@ -598,8 +605,8 @@ Something new that only a motion makes, as a circle's role, is no
 setting: it is composed whole and proposed as one motion. `Compose` is
 a quiet button, as Add a role…, opening a `Dialog` of its fields, each
 an argument of the motion's one action (`Composed`,
-`models/compose.ts`), a field that follows another until it is typed,
-as a role's id follows its name; above them, why a motion makes it, in
+`models/compose.ts`), none of them a key the write can take itself,
+as a role's id is taken from its name; above them, why a motion makes it, in
 its guard's words. Its primary action, Propose to the deciding circle,
 posts the motions' New form to the page's `propose`: the circle that
 decides it, the title its slice words from what was typed, the

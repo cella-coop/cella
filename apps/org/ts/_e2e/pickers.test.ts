@@ -48,13 +48,13 @@ eachBrowser((name, launch) => {
       await catching(form, 'time')
       const posted = () => form.getAttribute('data-posted')
       const submit = form.getByRole('button', { name: 'Schedule meeting' })
-      const time = form.getByLabel('Time')
+      const time = form.getByLabel('Time', { exact: true })
       const choose = form.getByRole('button', { name: 'Choose a time' })
       assert.equal(await time.getAttribute('type'), 'text', 'the time is no browser time input')
       assert.equal(await time.inputValue(), '10:00', 'it shows the time it is drawn with')
-      await form.getByLabel('Title').fill(`A time field in ${name}`)
-      await form.getByLabel('Circle').fill('coordination')
-      await form.getByLabel('Day').fill('02/11/2026')
+      await form.getByLabel('Title', { exact: true }).fill(`A time field in ${name}`)
+      await form.getByLabel('Circle', { exact: true }).fill('coordination')
+      await form.getByLabel('Day', { exact: true }).fill('02/11/2026')
 
       await time.fill('25:00')
       assert.match(await time.evaluate((el) => (el as HTMLInputElement).validationMessage), /Write the time as hh:mm/)
@@ -73,17 +73,25 @@ eachBrowser((name, launch) => {
       await page.keyboard.press('Enter')
       const list = page.getByRole('listbox', { name: 'Times' })
       await list.waitFor()
-      const on = async () => {
+      // The time the keyboard is on, waited for as the date field's test
+      // waits for its day: the list answers a key on its next frame.
+      const at = async () => {
         const id = await list.getAttribute('aria-activedescendant')
         return id ? page.locator(`[id="${id}"]`).getAttribute('data-value') : null
       }
-      assert.equal(await on(), '09:30', 'the list opens on the field\'s time')
+      const on = async (want: string) => {
+        for (let tries = 0; tries < 40 && (await at()) !== want; tries++) {
+          await page.waitForTimeout(50)
+        }
+        return at()
+      }
+      assert.equal(await on('09:30'), '09:30', 'the list opens on the field\'s time')
       await page.keyboard.press('ArrowDown')
-      assert.equal(await on(), '09:45', 'an arrow moves a quarter')
+      assert.equal(await on('09:45'), '09:45', 'an arrow moves a quarter')
       await page.keyboard.press('PageDown')
-      assert.equal(await on(), '10:45', 'Page Down moves an hour')
+      assert.equal(await on('10:45'), '10:45', 'Page Down moves an hour')
       await page.keyboard.type('14')
-      assert.equal(await on(), '14:00', 'figures typed reach the time they start')
+      assert.equal(await on('14:00'), '14:00', 'figures typed reach the time they start')
       await page.keyboard.press('Enter')
       await list.waitFor({ state: 'hidden' })
       assert.equal(await time.inputValue(), '14:00')
@@ -91,7 +99,7 @@ eachBrowser((name, launch) => {
       await page.keyboard.press('Enter')
       await list.waitFor()
       await page.keyboard.press('End')
-      assert.equal(await on(), '23:45', 'End reaches the day\'s last time')
+      assert.equal(await on('23:45'), '23:45', 'End reaches the day\'s last time')
       await page.keyboard.press('Escape')
       await list.waitFor({ state: 'hidden' })
       assert.ok(await choose.evaluate((el) => el === document.activeElement), 'Escape gives the focus back')
@@ -110,8 +118,8 @@ eachBrowser((name, launch) => {
       const upload = page.locator('form').filter({ has: page.getByRole('button', { name: 'Upload' }) })
       await catching(upload, 'file')
       const sent = () => upload.getAttribute('data-posted')
-      const picker = upload.getByLabel('File')
-      assert.equal(await picker.evaluate((el) => el.tagName), 'BUTTON', 'the label names the picker\'s Choose file')
+      const picker = upload.getByRole('button', { name: 'File Choose file', exact: true })
+      assert.equal(await picker.evaluate((el) => el.tagName), 'BUTTON', 'the label and its text name the picker\'s Choose file')
       assert.ok(!(await upload.locator('input[type=file]').isVisible()), 'the browser\'s file input is never seen')
 
       await upload.getByRole('button', { name: 'Upload' }).click()

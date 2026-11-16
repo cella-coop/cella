@@ -20,7 +20,7 @@
   import { useShell } from '../hooks/useShell.ts'
   import { usePinned } from '../hooks/usePinned.ts'
   import { mark } from '../marks.ts'
-  import { inked, nth } from '../models/ink.ts'
+  import { inked } from '../models/ink.ts'
   import type { Search } from '../hooks/CommandState.svelte.ts'
   import Avatar from './Avatar.svelte'
   import Command from './Command.svelte'
@@ -275,7 +275,7 @@
          icon, open, its collections indented on a guide line; a run under
          none listed flat. More… opens the circle's features page. -->
     <div class="middle">
-      {#each features as run, k}
+      {#each features as run}
         {#if run.group}
           {const key = $derived(`feature:${run.group}`)}
           {const open = $derived(state.expanded(key, holds(run.items)))}
@@ -284,9 +284,9 @@
             <span class="caret"><Icon icon={open ? CaretDown : CaretRight} size="0.7rem" /></span>
             {#if !open && waits(run.items)}<span class="dot" aria-label="{waits(run.items)} waiting in {run.group}"></span>{/if}
           </button>
-          {#if open}<div class="tree">{@render links(run.items, nth(k))}</div>{/if}
+          {#if open}<div class="tree">{@render links(run.items)}</div>{/if}
         {:else}
-          {@render links(run.items, nth(k))}
+          {@render links(run.items)}
         {/if}
       {/each}
       {#if inside}<a class="more" href="/settings/features/{inside.id}"><Icon icon={Plus} size="0.8rem" />More…</a>{/if}
@@ -655,9 +655,9 @@
     color: var(--text);
     font-weight: 500;
   }
-  /* A feature's run takes its collections' icons in the turn's ink
-     (`nth`), as the ink specimen's nav proposes; Settings' and the
-     home rows stay plain. */
+  /* A feature's collections keep plain icons (the operator, 16 Nov: no
+     icon colours in the sidebar for features); an `ink` passed to `links`
+     colours a row's icon where one is wanted. */
   .glyph {
     display: inline-flex;
     flex: none;

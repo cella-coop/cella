@@ -385,6 +385,19 @@
           node src/tools/feat-check.mjs --no-sql src
           touch $out
         '';
+
+        # The module run in a VM: a co-op's scope, and a demo's
+        # (nix/test.nix).
+        module = import ./nix/test.nix { inherit self pkgs; kind = "scope"; };
+        demo = import ./nix/test.nix { inherit self pkgs; kind = "demo"; };
       });
+
+      # services.cella: a host's scopes, each a database on its Postgres 18
+      # with the notary preloaded, its setup, its analytics shell and its
+      # server, and a nightly backup ([packaging](_corpus/doc/operations.md#packaging)).
+      nixosModules = rec {
+        cella = import ./nix/module.nix { inherit self; };
+        default = cella;
+      };
     };
 }

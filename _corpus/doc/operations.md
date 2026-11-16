@@ -9,8 +9,9 @@ What a host does to run a scope and keep it: the server's settings, its
 analytics shell, its two keys and their rotation, backups and a restore,
 and upgrades. Every
 task is a `cella` command ([the CLI](../../apps/org/rs/index.md)) or a
-Postgres one; the host's own configuration (its NixOS module, its timers)
-lives with the host, not here.
+Postgres one. A NixOS host runs its scopes by the flake's module
+([packaging](#packaging)); the rest of its configuration, its proxy, its
+TLS and its own backup, lives with the host, not here.
 
 ## A scope's server
 
@@ -61,30 +62,13 @@ copied to the server's with the same care as a key. It listens on
 localhost alone and is never exposed: the org app's server is its one
 client.
 
-A unit runs it with the server, started after Postgres and stopped
-before it. A sketch of one, for a NixOS host, with the flake's `cella`
-on its path; the shell backgrounds itself, so the unit forks:
+On a NixOS host the flake's module runs it as `cella-<name>-analytics`
+([the module](#the-module)), started after the scope's setup and before
+its server, as the `cella` user, which logs in as `cella_analytics` over
+Postgres's socket; the shell backgrounds itself, so the unit forks, and
+its token and pid are in the scope's `<stateDir>/<name>/.data`.
 
-```nix
-systemd.services.cella-analytics = {
-  after = [ "postgresql.service" ];
-  requires = [ "postgresql.service" ];
-  before = [ "cella.service" ];
-  wantedBy = [ "multi-user.target" ];
-  path = [ cella ];
-  serviceConfig = {
-    Type = "forking";
-    User = "cella";
-    WorkingDirectory = "/var/lib/cella";
-    ExecStart = "${cella}/bin/cella analytics start --url postgresql://cella_analytics@localhost/scope";
-    ExecStop = "${cella}/bin/cella analytics stop";
-    PIDFile = "/var/lib/cella/.data/analytics/54343/pid";
-    Restart = "on-failure";
-  };
-};
-```
-
-The server's unit sets `CELLA_ANALYTICS=quack:localhost:54343`,
+The server's unit sets `CELLA_ANALYTICS=quack:localhost:<port>`,
 `CELLA_ANALYTICS_TOKEN_FILE` and `CELLA_DUCKDB_EXTENSIONS` as `cella
 serve --prod` does. The shell holds no state of its own: a restart, or a
 migration that publishes the views again, loses nothing, and a backup
@@ -266,14 +250,49 @@ loads. Its `cella-server` runs the built server as `cella serve --prod`
 does. Its closure holds no key, no session key and no database: those
 are the host's, and its state is in `CELLA_DATA`.
 
-The flake's `nixosModules.cella` runs one scope on a NixOS host:
-Postgres 18 with `cella-pg` preloaded and the scope's settings, the
-notary's and the vault's key files at the paths the host names (the
-module never makes a key: `cella key init` does, once, by hand), the
-server and its analytics shell as units of their own user, and a
-nightly `cella backup` whose directory the host's own backup encrypts
-and carries off the host. A NixOS test boots it with test keys,
-migrates, signs one write and restores the night's backup.
+### The module
+
+The flake's `nixosModules.cella`, `services.cella`, runs a host's
+scopes on its one Postgres 18 cluster: `cella-pg` preloaded, the
+notary's and the vault's key files at the paths the host names, and for
+each scope under `scopes.<name>` a database and three units of its own.
+The module never makes a notary's or a vault's key, and none is in the
+store: `cella key init` makes each, once, by hand, owned by `postgres`,
+which reads them. A NixOS test, `checks.module`, boots it with test
+keys, migrates, founds Lanterne in the scope, signs in as a fixture
+member and signs a write, takes the night's backup and restores it into
+a database whose log verifies at the same head.
+
+| Option | What |
+|---|---|
+| `enable` | the module |
+| `package`, `extension` | the flake's `cella-org` and `cella-pg` unset |
+| `keyFile`, `vaultKeyFile` | `cella.key_file` and `cella.vault_key_file`, set in `postgresql.conf`; every scope on the cluster is signed by its one notary key |
+| `vaultKeyPrevious`, `vaultKeysKept` | `cella.vault_key_previous` and `cella.vault_keys_kept`, for a [rotation](#keys) |
+| `stateDir` | `/var/lib/cella` unset; each scope's `<stateDir>/<name>` holds its session key and its analytics shell's `.data`, the `cella` user's alone |
+| `backup.enable`, `.dir`, `.at`, `.keep` | the nightly `cella backup` of every scope that is no demo, as `postgres`, into `<dir>/<name>/<UTC time>` (`/var/backup/cella`, 03:00, the newest 7 kept unset) |
+| `scopes.<name>.database` | its database, `<name>` unset |
+| `scopes.<name>.address`, `.timezone` | `cella.scope` and `cella.timezone`, set on its database; unset, left to its founding |
+| `scopes.<name>.port`, `.analyticsPort` | its server's port on 127.0.0.1 and its analytics shell's on localhost, each the host's own |
+| `scopes.<name>.environment` | more of its server's settings, such as `CELLA_PATIENCE` |
+| `scopes.<name>.demo.enable`, `.scenario` | a demo's scope ([the demo](#the-demo)), its template played with `authority-walk` unset |
+
+Each scope is three units. `cella-<name>-setup`, a oneshot as
+`postgres`, makes its database if it is missing, sets its address and
+timezone, and migrates it with `cella migrate --url`, so a restart after
+an upgrade migrates it; a demo's builds its template and its copy
+instead. `cella-<name>-analytics` runs its [analytics
+shell](#the-analytics-shell). `cella-<name>`, its server, runs
+`cella-server` as the `cella` user, which logs in as `cella_app` over
+Postgres's socket (`pg_hba` maps the `cella` user to `cella_app` and
+`cella_analytics` on the scopes' databases alone), on `127.0.0.1:<port>`,
+with a session key it makes on first start and keeps. The host serves
+each port behind its own proxy, which terminates TLS and sets
+`x-forwarded-proto`; the module opens no port.
+
+Since the notary's key is the cluster's, every scope on a host is signed
+by one key: the module refuses a host mixing a demo's scope with a
+co-op's, so a demo's keys are the demo's own.
 
 ## The demo
 

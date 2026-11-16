@@ -11,6 +11,8 @@
   import Check from 'phosphor-svelte/lib/Check'
   import Desktop from 'phosphor-svelte/lib/Desktop'
   import Moon from 'phosphor-svelte/lib/Moon'
+  import Plus from 'phosphor-svelte/lib/Plus'
+  import SquaresFour from 'phosphor-svelte/lib/SquaresFour'
   import Sun from 'phosphor-svelte/lib/Sun'
   import type { Jump, Nav, Person, Theme } from '../models/view.ts'
   import { listed, runs } from '../models/arrange.ts'
@@ -124,12 +126,18 @@
   const waits = (items: Items) => items.reduce((n, i) => n + (i.waiting ?? i.count ?? 0), 0)
   // The group the page is in, Settings' where it is one of its pages.
   const held = $derived(nav.find((g) => g.items.some((i) => here(i.href) && i.href !== '/'))?.group)
-  // Settings' collections by subgroup, in its areas' order.
+  // Settings' collections by subgroup, in its areas' order; Organization
+  // gains the circle's own features page, a page of one normally kept off
+  // the sidebar (`listed: false`), since here it is always the circle the
+  // member is in, the same one More… opens from the features list.
   const parts = (group: string) => {
     const by = new Map<string, Nav[number]['items']>()
     for (const item of (nav.find((g) => g.group === group)?.items ?? []).filter((i) => i.listed !== false)) {
       const key = item.subgroup ?? ''
       by.set(key, [...(by.get(key) ?? []), item])
+    }
+    if (group === 'platform' && inside) {
+      by.set('Organization', [...(by.get('Organization') ?? []), { href: `/settings/features/${inside.id}`, title: 'Features', icon: SquaresFour }])
     }
     const parted = [...by].map(([sub, items]) => ({ sub, items }))
     return parted.sort((a, b) => areas.indexOf(a.sub) - areas.indexOf(b.sub))
@@ -182,7 +190,7 @@
       <a class="leave" href={state.left}><Icon icon={CaretLeft} size="0.8rem" />Back to app</a>
     </div>
     <div class="middle">
-      <p class="label">Settings</p>
+      <p class="heading">Settings</p>
       {@render list()}
     </div>
     {:else}
@@ -270,7 +278,7 @@
           {@render links(run.items)}
         {/if}
       {/each}
-      {#if inside}<a class="more" href="/settings/features/{inside.id}">More…</a>{/if}
+      {#if inside}<a class="more" href="/settings/features/{inside.id}"><Icon icon={Plus} size="0.8rem" />More…</a>{/if}
     </div>
     {/if}
 
@@ -444,11 +452,13 @@
     padding-left: var(--space-1);
     border-left: 1px solid var(--line);
   }
-  /* The circle's features page, after its features: quieter than a
-     collection, as an accordion's name is. */
+  /* The circle's features page, after its features: subtle, no filled
+     background even when it stands current, its + at the row's end. */
   .more {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-1);
     height: 1.9rem;
     margin-top: var(--space-1);
     padding: 0 var(--space-2);
@@ -582,6 +592,16 @@
     font-size: var(--text-2xs);
     font-weight: 500;
     color: var(--text-muted);
+  }
+  /* Settings' own title, standing apart from its subsections (.group):
+     the sidebar's heading, as the co-op's name is the main sidebar's. */
+  .heading {
+    margin: 0;
+    padding: var(--space-2) var(--space-2) var(--space-3);
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: var(--text-md);
+    color: var(--text);
   }
   .label,
   .group {

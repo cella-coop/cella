@@ -145,7 +145,7 @@
   const sorted = $derived(spec.sort ?? fallback)
   const descending = $derived(sorted?.dir === 'desc')
   const orders = $derived([
-    ...(standing ? [] : [{ value: '', label: 'As listed', default: true }]),
+    ...(fallback ? [] : [{ value: '', label: 'As listed', default: !standing }]),
     ...columns.map((c) => ({ value: c.key, label: c.label, default: c.key === standing?.field })),
   ])
   // A field chosen keeps the direction the toggle shows; the collection's

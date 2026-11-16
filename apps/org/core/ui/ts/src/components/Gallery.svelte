@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Column } from '../models/view.ts'
-  import { opens, under } from '../models/query.ts'
+  import { opens, under, type Grouping } from '../models/query.ts'
   import Group from './Group.svelte'
   import Tile from './Tile.svelte'
 
@@ -19,17 +19,30 @@
     titled: Column
     shown: Column[]
     href?: (row: any) => string | undefined
-    group?: { by: Column; counts: Record<string, number>; month?: boolean }
+    group?: Grouping
   } = $props()
 </script>
 
 <ul class="gallery">
   {#each rows as row, i (row.id)}
+    {const value = $derived(group ? under(row, group.by.key, group.month) : '')}
     {#if group && opens(rows, i, group.by.key, group.month)}
-      {const value = $derived(under(row, group.by.key, group.month))}
-      <li class="group"><Group by={group.by} {row} {value} month={group.month} count={group.counts[value] ?? 0} /></li>
+      <li class="group">
+        <Group
+          by={group.by}
+          {row}
+          {value}
+          month={group.month}
+          count={group.counts[value] ?? 0}
+          collapsed={group.collapsed.has(value)}
+          oncollapse={() => group.oncollapse(value)}
+          oncreate={group.oncreate}
+        />
+      </li>
     {/if}
-    <li><Tile {row} {titled} {shown} href={href?.(row)} /></li>
+    {#if !group || !group.collapsed.has(value)}
+      <li><Tile {row} {titled} {shown} href={href?.(row)} /></li>
+    {/if}
   {/each}
 </ul>
 

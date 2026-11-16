@@ -11,8 +11,12 @@
 // the rows in the collection's order within each, as the scenario works
 // them out from the rows themselves; a board draws a column per value. A
 // view saved with its group restores it from its tab, the address alone
-// draws it, and None draws the rows as one again. `SHOTS` names where its
-// screenshots go. Nothing is written. Run by `cella test e2e group`.
+// draws it, and None draws the rows as one again. In a table, a group's
+// bar collapses its own rows alone by its chevron, and its + ("Create
+// in …", never named New) opens New's own dialog (F32). `SHOTS` names
+// where its screenshots go. Nothing is written but what New's cancel
+// undoes. Run
+// by `cella test e2e group`.
 // covers: expense file
 
 import { after, before, test } from 'node:test'
@@ -186,6 +190,31 @@ eachBrowser((browserName, launch) => {
         await visit(`/expenses?view=${layout}&by=&sort=`)
         await grouping('expenses', layout, { key: 'status', label: 'Status' }, byStatus)
       }
+
+      // A table's group header: a bar, its chevron collapsing its own
+      // rows alone, its + opening New (`Group.svelte`, F32).
+      await visit('/expenses?view=table&by=status&sort=')
+      await groups(page, 'expenses', 'table', byStatus, `${browserName}: before collapsing`)
+      const expenseRows = () => page.locator('div.rows:not(:has(> .label)) tbody tr:not(.group)')
+      const bar = page.locator('tr.group').first()
+      const until = async (n: number, at: string) => {
+        let got = -1
+        for (let tries = 0; tries < 40 && got !== n; tries++) {
+          got = await expenseRows().count()
+          if (got !== n) {
+            await page.waitForTimeout(100)
+          }
+        }
+        assert.equal(got, n, at)
+      }
+      const whole = await expenseRows().count()
+      await bar.getByRole('button', { name: /^Hide /, exact: false }).click()
+      await until(whole - byStatus[0].count, `${browserName}: the chevron hides its own group's rows alone`)
+      await bar.getByRole('button', { name: /^Show /, exact: false }).click()
+      await until(whole, `${browserName}: it shows them again`)
+      await bar.getByRole('button', { name: /^Create in /, exact: false }).click()
+      await page.getByRole('dialog', { name: 'New in Expenses' }).waitFor()
+      await page.getByRole('button', { name: 'Cancel' }).click()
 
       // A person, by name.
       const names = Object.fromEntries((await people(app)).map((p) => [p.address, p.name]))

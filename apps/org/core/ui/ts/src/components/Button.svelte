@@ -67,9 +67,11 @@
   .quiet:hover {
     background: var(--hover);
   }
+  /* The one primary action, the site's own ink
+     (`styles/base.css`'s `--primary-fill`, the ink specimen's lead). */
   .primary {
-    background: var(--accent-fill);
-    color: var(--on-accent);
+    background: var(--primary-fill);
+    color: var(--primary-text);
   }
   .primary:hover {
     filter: brightness(0.94);

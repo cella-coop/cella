@@ -1,5 +1,6 @@
 import type { Column, Kind, Prop } from './view.ts'
 import { spans, type Span } from './calendar.ts'
+import { inkOf } from './ink.ts'
 
 // What a collection's rows can be asked: its fields, typed from the columns
 // it declares, and the plain objects a view or a dashboard is made of.
@@ -323,6 +324,28 @@ export const under = (row: Record<string, unknown>, key: string, month = false):
 // or one under another value than the row before it.
 export const opens = (rows: Record<string, unknown>[], i: number, key: string, month = false): boolean =>
   i === 0 || under(rows[i] ?? {}, key, month) !== under(rows[i - 1] ?? {}, key, month)
+
+// A group's header wears its value's own ink, seeded by its name, as a
+// record's icon elsewhere does (`Cell`): none holding no value, a
+// month, or an enumeration with a tone of its own, which keeps its
+// meaning instead; a record chip with none, as a project's, takes the
+// ink even where it is drawn as a badge.
+export const groupTint = (by: Column, value: string, month: boolean): number | null =>
+  by.record && !by.tone && !month && value !== '' ? inkOf(value) : null
+
+// How a list, a feed, a table and a gallery draw the rows grouped by a
+// field: the column and how many rows each value holds across every
+// page, a date's by its month; the values the viewer collapsed, by
+// value, and what collapses one; and, where the collection offers New,
+// what a group's + creates with.
+export interface Grouping {
+  by: Column
+  counts: Record<string, number>
+  month?: boolean
+  collapsed: Set<string>
+  oncollapse: (value: string) => void
+  oncreate?: () => void
+}
 
 // How a collection is looked at: its layout, the conditions on its rows,
 // the text filter, the table's hidden columns and its columns' order (the

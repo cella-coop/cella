@@ -58,6 +58,17 @@ code,
   border-radius: var(--radius-control);
 }
 
+:root {
+  /* The one primary action's ink: the ink specimen's lead, fixed in
+     both themes (`models/ink.ts`'s `ROLES.fill` at `HUES[TURN[0]]`,
+     `--p3`, the brand's blue), checked against it by `_tests/group.test.ts`.
+     Button alone reads it, so a secondary action, a checkbox, a date
+     field's selection and the day the calendar marks today stay as
+     they were. */
+  --primary-fill: oklch(0.52 0.13 237);
+  --primary-text: oklch(0.985 0.004 250);
+}
+
 input,
 textarea,
 button {

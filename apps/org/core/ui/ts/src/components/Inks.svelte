@@ -9,9 +9,11 @@
   // inks would go in the shell, each beside the same thing as the shell
   // draws it today, in both themes side by side, every text on ink with
   // its contrast. Ink marks identity and the one primary action and fills
-  // no surface; the candidate tokens are laid over this page alone
-  // (`models/ink.ts`), so nothing else changes colour until the operator
-  // has reviewed it.
+  // no surface; the operator approved it (09:50, 14 Nov), and the primary
+  // button, group headers, record and area icons, chips and avatars now
+  // wear it for real, across the app. A secondary action as a wash of
+  // it, the selected navigation row and the focus ring stay candidates,
+  // laid over this page alone (`models/ink.ts`) until they land too.
   type Collection = { title: string; icon: Component<any> }
   type Area = { name: string; collections: Collection[] }
   let {
@@ -190,11 +192,13 @@
     flex-wrap: wrap;
     gap: var(--space-2);
   }
-  /* The candidates: a primary button solid in its ink, a secondary a
-     wash of it, read through the roles the buttons already read. */
+  /* The primary button, landed (`styles/base.css`'s `--primary-fill`),
+     reads the same here as it does today; a secondary a wash of the
+     lead ink, read through the roles the buttons already read, still a
+     candidate. */
   .actions.inked {
-    --accent-fill: var(--fill);
-    --on-accent: var(--on-fill);
+    --primary-fill: var(--fill);
+    --primary-text: var(--on-fill);
   }
   .wash {
     display: contents;

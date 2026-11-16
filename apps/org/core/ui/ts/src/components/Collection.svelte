@@ -223,10 +223,12 @@
   const grouped = $derived(columns.find((c) => c.key === grouping({ layout: 'board', by: spec.by }, typed, look)?.key))
   // The field a list, a feed, a table or a gallery groups its rows by,
   // where the view names one: a header over each group's rows, with its
-  // value and how many rows it holds across every page.
+  // value and how many rows it holds across every page, a chevron that
+  // collapses it (`state.collapsed`, `state.toggleGroup`) and, where the
+  // collection offers New, a + that creates in it.
   const group = $derived.by(() => {
     const by = ['list', 'feed', 'table', 'gallery'].includes(spec.layout) && spec.by ? columns.find((c) => c.key === grouping(spec, typed)?.key) : undefined
-    return by && { by, counts: groups, month: by.kind === 'date' }
+    return by && { by, counts: groups, month: by.kind === 'date', collapsed: state.collapsed, oncollapse: (v: string) => state.toggleGroup(v), oncreate: creates.length ? () => create.show() : undefined }
   })
   const opening = (i: number) => !!group && opens(state.shown, i, group.by.key, group.month)
   // The fields the view chooses, in its order, but those a layout always
@@ -368,7 +370,18 @@
 {#snippet head(row: any)}
   {#if group}
     {const value = $derived(under(row, group.by.key, group.month))}
-    <li class="group"><Group by={group.by} {row} {value} month={group.month} count={group.counts[value] ?? 0} /></li>
+    <li class="group">
+      <Group
+        by={group.by}
+        {row}
+        {value}
+        month={group.month}
+        count={group.counts[value] ?? 0}
+        collapsed={group.collapsed.has(value)}
+        oncollapse={() => group.oncollapse(value)}
+        oncreate={group.oncreate}
+      />
+    </li>
   {/if}
 {/snippet}
 
@@ -525,6 +538,7 @@
           {const by = $derived(who.value(row))}
           {#if opening(i)}{@render head(row)}{/if}
           <!-- svelte-ignore a11y_no_noninteractive_tabindex: the keyboard roves the rows, one in the tab order, so a screen reader reads the row it is on -->
+          {#if !group || !group.collapsed.has(under(row, group.by.key, group.month))}
           <li
             class:active={i === state.active}
             tabindex={i === state.stop ? 0 : -1}
@@ -550,6 +564,7 @@
               <span class="when"><Cell value={when.value(row)} kind="date" /></span>
             {/if}
           </li>
+          {/if}
         {/each}
       </ol>
     {:else}
@@ -558,6 +573,7 @@
           {const to = $derived(href?.(row))}
           {#if opening(i)}{@render head(row)}{/if}
           <!-- svelte-ignore a11y_no_noninteractive_tabindex: the keyboard roves the rows, one in the tab order, so a screen reader reads the row it is on -->
+          {#if !group || !group.collapsed.has(under(row, group.by.key, group.month))}
           <li
             class:active={i === state.active}
             tabindex={i === state.stop ? 0 : -1}
@@ -585,6 +601,7 @@
               {/each}
             </span>
           </li>
+          {/if}
         {/each}
       </ul>
     {/if}

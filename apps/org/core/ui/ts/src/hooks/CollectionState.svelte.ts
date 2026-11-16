@@ -1,3 +1,4 @@
+import { SvelteSet } from 'svelte/reactivity'
 import { step, stop } from '../models/keys.ts'
 
 // What a collection's page holds while it is looked at: the text filter
@@ -20,6 +21,11 @@ export class CollectionState {
   // the first value it keeps.
   adding: string | null = $state(null)
   search: HTMLInputElement | undefined = $state()
+  // The groups the viewer collapsed, by value; a reload opens them
+  // again, as a view the address alone draws has no viewer to keep it
+  // for. `SvelteSet`, so adding or deleting a value is itself seen,
+  // which a plain `Set` under `$state` is not.
+  collapsed: SvelteSet<string> = new SvelteSet()
 
   readonly #rows: () => any[]
   readonly #left: () => number
@@ -85,5 +91,15 @@ export class CollectionState {
   enter() {
     this.active = 0
     this.search?.blur()
+  }
+
+  // A group's bar's chevron: its rows show or hide, the other groups'
+  // kept as they are.
+  toggleGroup(value: string) {
+    if (this.collapsed.has(value)) {
+      this.collapsed.delete(value)
+    } else {
+      this.collapsed.add(value)
+    }
   }
 }

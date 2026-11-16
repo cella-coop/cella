@@ -20,7 +20,9 @@
   import { useShell } from '../hooks/useShell.ts'
   import { usePinned } from '../hooks/usePinned.ts'
   import { mark } from '../marks.ts'
+  import { inked, nth } from '../models/ink.ts'
   import type { Search } from '../hooks/CommandState.svelte.ts'
+  import Avatar from './Avatar.svelte'
   import Command from './Command.svelte'
   import DemoBanner from './DemoBanner.svelte'
   import Icon from './Icon.svelte'
@@ -103,7 +105,6 @@
     nav.flatMap((g) => g.items.filter((i) => g.group !== 'platform' || i.listed !== false).map((i) => ({ title: i.title, href: i.href, kind: g.group }))),
   )
   const here = (href: string) => page.url.pathname === href || page.url.pathname.startsWith(`${href}/`)
-  const initials = (name: string) => name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('')
   const back = $derived(page.url.pathname + page.url.search)
   // Whether a pin's address is the page open, a bare `?` as none.
   const opened = (href: string) => href.replace(/\?$/, '') === back
@@ -171,12 +172,12 @@
 </svelte:head>
 
 <!-- Collections, each its icon, its title and its count where it has one. -->
-{#snippet links(items: Items)}
+{#snippet links(items: Items, ink?: number)}
   <ul>
     {#each items as item (item.href)}
       <li>
         <a href={item.href} class:on={here(item.href)} aria-current={here(item.href) ? 'page' : undefined}>
-          <Icon icon={item.icon} />{item.title}
+          <span class="glyph" class:inked={ink !== undefined} style={ink !== undefined ? inked(ink) : undefined}><Icon icon={item.icon} /></span>{item.title}
           {#if item.count}<span class="count" aria-label="{item.count} waiting">{item.count}</span>{/if}
         </a>
       </li>
@@ -274,7 +275,7 @@
          icon, open, its collections indented on a guide line; a run under
          none listed flat. More… opens the circle's features page. -->
     <div class="middle">
-      {#each features as run}
+      {#each features as run, k}
         {#if run.group}
           {const key = $derived(`feature:${run.group}`)}
           {const open = $derived(state.expanded(key, holds(run.items)))}
@@ -283,9 +284,9 @@
             <span class="caret"><Icon icon={open ? CaretDown : CaretRight} size="0.7rem" /></span>
             {#if !open && waits(run.items)}<span class="dot" aria-label="{waits(run.items)} waiting in {run.group}"></span>{/if}
           </button>
-          {#if open}<div class="tree">{@render links(run.items)}</div>{/if}
+          {#if open}<div class="tree">{@render links(run.items, nth(k))}</div>{/if}
         {:else}
-          {@render links(run.items)}
+          {@render links(run.items, nth(k))}
         {/if}
       {/each}
       {#if inside}<a class="more" href="/settings/features/{inside.id}"><Icon icon={Plus} size="0.8rem" />More…</a>{/if}
@@ -297,7 +298,7 @@
     <div class="account">
       <Popover label="Account: {actor?.name ?? 'no one signed in'}" side="top" wide>
         {#snippet trigger()}
-          <span class="avatar" aria-hidden="true">{actor ? initials(actor.name) : '–'}</span>
+          {#if actor}<Avatar name={actor.name} size="1.5rem" />{:else}<span class="avatar" aria-hidden="true">–</span>{/if}
           <span class="names">
             <b>{actor?.name ?? 'No one signed in'}</b>
           </span>
@@ -653,6 +654,16 @@
     background: var(--hover);
     color: var(--text);
     font-weight: 500;
+  }
+  /* A feature's run takes its collections' icons in the turn's ink
+     (`nth`), as the ink specimen's nav proposes; Settings' and the
+     home rows stay plain. */
+  .glyph {
+    display: inline-flex;
+    flex: none;
+  }
+  .glyph.inked {
+    color: var(--mark);
   }
   /* How many rows wait: a small pill, quiet beside its name. */
   .count {

@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Kind, Tone } from '../models/view.ts'
   import { show } from '../models/format.ts'
+  import { inked, inkOf } from '../models/ink.ts'
   import { useShell } from '../hooks/useShell.ts'
   import Badge from './Badge.svelte'
   import Icon from './Icon.svelte'
@@ -8,21 +9,23 @@
 
   // A value as a cell, a card's field or a property draws it. One that
   // names a record, of the collection `record` names, wears that
-  // collection's icon before it; a person is always one of `people`.
+  // collection's icon before it, in the record's own ink
+  // (`models/ink.ts`'s `inkOf`); a person is always one of `people`.
   let { value, kind = 'text', tone, record }: { value: unknown; kind?: Kind; tone?: Tone; record?: string } = $props()
   const text = $derived(show(value, kind))
   const shell = useShell()
   // A circle's id is drawn as its name, where the member reads it.
   const shown = $derived(kind === 'circle' ? (shell.circle(text) ?? text) : text)
   const icon = $derived(text === '—' ? undefined : shell.icon(record ?? (kind === 'person' ? 'people' : undefined)))
+  const tint = $derived(icon && record ? inkOf(shown) : null)
 </script>
 
 {#snippet mark()}
-  {#if icon}<span class="mark"><Icon {icon} size="1em" /></span>{/if}
+  {#if icon}<span class="mark" class:inked={tint !== null} style={tint !== null ? inked(tint) : undefined}><Icon {icon} size="1em" /></span>{/if}
 {/snippet}
 
 {#if kind === 'badge' && text !== '—'}
-  <Badge tone={tone ?? 'neutral'} {icon}>{text}</Badge>
+  <Badge tone={tone ?? 'neutral'} {icon} ink={record ? inkOf(shown) : undefined}>{text}</Badge>
 {:else if kind === 'person' && text !== '—'}
   <span class="record">{@render mark()}<Person address={text} /></span>
 {:else if icon}
@@ -43,6 +46,9 @@
     display: inline-flex;
     flex: none;
     color: var(--text-muted);
+  }
+  .mark.inked {
+    color: var(--mark);
   }
   .cell {
     overflow: hidden;

@@ -43,6 +43,7 @@
     actor,
     dev,
     demo = false,
+    copy = 0,
     theme,
     outcome,
     source,
@@ -60,6 +61,8 @@
     dev: boolean
     // A demo build, whose banner every page wears.
     demo?: boolean
+    // A visitor's copy of the demo: the seconds idle before it resets.
+    copy?: number
     theme: Theme
     outcome: Done | null
     // What the command menu searches, read by the shell's query.
@@ -317,7 +320,7 @@
   <main class="main">
     {@render children()}
     {#if demo}
-      <DemoBanner floating />
+      <DemoBanner floating {copy} />
     {/if}
     {#if dev}
       <!-- Dev mode, where anyone signs in as a fixture member: a watermark

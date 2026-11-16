@@ -28,11 +28,11 @@
 <!-- Signed in, the shell; before, the pages a person reaches first, the
      sign-in and an invitation's link, alone. -->
 {#if data.actor}
-  <Shell scope={data.scope} nav={nav(data.counts, data.waiting)} actor={data.actor} dev={data.dev} demo={data.demo} theme={data.theme} outcome={writes.done} source={index} drawer={data.drawer} kept={data.sections} people={data.people} circles={data.circles} lens={data.lens}>
+  <Shell scope={data.scope} nav={nav(data.counts, data.waiting)} actor={data.actor} dev={data.dev} demo={data.demo} copy={data.copy} theme={data.theme} outcome={writes.done} source={index} drawer={data.drawer} kept={data.sections} people={data.people} circles={data.circles} lens={data.lens}>
     {@render children()}
   </Shell>
 {:else}
-  <Gate scope={data.scope} demo={data.demo}>
+  <Gate scope={data.scope} demo={data.demo} copy={data.copy}>
     {@render children()}
   </Gate>
 {/if}

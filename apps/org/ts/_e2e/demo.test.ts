@@ -16,7 +16,7 @@ import { Shell } from './serve.ts'
 const su = new pg.Client()
 const shell = new Shell(su)
 const camille = 'camille@lanterne.example'
-const banner = 'Nothing here is real.'
+const banner = "This is a prototype environment for demo purposes and can't be used for real work."
 
 before(async () => {
   await su.connect()

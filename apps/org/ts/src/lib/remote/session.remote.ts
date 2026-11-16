@@ -5,7 +5,7 @@ import { scope } from '@cella/org-log/api'
 import { safe } from '#lib/server/back.ts'
 import { shell as call } from '#lib/server/calls.ts'
 import { using } from '#lib/server/db.ts'
-import { demo, dev, fixtures } from '#lib/server/device.ts'
+import { copy, demo, dev, fixtures } from '#lib/server/device.ts'
 import { answered, proof, relay } from '#lib/server/relay.ts'
 import { keep } from '#lib/server/session.ts'
 import { joining } from '#lib/server/slices.ts'
@@ -18,7 +18,8 @@ import { answer, poster } from './write.ts'
 // What the shell around every page reads, as the root layout awaits it,
 // read again after a write that took or reached a verdict, as its counts
 // may have moved: with the theme the viewer wears, whether the dev server
-// or a demo build serves it, and whether the viewer left the drawer open,
+// or a demo build serves it, a visitor's copy with the seconds idle
+// before it resets, and whether the viewer left the drawer open,
 // which the shell's toggle keeps in a cookie. Signed out, the scope and
 // whether it is a demo's, which the sign-in page and an invitation's link
 // wear.
@@ -27,6 +28,7 @@ export const shell = query(() =>
     ...(await call.run(db, who)),
     dev,
     demo,
+    copy,
     theme: getRequestEvent().locals.theme,
     drawer: who.cookies.get('cella-drawer') !== 'closed',
     sections: (who.cookies.get('cella-sections') ?? '').slice(0, 600),

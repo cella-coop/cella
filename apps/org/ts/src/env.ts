@@ -22,6 +22,11 @@ export const variables = defineEnvVars({
       'Demo mode: "1" lets a production build\'s sign-in offer the fixture members, each marked as a demo member, whose TEST-ONLY device keys the browser derives, and puts the demo\'s banner on every page. `cella serve --prod --demo` and the NixOS module\'s demo option set it, on a demo scope alone: never a real co-op\'s.',
     schema: (v) => v === '1',
   },
+  CELLA_DEMO_IDLE: {
+    description:
+      "A visitor's copy of the demo, as `cella demo serve` starts each: how many seconds with no request before the copy resets, which the demo's banner counts down beside its Reset now. Unset, a demo that is no visitor's copy, with neither.",
+    schema: (v) => (v ? whole(v, 'CELLA_DEMO_IDLE') : 0),
+  },
   CELLA_SESSION_KEY_FILE: {
     description: 'The 32-byte key the server MACs its sessions with. Unset, a fresh key per process, whose sessions end with it.',
     schema: (v) => v || undefined,

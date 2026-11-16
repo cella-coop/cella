@@ -35,9 +35,34 @@ GRANT INSERT (id, name, purpose) ON circle.circle TO cella_app;
 GRANT UPDATE (name, purpose, procedure) ON circle.circle TO cella_app;
 
 -- A role is made by motion, `circle:role:make`, in a circle or in every
--- working circle (`*`), with its id, name, duty and cap; and amended by
+-- working circle (`*`), with its name, duty and cap, its id taken from
+-- its name as it is made (`circle.role_key`); and amended by
 -- motion, `circle:role:amend`, its name, duty or cap, from the verdict
 -- date, its id and circle never, so its tenures and mandates stay its own.
 -- The app makes a role's grantee with it, through the trigger.
 GRANT INSERT (id, circle, name, duty, holders) ON circle.role TO cella_app;
 GRANT UPDATE (name, duty, holders) ON circle.role TO cella_app;
+
+-- The key a name gives a role: in lower case, its accents dropped, each
+-- run of anything but a letter or a digit one hyphen, from its first
+-- letter, as `print-buyer` from Print buyer; `role` where it has none.
+CREATE FUNCTION circle.keyed(name text) RETURNS text
+LANGUAGE sql IMMUTABLE
+RETURN coalesce(nullif(regexp_replace(regexp_replace(
+  regexp_replace(lower(normalize(coalesce(keyed.name, ''), NFD)), '[^a-z0-9]+', '-', 'g'),
+  '^[^a-z]+', ''), '-+$', ''), ''), 'role');
+
+-- The id a role named `name` takes as it is made: its key
+-- (`circle.keyed`), with `-2`, `-3` and on after it where a circle or a
+-- role already holds that key, since circles and roles share one.
+CREATE FUNCTION circle.role_key(name text) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT k.id FROM (
+    SELECT n, CASE n WHEN 1 THEN circle.keyed(role_key.name) ELSE circle.keyed(role_key.name) || '-' || n END AS id
+    FROM generate_series(1, (SELECT count(*)::int FROM circle.grantee) + 1) n
+  ) k
+  WHERE NOT EXISTS (SELECT FROM circle.grantee g WHERE g.id = k.id)
+  ORDER BY k.n
+  LIMIT 1;
+END;

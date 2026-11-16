@@ -1,26 +1,27 @@
 // A circle's roles made and changed by motion, end to end on a seeded
 // Lanterne. Through the handlers, the proposals to make or change a role
 // are refused at the proposal, each naming the role, the value read and
-// the fix: a circle there is not, a term no role has, an id not in lower
-// case, an id a circle or a role holds, one an earlier action of the
-// motion makes, no name, a name another role of the circle has, a cap
+// the fix: a circle there is not, a term no role has, an id given, which
+// the make takes from the name, no name, a name another role of the circle has, a cap
 // that is no whole count above none, a cap below the role's holders on
 // the day, `participant`, a change that changes nothing, lifting the cap
 // of a role with none among them, Web making its own role, and
 // coordination making a role of every working circle. The assembly makes
-// an Editor role in Web and seats Léa in it by the same motion, then
-// changes its duty and cap, each entry saying what it carried and what it
-// was. Then in every browser, light and dark, through the dev server:
-// Camille opens Web's Settings tab, presses Add a role…, and in the
-// dialog types a new role's name, its id following it, its duty and its
-// cap, and proposes it to the assembly: one motion making the role with
-// all of them; she empties the Editor role's cap and presses Enter, and
+// an Editor role in Web and seats Léa in it by the same motion, and a
+// Brand role, whose key the Brand circle holds, made as brand-2, then
+// changes the Editor's duty and cap, each entry saying what it carried
+// and what it was. Then in every browser, light and dark, through the
+// dev server: Camille opens Web's Settings tab, presses Add a role…, and
+// in the dialog, which asks for no id, types a new role's name, its duty
+// and its cap, and proposes it to the assembly: one motion making the
+// role with all of them; she empties the Editor role's cap and presses Enter, and
 // proposes the motion the dialog offers lifting it, its cap given as
 // none; then on the assembly's Settings tab she
 // lowers the Member role's cap below its holders, and the dialog shows the
 // guard's refusal before anything is proposed. Last, the first motion
 // lifting the Editor's cap carries, and the role reads uncapped, its entry
-// carrying the cap as none. `SHOTS` names where its screenshots go. Run
+// carrying the cap as none, and a role she proposed carries, made under
+// the id its name gives. `SHOTS` names where its screenshots go. Run
 // by `cella test e2e roles`.
 // covers: membership-motion motion
 
@@ -41,6 +42,9 @@ const shots = process.env.SHOTS ?? '/tmp/cella-roles-shots'
 const camille = 'camille@lanterne.example'
 const lea = 'lea@lanterne.example'
 let today = '2026-11-09'
+// The roles the Settings tab proposed by name alone, each with the id its
+// name gives.
+const proposed: { role: string; id: string }[] = []
 
 async function on(date: string) {
   today = date
@@ -102,22 +106,16 @@ after(async () => {
 
 test('a role made or changed is refused at its proposal, naming the role, the value read and the fix', async () => {
   const refused = async (actions: Action[], circle?: string) => reason(await moving(actions, circle))
-  const make = (args: Record<string, string | number>) => ({ kind: 'role', args: { circle: 'web', id: 'editor', name: 'Editor', ...args } })
+  const make = (args: Record<string, string | number>) => ({ kind: 'role', args: { circle: 'web', name: 'Editor', ...args } })
   const change = (args: Record<string, string | number | null>) => ({ kind: 'amend-role', args })
   assert.match(await refused([make({ circle: 'nowhere' })]), /no circle nowhere: a role is made in a circle there is, by its id, or in every working circle, \*/)
-  assert.match(await refused([make({ circle: 'web', seats: 2 })]), /a role is made with its circle, id, name, duty and cap, not its seats/)
-  assert.match(await refused([make({ id: 'Editor' })]), /a role is made with an id in lower case, as editor, not Editor/)
-  assert.match(await refused([make({ id: 'brand' })]), /a circle brand is there already, and circles and roles share one key: give the new role another id/)
-  assert.match(await refused([make({ id: 'lead' })]), /a role lead is there already, and circles and roles share one key: give the new role another id/)
-  assert.match(
-    await refused([{ kind: 'circle', args: { id: 'editor', name: 'Editors' } }, make({})]),
-    /an earlier action of .* makes a circle editor: give the new role another id/,
-  )
-  assert.match(await refused([{ kind: 'role', args: { circle: 'web', id: 'editor' } }]), /the editor role is made with no name: give it a name/)
-  assert.match(await refused([make({ name: ' ' })]), /the editor role is given a blank name: give it a name/)
+  assert.match(await refused([make({ circle: 'web', seats: 2 })]), /a role is made with its circle, name, duty and cap, not its seats/)
+  assert.match(await refused([make({ id: 'editor' })]), /a role is made with its circle, name, duty and cap, not its id, which it takes from its name/)
+  assert.match(await refused([{ kind: 'role', args: { circle: 'web' } }]), /a role is made with no name: give it a name/)
+  assert.match(await refused([make({ name: ' ' })]), /the new role is given a blank name: give it a name/)
   assert.match(
     await refused([make({ name: ' circle lead ' })]),
-    /the lead role is named Circle lead already in every working circle: give the editor role a name no other role of web has/,
+    /the lead role is named Circle lead already in every working circle: give the circle-lead role a name no other role of web has/,
   )
   assert.match(await refused([make({ holders: 0 })]), /0 is no cap: give the editor role a whole count of holders above none, or no cap/)
   assert.match(await refused([make({})], 'web'), /web may not decide about web: put the editor role to the assembly, or to another circle holding amend-circle/)
@@ -148,15 +146,24 @@ test('a role made or changed is refused at its proposal, naming the role, the va
 test('the assembly makes an Editor role in Web and seats Léa in it by one motion, then changes its duty and cap', async () => {
   const { motion } = settled(
     await moving([
-      { kind: 'role', args: { circle: 'web', id: 'editor', name: 'Editor', duty: 'edits the studio\'s copy', holders: 1 } },
+      { kind: 'role', args: { circle: 'web', name: 'Editor', duty: 'edits the studio\'s copy', holders: 1 } },
       { kind: 'seat', args: { circle: 'web', member: lea, role: 'editor' } },
+      { kind: 'role', args: { circle: 'web', name: 'Brand', duty: 'keeps the studio\'s brand' } },
     ]),
   ) as { motion: string }
   const out = await decided(motion)
   assert.deepEqual(states(out), [
     ['circle:role:make', 'settled', ''],
     ['circle:seat:add', 'settled', ''],
+    ['circle:role:make', 'settled', ''],
   ])
+  assert.deepEqual(
+    await one(`SELECT id, circle FROM circle.role WHERE name = 'Brand'`),
+    { id: 'brand-2', circle: 'web' },
+    'a name whose key the Brand circle holds takes the -2 suffix',
+  )
+  const suffixed = await one<{ p: Record<string, unknown> }>(`SELECT cella.opened($1) AS p`, [out[2].entry])
+  assert.equal(suffixed.p.role, 'brand-2', 'its entry carries the id it took')
   assert.deepEqual(await one(`SELECT circle, name, duty, holders FROM circle.role WHERE id = 'editor'`), {
     circle: 'web',
     name: 'Editor',
@@ -209,17 +216,18 @@ eachBrowser((name, launch) => {
             `${at}: the dialog says why her write makes nothing`,
           )
           await fresh.getByLabel('Name').fill(role)
-          assert.equal(await fresh.getByLabel('Id').inputValue(), id, `${at}: its id is the name in lower case`)
+          assert.equal(await fresh.getByLabel('Id').count(), 0, `${at}: the dialog asks for no id`)
           await fresh.getByLabel('Duty').fill('grants access to the studio\'s tools')
           await fresh.getByLabel('Cap').fill('1')
           await page.screenshot({ path: `${shots}/roles-${name}-${scheme}.png`, fullPage: true })
           await fresh.getByRole('button', { name: 'Propose to Assembly' }).click()
           await fresh.waitFor({ state: 'hidden' })
           assert.deepEqual(
-            await all(`SELECT d.circle, d.title, m.args FROM motion.motion d JOIN motion.action m ON m.motion = d.id WHERE m.kind = 'role' AND m.args ->> 'id' = $1`, [id]),
-            [{ circle: 'ag', title: `Make the ${role} role in Web`, args: { circle: 'web', id, name: role, duty: 'grants access to the studio\'s tools', holders: 1 } }],
-            `${at}: one motion of the assembly makes the role in Web, its name, duty and cap`,
+            await all(`SELECT d.circle, d.title, m.args FROM motion.motion d JOIN motion.action m ON m.motion = d.id WHERE m.kind = 'role' AND m.args ->> 'name' = $1`, [role]),
+            [{ circle: 'ag', title: `Make the ${role} role in Web`, args: { circle: 'web', name: role, duty: 'grants access to the studio\'s tools', holders: 1 } }],
+            `${at}: one motion of the assembly makes the role in Web, its name, duty and cap, and no id`,
           )
+          proposed.push({ role, id })
 
           const dialog = page.getByRole('dialog', { name: 'Assembly changes it by motion' })
           await editor.getByLabel('Cap').fill('')
@@ -285,4 +293,13 @@ test('the motion the Settings tab proposed carries and lifts the Editor role\'s 
     reason(await moving([{ kind: 'amend-role', args: { role: 'editor', holders: null } }])),
     /the amendment of the editor role changes nothing: it is named Editor, capped at no count/,
   )
+})
+
+test('a role the Settings tab proposed by its name alone is made under the id its name gives', async () => {
+  const [first] = proposed
+  assert.ok(first, 'the Settings tab proposed a role')
+  const making = await one<{ motion: string }>(`SELECT motion FROM motion.action WHERE kind = 'role' AND args ->> 'name' = $1`, [first.role])
+  const out = await decided(making.motion)
+  assert.deepEqual(states(out), [['circle:role:make', 'settled', '']])
+  assert.deepEqual(await one(`SELECT id, circle FROM circle.role WHERE name = $1`, [first.role]), { id: first.id, circle: 'web' }, 'its id is its name in lower case')
 })

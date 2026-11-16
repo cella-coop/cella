@@ -120,9 +120,9 @@ export interface Duties {
 }
 
 // A role to make in a circle, or in every working circle (`*`), by the
-// motion that makes it, which the write cites; no cap, uncapped.
+// motion that makes it, which the write cites; no cap, uncapped. It names
+// no id: the make takes one from its name (`circle.role_key`).
 export interface Make {
-  id: string
   circle: string
   name: string
   duty: string

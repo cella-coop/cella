@@ -285,7 +285,7 @@ test('24 October: the assembly and coordination put their motions, which are dis
     { kind: 'circle', args: { id: 'design', name: 'Design', purpose: 'product and service design' } },
     { kind: 'seat', args: { circle: 'design', member: sofia } },
     { kind: 'amend-circle', args: { circle: 'web', purpose: 'the studio\'s websites' } },
-    { kind: 'role', args: { circle: 'web', id: 'editor', name: 'Editor', duty: 'edits the studio\'s copy', holders: 1 } },
+    { kind: 'role', args: { circle: 'web', name: 'Editor', duty: 'edits the studio\'s copy', holders: 1 } },
     { kind: 'seat', args: { circle: 'web', member: sofia, role: 'editor' } },
     { kind: 'amend-role', args: { role: 'print-buyer', duty: 'orders Brand\'s print and paper' } },
     { kind: 'policy', args: { kind: 'rule', wording: capitalRule(20), replaces: founding } },

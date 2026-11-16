@@ -64,7 +64,7 @@ const writes: Record<string, { op: Permission; run: (a: Args, motion: string, de
   role: {
     op: 'circle:role:make',
     run: (a, motion, deps) =>
-      make({ id: String(a.id), circle: String(a.circle), name: String(a.name), duty: text(a.duty) ?? '', holders: count(a.holders), motion }, deps),
+      make({ circle: String(a.circle), name: String(a.name), duty: text(a.duty) ?? '', holders: count(a.holders), motion }, deps),
   },
   // A cap the motion leaves out stays as it was; one it gives as none
   // lifts the role's.

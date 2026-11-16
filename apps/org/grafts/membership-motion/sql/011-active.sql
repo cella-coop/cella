@@ -63,7 +63,7 @@ BEGIN ATOMIC
              ) AS made,
              EXISTS (
                SELECT FROM motion.action o
-               WHERE o.motion = m.motion AND o.n < m.n AND o.kind = 'role' AND o.args ->> 'id' = m.args ->> 'role'
+               WHERE o.motion = m.motion AND o.n < m.n AND o.kind = 'role' AND circle.role_key(o.args ->> 'name') = m.args ->> 'role'
                  AND o.args ->> 'circle' IN (m.args ->> 'circle', '*')
              ) AS role_made
       FROM motion.action m

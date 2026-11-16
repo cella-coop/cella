@@ -7,8 +7,9 @@
   // since only a motion makes or changes a role: a term's edit, as it
   // commits, opens the dialog proposing an `amend-role` motion of the
   // circle that decides about it, prefilled with what was typed; a new
-  // role is composed whole in a dialog, its name, id, duty and cap, and
-  // proposed as one `role` motion.
+  // role is composed whole in a dialog, its name, duty and cap, and
+  // proposed as one `role` motion, its id taken from its name as it is
+  // made.
   let { data }: { data: OnCircle | null; id: string } = $props()
 
   const amending = $derived(data?.amending)
@@ -33,19 +34,10 @@
       },
     })
 
-  // A new role's id, from the name typed: in lower case, as `editor`.
-  const id = (name: string) =>
-    name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^[^a-z]+|-+$/g, '')
-
   // The new role's terms, which one `role` motion makes in this circle;
-  // its id follows its name until it is typed.
+  // no id, which the make takes from its name.
   const fresh: Composed[] = [
     { name: 'name', label: 'Name' },
-    { name: 'id', label: 'Id', from: (typed) => id(typed.name ?? '') },
     { name: 'duty', label: 'Duty', rows: 2 },
     { name: 'holders', label: 'Cap', type: 'number' },
   ]

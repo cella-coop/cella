@@ -1,6 +1,6 @@
 +++
 title = "Circle"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 Core's circles: the co-op's structure and the authority that flows

@@ -1,6 +1,6 @@
 +++
 title = "membership-motion"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 What a motion decides of a membership: admitting someone invited,

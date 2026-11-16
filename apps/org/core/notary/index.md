@@ -1,6 +1,6 @@
 +++
 title = "Notary"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 The `cella` Postgres extension (pgrx, Postgres 18): the notary and the guard primitives as SQL, in schema `cella`. Every item is a thin wrapper over `cella-guards` (`core/guards/rs`) with no logic of its own, and the whole SQL surface is declared in one file, `rs/src/surface.rs`, whose header lists it; `rs/src/notary.rs` is the SPI plumbing `submit` and `verify_log` need.
@@ -211,6 +211,8 @@ The library is loaded through `shared_preload_libraries` so its settings exist b
 ## Build
 
 `cella ext build` packages it with `cargo pgrx package` into `.data/ext`; Postgres 18's `extension_control_path` and `dynamic_library_path` load it there, since the Nix store is read-only. The devshell provides cargo-pgrx, `pg_config`, the server headers and bindgen's libclang flags, so `cargo check --workspace` builds it too.
+
+A host takes it from the flake instead, as `cella-pg`: cargo-pgrx builds it in the Nix sandbox for Postgres 18, in release, from the Rust workspace alone, and lays it out as `postgresql.withPackages` takes an extension, its library, its control file, the generated script and every script of `rs/sql/` beside it. Its flake check preloads it in a fresh cluster, makes it, reads `cella.verdict_date()`, and updates a database made at the version before to this one ([packaging](../../../../_corpus/doc/operations.md#packaging)).
 
 The extension's version is its own, `version` in `rs/Cargo.toml` (0.13.0), and changes with every change to its SQL. `rs/sql/` keeps each earlier version's install script, as pgrx generated it, and the upgrade script from it, `cella--<from>--<to>.sql`, written by hand; `cella ext build` stages them all beside the generated one, since pgrx stages only the upgrade scripts and an earlier version installs from its own; an org migration appended to `sql/` then runs `ALTER EXTENSION cella UPDATE`, so a database keeps its log, its receipts and its vault through every change of the notary, never `DROP EXTENSION`, which `cella check feats` refuses in every `sql/` directory, this one's with the slices' ([operations](../../../../_corpus/doc/operations.md#upgrades)). An upgrade script never drops a function a guard may call: a guard whose body is SQL-standard (`BEGIN ATOMIC`) holds what it calls by its oid, so Postgres refuses the drop. It renames the function instead, which keeps its oid and so every body that calls it, and rebinds it to the new library's symbol with `CREATE OR REPLACE`, as `cella--0.5.0--0.6.0.sql` does with `cella.op()`, now `cella.action()`. A fresh install makes no head row, so a dump of the head restores into one.
 

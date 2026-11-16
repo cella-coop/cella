@@ -102,6 +102,73 @@
       # whose version is the shell's playwright-core's.
       browsers = pkgs: pkgs.playwright-driver.browsers;
 
+      lib = nixpkgs.lib;
+      cargoToml = file: (builtins.fromTOML (builtins.readFile file)).package;
+
+      # The Rust workspace alone, its manifests and every `rs/` package under
+      # apps/ (the workspace's `apps/**/rs`), so a change elsewhere never
+      # rebuilds the extension or the CLI.
+      rsDirs =
+        let
+          walk = dir:
+            lib.concatLists (lib.mapAttrsToList
+              (name: type:
+                if type != "directory" || builtins.elem name [ "ts" "sql" "node_modules" "fixtures" "_tests" "_e2e" ] then [ ]
+                else if name == "rs" && builtins.pathExists (dir + "/rs/Cargo.toml") then [ (dir + "/rs") ]
+                else walk (dir + "/${name}"))
+              (builtins.readDir dir));
+        in
+        walk ./apps;
+      rustSrc = lib.fileset.toSource {
+        root = ./.;
+        fileset = lib.fileset.unions ([ ./Cargo.toml ./Cargo.lock ] ++ rsDirs);
+      };
+      # The extension's: the workspace without the CLI's code, only its
+      # manifest, so a change to the CLI never rebuilds the notary; its
+      # targets are stubbed empty for cargo to load the workspace.
+      pgSrc = lib.fileset.toSource {
+        root = ./.;
+        fileset = lib.fileset.unions ([ ./Cargo.toml ./Cargo.lock ./apps/org/rs/Cargo.toml ]
+          ++ lib.filter (d: d != ./apps/org/rs) rsDirs);
+      };
+
+      # The notary's version before this one: the one its upgrade script
+      # in `rs/sql/` updates from.
+      notaryPrevious =
+        let
+          version = (cargoToml ./apps/org/core/notary/rs/Cargo.toml).version;
+          froms = lib.concatMap
+            (name: let m = builtins.match "cella--(.*)--${lib.escapeRegex version}\\.sql" name; in if m == null then [ ] else m)
+            (builtins.attrNames (builtins.readDir ./apps/org/core/notary/rs/sql));
+        in
+        builtins.head froms;
+
+      # The notary as a Postgres 18 extension: the shared library cargo-pgrx
+      # builds in the sandbox, its control file and its SQL, with every
+      # script of the notary's `rs/sql/` beside the one pgrx generates, as
+      # `cella ext build` stages them, so an earlier version installs from
+      # its own script and every upgrade path is there. Laid out as
+      # `postgresql.withPackages` takes an extension.
+      cellaPg = pkgs: pkgs.buildPgrxExtension {
+        pname = "cella";
+        inherit (cargoToml ./apps/org/core/notary/rs/Cargo.toml) version;
+        src = pgSrc;
+        cargoLock.lockFile = ./Cargo.lock;
+        postPatch = ''
+          mkdir -p apps/org/rs/src
+          touch apps/org/rs/src/lib.rs apps/org/rs/src/main.rs
+        '';
+        inherit (pkgs) cargo-pgrx;
+        postgresql = pkgs.postgresql_18;
+        buildAndTestSubdir = "apps/org/core/notary/rs";
+        # Its tests run on a cluster pgrx makes: `cella test notary`.
+        doCheck = false;
+        postInstall = ''
+          cp apps/org/core/notary/rs/sql/*.sql $out/share/postgresql/extension/
+        '';
+        meta.description = "The cella Postgres extension: the notary and the guard primitives";
+      };
+
       # cella runs from the checkout it is called in: cargo rebuilds it after
       # a change and execs it directly otherwise.
       wrapper = pkgs: pkgs.writeShellApplication {
@@ -131,6 +198,7 @@
       packages = each (pkgs: rec {
         cella = wrapper pkgs;
         duckdb = duckdb2 pkgs;
+        cella-pg = cellaPg pkgs;
         default = cella;
       });
 
@@ -154,12 +222,40 @@
         };
       });
 
-      # The feat check's tree, without its SQL boundaries, which need the npm
-      # install: `cella check feats --no-sql`, the one part of `cella check`
-      # that runs in the sandbox. Per-feat checks, each built from its own
-      # directory and its ancestors' cores (lib.fileset), join this once
-      # feats hold code.
       checks = each (pkgs: {
+        # The extension as a host loads it: Postgres 18 with `cella-pg`
+        # preloaded makes it at its default version and reads the verdict
+        # date; a second database makes it at the version before and
+        # updates it, as a scope upgrades by its upgrade script.
+        cella-pg = pkgs.runCommand "cella-pg-check" {
+          nativeBuildInputs = [ (pkgs.postgresql_18.withPackages (_: [ (cellaPg pkgs) ])) ];
+        } ''
+          export PGDATA=$TMPDIR/pg PGHOST=$TMPDIR PGUSER=postgres
+          initdb -A trust -U postgres > /dev/null
+          cat >> $PGDATA/postgresql.conf <<CONF
+          shared_preload_libraries = 'cella'
+          listen_addresses = '''
+          unix_socket_directories = '$TMPDIR'
+          CONF
+          pg_ctl -w -l $TMPDIR/log start > /dev/null
+          q() { psql -X -q -t -A -v ON_ERROR_STOP=1 "$@"; }
+          q -d postgres -c "CREATE EXTENSION cella"
+          version=$(q -d postgres -c "SELECT extversion FROM pg_extension WHERE extname = 'cella'")
+          [ "$version" = "${(cellaPg pkgs).version}" ] || { echo "cella is at $version"; exit 1; }
+          q -d postgres -c "SELECT cella.verdict_date()"
+          createdb upgraded
+          q -d upgraded -c "CREATE EXTENSION cella VERSION '${notaryPrevious}'" -c "ALTER EXTENSION cella UPDATE"
+          updated=$(q -d upgraded -c "SELECT extversion FROM pg_extension WHERE extname = 'cella'")
+          [ "$updated" = "$version" ] || { echo "cella updated to $updated, not $version"; exit 1; }
+          pg_ctl -w stop > /dev/null
+          echo "cella $version loads, and updates from ${notaryPrevious}" > $out
+        '';
+
+        # The feat check's tree, without its SQL boundaries, which need the
+        # npm install: `cella check feats --no-sql`, the one part of `cella
+        # check` that runs in the sandbox. Per-feat checks, each built from
+        # its own directory and its ancestors' cores (lib.fileset), join
+        # this once feats hold code.
         feat-check = pkgs.runCommand "feat-check" {
           nativeBuildInputs = [ pkgs.nodejs pkgs.cargo ];
         } ''

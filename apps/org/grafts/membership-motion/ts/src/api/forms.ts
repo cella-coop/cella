@@ -202,6 +202,13 @@ export async function basket(form: Form, db: Db): Promise<Propose> {
     } else if (page === 'features' && group[0]!.field === 'features') {
       actions.push({ kind: 'arrange-features', args: { circle: id, features: group.at(-1)!.value } })
     } else if (page === 'rules') {
+      // A circle's settings are ruled by the circle that decides them, so
+      // a motion of any other circle would word the rule as its own and
+      // set its own setting, not the one the change was made on.
+      const now = await ruling(db, id)
+      if (now && now.decider.circle !== form.get('circle')) {
+        throw new Error(`${now.decider.name} decides ${id}'s settings: propose them in a motion of ${now.decider.name}`)
+      }
       actions.push(...(await rules(given, id, db)))
     } else {
       throw new Error(`${group[0]!.field} on the ${page} page is not proposed by motion here: propose it from its own page`)

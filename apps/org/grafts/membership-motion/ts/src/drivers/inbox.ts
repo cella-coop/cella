@@ -8,7 +8,7 @@ export const mentions: Read = {
   sql: `SELECT 'mention/' || x.message AS id, 'mention' AS kind,
                coalesce(ap.name, x.author) || ' mentioned you on ' || d.title AS what, d.id AS about,
                to_char(x.at, 'YYYY-MM-DD') AS since, NULL::text AS due,
-               '/motions/' || d.id || '?tab=discussion' AS href, x.message
+               '/motions/' || d.id AS href, x.message
         FROM membership_motion.mention x
         JOIN motion.motion d ON d.id = x.motion AND d.closed IS NULL
         LEFT JOIN (membership.member a JOIN person.person ap ON ap.address = a.address) ON a.address = x.author

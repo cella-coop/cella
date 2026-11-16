@@ -10,7 +10,8 @@ import Vote from './blocks/Vote.svelte'
 // The feat's client side: the motions, open first, a new one with what
 // it decides, and a motion's page with where and how one votes first,
 // then its proposal, the stances given and its close, with what it does
-// and what the close carried.
+// and what the close carried; its deliberation is the shared thread
+// under its Overview, not a tab of its own.
 export const app: App = {
   name: 'motion',
   collections: {
@@ -53,10 +54,11 @@ export const app: App = {
         tabs: [
           { id: 'overview', label: 'Overview' },
           { id: 'stances', label: 'Stances' },
-          { id: 'discussion', label: 'Discussion' },
           { id: 'effects', label: 'Effects' },
         ],
-        blocks: [Vote, Proposal, { tab: 'discussion', block: Discussion }, { tab: 'effects', block: Effects }],
+        blocks: [Vote, Proposal, { tab: 'effects', block: Effects }],
+        // The deliberation, under the Activity like any record's.
+        comment: Discussion,
         actions: Close,
       },
     },

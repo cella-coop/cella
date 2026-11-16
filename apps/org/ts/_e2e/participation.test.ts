@@ -164,7 +164,9 @@ test('deliberation on m-2026-011: Camille asks Malik, linking the rate card, and
   assert.deepEqual(Object.keys(logged.payload).sort(), ['body', 'links', 'member', 'mentions', 'message', 'motion', 'reply'])
   const kept = await one<{ form: unknown }>('SELECT form FROM cella.log WHERE n = $1', [asked.entry])
   assert.ok(!JSON.stringify(kept.form).includes('solidarity'), 'the log keeps the commitment, never the words')
-  const discussion = await read(`${page}?tab=discussion`, malik)
+  // The deliberation is the shared thread under Overview, no tab of its
+  // own.
+  const discussion = await read(page, malik)
   assert.match(discussion, /Camille Martin .*Malik Benali what would it take for you to consent\? .*Rate card 2027/)
   assert.ok((await shell.page('/inbox', malik)).text.includes('Camille Martin mentioned you on Raise the day rate for 2027'))
   const answer = await shell.act(page, 'post', { body: 'If the rate card says when the solidarity rate applies. @camille?', reply: message.receipt }, malik)

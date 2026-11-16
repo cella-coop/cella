@@ -1,6 +1,6 @@
 +++
 title = "Document"
-updated = 2026-11-13
+updated = 2026-11-16
 +++
 
 The co-op's texts: statutes, internal rules, rate cards, policies and
@@ -311,15 +311,20 @@ over it where the draft stands (saved as the latest version, or changed
 since it), whether this member's edits are saved and that `/` adds a
 block, which an empty block it holds the caret in, and the last block
 when empty, also say; the draft's hash as the page was read is among
-its Properties. The header saves the draft as a version (`version`), and
-the box under its Activity comments on one (`comment`), each comment
-in the Activity with what it quotes; the box's Quoting takes the text
-last selected in the draft, and a posted comment's quote is highlighted
-there as the page refreshes. Its saved versions, the data
-central to it, are the Versions tab after the draft. The server renders the draft read-only; the editor takes it
+its Properties. The header's New version opens the shared Dialog,
+saying what it saves, the draft as the version it will number, and
+whether that is unchanged or changed since the latest one; it ends in
+Save version and Cancel, posting `version` and closing on a settled
+write, a refusal staying inside with its reason, and Cancel, Escape or
+a click outside it saves nothing. The box under its Activity comments
+on one (`comment`), each comment in the Activity with what it quotes;
+the box's Quoting takes the text last selected in the draft, and a
+posted comment's quote is highlighted there as the page refreshes. Its
+saved versions, the data central to it, are the Versions tab after the
+draft. The server renders the draft read-only; the editor takes it
 over once the browser holds the Loro document. A generated document's
-page reads its draft without the editor or the header's Save, and says
-whose policies it is generated from.
+page reads its draft without the editor or the header's New version,
+and says whose policies it is generated from.
 
 The editor is core's blocks' ([the editor](../../core/body/index.md#the-editor)),
 mounted over the document's draft with its `edit` action and its live

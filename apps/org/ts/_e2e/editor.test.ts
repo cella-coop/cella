@@ -863,7 +863,8 @@ eachBrowser((name, launch) => {
 
     it("cuts and copies a comment's text as its own while blocks are chosen, and a press outside ends the choice", async () => {
       await fresher()
-      await a.getByRole('button', { name: 'Save version' }).click()
+      await a.getByRole('button', { name: 'New version' }).click()
+      await a.locator('dialog[open]').getByRole('button', { name: 'Save version' }).click()
       await a.locator('input[name^="f.quote["]').waitFor()
       await editable(0).click()
       await a.keyboard.press('Control+Home')
@@ -915,7 +916,8 @@ eachBrowser((name, launch) => {
 
     it('quotes the selection in a comment, highlighted once posted', async () => {
       await fresher()
-      await a.getByRole('button', { name: 'Save version' }).click()
+      await a.getByRole('button', { name: 'New version' }).click()
+      await a.locator('dialog[open]').getByRole('button', { name: 'Save version' }).click()
       await a.locator('input[name^="f.quote["]').waitFor()
       await editable(0).click()
       await a.keyboard.press('Control+Home')
@@ -926,6 +928,28 @@ eachBrowser((name, launch) => {
       await a.getByRole('button', { name: 'Comment', exact: true }).click()
       await a.locator('[data-editor] [data-block] mark').first().waitFor({ timeout: 10000 })
       assert.equal(await editable(0).locator('mark').textContent(), 'Rate card 2027')
+      clean()
+    })
+
+    it('saves a version through the shared Dialog, and cancels one', async () => {
+      await fresher()
+      const versions = () =>
+        a.evaluate(() => {
+          const dt = [...document.querySelectorAll('dt')].find((d) => d.textContent === 'Versions')
+          return dt ? Number(dt.nextElementSibling?.textContent) : NaN
+        })
+      const before = await versions()
+      await a.getByRole('button', { name: 'New version' }).click()
+      const dialog = a.locator('dialog[open]')
+      await dialog.getByText(/Saves the draft as version/).waitFor()
+      await dialog.getByRole('button', { name: 'Cancel' }).click()
+      await dialog.waitFor({ state: 'hidden' })
+      assert.equal(await versions(), before, 'Cancel saves nothing')
+
+      await a.getByRole('button', { name: 'New version' }).click()
+      await dialog.getByRole('button', { name: 'Save version' }).click()
+      await dialog.waitFor({ state: 'hidden' })
+      assert.equal(await versions(), before + 1, 'Save version through the dialog saves one')
       clean()
     })
 

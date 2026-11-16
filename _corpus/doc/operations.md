@@ -443,26 +443,37 @@ room full of people arriving at once behind one NAT address:
   At the cap, a newcomer ends the copy idle longest if idle 5 minutes
   (`evictAfter`), else the oldest if 10 minutes old (`minAge`), and is
   otherwise asked to come back in a minute.
-- **What one address may take**: 40 copies held at once (`perAddress`)
-  and 80 made in ten minutes (`perAddressRate`), an IPv6 address
-  counted by its /64; 60 made a minute across the host (`perMinute`),
-  4 at once (`concurrent`). Only a copy made counts: a refused or
-  failed attempt costs the address nothing, so a page asking again
-  locks no one out. A public demo with no room to host lowers
-  `perAddress`, to 2 say, so no one client holds every copy.
+- **What one address may take**: all but four of the cap held at once
+  (`perAddress`, null so derived), so a room behind one NAT address
+  fills most of the host and leaves a few copies for others, and 30
+  made in ten minutes (`perAddressRate`), an IPv6 address counted by
+  its /64; 60 made a minute across the host (`perMinute`), 4 at once
+  (`concurrent`). Only a copy made counts: a refused or failed attempt
+  costs the address nothing, so a page asking again locks no one out.
+  A public demo with no room to host sets `perAddress` lower, to 2 say.
 - **What a copy may hold**: its server 192 MiB resident (`memory`),
   past which it ends; 10 connections (`connections`) and 128 MB of
   temporary files; a request's body 2 MB (`upload`), so a file too,
-  answered 413 past it, and none of no stated length (411); 64 MiB stored past
-  its template (`storage`), by `pg_database_size`, past which it takes
-  no write and says so, *Your copy holds as much as a demo copy may;
-  Reset now for a fresh one*, and past twice which it ends. While the
-  disk holding `/var/lib` has less than 1 GiB free (`diskFloor`), no
-  copy is made and the copy storing most ends, one each check.
+  answered 413 past it, and none of no stated length (411); 64 MiB
+  stored past its template (`storage`), by `pg_database_size`, past
+  which it takes no write and says so, *Your copy holds as much as a
+  demo copy may; Reset now for a fresh one*, and past twice which it
+  ends.
 
-The front checks every copy each 30 s, or a quarter of `idle` where
-that is shorter, and a copy's storage again before a write once its
-last reading is two seconds old.
+The quota fails closed. A write is let through only where the copy's
+last reading, at most two seconds old, what it was let write since that
+reading began, what it has in flight, and the write's own body fit in
+`storage`; a reading that fails refuses the write (503). A copy takes
+two uploads, bodies past 64 KiB, at a time, the rest waiting their
+turn, so parallel uploads pass the quota by one upload at most. The
+readings share six of the front role's eight connections, waiting
+their turn rather than failing.
+
+The front ends idle, old and oversized copies each 30 s, or a quarter
+of `idle` where that is shorter. Every 5 s it reads each copy's size,
+ending one stored past twice `storage`, and while the disk holding
+`/var/lib` has less than 1 GiB free (`diskFloor`) it makes no copy and
+ends the copies storing most, as many as it takes to come back above.
 
 The address is the last hop of `X-Forwarded-For`, so the host's proxy
 must **set** that header to the client's address, never append to what
@@ -506,7 +517,8 @@ reaches no address but localhost; an address past its copies is
 refused, and its refusals cost it nothing; Reset now drops a copy for a
 fresh one with the template's log; at the cap the idlest ends; a body
 past 2 MB is refused, and one of no stated length; a copy past its storage
-refuses a write, saying why, and past twice it ends; an IPv6 address
+refuses a write, saying why, and past twice it ends; parallel
+uploads pass its quota by one upload at most; an IPv6 address
 counts by its /64; an idle copy ends leaving no database, role, server
 or socket; a copy kept busy ends at its lifetime; and a front killed
 outright has its copies ended by the next. `checks.demo` serves a

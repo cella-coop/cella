@@ -42,7 +42,7 @@
 //     [--reserve 1536] [--footprint 160] [--idle 7200] [--lifetime 7200]
 //     [--evict-after 300] [--min-age 600] [--memory 192]
 //     [--connections 10] [--upload 2] [--storage 64] [--disk /var/lib]
-//     [--disk-floor 1024] [--per-address 40] [--per-address-rate 80]
+//     [--disk-floor 1024] [--per-address CAP-4] [--per-address-rate 30]
 //     [--rate-window 600] [--per-minute 60] [--concurrent 4] [--tick 30]
 //     [--trust-proxy]
 
@@ -85,11 +85,12 @@ function derivedCap(reserve, footprint) {
   return Math.max(1, Math.floor((total - reserve) / footprint))
 }
 const idle = whole('--idle', 7200)
+const cap = flag('--cap') ? whole('--cap') : derivedCap(whole('--reserve', 1536), whole('--footprint', 160))
 const config = {
   port: whole('--port', 3000),
   host: flag('--host', '127.0.0.1'),
   sockets: flag('--sockets', process.env.RUNTIME_DIRECTORY ?? join(process.cwd(), '.data', 'visitors')),
-  cap: flag('--cap') ? whole('--cap') : derivedCap(whole('--reserve', 1536), whole('--footprint', 160)),
+  cap,
   idle,
   lifetime: whole('--lifetime', 7200),
   evictAfter: whole('--evict-after', 300),
@@ -100,8 +101,9 @@ const config = {
   storage: whole('--storage', 64),
   disk: flag('--disk', '/var/lib'),
   diskFloor: whole('--disk-floor', 1024),
-  perAddress: whole('--per-address', 40),
-  perAddressRate: whole('--per-address-rate', 80),
+  // Unset, all but four of the copies, so one address leaves room for others.
+  perAddress: flag('--per-address') ? whole('--per-address') : Math.max(1, cap - 4),
+  perAddressRate: whole('--per-address-rate', 30),
   rateWindow: whole('--rate-window', 600),
   perMinute: whole('--per-minute', 60),
   concurrent: whole('--concurrent', 4),
@@ -119,13 +121,24 @@ const log = (line) => console.log(`demo serve: ${line}`)
 
 // --- Postgres, as the front's own role ---------------------------------
 
+// At most six connections at once, of the eight the front's role may hold,
+// the rest waiting their turn, so a burst of checks never fails for want
+// of one.
+let open = 0
+const turns = []
 async function admin(work) {
+  while (open >= 6) {
+    await new Promise((r) => turns.push(r))
+  }
+  open++
   const db = new pg.Client({ database: 'postgres', application_name: 'cella demo front' })
-  await db.connect()
   try {
+    await db.connect()
     return await work(db)
   } finally {
-    await db.end()
+    await db.end().catch(() => {})
+    open--
+    turns.shift()?.()
   }
 }
 const id = (name) => `"${name}"`
@@ -244,7 +257,7 @@ async function start(cookie, address) {
   const begun = Date.now()
   // `size`: the bytes its visitor stored, past the template's; `full` once
   // past `--storage`, when it takes no more writes.
-  const copy = { name: null, child: null, seen: begun, made: begun, ends: begun + config.lifetime * 1000, ready: null, ended: false, cookie, address, size: 0, full: false, measured: 0 }
+  const copy = { name: null, child: null, seen: begun, made: begun, ends: begun + config.lifetime * 1000, ready: null, ended: false, cookie, address, size: 0, full: false, measured: 0, measuring: null, landed: [], flying: 0, uploads: 0, queue: [] }
   copies.set(cookie, copy)
   preparing++
   copy.ready = (async () => {
@@ -359,21 +372,28 @@ function end(copy, why) {
 
 // What each copy stores past the template, by `pg_database_size`: past
 // `--storage` MiB it takes no more writes, past twice that it ends. Read
-// every tick, and before a write when the last reading is two seconds old.
+// every tick, and before a write when the last reading is two seconds old,
+// one reading a copy at a time, which every write waiting on it shares.
+// A write is let through only where what the copy stored, what it was
+// let write since that reading began, and its own body fit the quota.
 let base = null
 async function measure(list) {
   const named = list.filter((c) => c.name && !c.ended)
   if (!named.length) {
     return
   }
+  const begun = Date.now()
   await admin(async (db) => {
     base ??= Number((await db.query('SELECT pg_database_size($1::name) AS n', [template])).rows[0].n)
     const { rows } = await db.query('SELECT datname, pg_database_size(oid) AS n FROM pg_database WHERE datname = ANY($1)', [named.map((c) => c.name)])
     const sizes = new Map(rows.map((r) => [r.datname, Number(r.n)]))
     for (const copy of named) {
       copy.size = Math.max(0, (sizes.get(copy.name) ?? base) - base)
+      // What landed before this reading began is in it now; what lands
+      // after counts until the next.
+      copy.landed = copy.landed.filter((l) => l.at >= begun)
+      copy.measured = begun
       copy.full = copy.size > config.storage * MiB
-      copy.measured = Date.now()
       if (copy.size > 2 * config.storage * MiB) {
         end(copy, `it stored ${Math.round(copy.size / MiB)} MiB`)
       }
@@ -381,6 +401,22 @@ async function measure(list) {
   })
 }
 const MiB = 1024 * 1024
+// A fresh reading of one copy, shared by every write waiting on it.
+function fresh(copy) {
+  if (Date.now() - copy.measured <= 2000) {
+    return Promise.resolve()
+  }
+  copy.measuring ??= measure([copy]).finally(() => {
+    copy.measuring = null
+  })
+  return copy.measuring
+}
+// The bytes a copy may yet take: its quota, less what it stored at the
+// last reading, what landed since, and what is in flight.
+function quota(copy) {
+  const landed = copy.landed.reduce((n, l) => n + l.bytes, 0)
+  return config.storage * MiB - copy.size - landed - copy.flying
+}
 
 // The host's free disk where Postgres keeps its files, in MiB.
 function freeDisk() {
@@ -393,9 +429,11 @@ function freeDisk() {
 }
 
 // Every tick: a copy idle past `--idle` ends, one older than `--lifetime`
-// however busy, one whose server holds more than `--memory` MiB resident,
-// and one storing past twice `--storage`; while the disk holds less than
-// `--disk-floor` MiB free, the copy storing most ends, one a tick.
+// however busy, and one whose server holds more than `--memory` MiB
+// resident. Every five seconds: each copy is measured, one storing past
+// twice `--storage` ends, and while the disk holds less than
+// `--disk-floor` MiB free, the copies storing most end, as many as it
+// takes to bring it back above.
 function rss(child) {
   try {
     const m = /VmRSS:\s+(\d+) kB/.exec(readFileSync(`/proc/${child.pid}/status`, 'utf8'))
@@ -404,7 +442,7 @@ function rss(child) {
     return 0
   }
 }
-setInterval(async () => {
+setInterval(() => {
   const now = Date.now()
   for (const copy of [...copies.values()]) {
     if (now - copy.seen > config.idle * 1000) {
@@ -415,18 +453,33 @@ setInterval(async () => {
       end(copy, `its server passed ${config.memory} MiB`)
     }
   }
+}, config.tick * 1000).unref()
+let watching = false
+setInterval(async () => {
+  if (watching) {
+    return
+  }
+  watching = true
   try {
     await measure([...copies.values()])
   } catch (e) {
     log(`the copies could not be measured: ${e.message}`)
   }
-  if (freeDisk() < config.diskFloor) {
-    const largest = [...copies.values()].filter((c) => c.name).sort((a, b) => b.size - a.size)[0]
-    if (largest) {
-      end(largest, `the disk is below ${config.diskFloor} MiB free, and it stored most`)
+  try {
+    let short = config.diskFloor - freeDisk()
+    if (short > 0) {
+      for (const copy of [...copies.values()].filter((c) => c.name).sort((a, b) => b.size - a.size)) {
+        if (short <= 0) {
+          break
+        }
+        short -= copy.size / MiB
+        await end(copy, `the disk is below ${config.diskFloor} MiB free, and it stored most`)
+      }
     }
+  } finally {
+    watching = false
   }
-}, config.tick * 1000).unref()
+}, 5000).unref()
 
 // --- limits on making copies -------------------------------------------
 
@@ -688,8 +741,8 @@ async function handle(req, res) {
     return prepare(res, true)
   }
   // A write: no body past `--upload` MiB, nor of no stated length, and
-  // none at all once the copy stores past `--storage` MiB, measured afresh
-  // where the last reading is two seconds old.
+  // none past what the copy may yet store of `--storage` MiB, by a reading
+  // at most two seconds old and what it was let write since.
   const limit = config.upload * MiB
   const writes = !['GET', 'HEAD', 'OPTIONS'].includes(req.method ?? 'GET')
   if (writes) {
@@ -703,13 +756,54 @@ async function handle(req, res) {
       req.resume()
       return plain(res, 411, 'A demo takes a body of a stated length.', { connection: 'close' })
     }
-    if (Date.now() - copy.measured > 2000) {
-      await measure([copy]).catch((e) => log(`${copy.name} could not be measured: ${e.message}`))
+    // An upload, a body past 64 KiB, waits for one of the copy's two
+    // turns, so no burst of them is judged against one reading at once.
+    const bytes = Number(req.headers['content-length'] ?? 0)
+    let release = () => {}
+    if (bytes > 64 * 1024) {
+      const waited = Date.now()
+      while (copy.uploads >= 2) {
+        if (Date.now() - waited > 60_000 || copy.ended) {
+          req.resume()
+          return plain(res, 503, 'Your copy is busy with other uploads; try again.', { 'retry-after': '5' })
+        }
+        await new Promise((r) => {
+          copy.queue.push(r)
+          setTimeout(r, 5000).unref()
+        })
+      }
+      copy.uploads++
+      let released = false
+      release = () => {
+        if (!released) {
+          released = true
+          copy.uploads--
+          copy.queue.shift()?.()
+        }
+      }
     }
-    if (copy.full || copy.ended) {
+    // Fails closed: a reading that fails refuses the write.
+    try {
+      await fresh(copy)
+    } catch (e) {
+      log(`${copy.name} could not be measured: ${e.message}`)
+      release()
+      req.resume()
+      return plain(res, 503, 'Your copy could not be checked for room just now; try again.', { 'retry-after': '5' })
+    }
+    if (copy.ended || copy.full || quota(copy) < bytes) {
+      release()
       req.resume()
       return plain(res, 507, `Your copy holds as much as a demo copy may (${config.storage} MB). Reset now for a fresh one.`)
     }
+    // Counted against the quota from now on: in flight, then landed until
+    // a reading begun after it ended takes it in.
+    copy.flying += bytes
+    res.on('close', () => {
+      copy.flying -= bytes
+      copy.landed.push({ at: Date.now(), bytes })
+      release()
+    })
   }
   const headers = { ...req.headers, cookie: withoutOurs(req.headers.cookie) }
   if (!headers.cookie) {
@@ -746,11 +840,6 @@ async function handle(req, res) {
     }
   })
   req.pipe(upstream)
-  if (writes) {
-    res.on('finish', () => {
-      copy.measured = 0
-    })
-  }
 }
 
 mkdirSync(config.sockets, { recursive: true, mode: 0o700 })

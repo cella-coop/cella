@@ -280,6 +280,17 @@ pkgs.testers.runNixOSTest {
           assert code == "411", f"a chunked body answered {code}"
           assert c in copies()
 
+      with subtest("parallel uploads to one copy pass its quota by one upload at most"):
+          host.succeed("head -c 1500000 /dev/urandom > /tmp/mid")
+          one = curl("c", "10.0.0.3", f"-X POST -H 'Origin: {front}' --data-binary @/tmp/mid -o /dev/null -w '%{{http_code}}\\n' {front}/session")
+          codes = host.succeed(f"for i in $(seq 1 12); do {one} & done; wait").split()
+          print(codes)
+          through = [code for code in codes if code not in ("503", "507")]
+          assert len(codes) == 12, codes
+          assert "507" in codes, "no upload past the quota was refused"
+          # 4 MiB holds two of 1.5 MB; one more is the most it may pass by.
+          assert len(through) <= 3, f"{len(through)} uploads of 1.5 MB were let into a copy of 4 MiB"
+
       with subtest("a copy past its storage takes no write and says why, and past twice it ends, largest first"):
           fill(c, 6)
           out = host.execute(curl("c", "10.0.0.3", f"-X POST -H 'Origin: {front}' -d x=1 -w ' %{{http_code}}' {front}/session"))[1]

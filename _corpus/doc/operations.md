@@ -279,10 +279,18 @@ migrates, signs one write and restores the night's backup.
 
 The demo is a production build serving Lanterne, the mock co-op, and
 nothing else: never a pilot co-op's data. `cella serve --prod --demo`
-runs it, its sign-in offering Lanterne's fixture members by name, each
-marked as a demo member, where a production sign-in offers no one;
-every page says it is a demo. The demo's scope carries its own keys,
-never a real scope's.
+runs it, and so does the module's `demo.enable`, each setting the
+server's `CELLA_DEMO`: its sign-in offers Lanterne's fixture members by
+name, each marked as a demo member, whose TEST-ONLY keys anyone can
+derive from their address and their device's label, as the dev
+server's are, where a production sign-in offers no one; every page, the
+sign-in's and each signed-in one, wears the demo's banner, saying the
+co-op is a mock that anyone may sign in to and nothing in it is real.
+The demo's scope carries its own keys, never a real scope's: its host's
+notary and vault keys are the demo's, made by `cella key init`, and the
+module refuses a host mixing a demo with a co-op's scope. The e2e
+scenario `demo` asserts a demo build's sign-in, its banner and a demo
+member's write, and that the same build without it offers no one.
 
 `cella demo template --url URL` builds the demo's template from
 nothing: a database migrated, Lanterne seeded, then a scenario played

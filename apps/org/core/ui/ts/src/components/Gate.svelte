@@ -3,10 +3,16 @@
   import '../styles/tokens.css'
   import '../styles/base.css'
   import favicon from '@cella/brand/favicon.svg?url'
+  import DemoBanner from './DemoBanner.svelte'
 
   // What a person reaches before signing in, alone on the page: the
-  // co-op's mark and name above one panel, the sign-in or an invitation.
-  let { scope, children }: { scope: { address: string; name: string; legal: string | null }; children: Snippet } = $props()
+  // co-op's mark and name above one panel, the sign-in or an invitation;
+  // in a demo build, the demo's banner above them.
+  let {
+    scope,
+    demo = false,
+    children,
+  }: { scope: { address: string; name: string; legal: string | null }; demo?: boolean; children: Snippet } = $props()
 </script>
 
 <svelte:head>
@@ -15,6 +21,7 @@
 
 <div class="gate">
   <div class="panel">
+    {#if demo}<DemoBanner />{/if}
     <p class="coop"><span class="mark">{scope.name.slice(0, 1).toUpperCase()}</span><b>{scope.name}</b></p>
     {@render children()}
   </div>

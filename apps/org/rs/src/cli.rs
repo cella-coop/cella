@@ -136,6 +136,10 @@ pub enum Command {
         /// A database other than the dev cluster's, for --prod
         #[arg(long, value_name = "URL", requires = "prod")]
         url: Option<String>,
+
+        /// Serve a demo, a mock co-op's scope and never a real one's: the sign-in offers its fixture members, each marked as a demo member, and every page wears the demo's banner
+        #[arg(long, requires = "prod")]
+        demo: bool,
     },
 
     /// Build the shell for production into apps/org/ts/build

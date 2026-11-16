@@ -10,14 +10,32 @@ use crate::key;
 use crate::repo::Repo;
 use crate::run::{Fail, Result, Steps, last_line, quiet};
 
+/// How `serve` serves: on which port, built or not, as a demo or not, and
+/// against which database.
+#[derive(Clone, Copy)]
+pub struct Serve<'a> {
+    pub port: u16,
+    pub prod: bool,
+    pub demo: bool,
+    pub url: Option<&'a str>,
+}
+
 /// The shell against the dev database, or with `prod` the built server
 /// against it or the database `url` names: starts the dev cluster if it
 /// is stopped, applies any new migration, then runs until stopped. Dev
 /// mode is Vite's dev server, whose sign-in page offers the fixture
 /// members; `prod` builds the shell and runs it as a scope's server,
-/// offering no one. Either way members sign in and sign every write with
-/// their own devices, and sessions are MACed with `.data/session.key`.
-pub fn serve(repo: &Repo, steps: &Steps, port: u16, prod: bool, url: Option<&str>) -> Result {
+/// offering no one, or with `demo` a demo of a mock co-op, offering its
+/// fixture members, each marked as a demo member. Either way members sign
+/// in and sign every write with their own devices, and sessions are MACed
+/// with `.data/session.key`.
+pub fn serve(repo: &Repo, steps: &Steps, how: &Serve) -> Result {
+    let Serve {
+        port,
+        prod,
+        demo,
+        url,
+    } = *how;
     let dev = Dev::new(repo);
     if url.is_none() {
         if !dev.running()? {
@@ -46,16 +64,23 @@ pub fn serve(repo: &Repo, steps: &Steps, port: u16, prod: bool, url: Option<&str
     key::session(&session)?;
     let mut server = if prod {
         build(repo, steps)?;
-        println!(
-            "shell on http://127.0.0.1:{port}, production, behind TLS that sets x-forwarded-proto"
-        );
+        let mode = if demo {
+            "production, a demo: its sign-in offers the fixture members"
+        } else {
+            "production"
+        };
+        println!("shell on http://127.0.0.1:{port}, {mode}, behind TLS that sets x-forwarded-proto");
         let mut node = dev.cmd("node");
         node.arg(repo.shell_dir().join("build"))
             .env("PORT", port.to_string())
             .env("HOST", "127.0.0.1")
             .env("PROTOCOL_HEADER", "x-forwarded-proto")
             .env("BODY_SIZE_LIMIT", "11M")
-            .env_remove("CELLA_DEV");
+            .env_remove("CELLA_DEV")
+            .env_remove("CELLA_DEMO");
+        if demo {
+            node.env("CELLA_DEMO", "1");
+        }
         node
     } else {
         let mut sync = repo.shell("svelte-kit");

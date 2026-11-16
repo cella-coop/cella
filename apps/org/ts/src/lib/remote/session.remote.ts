@@ -5,7 +5,7 @@ import { scope } from '@cella/org-log/api'
 import { safe } from '#lib/server/back.ts'
 import { shell as call } from '#lib/server/calls.ts'
 import { using } from '#lib/server/db.ts'
-import { dev, fixtures } from '#lib/server/device.ts'
+import { demo, dev, fixtures } from '#lib/server/device.ts'
 import { answered, proof, relay } from '#lib/server/relay.ts'
 import { keep } from '#lib/server/session.ts'
 import { joining } from '#lib/server/slices.ts'
@@ -18,13 +18,15 @@ import { answer, poster } from './write.ts'
 // What the shell around every page reads, as the root layout awaits it,
 // read again after a write that took or reached a verdict, as its counts
 // may have moved: with the theme the viewer wears, whether the dev server
-// serves it, and whether the viewer left the drawer open, which the
-// shell's toggle keeps in a cookie. Signed out, the scope alone, which
-// the sign-in page and an invitation's link wear.
+// or a demo build serves it, and whether the viewer left the drawer open,
+// which the shell's toggle keeps in a cookie. Signed out, the scope and
+// whether it is a demo's, which the sign-in page and an invitation's link
+// wear.
 export const shell = query(() =>
   served(async (db, who) => ({
     ...(await call.run(db, who)),
     dev,
+    demo,
     theme: getRequestEvent().locals.theme,
     drawer: who.cookies.get('cella-drawer') !== 'closed',
     sections: (who.cookies.get('cella-sections') ?? '').slice(0, 600),
@@ -32,8 +34,9 @@ export const shell = query(() =>
 )
 
 // The sign-in page: where to go once signed in, the Inbox unless asked,
-// and, on the dev server alone, the fixture members it offers.
-export const signing = query(texts(['back']), async ({ back }) => ({ back: safe(back || '/inbox'), fixtures: await fixtures() }))
+// and, on the dev server or a demo build alone, the fixture members it
+// offers, a demo's each marked as a demo member.
+export const signing = query(texts(['back']), async ({ back }) => ({ back: safe(back || '/inbox'), fixtures: await fixtures(), demo }))
 
 // The proof a device signed for a run that asked for it, posted back by
 // the session that started the run, which goes on to its next step; with

@@ -20,6 +20,7 @@
   import { mark } from '../marks.ts'
   import type { Search } from '../hooks/CommandState.svelte.ts'
   import Command from './Command.svelte'
+  import DemoBanner from './DemoBanner.svelte'
   import Icon from './Icon.svelte'
   import Outcome from './Outcome.svelte'
   import Popover from './Popover.svelte'
@@ -41,6 +42,7 @@
     nav,
     actor,
     dev,
+    demo = false,
     theme,
     outcome,
     source,
@@ -56,6 +58,8 @@
     nav: Nav
     actor: Person | null
     dev: boolean
+    // A demo build, whose banner every page wears.
+    demo?: boolean
     theme: Theme
     outcome: Done | null
     // What the command menu searches, read by the shell's query.
@@ -312,6 +316,9 @@
 
   <main class="main">
     {@render children()}
+    {#if demo}
+      <DemoBanner floating />
+    {/if}
     {#if dev}
       <!-- Dev mode, where anyone signs in as a fixture member: a watermark
            at the content's foot, by the drawer. Its word is drawn by CSS,

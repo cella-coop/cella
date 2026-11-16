@@ -5,17 +5,20 @@
 
   // Signing in: each device this browser keeps for the scope signs the
   // server's challenge with its own key; on the dev server, the fixture
-  // members too, whose keys anyone can derive. A browser holding none is
+  // members too, whose keys anyone can derive, and in a demo build the
+  // same members, each marked as a demo member. A browser holding none is
   // pointed to an invitation's link, or makes a key to enrol from a
   // device its person holds.
   let {
     scope,
     back,
     fixtures,
+    demo = false,
   }: {
     scope: string
     back: string
     fixtures: { address: string; name: string; label: string }[]
+    demo?: boolean
   } = $props()
 
   const state = useSignIn(
@@ -39,7 +42,20 @@
   </p>
 {/if}
 
-{#if fixtures.length}
+{#if fixtures.length && demo}
+  <p class="label">Demo members <span class="dev">demo</span></p>
+  <p class="hint">
+    {scope} is a mock co-op. Sign in as any of its members: their keys are derived from their address and their
+    device's label, which anyone can do.
+  </p>
+  <div class="list">
+    {#each fixtures as f (f.address)}
+      <Button title={f.address} busy={state.busy} onclick={() => state.fixture(f.address, f.label)}
+        >{f.name} · {f.label} <span class="dev">demo member</span></Button
+      >
+    {/each}
+  </div>
+{:else if fixtures.length}
   <p class="label">Fixture members <span class="dev">dev only</span></p>
   <p class="hint">Their keys are derived from their address and their device's label, which anyone can do.</p>
   <div class="list">

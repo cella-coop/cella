@@ -19,7 +19,10 @@ pub fn build(repo: &Repo, steps: &Steps) -> Result<Repo> {
     let mut prune = repo.node("prune.mjs");
     prune.arg(&repo.root).arg(&tree);
     steps.run("pruned tree", &mut [prune], last_line)?;
-    let pruned = Repo { root: tree };
+    let pruned = Repo {
+        root: tree,
+        packaged: false,
+    };
     // The lockfile still names the pruned packages, which the install drops.
     let mut install = pruned.cmd("pnpm");
     install.args(["install", "--offline", "--silent", "--no-frozen-lockfile"]);

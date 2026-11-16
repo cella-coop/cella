@@ -84,8 +84,8 @@ pub enum Command {
         /// The fixture's directory name, such as lanterne
         fixture: String,
 
-        /// Play one e2e scenario's story into the dev database; reset before another
-        #[arg(long, value_name = "NAME", conflicts_with = "url")]
+        /// Play one e2e scenario's story into the database; reset before another
+        #[arg(long, value_name = "NAME")]
         scenario: Vec<String>,
 
         /// A database other than the dev cluster's
@@ -136,6 +136,16 @@ pub enum Command {
         /// A database other than the dev cluster's, for --prod
         #[arg(long, value_name = "URL", requires = "prod")]
         url: Option<String>,
+
+        /// Serve a demo, a mock co-op's scope and never a real one's: the sign-in offers its fixture members, each marked as a demo member, and every page wears the demo's banner
+        #[arg(long, requires = "prod")]
+        demo: bool,
+    },
+
+    /// The demo: its template, built from nothing, and the copies of it a scope is served from
+    Demo {
+        #[command(subcommand)]
+        command: Demo,
     },
 
     /// Build the shell for production into apps/org/ts/build
@@ -357,6 +367,51 @@ pub enum SitePhoto {
         urls: Vec<String>,
         #[arg(long)]
         name: Option<String>,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum Demo {
+    /// Build the demo's template from nothing: its database made afresh and migrated, Lanterne seeded, a scenario's story played on it through the notary, then closed to every connection
+    Template {
+        /// The template's database, on a cluster whose keys are the demo's own, logging in as a superuser
+        #[arg(long, value_name = "URL")]
+        url: String,
+
+        /// The e2e scenario whose story is played on Lanterne
+        #[arg(long, value_name = "NAME", default_value = "authority-walk")]
+        scenario: String,
+
+        /// Build it again where this build already built it with this story
+        #[arg(long)]
+        again: bool,
+    },
+    /// Copy the template into a database of its own, with the settings its database and roles carry there
+    Copy {
+        /// The new database's name
+        name: String,
+
+        /// The template, as `cella demo template` names it
+        #[arg(long, value_name = "URL")]
+        url: String,
+
+        /// Drop the database first where it exists, else refuse
+        #[arg(long)]
+        replace: bool,
+    },
+    /// Serve each visitor a copy of the template of their own, made at their first visit and ended after it is idle: the demo's front
+    Serve {
+        /// The template's database, on the cluster the PG* variables reach as the front's own role
+        #[arg(long, value_name = "NAME")]
+        template: String,
+
+        /// The built shell each copy runs, as `cella-server` runs it; apps/org/ts/build unset
+        #[arg(long, value_name = "DIR")]
+        server: Option<String>,
+
+        /// The front's limits, as `tools/demo-serve.mjs` reads them: --port, --cap, --idle, --lifetime, --upload, --storage, --per-address and the rest
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true, value_name = "OPTION")]
+        options: Vec<String>,
     },
 }
 

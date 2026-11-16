@@ -93,6 +93,14 @@ export class Shell {
     throw new Error('the shell did not start')
   }
 
+  // Reaches a server another process runs, as a host's unit does, at
+  // `base`: its pages and writes as `start`'s, its process left alone.
+  attach(base: string) {
+    this.#server = undefined
+    this.#sessions.clear()
+    this.#base = base
+  }
+
   async stop() {
     const server = this.#server
     // A server that killed itself has exited already.

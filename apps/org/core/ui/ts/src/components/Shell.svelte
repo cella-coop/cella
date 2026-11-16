@@ -44,6 +44,7 @@
     dev,
     demo = false,
     copy = 0,
+    ends = 0,
     theme,
     outcome,
     source,
@@ -63,6 +64,8 @@
     demo?: boolean
     // A visitor's copy of the demo: the seconds idle before it resets.
     copy?: number
+    // When it resets however busy, in seconds since 1970; 0, never.
+    ends?: number
     theme: Theme
     outcome: Done | null
     // What the command menu searches, read by the shell's query.
@@ -320,7 +323,7 @@
   <main class="main">
     {@render children()}
     {#if demo}
-      <DemoBanner floating {copy} />
+      <DemoBanner floating {copy} {ends} />
     {/if}
     {#if dev}
       <!-- Dev mode, where anyone signs in as a fixture member: a watermark

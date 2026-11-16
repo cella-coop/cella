@@ -1,5 +1,5 @@
 import { devices, person } from '@cella/org-person/api'
-import { CELLA_DEMO, CELLA_DEMO_IDLE, CELLA_DEV } from '$app/env/private'
+import { CELLA_DEMO, CELLA_DEMO_ENDS, CELLA_DEMO_IDLE, CELLA_DEV } from '$app/env/private'
 import { using } from './db.ts'
 import { own } from './fixture.ts'
 
@@ -17,6 +17,8 @@ export const demo = CELLA_DEMO
 // A visitor's copy, served by `cella demo serve`: the seconds idle before
 // it resets, else 0.
 export const copy = CELLA_DEMO && CELLA_DEMO_IDLE ? CELLA_DEMO_IDLE : 0
+// And when it resets however busy, in seconds since 1970, else 0.
+export const ends = copy ? CELLA_DEMO_ENDS : 0
 
 // Who the sign-in page offers in dev mode or a demo: everyone with a
 // fixture device in force, and that device's label, by name. The keyring

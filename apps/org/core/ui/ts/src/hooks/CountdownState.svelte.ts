@@ -1,15 +1,19 @@
 // A visitor's copy of the demo counting down to its reset: `seconds`
-// with no request end it, so the count starts again at each page and at
-// each touch or key the visitor gives it, which nearly always asks the
-// server something. It runs in the browser alone, once attached; the
+// with no request end it, as does its lifetime's end, whichever comes
+// first. The idle count starts again at each page and at each touch or
+// key the visitor gives it, which nearly always asks the server
+// something. It runs in the browser alone, once attached; the
 // server renders the whole span.
 export class CountdownState {
   readonly #seconds: () => number
+  // When the copy resets however busy, in seconds since 1970; 0, never.
+  readonly #ends: () => number
   #since = $state(0)
   #now = $state(0)
 
-  constructor(seconds: () => number) {
+  constructor(seconds: () => number, ends: () => number) {
     this.#seconds = seconds
+    this.#ends = ends
   }
 
   get seconds(): number {
@@ -19,7 +23,9 @@ export class CountdownState {
   // What is left, as `1:59:30`; the whole span before it runs.
   get left(): string {
     const gone = this.#since ? Math.floor((this.#now - this.#since) / 1000) : 0
-    const s = Math.max(0, this.seconds - gone)
+    const now = this.#now || Date.now()
+    const life = this.#ends() ? Math.floor(this.#ends() - now / 1000) : Infinity
+    const s = Math.max(0, Math.min(this.seconds - gone, life))
     const two = (n: number) => String(n).padStart(2, '0')
     return `${Math.floor(s / 3600)}:${two(Math.floor((s % 3600) / 60))}:${two(s % 60)}`
   }

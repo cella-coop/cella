@@ -70,7 +70,7 @@
     {/if}
     <span class="group">{@render inner()}</span>
     {#if oncreate}
-      <button type="button" class="create" onclick={oncreate} title="New in {label}" aria-label="New in {label}">
+      <button type="button" class="create" onclick={oncreate} title="Create in {label}" aria-label="Create in {label}">
         <Icon icon={Plus} size="0.8rem" />
       </button>
     {/if}

@@ -1,3 +1,4 @@
+import { SvelteSet } from 'svelte/reactivity'
 import { step, stop } from '../models/keys.ts'
 
 // What a collection's page holds while it is looked at: the text filter
@@ -22,8 +23,9 @@ export class CollectionState {
   search: HTMLInputElement | undefined = $state()
   // The groups the viewer collapsed, by value; a reload opens them
   // again, as a view the address alone draws has no viewer to keep it
-  // for.
-  collapsed: Set<string> = $state(new Set())
+  // for. `SvelteSet`, so adding or deleting a value is itself seen,
+  // which a plain `Set` under `$state` is not.
+  collapsed: SvelteSet<string> = new SvelteSet()
 
   readonly #rows: () => any[]
   readonly #left: () => number

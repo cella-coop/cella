@@ -368,8 +368,9 @@ draws.
   project's, its icon in the same ink, even drawn as a badge, kept at
   an enumeration's tone instead, which keeps its meaning; a chevron
   collapses its own rows alone, the other groups' kept as they are;
-  and, where the collection offers New, a + opens it, the same dialog
-  as the header's own (`Group`, `models/query.ts`'s `groupTint`). A
+  and, where the collection offers New, a + ("Create in …", never
+  named New, so the two are never confused by a voice or a test) opens
+  the same dialog (`Group`, `models/query.ts`'s `groupTint`). A
   board and a calendar place every row the view keeps. The feed draws each row as one line of who did what and when,
   as a record's Activity reads: its first person column as their chip,
   then its title, linked, then its first date, and the time links to

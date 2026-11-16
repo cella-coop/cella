@@ -12,9 +12,10 @@
 // them out from the rows themselves; a board draws a column per value. A
 // view saved with its group restores it from its tab, the address alone
 // draws it, and None draws the rows as one again. In a table, a group's
-// bar collapses its own rows alone by its chevron and opens New by its
-// +, leaving the collection's own New (F32). `SHOTS` names where its
-// screenshots go. Nothing is written but what New's cancel undoes. Run
+// bar collapses its own rows alone by its chevron, and its + ("Create
+// in …", never named New) opens New's own dialog (F32). `SHOTS` names
+// where its screenshots go. Nothing is written but what New's cancel
+// undoes. Run
 // by `cella test e2e group`.
 // covers: expense file
 
@@ -211,7 +212,7 @@ eachBrowser((browserName, launch) => {
       await until(whole - byStatus[0].count, `${browserName}: the chevron hides its own group's rows alone`)
       await bar.getByRole('button', { name: /^Show /, exact: false }).click()
       await until(whole, `${browserName}: it shows them again`)
-      await bar.getByRole('button', { name: /^New in /, exact: false }).click()
+      await bar.getByRole('button', { name: /^Create in /, exact: false }).click()
       await page.getByRole('dialog', { name: 'New in Expenses' }).waitFor()
       await page.getByRole('button', { name: 'Cancel' }).click()
 

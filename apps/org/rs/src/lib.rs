@@ -9,6 +9,7 @@ mod check;
 pub mod cli;
 mod data;
 mod db;
+mod demo;
 pub mod fold;
 mod key;
 mod overlap;
@@ -79,9 +80,22 @@ pub fn dispatch(command: Command, verbose: bool) -> Result {
             },
             url.as_deref(),
         ),
-        Command::Serve { port, prod, url } => {
-            shell::serve(&Repo::find()?, &steps, port, prod, url.as_deref())
-        }
+        Command::Serve {
+            port,
+            prod,
+            url,
+            demo,
+        } => shell::serve(
+            &Repo::find()?,
+            &steps,
+            &shell::Serve {
+                port,
+                prod,
+                demo,
+                url: url.as_deref(),
+            },
+        ),
+        Command::Demo { command } => demo::run(&Repo::find()?, &steps, command),
         Command::Build => shell::build(&Repo::find()?, &steps),
         Command::Preview { command } => shell::preview(&Repo::find()?, &steps, command),
         Command::Brand => check::brand(&Repo::find()?, &steps),

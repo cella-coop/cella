@@ -168,9 +168,17 @@ draws.
   opens). The account menu's Settings opens
   it at Personal's first page, the co-op menu's at Organization's. In
   dev mode a faint upright "prototype" with a test tube sits at the
-  content's bottom right. The last write's outcome floats above.
+  content's bottom right. A demo build's banner (`DemoBanner`) floats
+  at the content's bottom left, never dismissed: the operator's notice,
+  "This is a prototype environment for demo purposes and can't be used
+  for real work.", then, on a visitor's copy, that Lanterne is a mock
+  and the copy the visitor's own, the time left before it resets, which
+  starts again at each page and each touch or key, and Reset now, a
+  plain form posting to the demo's front. The last write's outcome
+  floats above.
 - `Gate`: what a person reaches before signing in, alone on the page,
-  the co-op's mark and name above one panel; `SignIn` in it, a button for
+  the co-op's mark and name above one panel, in a demo build the same
+  banner atop the panel; `SignIn` in it, a button for
   each device this browser keeps for the scope, which signs the server's
   challenge, the fixture members on the dev server, and a key made here
   for its person to enrol from a device they hold; and `Join`, an

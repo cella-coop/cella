@@ -10,6 +10,7 @@ import { basename, join } from 'node:path'
 import { parse } from 'smol-toml'
 import pg from 'pg'
 import { seed } from './seed/found.mjs'
+import { parts } from './seed/url.mjs'
 
 const dir = process.argv[2]
 const stories = ['governance', 'authority', 'mandate', 'provenance', 'procedure', 'chain', 'powers', 'grant', 'refusal', 'author', 'tenure', 'role-seat', 'collective', 'authority-walk']
@@ -23,8 +24,19 @@ for (let i = 3; i < process.argv.length; i += 2) {
 if (scenarios.length > 1) {
   throw new Error('seed one story at a time; run cella db reset before seeding another')
 }
+// A story connects by the PG* variables, as the e2e scenarios do, and as
+// the app's role as well as the superuser: a URL becomes them, its host
+// a socket's directory where its `host` parameter names one.
 if (scenarios.length && process.env.DATABASE_URL) {
-  throw new Error('--scenario needs the dev cluster, not --url')
+  const at = parts(process.env.DATABASE_URL)
+  const set = (name, value) => {
+    if (value) process.env[name] = String(value)
+  }
+  set('PGHOST', at.host)
+  set('PGPORT', at.port)
+  set('PGUSER', at.user)
+  set('PGPASSWORD', at.password)
+  set('PGDATABASE', at.database)
 }
 const read = (file) => {
   const path = join(dir, `${file}.toml`)

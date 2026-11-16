@@ -23,7 +23,7 @@ const READY: Duration = Duration::from_secs(30);
 
 /// The analytics shell: a DuckDB 2.0 server per scope that attaches its
 /// database read-only as `cella_analytics` and serves it over quack on
-/// localhost, behind a token. Its state lives in `.data/analytics/<port>`:
+/// 127.0.0.1 alone, behind a token. Its state lives in `.data/analytics/<port>`:
 /// the token, the SQL it starts with and a client attaches with, what it
 /// attaches, its pid and its log.
 pub struct Shell<'a> {
@@ -50,7 +50,7 @@ impl<'a> Shell<'a> {
     }
 
     pub fn url(&self) -> String {
-        format!("quack:localhost:{}", self.port)
+        format!("quack:127.0.0.1:{}", self.port)
     }
 
     pub fn token(&self) -> PathBuf {

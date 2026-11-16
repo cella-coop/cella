@@ -1,6 +1,6 @@
 +++
 title = "Operations"
-updated = 2026-11-13
+updated = 2026-11-16
 +++
 
 # Operations
@@ -9,8 +9,9 @@ What a host does to run a scope and keep it: the server's settings, its
 analytics shell, its two keys and their rotation, backups and a restore,
 and upgrades. Every
 task is a `cella` command ([the CLI](../../apps/org/rs/index.md)) or a
-Postgres one; the host's own configuration (its NixOS module, its timers)
-lives with the host, not here.
+Postgres one. A NixOS host runs its scopes by the flake's module
+([packaging](#packaging)); the rest of its configuration, its proxy, its
+TLS and its own backup, lives with the host, not here.
 
 ## A scope's server
 
@@ -58,33 +59,18 @@ analytics start --url URL` runs it, the URL logging in as
 readable by its user alone; the shell's server reads that file as
 `CELLA_ANALYTICS_TOKEN_FILE`, so both run as one user, or the token is
 copied to the server's with the same care as a key. It listens on
-localhost alone and is never exposed: the org app's server is its one
+127.0.0.1 alone (`quack:127.0.0.1:<port>`) and is never exposed: the org app's server is its one
 client.
 
-A unit runs it with the server, started after Postgres and stopped
-before it. A sketch of one, for a NixOS host, with the flake's `cella`
-on its path; the shell backgrounds itself, so the unit forks:
+On a NixOS host the flake's module runs it as `cella-<name>-analytics`
+([the module](#the-module)), started after the scope's setup and before
+its server, as the `cella` user, which logs in as `cella_analytics` over
+Postgres's socket; the shell backgrounds itself, so the unit forks, and
+its token and pid are in the scope's `<stateDir>/<name>/.data`. It runs
+hardened as the server does: no new privileges, the system read-only
+but for the scope's `<stateDir>/<name>`, a private `/tmp`.
 
-```nix
-systemd.services.cella-analytics = {
-  after = [ "postgresql.service" ];
-  requires = [ "postgresql.service" ];
-  before = [ "cella.service" ];
-  wantedBy = [ "multi-user.target" ];
-  path = [ cella ];
-  serviceConfig = {
-    Type = "forking";
-    User = "cella";
-    WorkingDirectory = "/var/lib/cella";
-    ExecStart = "${cella}/bin/cella analytics start --url postgresql://cella_analytics@localhost/scope";
-    ExecStop = "${cella}/bin/cella analytics stop";
-    PIDFile = "/var/lib/cella/.data/analytics/54343/pid";
-    Restart = "on-failure";
-  };
-};
-```
-
-The server's unit sets `CELLA_ANALYTICS=quack:localhost:54343`,
+The server's unit sets `CELLA_ANALYTICS=quack:127.0.0.1:<port>`,
 `CELLA_ANALYTICS_TOKEN_FILE` and `CELLA_DUCKDB_EXTENSIONS` as `cella
 serve --prod` does. The shell holds no state of its own: a restart, or a
 migration that publishes the views again, loses nothing, and a backup
@@ -244,3 +230,284 @@ migrations. `cella test e2e upgrade`, which rehearsed it from
 dump as its baseline: migrated in place, its log verified under the
 TEST-ONLY key that signed it, its vault moved to a vault key of its own,
 and both keys rotated.
+
+## Packaging
+
+A host installs a scope from the flake, never from a checkout. The
+flake's `cella-pg` is the notary as a Postgres 18 extension, built by
+cargo-pgrx in the sandbox: its shared library and its control and SQL
+files, every version's upgrade script among them, laid out as nixpkgs'
+`postgresql.withPackages` takes an extension, so a host's Postgres is
+`postgresql_18.withPackages (p: [ cella-pg ])` and its
+`shared_preload_libraries` names `cella`.
+
+The flake's `cella-org` is the org app as one derivation: the shell
+built with adapter-node, its node modules (a fixed-output fetch of the
+pnpm store the lockfile names, whose hash the flake holds and a change
+to the lockfile changes), the tree it migrates and seeds from, and the
+`cella` CLI, which runs from that tree as from a checkout built already
+([the CLI](../../apps/org/rs/index.md#on-the-path)), with Postgres 18's
+client binaries, node and DuckDB with the extensions the analytics shell
+loads. Its `cella-server` runs the built server as `cella serve --prod`
+does. Its closure holds no key, no session key and no database: those
+are the host's, and its state is in `CELLA_DATA`.
+
+### The module
+
+The flake's `nixosModules.cella`, `services.cella`, runs a host's
+scopes on its one Postgres 18 cluster: `cella-pg` preloaded, the
+notary's and the vault's key files at the paths the host names, and for
+each scope under `scopes.<name>` a database and three units of its own.
+The module never makes a notary's or a vault's key, and none is in the
+store: `cella key init` makes each, once, by hand, owned by `postgres`,
+which reads them. A NixOS test, `checks.module`, boots it with test
+keys, migrates, founds Lanterne in the scope, signs in as a fixture
+member and signs a write, takes the night's backup and restores it into
+a database whose log verifies at the same head.
+
+| Option | What |
+|---|---|
+| `enable` | the module |
+| `package`, `extension` | the flake's `cella-org` and `cella-pg` unset |
+| `keyFile`, `vaultKeyFile` | `cella.key_file` and `cella.vault_key_file`, set in `postgresql.conf`; every scope on the cluster is signed by its one notary key |
+| `vaultKeyPrevious`, `vaultKeysKept` | `cella.vault_key_previous` and `cella.vault_keys_kept`, for a [rotation](#keys) |
+| `stateDir` | `/var/lib/cella` unset; each scope's `<stateDir>/<name>` holds its session key and its analytics shell's `.data`, the `cella` user's alone |
+| `backup.enable`, `.dir`, `.at`, `.keep` | the nightly `cella backup` of every scope that is no demo, as `postgres`, into `<dir>/<name>/<UTC time>` (`/var/backup/cella`, 03:00, the newest 7 kept unset) |
+| `scopes.<name>.database` | its database, `<name>` unset |
+| `scopes.<name>.address`, `.timezone` | `cella.scope` and `cella.timezone`, set on its database; unset, left to its founding |
+| `scopes.<name>.port`, `.analyticsPort` | its server's port on 127.0.0.1 and its analytics shell's on localhost, each the host's own |
+| `scopes.<name>.environment` | more of its server's settings, such as `CELLA_PATIENCE` |
+| `scopes.<name>.demo.enable`, `.scenario` | a demo's scope ([the demo](#the-demo)), its template played with `authority-walk` unset |
+
+Each scope is three units. `cella-<name>-setup`, a oneshot as
+`postgres`, makes its database if it is missing, sets its address and
+timezone, and migrates it with `cella migrate --url`, so a restart after
+an upgrade migrates it; a demo's builds its template and its copy
+instead. `cella-<name>-analytics` runs its [analytics
+shell](#the-analytics-shell). `cella-<name>`, its server, runs
+`cella-server` as the `cella` user, which logs in as `cella_app` over
+Postgres's socket (`pg_hba` maps the `cella` user to `cella_app` and
+`cella_analytics` on the scopes' databases alone), on `127.0.0.1:<port>`,
+with a session key it makes on first start and keeps. The host serves
+each port behind its own proxy, which terminates TLS and sets
+`x-forwarded-proto`; the module opens no port.
+
+Since the notary's key is the cluster's, every scope on a host is signed
+by one key: the module refuses a host mixing a demo's scope with a
+co-op's, so a demo's keys are the demo's own. Every scope's server and
+shell run as the one `cella` user, so a demo host serves demos only, and
+a co-op's scope is never on a host anyone may sign in to as a demo.
+
+The module refuses as well two scopes naming one database, counting a
+demo's `<database>_template` among them, and a scope's `environment`
+setting `CELLA_DEMO`, `CELLA_DEV` or `HOST`: only `demo.enable` makes a
+demo, and a server listens on 127.0.0.1 alone. A demo never drops a
+database that is not its own: `cella demo template` renews only a
+database its comment marks a template `cella demo template` made, and
+`cella demo copy --replace` drops only one its comment marks a copy of
+that template, each refusing any other, so turning a co-op's scope into
+a demo by its `demo.enable` fails its setup and leaves its database as
+it was.
+
+## The demo
+
+The demo is a production build serving Lanterne, the mock co-op, and
+nothing else: never a pilot co-op's data. `cella serve --prod --demo`
+runs it, and so does the module's `demo.enable`, each setting the
+server's `CELLA_DEMO`: its sign-in offers Lanterne's fixture members by
+name, each marked as a demo member, whose TEST-ONLY keys anyone can
+derive from their address and their device's label, as the dev
+server's are, where a production sign-in offers no one; every page, the
+sign-in's and each signed-in one, wears the demo's banner, saying the
+co-op is a mock that anyone may sign in to and nothing in it is real.
+The demo's scope carries its own keys, never a real scope's: its host's
+notary and vault keys are the demo's, made by `cella key init`, and the
+module refuses a host mixing a demo with a co-op's scope. The e2e
+scenario `demo` asserts a demo build's sign-in, its banner and a demo
+member's write, and that the same build without it offers no one.
+
+`cella demo template --url URL [--scenario NAME]` builds the demo's
+template from nothing, in the database `URL` names, logging in as the
+cluster's superuser: the database dropped if it is there and made
+afresh, migrated, Lanterne founded in it, then the story of an e2e
+scenario played on it through the notary and the guards, as `cella seed
+--scenario` plays it, `authority-walk` unset, which leaves Lanterne on
+31 October 2026 with its four motions open, its bills, invoices,
+meetings and mandates as its year left them ([the authority
+walk](../../apps/org/fixtures/lanterne/index.md#the-authority-walk)).
+The story's clock is the app role's in that database (`cella.clock`), so
+the demo lives on the story's last day. The template is then marked a
+template and closed to every connection (`IS_TEMPLATE`, no
+`ALLOW_CONNECTIONS`), so nobody is served it, and labelled, as its
+database's comment, with the tree that built it and its story: run
+again by the same build with the same story it does nothing, and
+`--again` builds it anew. The module's demo builds it as
+`<database>_template` each time its setup starts, so it is built at the
+first start and again after each upgrade, and no copy is older than the
+build that serves it.
+
+### A copy of the template
+
+A demo scope is served from a copy of the template, never from the
+template, and a host makes as many as it serves, each a database of its
+own: `cella demo copy NAME --url TEMPLATE_URL [--replace]`. The copy is
+`CREATE DATABASE NAME TEMPLATE <template>`, Postgres copying the
+template's files, with no migration, seed or story run again, then the
+settings the template's database and roles carry there, which a copy
+does not take by itself: the scope's address and timezone the founding
+set and the story's clock. Its comment names the template and the label
+the template had, `a copy of <template>: <label>`, so a host knows a
+copy made before the template was built again. Every copy is signed by
+the cluster's demo key, as its template was, and its log verifies; what
+a visitor writes in one changes no other and never the template.
+
+This is how a host starts many scopes from one template: per scope, a
+copy made by `cella demo copy`, a server on it, `cella-server` with
+`PGDATABASE` naming the copy, `CELLA_DEMO=1`, a port of its own and a
+session key, and, to end it, the server stopped and the copy dropped
+(`DROP DATABASE … WITH (FORCE)`). The module's demo serves one copy, the
+scope's own `database`, made afresh by its setup whenever the template
+was built since, so an upgrade resets it and a restart keeps what was
+written. `checks.demo` boots a demo host: its template is built at the
+first start, its copy served, its sign-in offering Lanterne's members,
+each marked, under the banner, and a member signs in and signs a write;
+the template, built again from nothing, holds the same log, and a copy
+of each verifies.
+
+## A visitor's scope
+
+The demo serves each visitor a scope of their own, a copy of its
+template, so what they do changes only what they see, and nobody signs
+up. `cella demo serve` is its front, the one address the host serves
+(`tools/demo-serve.mjs`), which the module runs for a demo in place of
+its single server; `demo.shared = true` serves one copy to everyone, as
+above, made afresh each night at `demo.resetAt` (04:00), the fallback
+for a demo a presenter leads. A visitor arriving without a copy is
+shown a page saying their co-op is being prepared, and the page's
+script asks the front for one by a POST from the same origin, so a
+crawler, which runs no script, makes none; refused, the page asks again
+a few seconds later. The front then copies the template into a database
+of its own (`CREATE DATABASE … TEMPLATE`, about 0.2 s), marks it `a copy
+of <template>: <label>` as `cella demo copy` does, gives it a login role
+of the same name, `<database>_v_<16 hex digits>`, and starts its server,
+the built shell as `cella-server` runs it, with `CELLA_DEMO`, on a Unix
+socket of its own in the unit's runtime directory; the page goes on to
+it once it answers. The cookie, `__Host-cella-visitor`, always `Secure`,
+is 32 random bytes and nothing else, never the copy's name; the front
+keeps in memory alone which copy it names, when its visitor was last
+seen and the address it was made for, and records nothing about a
+visitor, no address, no name. It brings the visitor back to the same
+copy, and the front passes each of their requests to that copy's server
+and to no other, the cookie itself stripped from what the server is
+handed.
+
+The front is a single process, not a unit per visitor: one unit's
+limits hold every copy, and the front needs no right to start units.
+Each copy is still a process of its own, so what one visitor's server
+holds, its memory, its pools, its sessions, is no other's, and the
+server is the same one every scope runs. What keeps a copy to its own
+database is Postgres, not the front:
+
+- A copy's role logs in only by a password its server alone is handed,
+  over the socket, to its own database: the cluster's `pg_hba.conf`
+  lets `<database>_v_…` reach the database of its own name and refuses
+  it everywhere else and over TCP. Its database grants `CONNECT` to it
+  alone, never to `PUBLIC`. It is no superuser, makes no database or
+  role, and may act as `cella_app`, so the row-level policies hold.
+- The front logs in as `<database>_front` to `postgres` alone, a role
+  that may make databases and roles and grant `cella_app`, but is never
+  `cella_app` itself, nor a superuser: it drops a database only where
+  it owns it, a copy it made, and checks the name and the copy's mark
+  before it does. The setup makes the role and grants it, after the
+  template is built.
+- The front's unit, as a user of its own (`cella-visitors`), reaches no
+  address but localhost and holds no capability: no copy sends mail or
+  calls anything outside the host.
+
+### Its limits
+
+Each limit is an option of the module's `demo`, its default set for a
+room full of people arriving at once behind one NAT address:
+
+- **How many copies** (`visitors`): unset, the front derives it from the
+  host's memory as it starts, (RAM − `reserve`) / `footprint`, the
+  reserve 1536 MiB for Postgres's shared buffers, the proxy, the site
+  and the rest, and the footprint 160 MiB, a copy's server (127 MiB
+  resident, measured on the demo's sign-in and a write) and its
+  Postgres connections. That is **6 copies per GiB of RAM** past the
+  reserve: about 15 on a cx23 (4 GiB, of which the kernel keeps a
+  little), 40 on a cx33 (8 GiB), 90 on a cx43 (16 GiB). Twenty to forty people arriving at once want 8 GiB.
+- **How long a copy lives**: two hours with no request (`idle`), and two
+  hours after it was made however busy (`lifetime`), so no visitor
+  holds one for good; the banner counts down to whichever comes first.
+  At the cap, a newcomer ends the copy idle longest if idle 5 minutes
+  (`evictAfter`), else the oldest if 10 minutes old (`minAge`), and is
+  otherwise asked to come back in a minute.
+- **What one address may take**: 40 copies held at once (`perAddress`)
+  and 80 made in ten minutes (`perAddressRate`), an IPv6 address
+  counted by its /64; 60 made a minute across the host (`perMinute`),
+  4 at once (`concurrent`). Only a copy made counts: a refused or
+  failed attempt costs the address nothing, so a page asking again
+  locks no one out. A public demo with no room to host lowers
+  `perAddress`, to 2 say, so no one client holds every copy.
+- **What a copy may hold**: its server 192 MiB resident (`memory`),
+  past which it ends; 10 connections (`connections`) and 128 MB of
+  temporary files; a request's body 2 MB (`upload`), so a file too,
+  answered 413 past it, and none of no stated length (411); 64 MiB stored past
+  its template (`storage`), by `pg_database_size`, past which it takes
+  no write and says so, *Your copy holds as much as a demo copy may;
+  Reset now for a fresh one*, and past twice which it ends. While the
+  disk holding `/var/lib` has less than 1 GiB free (`diskFloor`), no
+  copy is made and the copy storing most ends, one each check.
+
+The front checks every copy each 30 s, or a quarter of `idle` where
+that is shorter, and a copy's storage again before a write once its
+last reading is two seconds old.
+
+The address is the last hop of `X-Forwarded-For`, so the host's proxy
+must **set** that header to the client's address, never append to what
+the client sent (Caddy: `header_up X-Forwarded-For {remote_host}`);
+else a client names any address it likes. A CDN or another proxy in
+front of the host makes every visitor its own few addresses, which the
+per-address limits then count together: with one, raise `perAddress`
+or take the client's address from the CDN's own header in the proxy.
+
+A visitor's copy is a scope spawned on demand, the first form of how a
+host spawns a scope per co-op: a database made from a template, a role
+and a server of its own, and an end.
+
+A copy that ends has its server stopped and its database dropped with
+its role. A visitor whose copy ended is prepared a fresh one, the page
+saying their earlier copy was reset. Reset now ends a visitor's copy
+and prepares a fresh one at once, under a new cookie; a copy less than
+20 s old is kept. The front starts by ending every copy an earlier run
+left, and a stopped front ends its copies before it goes, so an
+upgrade, which builds the template again, leaves no copy older than it.
+
+Every page of a visitor's copy wears the demo's banner, never
+dismissed, at the content's foot as every demo page does and atop the
+sign-in's panel: the operator's notice, "This is a prototype
+environment for demo purposes and can't be used for real work.", that
+its co-op is Lanterne, a mock, and this copy is the visitor's own, that
+it resets after two hours idle or when its time runs out and how long
+is left (`CELLA_DEMO_IDLE` and `CELLA_DEMO_ENDS`, which the front hands
+each server), and its Reset now, a form posting to the front. A demo
+that is no visitor's copy carries the same notice. Nobody signs up or
+sets a password: the sign-in offers Lanterne's members, as the demo's
+always does. The org app sends no mail, in a demo or a scope, and a
+demo's unit reaches nothing outside its host.
+
+`checks.visitors` boots a demo serving each visitor a copy, the cap at
+two, the idle span 90 s, the lifetime 150 s, storage 4 MiB and one copy
+to an address. A request with no cookie makes no copy; two visitors get
+two, and one's write reaches neither the other's nor the template; a
+copy's role reaches its own database alone, over the socket; the unit
+reaches no address but localhost; an address past its copies is
+refused, and its refusals cost it nothing; Reset now drops a copy for a
+fresh one with the template's log; at the cap the idlest ends; a body
+past 2 MB is refused, and one of no stated length; a copy past its storage
+refuses a write, saying why, and past twice it ends; an IPv6 address
+counts by its /64; an idle copy ends leaving no database, role, server
+or socket; a copy kept busy ends at its lifetime; and a front killed
+outright has its copies ended by the next. `checks.demo` serves a
+shared demo.

@@ -313,6 +313,7 @@ pub fn run(repo: &Repo, steps: &Steps, command: Db) -> Result {
 /// its own install script. The directory is emptied
 /// first, so nothing an earlier build staged stays.
 pub fn ext_build(repo: &Repo, steps: &Steps) -> Result<PathBuf> {
+    repo.checkout("building the extension (a host's Postgres carries the flake's cella-pg)")?;
     let dir = ext_dir(repo);
     if dir.exists() {
         fs::remove_dir_all(&dir).map_err(io(&dir))?;

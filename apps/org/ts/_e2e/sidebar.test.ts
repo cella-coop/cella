@@ -1,11 +1,12 @@
 // The sidebar scenario, in every browser, light and dark, on a seeded
 // Lanterne through the dev server: Camille signs in and lands in the
-// assembly, first in the co-op selector, its features in the sidebar
-// under its accordions and nothing else of the co-op's collections but
-// the Inbox and Activity. Each of Lanterne's circles, chosen, shows its
-// own enabled features in its order and under its accordions. She
-// chooses Web from the selector: its features, flat, and its rows; More…
-// opens Web's features page. `SHOTS` names where its screenshots go. It
+// assembly, the co-op's own row first in the co-op selector and checked,
+// the circles she sits in below it, its features in the sidebar under
+// its accordions and nothing else of the co-op's collections but the
+// Inbox and Activity. Each of Lanterne's circles, chosen, shows its own
+// enabled features in its order and under its accordions. She chooses
+// Brand from the selector and stays on the page she chose on; through
+// Web, its features, flat, and its rows; More… opens Web's features page. `SHOTS` names where its screenshots go. It
 // writes nothing to the log. Run by `cella test e2e sidebar`.
 
 import { after, before, test } from 'node:test'
@@ -113,7 +114,13 @@ eachBrowser((name, launch) => {
           await page.waitForLoadState('networkidle')
           const nav = page.getByRole('navigation', { name: 'Main' })
           const trigger = nav.locator('.coop .trigger')
-          const named = async () => ((await nav.locator('.coop .name').textContent()) ?? '').replace(/\s*\/\s*/, ' / ').replace(/\s+/g, ' ').trim()
+          // The trigger's name: the co-op's alone, or through a circle the
+          // co-op as its eyebrow over the circle's, read as "co-op / circle".
+          const named = async () =>
+            (await trigger.evaluate((t) => {
+              const names = t.querySelector('.names')
+              return names ? [...names.children].map((c) => c.textContent?.trim()).join(' / ') : (t.querySelector('.name')?.textContent ?? '')
+            })).replace(/\s+/g, ' ').trim()
 
           // The assembly: where she lands, first in the selector and checked.
           assert.equal(await named(), 'Lanterne', `${at}: she lands in the assembly, the trigger naming the co-op alone`)
@@ -126,11 +133,12 @@ eachBrowser((name, launch) => {
           assert.equal(more, `/settings/features/${assembly.id}`, `${at}: More… opens the assembly's features page`)
           await page.screenshot({ path: `${shots}/sidebar-assembly-${name}-${scheme}.png` })
           await trigger.click()
-          const menu = page.getByRole('group', { name: 'Circles' })
-          const rows = await menu.getByRole('menuitemradio').evaluateAll((bs) => bs.map((b) => `${b.textContent?.trim()}${b.getAttribute('aria-checked') === 'true' ? ' ✓' : ''}`))
-          assert.equal(rows[0], `${assembly.name} ✓`, `${at}: the assembly is first in the selector, and checked`)
+          const menu = page.getByRole('group', { name: 'Co-op' })
+          const rows = await menu.getByRole('menuitemradio').evaluateAll((bs) => bs.map((b) => `${b.textContent?.replace(/\s+/g, ' ').trim()}${b.getAttribute('aria-checked') === 'true' ? ' ✓' : ''}`))
+          assert.match(rows[0] ?? '', /Lanterne.* ✓$/, `${at}: the co-op's own row, the assembly's, is first in the selector, and checked`)
           assert.ok(!rows.some((r) => /All circles/.test(r)), `${at}: no row lists all circles`)
-          assert.equal(rows.length, circles.length, `${at}: every circle she reads is offered`)
+          assert.ok(rows.includes('Brand') && rows.includes('Coordination'), `${at}: the circles she sits in are offered`)
+          assert.ok(!rows.includes('Web') && !rows.includes(assembly.name), `${at}: a circle she does not sit in is not, nor the assembly as a circle of its own`)
           await page.screenshot({ path: `${shots}/sidebar-selector-${name}-${scheme}.png` })
           await page.keyboard.press('Escape')
 
@@ -147,16 +155,19 @@ eachBrowser((name, launch) => {
 
           // Back to the assembly by the selector, then Web.
           await trigger.click()
-          await page.getByRole('menuitemradio', { name: assembly.name }).click()
-          await page.waitForFunction(() => !document.querySelector('.coop .name')?.textContent?.includes('/'))
+          await page.getByRole('menuitemradio', { name: /^L?\s*Lanterne/ }).click()
+          await page.waitForFunction(() => !document.querySelector('.coop .trigger .names'))
           await page.waitForLoadState('networkidle')
           assert.equal(await named(), 'Lanterne', `${at}: the assembly's row clears the lens`)
           await page.goto(`${dev.base}/tasks`)
           await page.waitForLoadState('networkidle')
           await trigger.click()
-          await page.getByRole('menuitemradio', { name: 'Web' }).click()
-          await page.waitForFunction(() => document.querySelector('.coop .name')?.textContent?.includes('Web'))
+          await page.getByRole('menuitemradio', { name: 'Brand' }).click()
+          await page.waitForFunction(() => document.querySelector('.coop .name')?.textContent?.includes('Brand'))
           assert.equal(new URL(page.url()).pathname, '/tasks', `${at}: the selector returns to the page she chose on`)
+          await page.waitForLoadState('networkidle')
+          await context.addCookies([{ name: 'cella-lens', value: 'web', url: dev.base }])
+          await page.goto(`${dev.base}/tasks`)
           await page.waitForLoadState('networkidle')
           assert.equal(await named(), 'Lanterne / Web', `${at}: choosing Web puts her in Web`)
           const web = circles.find((c) => c.id === 'web')!

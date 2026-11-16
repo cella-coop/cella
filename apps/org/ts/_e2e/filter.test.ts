@@ -24,7 +24,7 @@ import { people } from '@cella/org-person/api'
 import { limits } from '@cella/org-ui/models'
 import { source } from '#lib/server/slices.ts'
 import { eachBrowser, serve, signIn } from './browser.ts'
-import { choose, offered } from './controls.ts'
+import { choose, offered as listed } from './controls.ts'
 
 const julien = 'julien@lanterne.example'
 const shots = process.env.SHOTS ?? '/tmp/cella-filter-shots'
@@ -216,7 +216,7 @@ eachBrowser((browserName, launch) => {
       const own = await powers([{ field: 'issuer', is: [narrow] }])
       const others = (await powers([])).filter((p) => !own.includes(p))
       assert.ok(others.length > 0, 'other circles issued powers this one did not')
-      const offers = async () => (await offered(panel(page).getByRole('combobox', { name: 'Filter' }))).map((o) => o.label)
+      const offers = async () => (await listed(panel(page).getByRole('combobox', { name: 'Filter' }))).map((o) => o.label)
       await visit('/mandates?view=list')
       assert.ok(!(await offers()).includes('Power'), `${browserName}: Filter offers no Power across every mandate`)
       await visit(`/mandates?view=list&where=${encodeURIComponent(JSON.stringify([{ field: 'issuer', is: [narrow] }]))}`)

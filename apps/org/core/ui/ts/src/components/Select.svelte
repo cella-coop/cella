@@ -170,6 +170,7 @@
 
 {#snippet item(o: Option, at: number)}
   {const chosen = $derived(o.value === current && !!shown)}
+  <!-- svelte-ignore a11y_interactive_supports_focus, a11y_click_events_have_key_events: an option is the combobox's active descendant; the combobox keeps the focus and answers the keys -->
   <div
     role="option"
     id={option(at)}

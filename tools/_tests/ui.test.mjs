@@ -1,11 +1,11 @@
 // The ui check: CSS only in the UI core, state and effects only in hooks,
 // no module-level mutable state in client code, no server layer imported
-// by a client one, no legacy Svelte or SvelteKit form, and no create form
-// drawn but in New's Dialog.
+// by a client one, no legacy Svelte or SvelteKit form, no create form
+// drawn but in New's Dialog, and no page's own Save button.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { inlineCreates, problems } from '../ui-check.mjs'
+import { inlineCreates, pageSaves, problems } from '../ui-check.mjs'
 
 const block = 'apps/org/feats/invoice/core/ts/src/app/blocks/Lines.svelte'
 const component = (script, markup = '<p>x</p>') => `<script lang="ts">\n${script}\n</script>\n\n${markup}\n`
@@ -244,4 +244,24 @@ test('a create form drawn inline on a page is refused by name; New opens it in t
     `${collection}: draws a collection's create forms outside its Dialog; New opens them in the one Dialog`,
   ])
   assert.deepEqual(inlineCreates(drawn(`<Dialog title="New">${each}</Dialog>\n<!-- {#each creates} -->`)), [], "the Dialog behind New holds them")
+})
+
+test('a Form with a Save submit drawn on a page is refused by name; a modal may end in Save', () => {
+  const page = { path: 'apps/org/feats/report/core/ts/src/app/blocks/Save.svelte', text: component('', '<Form action="save" submit="Save report">\n  <Field label="Title" name="title" />\n</Form>') }
+  assert.deepEqual(pageSaves([page]), [`${page.path}: draws a Form submitting "Save report" on a page; a page holds no Save button, only a modal confirms`])
+
+  const dialog = { path: 'apps/org/feats/document/core/ts/src/app/blocks/Save.svelte', text: component('', '<Dialog title="New version">\n  <Form action="version" submit="Save version" />\n</Dialog>') }
+  assert.deepEqual(pageSaves([dialog]), [], "the shared Dialog's own Form may end in Save")
+
+  const propose = { path: 'apps/org/core/ui/ts/src/components/Settings.svelte', text: component('', '<ProposeInstead>\n  <Form action="propose" submit="Save settings" />\n</ProposeInstead>') }
+  assert.deepEqual(pageSaves([propose]), [], 'ProposeInstead holds one too')
+
+  // A create form a collection declares is exempt throughout its file:
+  // inlineCreates already refuses it drawn anywhere but in New's Dialog.
+  const app = { path: 'apps/org/feats/report/core/ts/src/app/index.ts', text: "import Save from './blocks/Save.svelte'\nexport const app = { collections: { reports: { view: { create: Save } } } }\n" }
+  assert.deepEqual(pageSaves([app, page]), [], "a declared create form's own confirming button may be named Save")
+
+  // A submit not starting with Save passes.
+  const other = { path: 'apps/org/feats/project/core/ts/src/app/blocks/Budget.svelte', text: component('', '<Form action="budget" submit="Set budget" inline />') }
+  assert.deepEqual(pageSaves([other]), [])
 })

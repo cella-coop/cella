@@ -176,10 +176,14 @@ saves nothing itself, since the server signs with none
   unmounting or the tab's hiding. It posts to the session first every
   edit it holds that the session lacks, its own and those it heard from
   other editors, and saves only once the session accepted all of them,
-  its version vector holding the browser's: where a post fails or is
-  refused, it makes no save, keeps the edits, says why, and tries again
+  its version vector holding the browser's, and once the browser holds
+  all the session had accepted when it joined, the update `joined`
+  promised imported, its version vector holding the one `joined` named:
+  where a post fails or is refused, or the joined update has not
+  arrived, it makes no save, keeps the edits, says why, and tries again
   after its next pause, so no save carries an edit the session refused
-  or never had, whoever made it. The save carries the snapshot of
+  or never had, whoever made it, and none leaves out an edit the session
+  had accepted before the browser joined. The save carries the snapshot of
   the merged document as the browser holds it, in its `snapshot` field;
   its `base`, the SHA-256 of the saved body it last imported, empty for
   a body never saved; and the addresses of who contributed since the
@@ -269,8 +273,11 @@ are their feats' own, and not held.
   saves a browser's pauses and its leaving make, each signed by its
   device and naming who contributed, a save with nothing new not made,
   and a refused save kept for the next; no save after a post that
-  failed or was refused; two browsers saving from one base, the second
-  refused for its `base`, then merging the first's save and saving both
+  failed or was refused; a browser whose joined update is delayed, which
+  edits, posts its edit and makes no save until the update arrives, then
+  saves a snapshot holding the other editor's accepted edit with its
+  own; two browsers saving from one base, the second refused for its
+  `base`, then merging the first's save and saving both
   editors' edits; a peer dropped when its answer
   turns no, at an update and at a save, a reader who may not discuss
   and one who reads nothing; a restart in which a peer rejoins, posts

@@ -26,6 +26,7 @@
     under,
   } from '../models/query.ts'
   import { anchor, period } from '../models/calendar.ts'
+  import { widest } from '../models/format.ts'
   import { abandon } from '../models/navigation.ts'
   import { control, focused, typing } from '../models/keys.ts'
   import { mark } from '../marks.ts'
@@ -187,7 +188,9 @@
   // A feed's who and when: its first person column and its first date.
   const who = $derived(columns.find((c) => c.kind === 'person'))
   const when = $derived(columns.find((c) => c.kind === 'date'))
-  const visible = $derived(arranged(columns, spec.order).filter((c) => c === titled || !hidden.has(c.key)))
+  // A table's columns, but the one its rows are grouped by, which each
+  // group's header names.
+  const visible = $derived(arranged(columns, spec.order).filter((c) => c === titled || (!hidden.has(c.key) && c !== group?.by)))
 
   const active = $derived(views.find((v) => v.id === view))
   const custom = $derived(saved.find(view))
@@ -203,7 +206,7 @@
   const link = (id: string, s: Spec) => `${page.url.pathname}${address(id, s, resolved(id))}`
   const presetLink = (p: Preset) => link(p.id, resolved(p.id))
   const customLink = (c: Custom) => link(c.id, c.spec)
-  // The open view as Favorites pins it: at its own address, not with what
+  // The open view as Pinned holds it: at its own address, not with what
   // is changed from it, named by the collection where it is a preset.
   const pin: Pin | null = $derived(
     custom
@@ -223,9 +226,9 @@
   // value and how many rows it holds across every page.
   const group = $derived.by(() => {
     const by = ['list', 'feed', 'table', 'gallery'].includes(spec.layout) && spec.by ? columns.find((c) => c.key === grouping(spec, typed)?.key) : undefined
-    return by && { by, counts: groups }
+    return by && { by, counts: groups, month: by.kind === 'date' }
   })
-  const opening = (i: number) => !!group && opens(state.shown, i, group.by.key)
+  const opening = (i: number) => !!group && opens(state.shown, i, group.by.key, group.month)
   // The fields the view chooses, in its order, but those a layout always
   // shows: a feed's who and when and every layout's title.
   const chosen = (fixed: Column[]) => arranged(columns, spec.cards).filter((c) => spec.cards.includes(c.key) && !fixed.includes(c))
@@ -238,11 +241,13 @@
   const choices = $derived(columns.filter((c) => !fixed.includes(c)))
   const lined = $derived(spec.layout === 'list' || spec.layout === 'feed')
   const choosing = $derived(spec.cards.length > 0 && !(lined && spec.cards.join() === (look.cards ?? []).join()))
+  // What the rows are grouped by leaves them, as its header names it,
+  // but where the view chose it.
   const shown = $derived(
     choosing ? chosen(fixed)
-    : spec.layout === 'list' ? [...subs, ...metas]
+    : spec.layout === 'list' ? [...subs, ...metas].filter((c) => c !== group?.by)
     : spec.layout === 'feed' ? []
-    : [...subs, ...metas].filter((c) => c !== grouped),
+    : [...subs, ...metas].filter((c) => c !== grouped && c !== group?.by),
   )
   // A list places each field it shows by its role: a line under the title
   // goes under it, any other after it, with the meta.
@@ -255,7 +260,7 @@
   const shownPeriod = $derived(period(anchor(page.url.searchParams.get('at'), today), spec.span, today))
   // The field a calendar colours its cards by, where the view groups by
   // one, and its values in its board's order, which hand out the inks.
-  const tinted = $derived(spec.layout === 'calendar' && spec.by ? columns.find((c) => c.key === grouping(spec, typed)?.key) : undefined)
+  const tinted = $derived(spec.layout === 'calendar' && spec.by ? columns.find((c) => c.key === grouping(spec, typed)?.key && c.kind !== 'date') : undefined)
   const tints = $derived(tinted ? lanes(look, tinted.key, values[tinted.key] ?? []) : [])
 
   // A calendar draws its period even with no row on its days, so it keeps
@@ -362,8 +367,8 @@
 <!-- A group's header in a list or a feed, over the first of its rows. -->
 {#snippet head(row: any)}
   {#if group}
-    {const value = $derived(under(row, group.by.key))}
-    <li class="group"><Group by={group.by} {row} empty={value === ''} count={group.counts[value] ?? 0} /></li>
+    {const value = $derived(under(row, group.by.key, group.month))}
+    <li class="group"><Group by={group.by} {row} {value} month={group.month} count={group.counts[value] ?? 0} /></li>
   {/if}
 {/snippet}
 
@@ -381,6 +386,7 @@
     grouped={grouped?.key}
     placing={placing?.key}
     {declared}
+    opened={base}
     {custom}
     {dirty}
     {pin}
@@ -570,7 +576,12 @@
             </span>
             <span class="meta">
               {#each after as c (c.key)}
-                <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} />
+                {#if c.kind === 'date'}
+                  <!-- A date takes the width of the widest, an empty one its dim dash in the same box, so what comes before it lines up down the list. -->
+                  <span class="dated"><span class="widest" aria-hidden="true">{widest}</span><Cell value={c.value(row)} kind="date" tone={c.tone?.(row)} /></span>
+                {:else}
+                  <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} />
+                {/if}
               {/each}
             </span>
           </li>
@@ -689,6 +700,19 @@
     align-items: center;
     gap: var(--space-4);
     flex-shrink: 0;
+  }
+  /* A trailing date's box: as wide as the widest date, in tabular
+     figures, the date or its dash at its end. */
+  .dated {
+    display: inline-grid;
+    justify-items: end;
+    font-variant-numeric: tabular-nums;
+  }
+  .dated > :global(*) {
+    grid-area: 1 / 1;
+  }
+  .widest {
+    visibility: hidden;
   }
   /* A feed's line, as a record's Activity: a dot, who, what they did, and
      when, quiet, at the end; the time opens the row's own page above the

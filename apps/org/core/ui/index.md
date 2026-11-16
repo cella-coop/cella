@@ -123,14 +123,14 @@ draws.
   reads whole. A sign-in clears it, so it lands in the assembly. Then,
   always shown, the Inbox, whole whatever the lens, since it is what
   waits on the member, where `/` and the sign-in land, and Activity,
-  the log read as a feed of who did what; then Favorites, the one place
+  the log read as a feed of who did what; then Pinned, the one place
   the same in every circle: the views the member pinned, a collection's
   preset or one of their own, each its icon and its name, opening its
   view at its own address, in the circle the member is in unless the
   view reads across circles. A pin is a preference, never a record,
-  kept in the browser beside the viewer's own views (`FavoritesState`,
+  kept in the browser beside the viewer's own views (`PinnedState`,
   `Saved`'s `pins`), and follows the view it pins: renamed or changed,
-  so is the pin, and deleted, it goes. With none pinned, Favorites says
+  so is the pin, and deleted, it goes. With none pinned, Pinned says
   where a view is pinned from. The middle holds the features
   the circle the member is in enabled, in its order
   ([features](../circle/index.md#features)), each drawn as its
@@ -258,16 +258,21 @@ draws.
   (`Viewing`), of one shape for every collection, as Linear's display
   menu. At its top the layout, a segmented control of icons (list · feed ·
   table · gallery · board · calendar · dashboard, those the
-  collection's fields allow), then the text filter, then the same rows
-  in the same order everywhere, each a label and a dropdown: Group by
-  (any enumeration, person or circle field, or None: a board's columns,
-  and in a list, a feed, a table and a gallery a header over each
-  group's rows, naming its value and its count as a board's column
-  does; a calendar's date, and month or week, and a value that colours
+  collection's fields allow), then the search box (Search), then the
+  same rows in the same order everywhere, each a label and a dropdown,
+  ending on one right edge: Group by
+  (any enumeration, person or circle field, a date by its month, or
+  None: a board's columns, never a month, and in a list, a feed, a
+  table and a gallery a header over each group's rows, naming its
+  value, a date's month in full, and its count as a board's column
+  does, the field leaving the rows, as its header names it; a
+  calendar's date, and month or week, and a value that colours
   each card, a legend over the calendar naming each value with its
-  colour and count), Order by (any of the collection's fields, and a toggle beside
-  it for ascending or descending; none chosen, the collection's own
-  order) and Filter (a field to add a condition on: a date, or any field
+  colour and count), Order by (the direction's toggle, ascending or
+  descending, before it, and the field alone, any of the collection's;
+  the order the view opened with, else the field its read leads with,
+  else As listed, is marked quietly in the options as the default,
+  never named in the panel) and Filter (a field to add a condition on: a date, or any field
   with a handful of values, at most `limits.values`, an enumeration's
   across every row and any other's across the rows the view would keep
   without it, a person's and a circle's among them; the conditions
@@ -283,8 +288,11 @@ draws.
   read of its own for it
   ([the lens](../../../../_corpus/doc/architecture.md#the-lens)),
   disabled with no lens or where the lens leaves the collection whole;
-  and last, saving what is shown as a view, and pinning the open view to
-  Favorites or unpinning it. A row the layout has no use for is shown disabled, never
+  and last, one row: Save, shown only once the view differs from what
+  it opened as, which keeps a view of the viewer's own or names a new
+  one, and Pin, with its pin icon, which pins the open view under
+  Pinned in the sidebar, or Unpin; on a view of the viewer's own, its
+  name over them and Delete after them. A row the layout has no use for is shown disabled, never
   dropped, so the rows never move; a control that offers no choice
   reads as its value, not as a control: a disabled field is muted, and
   a disabled select drops its field and chevron. What a collection offers lives only
@@ -319,8 +327,9 @@ draws.
   filter goes into the address once the typing pauses, which draws the
   first page again. A grouped list, feed, table or gallery reads its
   rows group by group, the groups in the order a board's columns take
-  (`lanes`), a row with no value for the field in a last group, None,
-  and the view's order within each; so a page of a hundred continues
+  (`lanes`), any other value after them, months among them, the way the
+  view's sort runs, a row with no value for the field in a last group,
+  None, and the view's order within each; so a page of a hundred continues
   the group the last one ended in, under its header again, and each
   header's count is the group's whole, read with the page. A board and
   a calendar place every row the view keeps. The feed draws each row as one line of who did what and when,
@@ -353,12 +362,25 @@ draws.
   (`models/calendar.ts`). It draws that month or week, its header and
   arrows with it, even where no row falls in it; only a view that keeps
   no row at all says it is empty. A view, its extensions overriding it part by
-  part, declares its `look`: its default layout, its board's grouping
-  and columns' order (`lanes`), its cards' fields, its calendar's date
-  (`on`) and span, and the columns a table hides until a view shows
-  them (`hide`); the log opens as a feed, circles and projects as a gallery, motions and
-  tasks as a board, timesheets as a table, meetings as a calendar of
-  months. A board move is
+  part, declares its `look`: its default layout, the field every layout
+  groups by (`by`: a board's columns, a calendar's colours, a list's,
+  a feed's, a table's and a gallery's headers), the order it sorts by
+  (`sort`) and the tiebreak after any sort (`then`, as the inbox's
+  since, so an ask with no due date follows those with one, the
+  longest waiting first), its groups' and columns' order (`lanes`), its
+  cards' fields, its calendar's date (`on`) and span, and the columns a
+  table hides until a view shows them (`hide`, every slice's together);
+  a view changes each, and its address says so. A state a board's moves
+  write is a board (tasks, expenses, motions); a state with no moves is
+  a list grouped by it (invoices, bills, periods; timesheets as a
+  table, the approval queue); a circle's records group by circle
+  (projects, documents, mandates by their issuer), and history by its
+  month (transactions, payslips); the log opens as a feed, circles as a
+  gallery, accounts and timesheets as tables, where figures line up,
+  meetings as a calendar of months tinted by circle. In a list, a
+  row's trailing date takes the width of the widest date, in tabular
+  figures, an empty one its dim dash in the same box, so what comes
+  before it lines up down the list. A board move is
   a write only where a slice declares it (`shifts`: the field, the
   columns it leaves and enters, the write): the `transfer` attachment
   lets a card drop only there, and the drop posts that write to the

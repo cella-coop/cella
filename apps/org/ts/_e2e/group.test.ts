@@ -168,7 +168,9 @@ eachBrowser((browserName, launch) => {
         // changes nothing, as the browser's own select did not.
         if ((await chosen(by)) !== field.key) {
           await choose(by, { label: field.label })
-          await page.waitForURL((u) => u.searchParams.get('by') === field.key)
+          // The address names the field, or nothing where it is the one the
+          // collection groups by.
+          await page.waitForURL((u) => u.searchParams.get('by') === field.key || !u.searchParams.has('by'))
         }
 
         await view.getByRole('heading', { name: 'View', exact: true }).hover()
@@ -179,7 +181,9 @@ eachBrowser((browserName, launch) => {
       const byStatus = await expected('expenses', 'status', [...statuses], (v) => v)
       assert.ok(byStatus.length > 1, 'expenses stand in more than one status')
       for (const layout of ['list', 'table', 'gallery', 'board']) {
-        await visit(`/expenses?view=${layout}`)
+        // Grouped by nothing and in the collection's own order, the start
+        // the scenario works its groups out from.
+        await visit(`/expenses?view=${layout}&by=&sort=`)
         await grouping('expenses', layout, { key: 'status', label: 'Status' }, byStatus)
       }
 
@@ -188,7 +192,7 @@ eachBrowser((browserName, launch) => {
       const byUploader = await expected('files', 'uploader', [], (v) => names[v] ?? v)
       assert.ok(byUploader.length > 1, 'more than one person uploaded the files Julien reads')
       for (const layout of ['feed', 'list', 'table', 'gallery', 'board']) {
-        await visit(`/files?view=${layout}`)
+        await visit(`/files?view=${layout}&by=&sort=`)
         await grouping('files', layout, { key: 'uploader', label: 'By' }, byUploader)
       }
 
@@ -197,36 +201,36 @@ eachBrowser((browserName, launch) => {
       const byIssuer = await expected('mandates', 'issuer', [], (v) => circles[v] ?? v)
       assert.ok(byIssuer.length > 1, 'more than one circle issued the mandates')
       for (const layout of ['list', 'table', 'gallery', 'board']) {
-        await visit(`/mandates?view=${layout}`)
+        await visit(`/mandates?view=${layout}&by=&sort=`)
         await grouping('mandates', layout, { key: 'issuer', label: 'Issued by' }, byIssuer)
       }
 
       // A view saved with its group restores it from its tab.
-      await visit('/mandates?view=list&by=issuer')
+      await visit('/mandates?view=list&by=issuer&sort=')
       await groups(page, 'mandates', 'list', byIssuer, `${browserName}: before saving`)
-      await panel(page).getByRole('button', { name: 'Save as view' }).click()
+      await panel(page).getByRole('button', { name: 'Save', exact: true }).click()
       await panel(page).getByLabel('View name').fill('By issuer')
       await panel(page).getByRole('button', { name: 'Save view' }).click()
       await page.waitForURL((u) => u.searchParams.get('v')?.startsWith('c-') ?? false)
-      await visit('/mandates?view=list')
+      await visit('/mandates?view=list&by=')
       assert.equal(await drawn(page, 'mandates', 'list').then((d) => d.length), 0, `${browserName}: the list groups by nothing`)
       await page.getByTitle(/^View By issuer /).click()
-      await page.waitForURL((u) => u.searchParams.get('by') === 'issuer')
+      await page.waitForURL((u) => u.searchParams.get('v')?.startsWith('c-') ?? false)
       await groups(page, 'mandates', 'list', byIssuer, `${browserName}: the saved view`)
 
       // The address alone draws the group, from the server.
-      await visit('/mandates?view=table&by=issuer')
+      await visit('/mandates?view=table&by=issuer&sort=')
       await groups(page, 'mandates', 'table', byIssuer, `${browserName}: the address`)
       mkdirSync(shots, { recursive: true })
       await page.screenshot({ path: `${shots}/mandates-${browserName}.png` })
-      await visit('/files?view=feed&by=uploader')
+      await visit('/files?view=feed&by=uploader&sort=')
       await groups(page, 'files', 'feed', byUploader, `${browserName}: the feed's address`)
       await page.screenshot({ path: `${shots}/files-${browserName}.png` })
 
       // None draws the rows as one again.
       await choose(panel(page).getByRole('combobox', { name: 'Group by' }), { label: 'None' })
 
-      await page.waitForURL((u) => !u.searchParams.has('by'))
+      await page.waitForURL((u) => u.searchParams.get('by') === '')
       for (let tries = 0; tries < 60 && (await drawn(page, 'files', 'feed')).length > 0; tries++) {
         await page.waitForTimeout(250)
       }

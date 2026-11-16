@@ -28,6 +28,20 @@ export const month = (ym: string) => {
   return Number.isNaN(d.getTime()) ? ym : months.format(d)
 }
 
+const named = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' })
+
+// A `YYYY-MM` month in full, as a group of rows by a date's month is
+// headed.
+export const monthName = (ym: string) => {
+  const d = new Date(`${ym}-01T00:00:00Z`)
+  return Number.isNaN(d.getTime()) ? ym : named.format(d)
+}
+
+// The widest a date shows, of every month's last two-digit day, which a
+// row's trailing date cell is sized to, so a short date and an empty one
+// take the same width as the longest.
+export const widest = Array.from({ length: 12 }, (_, m) => date(`2026-${String(m + 1).padStart(2, '0')}-28`)).reduce((a, b) => (b.length > a.length ? b : a))
+
 // A hash or key, shortened to its head.
 export const short = (hex: unknown, n = 10) => (hex ? `${String(hex).slice(0, n)}…` : '—')
 

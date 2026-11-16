@@ -19,15 +19,15 @@
     titled: Column
     shown: Column[]
     href?: (row: any) => string | undefined
-    group?: { by: Column; counts: Record<string, number> }
+    group?: { by: Column; counts: Record<string, number>; month?: boolean }
   } = $props()
 </script>
 
 <ul class="gallery">
   {#each rows as row, i (row.id)}
-    {#if group && opens(rows, i, group.by.key)}
-      {const value = $derived(under(row, group.by.key))}
-      <li class="group"><Group by={group.by} {row} empty={value === ''} count={group.counts[value] ?? 0} /></li>
+    {#if group && opens(rows, i, group.by.key, group.month)}
+      {const value = $derived(under(row, group.by.key, group.month))}
+      <li class="group"><Group by={group.by} {row} {value} month={group.month} count={group.counts[value] ?? 0} /></li>
     {/if}
     <li><Tile {row} {titled} {shown} href={href?.(row)} /></li>
   {/each}

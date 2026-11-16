@@ -1,6 +1,6 @@
 import { ask as asking, counts, made, ordered, read, texts, today, type Db, type Source } from '@cella/org-db'
 import { scoped } from '@cella/org-analytics'
-import { anchor, defaults, fields, grouping, limits, logged, period, resolve, wheres, widgets, type Field, type Spec } from '@cella/org-ui/models'
+import { anchor, defaults, fields, grouping, limits, logged, period, resolve, wheres, widgets, type Field, type Sort, type Spec } from '@cella/org-ui/models'
 import { named } from '@cella/org-log/api'
 import { people, person } from '@cella/org-person/api'
 import { lensed, lensing } from '#lib/server/lens.ts'
@@ -59,7 +59,7 @@ export const collection = {
     const looks = look(name)
     const { id, spec, errors } = resolve(url, tabs, fs, looks)
     const limit = drawn(url)
-    const keeps = keeping(spec, fs)
+    const keeps = keeping(spec, fs, looks.then)
     // Its rows through the member's lens, where they have one, but in a
     // view that reads across circles, which reads every circle's rows the
     // member reads.
@@ -72,10 +72,15 @@ export const collection = {
     // answered with all its values, as a board's columns are drawn from
     // them and a calendar's inks handed out by them.
     const by = grouping(spec, fs, looks)
-    const group = paged && by ? { field: by.key, values: looks.lanes?.[by.key] ?? [] } : undefined
-    const full = (f: Field) => f.type === 'enum' || (f === by && spec.layout !== 'dashboard')
+    // A date groups by its month; groups not declared in the look's lanes,
+    // months among them, follow the direction of the view's sort.
+    const group =
+      paged && by
+        ? { field: by.key, values: looks.lanes?.[by.key] ?? [], ...(by.type === 'date' ? { month: true } : {}), ...(spec.sort ? { dir: spec.sort.dir } : {}) }
+        : undefined
+    const full = (f: Field) => f.type === 'enum' || (f === by && f.type !== 'date' && spec.layout !== 'dashboard')
     const { rows, counts, values, groups, whole } = await read(db, from, {
-      ...(spec.layout === 'dashboard' ? {} : { keep: placing(spec, fs, url, day) ?? { ...keeps, ...(group ? { group } : {}) }, ...(paged ? { limit } : {}) }),
+      ...(spec.layout === 'dashboard' ? {} : { keep: placing(spec, fs, url, day, looks.then) ?? { ...keeps, ...(group ? { group } : {}) }, ...(paged ? { limit } : {}) }),
       counts: [{ where: spec.where }, keeps, ...tabs.map((p) => ({ where: wheres(p.where, fs) }))],
       values: fs.filter(full).map((f) => f.key),
       few: { keys: fs.filter((f) => !full(f) && f.type !== 'date').map((f) => f.key), most: limits.values, keep: keeps },
@@ -115,13 +120,13 @@ export const collection = {
 // In a calendar, the rows the view keeps on the days it shows: the month
 // or week around the day the address is at, else today's, by the date it
 // places them by, the first when the view names none.
-function placing(spec: Spec, fs: Field[], url: URLSearchParams, today: string) {
+function placing(spec: Spec, fs: Field[], url: URLSearchParams, today: string, then?: Sort) {
   const on = fs.find((f) => f.key === spec.on) ?? fs.find((f) => f.type === 'date')
   if (spec.layout !== 'calendar' || !on) {
     return undefined
   }
   const { days } = period(anchor(url.get('at'), today), spec.span, today)
-  return { ...keeping(spec, fs), where: [...spec.where, { field: on.key, from: days[0]?.day ?? today, to: days.at(-1)?.day ?? today }] }
+  return { ...keeping(spec, fs, then), where: [...spec.where, { field: on.key, from: days[0]?.day ?? today, to: days.at(-1)?.day ?? today }] }
 }
 
 // The dashboard: the view's widgets, else the collection's, else the

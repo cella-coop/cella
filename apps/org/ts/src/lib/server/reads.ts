@@ -1,5 +1,5 @@
 import { measures, type Db, type Keep, type Measure, type Source } from '@cella/org-db'
-import { PAGE, result, type Field, type Result, type Spec, type Widget, type Where } from '@cella/org-ui/models'
+import { PAGE, result, type Field, type Result, type Sort, type Spec, type Widget, type Where } from '@cella/org-ui/models'
 
 // How many rows a list, a table or a gallery draws at most: "Show more"
 // asks for the next page in the address (`n`).
@@ -12,11 +12,13 @@ export const drawn = (query: URLSearchParams): number => {
 }
 
 // The rows a view keeps: its conditions, its text filter over every
-// column the collection shows, and the order it sorts them in.
-export const keeping = (spec: Pick<Spec, 'where' | 'q' | 'sort'>, fs: Field[]): Keep => ({
+// column the collection shows, and the order it sorts them in, then the
+// tiebreak the collection's look declares, where it is one of its fields.
+export const keeping = (spec: Pick<Spec, 'where' | 'q' | 'sort'>, fs: Field[], then?: Sort): Keep => ({
   where: spec.where,
   ...(spec.q.trim() ? { q: { text: spec.q, keys: fs.map((f) => f.key) } } : {}),
   ...(spec.sort ? { sort: spec.sort } : {}),
+  ...(then && fs.some((f) => f.key === then.field) ? { then } : {}),
 })
 
 // A widget as the server measures it over a collection's rows: its own

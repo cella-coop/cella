@@ -56,14 +56,19 @@ eachBrowser((name, launch) => {
       // closes it with the focus back on its button.
       await calendar.focus()
       await page.keyboard.press('Enter')
-      const focused = () => page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset.day ?? null)
-      for (let tries = 0; tries < 40 && (await focused()) !== '2026-03-02'; tries++) {
-        await page.waitForTimeout(50)
+      const focused = async (want: string) => {
+        const on = () => page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset.day ?? null)
+        for (let tries = 0; tries < 40 && (await on()) !== want; tries++) {
+          await page.waitForTimeout(50)
+        }
+        return on()
       }
-      assert.equal(await focused(), '2026-03-02', 'the calendar opens on the field\'s day')
+      assert.equal(await focused('2026-03-02'), '2026-03-02', 'the calendar opens on the field\'s day')
       await page.keyboard.press('ArrowRight')
+      assert.equal(await focused('2026-03-03'), '2026-03-03', 'an arrow moves a day')
       await page.keyboard.press('PageDown')
-      assert.equal(await focused(), '2026-04-03')
+      assert.equal(await focused('2026-04-03'), '2026-04-03', 'Page Down moves a month')
+
       await page.keyboard.press('Enter')
       assert.equal(await day.inputValue(), '03/04/2026')
       await calendar.focus()

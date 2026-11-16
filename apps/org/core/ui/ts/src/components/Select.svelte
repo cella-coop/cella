@@ -97,11 +97,15 @@
     }
     hide()
     trigger.focus()
+    // A choice may take the select away, as an embed's picker goes once
+    // it picks; the button it was is still told.
+    const button = trigger
     if (o.value !== current || o.value !== value) {
       value = o.value
       onchange?.(o.value)
-      trigger.dispatchEvent(new Event('change', { bubbles: true }))
+      button.dispatchEvent(new Event('change', { bubbles: true }))
     }
+
   }
 
   function ontoggle(e: ToggleEvent) {

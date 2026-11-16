@@ -89,7 +89,7 @@ test('the founding motion grants the assembly\'s collective mandates and coordin
   assert.deepEqual(held, [
     {
       circle: 'ag',
-      powers: ['admit-member', 'adopt-document', 'adopt-policy', 'amend-circle', 'approve-distribution', 'create-circle', 'end-policy', 'exclude-member', 'seat-member', 'suspend-member'],
+      powers: ['admit-member', 'adopt-document', 'adopt-policy', 'amend-circle', 'approve-distribution', 'arrange-features', 'create-circle', 'end-policy', 'exclude-member', 'seat-member', 'suspend-member'],
     },
     { circle: 'coordination', powers: ['adopt-document', 'adopt-policy', 'end-policy', 'seat-member'] },
   ])

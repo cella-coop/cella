@@ -7,6 +7,9 @@ import { bound } from '../models/bound.ts'
 // keeps its name.
 export class FormState {
   pending = $state(false)
+  // Why the last post was refused, where the form says so itself, as a
+  // create form in New's dialog does.
+  problem = $state<string | null>(null)
   #form: (() => string) | null = null
 
   // The remote form, `<hash>/<name>`, the fields bind to.

@@ -9,6 +9,10 @@
   // what it holds. Submitting hands its fields, by name, to `onsubmit`;
   // Cancel, Escape or a click outside it calls `oncancel`, and its close
   // event `onclose`. Whoever opens it holds the element (`dialog`).
+  // Without `onsubmit` it holds forms of their own, as New holds a
+  // collection's create forms, each ending in its own confirming button
+  // and Cancel (`Form` in a `useCreate` dialog), and draws no form or
+  // buttons itself.
   let {
     dialog = $bindable(),
     title,
@@ -23,10 +27,10 @@
   }: {
     dialog?: HTMLDialogElement
     title: string
-    submit: string
+    submit?: string
     busy?: boolean
     problem?: string | null
-    onsubmit: (fields: [string, string][]) => void
+    onsubmit?: (fields: [string, string][]) => void
     oncancel?: () => void
     onclose?: () => void
     lead?: Snippet
@@ -40,7 +44,7 @@
   function submitted(e: SubmitEvent) {
     e.preventDefault()
     const form = new FormData(e.currentTarget as HTMLFormElement)
-    onsubmit([...form].flatMap(([k, v]): [string, string][] => (typeof v === 'string' ? [[k, v]] : [])))
+    onsubmit?.([...form].flatMap(([k, v]): [string, string][] => (typeof v === 'string' ? [[k, v]] : [])))
   }
 
   function onbackdrop(e: MouseEvent) {
@@ -59,14 +63,18 @@
 <dialog bind:this={dialog} class="dialog" aria-labelledby="{id}-title" {onclose} oncancel={oncancelled} onclick={onbackdrop}>
   <h2 id="{id}-title" class="title">{title}</h2>
   {@render lead?.()}
-  <form method="post" class="form" onsubmit={submitted}>
+  {#if onsubmit}
+    <form method="post" class="form" onsubmit={submitted}>
+      {@render children()}
+      {#if problem}<p class="problem" role="alert">{problem}</p>{/if}
+      <div class="buttons">
+        <Button onclick={cancel}>Cancel</Button>
+        <Button type="submit" tone="primary" {busy}>{submit}</Button>
+      </div>
+    </form>
+  {:else}
     {@render children()}
-    {#if problem}<p class="problem" role="alert">{problem}</p>{/if}
-    <div class="buttons">
-      <Button onclick={cancel}>Cancel</Button>
-      <Button type="submit" tone="primary" {busy}>{submit}</Button>
-    </div>
-  </form>
+  {/if}
 </dialog>
 
 <style>

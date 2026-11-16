@@ -32,6 +32,7 @@
   import { sortable } from '../attachments/sortable.ts'
   import { useWrites } from '../hooks/useWrites.ts'
   import { useCollection } from '../hooks/useCollection.ts'
+  import { useCreate } from '../hooks/useCreate.ts'
   import { useDrag } from '../hooks/useDrag.ts'
   import { useRow } from '../hooks/useRow.ts'
   import { useShell } from '../hooks/useShell.ts'
@@ -39,7 +40,7 @@
   import Board from './Board.svelte'
   import Button from './Button.svelte'
   import Calendar from './Calendar.svelte'
-  import Card from './Card.svelte'
+  import Dialog from './Dialog.svelte'
   import Gallery from './Gallery.svelte'
   import Group from './Group.svelte'
   import Pill from './Pill.svelte'
@@ -176,6 +177,8 @@
   )
   const drag = useDrag()
   const writes = useWrites()
+  // New: the shell's one Dialog, holding the create forms.
+  const create = useCreate()
 
   const hidden = $derived(new Set(spec.hide))
   const titled = $derived(columns.find((c) => c.role === 'title') ?? columns[0])
@@ -323,7 +326,8 @@
   }
 
   function onkeydown(e: KeyboardEvent) {
-    if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) {
+    // While New's dialog is open, the rows behind it take no key.
+    if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented || create.open) {
       return
     }
     if (typing(e)) {
@@ -347,7 +351,7 @@
       e.preventDefault()
       filter()
     } else if (e.key === 'c' && creates.length) {
-      state.toggle()
+      create.show()
       e.preventDefault()
     }
   }
@@ -398,7 +402,7 @@
 >
   {#snippet actions()}
     {#if creates.length}
-      <Button tone="primary" kbd="C" onclick={() => state.toggle()}><Icon icon={Plus} />New</Button>
+      <Button tone="primary" kbd="C" onclick={() => create.show()}><Icon icon={Plus} />New</Button>
     {/if}
   {/snippet}
 
@@ -458,11 +462,19 @@
     </div>
   {/if}
 
-  {#if state.creating}
-    {#each creates as c (c)}
-      {const Create = $derived(c.form)}
-      <Card title={creates.length > 1 ? (c.title ?? 'New') : 'New'}><Create {rows} {about} /></Card>
-    {/each}
+  <!-- New's dialog, in the top layer: the create forms, each under its
+       title where there are several, mounted only while it is open. A
+       page draws no create form. -->
+  {#if creates.length}
+    <Dialog bind:dialog={create.dialog} title="New in {title}" oncancel={() => create.close()} onclose={() => create.close()}>
+      {#if create.open}
+        {#each creates as c (c)}
+          {const Create = $derived(c.form)}
+          {#if creates.length > 1}<h3 class="creates">{c.title ?? 'New'}</h3>{/if}
+          <Create {rows} {about} />
+        {/each}
+      {/if}
+    </Dialog>
   {/if}
 
   <div class="rows">
@@ -604,6 +616,13 @@
   .new:hover {
     background: var(--hover);
     color: var(--text);
+  }
+  /* A create form's title, where New holds several. */
+  .creates {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-muted);
   }
   .errors {
     margin: 0;

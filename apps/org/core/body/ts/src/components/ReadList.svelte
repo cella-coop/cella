@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Embeds } from '@cella/org-ui'
+  import { Checkbox, type Embeds } from '@cella/org-ui'
   import type { Block } from '../models/canonical.ts'
   import ReadList from './ReadList.svelte'
   import ReadEmbed from './ReadEmbed.svelte'
@@ -29,7 +29,7 @@
         {:else if b.type === 'bullet' || b.type === 'numbered' || b.type === 'todo'}
           <div class="item" data-done={(b.type === 'todo' && b.checked === true) || undefined}>
             {#if b.type === 'todo'}
-              <input type="checkbox" checked={b.checked === true} disabled aria-label="Done" />
+              <Checkbox label="Done" checked={b.checked === true} disabled />
             {:else if b.type === 'numbered'}
               <span class="marker" data-numbered aria-hidden="true">{numbers[i]}.</span>
             {:else}

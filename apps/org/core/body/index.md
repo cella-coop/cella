@@ -1,6 +1,6 @@
 +++
 title = "Body"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 Core's body: free-form content as a Loro tree of blocks, its
@@ -104,9 +104,10 @@ again from Loro. Its parts:
   items, the toolbar over a selection, and Ctrl-K's link in the UI core's
   popover; the menu and the toolbar follow their caret as the window is
   resized or scrolled, and the menu opens above the caret where below it
-  would pass the window's edge; an embed's picker browses by its arrows
-  and picks by a click or Enter, and a pick puts the caret in the
-  paragraph after the embed, made where there is none;
+  would pass the window's edge; an embed's picker, the UI core's `Select`, takes the
+  focus, browses by its arrows and picks by a press or Enter, and a pick puts the caret in the
+  paragraph after the embed, made where there is none; a code block's
+  language is a `Select` too, and a to-do's box the UI core's `Checkbox`;
 - `Clipboard`: blocks as fragments, text as runs, both as plain text;
 - `SyncState`: the live sync of the draft the slice hands it, and the
   draft's hash;

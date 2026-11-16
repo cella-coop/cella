@@ -169,11 +169,8 @@
   .blocks :global(.marker[data-numbered]) {
     text-align: right;
   }
-  .blocks :global(.item input) {
-    margin: 0.35em 0 0;
-    width: 1em;
-    height: 1em;
-    accent-color: var(--accent-fill);
+  .blocks :global(.item > .checkbox) {
+    margin-top: 0.3em;
   }
   .blocks :global(.item[data-done] .text) {
     color: var(--text-subtle);

@@ -60,31 +60,6 @@ export class MenuState {
     })
   }
 
-  // The picker's keys: the arrows only browse it, as Chromium would pick
-  // on each; Enter picks what they reached. A click picks at once.
-  #browsing = false
-
-  pickKey(e: KeyboardEvent, id: TreeID, embed: string): void {
-    const el = e.currentTarget as HTMLSelectElement
-    if (e.key === 'Enter' && el.value) {
-      e.preventDefault()
-      this.pick(id, embed, el.value)
-      return
-    }
-    this.#browsing = /^(Arrow|Page|Home|End)/.test(e.key)
-  }
-
-  picked(e: Event, id: TreeID, embed: string): void {
-    const el = e.currentTarget as HTMLSelectElement
-    if (this.#browsing) {
-      this.#browsing = false
-      return
-    }
-    if (el.value) {
-      this.pick(id, embed, el.value)
-    }
-  }
-
   matches: Item[] = $derived.by(() => {
     const q = this.query.toLowerCase()
     return [...items, ...this.offers].filter((i) => i.label.toLowerCase().includes(q) || i.hint.toLowerCase().includes(q))

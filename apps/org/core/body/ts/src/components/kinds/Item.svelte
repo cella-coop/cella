@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Checkbox } from '@cella/org-ui'
   import Text from '../Text.svelte'
   import { useEditor } from '../../hooks/useEditor.ts'
   import type { View } from '../../hooks/EditorState.svelte.ts'
@@ -13,7 +14,7 @@
 
 <div class="item" data-done={(view.kind === 'todo' && checked) || undefined}>
   {#if view.kind === 'todo'}
-    <input type="checkbox" {checked} aria-label="Done" onchange={() => ed.check(view.id, !checked)} />
+    <Checkbox label="Done" bind:checked={() => checked, (on) => ed.check(view.id, on)} />
   {:else if view.kind === 'numbered'}
     <span class="marker" data-numbered aria-hidden="true">{view.number}.</span>
   {:else}

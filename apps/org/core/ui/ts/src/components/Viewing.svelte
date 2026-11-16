@@ -22,12 +22,14 @@
   import { useFavorites } from '../hooks/useFavorites.ts'
   import { useViews } from '../hooks/useViews.ts'
   import Button from './Button.svelte'
+  import Checkbox from './Checkbox.svelte'
   import Card from './Card.svelte'
   import DragHandle from './DragHandle.svelte'
   import DropIndicator from './DropIndicator.svelte'
   import Icon from './Icon.svelte'
   import Person from './Person.svelte'
   import Popover from './Popover.svelte'
+  import Select from './Select.svelte'
   import Widgets from './Widgets.svelte'
 
   // The drawer's View panel, of one shape for every collection, as
@@ -155,6 +157,10 @@
 
   const change = (s: Partial<Spec>) => onchange({ ...spec, q: state.filter, ...s })
 
+  // Fields and columns as a select's options.
+  const as = (fs: { key: string; label: string }[]) => fs.map((f) => ({ value: f.key, label: f.label }))
+  const none = { value: '', label: 'None' }
+
   function card(key: string, on: boolean) {
     change({ cards: choices.filter((c) => (c.key === key ? on : showing.has(c.key))).map((c) => c.key) })
   }
@@ -229,10 +235,7 @@
     <ul>
       {#each choices as c (c.key)}
         <li>
-          <label>
-            <input type="checkbox" checked={showing.has(c.key)} onchange={(e) => card(c.key, e.currentTarget.checked)} />
-            {c.label}
-          </label>
+          <Checkbox bind:checked={() => showing.has(c.key), (on) => card(c.key, on)}>{c.label}</Checkbox>
         </li>
       {/each}
     </ul>
@@ -257,44 +260,32 @@
     <span class="label" id="{id}-group">Group by</span>
     <div class="control">
       {#if spec.layout === 'board'}
-        <select aria-labelledby="{id}-group" value={grouped} onchange={(e) => change({ by: e.currentTarget.value })}>
-          {#each groups as f (f.key)}<option value={f.key}>{f.label}</option>{/each}
-        </select>
+        <Select fit labelledby="{id}-group" options={as(groups)} bind:value={() => grouped ?? '', (v) => change({ by: v })} />
       {:else if spec.layout === 'calendar'}
-        <select aria-labelledby="{id}-group" value={placing} onchange={(e) => change({ on: e.currentTarget.value })}>
-          {#each dates as f (f.key)}<option value={f.key}>{f.label}</option>{/each}
-        </select>
-        <select aria-label="Span" value={spec.span} onchange={(e) => change({ span: e.currentTarget.value as Spec['span'] })}>
-          {#each spans as s (s)}<option value={s}>{s === 'month' ? 'Month' : 'Week'}</option>{/each}
-        </select>
-        <select aria-label="Colour by" value={spec.by ?? ''} onchange={(e) => change({ by: e.currentTarget.value || null })}>
-          <option value="">None</option>
-          {#each groups as f (f.key)}<option value={f.key}>{f.label}</option>{/each}
-        </select>
+        <Select fit labelledby="{id}-group" options={as(dates)} bind:value={() => placing ?? '', (v) => change({ on: v })} />
+        <Select
+          fit
+          label="Span"
+          options={spans.map((s) => ({ value: s, label: s === 'month' ? 'Month' : 'Week' }))}
+          bind:value={() => spec.span ?? '', (v) => change({ span: v as Spec['span'] })}
+        />
+        <Select fit label="Colour by" options={[none, ...as(groups)]} bind:value={() => spec.by ?? '', (v) => change({ by: v || null })} />
       {:else if spec.layout === 'dashboard'}
-        <select aria-labelledby="{id}-group" disabled><option>None</option></select>
+        <Select fit labelledby="{id}-group" options={[none]} disabled />
       {:else}
-        <select aria-labelledby="{id}-group" value={spec.by ?? ''} onchange={(e) => change({ by: e.currentTarget.value || null })}>
-          <option value="">None</option>
-          {#each groups as f (f.key)}<option value={f.key}>{f.label}</option>{/each}
-        </select>
+        <Select fit labelledby="{id}-group" options={[none, ...as(groups)]} bind:value={() => spec.by ?? '', (v) => change({ by: v || null })} />
       {/if}
     </div>
 
     <span class="label" id="{id}-order">Order by</span>
     <div class="control">
-      <select
-        aria-labelledby="{id}-order"
-        value={spec.sort?.field ?? ''}
+      <Select
+        fit
+        labelledby="{id}-order"
+        options={[{ value: '', label: own }, ...as(columns)]}
         disabled={spec.layout === 'dashboard'}
-        onchange={(e) => {
-          const key = e.currentTarget.value
-          change({ sort: key ? { field: key, dir: spec.sort?.dir ?? 'asc' } : null })
-        }}
-      >
-        <option value="">{own}</option>
-        {#each columns as c (c.key)}<option value={c.key}>{c.label}</option>{/each}
-      </select>
+        bind:value={() => spec.sort?.field ?? '', (key) => change({ sort: key ? { field: key, dir: spec.sort?.dir ?? 'asc' } : null })}
+      />
       <button
         class="direction"
         aria-label={descending ? 'Descending' : 'Ascending'}
@@ -308,21 +299,16 @@
 
     <span class="label" id="{id}-filter">Filter</span>
     <div class="control">
-      <select
-        aria-labelledby="{id}-filter"
-        value=""
+      <!-- An action more than a value: choosing a field adds its condition
+           and the select reads Add a condition again. -->
+      <Select
+        fit
+        labelledby="{id}-filter"
+        placeholder="Add a condition"
+        options={as(offered)}
         disabled={offered.length === 0}
-        onchange={(e) => {
-          const key = e.currentTarget.value
-          e.currentTarget.value = ''
-          if (key) {
-            add(key)
-          }
-        }}
-      >
-        <option value="">Add a condition</option>
-        {#each offered as f (f.key)}<option value={f.key}>{f.label}</option>{/each}
-      </select>
+        bind:value={() => '', (key) => key && add(key)}
+      />
     </div>
     {#if conditions.length}
       <div class="chips">
@@ -377,15 +363,7 @@
                   <DropIndicator show={drag.before('columns', i)} />
                   <li data-drag-item="columns" data-drag-index={i}>
                     <DragHandle label={c.label} />
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={c === titled || !hidden.has(c.key)}
-                        disabled={c === titled}
-                        onchange={(e) => hide(c.key, !e.currentTarget.checked)}
-                      />
-                      {c.label}
-                    </label>
+                    <Checkbox bind:checked={() => c === titled || !hidden.has(c.key), (on) => hide(c.key, !on)} disabled={c === titled}>{c.label}</Checkbox>
                   </li>
                 {/each}
                 <DropIndicator show={drag.before('columns', ordered.length)} />
@@ -398,7 +376,7 @@
           {/if}
         </Popover>
       {:else}
-        <select aria-labelledby="{id}-display" disabled><option>As listed</option></select>
+        <Select fit labelledby="{id}-display" options={[{ value: '', label: 'As listed' }]} disabled />
       {/if}
     </div>
 
@@ -407,15 +385,16 @@
          collection whole, it already reads every circle. -->
     <span class="label" id="{id}-circles">Circles</span>
     <div class="control">
-      <select
-        aria-labelledby="{id}-circles"
-        value={narrowed && !spec.across ? 'this' : 'every'}
+      <Select
+        fit
+        labelledby="{id}-circles"
+        options={[
+          { value: 'this', label: 'This circle' },
+          { value: 'every', label: 'Every circle' },
+        ]}
         disabled={!narrowed}
-        onchange={(e) => change({ across: e.currentTarget.value === 'every' })}
-      >
-        <option value="this">This circle</option>
-        <option value="every">Every circle</option>
-      </select>
+        bind:value={() => (narrowed && !spec.across ? 'this' : 'every'), (v) => change({ across: v === 'every' })}
+      />
     </div>
   </div>
 
@@ -489,11 +468,6 @@
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: var(--space-1);
-    min-width: 0;
-  }
-  .control select {
-    width: auto;
-    max-width: 11rem;
     min-width: 0;
   }
   .direction {
@@ -615,19 +589,6 @@
     display: flex;
     align-items: center;
     gap: var(--space-1);
-  }
-  .columns label {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    font-size: var(--text-sm);
-    cursor: pointer;
-  }
-  .columns input {
-    width: auto;
-    min-height: 0;
-    margin: 0;
-    accent-color: var(--accent-fill);
   }
   .saving,
   .naming {

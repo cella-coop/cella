@@ -24,6 +24,8 @@
 // A slice reads the policy register's policies and values, never their
 // wording, policy.wording: a guard reads a policy's values from its own
 // columns, copied there at adoption, and never parses the sentence.
+// It reads a setting by circle.setting_of, never circle.setting_value,
+// which core circle and its core grafts alone read.
 //
 // A core library's SQL keeps the own-schema, clock and wording rules below
 // as a slice's does, and writes and triggers on no table outside its own
@@ -276,6 +278,11 @@ function inspect(tree, o, s, known, fail, found) {
       const securing = (key === 'table' || key === 'relation') && s.secures?.has(REGISTER)
       if (n.schemaname === REGISTER && n.relname === 'wording' && !privileged(o) && s.own !== REGISTER && !securing) {
         fail(`reads ${named(n)}: a guard reads a policy's values from its own columns, never its wording`)
+      }
+      // A setting is read by `circle.setting_of`, never by its rows, which
+      // core circle and its core grafts alone read.
+      if (n.schemaname === CIRCLES && n.relname === 'setting_value' && !privileged(o) && s.own !== CIRCLES && !o.joins?.includes(CIRCLES)) {
+        fail(`reads ${named(n)}: a slice reads a setting by circle.setting_of, never its values' rows`)
       }
     }
     if (key === 'funcname' || key === 'objname') {
@@ -1223,7 +1230,7 @@ function collects(b, lib, found) {
       found.powers.push({ op: vals.op, power: vals.power ?? null, amount: vals.amount ?? null, owner: lib })
     }
     if (b.relation.relname === 'guard' && vals.op) {
-      found.guards.push({ op: vals.op, owner: lib })
+      found.guards.push({ op: vals.op, fn: vals.fn ?? null, owner: lib })
     }
   }
 }
@@ -1248,7 +1255,7 @@ function registers(b, o, s, fail, found) {
       fail(`registers a ${what} as ${vals.owner}, not as itself, ${o.name}`)
     }
     if (what === 'guard' && vals.op) {
-      found.guards.push({ op: vals.op, owner: o.name })
+      found.guards.push({ op: vals.op, fn: vals.fn ?? null, owner: o.name })
     }
     if (what === 'power' && vals.op) {
       found.powers.push({ op: vals.op, power: vals.power ?? null, amount: vals.amount ?? null, owner: o.name })

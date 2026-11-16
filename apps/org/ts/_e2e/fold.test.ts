@@ -3,7 +3,8 @@
 // tree declares at least once. People keep their profiles and devices and
 // are invited; the books take an import, invoices, bills, expenses, a
 // payroll and the capital paid in, drawn on, repaid and withdrawn; the
-// projects, their tasks and time, the files, documents and meetings go
+// projects, each with a body and a thread, their tasks with theirs and
+// their reactions, and time, the files, documents and meetings go
 // on; the assembly passes motions whose closes carry their effects, one
 // forgoing one; the 2025 and 2026 distributions are approved and the
 // year's periods closed; a member erases her data; and a year after his
@@ -34,9 +35,9 @@ import { capture as captureAlone, refuse, submit as claim } from '@cella/org-exp
 import { attach as receipt, capture } from '@cella/org-graft-expense-file/api'
 import { approve as approveExpense, reimburse } from '@cella/org-graft-expense-transaction/api'
 import { rebill } from '@cella/org-graft-expense-project/api'
-import { add as milestone, archive, budget, complete as reach, create as createProject } from '@cella/org-project/api'
+import { add as milestone, archive, budget, complete as reach, create as createProject, postComment as discussProject, reactToComment as reactOnProject, resolveComment as settleProject, saveBody as saveBrief } from '@cella/org-project/api'
 import { share } from '@cella/org-graft-membership-project/api'
-import { complete, create as createTask, move } from '@cella/org-task/api'
+import { complete, create as createTask, move, post as postComment, react, resolve, save as saveBody } from '@cella/org-task/api'
 import { file as fileTask } from '@cella/org-graft-project-task/api'
 import { assign } from '@cella/org-graft-membership-task/api'
 import { approve as approveTime, correct, log as logTime, submit as submitTime } from '@cella/org-timesheet/api'
@@ -46,7 +47,7 @@ import { attach as contract } from '@cella/org-graft-employment-file/api'
 import { upload } from '@cella/org-file/api'
 import { attach as record } from '@cella/org-graft-file-membership/api'
 import { adopt as adoptVersion, comment, create as createDocument, edit, merged, version } from '@cella/org-document/api'
-import { edits, order } from '@cella/org-body/models'
+import { createDoc, edits, order } from '@cella/org-body/models'
 import { read } from '@cella/org-graft-document-membership/api'
 import { add as item, cancel, hold, move as moveItem, remove, schedule } from '@cella/org-meeting/api'
 import { table } from '@cella/org-graft-meeting-motion/api'
@@ -173,7 +174,7 @@ test('24 October: people keep their profiles and devices, Nadia and Yara are inv
   }
 })
 
-test('24 October: contacts are kept, archived and erased, and the work goes on: a project, its milestones, tasks, time and files', async () => {
+test('24 October: contacts are kept, archived and erased, and the work goes on: a project, its milestones, its body and a thread, tasks, a body and a thread, time and files', async () => {
   settled(await updateContact({ id: 'nuvola', fields: { note: 'Renews in January' } }, as(chloe)))
   settled(await archiveContact({ id: 'velo' }, as(camille)))
   settled(await eraseContact({ id: 'halles-roux' }, as(camille)))
@@ -183,11 +184,29 @@ test('24 October: contacts are kept, archived and erased, and the work goes on: 
   settled(await share({ project, member: sofia, amount: 2_000_00 }, as(hugo)))
   settled(await milestone({ project, title: 'Proofs approved', due: '2026-11-20' }, as(hugo)))
   settled(await reach({ project, n: 1 }, as(hugo)))
+  const brief = createDoc()
+  edits.paste(brief, undefined, 0, [{ type: 'paragraph', runs: [{ text: 'Three labels, one vine, printed by Imprimerie Sud' }], children: [] }])
+  brief.commit()
+  settled(await saveBrief({ project, snapshot: brief.export({ mode: 'snapshot' }), base: '', contributors: [hugo] }, as(hugo)))
+  const { comment: ask } = settled(await discussProject({ project, parent: null, text: `@[${sofia}] can the vine be redrawn by the 6th?` }, as(hugo))) as { comment: number }
+  settled(await discussProject({ project, parent: ask, text: 'Yes, by the 6th.' }, as(sofia)))
+  settled(await settleProject({ comment: ask, resolved: true }, as(hugo)))
+  settled(await reactOnProject({ comment: ask, emoji: '👍', on: true }, as(sofia)))
   const { task } = settled(await createTask({ title: 'Redraw the vine', priority: 'high', due: '2026-11-06' }, as(sofia))) as { task: string }
   settled(await fileTask({ task, project }, as(hugo)))
   settled(await assign({ task, member: sofia }, as(hugo)))
   settled(await move({ task, status: 'doing' }, as(sofia)))
+  const notes = createDoc()
+  edits.paste(notes, undefined, 0, [{ type: 'todo', checked: false, runs: [{ text: 'Send the redrawn vine to the printer' }], children: [] }])
+  notes.commit()
+  settled(await saveBody({ task, snapshot: notes.export({ mode: 'snapshot' }), base: '', contributors: [sofia] }, as(sofia)))
   settled(await complete({ task }, as(sofia)))
+  const { comment: root } = settled(await postComment({ task, parent: null, text: `@[${hugo}] the vine is redrawn: does it print?` }, as(sofia))) as { comment: number }
+  settled(await postComment({ task, parent: root, text: 'It prints well.' }, as(hugo)))
+  settled(await resolve({ comment: root, resolved: true }, as(sofia)))
+  settled(await react({ comment: root, emoji: '👍', on: true }, as(hugo)))
+  settled(await react({ comment: root, emoji: '🎉', on: true }, as(sofia)))
+  settled(await react({ comment: root, emoji: '🎉', on: false }, as(sofia)))
   const { entry } = settled(await logTime({ member: thomas, day: '2026-10-23', minutes: 90, billable: true, note: 'Proofs for the Halles shop' }, as(thomas))) as { entry: string }
   settled(await correct({ entry, minutes: 60 }, as(thomas)))
   settled(await book({ member: sofia, day: '2026-10-23', minutes: 120, billable: true, project }, as(sofia)))

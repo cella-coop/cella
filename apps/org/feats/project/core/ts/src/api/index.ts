@@ -7,10 +7,14 @@ import { item, listing, offered, projects } from '../drivers/project.ts'
 import * as forms from './forms.ts'
 import { projects as imported } from './imports.ts'
 import { contract } from './contract.ts'
+import { bodyActions, bodyMount, withBody } from './body.ts'
+import { commentActions, inbox, withThreads } from './comments.ts'
 
 export { add, archive, budget, complete, create, slug } from '../handlers/index.ts'
 export { item as project, offered, projects } from '../drivers/project.ts'
 export * as forms from './forms.ts'
+export { saveBody } from '../handlers/body.ts'
+export { postComment, reactToComment, resolveComment } from '../handlers/comment.ts'
 
 export const slice: Slice = {
   name: 'project',
@@ -20,9 +24,12 @@ export const slice: Slice = {
     projects: {
       list: listing,
       about: offered,
-      item,
+      item: withThreads(withBody(item)),
       index: async (db) => (await projects(db)).map((p) => ({ id: p.id, title: p.title, sub: p.circle ?? undefined })),
+      body: bodyMount,
       actions: {
+        ...commentActions,
+        ...bodyActions,
         create: action('project:project:create', (form) => forms.create(form), create),
         milestone: action('project:milestone:add', (form, id) => forms.add(form, id ?? ''), add),
         complete: action('project:milestone:complete', (form, id) => forms.complete(form, id ?? ''), complete),
@@ -30,5 +37,9 @@ export const slice: Slice = {
         archive: action('project:project:archive', (_, id) => ({ project: id ?? '' }), archive),
       },
     },
+  },
+  extends: {
+    // The mentions waiting on the acting person, in their Inbox.
+    inbox,
   },
 }

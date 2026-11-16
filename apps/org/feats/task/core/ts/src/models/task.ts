@@ -1,3 +1,5 @@
+import type { Canon, Comment, Named } from '@cella/org-body/models'
+
 export const statuses = ['backlog', 'todo', 'doing', 'done'] as const
 export type Status = (typeof statuses)[number]
 
@@ -40,4 +42,34 @@ export interface Moved {
   task: string
   status: Status
   completed: string | null
+}
+
+// A task as its page reads it: its body as a Loro snapshot in base64,
+// which the browser's editor opens, and its canonical form, which the
+// page draws until it does; null both where it has none yet. Its
+// comments, oldest first, the people who may read it, whom a mention
+// may name, whether the reader may discuss it, posting, resolving and
+// reacting, and whether its circle has reactions on.
+export interface Page extends Task {
+  snapshot: string | null
+  canon: Canon | null
+  comments: Comment[]
+  readers: Named[]
+  discuss: boolean
+  reactions: boolean
+}
+
+// An editor's save of a task's body: the merged snapshot as its browser
+// holds it, the hash of the saved body it merged, empty for none, and who
+// contributed since the last save, by address.
+export interface Save {
+  task: string
+  snapshot: Uint8Array
+  base: string
+  contributors: string[]
+}
+
+export interface Saved {
+  task: string
+  circle: string
 }

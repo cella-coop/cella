@@ -284,8 +284,8 @@ BEGIN ATOMIC
 END;
 
 -- Revokes on `day` what the policy `ref` granted that is not revoked
--- yet: its right, its disclosure values, its publication and its
--- particulars, and its
+-- yet: its right, its disclosure values, its publication, its
+-- particulars and its setting value, and its
 -- mandate with every mandate issued under it that still stands then
 -- (`circle.revoke`). Returns the mandate, or null, and the mandates it
 -- revoked, the policy's first.
@@ -298,6 +298,7 @@ BEGIN
   UPDATE circle.disclosure d SET revoked = day WHERE d.policy = ref AND d.revoked IS NULL;
   UPDATE circle.publication o SET revoked = day WHERE o.policy = ref AND o.revoked IS NULL;
   UPDATE circle.particulars o SET revoked = day WHERE o.policy = ref AND o.revoked IS NULL;
+  UPDATE circle.setting_value o SET revoked = day WHERE o.policy = ref AND o.revoked IS NULL;
   UPDATE circle.right r SET revoked = day WHERE r.policy = ref AND r.revoked IS NULL;
   SELECT m.id, circle.revoke(m.id, day) INTO made, gone FROM circle.mandate m WHERE m.policy = ref;
   RETURN QUERY SELECT made, coalesce(gone, '{}');
@@ -311,3 +312,91 @@ LANGUAGE sql
 BEGIN ATOMIC
   SELECT setval(pg_get_serial_sequence('circle.mandate', 'id'), pin_mandate.id, false);
 END;
+
+-- Registers a setting a slice offers, from its migration: its name, its
+-- default, `on` or `off`, and the slice. A setting registered again takes
+-- the default and owner given.
+CREATE FUNCTION circle.register_setting(name text, "default" text, owner text) RETURNS void
+LANGUAGE sql
+BEGIN ATOMIC
+  INSERT INTO circle.setting (name, "default", owner)
+  VALUES (register_setting.name, register_setting."default", register_setting.owner)
+  ON CONFLICT (name) DO UPDATE SET "default" = excluded."default", owner = excluded.owner;
+END;
+
+REVOKE EXECUTE ON FUNCTION circle.register_setting(text, text, text) FROM PUBLIC;
+
+-- A circle's value of a setting a rule of it set, standing on a day:
+-- the one rule's whose days hold it and that is not revoked by then.
+CREATE FUNCTION circle.set_on(circle text, setting text, day date) RETURNS TABLE (policy text, value text)
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT v.policy, v.value
+  FROM circle.setting_value v
+  WHERE v.circle = set_on.circle AND v.setting = set_on.setting
+    AND v."from" <= set_on.day
+    AND (v.until IS NULL OR v.until > set_on.day)
+    AND (v.revoked IS NULL OR v.revoked > set_on.day)
+  ORDER BY v."from" DESC, v.id DESC
+  LIMIT 1;
+END;
+
+-- Each setting as a circle has it on the verdict date: its value, the
+-- rule that set it and who did, `circle` where the circle's own rule did,
+-- `assembly` where the assembly's did, which every circle inherits, since
+-- circles never nest, and `default` where neither did; in the order of
+-- their names.
+CREATE FUNCTION circle.settings(circle text) RETURNS TABLE (name text, value text, policy text, set_by text, "default" text)
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT s.name, coalesce(o.value, a.value, s."default"), coalesce(o.policy, a.policy),
+    CASE WHEN o.policy IS NOT NULL THEN 'circle' WHEN a.policy IS NOT NULL THEN 'assembly' ELSE 'default' END,
+    s."default"
+  FROM circle.setting s
+  LEFT JOIN LATERAL circle.set_on(settings.circle, s.name, cella.verdict_date()) o ON true
+  LEFT JOIN LATERAL circle.set_on(circle.assembly(), s.name, cella.verdict_date()) a ON settings.circle IS DISTINCT FROM circle.assembly()
+  ORDER BY s.name;
+END;
+
+-- A circle's value of a setting on the verdict date: its own rule's,
+-- else the assembly's, else the setting's default; null for a setting no
+-- slice registered. A guard reads a setting by this alone.
+CREATE FUNCTION circle.setting_of(circle text, name text) RETURNS text
+LANGUAGE sql STABLE
+RETURN (SELECT s.value FROM circle.settings(setting_of.circle) s WHERE s.name = setting_of.name);
+
+-- Sets a circle's value of a setting the rule `ref` marks, on its days.
+-- Returns the row it made.
+CREATE FUNCTION circle.set_setting(ref text, circle text, setting text, value text, "from" date, until date) RETURNS bigint
+LANGUAGE sql
+BEGIN ATOMIC
+  INSERT INTO circle.setting_value (policy, circle, setting, value, "from", until)
+  VALUES (set_setting.ref, set_setting.circle, set_setting.setting, set_setting.value, set_setting."from", set_setting.until)
+  RETURNING id;
+END;
+
+-- What is wrong with a rule setting `setting` for `circle` from `day`,
+-- perhaps until `until`, and replacing `replaces`, or null: one rule sets
+-- a setting for a circle at a time, so one whose days meet those of
+-- another not yet revoked by then replaces that one, and the refusal
+-- names it. `made` is the rule itself, once adopted.
+CREATE FUNCTION circle.setting_overlap(circle text, setting text, day date, until date, replaces text, made text) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT o.policy || ' sets ' || o.setting || ' ' || o.value || ' for ' || o.circle
+    || ' from ' || to_char(o."from", 'YYYY-MM-DD') || coalesce(' until ' || to_char(least(o.until, o.revoked), 'YYYY-MM-DD'), '')
+    || ': one rule sets a setting for a circle at a time, so one on days that meet its replaces ' || o.policy
+  FROM circle.setting_value o
+  WHERE o.circle = setting_overlap.circle AND o.setting = setting_overlap.setting
+    AND o.policy IS DISTINCT FROM setting_overlap.replaces AND o.policy IS DISTINCT FROM setting_overlap.made
+    AND (least(o.until, o.revoked) IS NULL OR least(o.until, o.revoked) > setting_overlap.day)
+    AND (setting_overlap.until IS NULL OR o."from" < setting_overlap.until)
+    AND (least(o.until, o.revoked) IS NULL OR o."from" < least(o.until, o.revoked))
+  ORDER BY o."from", o.id
+  LIMIT 1;
+END;
+
+-- The first setting: whether a circle's comments take reactions, on by
+-- default. Core circle registers it, since core body, whose threads draw
+-- them, has no SQL.
+SELECT circle.register_setting('reactions', 'on', 'circle');

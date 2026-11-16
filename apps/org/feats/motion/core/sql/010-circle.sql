@@ -295,7 +295,9 @@ END;
 -- `circle.publication_flaw`, `circle.particulars_flaw`); one of each
 -- stands at a time, so such a rule replaces the one its days meet
 -- (`circle.overlap_flaw`), and a motion adopts no two of a kind whose
--- days meet.
+-- days meet. A rule marking a setting marks it soundly, for the motion's
+-- circle or, from the assembly, another, and replaces the rule its days
+-- meet for that setting and circle (`circle_policy.setting_flaw`).
 CREATE FUNCTION motion.circle_asks(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -366,6 +368,14 @@ BEGIN ATOMIC
       SELECT jsonb_object_agg(p.name, jsonb_build_object('literal', p.literal, 'stricter', p.stricter)) AS marks
       FROM policy.marks(m.args ->> 'wording') p
     ) k
+    WHERE m.motion = payload ->> 'motion' AND m.kind = 'policy' AND m.args ->> 'kind' = 'rule'
+    UNION ALL
+    SELECT circle_policy.setting_flaw(motion.marked(m.args ->> 'wording'), d.circle,
+      CASE WHEN coalesce(m.args ->> 'from', '') ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (m.args ->> 'from')::date ELSE d.deadline END,
+      CASE WHEN coalesce(m.args ->> 'until', '') ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (m.args ->> 'until')::date END,
+      nullif(m.args ->> 'replaces', ''), NULL)
+    FROM motion.action m
+    JOIN motion.motion d ON d.id = m.motion
     WHERE m.motion = payload ->> 'motion' AND m.kind = 'policy' AND m.args ->> 'kind' = 'rule'
     UNION ALL
     SELECT coalesce(

@@ -1,6 +1,6 @@
 +++
 title = "Circle"
-updated = 2026-11-14
+updated = 2026-11-15
 +++
 
 Core's circles: the co-op's structure and the authority that flows
@@ -570,14 +570,59 @@ and Activity ([the shell](../ui/index.md#components)); its api's `lenses`
 reads each circle the member reads with its features spelt as one
 listing, so the shell reads them with the selector's circles.
 
+## Settings
+
+`circle.setting` is the registry of settings
+([settings](../../../../_corpus/doc/architecture.md#settings)): each a
+name, its default and the slice that registered it by
+`circle.register_setting`, each a switch, `on` or `off`; and
+`circle.setting_value`, each circle's value of each that a rule it
+adopted set, on the rule's days until it is revoked.
+`circle.setting_of(circle, name)` reads the circle's value on the
+verdict date, else the assembly's, the co-op's, since circles never
+nest and the assembly is the root, else the default.
+
+A rule marking `setting` sets one: `{setting: reactions}` and `{value:
+off}` in its wording, and perhaps the circle it is for, `{circle:
+web}`, the circle adopting it where it names none; only the assembly
+sets another circle's. Lanterne's Web would adopt:
+
+```text
+In Web, comments take {setting: reactions} {value: off}
+```
+
+Circle-policy copies it into `circle.setting_value` in the write that
+adopts it, as it copies open books' values
+(`circle_policy.setting_from`, which `circle_policy.mandate_from`
+calls, by `circle.set_setting`), and `circle.withdraw` revokes it as the rule
+ends or is replaced. A rule naming a setting no slice registered, a
+value neither `on` nor `off`, a circle it may not set or any other
+value is refused as it is adopted, saying what is wrong
+(`circle_policy.setting_flaw`); one whose days meet those of a rule
+setting the same setting for the same circle, not revoked, is refused
+unless it replaces that one, saying which. The first setting is
+`reactions`, on by default, which core circle's own migration
+registers, since core body has no SQL, and every feat's threads read.
+A slice reads a setting by `circle.setting_of`, and each setting with
+the rule that set it and who did by `circle.settings(circle)`, never
+`circle.setting_value`, which `sql-check` refuses outside core circle
+and its core grafts.
+
+Each circle's settings page, `/settings/rules/<id>`, shows each setting
+with its value and where it comes from, and its Save proposes the rule
+that changes it
+([membership-motion](../../grafts/membership-motion/index.md)).
+
 ## Schema
 
 `circle` (`core/circle/sql/`): `circle.circle`, `circle.role`,
 `circle.grantee`, `circle.mandate` and `circle.right`, as in the
 entities above, `circle.disclosure`, open books' values by the rule
 that marks them, and `circle.publication`, the parts of the structure
-the publication publishes, and `circle.particulars`, the co-op's
-particulars, each on its rule's days until it is revoked, and
+the publication publishes, `circle.particulars`, the co-op's
+particulars, and `circle.setting_value`, a circle's value of a setting
+of `circle.setting` ([settings](#settings)), each on its rule's days
+until it is revoked, and
 `circle.feature`, each circle's features ([features](#features)), keyed
 by the circle and the feat, its positions distinct in the circle; a role's `holders` is a positive count or none. Every circle and every role is a grantee, its row made
 by a trigger as the circle or the role is, so a circle and a role never
@@ -606,10 +651,11 @@ once the policies `ending` end
 and the mandates `adopting` are granted ([authority](#authority)), and
 `circle.bundle(day)` names the default bundle on a day: every mandate
 in force then on a role every circle has (`*`), by id. A mandate, a
-right, open books' values, a publication and the particulars are written
+right, open books' values, a publication, the particulars and a
+setting's value are written
 by the circles' own writes alone, which circle-policy calls as a policy
 is adopted and ends: `circle.issue`, `circle.give`, `circle.disclose`,
-`circle.publish` and `circle.particularise` each make one by the policy's id and the values it
+`circle.publish`, `circle.particularise` and `circle.set_setting` each make one by the policy's id and the values it
 marks, and `circle.withdraw(policy, day)` revokes what a policy granted
 on a day, its mandate with every mandate issued under it.
 

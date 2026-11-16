@@ -107,6 +107,10 @@ export interface Page<T = any> {
   // The drawer's label and value rows, and the records it links to.
   properties?: (data: T) => Prop[]
   related?: (data: T) => Link[]
+  // Blocks in the drawer's Details, over its rows: a structured field set
+  // where it is shown, as a task's assignee, since the content is the
+  // record's free-form body.
+  details?: Block<T>[]
   // What happened to the item, newest first; the page merges every
   // slice's and shows them oldest first, under its content.
   activity?: (data: T) => Event[]

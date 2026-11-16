@@ -52,9 +52,6 @@ importers:
 
   apps/org/core/body/ts:
     dependencies:
-      '@cella/org-actions':
-        specifier: workspace:*
-        version: link:../../actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../db/ts
@@ -70,6 +67,10 @@ importers:
       svelte:
         specifier: 5.57.2
         version: 5.57.2
+    devDependencies:
+      '@cella/org-sign':
+        specifier: workspace:*
+        version: link:../../sign/ts
 
   apps/org/core/circle/ts:
     dependencies:
@@ -447,6 +448,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../core/actions/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../../core/body/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
@@ -483,6 +487,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../core/actions/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../../core/body/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts

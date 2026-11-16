@@ -9,6 +9,7 @@ import Membership from './blocks/Membership.svelte'
 import Outcome from './blocks/Outcome.svelte'
 import Organization from './blocks/Organization.svelte'
 import Features from './blocks/Features.svelte'
+import Rules from './blocks/Rules.svelte'
 
 const tones: Record<State, Tone> = { open: 'accent', passed: 'positive', rejected: 'negative' }
 
@@ -85,6 +86,16 @@ export const app: App = {
       icon: icons.SquaresFour,
       listed: false,
       block: Features,
+    },
+    // A circle's rules, a page of the circle, `/settings/rules/<id>`,
+    // which its Settings tab links to beside its features.
+    rules: {
+      subgroup: 'Organization',
+      title: 'Rules',
+      caption: 'What the circle sets for itself, as whether its comments take reactions, each by a rule a motion adopts.',
+      icon: icons.Scales,
+      listed: false,
+      block: Rules,
     },
   },
 }

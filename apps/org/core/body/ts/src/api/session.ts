@@ -1,70 +1,67 @@
-import type { Pending, Refused, Settled } from '@cella/org-actions'
-import type { Db, Deps } from '@cella/org-db'
+import type { Db } from '@cella/org-db'
+import type { VersionVector } from 'loro-crdt'
 import { createDoc } from '../models/blocks.ts'
 import { canonical } from '../models/canonical.ts'
-import { since, type LoroDoc } from '../models/body.ts'
-import { memory, type Buffer, type Held } from './buffer.ts'
-
-// What a save carries: the record, the merged body as a Loro snapshot,
-// and the addresses of who contributed since the last save, sorted.
-export interface Save {
-  record: string
-  snapshot: Uint8Array
-  contributors: string[]
-}
-
-export type Saved = Settled<unknown> | Pending | Refused
+import { baseOf, since, type LoroDoc } from '../models/body.ts'
 
 // What a feat that keeps bodies hands the session when its `./api`
 // mounts: the collection its records are served under, how to read a
 // record's owning circle and its saved body, each as the reader of `db`
-// sees them, null where they see no such record or no body yet, and its
-// save action, run with the scope's own deps.
+// sees them, null where they see no such record or no body yet, and the
+// name of its save write, which an editor's browser sends its save as,
+// signed by its device.
 export interface Mount {
   kind: string
   circle(db: Db, record: string): Promise<string | null>
   saved(db: Db, record: string): Promise<Uint8Array | null>
-  save(input: Save, deps: Deps): Promise<Saved>
+  save: string
 }
 
 // A connection reading for `actor`, as the shell lends one.
 export type Using = <T>(actor: string | null, fn: (db: Db) => Promise<T>) => Promise<T>
 
-// The session's timers, which the tests drive by hand.
-export interface Clock {
-  set(fn: () => void, ms: number): unknown
-  clear(timer: unknown): void
-}
-
-const real: Clock = { set: (fn, ms) => setTimeout(fn, ms), clear: (t) => clearTimeout(t as ReturnType<typeof setTimeout>) }
-
 // What the shell hands the session when it starts it: its connections,
-// whether a person holds a power over a record of a circle (membership's
-// `may`, on the verdict date), the scope's own deps, which a save is
-// signed with, and where the updates since a save are kept.
+// and whether a person holds a power over a record of a circle
+// (membership's `may`, on the verdict date).
 export interface Options {
   using: Using
   may(db: Db, actor: string, power: string, circle: string): Promise<boolean>
-  scope(): Deps | Promise<Deps>
-  buffer?: Buffer
-  clock?: Clock
-  // A save after this long with no edit, and at most this long after the
-  // first edit it carries.
-  pause?: number
-  every?: number
 }
 
-// What a peer hears: an update merged, from any peer, or that it is
-// dropped and why.
-export type Heard = { type: 'update'; update: Uint8Array } | { type: 'dropped'; reason: string }
+// What a peer hears: an update merged, from any peer, a save made, each
+// with who contributed since the last save, or that it is dropped and why.
+export type Heard =
+  | { type: 'update'; update: Uint8Array; contributors: string[] }
+  | { type: 'saved'; saved: Uint8Array; snapshot: Uint8Array; base: string; contributors: string[] }
+  | { type: 'dropped'; reason: string }
 
-// What a post of an update comes to.
-export type Posted = { state: 'merged' } | { state: 'refused'; reason: string }
+// What a post to the session comes to: an update merged, a save taken
+// note of, with the body the record holds as every peer hears it, or why
+// not.
+export type Posted =
+  | { state: 'merged' }
+  | { state: 'saved'; saved: Uint8Array; snapshot: Uint8Array; base: string; contributors: string[] }
+  | { state: 'refused'; reason: string }
+
+// What a peer is handed as it joins: its place, the update holding all
+// it lacks, and what its browser needs to save, the hash of the body the
+// record holds among it.
+export interface Opened {
+  peer: Peer
+  update: Uint8Array
+  save: string
+  version: Uint8Array
+  saved: Uint8Array
+  contributors: string[]
+  base: string
+}
 
 // The power editing a body needs, in the record's circle.
 export const power = 'discuss'
 
 const key = (kind: string, record: string) => `${kind}/${record}`
+
+const unread = 'this record is no longer one you read'
 
 // One editor's place in a body's session: whether it may edit, what it
 // lacks to catch up, and what it hears from here on.
@@ -73,9 +70,9 @@ export class Peer {
   writable: boolean
   #hear: ((h: Heard) => void) | null = null
   #heard: Heard[] = []
-  readonly #leave: (p: Peer) => Promise<void>
+  readonly #leave: (p: Peer) => void
 
-  constructor(actor: string, writable: boolean, leave: (p: Peer) => Promise<void>) {
+  constructor(actor: string, writable: boolean, leave: (p: Peer) => void) {
     this.actor = actor
     this.writable = writable
     this.#leave = leave
@@ -97,45 +94,60 @@ export class Peer {
     }
   }
 
-  leave(): Promise<void> {
-    return this.#leave(this)
+  leave(): void {
+    this.#leave(this)
   }
 }
 
-// One open body: the server's own peer, its document, the base it was
-// last saved at, the updates merged since, and who has it open.
+// One open body: the server's own peer, its document, the version vector
+// of the snapshot last saved and that snapshot's hash, whose Loro peer
+// each editor's browser is, and who has it open.
 class Open {
   readonly mount: Mount
   readonly record: string
   readonly doc: LoroDoc
-  base: Uint8Array
-  updates: Held[] = []
+  saved: VersionVector
+  base: string
+  authors = new Map<string, string>()
   peers = new Set<Peer>()
-  pause: unknown = null
-  every: unknown = null
-  saving: Promise<void> | null = null
-  problem: string | null = null
 
-  constructor(mount: Mount, record: string, doc: LoroDoc) {
+  constructor(mount: Mount, record: string, doc: LoroDoc, base: string) {
     this.mount = mount
     this.record = record
     this.doc = doc
-    this.base = doc.export({ mode: 'snapshot' })
+    this.saved = doc.oplogVersion()
+    this.base = base
+  }
+
+  // Who contributed since the last save: the editors whose browsers' Loro
+  // peers hold edits the saved snapshot does not, by address, sorted.
+  contributors(): string[] {
+    const out = new Set<string>()
+    for (const [peer, n] of this.doc.oplogVersion().toJSON()) {
+      const author = this.authors.get(peer)
+      if (author && n > (this.saved.get(peer) ?? 0)) {
+        out.add(author)
+      }
+    }
+    return [...out].sort()
   }
 }
 
 // The live session of every open body. The server joins each body an
 // editor opens as one more Loro peer, in memory: it merges what each
-// editor posts, relays it to all who have it open, and saves the merged
-// body through the save its feat handed it. It knows no feat.
+// editor posts and relays it to all who have it open, with who
+// contributed since the last save. It saves nothing: each editor's
+// browser saves through its feat's action, signed by its device, and
+// tells the session, which reads what the record holds now. It knows no
+// feat.
 export class Session {
-  readonly #o: Required<Omit<Options, 'buffer' | 'clock'>> & { buffer: Buffer; clock: Clock }
+  readonly #o: Options
   readonly #mounts = new Map<string, Mount>()
   readonly #open = new Map<string, Open>()
   readonly #opening = new Map<string, Promise<Open>>()
 
   constructor(o: Options) {
-    this.#o = { pause: 3_000, every: 30_000, buffer: memory(), clock: real, ...o }
+    this.#o = o
   }
 
   // A feat's bodies, as its `./api` mounts them.
@@ -167,19 +179,32 @@ export class Session {
 
   // Opens a record's body for `actor`: null where they read no such
   // record, else their peer, writable where they may discuss it in its
-  // circle, and the update holding all they lack by the Loro version
-  // vector they sent. The first to open it starts the session from the
-  // saved snapshot.
-  async join(kind: string, record: string, actor: string, vv?: string | null): Promise<{ peer: Peer; update: Uint8Array } | null> {
+  // circle, the update holding all they lack by the Loro version vector
+  // they sent, and what their browser saves by. `loro` is their browser's
+  // Loro peer, whose edits the session names them for from here on; the
+  // first to claim a Loro peer keeps it. The first to open the body
+  // starts the session from the saved snapshot.
+  async join(kind: string, record: string, actor: string, vv?: string | null, loro?: string | null): Promise<Opened | null> {
     const m = this.#mounted(kind)
     const asked = await this.#ask(m, record, actor)
     if (!asked) {
       return null
     }
     const body = await this.#start(m, record, actor)
+    if (loro && /^\d+$/.test(loro) && !body.authors.has(loro)) {
+      body.authors.set(loro, actor)
+    }
     const peer = new Peer(actor, asked.may, (p) => this.#gone(body, p))
     body.peers.add(peer)
-    return { peer, update: since(body.doc, vv) }
+    return {
+      peer,
+      update: since(body.doc, vv),
+      save: m.save,
+      version: body.doc.oplogVersion().encode(),
+      saved: body.saved.encode(),
+      contributors: body.contributors(),
+      base: body.base,
+    }
   }
 
   async #start(m: Mount, record: string, actor: string): Promise<Open> {
@@ -196,17 +221,7 @@ export class Session {
         if (saved) {
           doc.import(saved)
         }
-        const body = new Open(m, record, doc)
-        // Updates the buffer still holds, of a restart whose save
-        // failed, are merged in and carried by the next save.
-        const kept = this.#o.buffer.held().find((b) => b.key === k)
-        if (kept?.updates.length) {
-          doc.import(kept.base)
-          doc.importBatch(kept.updates.map((u) => u.update))
-          body.base = kept.base
-          body.updates = kept.updates
-          this.#schedule(body)
-        }
+        const body = new Open(m, record, doc, baseOf(saved))
         this.#open.set(k, body)
         return body
       })().finally(() => this.#opening.delete(k))
@@ -215,25 +230,32 @@ export class Session {
     return opening
   }
 
+  // The open body and `actor`'s peers on it, or why they post nothing.
+  #theirs(kind: string, record: string, actor: string): { body: Open; mine: Peer[] } | string {
+    const body = this.#open.get(key(kind, record))
+    const mine = body ? [...body.peers].filter((p) => p.actor === actor) : []
+    return body && mine.length ? { body, mine } : 'this body is not open here: open it again to edit it'
+  }
+
   // An update `actor` posts to a body they have open. They are asked
   // again first: one who no longer may discuss it is refused, and every
   // peer of theirs on it dropped, so a mandate revoked mid-session ends
   // their editing at their next keystroke. Bytes that are not a Loro
   // update, or leave the body with no canonical form, are refused. A
-  // merged update is kept in the buffer and relayed to every peer, the
-  // poster's own too, which Loro imports once.
+  // merged update is relayed to every peer, the poster's own too, which
+  // Loro imports once.
   async post(kind: string, record: string, actor: string, update: Uint8Array): Promise<Posted> {
     const m = this.#mounted(kind)
-    const body = this.#open.get(key(kind, record))
-    const mine = body ? [...body.peers].filter((p) => p.actor === actor) : []
-    if (!body || !mine.length) {
-      return { state: 'refused', reason: 'this body is not open here: open it again to edit it' }
+    const theirs = this.#theirs(kind, record, actor)
+    if (typeof theirs === 'string') {
+      return { state: 'refused', reason: theirs }
     }
+    const { body, mine } = theirs
     const asked = await this.#ask(m, record, actor)
     if (!asked?.may) {
       const reason = asked
         ? `editing this body needs ${power} in ${asked.circle}, which you no longer hold: a mandate granting it there would let you edit again`
-        : 'this record is no longer one you read'
+        : unread
       for (const p of mine) {
         this.#drop(body, p, reason)
       }
@@ -247,14 +269,56 @@ export class Session {
       return { state: 'refused', reason: `the update is not one this body takes: ${(e as Error).message}` }
     }
     body.doc.import(update)
-    const held = { author: actor, update }
-    body.updates.push(held)
-    this.#o.buffer.append(key(kind, record), body.base, held)
+    const contributors = body.contributors()
     for (const p of body.peers) {
-      p.tell({ type: 'update', update })
+      p.tell({ type: 'update', update, contributors })
     }
-    this.#schedule(body)
     return { state: 'merged' }
+  }
+
+  // `actor`'s browser saved the body through its feat's action. The
+  // session reads the snapshot the record holds now, as `actor` reads
+  // it, merges it in and counts from it who contributed since; it asks
+  // every peer again, dropping a writable one that may no longer discuss
+  // the body and any that no longer reads it, and tells the rest the
+  // snapshot and its hash, which each browser imports and saves from
+  // next. What the record holds is the save, whoever's landed last; a
+  // browser whose save was refused for its `base` posts this to read it.
+  async saved(kind: string, record: string, actor: string): Promise<Posted> {
+    const m = this.#mounted(kind)
+    const theirs = this.#theirs(kind, record, actor)
+    if (typeof theirs === 'string') {
+      return { state: 'refused', reason: theirs }
+    }
+    const { body } = theirs
+    const snapshot = await this.#o.using(actor, (db) => m.saved(db, record))
+    if (!snapshot) {
+      return { state: 'refused', reason: 'the record holds no saved body' }
+    }
+    const kept = createDoc()
+    try {
+      kept.import(snapshot)
+    } catch (e) {
+      return { state: 'refused', reason: `the record's body is not a Loro snapshot: ${(e as Error).message}` }
+    }
+    body.doc.import(snapshot)
+    body.saved = kept.oplogVersion()
+    body.base = baseOf(snapshot)
+    for (const who of new Set([...body.peers].map((p) => p.actor))) {
+      const asked = await this.#ask(m, record, who)
+      for (const p of [...body.peers].filter((p) => p.actor === who)) {
+        if (!asked) {
+          this.#drop(body, p, unread)
+        } else if (p.writable && !asked.may) {
+          this.#drop(body, p, `editing this body needs ${power} in ${asked.circle}, which you no longer hold`)
+        }
+      }
+    }
+    const heard = { saved: body.saved.encode(), snapshot, base: body.base, contributors: body.contributors() }
+    for (const p of body.peers) {
+      p.tell({ type: 'saved', ...heard })
+    }
+    return { state: 'saved', ...heard }
   }
 
   #drop(body: Open, peer: Peer, reason: string): void {
@@ -262,134 +326,18 @@ export class Session {
     peer.tell({ type: 'dropped', reason })
   }
 
-  // A save after a pause in the edits, and at most `every` after the
-  // first edit since the last.
-  #schedule(body: Open): void {
-    const { clock, pause, every } = this.#o
-    // A timer's save that throws, as on a lost connection, says why and
-    // keeps its updates for the next edit's, never failing the server.
-    const save = () =>
-      void this.save(body.mount.kind, body.record).catch((e: Error) => {
-        body.problem = e.message
-      })
-    clock.clear(body.pause)
-    body.pause = clock.set(save, pause)
-    body.every ??= clock.set(save, every)
-  }
-
-  async #gone(body: Open, peer: Peer): Promise<void> {
+  // The last to leave closes the body: the next to open it starts again
+  // from what the record holds.
+  #gone(body: Open, peer: Peer): void {
     body.peers.delete(peer)
-    if (!body.peers.size) {
-      await this.save(body.mount.kind, body.record).catch((e: Error) => {
-        body.problem = e.message
-      })
-      // A body whose save failed stays open, its updates with it, so the
-      // next to open it carries on from them and its next save takes them.
-      if (!body.peers.size && !body.updates.length && this.#open.get(key(body.mount.kind, body.record)) === body) {
-        this.#open.delete(key(body.mount.kind, body.record))
-      }
-    }
-  }
-
-  // Saves a body now, if anything was merged since its last save. Every
-  // peer is asked again first: a writable one that no longer may discuss
-  // it, or one that no longer reads it, is dropped. A save is one at a
-  // time; one asked for while another runs follows it.
-  async save(kind: string, record: string): Promise<void> {
-    const body = this.#open.get(key(kind, record))
-    if (!body) {
-      return
-    }
-    while (body.saving) {
-      await body.saving
-    }
-    if (!body.updates.length) {
-      return
-    }
-    body.saving = this.#saving(body).finally(() => {
-      body.saving = null
-    })
-    await body.saving
-  }
-
-  async #saving(body: Open): Promise<void> {
-    const { clock } = this.#o
-    clock.clear(body.pause)
-    clock.clear(body.every)
-    body.pause = body.every = null
-    const actors = new Set([...body.peers].map((p) => p.actor))
-    for (const actor of actors) {
-      const asked = await this.#ask(body.mount, body.record, actor)
-      for (const p of [...body.peers].filter((p) => p.actor === actor)) {
-        if (!asked) {
-          this.#drop(body, p, 'this record is no longer one you read')
-        } else if (p.writable && !asked.may) {
-          this.#drop(body, p, `editing this body needs ${power} in ${asked.circle}, which you no longer hold`)
-        }
-      }
-    }
-    const n = body.updates.length
-    const snapshot = body.doc.export({ mode: 'snapshot' })
-    const contributors = [...new Set(body.updates.slice(0, n).map((u) => u.author))].sort()
-    // A save that throws is kept for the next, as a refused one is.
-    let out: Saved
-    try {
-      out = await body.mount.save({ record: body.record, snapshot, contributors }, await this.#o.scope())
-    } catch (e) {
-      out = { state: 'refused', verdict: 0, reason: (e as Error).message }
-    }
-    if (out.state === 'refused') {
-      body.problem = out.reason
-      if (body.updates.length) {
-        this.#schedule(body)
-      }
-      return
-    }
-    body.problem = null
-    body.base = snapshot
-    body.updates = body.updates.slice(n)
     const k = key(body.mount.kind, body.record)
-    this.#o.buffer.clear(k)
-    for (const held of body.updates) {
-      this.#o.buffer.append(k, body.base, held)
+    if (!body.peers.size && this.#open.get(k) === body) {
+      this.#open.delete(k)
     }
-    if (body.updates.length) {
-      this.#schedule(body)
-    }
-  }
-
-  // Why a body's last save failed, or null.
-  problem(kind: string, record: string): string | null {
-    return this.#open.get(key(kind, record))?.problem ?? null
   }
 
   // Who has a body open, by address, once each.
   editors(kind: string, record: string): string[] {
     return [...new Set([...(this.#open.get(key(kind, record))?.peers ?? [])].map((p) => p.actor))].sort()
-  }
-
-  // At a restart: each body the buffer holds updates of, of a kind
-  // mounted, merged over the base it holds and saved at once, its
-  // contributors the updates' authors. How many it saved.
-  async recover(): Promise<number> {
-    let saved = 0
-    for (const kept of this.#o.buffer.held()) {
-      const slash = kept.key.indexOf('/')
-      const m = this.#mounts.get(kept.key.slice(0, slash))
-      if (!m || !kept.updates.length) {
-        continue
-      }
-      const doc = createDoc()
-      doc.import(kept.base)
-      doc.importBatch(kept.updates.map((u) => u.update))
-      const record = kept.key.slice(slash + 1)
-      const contributors = [...new Set(kept.updates.map((u) => u.author))].sort()
-      const out = await m.save({ record, snapshot: doc.export({ mode: 'snapshot' }), contributors }, await this.#o.scope())
-      if (out.state !== 'refused') {
-        this.#o.buffer.clear(kept.key)
-        saved++
-      }
-    }
-    return saved
   }
 }

@@ -1,7 +1,7 @@
 import type { Outcome } from '@cella/org-actions'
 import { personal, write, type Deps, type Write } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
-import type { Complete, Create, Created, Move, Moved } from '../models/task.ts'
+import type { Complete, Create, Created, Move, Moved, Save, Saved } from '../models/task.ts'
 
 type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
@@ -71,5 +71,43 @@ export async function complete(input: Complete, deps: Deps): Out<'task:task:comp
       return { task: input.task, status: 'done' as const, completed: rows[0].completed }
     },
     payload: (v) => ({ ...v }),
+  })
+}
+
+// Saves a task's body: the merged snapshot an editor's browser signs,
+// with who contributed since the last save, each of whom the feat's guard
+// asks holds `discuss` in the task's circle, as the saver must. The
+// payload names the circle the handler read, which the power's guard
+// reads. Its `base`, the hash of the saved body the browser merged, goes
+// in the payload with `replaced`, the hash of the body it replaces, read
+// under the row's lock; the feat's guard refuses the save where they
+// differ, so a stale snapshot never erases another editor's save. A
+// snapshot with no canonical form is refused by the column.
+export async function save(input: Save, deps: Deps): Out<'task:body:save', Saved> {
+  let snapshot = ''
+  let replaced = ''
+  return write(deps, {
+    op: 'task:body:save' satisfies Action,
+    request: input,
+    state: async (tx) => {
+      const held = await tx.query<{ replaced: string }>(
+        `SELECT coalesce(encode(sha256(body), 'hex'), '') AS replaced FROM task.task WHERE id = $1 FOR UPDATE`,
+        [input.task],
+      )
+      replaced = held.rows[0]?.replaced ?? ''
+      const { rows } = await tx.query<{ circle: string; snapshot: string }>(
+        `UPDATE task.task SET body = $2 WHERE id = $1 RETURNING circle, encode(body, 'hex') AS snapshot`,
+        [input.task, input.snapshot],
+      )
+      if (!rows[0]) {
+        throw new Error(`no task ${input.task}`)
+      }
+      snapshot = rows[0].snapshot
+      return { task: input.task, circle: rows[0].circle }
+    },
+    // The log keeps the snapshot, in hex, which its fold sets the body to,
+    // the base it was merged from and the hash of the body it replaced, and
+    // who contributed to it since the last.
+    payload: (v) => ({ ...v, snapshot, base: input.base, replaced, contributors: [...new Set(input.contributors)].sort() }),
   })
 }

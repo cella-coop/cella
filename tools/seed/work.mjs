@@ -5,9 +5,13 @@
 // membership-timesheet, project-timesheet), and the report feat's margin
 // thresholds. Invoices load first. A run of time in the fixture is logged as one entry
 // on each working day, Monday to Friday, from its first day to its last.
+// A task's body is its blocks as one Loro snapshot, carried in with it,
+// and its thread its comments, each with its mentions.
 // Members and contacts load first; an archived project is archived after
 // its milestones are in, and periods are submitted and approved after
 // their entries are in.
+
+import { createDoc, edits, outline, thread } from '../../apps/org/core/body/ts/src/models/index.ts'
 
 // The working days from one ISO day to another, both included.
 export function weekdays(from, to) {
@@ -54,14 +58,33 @@ export async function work(db, read, day) {
   const tasks = read('task').task ?? []
   for (const t of tasks) {
     await db.query(
-      'INSERT INTO task.task (id, title, status, priority, due, created, completed, circle) VALUES ($1, $2, $3, $4, $5, $6, $7, coalesce($8, circle.assembly()))',
-      [t.id, t.title, t.status, t.priority, day(t.due), day(t.created), day(t.completed), t.circle ?? null],
+      'INSERT INTO task.task (id, title, status, priority, due, created, completed, circle, body) VALUES ($1, $2, $3, $4, $5, $6, $7, coalesce($8, circle.assembly()), $9)',
+      [t.id, t.title, t.status, t.priority, day(t.due), day(t.created), day(t.completed), t.circle ?? null, t.body ? body(t) : null],
     )
   }
   // New tasks number on from the fixture's last.
   const last = Math.max(0, ...tasks.map((t) => Number(t.id.slice(2))))
   if (last) {
     await db.query(`SELECT setval('task.number', $1)`, [last])
+  }
+  // Each task's thread, its comments under receipts in file order, a
+  // reply naming its root by its place among the task's comments, and
+  // each `@[address]` in a comment's text a mention, in the order given.
+  let comments = 0
+  for (const t of tasks) {
+    const posted = []
+    for (const c of t.comment ?? []) {
+      const { rows } = await db.query(
+        `INSERT INTO task.comment (id, task, author, parent, text, posted, resolved)
+         VALUES (nextval('cella.receipt_seq'), $1, $2, $3, $4, $5, $6) RETURNING id`,
+        [t.id, c.author, c.reply ? posted[c.reply - 1] : null, c.text, day(c.posted), day(c.resolved)],
+      )
+      posted.push(rows[0].id)
+      for (const [i, person] of thread.mentioned(c.text).entries()) {
+        await db.query('INSERT INTO task.mention (comment, n, person) VALUES ($1, $2, $3)', [rows[0].id, i + 1, person])
+      }
+      comments++
+    }
   }
   for (const a of read('graft.membership-task').assignment ?? []) {
     await db.query('INSERT INTO membership_task.assignment (task, member) VALUES ($1, $2)', [a.task, a.member])
@@ -114,5 +137,13 @@ export async function work(db, read, day) {
     await db.query('UPDATE project.project SET archived = $2 WHERE id = $1', [p.id, day(p.archived)])
   }
 
-  return `${projects.length} projects, ${shares.length} shares, ${tasks.length} tasks, ${entries} time entries`
+  return `${projects.length} projects, ${shares.length} shares, ${tasks.length} tasks, ${comments} comments, ${entries} time entries`
+}
+
+// A task's body, as the snapshot of one Loro document holding its blocks.
+function body(t) {
+  const loro = createDoc(1n)
+  edits.patch(loro, undefined, outline(t.body, `task ${t.id}'s body`))
+  loro.commit()
+  return loro.export({ mode: 'snapshot' })
 }

@@ -1,6 +1,6 @@
 +++
 title = "Trust"
-updated = 2026-11-14
+updated = 2026-11-15
 +++
 
 # Trust
@@ -561,6 +561,15 @@ erased until their legal clock runs out.
   commitment, never the value ([signatures](signatures.md#digests)). The
   request the member signs is hashed with a fresh salt of its own, so its
   digest in the receipt confirms no guess either.
+- **Free text is its author's.** A body, a comment or a note is free
+  text, and no tool can tell sanely, without a model reading it, what
+  personal data a sentence holds: what someone writes there is theirs to
+  keep fit to be logged, and a body's snapshot and a comment's text
+  enter the log as written. What cella controls is the structured
+  reference: a mention names a core person by their address, the
+  pseudonym every entry names them by, never by their name, which the
+  thread reads as it stands, so erasing the person's name erases what
+  every mention of them reads.
 - **Who reads a row is its table's policy.** Every table a slice makes
   is under row-level security, enabled and forced, and every policy that
   reads it is of a pattern the check knows: the owning circle's, the

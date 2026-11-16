@@ -203,3 +203,59 @@ export function granted(ops, grants, stances = []) {
     .filter((o) => o.power && !given.has(o.op) && !powers.has(o.power))
     .map((o) => `${o.file}: ${o.op} needs ${o.power}, which no mandate, collective mandate or right grants in ${where}: adopt one in a fixture's closed motion, or declare the action only once it is built`)
 }
+
+// Where a feat keeps a body or threads but not whole, as
+// `cella scaffold` writes them (core body's doc, "Threads"): a `body`
+// of core body's, a `bytea` column on a table of its schema, needs
+// `<feat>:body:save`, needing `discuss`, its fold, its guard on the
+// save's `base`, `<feat>.based`, and the session's mount, a `body:` in a
+// collection of its slice; a thread's
+// `<feat>.comment` table, its replies by `parent`, needs post, resolve
+// and react,
+// each needing `discuss` and folding, the `<feat>.mention` table and a
+// guard on react, which reads whether the circle takes reactions. `feats`
+// lists each feat's core package, `{ name, file, mounts }`, `file` its
+// actions.ts, `mounts` whether its slice mounts a body; `found` is what
+// the SQL check read, its columns, tables, guards and folds.
+export function whole(feats, ops, found) {
+  const out = []
+  const byOp = new Map(ops.map((o) => [o.op, o]))
+  const folds = new Set((found.folds ?? []).map((f) => f.op))
+  const tables = new Set((found.tables ?? []).map((t) => t.key))
+  const needs = (file, F, what, op) => {
+    const o = byOp.get(op)
+    if (!o) {
+      return [`${file}: ${F} keeps ${what} but declares no ${op}: run cella scaffold, or declare it with its power and fold`]
+    }
+    return [
+      ...(o.power === 'discuss' ? [] : [`${file}: ${op} needs ${o.power ?? 'no power'}, but ${what} is discussed: it needs discuss`]),
+      ...(folds.has(op) ? [] : [`${file}: ${op} has no fold, so ${what} would not fold: register it by cella.lets_fold`]),
+    ]
+  }
+  for (const { name: F, file, mounts } of feats) {
+    const body = (found.columns ?? []).find((c) => c.key.split('.')[0] === F && c.key.endsWith('.body') && c.type === 'bytea')
+    if (body) {
+      const what = `a body in ${body.key}`
+      out.push(...needs(file, F, what, `${F}:body:save`))
+      if (!(found.guards ?? []).some((g) => g.op === `${F}:body:save` && g.fn === `${F}.based(jsonb)`)) {
+        out.push(`${file}: ${F} keeps ${what} but no guard ${F}.based on ${F}:body:save: a save whose base is not the body it replaces would erase another editor's`)
+      }
+      if (!mounts) {
+        out.push(`${file}: ${F} keeps ${what} but mounts none in core body's session: its collection names body: { circle, saved, save }`)
+      }
+    }
+    if (tables.has(`${F}.comment`) && (found.columns ?? []).some((c) => c.key === `${F}.comment.parent`)) {
+      const what = `threads in ${F}.comment`
+      for (const verb of ['post', 'resolve', 'react']) {
+        out.push(...needs(file, F, what, `${F}:comment:${verb}`))
+      }
+      if (!tables.has(`${F}.mention`)) {
+        out.push(`${file}: ${F} keeps ${what} but no ${F}.mention: a comment's mentions are rows the Inbox reads`)
+      }
+      if (!(found.guards ?? []).some((g) => g.op === `${F}:comment:react` && g.owner === F)) {
+        out.push(`${file}: ${F} keeps ${what} but no guard on ${F}:comment:react: a reaction is refused where its circle turned reactions off`)
+      }
+    }
+  }
+  return out
+}

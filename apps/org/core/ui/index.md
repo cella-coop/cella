@@ -392,8 +392,10 @@ draws.
   takes comments (`comment`). Each slice gives its events newest first
   (`activity`), a comment's words as its `body`; the page merges every
   slice's and shows them oldest first, the box last. The drawer's
-  Details panel holds its properties, label and value rows on the
-  drawer itself, with no card or panel around them, ending with the
+  Details panel holds first the forms that set its structured fields,
+  where its slices set them there (`details`), as a task's assignee and
+  project, since a record whose content is its body keeps the main area
+  for it; then its properties, label and value rows on the drawer itself, with no card or panel around them, ending with the
   record's Created, Updated, Created by and Updated by as the log has
   them (`stamps`), the dates and actors of its first and latest
   entries, which the item's read gives beside its data, but those its
@@ -452,7 +454,10 @@ draws.
   slice puts at its end and a quiet removal when the slice offers one;
   `fixed` drops both once the list may not change), `Prose`, `Note` (a quiet line), `Message` (one message of a thread:
   who and when over what it says, set in by its depth as a reply, its
-  writes at its foot), `Mention` (a member or a document named inside a
+  writes at its foot), `Reactions` (a message's reactions, a line at its
+  foot: each emoji with its count, each a write toggling the reader's
+  own, theirs filled, or read alone where the reader may not react),
+  `Mention` (a member or a document named inside a
   text, a quiet chip linking to it), `Icon`
   (Phosphor, duotone), `Outcome` (the last write's outcome, floating
   until dismissed: each write with its verdict and reason; a write of

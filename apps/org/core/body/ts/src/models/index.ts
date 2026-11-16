@@ -5,3 +5,5 @@ export { canonical, jcs, bytes, hash, plain, type Canon, type Block } from './ca
 export type { Run, Fragment, Place } from './edits.ts'
 export { anchor } from './anchor.ts'
 export { outline, embedded, type Line } from './outline.ts'
+export * as thread from './thread.ts'
+export type { Comment, Named, Part, Thread } from './thread.ts'

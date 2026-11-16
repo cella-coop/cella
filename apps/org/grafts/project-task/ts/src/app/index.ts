@@ -4,7 +4,7 @@ import Place from './blocks/Place.svelte'
 import Tasks from './blocks/Tasks.svelte'
 
 // The graft's client side: each task's project, a column a board may group
-// by, and filing a task on its page; on a project's page, its own tab of
+// by, and filing a task in its page's Details; on a project's page, its own tab of
 // tasks, a list long enough to crowd the overview, with a new task already
 // in the project.
 export const app: App = {
@@ -18,7 +18,7 @@ export const app: App = {
           ...(f.place?.phase ? [{ label: 'Milestone', value: f.place.phase }] : []),
         ],
         related: (f: Filed) => (f.place ? [{ label: f.place.title, sub: 'project', href: `/projects/${f.place.project}` }] : []),
-        blocks: [Place],
+        details: [Place],
       },
     },
     projects: {

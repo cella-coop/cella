@@ -1,6 +1,6 @@
 +++
 title = "membership-motion"
-updated = 2026-11-14
+updated = 2026-11-15
 +++
 
 What a motion decides of a membership: admitting someone invited,
@@ -392,3 +392,16 @@ posted to the page's `propose` as the circle's Settings tab posts one,
 so the guard judges the listing there before anything is proposed. The
 e2e scenario `features` enables a feature of Web and moves one, by the
 assembly's motion, light and dark.
+
+It serves each circle's rules page, `/settings/rules/<id>`
+([settings](../../core/circle/index.md#settings)), a page of one circle,
+which the circle's Settings tab links to beside its features: each
+setting core circle registers, `on` or `off`, with the value in force
+for the circle (`circle.setting_of`) and whether the circle set it, the
+assembly did, or it is the default. No write of anyone's saves one, so
+Save proposes a motion carrying one `policy` action: a `rule` marking
+the setting and its value, and the circle where the circle that decides
+is the assembly, replacing the rule that set the circle's value where
+one stands. The circle that decides is the circle itself where it holds
+`adopt-policy`, else the assembly. The e2e scenario `reactions` turns
+reactions off for Web there.

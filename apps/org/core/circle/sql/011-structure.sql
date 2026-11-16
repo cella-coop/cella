@@ -156,3 +156,14 @@ ALTER TABLE circle.particulars ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURI
 CREATE POLICY structure ON circle.particulars TO cella_app
   USING ((SELECT circle.whole()) OR (SELECT circle.inside())) WITH CHECK (true);
 CREATE POLICY structure_guards ON circle.particulars FOR SELECT TO cella_guards USING (true);
+
+-- The settings and each circle's value of them are no one's secret:
+-- every reader of a circle's records reads whether its comments take
+-- reactions, as the thread draws them.
+ALTER TABLE circle.setting ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
+CREATE POLICY registry ON circle.setting TO cella_app USING (true) WITH CHECK (true);
+CREATE POLICY registry_guards ON circle.setting FOR SELECT TO cella_guards USING (true);
+
+ALTER TABLE circle.setting_value ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
+CREATE POLICY registry ON circle.setting_value TO cella_app USING (true) WITH CHECK (true);
+CREATE POLICY registry_guards ON circle.setting_value FOR SELECT TO cella_guards USING (true);

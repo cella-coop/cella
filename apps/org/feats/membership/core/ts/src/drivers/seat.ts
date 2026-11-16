@@ -85,3 +85,15 @@ export async function named(db: Db, member: string): Promise<string> {
   const { rows } = await db.query<{ name: string }>('SELECT name FROM person.person WHERE address = $1', [member])
   return rows[0]?.name ?? member
 }
+
+// Whether a person holds a power over a record of a circle on the verdict
+// date, by a seat's mandate covering it or by a right, as circle-person's
+// guard on every write with a power asks.
+export async function may(db: Db, actor: string, power: string, circle: string): Promise<boolean> {
+  const { rows } = await db.query<{ may: boolean }>(
+    `SELECT circle_person.may($1, $2, NULL, $3, cella.verdict_date())
+         OR circle_person.entitled($1, $2, NULL, cella.verdict_date()) AS may`,
+    [actor, power, circle],
+  )
+  return rows[0]?.may ?? false
+}

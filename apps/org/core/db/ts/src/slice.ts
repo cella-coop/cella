@@ -161,7 +161,27 @@ export interface Collection {
   streams?: Record<string, Stream>
   // An item's bytes, for the acting member, or null where there are none.
   content?(db: Db, id: string, actor: string | null): Promise<Content | null>
+  // Where its records keep a body, what core body's session reads of it,
+  // which the shell hands the session as it mounts the slice.
+  body?: Body
 }
+
+// A collection's bodies, as core body's session reads them: a record's
+// owning circle and its saved snapshot, each as the reader of `db` sees
+// them, null where they see no such record or no body yet, and the name
+// of the collection's write an editor's browser saves the body through,
+// signed by its device.
+export interface Body {
+  circle(db: Db, id: string): Promise<string | null>
+  saved(db: Db, id: string): Promise<Uint8Array | null>
+  save: string
+}
+
+// Whether a person holds a power over a record of a circle, on the
+// verdict date, by a mandate or a right, as the guard on every write with
+// a power asks: what a live session asks again as its peers edit. The
+// membership feat serves it; with no slice serving it, no one holds any.
+export type May = (db: Db, actor: string, power: string, circle: string) => Promise<boolean>
 
 // What a graft, or the root, adds to a collection of a feat it joins:
 // fields on each row by its id, data for the item's blocks, and writes.
@@ -238,8 +258,8 @@ export interface Joining {
 
 // A slice's server side, which the root mounts: the collections it owns,
 // what it adds to the collections of the feats it joins or nests in, its reactions,
-// the kinds of file it imports, the settings pages it serves, and how an
-// invitation's link is taken up.
+// the kinds of file it imports, the settings pages it serves, how an
+// invitation's link is taken up, and whether a person holds a power.
 export interface Slice {
   // The feat's or graft's name, or `<name>/<part>` for one part of a
   // slice mounted in parts, as a feat a graft of the circles dissolved
@@ -257,6 +277,7 @@ export interface Slice {
   imports?: Record<string, Importer>
   settings?: Record<string, SettingsPage>
   joins?: Joining
+  may?: May
   // Its queries written in SQL, by name, each a view of its own schema,
   // which the shell serves as any query.
   queries?: Record<string, Query>

@@ -81,3 +81,10 @@ export const parsed = (text: string): string | null => {
   }
   return day.toISOString().slice(0, 10)
 }
+
+// A day as a calendar's cell says it aloud: Monday 16 November 2026.
+const spokenDay = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+export const spoken = (iso: string) => spokenDay.format(new Date(`${iso}T00:00:00Z`))
+
+// Today in the browser's own time, as an ISO day.
+export const local = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`

@@ -20,6 +20,7 @@ import type { Page } from 'playwright-core'
 import { add, update } from '@cella/org-contact/api'
 import type { Deps } from '@cella/org-db'
 import { eachBrowser, serve, signIn } from './browser.ts'
+import { choose, chosen, offered } from './controls.ts'
 import { reader, sign } from './lanterne.ts'
 
 const camille = 'camille@lanterne.example'
@@ -100,7 +101,7 @@ eachBrowser((browserName, launch) => {
         // A calendar of contacts, by Created: each on the day it was added.
         await visit('/contacts')
         await layout('Calendar')
-        await until(() => date().inputValue(), (v) => v === 'created', `${at}: the calendar places contacts by Created`)
+        await until(() => chosen(date()), (v) => v === 'created', `${at}: the calendar places contacts by Created`)
         const day = (d: string) => page.locator(`.calendar li.day[aria-label^="${d},"] li.entry`)
         await until(() => day('2026-10-24').allInnerTexts(), (t) => t.some((x) => x.includes('Atelier Estampe')), `${at}: Camille's contact sits on the 24th`)
         await until(() => day('2026-10-25').allInnerTexts(), (t) => t.some((x) => x.includes('Bureau Tampon')), `${at}: Julien's sits on the 25th`)
@@ -118,7 +119,7 @@ eachBrowser((browserName, launch) => {
 
         // A table ordered by Updated, either way, a row with none last.
         await layout('Table')
-        await panel(page).getByRole('combobox', { name: 'Order by' }).selectOption({ label: 'Updated' })
+        await choose(panel(page).getByRole('combobox', { name: 'Order by' }), { label: 'Updated' })
         await page.waitForURL((u) => u.searchParams.get('sort') === 'updated')
         await until(() => listed(page), (ids) => ids[0] === 'logged-tampon' && ids[1] === 'logged-estampe', `${at}: by Updated, the 25th's first`)
         await panel(page).getByRole('button', { name: 'Ascending' }).click()
@@ -126,7 +127,8 @@ eachBrowser((browserName, launch) => {
         await until(() => listed(page), (ids) => ids[0] === 'logged-estampe' && ids[1] === 'logged-tampon', `${at}: descending, the 26th's first`)
 
         // Filtered by Created by: Julien's alone.
-        await panel(page).getByRole('combobox', { name: 'Filter' }).selectOption({ label: 'Created by' })
+        await choose(panel(page).getByRole('combobox', { name: 'Filter' }), { label: 'Created by' })
+
         const his = page.locator(`[role="menuitemcheckbox"][data-value="${julien}"]`)
         await his.waitFor()
         await his.click()
@@ -157,9 +159,9 @@ eachBrowser((browserName, launch) => {
           ['/invoices?view=calendar', 'due'],
         ]) {
           await visit(path)
-          assert.equal(await date().inputValue(), want, `${at}: ${path} places its rows by ${want}`)
-          const offered = await date().locator('option').evaluateAll((os) => os.map((o) => (o as HTMLOptionElement).value))
-          assert.ok(offered.includes('created') && offered.includes('updated'), `${at}: ${path} offers Created and Updated: ${offered}`)
+          assert.equal(await chosen(date()), want, `${at}: ${path} places its rows by ${want}`)
+          const values = (await offered(date())).map((o) => o.value)
+          assert.ok(values.includes('created') && values.includes('updated'), `${at}: ${path} offers Created and Updated: ${values}`)
         }
 
         assert.deepEqual(errors, [], `${at}: no page error`)

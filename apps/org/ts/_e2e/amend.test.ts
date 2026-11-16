@@ -37,6 +37,7 @@ import { carried, close, propose } from '@cella/org-graft-membership-motion/api'
 import type { Deps, Done } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
 import { eachBrowser, serve, signIn } from './browser.ts'
+import { chosen } from './controls.ts'
 
 const su = new pg.Client()
 let app: pg.Client | undefined
@@ -214,7 +215,7 @@ eachBrowser((name, launch) => {
 
           const form = page.locator('form.settings').first()
           assert.equal(await form.getByLabel('Name').inputValue(), was, `${at}: its name in force`)
-          assert.equal(await form.getByLabel('Decides by').inputValue(), 'consent', `${at}: its procedure in force`)
+          assert.equal(await chosen(form.getByLabel('Decides by')), 'consent', `${at}: its procedure in force`)
           assert.equal(await form.getByText('Assembly changes it by motion').count(), 3, `${at}: each term is the assembly's motion's to change`)
           await page.screenshot({ path: `${shots}/amend-${name}-${scheme}.png`, fullPage: true })
 
@@ -227,7 +228,8 @@ eachBrowser((name, launch) => {
             `${at}: the dialog says why her write changes nothing`,
           )
           assert.equal(await dialog.getByLabel('Title').inputValue(), `Rename ${was} to Brand`, `${at}: its title says the change`)
-          assert.equal(await dialog.getByLabel('Circle').inputValue(), 'ag', `${at}: put to the assembly`)
+          assert.equal(await chosen(dialog.getByLabel('Circle')), 'ag',
+ `${at}: put to the assembly`)
           await dialog.getByRole('button', { name: 'Propose to Assembly' }).click()
           await dialog.getByRole('alert').filter({ hasText: /brand is named Brand already: give web a name no other circle has/ }).waitFor()
           assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM motion.action WHERE kind = 'amend-circle' AND args ->> 'name' = 'Brand'`)).n, 0, `${at}: refused before anything is proposed`)

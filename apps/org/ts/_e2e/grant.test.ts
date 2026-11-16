@@ -26,6 +26,7 @@ import { vote } from '@cella/org-motion/api'
 import type { Deps } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
 import { inBrowsers, serve, signIn } from './browser.ts'
+import { choose } from './controls.ts'
 import { Shell, type Done } from './serve.ts'
 
 const su = new pg.Client()
@@ -194,13 +195,14 @@ unseeded('in every browser, light and dark, Operations\' page refuses a grant wi
         await page.goto(`${dev.base}/circles/operations`)
         await page.waitForLoadState('networkidle')
         await page.getByRole('button', { name: 'Propose…' }).click()
-        const form = page.locator('form', { has: page.locator('select[name^="f.kind["] option[value="change"]') })
-        await form.getByLabel('Proposes to').selectOption('grant')
-        await form.getByLabel('Grantee').selectOption('role:finance')
+        const form = page.locator('form', { has: page.locator('[role=option][data-value="change"]') })
+        await choose(form.getByLabel('Proposes to'), 'grant')
+        await choose(form.getByLabel('Grantee'), 'role:finance')
         await form.getByLabel('Power', { exact: true }).fill('send-quote')
         await form.getByLabel('Grants', { exact: true }).fill('send a quote')
         await form.getByLabel('Limit per write, €').fill('20000')
-        await form.getByLabel('Issued by').selectOption('coordination')
+        await choose(form.getByLabel('Issued by'), 'coordination')
+
         await form.getByLabel('Deadline', { exact: true }).fill('2026-12-21')
         const sentence = 'It will read: The finance role holds send-quote, to send a quote, up to 20 000 € a write.'
         assert.equal(await form.getByText(/^It will read:/).textContent(), sentence, `${engine}, ${scheme}: the sentence as it will read`)

@@ -138,9 +138,11 @@ test('Thomas drags it into Doing, then Done, each drop a write signed as him', a
 })
 
 // The options a select of the page's offers, in order, by its name, as
-// its form binds it (`f.<name>[]/<form>`).
+// its form binds it (`f.<name>[]/<form>`): the UI core's Select names its
+// combobox so, and its options follow it, up to the next select.
 const offered = (html: string, name: string) =>
-  [...(html.split(`name="f.${name}[]/`)[1]?.split('</select>')[0] ?? '').matchAll(/<option value="([^"]*)"/g)].map((m) => m[1])
+  [...(html.split(`data-name="f.${name}[]/`)[1]?.split('data-name=')[0] ?? '').matchAll(/role="option"[^>]*data-value="([^"]*)"/g)].map((m) => m[1])
+
 
 test('Thomas logs time against the shop for Web, its circle, which the page offers him first', async () => {
   const { text } = await shell.page('/projects/halles-shop?tab=budget', thomas)

@@ -32,8 +32,8 @@
   --neutral-soft: var(--sunk);
 
   --focus: 0 0 0 2px var(--accent-border);
-  /* The same ring as an outline, for a select, whose native menu list
-     WebKit draws without a shadow. */
+  /* The same ring as an outline, where a shadow would be clipped, as on
+     a table's cell. */
   --focus-outline: 2px solid var(--accent-border);
 }
 

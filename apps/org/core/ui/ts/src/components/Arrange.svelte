@@ -2,6 +2,7 @@
   import CaretDown from 'phosphor-svelte/lib/CaretDown'
   import CaretUp from 'phosphor-svelte/lib/CaretUp'
   import { listed, movable, moved, regrouped, renamed, runs, shiftable, shifted, spell, toggled, type Placed } from '../models/arrange.ts'
+  import Checkbox from './Checkbox.svelte'
   import Icon from './Icon.svelte'
 
   // An arrangement, a setting's field where it declares its choices: every
@@ -33,7 +34,7 @@
 {#snippet on(placed: Placed, at: number)}
   {const name = $derived(named(placed.value))}
   <li class="choice">
-    <label class="toggle"><input type="checkbox" role="switch" checked onchange={() => set(toggled(items, placed.value, false))} />{name}</label>
+    <span class="toggle"><Checkbox role="switch" bind:checked={() => true, () => set(toggled(items, placed.value, false))}>{name}</Checkbox></span>
     <input
       class="group"
       aria-label="Accordion of {name}"
@@ -90,7 +91,7 @@
     <ul class="off">
       {#each off as c (c.value)}
         <li class="choice">
-          <label class="toggle"><input type="checkbox" role="switch" onchange={() => set(toggled(items, c.value, true))} />{c.label}</label>
+          <span class="toggle"><Checkbox role="switch" bind:checked={() => false, () => set(toggled(items, c.value, true))}>{c.label}</Checkbox></span>
         </li>
       {/each}
     </ul>
@@ -151,14 +152,6 @@
     gap: var(--space-2);
     font-size: var(--text-sm);
     min-width: 0;
-  }
-  .toggle input {
-    flex: none;
-    width: auto;
-    min-height: 0;
-    margin: 0;
-    padding: 0;
-    accent-color: var(--accent-fill);
   }
   .name {
     flex: 1;

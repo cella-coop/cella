@@ -1,5 +1,6 @@
 <script lang="ts">
   import DateField from './DateField.svelte'
+  import Select from './Select.svelte'
   import { useForm } from '../hooks/useForm.ts'
 
   let {
@@ -37,17 +38,12 @@
   const posted = $derived(form.name(name))
 </script>
 
-<label class="field" class:wide for={id}>
-  <span class="label">{label}</span>
+<!-- Its label names the field by its id, never by wrapping it, so a press
+     inside a select's list or a date's calendar is no press on the label. -->
+<div class="field" class:wide>
+  <label class="label" for={id} id="{id}-label">{label}</label>
   {#if options}
-    <select {id} name={posted} {required} bind:value>
-      {#if placeholder}
-        <option value="" disabled>{placeholder}</option>
-      {/if}
-      {#each options as o (o.value)}
-        <option value={o.value}>{o.label}</option>
-      {/each}
-    </select>
+    <Select {id} labelledby="{id}-label" name={posted} {options} {placeholder} {required} bind:value={() => String(value ?? ''), (v) => (value = v)} />
   {:else if type === 'date'}
     <DateField {id} name={posted} {required} bind:value />
   {:else if type === 'file'}
@@ -64,7 +60,7 @@
       </datalist>
     {/if}
   {/if}
-</label>
+</div>
 
 <style>
   .field {

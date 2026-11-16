@@ -28,6 +28,7 @@ import { carried, close } from '@cella/org-graft-membership-motion/api'
 import type { Deps, Done } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
 import { eachBrowser, serve, signIn } from './browser.ts'
+import { chosen } from './controls.ts'
 
 const su = new pg.Client()
 let app: pg.Client | undefined
@@ -75,7 +76,7 @@ async function decided(motion: string) {
 async function shown(page: Page) {
   const on = page.locator('fieldset.arrange ul.on')
   await on.getByRole('switch').first().waitFor()
-  return (await on.getByRole('switch').evaluateAll((els) => els.map((e) => e.closest('label')?.textContent?.trim() ?? ''))).join(', ')
+  return (await on.getByRole('switch').evaluateAll((els) => els.map((e) => e.textContent?.trim() ?? ''))).join(', ')
 }
 
 before(async () => {
@@ -134,7 +135,7 @@ eachBrowser((name, launch) => {
             `${at}: the dialog says why her write changes nothing`,
           )
           assert.equal(await dialog.getByLabel('Title').inputValue(), 'Enable Invoice for Web', `${at}: its title says the change`)
-          assert.equal(await dialog.getByLabel('Circle').inputValue(), 'web', `${at}: put to Web itself, not the assembly`)
+          assert.equal(await chosen(dialog.getByLabel('Circle')), 'web', `${at}: put to Web itself, not the assembly`)
           assert.equal(await dialog.getByLabel('New features').inputValue(), arranged, `${at}: the listing as she arranged it`)
           await page.screenshot({ path: `${shots}/features-propose-${name}-${scheme}.png` })
           await dialog.getByRole('button', { name: 'Propose to Web' }).click()

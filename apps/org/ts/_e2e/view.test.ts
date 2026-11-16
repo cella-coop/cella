@@ -8,7 +8,7 @@
 // takes the condition away; Display opens a popover of the cards' fields. On
 // meetings, a calendar, Group by is its date and span. Light and dark,
 // `SHOTS` names where its screenshots go. Nothing is written. Run by
-// `cella test e2e view`.
+// `cella test e2e view`; Group by is driven by its keyboard too.
 // covers: all
 
 import { test } from 'node:test'
@@ -16,6 +16,7 @@ import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
 import type { Page } from 'playwright-core'
 import { eachBrowser, serve, signIn } from './browser.ts'
+import { choose, chosen, offered } from './controls.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-view-shots'
 const rows = ['Group by', 'Order by', 'Filter', 'Display', 'Circles']
@@ -70,12 +71,31 @@ eachBrowser((name, launch) => {
 
         await visit('/tasks')
         const view = panel(page)
-        assert.equal(await view.getByLabel('Group by').inputValue(), 'status', `${at}: a board groups by its enumeration`)
+        assert.equal(await chosen(view.getByLabel('Group by')), 'status', `${at}: a board groups by its enumeration`)
         await page.screenshot({ path: `${shots}/tasks-${name}-${scheme}.png` })
-        const filter = view.getByLabel('Filter', { exact: true }).last()
-        const field = await filter.locator('option').nth(1).getAttribute('value')
+        // Group by answers the keyboard: an arrow opens its list on the
+        // option chosen, which wears the check, as the active descendant;
+        // Escape closes it, choosing nothing, the focus staying on it.
+        const by = view.getByRole('combobox', { name: 'Group by' })
+        await by.focus()
+        await page.keyboard.press('ArrowDown')
+        assert.equal(await by.getAttribute('aria-expanded'), 'true', `${at}: an arrow opens Group by`)
+        const active = () => by.evaluate((el) => document.getElementById(el.getAttribute('aria-activedescendant') ?? '')?.dataset.value ?? null)
+        assert.equal(await active(), 'status', `${at}: on the option chosen`)
+        const list = page.locator(`[id="${await by.getAttribute('aria-controls')}"]`)
+        assert.equal(await list.locator('[role=option][aria-selected=true]').filter({ has: page.locator('svg') }).count(), 1, `${at}: the chosen option wears its check`)
+
+        await page.screenshot({ path: `${shots}/tasks-group-by-${name}-${scheme}.png` })
+        await page.keyboard.press('Escape')
+        assert.equal(await by.getAttribute('aria-expanded'), 'false', `${at}: Escape closes it`)
+        assert.ok(await by.evaluate((el) => el === document.activeElement), `${at}: the focus stays on Group by`)
+        assert.equal(await chosen(by), 'status', `${at}: Escape chooses nothing`)
+        const filter
+ = view.getByLabel('Filter', { exact: true }).last()
+        const field = (await offered(filter))[0]?.value
         assert.ok(field, `${at}: Filter offers a field`)
-        await filter.selectOption(field)
+        await choose(filter, field)
+
         const menu = page.getByRole('menu', { name: /^Condition on / })
         await menu.waitFor()
         const value = (await menu.getByRole('menuitemcheckbox').first().textContent())!.trim()

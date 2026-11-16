@@ -246,3 +246,88 @@ completed = 2026-10-05
 [[project.milestone]]
 title = "October closed in cella alone"
 due = 2026-11-10
+
+[[project]]
+id = "client-renewals"
+title = "Client renewals for 2027"
+circle = "clients"
+started = 2026-10-05
+due = 2026-12-18
+summary = """
+Every client whose work ends this year hears from us before it does: a
+care contract, a retainer or a plain thank-you, decided with each."""
+
+[[project.milestone]]
+title = "Renewal list"
+due = 2026-10-16
+completed = 2026-10-16
+
+[[project.milestone]]
+title = "Proposals sent"
+due = 2026-11-27
+
+[[project]]
+id = "hiring-2027"
+title = "Two junior hires for 2027"
+circle = "hiring"
+started = 2026-10-01
+due = 2027-01-29
+summary = """
+A junior developer for Web and a junior designer for Brand, hired by
+February 2027, as m-2026-020 decided."""
+
+[[project.milestone]]
+title = "Job descriptions"
+due = 2026-10-14
+completed = 2026-10-13
+
+[[project.milestone]]
+title = "Interviews"
+due = 2026-12-11
+
+[[project.milestone]]
+title = "Offers"
+due = 2027-01-29
+
+[[project]]
+id = "workload-review"
+title = "Workload review 2026"
+circle = "care"
+started = 2026-09-21
+due = 2026-11-30
+summary = """
+How much everyone works, and how it feels: an anonymous survey, its
+findings, and what Care proposes to the assembly from them."""
+
+[[project.milestone]]
+title = "Survey"
+due = 2026-10-09
+completed = 2026-10-09
+
+[[project.milestone]]
+title = "Findings to the assembly"
+due = 2026-11-30
+
+[[project]]
+id = "hosting-move"
+title = "Move the studio's hosting"
+circle = "tools"
+started = 2026-09-14
+due = 2026-12-04
+summary = """
+The studio's servers, its clients' staging and production sites, move to
+a co-operative host, one environment at a time."""
+
+[[project.milestone]]
+title = "Inventory"
+due = 2026-09-30
+completed = 2026-09-29
+
+[[project.milestone]]
+title = "Staging moved"
+due = 2026-10-21
+completed = 2026-10-21
+
+[[project.milestone]]
+title = "Production moved"
+due = 2026-12-04

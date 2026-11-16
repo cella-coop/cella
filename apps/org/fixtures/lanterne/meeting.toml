@@ -375,3 +375,86 @@ adopts = true
 circle = "coordination"
 quorum = 50
 adopts = false
+
+# Clients, Hiring, Care and Tools each meet once a month or so, and have
+# none held yet.
+
+[[meeting]]
+id = "clients-2026-10-28"
+circle = "clients"
+title = "Clients"
+at = 2026-10-28T14:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/clients"
+scheduled = 2026-10-19
+status = "scheduled"
+
+[[meeting.item]]
+title = "Renewals: who hears from whom"
+presenter = "Thomas"
+minutes = 20
+
+[[meeting.item]]
+title = "Nuvola's 2027 retainer"
+presenter = "Malik"
+minutes = 15
+
+[[meeting]]
+id = "hiring-2026-11-04"
+circle = "hiring"
+title = "Hiring"
+at = 2026-11-04T11:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/hiring"
+scheduled = 2026-10-21
+status = "scheduled"
+
+[[meeting.item]]
+title = "The two job descriptions"
+presenter = "Léa"
+minutes = 20
+
+[[meeting.item]]
+title = "Where we post them"
+presenter = "Julien"
+minutes = 10
+
+[[meeting]]
+id = "care-2026-10-29"
+circle = "care"
+title = "Care"
+at = 2026-10-29T16:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/care"
+scheduled = 2026-10-20
+status = "scheduled"
+
+[[meeting.item]]
+title = "The workload survey's findings"
+presenter = "Amina"
+minutes = 30
+
+[[meeting.item]]
+title = "A quiet first hour"
+presenter = "Sofia"
+minutes = 15
+
+[[meeting]]
+id = "tools-2026-11-02"
+circle = "tools"
+title = "Tools"
+at = 2026-11-02T15:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/tools"
+scheduled = 2026-10-21
+status = "scheduled"
+
+[[meeting.item]]
+title = "Production move: the plan"
+presenter = "Yusuf"
+minutes = 20
+
+[[meeting.item]]
+title = "Password manager: who is still out"
+presenter = "Inès"
+minutes = 10

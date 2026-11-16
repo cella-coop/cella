@@ -497,6 +497,49 @@ hours = 7
 billable = false
 note = "Web circle: code reviews, internal tools and training"
 
+# Clients, Hiring, Care and Tools: an hour a day in the last week of
+# October, beside each worker's own circle's time.
+
+[[run]]
+id = "malik-clients"
+member = "malik@lanterne.example"
+circle = "clients"
+from = 2026-10-19
+to = 2026-10-23
+hours = 1
+billable = false
+note = "Clients: renewals and the Nuvola proposal"
+
+[[run]]
+id = "julien-hiring"
+member = "julien@lanterne.example"
+circle = "hiring"
+from = 2026-10-19
+to = 2026-10-23
+hours = 1
+billable = false
+note = "Hiring: the job descriptions"
+
+[[run]]
+id = "hugo-care"
+member = "hugo@lanterne.example"
+circle = "care"
+from = 2026-10-19
+to = 2026-10-23
+hours = 1
+billable = false
+note = "Care: the workload survey and the first-aid refresher"
+
+[[run]]
+id = "ines-tools"
+member = "ines@lanterne.example"
+circle = "tools"
+from = 2026-10-19
+to = 2026-10-23
+hours = 1
+billable = false
+note = "Tools: the domain list and the password manager"
+
 # September, submitted and approved.
 
 [[period]]

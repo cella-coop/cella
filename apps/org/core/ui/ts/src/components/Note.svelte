@@ -9,6 +9,7 @@
 
 <style>
   .note {
+    min-height: 1.5em;
     font-size: var(--text-sm);
     color: var(--text-muted);
     padding-inline: var(--space-3);

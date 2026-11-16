@@ -39,7 +39,7 @@
 </script>
 
 <div data-body={body.live?.writable ? 'edit' : 'read'} data-hash={body.live?.hash ?? ''} data-state={state}>
-  {#if banner}<Note text={banner} />{/if}
+  <Note text={banner ?? ''} />
 </div>
 {#if body.doc && body.live?.writable}
   <Editor doc={body.doc} name={data.title} {embeds} />

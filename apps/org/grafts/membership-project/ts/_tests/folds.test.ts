@@ -1,4 +1,4 @@
-// membership-project's fold (`sql/004-folds.sql`), on a database holding
+// membership-project's fold (`sql/005-folds.sql`), on a database holding
 // the app's core, the member and project feats and this graft, in a
 // transaction rolled back after: a share granted under the id, the
 // amount and the day its entry names, and one beyond what is left of the
@@ -14,6 +14,9 @@ const sacha = 'sacha@folded.example'
 
 const fold = (n: number, payload: unknown) =>
   db.query(`SELECT membership_project.fold_share($1)`, [{ n, op: 'membership-project:project:share', actor: sacha, date: '2041-02-03', cause: null, payload }])
+
+const foldCrew = (n: number, payload: unknown) =>
+  db.query(`SELECT membership_project.fold_crew($1)`, [{ n, op: 'membership-project:project:crew', actor: sacha, date: '2041-02-03', cause: null, payload }])
 
 before(async () => {
   await db.connect()
@@ -36,4 +39,16 @@ test('a share folds under the id, the amount and the day its entry names, and on
   await db.query('SAVEPOINT refused')
   await assert.rejects(fold(2, { project: 'folded-site', member: sacha, amount: 60000, circle: 'assembly', share: 9002, granted: '2041-02-03' }), /exceeds what is left of folded-site's budget, 40000 of 100000 cents/)
   await db.query('ROLLBACK TO SAVEPOINT refused')
+})
+
+test('a crew folds whole, its lead replaced and its members replaced, and one not an active member is refused', async () => {
+  await db.query('SAVEPOINT crew')
+  await foldCrew(3, { project: 'folded-site', lead: sacha, members: [sacha] })
+  assert.deepEqual((await db.query(`SELECT member FROM membership_project.lead WHERE project = 'folded-site'`)).rows, [{ member: sacha }])
+  assert.deepEqual((await db.query(`SELECT member FROM membership_project.member WHERE project = 'folded-site'`)).rows, [{ member: sacha }])
+  await foldCrew(4, { project: 'folded-site', lead: null, members: [] })
+  assert.deepEqual((await db.query(`SELECT member FROM membership_project.lead WHERE project = 'folded-site'`)).rows, [])
+  assert.deepEqual((await db.query(`SELECT member FROM membership_project.member WHERE project = 'folded-site'`)).rows, [])
+  await assert.rejects(foldCrew(5, { project: 'folded-site', lead: 'nobody@folded.example', members: [] }), /nobody@folded\.example is no active member/)
+  await db.query('ROLLBACK TO SAVEPOINT crew')
 })

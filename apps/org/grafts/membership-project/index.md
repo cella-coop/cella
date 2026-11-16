@@ -21,6 +21,11 @@ a power covers ([circles](#circles)). Declared by `project`.
   set meanwhile waits for them.
 - `membership_project.pot`: each project's budget, what was shared from it
   and what remains, in cents. It reads as its reader.
+- `membership_project.lead` and `membership_project.member` (`sql/004-crew.sql`):
+  a project's crew, Linear's lead and members, independent of who wrote
+  its log: at most one lead, any number of members. A trigger refuses a
+  project that is missing or archived, and a person who is not an active
+  member (SQLSTATE `09000`). A crew write replaces the whole crew.
 
 The app role may select and insert; the guards role may select.
 
@@ -49,6 +54,7 @@ membership feat checks it.
 
 ## Invariants
 
+- a project's lead and members are active members, of a live project;
 - a share goes to an active member (`membership.active` on the verdict
   date), from a live project with a budget;
 - shares never exceed the budget (`membership_project.within`), and the
@@ -59,11 +65,15 @@ for the expense feat.
 
 ## Folds
 
-A share folds by `membership_project.fold_share` (`sql/004-folds.sql`,
+A share folds by `membership_project.fold_share` (`sql/005-folds.sql`,
 [folds](../../../../_corpus/doc/architecture.md#folds)): under the id its entry names, of
 its amount, to its member from its project, granted on the day its
 entry names, which its entry carries; the graft's trigger judges it
 against the member and what is left of the budget again, as it did.
+
+A crew folds by `membership_project.fold_crew` (`sql/005-folds.sql`): its
+entry's lead and members replace the project's crew, as the write did,
+and the trigger judges them again.
 
 ## Shell
 

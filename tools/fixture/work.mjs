@@ -88,6 +88,16 @@ export function work(read, fail) {
     }
   }
 
+  for (const c of read('graft.membership-project').crew ?? []) {
+    has(projects, c.project, 'project', 'crew')
+    if (c.lead) {
+      active(c.lead, `crew of ${c.project}, its lead`)
+    }
+    for (const member of c.members ?? []) {
+      active(member, `crew of ${c.project}`)
+    }
+  }
+
   for (const t of tasks.values()) {
     if ((t.status === 'done') !== Boolean(t.completed)) {
       fail(`task ${t.id}: done and its completion day go together`)

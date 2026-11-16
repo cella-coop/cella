@@ -31,16 +31,21 @@
     }
     return l.unsaved ? 'saving' : 'saved'
   })
-  const note = $derived(
-    state === 'opening' ? 'Opening the body' : !body.live?.writable ? (body.live?.problem ?? 'Read-only: editing it needs discuss in its circle') : `Edits ${state} · type / for blocks`,
-  )
+  // The empty line already hints how a block is added; this line only
+  // says whether the edit stood, so it says that alone, dimmer, by the
+  // box it stands for.
+  const banner = $derived(state === 'opening' ? 'Opening the body' : !body.live?.writable ? (body.live?.problem ?? 'Read-only: editing it needs discuss in its circle') : null)
+  const saved = $derived(`Edits ${state}`)
 </script>
 
 <div data-body={body.live?.writable ? 'edit' : 'read'} data-hash={body.live?.hash ?? ''} data-state={state}>
-  <Note text={note} />
+  <Note text={banner ?? ''} />
 </div>
 {#if body.doc && body.live?.writable}
   <Editor doc={body.doc} name={data.title} {embeds} />
 {:else}
   <Reader {canon} label={data.title} {embeds} readonly={!!body.live?.joined} />
+{/if}
+{#if body.live?.writable}
+  <Note text={saved} subtle end />
 {/if}

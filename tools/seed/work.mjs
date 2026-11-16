@@ -1,5 +1,6 @@
 // seed, work: loads a mock co-op's projects with their milestones,
-// budgets and shares, its tasks, each its circle's, and its timesheets into the project,
+// budgets and shares, their crew, Linear's lead and members, its tasks,
+// each its circle's, and its timesheets into the project,
 // task and timesheet schemas and their grafts' (contact-project,
 // invoice-project, membership-project, membership-task, project-task,
 // membership-timesheet, project-timesheet), and the report feat's margin
@@ -53,6 +54,15 @@ export async function work(db, read, day) {
       'INSERT INTO membership_project.share (project, member, amount, granted) VALUES ($1, $2, cella.amount($3), $4)',
       [s.project, s.member, s.amount, day(s.granted)],
     )
+  }
+
+  for (const c of read('graft.membership-project').crew ?? []) {
+    if (c.lead) {
+      await db.query('INSERT INTO membership_project.lead (project, member) VALUES ($1, $2)', [c.project, c.lead])
+    }
+    for (const member of c.members ?? []) {
+      await db.query('INSERT INTO membership_project.member (project, member) VALUES ($1, $2)', [c.project, member])
+    }
   }
 
   const tasks = read('task').task ?? []

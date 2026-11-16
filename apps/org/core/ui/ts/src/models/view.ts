@@ -48,6 +48,10 @@ export interface Prop {
   kind?: Kind
   tone?: Tone
   href?: string
+  // The subheading a crowded drawer clusters it under, in the order its
+  // first property names it; a property naming none sits above every
+  // group, as a drawer with none shows one plain list.
+  group?: string
 }
 
 // A line of the drawer's Related: a record it links to, or a jump to the
@@ -124,6 +128,10 @@ export interface Page<T = any> {
   // where it is shown, as a task's assignee, since the content is the
   // record's free-form body.
   details?: Block<T>[]
+  // False keeps the log's four, Created, Updated and by whom, out of the
+  // Details' properties and in their own History at the drawer's foot,
+  // for a page too crowded to carry them among its own fields.
+  history?: boolean
   // What happened to the item, newest first; the page merges every
   // slice's and shows them oldest first, under its content.
   activity?: (data: T) => Event[]

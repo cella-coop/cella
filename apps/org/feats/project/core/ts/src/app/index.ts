@@ -43,16 +43,22 @@ export const app: App = {
         title: (p: Detail) => p.title,
         subtitle: (p: Detail) => p.id,
         summary: (p: Detail) => p.summary,
+        // On top, grouped: its state and progress, its circle, its lead
+        // and crew (the membership-project graft's), then its dates and
+        // its money; Created, Updated and by whom sit in their own
+        // History at the drawer's foot instead, kept off this page's
+        // crowded top (`history: false`, below).
         properties: (p: Detail) => [
-          { label: 'State', value: p.archived ? 'archived' : p.state, kind: 'badge', tone: p.archived ? 'neutral' : tones[p.state] },
-          { label: 'Circle', value: p.circle },
-          { label: 'Milestones', value: progress(p) },
-          { label: 'Next', value: p.next },
-          { label: 'Budget', value: p.budget, kind: 'money' },
-          { label: 'Started', value: p.started, kind: 'date' },
-          { label: 'Due', value: p.due, kind: 'date' },
-          ...(p.archived ? [{ label: 'Archived', value: p.archived, kind: 'date' as const }] : []),
+          { label: 'State', value: p.archived ? 'archived' : p.state, kind: 'badge', tone: p.archived ? 'neutral' : tones[p.state], group: 'State' },
+          { label: 'Milestones', value: progress(p), group: 'State' },
+          { label: 'Next', value: p.next, group: 'State' },
+          { label: 'Circle', value: p.circle, group: 'Circle' },
+          { label: 'Started', value: p.started, kind: 'date', group: 'Dates' },
+          { label: 'Due', value: p.due, kind: 'date', group: 'Dates' },
+          ...(p.archived ? [{ label: 'Archived', value: p.archived, kind: 'date' as const, group: 'Dates' }] : []),
+          { label: 'Budget', value: p.budget, kind: 'money', group: 'Money' },
         ],
+        history: false,
         activity: (p: Detail) => [
           ...p.milestones.filter((m) => m.completed).map((m) => ({ at: m.completed ?? '', text: `completed ${m.title}` })),
           { at: p.started, text: 'started' },

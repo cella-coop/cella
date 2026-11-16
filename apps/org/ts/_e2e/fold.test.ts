@@ -3,7 +3,7 @@
 // tree declares at least once. People keep their profiles and devices and
 // are invited; the books take an import, invoices, bills, expenses, a
 // payroll and the capital paid in, drawn on, repaid and withdrawn; the
-// projects, each with a body and a thread, their tasks with theirs and
+// projects, each with a body, a thread and its crew, their tasks with theirs and
 // their reactions, and time, the files, documents and meetings go
 // on; the assembly passes motions whose closes carry their effects, one
 // forgoing one; the 2025 and 2026 distributions are approved and the
@@ -37,7 +37,7 @@ import { attach as receipt, capture } from '@cella/org-graft-expense-file/api'
 import { approve as approveExpense, reimburse } from '@cella/org-graft-expense-transaction/api'
 import { rebill } from '@cella/org-graft-expense-project/api'
 import { add as milestone, archive, budget, complete as reach, create as createProject, postComment as discussProject, reactToComment as reactOnProject, resolveComment as settleProject, saveBody as saveBrief } from '@cella/org-project/api'
-import { share } from '@cella/org-graft-membership-project/api'
+import { crew, share } from '@cella/org-graft-membership-project/api'
 import { complete, create as createTask, move, post as postComment, react, resolve, save as saveBody } from '@cella/org-task/api'
 import { file as fileTask } from '@cella/org-graft-project-task/api'
 import { assign } from '@cella/org-graft-membership-task/api'
@@ -183,6 +183,7 @@ test('24 October: contacts are kept, archived and erased, and the work goes on: 
   settled(await clientOf({ project, contact: 'terres' }, as(hugo)))
   settled(await budget({ project, amount: 8_000_00 }, as(hugo)))
   settled(await share({ project, member: sofia, amount: 2_000_00 }, as(hugo)))
+  settled(await crew({ project, lead: hugo, members: [sofia] }, as(hugo)))
   settled(await milestone({ project, title: 'Proofs approved', due: '2026-11-20' }, as(hugo)))
   settled(await reach({ project, n: 1 }, as(hugo)))
   const brief = createDoc()

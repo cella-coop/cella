@@ -10,6 +10,7 @@ import { basename, join } from 'node:path'
 import { parse } from 'smol-toml'
 import pg from 'pg'
 import { seed } from './seed/found.mjs'
+import { parts } from './seed/url.mjs'
 
 const dir = process.argv[2]
 const stories = ['governance', 'authority', 'mandate', 'provenance', 'procedure', 'chain', 'powers', 'grant', 'refusal', 'author', 'tenure', 'role-seat', 'collective', 'authority-walk']
@@ -27,15 +28,15 @@ if (scenarios.length > 1) {
 // the app's role as well as the superuser: a URL becomes them, its host
 // a socket's directory where its `host` parameter names one.
 if (scenarios.length && process.env.DATABASE_URL) {
-  const at = new URL(process.env.DATABASE_URL)
+  const at = parts(process.env.DATABASE_URL)
   const set = (name, value) => {
-    if (value) process.env[name] = value
+    if (value) process.env[name] = String(value)
   }
-  set('PGHOST', at.searchParams.get('host') ?? decodeURIComponent(at.hostname))
-  set('PGPORT', at.port || at.searchParams.get('port'))
-  set('PGUSER', decodeURIComponent(at.username))
-  set('PGPASSWORD', decodeURIComponent(at.password))
-  set('PGDATABASE', decodeURIComponent(at.pathname.slice(1)))
+  set('PGHOST', at.host)
+  set('PGPORT', at.port)
+  set('PGUSER', at.user)
+  set('PGPASSWORD', at.password)
+  set('PGDATABASE', at.database)
 }
 const read = (file) => {
   const path = join(dir, `${file}.toml`)

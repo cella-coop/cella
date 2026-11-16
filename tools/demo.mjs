@@ -14,18 +14,17 @@
 // `postgres` database, since none of this runs in the database it makes.
 
 import pg from 'pg'
+import { parts } from './seed/url.mjs'
 
 const url = process.env.DATABASE_URL
 if (!url) {
   throw new Error('demo: DATABASE_URL names the template')
 }
-const at = new URL(url)
-const template = decodeURIComponent(at.pathname.slice(1))
+const at = parts(url)
+const template = at.database
 if (!template) {
-  throw new Error(`demo: ${at.protocol}//… names no database`)
+  throw new Error('demo: DATABASE_URL names no database')
 }
-const maintenance = new URL(url)
-maintenance.pathname = '/postgres'
 
 const [verb, ...rest] = process.argv.slice(2)
 const flag = (name) => {
@@ -33,7 +32,7 @@ const flag = (name) => {
   return i < 0 ? undefined : (rest[i + 1] ?? '')
 }
 
-const db = new pg.Client({ connectionString: maintenance.toString() })
+const db = new pg.Client({ ...at, database: 'postgres' })
 await db.connect()
 const id = (name) => db.escapeIdentifier(name)
 const exists = async (name) => (await db.query('SELECT 1 FROM pg_database WHERE datname = $1', [name])).rowCount > 0

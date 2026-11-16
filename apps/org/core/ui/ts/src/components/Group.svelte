@@ -10,7 +10,7 @@
   import Cell from './Cell.svelte'
   import Icon from './Icon.svelte'
 
-  // The header over a group of a list's, a feed's, a table's or a
+  // The header over a group of a list's, a table's or a
   // gallery's rows, as Linear's: a solid bar across its width, a subtle
   // gradient in the value's own ink where it names a record
   // (`groupTint`, its icon the same ink), kept at an enumeration's tone

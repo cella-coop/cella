@@ -1,6 +1,6 @@
 +++
 title = "Log"
-updated = 2026-11-13
+updated = 2026-11-16
 +++
 
 A signed, hash-chained log in CBOR, with an envelope every entry extends. It becomes the notary's log: receipts, verdicts and signed batches of confluent writes, checked by their hashes and signatures and never replayed to rebuild the state, which a scope restores from its backup ([trust](../../../../_corpus/doc/trust.md#one-server)).
@@ -21,8 +21,9 @@ writes, since only the notary appends.
 
 ## Activity
 
-The shell lists the log as Activity, a feed of who did what and when
-(the `feed` layout of [the UI core](../ui/index.md#components)): each
+The shell lists the log as Activity, a list of who did what and when
+(the `list` layout of [the UI core](../ui/index.md#components)), its
+person and date columns its default fields: each
 entry a line naming its actor, as their chip, then what they did, then
 its verdict date, newest first. What they did is said from the op, its
 verb in the past and its thing: `invoice:invoice:send` reads "sent
@@ -35,4 +36,4 @@ feats'; an entry about no record the shell shows links to the entry
 itself. The entry's page holds the rest: its op as the log keeps it,
 its receipt, hashes, signatures and deciding guards. An entry keeps
 nothing of what a write was about but these ids, its op and its actor,
-so the feed says no amount, title or name.
+so the list says no amount, title or name.

@@ -1,11 +1,11 @@
 // A view groups its rows by an enumeration, a person or a circle, in
 // every browser: signed in as Julien on the dev server, the expenses
 // grouped by their status, an enumeration, in a list, a table, a gallery
-// and on a board; the files, the collection that offers a feed, by who
-// uploaded them, a person, in a feed, a list, a table, a gallery and on a
+// and on a board; the files, by who
+// uploaded them, a person, in a list, a table, a gallery and on a
 // board; and the mandates by the circle that issued them, a circle, in a
 // list, a table, a gallery and on a board. Group by offers each field and
-// None; a list, a feed, a table and a gallery draw a header over each
+// None; a list, a table and a gallery draw a header over each
 // group's rows, naming its value, a person and a circle by name, and how
 // many rows it holds, the groups in the order a board's columns take and
 // the rows in the collection's order within each, as the scenario works
@@ -111,7 +111,7 @@ async function drawn(page: Page, name: string, layout: string): Promise<Drawn[]>
   )
 }
 
-// Polls until the layout draws the groups `want` says: a list, a feed, a
+// Polls until the layout draws the groups `want` says: a list, a
 // table and a gallery each group, its header's label and count and its
 // rows, in order; a board each column that holds a row, the rows with
 // none being in none.
@@ -220,7 +220,7 @@ eachBrowser((browserName, launch) => {
       const names = Object.fromEntries((await people(app)).map((p) => [p.address, p.name]))
       const byUploader = await expected('files', 'uploader', [], (v) => names[v] ?? v)
       assert.ok(byUploader.length > 1, 'more than one person uploaded the files Julien reads')
-      for (const layout of ['feed', 'list', 'table', 'gallery', 'board']) {
+      for (const layout of ['list', 'table', 'gallery', 'board']) {
         await visit(`/files?view=${layout}&by=&sort=`)
         await grouping('files', layout, { key: 'uploader', label: 'By' }, byUploader)
       }
@@ -252,18 +252,18 @@ eachBrowser((browserName, launch) => {
       await groups(page, 'mandates', 'table', byIssuer, `${browserName}: the address`)
       mkdirSync(shots, { recursive: true })
       await page.screenshot({ path: `${shots}/mandates-${browserName}.png` })
-      await visit('/files?view=feed&by=uploader&sort=')
-      await groups(page, 'files', 'feed', byUploader, `${browserName}: the feed's address`)
+      await visit('/files?view=list&by=uploader&sort=')
+      await groups(page, 'files', 'list', byUploader, `${browserName}: the list's address`)
       await page.screenshot({ path: `${shots}/files-${browserName}.png` })
 
       // None draws the rows as one again.
       await choose(panel(page).getByRole('combobox', { name: 'Group by' }), { label: 'None' })
 
       await page.waitForURL((u) => u.searchParams.get('by') === '')
-      for (let tries = 0; tries < 60 && (await drawn(page, 'files', 'feed')).length > 0; tries++) {
+      for (let tries = 0; tries < 60 && (await drawn(page, 'files', 'list')).length > 0; tries++) {
         await page.waitForTimeout(250)
       }
-      assert.equal((await drawn(page, 'files', 'feed')).length, 0, `${browserName}: None draws no header`)
+      assert.equal((await drawn(page, 'files', 'list')).length, 0, `${browserName}: None draws no header`)
 
       assert.deepEqual(errors, [], `${browserName}: no page error`)
       await context.close()

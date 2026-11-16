@@ -46,7 +46,6 @@
   import Group from './Group.svelte'
   import Pill from './Pill.svelte'
   import Cell from './Cell.svelte'
-  import Person from './Person.svelte'
   import Dashboard from './Dashboard.svelte'
   import DropIndicator from './DropIndicator.svelte'
   import Frame from './PageFrame.svelte'
@@ -55,7 +54,7 @@
   import Viewing from './Viewing.svelte'
 
   // The one collection component: the same header, view bar and rows for
-  // every collection, as a list, a feed, a table, a gallery, a board, a calendar
+  // every collection, as a list, a table, a gallery, a board, a calendar
   // or a dashboard, and the drawer's
   // View panel holding how they are shown. The view bar's tabs are the
   // collection's preset views, then the viewer's own; the active one, and
@@ -105,8 +104,7 @@
     kept: number
     matched: number
     href?: (row: any) => string | undefined
-    // The row's own page, where `href` links it elsewhere, as a feed's
-    // line links to its record and its time to the row.
+    // The row's own page, where `href` links it elsewhere.
     own?: (row: any) => string | undefined
     about?: unknown
     // The New forms, each under its title where there are several.
@@ -185,9 +183,6 @@
   const titled = $derived(columns.find((c) => c.role === 'title') ?? columns[0])
   const subs = $derived(columns.filter((c) => c.role === 'sub'))
   const metas = $derived(columns.filter((c) => c.role === 'meta'))
-  // A feed's who and when: its first person column and its first date.
-  const who = $derived(columns.find((c) => c.kind === 'person'))
-  const when = $derived(columns.find((c) => c.kind === 'date'))
   // A table's columns, but the one its rows are grouped by, which each
   // group's header names.
   const visible = $derived(arranged(columns, spec.order).filter((c) => c === titled || (!hidden.has(c.key) && c !== group?.by)))
@@ -221,34 +216,32 @@
   // board's enumeration, person or circle, when the view names none the
   // one the collection's look names, else its first enumeration.
   const grouped = $derived(columns.find((c) => c.key === grouping({ layout: 'board', by: spec.by }, typed, look)?.key))
-  // The field a list, a feed, a table or a gallery groups its rows by,
+  // The field a list, a table or a gallery groups its rows by,
   // where the view names one: a header over each group's rows, with its
   // value and how many rows it holds across every page, a chevron that
   // collapses it (`state.collapsed`, `state.toggleGroup`) and, where the
   // collection offers New, a + that creates in it.
   const group = $derived.by(() => {
-    const by = ['list', 'feed', 'table', 'gallery'].includes(spec.layout) && spec.by ? columns.find((c) => c.key === grouping(spec, typed)?.key) : undefined
+    const by = ['list', 'table', 'gallery'].includes(spec.layout) && spec.by ? columns.find((c) => c.key === grouping(spec, typed)?.key) : undefined
     return by && { by, counts: groups, month: by.kind === 'date', collapsed: state.collapsed, oncollapse: (v: string) => state.toggleGroup(v), oncreate: creates.length ? () => create.show() : undefined }
   })
   const opening = (i: number) => !!group && opens(state.shown, i, group.by.key, group.month)
   // The fields the view chooses, in its order, but those a layout always
-  // shows: a feed's who and when and every layout's title.
+  // shows: every layout's title.
   const chosen = (fixed: Column[]) => arranged(columns, spec.cards).filter((c) => spec.cards.includes(c.key) && !fixed.includes(c))
   // What Display offers to show, and what shows: a list's fields under
   // and after each row's title, the collection's lines and meta where the
-  // view chooses none; a feed's after its line's title, none where the
-  // view chooses none; else the cards' fields. A list and a feed take the
+  // view chooses none; else the cards' fields. A list takes the
   // look's own card fields as no choice, its cards' and not theirs.
-  const fixed = $derived(spec.layout === 'feed' ? [titled, who, when].filter((c) => c !== undefined) : [titled])
+  const fixed = $derived([titled])
   const choices = $derived(columns.filter((c) => !fixed.includes(c)))
-  const lined = $derived(spec.layout === 'list' || spec.layout === 'feed')
+  const lined = $derived(spec.layout === 'list')
   const choosing = $derived(spec.cards.length > 0 && !(lined && spec.cards.join() === (look.cards ?? []).join()))
   // What the rows are grouped by leaves them, as its header names it,
   // but where the view chose it.
   const shown = $derived(
     choosing ? chosen(fixed)
     : spec.layout === 'list' ? [...subs, ...metas].filter((c) => c !== group?.by)
-    : spec.layout === 'feed' ? []
     : [...subs, ...metas].filter((c) => c !== grouped && c !== group?.by),
   )
   // A list places each field it shows by its role: a line under the title
@@ -269,7 +262,7 @@
   // its header and navigation; `kept` counts the view over the whole
   // collection, so only a collection with no rows says it is empty.
 
-  // A list, a feed, a table and a gallery draw a page of rows at a time; a board
+  // A list, a table and a gallery draw a page of rows at a time; a board
   // and a calendar place every row the view keeps, and a dashboard draws
   // none.
   const paging = $derived(!(spec.layout === 'dashboard' || (spec.layout === 'board' && grouped) || (spec.layout === 'calendar' && placing)))
@@ -366,7 +359,7 @@
 
 <svelte:window {onkeydown} />
 
-<!-- A group's header in a list or a feed, over the first of its rows. -->
+<!-- A group's header in a list, over the first of its rows. -->
 {#snippet head(row: any)}
   {#if group}
     {const value = $derived(under(row, group.by.key, group.month))}
@@ -530,43 +523,6 @@
       />
     {:else if spec.layout === 'calendar' && placing}
       <Calendar rows={state.shown} on={placing} period={shownPeriod} {titled} {shown} {href} link={at} sorted={spec.sort !== null} by={tinted} order={tints} />
-    {:else if spec.layout === 'feed' && who && when}
-      <ol class="list feed">
-        {#each state.shown as row, i (row.id)}
-          {const to = $derived(href?.(row))}
-          {const self = $derived(own?.(row))}
-          {const by = $derived(who.value(row))}
-          {#if opening(i)}{@render head(row)}{/if}
-          <!-- svelte-ignore a11y_no_noninteractive_tabindex: the keyboard roves the rows, one in the tab order, so a screen reader reads the row it is on -->
-          {#if !group || !group.collapsed.has(under(row, group.by.key, group.month))}
-          <li
-            class:active={i === state.active}
-            tabindex={i === state.stop ? 0 : -1}
-            onfocusin={() => (state.active = i)}
-            {@attach focused(i === state.active)}
-          >
-            <span class="dot"></span>
-            <span class="main">
-              <!-- A row no one is named on, as one the founding carried in, names no one. -->
-              <b class="who">{#if by}<Person address={String(by)} />{/if}</b>
-              {#if to}
-                <a href={to} class="what stretched" tabindex="-1">{titled.value(row)}</a>
-              {:else}
-                <span class="what">{titled.value(row)}</span>
-              {/if}
-              {#each shown as c (c.key)}
-                <span class="sub"><Cell value={c.value(row)} kind={c.kind === 'badge' ? 'text' : c.kind} /></span>
-              {/each}
-            </span>
-            {#if self && self !== to}
-              <a href={self} class="when" tabindex="-1"><Cell value={when.value(row)} kind="date" /></a>
-            {:else}
-              <span class="when"><Cell value={when.value(row)} kind="date" /></span>
-            {/if}
-          </li>
-          {/if}
-        {/each}
-      </ol>
     {:else}
       <ul class="list">
         {#each state.shown as row, i (row.id)}
@@ -730,49 +686,6 @@
   }
   .widest {
     visibility: hidden;
-  }
-  /* A feed's line, as a record's Activity: a dot, who, what they did, and
-     when, quiet, at the end; the time opens the row's own page above the
-     line's link. */
-  .feed li {
-    justify-content: flex-start;
-    gap: var(--space-2);
-  }
-  .feed .dot {
-    flex: none;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent-border);
-  }
-  .feed .main {
-    gap: var(--space-2);
-  }
-  .who {
-    flex: none;
-    max-width: 40%;
-    font-weight: 500;
-    overflow: hidden;
-  }
-  .what {
-    color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  a.what {
-    text-decoration: none;
-  }
-  .when {
-    position: relative;
-    flex: none;
-    color: var(--text-subtle);
-    font-size: var(--text-xs);
-    white-space: nowrap;
-    text-decoration: none;
-  }
-  a.when:hover {
-    color: var(--text);
   }
   .empty {
     color: var(--text-muted);

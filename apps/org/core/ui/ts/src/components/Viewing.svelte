@@ -5,7 +5,6 @@
   import SquaresFour from 'phosphor-svelte/lib/SquaresFour'
   import Kanban from 'phosphor-svelte/lib/Kanban'
   import CalendarDots from 'phosphor-svelte/lib/CalendarDots'
-  import ClockCounterClockwise from 'phosphor-svelte/lib/ClockCounterClockwise'
   import Check from 'phosphor-svelte/lib/Check'
   import SortAscending from 'phosphor-svelte/lib/SortAscending'
   import SortDescending from 'phosphor-svelte/lib/SortDescending'
@@ -78,7 +77,7 @@
     // they number a handful, what Filter offers.
     values: Record<string, string[]>
     dashboard: { custom: boolean; widgets: Widget[]; results: Result[]; errors: string[] } | null
-    // The fields the layout shows, a list's, a feed's or its cards', and
+    // The fields the layout shows, a list's or its cards', and
     // those Display offers; and the board's enumeration, person or circle.
     shown: Column[]
     choices: Column[]
@@ -112,23 +111,16 @@
   const lanes = $derived(fields.filter(laned))
   const dates = $derived(fields.filter((f) => f.type === 'date'))
   // A board only where a field is one it groups by, an enumeration, a
-  // person or a circle, a calendar only where one is a date, and a feed
-  // only where one is and a column is a person.
+  // person or a circle, a calendar only where one is a date.
   const layouts: { id: Layout; label: string; icon: typeof Rows }[] = $derived(
     [
       { id: 'list' as const, label: 'List', icon: Rows },
-      { id: 'feed' as const, label: 'Feed', icon: ClockCounterClockwise },
       { id: 'table' as const, label: 'Table', icon: TableIcon },
       { id: 'gallery' as const, label: 'Gallery', icon: SquaresFour },
       { id: 'board' as const, label: 'Board', icon: Kanban },
       { id: 'calendar' as const, label: 'Calendar', icon: CalendarDots },
       { id: 'dashboard' as const, label: 'Dashboard', icon: ChartBar },
-    ].filter(
-      (l) =>
-        (l.id !== 'board' || lanes.length > 0) &&
-        (l.id !== 'calendar' || dates.length > 0) &&
-        (l.id !== 'feed' || (dates.length > 0 && columns.some((c) => c.kind === 'person'))),
-    ),
+    ].filter((l) => (l.id !== 'board' || lanes.length > 0) && (l.id !== 'calendar' || dates.length > 0)),
   )
   const showing = $derived(new Set(shown.map((c) => c.key)))
   const hidden = $derived(new Set(spec.hide))
@@ -166,7 +158,7 @@
   // What a row of the panel shows in its Display popover, by layout.
   const display = $derived(
     spec.layout === 'table' ? `${columns.filter((c) => c === titled || !hidden.has(c.key)).length} columns`
-    : spec.layout === 'list' || spec.layout === 'feed' ? `${shown.length} fields`
+    : spec.layout === 'list' ? `${shown.length} fields`
     : spec.layout === 'gallery' || spec.layout === 'board' || spec.layout === 'calendar' ? `${shown.length} card fields`
     : spec.layout === 'dashboard' && dashboard ? `${dashboard.widgets.length} widgets`
     : null,
@@ -245,11 +237,11 @@
   }
 </script>
 
-<!-- The fields a list or a feed shows after each row's title, or a
+<!-- The fields a list shows after each row's title, or a
      gallery's, a board's or a calendar's cards. -->
 {#snippet cards()}
   <fieldset class="columns">
-    <legend class="label">{spec.layout === 'list' || spec.layout === 'feed' ? 'Fields' : 'Card fields'}</legend>
+    <legend class="label">{spec.layout === 'list' ? 'Fields' : 'Card fields'}</legend>
     <ul>
       {#each choices as c (c.key)}
         <li>

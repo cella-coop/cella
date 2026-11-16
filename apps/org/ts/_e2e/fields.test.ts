@@ -3,10 +3,8 @@
 // a list grouped by nothing show who uploaded them under each row's title and their kind, size and
 // day after it, by their columns' roles; Display hides the size and who
 // uploaded them and shows the type, a column the table alone shows by default,
-// after the title, and the address keeps the choice as `cards`. In a
-// feed the files show nothing after each line's title but what Display
-// chooses, offering every field but the title, who and when; it shows
-// their kind and type. A view saved with its fields restores them from
+// after the title, and the address keeps the choice as `cards`. A view
+// saved with its fields restores them from
 // its tab, and the address alone draws them. In a table, a gallery, on
 // a board and in a calendar, a field taken away in Display is one fewer
 // shown. `SHOTS` names where its screenshots go. Nothing is written. Run
@@ -24,11 +22,11 @@ const shots = process.env.SHOTS ?? '/tmp/cella-fields-shots'
 
 const panel = (page: Page) => page.locator('section.card', { has: page.getByRole('heading', { name: 'View', exact: true }) })
 
-// What the first row of a list or a feed draws: how many fields under or
+// What the first row of a list draws: how many fields under or
 // beside its title, how many after it, and how many of those are mono,
 // as the id and the type are.
-async function first(page: Page, layout: 'list' | 'feed') {
-  const row = page.locator(layout === 'list' ? 'ul.list > li:not(.group)' : 'ol.feed > li:not(.group)').first()
+async function first(page: Page) {
+  const row = page.locator('ul.list > li:not(.group)').first()
   await row.waitFor()
   return {
     sub: await row.locator('.main .sub').count(),
@@ -38,17 +36,17 @@ async function first(page: Page, layout: 'list' | 'feed') {
 }
 
 // Polls until the first row draws what `want` says.
-async function draws(page: Page, layout: 'list' | 'feed', want: { sub: number; meta: number; mono: number }, at: string) {
-  let last = await first(page, layout)
+async function draws(page: Page, want: { sub: number; meta: number; mono: number }, at: string) {
+  let last = await first(page)
   for (let tries = 0; tries < 60 && JSON.stringify(last) !== JSON.stringify(want); tries++) {
     await page.waitForTimeout(250)
-    last = await first(page, layout)
+    last = await first(page)
   }
   assert.deepEqual(last, want, at)
 }
 
 eachBrowser((browserName, launch) => {
-  test(`${browserName}: a list and a feed show the fields their view chooses, saved in a view and in the address, and every layout's Display changes what shows`, async () => {
+  test(`${browserName}: a list shows the fields its view chooses, saved in a view and in the address, and every layout's Display changes what shows`, async () => {
     const { base, stop } = await serve()
     const browser = await launch()
     try {
@@ -95,7 +93,7 @@ eachBrowser((browserName, launch) => {
       // A list, grouped by nothing: by the columns' roles, then as Display
       // chooses.
       await visit('/files?view=list&by=')
-      await draws(page, 'list', { sub: 1, meta: 3, mono: 0 }, `${browserName}: a list shows its columns by their roles`)
+      await draws(page, { sub: 1, meta: 3, mono: 0 }, `${browserName}: a list shows its columns by their roles`)
       await panel(page).getByRole('button', { name: '4 fields' }).click()
       await display().waitFor()
       assert.deepEqual(
@@ -108,43 +106,17 @@ eachBrowser((browserName, launch) => {
       await field('By', false, 'class,uploaded,type')
       await page.keyboard.press('Escape')
       const listed = { sub: 0, meta: 3, mono: 1 }
-      await draws(page, 'list', listed, `${browserName}: the list shows the kind, the day and the type after the title`)
+      await draws(page, listed, `${browserName}: the list shows the kind, the day and the type after the title`)
       mkdirSync(shots, { recursive: true })
       await page.screenshot({ path: `${shots}/files-list-${browserName}.png` })
       await save('Chosen fields')
       await visit('/files?view=list&by=')
-      await draws(page, 'list', { sub: 1, meta: 3, mono: 0 }, `${browserName}: the list's default is back`)
+      await draws(page, { sub: 1, meta: 3, mono: 0 }, `${browserName}: the list's default is back`)
       await page.getByTitle(/^View Chosen fields /).click()
       await page.waitForURL((u) => cards(u) === 'class,uploaded,type')
-      await draws(page, 'list', listed, `${browserName}: the saved view restores the list's fields`)
+      await draws(page, listed, `${browserName}: the saved view restores the list's fields`)
       await visit('/files?view=list&by=&cards=class,uploaded,type')
-      await draws(page, 'list', listed, `${browserName}: the address alone draws the list's fields`)
-
-      // A feed: nothing after its title, then as Display chooses.
-      await visit('/files?view=feed')
-      await draws(page, 'feed', { sub: 0, meta: 0, mono: 0 }, `${browserName}: a feed shows who, what and when`)
-      await panel(page).getByRole('button', { name: '0 fields' }).click()
-      await display().waitFor()
-      assert.deepEqual(
-        await display().getByRole('checkbox').evaluateAll((bs) => bs.map((b) => b.parentElement?.textContent?.trim())),
-        ['Id', 'Kind', 'Size', 'Type', 'Concerns', 'Created', 'Updated', 'Created by', 'Updated by'],
-
-        `${browserName}: a feed's Display offers every field but the title, who and when, the logged ones last`,
-      )
-      await field('Kind', true, 'class')
-      await field('Type', true, 'class,type')
-      await page.keyboard.press('Escape')
-      const fed = { sub: 2, meta: 0, mono: 1 }
-      await draws(page, 'feed', fed, `${browserName}: the feed shows the kind and the type after the title`)
-      await page.screenshot({ path: `${shots}/files-feed-${browserName}.png` })
-      await save('Fed fields')
-      await visit('/files?view=feed')
-      await draws(page, 'feed', { sub: 0, meta: 0, mono: 0 }, `${browserName}: the feed's default is back`)
-      await page.getByTitle(/^View Fed fields /).click()
-      await page.waitForURL((u) => cards(u) === 'class,type')
-      await draws(page, 'feed', fed, `${browserName}: the saved view restores the feed's fields`)
-      await visit('/files?view=feed&cards=class,type')
-      await draws(page, 'feed', fed, `${browserName}: the address alone draws the feed's fields`)
+      await draws(page, listed, `${browserName}: the address alone draws the list's fields`)
 
       // Every other layout but the dashboard: a field taken away in
       // Display is one fewer shown, as its row in the panel counts it.

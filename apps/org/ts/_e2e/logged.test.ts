@@ -3,8 +3,8 @@
 // contact on 24 October, Julien another on the 25th and updates the
 // first on the 26th, the day the dev server is at. Contacts hold no date
 // and no person of their own, yet their View panel offers a calendar,
-// which places the two by Created, and a feed, which names who created
-// each; a table orders them by Updated either way, a row the log names
+// which places the two by Created, and a list, once Display shows who
+// created each and when; a table orders them by Updated either way, a row the log names
 // none of last; Filter keeps Julien's by Created by; the first's page
 // ends its properties with its four. A meeting's calendar still places
 // them by their start, and an invoice's by the day it is due, with
@@ -72,7 +72,7 @@ async function until<T>(read: () => Promise<T>, holds: (x: T) => boolean, messag
 }
 
 eachBrowser((browserName, launch) => {
-  test(`${browserName}: a collection with no date of its own offers a calendar and a feed by Created, a table orders by Updated and filters by Created by, and a record's page ends with its four, light and dark`, async () => {
+  test(`${browserName}: a collection with no date of its own offers a calendar by Created, a table orders by Updated and filters by Created by, and a record's page ends with its four, light and dark`, async () => {
     mkdirSync(shots, { recursive: true })
     const { base, stop } = await serve()
     const browser = await launch()
@@ -109,14 +109,20 @@ eachBrowser((browserName, launch) => {
         assert.equal(await page.locator('.calendar li.entry').count(), 2, `${at}: a contact the founding carried in sits nowhere`)
         await page.screenshot({ path: `${shots}/contacts-calendar-${browserName}-${scheme}.png`, fullPage: true })
 
-        // A feed of them: who created each, and when.
-        await layout('Feed')
-        const line = (name: string) => page.locator('ol.feed > li', { hasText: name })
-        await line('Atelier Estampe').waitFor()
-        assert.equal(await line('Atelier Estampe').locator('.who .person').getAttribute('title'), camille, `${at}: the feed names who created the first`)
-        assert.equal(await line('Bureau Tampon').locator('.who .person').getAttribute('title'), julien, `${at}: and the second`)
-        assert.notEqual((await line('Atelier Estampe').locator('.when').innerText()).trim(), '—', `${at}: and when`)
-        await page.screenshot({ path: `${shots}/contacts-feed-${browserName}-${scheme}.png`, fullPage: true })
+        // A list of them, who created each and when, once Display shows
+        // them: contacts hold neither by default.
+        await layout('List')
+        await panel(page).getByRole('button', { name: /^\d+ fields$/ }).click()
+        const display = page.getByRole('dialog', { name: 'Display' })
+        await display.waitFor()
+        await display.getByRole('checkbox', { name: 'Created by', exact: true }).check()
+        await display.getByRole('checkbox', { name: 'Created', exact: true }).check()
+        await page.keyboard.press('Escape')
+        const line = (name: string) => page.locator('ul.list > li', { hasText: name })
+        await until(() => line('Atelier Estampe').locator('.meta .person').getAttribute('title'), (t) => t === camille, `${at}: the list names who created the first`)
+        await until(() => line('Bureau Tampon').locator('.meta .person').getAttribute('title'), (t) => t === julien, `${at}: and the second`)
+        assert.notEqual((await line('Atelier Estampe').locator('.meta .dated').innerText()).trim(), '—', `${at}: and when`)
+        await page.screenshot({ path: `${shots}/contacts-list-${browserName}-${scheme}.png`, fullPage: true })
 
         // A table ordered by Updated, either way, a row with none last.
         await layout('Table')

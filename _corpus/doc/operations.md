@@ -256,10 +256,15 @@ files, every version's upgrade script among them, laid out as nixpkgs'
 `shared_preload_libraries` names `cella`.
 
 The flake's `cella-org` is the org app as one derivation: the shell
-built with adapter-node, its node modules and the `cella` CLI, which
-runs it as `cella serve --prod` does, with the DuckDB extensions the
-analytics shell loads. Its closure holds no key, no session key and no
-database: those are the host's.
+built with adapter-node, its node modules (a fixed-output fetch of the
+pnpm store the lockfile names, whose hash the flake holds and a change
+to the lockfile changes), the tree it migrates and seeds from, and the
+`cella` CLI, which runs from that tree as from a checkout built already
+([the CLI](../../apps/org/rs/index.md#on-the-path)), with Postgres 18's
+client binaries, node and DuckDB with the extensions the analytics shell
+loads. Its `cella-server` runs the built server as `cella serve --prod`
+does. Its closure holds no key, no session key and no database: those
+are the host's, and its state is in `CELLA_DATA`.
 
 The flake's `nixosModules.cella` runs one scope on a NixOS host:
 Postgres 18 with `cella-pg` preloaded and the scope's settings, the

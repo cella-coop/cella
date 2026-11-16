@@ -83,6 +83,10 @@ pub fn serve(repo: &Repo, steps: &Steps, port: u16, prod: bool, url: Option<&str
 /// The shell built for production by adapter-node into `apps/org/ts/build`,
 /// a Node server that is not in dev mode, which `serve --prod` runs.
 pub fn build(repo: &Repo, steps: &Steps) -> Result {
+    if repo.packaged {
+        // A package's shell was built with it.
+        return Ok(());
+    }
     repo.install(steps)?;
     let mut vite = repo.shell("vite");
     vite.arg("build");

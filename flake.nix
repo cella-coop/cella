@@ -169,6 +169,88 @@
         meta.description = "The cella Postgres extension: the notary and the guard primitives";
       };
 
+      # The cella CLI's binary, built once, as a host runs it.
+      cellaCli = pkgs: pkgs.rustPlatform.buildRustPackage {
+        pname = "cella-cli";
+        version = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).workspace.package.version;
+        src = rustSrc;
+        cargoLock.lockFile = ./Cargo.lock;
+        cargoBuildFlags = [ "-p" "cella-cli" ];
+        # Its tests need the dev cluster: `cella test cli`.
+        doCheck = false;
+      };
+
+      # The org app's source as a host runs it: the npm workspace, the
+      # tree's TypeScript and SQL, the fixtures and the e2e stories a seed
+      # plays, and the tools; never the Rust, the secrets, the research or
+      # the corpus.
+      orgSrc = lib.fileset.toSource {
+        root = ./.;
+        fileset = lib.fileset.difference
+          (lib.fileset.unions [
+            ./Cargo.toml
+            ./package.json
+            ./pnpm-lock.yaml
+            ./pnpm-workspace.yaml
+            ./tsconfig.json
+            ./apps
+            ./packages
+            ./tools
+          ])
+          (lib.fileset.unions rsDirs);
+      };
+
+      # The org app as one derivation: the shell built with adapter-node,
+      # its node modules, the tree it migrates and seeds from, and the
+      # cella CLI, which runs from it as from a checkout already built
+      # (`CELLA_PACKAGE`), with Postgres's client binaries, node and DuckDB
+      # with the extensions the analytics shell loads. `cella-server` runs
+      # the built shell as `cella serve --prod` does. No key, session key
+      # or database is in it: those are the host's.
+      cellaOrg = pkgs:
+        let
+          cli = cellaCli pkgs;
+          duckdb = duckdb2 pkgs;
+          runtime = [ pkgs.nodejs pkgs.postgresql_18 duckdb pkgs.coreutils pkgs.procps ];
+        in
+        pkgs.stdenv.mkDerivation (finalAttrs: {
+          pname = "cella-org";
+          inherit (cli) version;
+          src = orgSrc;
+          pnpmDeps = pkgs.fetchPnpmDeps {
+            inherit (finalAttrs) pname version src;
+            fetcherVersion = 4;
+            hash = "sha256-ZkjmE1/K49eCjtC8/DrbM1XW8nn3Fg5vyuW/3xsk4u4=";
+          };
+          nativeBuildInputs = [ pkgs.nodejs pkgs.pnpm pkgs.pnpmConfigHook pkgs.makeWrapper ];
+          buildPhase = ''
+            runHook preBuild
+            (cd apps/org/ts && pnpm exec vite build)
+            runHook postBuild
+          '';
+          installPhase = ''
+            runHook preInstall
+            mkdir -p $out/share $out/bin
+            cp -r . $out/share/cella
+            makeWrapper ${cli}/bin/cella $out/bin/cella \
+              --set CELLA_PACKAGE $out/share/cella \
+              --set CELLA_DUCKDB_EXTENSIONS ${duckdb}/share/duckdb/extensions \
+              --unset CELLA_DEV \
+              --prefix PATH : ${lib.makeBinPath runtime}
+            makeWrapper ${pkgs.nodejs}/bin/node $out/bin/cella-server \
+              --add-flags $out/share/cella/apps/org/ts/build \
+              --set-default HOST 127.0.0.1 \
+              --set-default PORT 3000 \
+              --set-default PROTOCOL_HEADER x-forwarded-proto \
+              --set-default BODY_SIZE_LIMIT 11M \
+              --set CELLA_DUCKDB_EXTENSIONS ${duckdb}/share/duckdb/extensions \
+              --unset CELLA_DEV
+            runHook postInstall
+          '';
+          passthru = { inherit cli; };
+          meta.mainProgram = "cella";
+        });
+
       # cella runs from the checkout it is called in: cargo rebuilds it after
       # a change and execs it directly otherwise.
       wrapper = pkgs: pkgs.writeShellApplication {
@@ -199,6 +281,7 @@
         cella = wrapper pkgs;
         duckdb = duckdb2 pkgs;
         cella-pg = cellaPg pkgs;
+        cella-org = cellaOrg pkgs;
         default = cella;
       });
 
@@ -223,6 +306,44 @@
       });
 
       checks = each (pkgs: {
+        # The org app as a host starts it, in the sandbox: Postgres 18 with
+        # `cella-pg` and keys `cella key init` makes, a scope's database
+        # migrated by `cella migrate --url`, then the built server started
+        # by `cella-server` as `cella_app`, whose sign-in page it reads,
+        # offering no one.
+        cella-org = pkgs.runCommand "cella-org-check" {
+          nativeBuildInputs = [ (pkgs.postgresql_18.withPackages (_: [ (cellaPg pkgs) ])) (cellaOrg pkgs) pkgs.curl ];
+        } ''
+          export HOME=$TMPDIR PGDATA=$TMPDIR/pg PGHOST=$TMPDIR PGUSER=postgres
+          cella key init $TMPDIR/notary.key > /dev/null
+          cella key init --vault $TMPDIR/vault.key > /dev/null
+          initdb -A trust -U postgres > /dev/null
+          cat >> $PGDATA/postgresql.conf <<CONF
+          shared_preload_libraries = 'cella'
+          listen_addresses = '''
+          unix_socket_directories = '$TMPDIR'
+          cella.key_file = '$TMPDIR/notary.key'
+          cella.vault_key_file = '$TMPDIR/vault.key'
+          CONF
+          pg_ctl -w -l $TMPDIR/log start > /dev/null
+          createdb scope
+          cd $TMPDIR
+          cella migrate --url "postgresql://postgres@/scope?host=$TMPDIR"
+          PORT=3000 PGDATABASE=scope PGUSER=cella_app \
+            cella-server > $TMPDIR/server.log 2>&1 &
+          for _ in $(seq 100); do
+            curl -sf http://127.0.0.1:3000/sign-in -o $TMPDIR/sign-in.html && break
+            sleep 0.2
+          done
+          kill %1
+          pg_ctl -w stop > /dev/null
+          grep -q 'Sign in' $TMPDIR/sign-in.html || { cat $TMPDIR/server.log; exit 1; }
+          if grep -q 'Fixture members\|Demo members' $TMPDIR/sign-in.html; then
+            echo "a production build's sign-in offers someone"; exit 1
+          fi
+          echo "the built server, on a migrated scope, serves a sign-in offering no one" > $out
+        '';
+
         # The extension as a host loads it: Postgres 18 with `cella-pg`
         # preloaded makes it at its default version and reads the verdict
         # date; a second database makes it at the version before and

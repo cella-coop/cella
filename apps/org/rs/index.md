@@ -1,6 +1,6 @@
 +++
 title = "Cella CLI"
-updated = 2026-11-15
+updated = 2026-11-16
 +++
 
 `cella` is the org app's Rust root (`apps/org/rs`, package `cella-cli`) and the repository's one entry point: every development and production task runs through it. It orchestrates the tools where their logic lives — cargo, cargo-pgrx, the Postgres binaries, pnpm and the node tools in `tools/` — as subprocesses from the workspace root, which it finds by walking up from the working directory, or else where the binary was built, so it runs the same from any directory. Each step prints one line, `ok` with its time and a summary, or `FAIL` followed by the tool's whole output; the exit code is the failing tool's. `-v` streams every tool's output instead. A missing tool fails with exit code 127 and says to run inside `nix develop`.
@@ -67,6 +67,8 @@ A person edits the file with `sops secrets/dev.yaml` from the repository's root,
 ## On the path
 
 The flake's `cella` package is a wrapper that runs this crate with `cargo run -q -p cella-cli`, carrying the toolchain and pgrx's settings, DuckDB 2.0 among the toolchain and its extensions' directory as `CELLA_DUCKDB_EXTENSIONS`, so `cella` is on the devshell's path, rebuilds itself after a change and is instant otherwise; `nix run .#cella -- check` runs it from a checkout without entering the shell.
+
+A host takes the flake's `cella-org` instead, the org app built once ([packaging](../../../_corpus/doc/operations.md#packaging)): this crate's release binary, wrapped so `CELLA_PACKAGE` names the tree installed beside it, `share/cella`, which `cella` takes for its workspace in place of a checkout, and with node, Postgres 18's client binaries and DuckDB with its extensions on its path. That tree is read-only and built already: its npm workspace was installed and its shell built with adapter-node when the package was, so `cella` installs nothing, `cella build` and `serve --prod` build nothing, and what only a checkout does, as `cella ext build`, refuses, saying the host's Postgres carries `cella-pg`. Its state, the analytics shell's token and pid, `serve`'s session key, lives in `CELLA_DATA`, else in `.data` in the working directory, never in the tree. `cella migrate`, `seed`, `backup`, `restore`, `log verify`, `vault`, `key init` and `analytics` run from it with `--url`, as from a checkout. Its `cella-server` starts the built server as `cella serve --prod` does, `node share/cella/apps/org/ts/build` on `127.0.0.1:$PORT` (3000 unset), taking `x-forwarded-proto` for the protocol and files up to 10 MiB, its database by the `PG*` variables or `DATABASE_URL`, its session key by `CELLA_SESSION_KEY_FILE` and its analytics shell by `CELLA_ANALYTICS` and `CELLA_ANALYTICS_TOKEN_FILE`; it never sets `CELLA_DEV`. The flake's check `cella-org` starts it in the sandbox on a scope migrated by `cella migrate --url` and reads its sign-in, which offers no one.
 
 ## Gates
 

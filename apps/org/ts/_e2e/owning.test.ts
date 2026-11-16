@@ -96,6 +96,10 @@ test('Lanterne\'s records are owned as its fixtures place them', async () => {
     { id: 'ex-0005', circle: 'coordination' },
     { id: 'ex-0006', circle: 'operations' },
     { id: 'ex-0007', circle: 'marketing' },
+    { id: 'ex-0008', circle: 'clients' },
+    { id: 'ex-0009', circle: 'hiring' },
+    { id: 'ex-0010', circle: 'care' },
+    { id: 'ex-0011', circle: 'tools' },
   ])
   assert.deepEqual(await all('SELECT id, circle FROM bill.bill ORDER BY id'), [
     { id: 'bi-0001', circle: 'brand' },

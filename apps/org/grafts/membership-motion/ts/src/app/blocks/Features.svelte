@@ -4,10 +4,11 @@
 
   // A circle's features page in Settings: every feature the co-op
   // installed with a toggle, those the circle enabled in its order, under
-  // their accordions. None saves directly, since only a motion amends a
-  // circle: a toggle or a move, made, opens the dialog proposing an
-  // `amend-circle` motion of the circle that decides about it, carrying
-  // the listing as arranged.
+  // their accordions. A reader holding `arrange-features` over the circle
+  // saves a toggle or a move at once; for anyone else it opens the dialog
+  // proposing an `arrange-features` motion of the circle that holds the
+  // power over it, the circle itself where it does, carrying the listing
+  // as arranged.
   let { data }: { data: Featuring } = $props()
 
   // A feature by its name, as its schema is named.
@@ -33,8 +34,8 @@
       label: 'Features',
       value: data.features,
       choices: data.installed.map((f) => ({ value: f, label: named(f) })),
-      refused: data.refused,
-      motion: { kind: 'amend-circle', args: (value) => ({ circle: data.circle, features: value }), labels: { features: 'New features' }, says },
+      ...(data.may ? { write: 'arrange' } : { refused: data.refused }),
+      motion: { kind: 'arrange-features', args: (value) => ({ circle: data.circle, features: value }), labels: { features: 'New features' }, says },
     },
   ])
 </script>

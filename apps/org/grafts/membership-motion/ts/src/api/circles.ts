@@ -1,6 +1,7 @@
 // The graft's writes and reactions, its reads, and its slice, which the
 // shell mounts.
 import { action, type Slice } from '@cella/org-db'
+import { arrange } from '@cella/org-circle/api'
 import { circles, forms as motionForms } from '@cella/org-motion/api'
 import { apply } from '../handlers/apply.ts'
 import { carried } from '../handlers/carried.ts'
@@ -76,7 +77,8 @@ export const slice: Slice = {
   // Settings' Organization page: the co-op's particulars, which only the
   // assembly's motion replaces, and the scope's address and timezone; and
   // each circle's features page, a page of the circle, whose features a
-  // motion of the circle that decides about it changes.
+  // holder of `arrange-features` over it arranges at once, and anyone
+  // else proposes to the circle whose motion arranges them.
   settings: {
     organization: {
       read: (db) => organization(db),
@@ -87,6 +89,7 @@ export const slice: Slice = {
     features: {
       read: async (db, _, circle) => (circle ? featuring(db, circle) : null),
       actions: {
+        arrange: action('circle:feature:arrange', (form, circle) => ({ circle: circle ?? '', features: form.get('features') }), arrange),
         propose: action('motion:motion:propose', (form, _, deps) => motionForms.propose(form, deps.db), propose),
       },
     },

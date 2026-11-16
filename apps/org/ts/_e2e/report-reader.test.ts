@@ -37,8 +37,9 @@ const assembly = ['camille', 'yusuf', 'hugo', 'malik', 'julien', 'amina', 'thoma
 
 // Lanterne's expenses: Brand's, Sofia's; Web's, Thomas's; Marketing's,
 // Chloé's; the assembly's, Léa's; Coordination's; Operations'; Marketing's
-// refused one, Chloé's; and the one Chloé spends for Brand.
-const theirs = ['ex-0001', 'ex-0002', 'ex-0003', 'ex-0004', 'ex-0005', 'ex-0006', 'ex-0007']
+// refused one, Chloé's; the drafts of Clients, Hiring, Care and Tools;
+// and the one Chloé spends for Brand.
+const theirs = ['ex-0001', 'ex-0002', 'ex-0003', 'ex-0004', 'ex-0005', 'ex-0006', 'ex-0007', 'ex-0008', 'ex-0009', 'ex-0010', 'ex-0011']
 let hers = ''
 
 const definition = { from: { e: 'expense.expenses' }, fields: ['e.id', 'e.circle', 'e.member'], order: ['e.id'] }
@@ -125,8 +126,8 @@ test('the assembly ends the member role\'s mandate to read every circle', async 
 
 test('once it ends, Chloé reads through the same report no expense of a circle she no longer reads, and her own still', async () => {
   const after = await through('expenses-by-id', definition, chloe)
-  assert.deepEqual(after.page, ['ex-0003', 'ex-0004', 'ex-0007', hers], 'Marketing\'s, hers, the assembly\'s, and the one she spent for Brand, hers')
-  assert.deepEqual(after.port, ['ex-0003', 'ex-0004', 'ex-0007', hers].sort(), 'and the port the page reads through, run as her, reads the same')
+  assert.deepEqual(after.page, ['ex-0003', 'ex-0004', 'ex-0007', 'ex-0008', 'ex-0010', hers], 'Marketing\'s, the assembly\'s, Clients\' and Care\'s, and the one she spent for Brand, hers')
+  assert.deepEqual(after.port, ['ex-0003', 'ex-0004', 'ex-0007', 'ex-0008', 'ex-0010', hers].sort(), 'and the port the page reads through, run as her, reads the same')
   assert.deepEqual(await listed(chloe), after.page, 'as the expenses\' page shows her')
 })
 
@@ -134,15 +135,15 @@ test('a new report Chloé saves once it ends reads the same', async () => {
   const done = await shell.act('/reports', 'save', { title: 'Expenses net', caption: '', definition: JSON.stringify(later) }, chloe)
   assert.equal(done.state, 'settled', done.reason)
   const read = await through('expenses-net', later, chloe)
-  assert.deepEqual(read.page, ['ex-0003', 'ex-0004', 'ex-0007', hers], 'no Brand expense but hers, no Web one')
-  assert.deepEqual(read.port, ['ex-0003', 'ex-0004', 'ex-0007', hers].sort())
+  assert.deepEqual(read.page, ['ex-0003', 'ex-0004', 'ex-0007', 'ex-0008', 'ex-0010', hers], 'no Brand expense but hers, no Web one')
+  assert.deepEqual(read.port, ['ex-0003', 'ex-0004', 'ex-0007', 'ex-0008', 'ex-0010', hers].sort())
 })
 
 test('Inès, who never held the mandate, reads through both reports Web\'s and the assembly\'s alone', async () => {
   for (const [id, saved] of [['expenses-by-id', definition], ['expenses-net', later]] as const) {
     const read = await through(id, saved, ines)
-    assert.deepEqual(read.page, ['ex-0002', 'ex-0004'], `Inès reads Web's and the assembly's through ${id}, and no other circle's nor Chloé's`)
-    assert.deepEqual(read.port, ['ex-0002', 'ex-0004'])
+    assert.deepEqual(read.page, ['ex-0002', 'ex-0004', 'ex-0010', 'ex-0011'], `Inès reads Web's, Care's, Tools' and the assembly's through ${id}, and no other circle's nor Chloé's`)
+    assert.deepEqual(read.port, ['ex-0002', 'ex-0004', 'ex-0010', 'ex-0011'])
   }
-  assert.deepEqual(await listed(ines), ['ex-0002', 'ex-0004'], 'as the expenses\' page shows her')
+  assert.deepEqual(await listed(ines), ['ex-0002', 'ex-0004', 'ex-0010', 'ex-0011'], 'as the expenses\' page shows her')
 })

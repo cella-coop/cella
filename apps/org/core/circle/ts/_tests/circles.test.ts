@@ -4,7 +4,8 @@
 // issued or issued under a parent its issuer holds, narrower than it in
 // cap, scope and term, and revoking one revokes every mandate issued
 // under it; a role's holder cap counts its holders on each day; and a
-// circle's features read from a listing and fold as an amendment says; and
+// circle's features read from a listing, judged, and fold as an
+// arrangement says; and
 // a circle reads a setting as its own rule set it, else the assembly's,
 // else its default. Run by `cella test slice circle`.
 
@@ -207,7 +208,7 @@ test('a role\'s holder cap counts the holders on each day, never every tenure a 
   }
 })
 
-test('a circle\'s features are read from a listing in order, under their accordions, spelt one way, and an amendment\'s fold replaces them', async () => {
+test('a circle\'s features are read from a listing in order, under their accordions, spelt one way, judged before they are arranged, and an arrangement\'s fold replaces them', async () => {
   const listed = await db.query(`SELECT feat, position, "group" FROM circle.listed($1)`, [' Books:account ,transaction; contact,, ; Pay: bill '])
   assert.deepEqual(listed.rows, [
     { feat: 'account', position: 0, group: 'Books' },
@@ -230,13 +231,21 @@ test('a circle\'s features are read from a listing in order, under their accordi
   try {
     const features = async () => (await db.query<{ f: string }>(`SELECT circle.features('brand') AS f`)).rows[0].f
     assert.equal(await features(), '', 'a circle enables nothing until it says so')
-    const fold = (payload: object) => db.query('SELECT circle.fold_amend($1)', [{ n: 7, date: '2026-11-14', payload: { circle: 'brand', motion: 'm-1', ...payload } }])
-    await fold({ features: 'Work: task, project; file', was: { features: '' } })
+    const flaw = async (listing: string, was = '') => (await db.query<{ f: string | null }>(`SELECT circle.listing_flaw('brand', $1, $2) AS f`, [listing, was])).rows[0].f
+    assert.equal(await flaw('Work: circle, person; policy'), null, 'a sound listing of installed features')
+    assert.match((await flaw('circle, people')) ?? '', /people is no feature the co-op has installed: give brand features of .*circle/)
+    assert.match((await flaw('circle, person, circle')) ?? '', /the features of brand name circle twice: list each once/)
+    assert.match((await flaw(' : circle; person')) ?? '', /an accordion of brand's features has a blank name/)
+    assert.match((await flaw('W: circle; person; W: policy')) ?? '', /the features of brand list the W accordion's apart: list them together/)
+    assert.match((await flaw('circle ,person', 'circle, person')) ?? '', /the arrangement of brand changes nothing: its features are circle, person already/)
+    assert.match((await db.query<{ f: string }>(`SELECT circle.listing_flaw('nowhere', 'circle', '') AS f`)).rows[0].f, /no circle nowhere/)
+    const fold = (payload: object) => db.query('SELECT circle.fold_arrange($1)', [{ n: 7, date: '2026-11-14', payload: { circle: 'brand', motion: 'm-1', ...payload } }])
+    await fold({ features: 'Work: task, project; file', was: '' })
     assert.equal(await features(), 'Work: task, project; file')
     await db.query('SAVEPOINT stale')
-    await assert.rejects(fold({ features: 'task', was: { features: 'task' } }), /entry 7 says brand was .*, where the fold has/)
+    await assert.rejects(fold({ features: 'task', was: 'task' }), /entry 7 says the features of brand were task, where the fold has Work: task, project; file/)
     await db.query('ROLLBACK TO SAVEPOINT stale')
-    await fold({ features: 'file', was: { features: 'Work: task, project; file' } })
+    await fold({ features: 'file', was: 'Work: task, project; file' })
     assert.deepEqual((await db.query(`SELECT feat, position, "group" FROM circle.feature WHERE circle = 'brand'`)).rows, [{ feat: 'file', position: 0, group: null }])
   } finally {
     await db.query('ROLLBACK')

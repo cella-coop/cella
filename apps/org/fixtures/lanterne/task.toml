@@ -405,3 +405,109 @@ status = "backlog"
 priority = "low"
 created = 2026-10-14
 due = 2026-12-18
+
+# The tasks of Clients, Hiring, Care and Tools, the circles that look
+# after the co-op itself.
+
+[[task]]
+id = "t-38"
+circle = "clients"
+title = "Call Les Halles Paysannes about a care contract"
+status = "todo"
+priority = "high"
+created = 2026-10-19
+due = 2026-10-30
+
+[[task]]
+id = "t-39"
+circle = "clients"
+title = "Draft Nuvola's 2027 retainer proposal"
+status = "doing"
+priority = "normal"
+created = 2026-10-12
+due = 2026-11-13
+
+[[task]]
+id = "t-40"
+circle = "clients"
+title = "Ask Clairval for feedback after the launch"
+status = "backlog"
+priority = "low"
+created = 2026-10-19
+due = 2026-12-04
+
+[[task]]
+id = "t-41"
+circle = "hiring"
+title = "Write the junior developer job description"
+status = "done"
+priority = "normal"
+created = 2026-10-01
+due = 2026-10-14
+completed = 2026-10-13
+
+[[task]]
+id = "t-42"
+circle = "hiring"
+title = "Plan Inès's review at her first year"
+status = "todo"
+priority = "normal"
+created = 2026-10-16
+due = 2026-11-20
+
+[[task]]
+id = "t-43"
+circle = "care"
+title = "Run the anonymous workload survey"
+status = "done"
+priority = "high"
+created = 2026-09-21
+due = 2026-10-09
+completed = 2026-10-09
+
+[[task]]
+id = "t-44"
+circle = "care"
+title = "Write up the survey's findings"
+status = "doing"
+priority = "normal"
+created = 2026-10-12
+due = 2026-11-06
+
+[[task]]
+id = "t-45"
+circle = "care"
+title = "Book the first-aid refresher"
+status = "todo"
+priority = "low"
+created = 2026-10-19
+due = 2026-11-27
+
+[[task]]
+id = "t-46"
+circle = "tools"
+title = "List every domain and when it renews"
+status = "done"
+priority = "normal"
+created = 2026-09-14
+due = 2026-09-30
+completed = 2026-09-29
+
+[[task]]
+id = "t-47"
+circle = "tools"
+title = "Move the staging servers"
+status = "done"
+priority = "high"
+created = 2026-09-28
+due = 2026-10-21
+completed = 2026-10-21
+
+[[task]]
+id = "t-48"
+circle = "tools"
+title = "Move the production sites"
+status = "todo"
+priority = "high"
+created = 2026-10-19
+due = 2026-12-04

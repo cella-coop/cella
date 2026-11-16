@@ -68,7 +68,8 @@ export async function appointing(db: Db, circle: string): Promise<Appointing | n
 // circle. Below them its roles, and on the assembly's those every working
 // circle has but `participant`, built in: each its name, duty and cap,
 // the circle that decides its amendment and why no write of the reader's
-// changes it.
+// changes it. Its features are arranged apart, and the circle that
+// arranges them is named (`circle.arranger`).
 export async function amending(db: Db, circle: string): Promise<Amending | null> {
   const { rows } = await db.query<Omit<Amending, 'roles'>>(
     `SELECT c.id AS circle, c.name, c.purpose, c.procedure,
@@ -76,7 +77,8 @@ export async function amending(db: Db, circle: string): Promise<Amending | null>
              FROM motion.procedure o WHERE o.id IN (SELECT membership_motion.procedures(cella.verdict_date()))) AS procedures,
             json_build_object('circle', d.id, 'name', d.name, 'deadline', to_char(cella.verdict_date() + 14, 'YYYY-MM-DD')) AS decider,
             c.name || '''s name, purpose and procedure change only by a motion of ' || d.name || ', which holds amend-circle: no one''s own write amends a circle' AS refused,
-            c.name || '''s roles are made and changed only by a motion of ' || d.name || ', which holds amend-circle: no one''s own write changes a role' AS making
+            c.name || '''s roles are made and changed only by a motion of ' || d.name || ', which holds amend-circle: no one''s own write changes a role' AS making,
+            coalesce((SELECT a.name FROM circle.circle a WHERE a.id = circle.arranger(c.id, cella.verdict_date())), 'no circle') AS arranger
      FROM circle.circle c
      JOIN circle.circle d ON d.id = motion.decider(c.id, ARRAY['amend-circle'], cella.verdict_date())
      WHERE c.id = $1`,
@@ -118,16 +120,22 @@ export async function organization(db: Db): Promise<Organization> {
 }
 
 // A circle's features page: its features in force, every feature the
-// co-op installed, and the circle that decides their amendment, as the
-// circle's Settings tab reads its terms; none for a circle there is not.
+// co-op installed, whether the reader arranges them at once, holding
+// `arrange-features` over the circle by a seat, and otherwise the circle
+// whose motion arranges them, the circle itself where it holds the power
+// over itself (`circle.arranger`), and why no write of the reader's
+// changes them; none for a circle there is not. Where no circle holds
+// it, the assembly is named, whose motion is refused until one does.
 export async function featuring(db: Db, circle: string): Promise<Featuring | null> {
   const { rows } = await db.query<Featuring>(
     `SELECT c.id AS circle, c.name, circle.features(c.id) AS features,
             (SELECT coalesce(json_agg(i.f ORDER BY i.f), '[]') FROM circle.installed() i(f)) AS installed,
+            circle_person.may(cella.reader(), 'arrange-features', NULL, c.id, cella.verdict_date()) AS may,
             json_build_object('circle', d.id, 'name', d.name, 'deadline', to_char(cella.verdict_date() + 14, 'YYYY-MM-DD')) AS decider,
-            c.name || '''s features change only by a motion of ' || d.name || ', which holds amend-circle: no one''s own write changes them' AS refused
+            c.name || '''s features change only by a motion of ' || d.name || ', which holds arrange-features over '
+              || CASE WHEN d.id = c.id THEN 'itself' ELSE c.name END || ': your own write does not change them' AS refused
      FROM circle.circle c
-     JOIN circle.circle d ON d.id = motion.decider(c.id, ARRAY['amend-circle'], cella.verdict_date())
+     JOIN circle.circle d ON d.id = coalesce(circle.arranger(c.id, cella.verdict_date()), circle.assembly())
      WHERE c.id = $1`,
     [circle],
   )

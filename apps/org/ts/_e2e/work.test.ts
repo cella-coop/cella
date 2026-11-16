@@ -45,7 +45,7 @@ test('the seed holds Lanterne\'s work: its projects, tasks and two months of tim
             (SELECT count(*) FROM timesheet.entry) AS entries,
             (SELECT count(*) FROM timesheet.period WHERE month = '2026-09' AND approved IS NOT NULL) AS approved`,
   )
-  assert.deepEqual(counts, { projects: '11', tasks: '37', entries: '848', approved: '11' })
+  assert.deepEqual(counts, { projects: '15', tasks: '48', entries: '868', approved: '11' })
   const days = await one<{ off: string }>(
     `SELECT count(*) AS off FROM (SELECT member, day FROM timesheet.entry GROUP BY member, day HAVING sum(minutes) <> 420) d`,
   )
@@ -110,7 +110,7 @@ test('Thomas creates a task; Yusuf gives it to him and files it under the shop\'
   const created = await shell.act('/tasks', 'create', { title: 'Audit the checkout for RGAA', priority: 'high', due: '2026-10-30' }, thomas)
   assert.equal(created.state, 'settled', created.reason)
   task = (await one<{ id: string }>(`SELECT id FROM task.task WHERE title = 'Audit the checkout for RGAA'`)).id
-  assert.equal(task, 't-38', 'numbered on from the seed')
+  assert.equal(task, 't-49', 'numbered on from the seed')
   const assigned = await shell.act(`/tasks/${task}`, 'assign', { member: thomas }, yusuf)
   assert.equal(assigned.state, 'settled', assigned.reason)
   const filed = await shell.act(`/tasks/${task}`, 'file', { place: 'halles-shop#4' }, yusuf)
@@ -146,7 +146,7 @@ const offered = (html: string, name: string) =>
 
 test('Thomas logs time against the shop for Web, its circle, which the page offers him first', async () => {
   const { text } = await shell.page('/projects/halles-shop?tab=budget', thomas)
-  assert.deepEqual(offered(text, 'circle'), ['web', 'ag'], 'the shop is Web\'s, offered before the assembly he also sits in')
+  assert.deepEqual(offered(text, 'circle'), ['web', 'ag', 'clients', 'tools'], 'the shop is Web\'s, offered before the assembly, Clients and Tools he also sits in')
   const logged = await shell.act('/projects/halles-shop', 'log', { day: '2026-10-24', hours: '2,5', billable: 'billable', circle: 'web', note: 'Checkout audit' }, thomas)
   assert.equal(logged.state, 'settled', logged.reason)
   const booked = await one<{ project: string; circle: string }>(
@@ -167,8 +167,8 @@ test('Thomas logs his week from the form, each row naming the circle its time is
   await app.end()
   assert.equal(now.monday, '2026-10-19')
   const circles = (project: string) => now.rows.find((r) => r.project === project)?.circles.map((c) => c.id)
-  assert.deepEqual(circles('halles-shop'), ['web', 'ag'])
-  assert.deepEqual(circles(''), ['ag', 'web'])
+  assert.deepEqual(circles('halles-shop'), ['web', 'ag', 'clients', 'tools'])
+  assert.deepEqual(circles(''), ['ag', 'clients', 'tools', 'web'])
   const week: [string, string][] = [
     ['row', 'halles-shop'],
     ['row', '_'],

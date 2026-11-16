@@ -98,7 +98,7 @@ test('every mandate of the founding motion is a root the assembly issued', async
       `SELECT count(*)::int AS mandates, count(*) FILTER (WHERE m.issuer = 'ag' AND m.parent IS NULL)::int AS roots
        FROM circle.mandate m JOIN policy.policy r ON r.id = m.policy WHERE r.motion = 'm-2021-001'`,
     ),
-    { mandates: 54, roots: 54 },
+    { mandates: 55, roots: 55 },
   )
 })
 

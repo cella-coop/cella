@@ -99,3 +99,45 @@ submitted = 2026-10-22
 decided = 2026-10-23
 decider = "malik@lanterne.example"
 status = "refused"
+
+# Drafts of Clients', Hiring's, Care's and Tools' own, not yet submitted.
+
+[[expense]]
+id = "ex-0008"
+circle = "clients"
+member = "malik@lanterne.example"
+day = 2026-10-20
+label = "Lunch with Nuvola about the 2027 retainer"
+category = "6257"
+net = 6200
+vat = 620
+
+[[expense]]
+id = "ex-0009"
+circle = "hiring"
+member = "julien@lanterne.example"
+day = 2026-10-21
+label = "Train to Paris for the co-op jobs fair"
+category = "6251"
+net = 4100
+vat = 410
+
+[[expense]]
+id = "ex-0010"
+circle = "care"
+member = "hugo@lanterne.example"
+day = 2026-10-22
+label = "A first-aid kit for the studio"
+category = "606"
+net = 3500
+vat = 700
+
+[[expense]]
+id = "ex-0011"
+circle = "tools"
+member = "thomas@lanterne.example"
+day = 2026-10-22
+label = "Two USB keys for the server backups"
+category = "606"
+net = 2400
+vat = 480

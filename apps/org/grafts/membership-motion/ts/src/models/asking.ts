@@ -55,7 +55,8 @@ export interface Applying {
 // On a circle's Settings tab: its name, purpose and procedure in force,
 // the procedures in force it may take, the circle that decides its
 // amendment and the deadline asked, two weeks on, why no write of the
-// reader's changes them or makes a role, and the roles below them.
+// reader's changes them or makes a role, the roles below them, and the
+// name of the circle that arranges its features.
 export interface Amending {
   circle: string
   name: string
@@ -66,6 +67,7 @@ export interface Amending {
   refused: string
   making: string
   roles: Duty[]
+  arranger: string
 }
 
 // A role on a circle's Settings tab: its circle, `*` for every working
@@ -109,13 +111,15 @@ export interface Organization {
 
 // A circle's features page in Settings: its features in force, spelt as
 // one listing (`circle.features`), every feature the co-op installed, by
-// its schema, the circle that decides an amendment of it, and why no
-// write of the reader's changes them.
+// its schema, whether the reader arranges them at once, the circle whose
+// motion arranges them otherwise, and why no write of the reader's
+// changes them.
 export interface Featuring {
   circle: string
   name: string
   features: string
   installed: string[]
+  may: boolean
   decider: { circle: string; name: string; deadline: string }
   refused: string
 }

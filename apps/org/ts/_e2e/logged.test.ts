@@ -98,8 +98,9 @@ eachBrowser((browserName, launch) => {
         }
         const date = () => panel(page).getByRole('combobox', { name: 'Group by' })
 
-        // A calendar of contacts, by Created: each on the day it was added.
-        await visit('/contacts')
+        // A calendar of contacts, by Created: each on the day it was added;
+        // grouped by nothing, so the table later reads as one.
+        await visit('/contacts?by=')
         await layout('Calendar')
         await until(() => chosen(date()), (v) => v === 'created', `${at}: the calendar places contacts by Created`)
         const day = (d: string) => page.locator(`.calendar li.day[aria-label^="${d},"] li.entry`)

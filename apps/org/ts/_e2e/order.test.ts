@@ -115,7 +115,11 @@ eachBrowser((browserName, launch) => {
 
       // Order by a field and turn its direction, in the View panel; each
       // order checked against the rows sorted here.
-      const ordering = async (name: string, layout: string, fields: string[]) => {
+      // `own` is the collection's own sort, which the address leaves out.
+      const ordering = async (name: string, layout: string, fields: string[], own: string) => {
+        const sorted = async (want: string) => {
+          await page.waitForURL((u) => (u.searchParams.get('sort') ?? own) === want)
+        }
         const view = panel(page)
         const select = view.getByLabel('Order by')
         for (const field of fields) {
@@ -144,12 +148,12 @@ eachBrowser((browserName, launch) => {
         // Grouped by nothing, so the rows are drawn as one.
         await visit(`/expenses?view=${layout}&by=${layout === 'calendar' ? `&at=${busiest}` : ''}`)
         assert.equal(await panel(page).getByRole('button', { name: layout[0].toUpperCase() + layout.slice(1), exact: true }).getAttribute('aria-pressed'), 'true', `${browserName}: expenses in a ${layout}`)
-        await ordering('expenses', layout, ['total', 'day'])
+        await ordering('expenses', layout, ['total', 'day'], '-day')
       }
 
       await visit('/files?view=feed&by=')
       assert.equal(await panel(page).getByRole('button', { name: 'Feed', exact: true }).getAttribute('aria-pressed'), 'true', `${browserName}: files in a feed`)
-      await ordering('files', 'feed', ['uploaded', 'size'])
+      await ordering('files', 'feed', ['uploaded', 'size'], '-uploaded')
 
       // A table's header orders by its column, and again turns it; the
       // header says so.

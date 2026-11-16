@@ -31,9 +31,7 @@ export const app: App = {
           { key: 'next', label: 'Next', role: 'hidden', value: (p: Project) => p.next },
           { key: 'budget', label: 'Budget', kind: 'money', role: 'hidden', value: (p: Project) => p.budget },
           { key: 'started', label: 'Started', kind: 'date', role: 'hidden', value: (p: Project) => p.started },
-          // A row marks a project done; an active one, most of them, wears
-          // no chip.
-          { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: (p: Project) => (p.state === 'active' ? null : p.state), tone: (p: Project) => tones[p.state] },
+          { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: (p: Project) => p.state, tone: (p: Project) => tones[p.state] },
           { key: 'due', label: 'Due', kind: 'date', role: 'meta', value: (p: Project) => p.due },
         ],
         // As Linear lists its projects: by circle, the soonest due first.

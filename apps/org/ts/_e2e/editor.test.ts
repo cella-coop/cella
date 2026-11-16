@@ -1028,7 +1028,8 @@ eachBrowser((name, launch) => {
 
     it('moves the focus to the row j and k reach, opens it on Enter and focuses it again on back; a table marks the column its rows are ordered by', async () => {
       const page = await context.newPage()
-      await page.goto(`${base}/people`)
+      // Grouped by nothing, so every line is a row.
+      await page.goto(`${base}/people?by=`)
       await page.waitForLoadState('networkidle')
       const rows = page.locator('.rows li')
       const focused = () => page.evaluate(() => [...document.querySelectorAll('.rows li')].indexOf(document.activeElement as Element))

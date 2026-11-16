@@ -285,7 +285,8 @@ test('a page of fifty thousand time entries is read in SQL: a hundred rows drawn
      SELECT $1, date '2026-10-01' + (i % 23), 15, i % 3 <> 0, 'load ' || i FROM generate_series(1, 50000) i`,
     [camille],
   )
-  const rows = (html: string) => (html.match(/<tr\b/g) ?? []).length - 1
+  // The table's rows, past its header and the groups' headers.
+  const rows = (html: string) => (html.match(/<tr\b(?![^>]*\bgroup\b)/g) ?? []).length - 1
   const started = performance.now()
   const first = await shell.page('/timesheets', julien)
   const took = performance.now() - started

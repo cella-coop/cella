@@ -696,8 +696,37 @@ Saved once it settles, or Not saved and the refusal's reason, the
 field keeping what was typed; the shell shows the outcome as for any
 `Form`, the write's that names one, as the theme's cookie names none.
 A setting the reader may not change, since its write needs a mandate
-they lack, or since only a motion changes it, never posts a write: its
-commit opens `ProposeInstead`, a `Dialog`, one a commit, which says plainly that the change needs a motion of
+they lack, or since only a motion changes it, never posts a write. On
+the settings pages its commit puts the change among **the changes to
+propose**, a basket for each circle that decides, since one motion goes
+to one circle (`BasketState`, `useBasket`, `models/basket.ts`): the
+field keeps the value typed, its icon turns to the accent (Proposed to
+Assembly), and a quiet line under it shows the value in force struck
+through. A change back to the value in force takes it out. The basket
+gathers across the settings pages, a change named by its page, the
+thing the page is of and its setting, and is kept for the session in a
+cookie, `cella-basket`, which the browser alone reads as the page
+mounts and a sign-in or a sign-out clears; nothing of it is written
+before it is proposed. While any change waits, the settings pages'
+sidebar holds them (`Basket`), standing in the drawer and opening on
+them as one is gathered: for each circle, "3 changes to propose to
+Assembly", each change in a line, from what to what, with its own
+removal, and Review and propose and Discard. Review opens one `Dialog`
+(`ProposeBasket`) showing every change as its diff (`Diff`): the tree
+of an arrangement with its marks, a plain value from the one in force,
+struck through, to the new. Under them the motions' New form,
+prefilled: its title, the one change's or each one's joined, the
+circle, the deadline it asks for, and the proposal. Propose posts it to
+the `basket` write of the page the first change was made on, with each
+change's page, thing, setting and value, which the server turns into
+the actions, never those a client names; a refusal keeps the dialog
+open, saying why, and once proposed the basket empties. A page mixing
+the two kinds saves what the reader may change at once and gathers the
+rest.
+
+A settings form with no basket above it, as a record's page draws for
+one field, offers the motion at once: its commit opens
+`ProposeInstead`, a `Dialog`, one a commit, which says plainly that the change needs a motion of
 the circle that decides it, shows the change from the value in force
 to the one typed, and says why in the guard's own words, the refusal
 its write's guard gives as early as it can, with the values it read
@@ -745,9 +774,9 @@ name, legal form, capital, seat, SIREN, trade register and VAT number,
 none saved by anyone's write, since only a motion of the assembly
 adopts them ([the co-op's
 particulars](../circle/index.md#the-co-ops-particulars)). A value's
-edit, as it commits, opens the dialog proposing a motion of the
-assembly, the value its own field, which carries Adopt a policy
-replacing the particulars with it, its procedure the one their
+edit, as it commits, joins the changes to propose to the assembly, and
+the motion proposing them carries one Adopt a policy replacing the
+particulars with every value changed, its procedure the one their
 protection fixes; and under the form,
 read-only, the scope's address and its timezone, each with the host icon beside
 its label, its tooltip saying a host sets it and why ([the notary](../notary/index.md#settings)). Membership-motion

@@ -2,13 +2,13 @@
   import { arrangement, Section, Settings, type Declared } from '@cella/org-ui'
   import type { Featuring } from '../../models/asking.ts'
 
-  // A circle's features page in Settings: every feature the co-op
-  // installed with a toggle, those the circle enabled in its order, under
-  // their accordions. A reader holding `arrange-features` over the circle
-  // saves a toggle or a move at once; for anyone else it opens the dialog
-  // proposing an `arrange-features` motion of the circle that holds the
-  // power over it, the circle itself where it does, carrying the listing
-  // as arranged.
+  // A circle's features page in Settings: the tree of the features the
+  // circle shows, in its order, under their accordions, and the rest of
+  // those the co-op installed, not shown, each placed by dragging. A reader
+  // holding `arrange-features` over the circle saves a drop at once; for
+  // anyone else it joins the changes to propose to the circle that holds
+  // the power over it, the circle itself where it does, as an
+  // `arrange-features` action carrying the listing as arranged.
   let { data }: { data: Featuring } = $props()
 
   // A feature by its name, as its schema is named.
@@ -41,5 +41,5 @@
 </script>
 
 <Section title={data.name}>
-  <Settings {settings} decider={data.decider} />
+  <Settings {settings} decider={data.decider} where={data.name} />
 </Section>

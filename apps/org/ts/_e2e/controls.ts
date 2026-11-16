@@ -5,7 +5,7 @@
 // whose list of options opens in the top layer; a date field's calendar
 // is a popover of day buttons.
 
-import type { Locator } from 'playwright-core'
+import type { Locator, Page } from 'playwright-core'
 
 // The listbox a select's combobox opens, found by the id it controls.
 const listOf = async (select: Locator) => select.page().locator(`[id="${await select.getAttribute('aria-controls')}"]`)
@@ -54,3 +54,17 @@ export async function pick(button: Locator, day: string) {
 
 // What a select shows: its chosen option's label, or its placeholder.
 export const said = async (select: Locator) => ((await select.locator('.value').textContent()) ?? '').trim()
+
+// The changes to propose to a circle, in the settings pages' sidebar:
+// its section, headed by how many wait.
+export const basket = (page: Page, circle: string) =>
+  page.getByRole('complementary', { name: 'Changes to propose' }).locator('section', { has: page.getByRole('heading', { name: new RegExp(`to propose to ${circle}$`) }) })
+
+// Opens the one motion proposing a circle's changes to propose, by its
+// Review and propose, and hands back its dialog.
+export async function review(page: Page, circle: string): Promise<Locator> {
+  await basket(page, circle).getByRole('button', { name: 'Review and propose' }).click()
+  const dialog = page.getByRole('dialog', { name: `Propose to ${circle}` })
+  await dialog.waitFor()
+  return dialog
+}

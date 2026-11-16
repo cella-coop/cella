@@ -4,9 +4,8 @@
 
   // A circle's rules page in Settings: each setting core circle registers,
   // on or off, with where its value comes from. None saves directly, since
-  // only a rule adopted by motion sets one: Save opens the dialog proposing
-  // a motion of the circle that decides, carrying the rule for each
-  // setting changed.
+  // only a rule adopted by motion sets one: a change joins the changes to
+  // propose to the circle that decides, which proposes a rule for each.
   let { data }: { data: Ruling } = $props()
 
   const labels: Record<string, string> = { reactions: 'Reactions on comments' }
@@ -34,5 +33,5 @@
 </script>
 
 <Section title={data.name}>
-  <Settings {settings} decider={data.decider} />
+  <Settings {settings} decider={data.decider} where={data.name} />
 </Section>

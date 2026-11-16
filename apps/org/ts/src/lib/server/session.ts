@@ -88,16 +88,19 @@ export async function opens(db: Db, scope: string, o: Session & { challenge: str
 const sealed = (s: Session, until: number) => `session\n${s.actor}\n${s.device}\n${until}`
 
 // Keeps a session in its cookie, readable by the server alone, and
-// clears the lens, so a sign-in lands in the assembly.
+// clears the lens, so a sign-in lands in the assembly, and the changes to
+// propose another session gathered, which are that session's draft.
 export function keep(cookies: Cookies, s: Session, secure: boolean) {
   const until = Date.now() + LASTS
   const value = [Buffer.from(s.actor).toString('base64url'), s.device, until, mac(sealed(s, until))].join('.')
   cookies.set(COOKIE, value, { path: '/', httpOnly: true, sameSite: 'lax', secure, maxAge: LASTS / 1000 })
   cookies.delete('cella-lens', { path: '/', secure })
+  cookies.delete('cella-basket', { path: '/', secure })
 }
 
 export function end(cookies: Cookies, secure: boolean) {
   cookies.delete(COOKIE, { path: '/', secure })
+  cookies.delete('cella-basket', { path: '/', secure })
 }
 
 // The session a request's cookie holds, if its MAC is the server's, it

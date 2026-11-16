@@ -13,14 +13,18 @@
     settings,
     decider = null,
     propose = 'propose',
+    where,
   }: {
     settings: Declared[]
     // The circle that decides the motions this form offers, if any.
     decider?: Decider | null
     propose?: string
+    // Whose settings these are, as the page heads them, which a change
+    // waiting to be proposed names.
+    where?: string
   } = $props()
 
-  useSettings(() => settings, () => decider)
+  useSettings(() => settings, () => decider, () => where)
 </script>
 
 <form method="post" class="settings" onsubmit={(e) => e.preventDefault()}>

@@ -39,16 +39,18 @@ export const onCollection = (name: () => string, id: () => string | undefined): 
   }) as unknown as Route
 
 // A settings page, posting to the writes its slice saves by, with the one
-// thing it is of where its address names one (`id`); it reads through
-// its `page` query, which a save that took or reached a verdict reads
-// again with the shell's, as the theme it wears may have changed; a
-// specimen, which reads nothing of its own (`own`), the shell's alone.
+// thing it is of where its address names one (`id`), or to another
+// settings page's where a write names it, as the changes to propose are
+// posted to the page the first was made on; it reads through its `page`
+// query, which a save that took or reached a verdict reads again with the
+// shell's, as the theme it wears may have changed; a specimen, which
+// reads nothing of its own (`own`), the shell's alone.
 const of = (settings: string, id: string): Record<string, string> => (id ? { settings, id } : { settings })
 
 export const onSettings = (page: () => string, own = true, id: () => string = () => ''): Route =>
   ({
     form: (w: string, n: string) => setting.for(key(of(page(), id()), w, n)),
-    send: (w: string, fields: [string, string][]) => save({ at: of(page(), id()), write: w, fields }),
+    send: (w: string, fields: [string, string][], other?: string, owner?: string) => save({ at: of(owner ?? page(), other ?? id()), write: w, fields }),
     prove: (run: string, proof: string) => prove({ run, proof }),
     touched: [],
     ...reading,

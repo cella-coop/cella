@@ -1,11 +1,13 @@
 import { direct, posted, proposal, type Decider, type Proposal, type Setting } from '../models/settings.ts'
 import { took, type Answer } from '../post.ts'
 import type { WriteState } from './WriteState.svelte.ts'
+import type { BasketState } from './BasketState.svelte.ts'
 
 // How a setting's last commit went, as the mark beside it says it: its
-// write under way, saved, proposed as a motion, or not saved and why.
+// write under way, saved, proposed as a motion, put among the changes to
+// propose, or not saved and why.
 export interface Mark {
-  state: 'saving' | 'saved' | 'proposed' | 'refused'
+  state: 'saving' | 'saved' | 'proposed' | 'gathered' | 'refused'
   reason?: string
 }
 
@@ -31,24 +33,37 @@ export class SettingsState {
   readonly #settings: () => Setting[]
   readonly #decider: () => Decider | null
   readonly #writes: WriteState
+  readonly #basket: BasketState | null
+  readonly #where: () => string | undefined
   // The writes in flight, those committed again while in flight, and the
   // marks about to fade, by setting.
   readonly #flying = new Set<string>()
   readonly #again = new Set<string>()
   readonly #fading = new Map<string, ReturnType<typeof setTimeout>>()
 
-  constructor(settings: () => Setting[], decider: () => Decider | null, writes: WriteState) {
+  // `basket`, the changes to propose a settings page gathers; where there
+  // are none, as on a record's page, a motion's change opens its dialog.
+  constructor(settings: () => Setting[], decider: () => Decider | null, writes: WriteState, basket: BasketState | null = null, where: () => string | undefined = () => undefined) {
     this.#settings = settings
     this.#decider = decider
     this.#writes = writes
+    this.#basket = basket
+    this.#where = where
   }
 
   get decider(): Decider | null {
     return this.#decider()
   }
 
+  // The change to a setting waiting among the changes to propose, if any.
+  waiting(s: Setting) {
+    return this.#basket?.waiting(s.name) ?? null
+  }
+
+  // What a setting's field shows: what was typed, else the change waiting
+  // to be proposed, else the value in force.
   value(s: Setting): string {
-    return this.typed[s.name] ?? s.value
+    return this.typed[s.name] ?? this.waiting(s)?.value ?? s.value
   }
 
   type(s: Setting, value: string) {
@@ -58,14 +73,16 @@ export class SettingsState {
     }
   }
 
-  // Whether a setting's field differs from its value in force.
+  // Whether a setting's field differs from what it showed: the change
+  // waiting to be proposed, else its value in force.
   changed(s: Setting): boolean {
-    return s.name in this.typed && this.typed[s.name] !== s.value
+    return s.name in this.typed && this.typed[s.name] !== (this.waiting(s)?.value ?? s.value)
   }
 
   // A setting's edit committed: saved by the reader's write, or, where
-  // only a motion changes it, offered as one; nothing where it is
-  // unchanged.
+  // only a motion changes it, put among the changes to propose to the
+  // circle that decides it, or, on a page that gathers none, offered as a
+  // motion at once; nothing where it is unchanged.
   commit(s: Setting) {
     if (!this.changed(s)) {
       return
@@ -74,7 +91,37 @@ export class SettingsState {
       void this.#save(s)
       return
     }
+    if (this.#basket) {
+      this.#gather(s, this.#basket)
+      return
+    }
     this.#offer(s)
+  }
+
+  // Puts a setting's change in the basket of the circle that decides it,
+  // or takes it out where it is back to the value in force; with no
+  // motion to make it, it is not saved.
+  #gather(s: Setting, basket: BasketState) {
+    const value = this.typed[s.name]
+    const decider = this.#decider()
+    const p = proposal(s, value, decider)
+    if (!p || !decider) {
+      this.#mark(s.name, { state: 'refused', reason: s.refused ?? 'nothing you may write changes it' })
+      return
+    }
+    const label = (v: string) => s.options?.find((o) => o.value === v)?.label ?? v
+    basket.put(decider, {
+      field: s.name,
+      label: s.label,
+      where: this.#where(),
+      was: s.value,
+      value,
+      title: p.title,
+      shape: s.choices ? 'arrangement' : 'value',
+      ...(s.options ? { shown: { was: label(s.value), value: label(value) } } : {}),
+    })
+    delete this.typed[s.name]
+    this.#mark(s.name, value === s.value ? null : { state: 'gathered' })
   }
 
   // A typed edit taken back: the field shows the value in force again.
@@ -148,7 +195,7 @@ export class SettingsState {
       return
     }
     this.marks[name] = mark
-    if (mark.state === 'saved' || mark.state === 'proposed') {
+    if (mark.state === 'saved' || mark.state === 'proposed' || mark.state === 'gathered') {
       this.#fading.set(
         name,
         setTimeout(() => {

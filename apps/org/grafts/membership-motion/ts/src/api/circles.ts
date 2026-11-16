@@ -78,12 +78,15 @@ export const slice: Slice = {
   // assembly's motion replaces, and the scope's address and timezone; and
   // each circle's features page, a page of the circle, whose features a
   // holder of `arrange-features` over it arranges at once, and anyone
-  // else proposes to the circle whose motion arranges them.
+  // else proposes to the circle whose motion arranges them; and on each,
+  // the changes to propose gathered across them, proposed as one motion
+  // (`basket`).
   settings: {
     organization: {
       read: (db) => organization(db),
       actions: {
         propose: action('motion:motion:propose', (form, _, deps) => forms.particulars(form, deps.db), propose),
+        basket: action('motion:motion:propose', (form, _, deps) => forms.basket(form, deps.db), propose),
       },
     },
     features: {
@@ -91,12 +94,14 @@ export const slice: Slice = {
       actions: {
         arrange: action('circle:feature:arrange', (form, circle) => ({ circle: circle ?? '', features: form.get('features') }), arrange),
         propose: action('motion:motion:propose', (form, _, deps) => motionForms.propose(form, deps.db), propose),
+        basket: action('motion:motion:propose', (form, _, deps) => forms.basket(form, deps.db), propose),
       },
     },
     rules: {
       read: async (db, _, circle) => (circle ? ruling(db, circle) : null),
       actions: {
         propose: action('motion:motion:propose', (form, circle, deps) => forms.settings(form, circle ?? '', deps.db), propose),
+        basket: action('motion:motion:propose', (form, _, deps) => forms.basket(form, deps.db), propose),
       },
     },
   },

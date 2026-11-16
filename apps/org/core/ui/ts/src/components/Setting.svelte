@@ -17,7 +17,8 @@
 
   const state = useSettings()
   const mark = $derived(state.marks[setting.name])
-  const changer = $derived(who(setting, state.decider))
+  const waiting = $derived(state.waiting(setting))
+  const changer = $derived(who(setting, state.decider, !!waiting))
 </script>
 
 {#snippet hint()}
@@ -47,9 +48,12 @@
       bind:value={() => state.value(setting), (v) => state.type(setting, v === null || v === undefined ? '' : String(v))}
     />
   {/if}
+  {#if waiting && !setting.choices}
+    <p class="was">In force <s>{waiting.shown?.was ?? (waiting.was || 'Empty')}</s>, proposed to {state.decider?.name}</p>
+  {/if}
   <p class="how" aria-live="polite">
     <span class="mark" data-state={mark?.state}
-      >{#if mark?.state === 'saving'}Saving…{:else if mark?.state === 'saved'}Saved{:else if mark?.state === 'proposed'}Proposed{:else if mark?.state === 'refused'}Not saved: {mark.reason}{/if}</span
+      >{#if mark?.state === 'saving'}Saving…{:else if mark?.state === 'saved'}Saved{:else if mark?.state === 'proposed'}Proposed{:else if mark?.state === 'gathered'}Added to the changes to propose{:else if mark?.state === 'refused'}Not saved: {mark.reason}{/if}</span
     >
   </p>
 </div>
@@ -67,8 +71,17 @@
     font-size: var(--text-xs);
     color: var(--text-subtle);
   }
+  .was {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+  }
+  .was s {
+    color: var(--text-subtle);
+  }
   .mark[data-state='saved'],
-  .mark[data-state='proposed'] {
+  .mark[data-state='proposed'],
+  .mark[data-state='gathered'] {
     color: var(--positive-text);
   }
   .mark[data-state='refused'] {

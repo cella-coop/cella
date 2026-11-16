@@ -95,8 +95,8 @@ test('every worker has a contract, the members who work and Inès, who is employ
   }
 })
 
-test('Inès, seated in Web and no member, logs her own time and books it to a Web project, none before her hire; the assembly seats no one who is no member', async () => {
-  assert.deepEqual(await all('SELECT circle, role FROM circle.seat WHERE member = $1 AND until IS NULL', [ines]), [{ circle: 'web', role: null }])
+test('Inès, seated in Web, Care and Tools and no member, logs her own time and books it to a Web project, none before her hire; the assembly seats no one who is no member', async () => {
+  assert.deepEqual(await all('SELECT circle, role FROM circle.seat WHERE member = $1 AND until IS NULL ORDER BY circle', [ines]), [{ circle: 'care', role: null }, { circle: 'tools', role: null }, { circle: 'web', role: null }])
   const counts = await all<{ circle: string; counts: boolean }>(
     `SELECT c.id AS circle, circle_person.counts($1, c.id, '2026-10-24') AS counts FROM circle.circle c WHERE c.id IN ('ag', 'web') ORDER BY c.id`,
     [ines],
@@ -238,8 +238,9 @@ test('Inès\'s member page lists what joining asks of her and reads back what sh
     'Inès holds no shares yet',
     'the work share goes to the workers, 100 % by pay, and 50 % of each associate\'s part buys them shares, blocked five years',
     'the first repayment 12 months after they leave, in 3 yearly repayments',
-    'Inès sits in Web.',
-    'Web decides by consent',
+    'Inès sits in ',
+    'Web',
+    'decide by consent',
   ]) {
     assert.ok(rights.includes(says), `owning and deciding says ${says}`)
   }
@@ -266,11 +267,11 @@ test('a member\'s page lists every mandate may grants them: Inès\'s the partici
   assert.ok(asked.filter((a) => a.may).length > 0)
 })
 
-test('Inès, no member, reads her own seat in Web and the mandates her seat holds, and none of the assembly\'s, no other seat and no policy; Chloé, a member, reads the whole structure', async () => {
+test('Inès, no member, reads her own seats in Web, Care and Tools and the mandates they hold, and none of the assembly\'s, no other seat and no policy; Chloé, a member, reads the whole structure', async () => {
   const read = async <R>(actor: string, sql: string) => (await as(actor).db.query<R>(sql)).rows
   const seats = await read<{ circle: string; member: string }>(ines, 'SELECT circle, member FROM circle.seat ORDER BY circle')
-  assert.deepEqual(seats, [{ circle: 'web', member: ines }], 'her own seat and no one else\'s')
-  assert.deepEqual(await read(ines, 'SELECT id FROM circle.circle ORDER BY id'), [{ id: 'web' }], 'the circle she sits in and no other')
+  assert.deepEqual(seats, [{ circle: 'care', member: ines }, { circle: 'tools', member: ines }, { circle: 'web', member: ines }], 'her own seats and no one else\'s')
+  assert.deepEqual(await read(ines, 'SELECT id FROM circle.circle ORDER BY id'), [{ id: 'care' }, { id: 'tools' }, { id: 'web' }], 'the circles she sits in and no other')
   const mandates = await read<{ grantee: string }>(ines, 'SELECT DISTINCT grantee FROM circle.mandate ORDER BY grantee')
   assert.deepEqual(mandates, [{ grantee: 'participant' }], 'the participant\'s, which her seat holds, and not the member role\'s, the manager\'s or the assembly\'s')
   for (const table of ['circle.right', 'circle.disclosure', 'circle.tenure', 'policy.policy', 'policy.wording', 'policy.value']) {
@@ -312,7 +313,7 @@ test('once m-2026-012 admits her, every step of joining is done, Web her working
     'Inès has been a member since 31 Oct 2026',
     'Inès holds 20 shares of 50,00',
     'Assembly as Member',
-    'Assembly and Web decide by consent',
+    'decide by consent',
     'Through these seats Inès may',
     'invite someone to join, with their first device',
   ]) {

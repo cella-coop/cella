@@ -146,8 +146,11 @@ test('each project\'s margin, burn and watch, on 25 October', async () => {
   assert.deepEqual(Object.fromEntries(m.projects.map((x) => [x.project, x.watch])), {
     'books-move': 'on track',
     'clairval-site': 'on track',
+    'client-renewals': 'on track',
     'ferrand-packaging': 'budget spent',
     'halles-shop': 'on track',
+    'hiring-2027': 'on track',
+    'hosting-move': 'on track',
     'mauve-posters': 'on track',
     'nuvola-retainer': 'on track',
     'ondine-shop': 'archived',
@@ -155,6 +158,7 @@ test('each project\'s margin, burn and watch, on 25 October', async () => {
     'statutes-2027': 'on track',
     'terres-report': 'over budget',
     'velo-identity': 'on track',
+    'workload-review': 'on track',
   })
   const ferrand = m.projects.find((x) => x.project === 'ferrand-packaging')!
   assert.equal(ferrand.invoiced, 14_000_00)

@@ -179,6 +179,7 @@ each action is carried out ([motion](../../feats/motion/index.md#circles)).
 | `seat-member` | giving and ending a seat (`circle:seat:add`, `:remove`) |
 | `create-circle` | creating a circle (`circle:circle:create`) |
 | `amend-circle` | changing a circle's name, purpose or procedure (`circle:circle:amend`), and making and changing its roles (`circle:role:make`, `:amend`) |
+| `arrange-features` | arranging a circle's features (`circle:circle:arrange`) where the mandate's scope covers the circle, its own for `{scope: own}`, so unlike every power above a circle may hold it over itself ([features](#features)) |
 
 Whom a circle's motion decides about is `motion.decides`, and
 never where a circle sits, since none nests: the assembly decides about
@@ -527,7 +528,8 @@ words ([the circles in the shell](../../feats/motion/index.md#the-circles-in-the
 ## Features
 
 A circle enables the features it uses, a setting of the circle beside
-its name, its purpose and its procedure. A **feature** is a feat the
+its name, its purpose and its procedure, but decided apart from them,
+under a power of its own, `arrange-features`. A **feature** is a feat the
 co-op has installed, named by its schema, or one of core's own
 collections, which are no feat and which a circle shows or not:
 `circle`, its circles and mandates, `person`, its people, and `policy`,
@@ -538,7 +540,7 @@ are two levels: the co-op installs a feat, and a circle enables it.
 
 A circle's features are in its order, each perhaps under an accordion
 of the circle's naming, and are written as one listing, the form an
-amendment carries and its entry keeps: the features in order, separated
+arrangement carries and its entry keeps: the features in order, separated
 by commas, an accordion's run after its name and a colon, the runs
 separated by semicolons.
 
@@ -551,14 +553,35 @@ position its place in it from 0; `circle.spelt(listing)` writes it
 canonically, spaced as above; and `circle.features(circle)` spells a
 circle's own. An empty listing enables none.
 
-A circle's features change as its other settings do, by `amend`, a
-motion of the circle that decides about it (`motion.decider`), which
-replaces the whole set by the listing it gives. No member's own write
-changes them: `amend-circle` is a collective mandate, which only a
-motion uses. Nothing is refused for a feature a circle has not enabled,
-and no power of its own arranges them: a feature's write refused in a
-circle that has not enabled it, and the circle's own power to arrange
-its features, are a later stream's
+A circle's features change by `arrange`, which replaces the whole set
+by the listing it gives, under `arrange-features`, a power over a
+circle as a mandate's scope covers it ([authority](#authority)), and so unlike
+`amend-circle`, which another circle holds over a circle's name,
+purpose, procedure and roles (`motion.decides`): a circle holding
+`arrange-features` over itself arranges its own features.
+
+- **At once**, `circle:feature:arrange`, by whoever holds
+  `arrange-features` over the circle by a mandate on a seat, such as a
+  lead's on their own circle (`{scope: own}`). Core's guard on every op
+  with a power checks it, by the circle the payload names, and
+  `circle.arranged` that the listing is sound.
+- **By motion**, `circle:circle:arrange`, citing a passed motion of a
+  circle holding `arrange-features` over the circle as a collective
+  mandate (`circle.arranges(decider, subject, day)`): the circle itself
+  where it holds it over itself, as `{scope: own}`, another where its
+  mandate names the circle, or any where it names none, as the
+  assembly's. `circle.arranger(subject, day)` names the one a proposal
+  goes to: the circle itself first, then the others by id, the assembly
+  last. Membership-motion registers the `arrange-features` action and
+  judges it at the proposal and again as it is written
+  ([membership-motion](../../grafts/membership-motion/index.md)).
+
+Either way `circle.listing_flaw(circle, listing, was)` judges the
+listing: each feature installed, none twice, each accordion named and
+its features listed together, and a change from `was`. Both fold by
+`circle.fold_arrange`, from the listing the entry says they were.
+Nothing is refused for a feature a circle has not enabled: a feature's
+write refused in a circle that has not enabled it is a later stream's
 (`26-11-14-a-feature-s-write-in-a-circle-that-has-not-enabled-it-is-refused-and-being-in-a-circle-replaces-the-lens`).
 The features are the structure's, read by whoever reads it ([who reads
 it](#who-reads-the-structure)).
@@ -810,7 +833,9 @@ tenure changes who holds the role, never what it holds.
 | Action | Label | Why |
 |---|---|---|
 | `POST /api/circle/create` | ordered | a new circle, by motion |
-| `POST /api/circle/amend` | ordered | a circle's name, purpose, procedure or features, by motion |
+| `POST /api/circle/amend` | ordered | a circle's name, purpose or procedure, by motion |
+| `POST /api/circle/arrange` | ordered | a circle's features, by motion |
+| `POST /api/circle/feature.arrange` | confluent | a circle's features, at once, by whoever holds `arrange-features` over it |
 | `POST /api/circle/role.make` | ordered | a new role in a circle, by motion |
 | `POST /api/circle/role.amend` | ordered | a role's name, duty or cap, by motion |
 | `POST /api/circle/seat.add` | ordered | who holds which role |
@@ -832,13 +857,17 @@ and `revoking`. Creating a circle places it nowhere: circles never nest.
   default bundle in force on the verdict date (`circle.bundle`), so its
   members read its records and its roles act on them from that day.
   Ordered, since the same motion's later actions seat people in it.
-- **amend** changes a circle's name, its purpose, its procedure or its
-  features, by the motion it cites, each from the verdict date; its id
-  never changes, so every record, mandate and seat it owns stays its
-  own. Features given replace the circle's by the listing as the motion
-  wrote it. It commits what it changed and what it was, features as
-  `circle.features` spells them. Ordered, since the
+- **amend** changes a circle's name, its purpose or its procedure, by
+  the motion it cites, each from the verdict date; its id never
+  changes, so every record, mandate and seat it owns stays its own. It
+  commits what it changed and what it was. Ordered, since the
   procedure it sets decides the motions put to the circle after it.
+- **arrange** replaces a circle's features by the listing given, by the
+  motion it cites, ordered as what a motion carries is; and
+  **feature.arrange** the same at once, citing no motion, by the
+  actor's own `arrange-features` over the circle, confluent. Both
+  commit the listing and the one it replaced, as `circle.features`
+  spells it ([features](#features)).
 - **role.make** makes a role in a circle, or a `*` role every working
   circle has, by the motion it cites: its name, duty and cap, and its
   id, which the motion's proposal took from its name: in lower case,
@@ -882,6 +911,8 @@ and `revoking`. Creating a circle places it nowhere: circles never nest.
 | a mandate policy adopted or ended | `adopt-policy` or `end-policy`, collective mandates: the cited motion adopts or ends it, and carried | the assembly or coordination, by motion |
 | create | `create-circle`, a collective mandate: the motion it cites creates this circle | the assembly, by motion |
 | amend | `amend-circle`, a collective mandate: the motion it cites changes this circle so | the assembly, by motion |
+| arrange | `arrange-features`, a collective mandate covering the circle: the motion it cites arranges its features so | the circle itself, by its own motion, for every circle but Hiring, whose coordination arranges; the assembly any |
+| feature.arrange | `arrange-features`, a mandate on a seat covering the circle | a circle's lead, their own circle's |
 | role.make, role.amend | `amend-circle`, a collective mandate: the motion it cites makes or changes this role so | the assembly, by motion |
 | message | `discuss`, held in the circle | the circle's participants |
 | seat.add | `seat-member`, a collective mandate: the motion it cites gives this seat | the assembly, admitting a member; coordination, seating one in a working circle, and the assembly in coordination or itself |
@@ -903,11 +934,19 @@ it (`motion.decides`), which membership-motion's guard judges at the
 proposal and again as it is written: the circle is one there is; a
 name given is not blank and no other circle's; a procedure given is
 one in force on the day, built in or a policy's (`motion.decides_by`);
-features given name each a feature the co-op installed
-(`circle.installed`), none twice, each accordion named and its
-features listed together; and it changes something, features compared
-as spelt. Each refusal names the circle, the value it
-read and what would fix it.
+and it changes something. It changes no feature: an amendment giving
+features is refused, naming `arrange-features`. Each refusal names the
+circle, the value it read and what would fix it.
+
+A circle's features are arranged by the motion it cites, an
+`arrange-features` action of a motion of a circle holding
+`arrange-features` over it (`circle.arranges`), the circle itself
+among them, which membership-motion's guards judge at the proposal and
+again as it is written: the motion's circle holds the power over the
+circle, and the listing is sound (`circle.listing_flaw`). Or at once,
+by a holder's own write, which core's guard on every op with a power
+and `circle.arranged` judge. Each refusal names the circle and what
+would fix it, the circle that holds the power over it among them.
 
 A role is made and changed the same way, by a `role` or `amend-role`
 action: the role's circle is one the motion's circle may decide about,
@@ -1017,10 +1056,12 @@ the state before it (`sql/011-folds.sql`,
   the id, name and purpose its entry carries, and refuses where the
   default bundle in force on the entry's day is not the one it names.
 - `circle:circle:amend` (`circle.fold_amend`) changes the circle's
-  name, purpose and procedure to those its entry carries, and its
-  features to the listing it carries, replacing the set; it refuses
-  where a term its entry says it was, features as spelt, is not the
-  circle's.
+  name, purpose and procedure to those its entry carries; it refuses
+  where a term its entry says it was is not the circle's.
+- `circle:circle:arrange` and `circle:feature:arrange`
+  (`circle.fold_arrange`) replace the circle's features by the listing
+  its entry carries; each refuses where the features its entry says
+  they were, as spelt, are not the circle's.
 - `circle:seat:add` (`circle.fold_seat_add`) inserts the seat by the id
   its entry carries, from the entry's day: a tenure of the role it
   names, or a membership of the circle where it names none, so a seat
@@ -1143,12 +1184,16 @@ down past its neighbour in its accordion, an ungrouped one past the
 feature or the accordion beside it, and an accordion moves as a whole;
 naming a feature's accordion moves it into that accordion, or makes
 one, and renaming an accordion renames it on each of its features. A
-Save offers one `amend-circle` motion of the circle that decides about
-it, carrying the listing as arranged, its title saying what it enables
-and disables, or that it rearranges the circle's features where it
-does neither; the dialog says why no write of the reader's changes them,
-since no member's own write does ([features](#features)). Once the
-motion passes the page reads the new set. Membership-motion serves it
+reader holding `arrange-features` over the circle by a seat, as its
+lead, saves each change at once, and the page says they change it
+here. Anyone else is offered one `arrange-features` motion of the
+circle whose motion arranges them (`circle.arranger`), the circle
+itself where it holds the power over itself, never the assembly for
+that alone, carrying the listing as arranged, its title saying what it
+enables and disables, or that it rearranges the circle's features
+where it does neither; the dialog says why their own write changes
+nothing ([features](#features)). Once the motion passes the page reads
+the new set. The Settings tab says which circle arranges them. Membership-motion serves it
 ([membership-motion](../../grafts/membership-motion/index.md#shell-of-the-roll)).
 
 Who sits in a circle is the membership feat's, which names people.
@@ -1186,9 +1231,16 @@ Every feat and graft reads core's circles; those that extend them:
 | Assembly, the assembly | every member, one vote: statutes, admissions, accounts and surplus |
 | Coordination | weekly: pipeline, staffing and anything that crosses circles |
 | Web, Brand, Marketing, Operations | the working circles |
+| Clients | client relationships: briefs, proposals, renewals and care after launch |
+| Hiring | recruitment, onboarding and the path to membership |
+| Care | wellbeing, workload, conflict and peer support |
+| Tools | the studio's own stack: hosting, accounts, licences and internal tooling |
 
 No circle sits in another: coordination is the working circles' by the
-mandates the assembly issued it, not by a place above them.
+mandates the assembly issued it, not by a place above them. Clients,
+Hiring, Care and Tools look after the co-op itself and have no lead;
+each person sits in three to five circles, the assembly among them for
+a member ([the fixture](../../fixtures/lanterne/index.md#people-and-circles)).
 
 Each circle enables the features its work uses, as the founding left
 them ([features](#features)):
@@ -1201,6 +1253,16 @@ them ([features](#features)):
 | Brand | project, task, timesheet, file, bill |
 | Marketing | project, task, timesheet, contact, document |
 | Operations | Books: account, transaction, report, import; Payments: invoice, bill, expense, payslip; contact, employment |
+| Clients | contact, project, task, document; Governance: motion, meeting |
+| Hiring | task, document, employment; Governance: motion, meeting |
+| Care | task, meeting, document, motion |
+| Tools | project, task, timesheet, expense, file |
+
+Every circle but Hiring holds `arrange-features` over itself, `{scope:
+own}`, so its own motion arranges its features; coordination holds it
+over Hiring, `{scope: hiring}`; and the assembly over every circle,
+from the founding. Each circle's lead arranges their own circle's at
+once. These are m-2026-018's, the assembly's, of 20 June 2026.
 
 | Role | Power | Cap |
 |---|---|---|
@@ -1218,6 +1280,7 @@ them ([features](#features)):
 | Circle lead | `set-budget` | 15 000 € limit |
 | Circle lead | `manage-project`, `approve-time` | its own circle |
 | Circle lead | `schedule-meeting`, `keep-minutes` | its own circle |
+| Circle lead | `arrange-features` | its own circle, by m-2026-018 |
 | Manager | `schedule-meeting`, `erase-personal-data` | — |
 | Secretary (`*`: Julien in the assembly, Malik in coordination) | `keep-minutes` | its own circle |
 | Print buyer (Sofia, in `brand`, since 12 October 2026) | `approve-bill` | 1 200 € limit, Brand's bills |
@@ -1242,9 +1305,10 @@ their tenure, and Camille sits there as a member.
 
 | Circle, by motion | Power |
 |---|---|
-| Assembly | `admit-member`, `suspend-member`, `exclude-member`, `adopt-policy`, `end-policy`, `approve-distribution`, `adopt-document`, `seat-member`, `create-circle`, `amend-circle` |
-| Coordination | `adopt-policy`, `end-policy`, `adopt-document`, `seat-member`; `approve-bill`, 3 000 € limit |
-| Operations | `adopt-policy`; `approve-bill`, 2 000 € limit |
+| Assembly | `admit-member`, `suspend-member`, `exclude-member`, `adopt-policy`, `end-policy`, `approve-distribution`, `adopt-document`, `seat-member`, `create-circle`, `amend-circle`, `arrange-features` |
+| Coordination | `adopt-policy`, `end-policy`, `adopt-document`, `seat-member`; `approve-bill`, 3 000 € limit; `arrange-features`, its own and Hiring's |
+| Operations | `adopt-policy`; `approve-bill`, 2 000 € limit; `arrange-features`, its own |
+| Web, Brand, Marketing, Clients, Care, Tools | `arrange-features`, its own |
 
 | Right, given by the form | Power |
 |---|---|
@@ -1288,22 +1352,25 @@ holds by no mandate; approving Imprimerie du Parc's paper, Brand's
 and the assembly's, a record of a circle her mandate's scope does not
 cover.
 Lanterne's default bundle is what the founding motion grants the
-participant, lead and secretary roles, so a circle the assembly creates
-has its members read its records, its lead run its projects, approve
-its time and schedule its meetings, and its secretary keep its minutes,
-from the day it is created. Lanterne keeps open books: the founding
+participant, lead and secretary roles, and m-2026-018 the lead, so a
+circle the assembly creates has its members read its records, its lead
+run its projects, approve its time, schedule its meetings and arrange
+its features, and its secretary keep its minutes, from the day it is
+created. Lanterne keeps open books: the founding
 motion grants the member role `read` on every circle's records, so a
 member of Brand reads Web's expenses, while Inès, employed and seated
-in Web alone, reads Web's and the assembly's, and not Marketing's. Its
+in Web, Care and Tools, reads theirs and the assembly's, and not
+Marketing's. Its
 disclosure rule is the founding motion's last, with the defaults above,
 so a member reads a month's payroll or a project's time only where at
 least five people are in it and no one or two make most of it, unless
 a power of theirs reads every row of it.
-Of the working circles, Operations alone holds a collective mandate,
-and only to grant the roles of the others what it holds: a motion of
-Web decides by its text alone, and one carrying an action is refused at
-its proposal until a circle holding one grants Web a collective mandate
-for it.
+Of the working circles, Operations alone holds a collective mandate
+beyond arranging its own features, and only to grant the roles of the
+others what it holds: a motion of Web decides by its text alone, or
+arranges Web's features, and one carrying any other action is refused
+at its proposal until a circle holding one grants Web a collective
+mandate for it.
 
 ## Analytics
 

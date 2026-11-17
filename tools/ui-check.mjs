@@ -390,6 +390,41 @@ export function inlineCreates(sources, ui = (path) => /(^|\/)core\/ui\/ts\//.tes
   return out
 }
 
+// A phosphor-svelte icon a module import names, by its default export's
+// path, `phosphor-svelte/lib/<Name>`.
+const phosphorIcon = (spec) => spec.match(/^phosphor-svelte\/lib\/([A-Za-z]+)$/)?.[1]
+const recordIconsFile = /(^|\/)core\/ui\/ts\/src\/record-icons\.ts$/
+
+// The curated record icons (`core/ui/ts/src/record-icons.ts`) overlap no
+// icon a feature or a collection already draws: every other source's
+// phosphor-svelte imports, by name, refuse any the curated file also
+// imports. `sources` are every file's `{ path, text }`, paths relative to
+// the repository.
+export function recordIconOverlap(sources) {
+  const out = []
+  const curated = sources.find(({ path }) => recordIconsFile.test(path))
+  if (!curated) {
+    return out
+  }
+  const picked = new Set(imports(curated.text).map(phosphorIcon).filter(Boolean))
+  const used = new Set()
+  for (const { path, text } of sources) {
+    if (path === curated.path) {
+      continue
+    }
+    for (const spec of imports(text)) {
+      const name = phosphorIcon(spec)
+      if (name && picked.has(name)) {
+        used.add(name)
+      }
+    }
+  }
+  for (const name of [...used].sort()) {
+    out.push(`${curated.path}: curates ${name}, which a feature's or a collection's icon already draws; pick another`)
+  }
+  return out
+}
+
 const walk = (repo, dir, out = []) => {
   for (const name of readdirSync(join(repo, dir))) {
     const path = join(dir, name)
@@ -428,5 +463,6 @@ export function checkUi(repo, dirs) {
   }
   out.push(...inlineCreates(sources, (path) => core.has(path)))
   out.push(...pageSaves(sources))
+  out.push(...recordIconOverlap(sources))
   return out
 }

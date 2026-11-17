@@ -120,14 +120,20 @@
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: minmax(15rem, 1fr);
-    gap: var(--space-3);
+    gap: var(--space-1);
     overflow-x: auto;
-    align-items: start;
+    align-items: stretch;
   }
+  /* A column is a faint band off the page, a few percent of the text's
+     own colour over it, so it reads alike in light and dark; the gutters
+     between are narrow. */
   .lane {
     display: grid;
     gap: var(--space-2);
+    align-content: start;
     padding: var(--space-2);
+    grid-template-columns: minmax(0, 1fr);
+    background: color-mix(in oklab, var(--text) 1.5%, transparent);
     border-radius: var(--radius-panel);
     outline: 2px dashed transparent;
     outline-offset: -2px;
@@ -161,6 +167,7 @@
   .cards {
     display: grid;
     gap: var(--space-2);
+    grid-template-columns: minmax(0, 1fr);
     min-height: 2.5rem;
   }
 </style>

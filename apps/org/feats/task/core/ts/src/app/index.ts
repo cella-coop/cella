@@ -31,7 +31,7 @@ export const app: App = {
           { key: 'created', label: 'Created', kind: 'date', role: 'hidden', value: (t: Task) => t.created },
           { key: 'completed', label: 'Completed', kind: 'date', role: 'hidden', value: (t: Task) => t.completed },
         ],
-        look: { layout: 'board', by: 'status', lanes: { status: [...statuses], priority: [...priorities] }, cards: ['priority', 'due'] },
+        look: { layout: 'board', by: 'status', lanes: { status: [...statuses], priority: [...priorities] }, cards: ['priority', 'due', 'created'] },
         shifts: [
           { by: 'status', to: ['backlog', 'todo', 'doing'], action: 'move' },
           { by: 'status', to: ['done'], action: 'complete' },

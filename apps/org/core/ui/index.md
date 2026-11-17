@@ -412,7 +412,7 @@ draws.
   named New, so the two are never confused by a voice or a test) opens
   the same dialog (`Group`, `models/query.ts`'s `groupTint`). A
   board and a calendar place every row the view keeps. `Gallery`
-  lays the items out as cards (`Tile`); `Board` puts them in a column
+  lays the items out as cards (`Tile`, drawn as Linear's: a muted reference and a person's avatar on top, the title in two lines at most, the other fields as quiet unlabelled chips (`Chip`, a hairline outline with an icon or a tone's dot, none drawn for an empty field) and a muted created or updated line at the foot); `Board` puts them in a column
   per value of an enumeration, a person or a circle, each with its
   count, the board offered only where a field is one of them; `Calendar` puts them on the days of a
   month, in whole weeks from Monday, or of a week, by a date field, in

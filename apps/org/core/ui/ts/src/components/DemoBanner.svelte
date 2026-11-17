@@ -2,6 +2,7 @@
   import ArrowCounterClockwise from 'phosphor-svelte/lib/ArrowCounterClockwise'
   import LinkSimple from 'phosphor-svelte/lib/LinkSimple'
   import Timer from 'phosphor-svelte/lib/Timer'
+  import { tick } from 'svelte'
   import { tip } from '../attachments/tip.ts'
   import { useCountdown } from '../hooks/useCountdown.ts'
   import { useDismiss } from '../hooks/useDismiss.ts'
@@ -37,6 +38,14 @@
   const invite = useInvite()
   const dismiss = useDismiss(() => countdown.warn)
 
+  // Hides or shows the strip and hands the keyboard focus to the control
+  // that replaces the one pressed, so a key press never loses it.
+  async function swap(change: () => void, next: string) {
+    change()
+    await tick()
+    document.querySelector<HTMLElement>(next)?.focus()
+  }
+
   // Copies the room's link, so another browser that opens it joins as one
   // of this room's members; `invite.copied` confirms it, briefly.
   function copyInvite(e: MouseEvent) {
@@ -58,8 +67,12 @@
   }
 </script>
 
+<!-- One countdown for the strip and its watermark alike: attached here,
+     it is never started again by a swap between them, which would end
+     the idle warning that brought the strip back. -->
+<div class="banner" {@attach countdown.run}>
 {#if !dismiss.hidden}
-  <div class="demo" role="note" {@attach countdown.run} {@attach reserve}>
+  <div class="demo" role="note" {@attach reserve}>
     <span class="about">
       <button type="button" class="trigger" aria-describedby="{id}-tip">
         <Icon icon={TestTube} />
@@ -90,11 +103,11 @@
       {/if}
     </span>
     <span class="hide">
-      <Button tone="quiet" aria-label="Hide the demo banner" onclick={() => dismiss.hide()}><Icon icon={X} size="0.95em" /></Button>
+      <Button tone="quiet" aria-label="Hide the demo banner" onclick={() => swap(() => dismiss.hide(), '.watermark .show button')}><Icon icon={X} size="0.95em" /></Button>
     </span>
   </div>
 {:else}
-  <p class="watermark" {@attach countdown.run}>
+  <p class="watermark">
     <Icon icon={TestTube} size="1rem" />
     <span>Prototype</span>
     {#if countdown.active}
@@ -104,12 +117,16 @@
       </span>
     {/if}
     <span class="show">
-      <Button tone="quiet" aria-label="Show the demo banner" onclick={() => dismiss.show()}><Icon icon={Plus} size="0.95em" /></Button>
+      <Button tone="quiet" aria-label="Show the demo banner" onclick={() => swap(() => dismiss.show(), '.demo .hide button')}><Icon icon={Plus} size="0.95em" /></Button>
     </span>
   </p>
 {/if}
+</div>
 
 <style>
+  .banner {
+    display: contents;
+  }
   .demo {
     position: fixed;
     inset-inline: 0;

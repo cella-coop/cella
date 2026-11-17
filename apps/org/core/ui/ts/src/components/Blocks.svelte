@@ -31,7 +31,7 @@
   .blocks {
     padding: var(--space-2) var(--space-2) var(--space-5) var(--space-5);
     font-family: var(--font-ui);
-    font-size: var(--text-lg);
+    font-size: var(--text-md);
     line-height: 1.55;
     max-width: 46rem;
     color: var(--text);

@@ -19,6 +19,7 @@
   import type { Outcome as Done } from '../models/outcome.ts'
   import { useShell } from '../hooks/useShell.ts'
   import { usePinned } from '../hooks/usePinned.ts'
+  import { useRemember } from '../hooks/useRemember.ts'
   import { mark } from '../marks.ts'
   import { inked } from '../models/ink.ts'
   import type { Search } from '../hooks/CommandState.svelte.ts'
@@ -89,6 +90,7 @@
 
   const state = useShell(() => outcome, () => drawer, () => people, () => lens, () => circles, () => nav, () => kept)
   const pinned = usePinned()
+  useRemember(() => scope.address, () => actor, () => circles)
 
   function onkeydown(e: KeyboardEvent) {
     if (e.key !== ']' || e.metaKey || e.ctrlKey || e.altKey || typing(e) || document.querySelector('dialog[open]')) {

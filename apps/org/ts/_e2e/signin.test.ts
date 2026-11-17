@@ -95,6 +95,12 @@ eachBrowser((name, launch) => {
       assert.equal(accepted.device, device.key, 'the device signed its own acceptance')
       assert.equal((await visit(`/join/${secret}`))?.status(), 404, 'the link is spent')
 
+      // Seated in Web around the notary, as only a superuser may, so the
+      // sign-in page has a circle of Sam's to show, besides the assembly
+      // every member sits in; the rename below carries this seat along
+      // when it refreshes what the shell reads.
+      await su.query(`INSERT INTO circle.member (circle, person, since) VALUES ('web', $1, '2026-10-24')`, [sam])
+
       await visit(`/people/${encodeURIComponent(sam)}`)
       const profile = page.locator('form[data-write="profile"]')
       await profile.getByLabel('Name').fill('Sam Petit-Roux')
@@ -109,11 +115,18 @@ eachBrowser((name, launch) => {
       await page.getByRole('button', { name: 'Sign out' }).click()
       await page.waitForURL(`${base}/sign-in`)
       await page.waitForLoadState('networkidle')
-      await page.getByRole('button', { name: `Sign in as ${sam} · laptop` }).click()
+      // The recent sign-in reads as the fixture rows do: the member's
+      // name, then their circle, Web, the assembly left out since every
+      // member sits in it; never the address or the device.
+      assert.ok(await page.getByRole('button', { name: 'Sam Petit-Roux Web' }).isVisible(), 'the row shows the name and the circle')
+      assert.equal(await page.getByText('laptop').count(), 0, 'no device is shown')
+      assert.equal(await page.getByText('Assembly').count(), 0, 'the assembly is left out')
+      await page.getByRole('button', { name: 'Sam Petit-Roux Web' }).click()
       await page.waitForURL(`${base}/inbox`)
       await page.waitForLoadState('networkidle')
       assert.ok(await page.getByText('Sam Petit-Roux').first().isVisible(), 'signed in again, on the same device')
 
+      await su.query(`DELETE FROM circle.member WHERE circle = 'web' AND person = $1`, [sam])
       await su.query(`UPDATE person.device SET revoked = '2026-10-24' WHERE key = decode($1, 'hex')`, [device.key])
       await visit('/people')
       assert.match(page.url(), /\/sign-in\?back=%2Fpeople$/, 'a revoked device\'s session opens nothing')

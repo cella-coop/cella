@@ -1,3 +1,5 @@
+import { today } from '@cella/org-db'
+import { circles, sitting } from '@cella/org-circle/api'
 import { devices, person } from '@cella/org-person/api'
 import { CELLA_DEMO, CELLA_DEMO_ENDS, CELLA_DEMO_IDLE, CELLA_DEV } from '$app/env/private'
 import { using } from './db.ts'
@@ -21,19 +23,25 @@ export const copy = CELLA_DEMO && CELLA_DEMO_IDLE ? CELLA_DEMO_IDLE : 0
 export const ends = copy ? CELLA_DEMO_ENDS : 0
 
 // Who the sign-in page offers in dev mode or a demo: everyone with a
-// fixture device in force, and that device's label, by name. The keyring
-// reads for anyone; each person's name is read as them, since no one
-// signed in reads anyone's record and everyone reads their own.
-export async function fixtures(): Promise<{ address: string; name: string; label: string }[]> {
+// fixture device in force, that device's label, by name, and the circles
+// they sit in now, the assembly left out since every member is in it. The
+// keyring reads for anyone; each person's name and seats are read as
+// them, since no one signed in reads anyone's record and everyone reads
+// their own.
+export async function fixtures(): Promise<{ address: string; name: string; label: string; circles: string[] }[]> {
   if (!dev && !demo) {
     return []
   }
   const addresses = [...new Set((await using(null, (db) => devices(db))).map((d) => d.address))]
   const out = []
   for (const address of addresses) {
-    const found = await using(address, async (db) => ({ p: await person(db, address), d: await own(db, address) }))
+    const found = await using(address, async (db) => {
+      const day = await today(db)
+      return { p: await person(db, address), d: await own(db, address), all: await circles(db), sat: await sitting(db, address, day, day) }
+    })
     if (found.p && found.d) {
-      out.push({ address, name: found.p.name, label: found.d.label })
+      const assembly = found.all.find((c) => c.assembly)?.id
+      out.push({ address, name: found.p.name, label: found.d.label, circles: found.sat.filter((c) => c.id !== assembly).map((c) => c.name) })
     }
   }
   return out.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))

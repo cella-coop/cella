@@ -1,5 +1,6 @@
 <script lang="ts">
   import { useSignIn } from '../hooks/useSignIn.ts'
+  import Badge from './Badge.svelte'
   import Button from './Button.svelte'
   import Field from './Field.svelte'
 
@@ -8,7 +9,9 @@
   // members too, whose keys anyone can derive, and in a demo build the
   // same members, each marked as a demo member. A browser holding none is
   // pointed to an invitation's link, or makes a key to enrol from a
-  // device its person holds.
+  // device its person holds. Each row reads the same way: the person's
+  // name, then the circles they sit in, the assembly left out since
+  // every member is in it; never their device.
   let {
     scope,
     back,
@@ -17,7 +20,7 @@
   }: {
     scope: string
     back: string
-    fixtures: { address: string; name: string; label: string }[]
+    fixtures: { address: string; name: string; label: string; circles: string[] }[]
     demo?: boolean
   } = $props()
 
@@ -32,7 +35,9 @@
 {#if state.devices.length}
   <div class="list">
     {#each state.devices as d (d.key)}
-      <Button tone="primary" busy={state.busy} onclick={() => state.as(d)}>Sign in as {d.address} · {d.label}</Button>
+      <Button busy={state.busy} onclick={() => state.as(d)}
+        >{d.name ?? d.address}{#each d.circles ?? [] as c (c)} <Badge>{c}</Badge>{/each}</Button
+      >
     {/each}
   </div>
 {:else}
@@ -51,7 +56,7 @@
   <div class="list">
     {#each fixtures as f (f.address)}
       <Button title={f.address} busy={state.busy} onclick={() => state.fixture(f.address, f.label)}
-        >{f.name} · {f.label} <span class="dev">demo member</span></Button
+        >{f.name}{#each f.circles as c (c)} <Badge>{c}</Badge>{/each} <span class="dev">demo member</span></Button
       >
     {/each}
   </div>
@@ -60,7 +65,9 @@
   <p class="hint">Their keys are derived from their address and their device's label, which anyone can do.</p>
   <div class="list">
     {#each fixtures as f (f.address)}
-      <Button title={f.address} busy={state.busy} onclick={() => state.fixture(f.address, f.label)}>{f.name} · {f.label}</Button>
+      <Button title={f.address} busy={state.busy} onclick={() => state.fixture(f.address, f.label)}
+        >{f.name}{#each f.circles as c (c)} <Badge>{c}</Badge>{/each}</Button
+      >
     {/each}
   </div>
 {/if}

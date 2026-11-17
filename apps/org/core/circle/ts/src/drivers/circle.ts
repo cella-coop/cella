@@ -7,13 +7,13 @@ const order = '(CASE WHEN c.assembly THEN 0 ELSE 1 END)::text || c.name'
 
 // The circles as the collection lists them.
 export const listing: Read = {
-  sql: `SELECT c.id, c.name, c.assembly, c.purpose, c.procedure, ${order} AS listed FROM circle.circle c`,
+  sql: `SELECT c.id, c.name, c.assembly, c.purpose, c.procedure, c.icon, ${order} AS listed FROM circle.circle c`,
   order: 'listed',
 }
 
 // The circles, the assembly first and the others by name.
 export async function circles(db: Db): Promise<Circle[]> {
-  const { rows } = await db.query<Circle>(`SELECT c.id, c.name, c.assembly, c.purpose, c.procedure FROM circle.circle c ORDER BY ${order}`)
+  const { rows } = await db.query<Circle>(`SELECT c.id, c.name, c.assembly, c.purpose, c.procedure, c.icon FROM circle.circle c ORDER BY ${order}`)
   return rows
 }
 
@@ -37,7 +37,7 @@ export async function sitting(db: Db, person: string, from: string, until: strin
 // each in the circles' order, with the features each enabled.
 export async function lenses(db: Db, person: string, day: string): Promise<Lens[]> {
   const { rows } = await db.query<Lens>(
-    `SELECT c.id, c.name, c.assembly, circle.features(c.id) AS features, EXISTS (
+    `SELECT c.id, c.name, c.assembly, c.icon, circle.features(c.id) AS features, EXISTS (
        SELECT FROM circle.seat s WHERE s.circle = c.id AND s.member = $1
          AND (s.since IS NULL OR s.since <= $2::date) AND (s.until IS NULL OR s.until > $2::date)
      ) AS sits
@@ -54,7 +54,7 @@ export async function lenses(db: Db, person: string, day: string): Promise<Lens[
 // circles: those that issued
 // what it and its roles hold, and those it issued to.
 export async function circle(db: Db, id: string): Promise<Detail | null> {
-  const found = await db.query<Circle>('SELECT c.id, c.name, c.assembly, c.purpose, c.procedure FROM circle.circle c WHERE c.id = $1', [id])
+  const found = await db.query<Circle>('SELECT c.id, c.name, c.assembly, c.purpose, c.procedure, c.icon FROM circle.circle c WHERE c.id = $1', [id])
   const c = found.rows[0]
   if (!c) {
     return null

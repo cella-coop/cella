@@ -10,6 +10,9 @@ export interface Circle {
   assembly: boolean
   purpose: string
   procedure: Procedure
+  // Its own icon, a slug of the curated set, replacing the collection's;
+  // none wears the collection's instead.
+  icon: string | null
 }
 
 // `circle` is one circle, or `*` for a role every working circle has.
@@ -68,6 +71,9 @@ export interface Lens {
   assembly: boolean
   sits: boolean
   features: string
+  // Its own icon, a slug of the curated set, which a reference elsewhere
+  // (a cell, a chip, a group's bar) wears in place of the collection's.
+  icon: string | null
 }
 
 // The circles a person sits in as a form offers them, the one a record
@@ -123,6 +129,16 @@ export interface Arranged {
   circle: string
   was: string
 }
+
+// A circle's own icon, set or cleared at once by a holder of
+// `arrange-features` over it, the same power that arranges its features.
+export interface Icon {
+  circle: string
+  // A slug of the curated set, or none, which clears it.
+  icon: string | null
+}
+
+export type Iconed = Icon
 
 // What a role may be changed in, by the motion that amends it: its name,
 // its duty and its cap, each left as it is where none is given; a cap

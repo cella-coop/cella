@@ -29,10 +29,10 @@ const sent = (a: Answer): Sent => {
 
 // The post telling the session this browser saved, answered with the body
 // the record holds; one refused or with no answer it can read throws.
-async function kept(url: string): Promise<Kept> {
+async function kept(url: string, signal: AbortSignal): Promise<Kept> {
   const body = new FormData()
   body.append('saved', '1')
-  const res = await fetch(url, { method: 'POST', body, headers: { accept: 'application/json' } })
+  const res = await fetch(url, { method: 'POST', body, headers: { accept: 'application/json' }, signal })
   const r = (await res.json()) as { type: string; data?: Kept & { done?: { reason?: string } } }
   if (r.type !== 'success' || !r.data) {
     throw new Error(r.data?.done?.reason ?? `refused (${res.status})`)
@@ -42,12 +42,12 @@ async function kept(url: string): Promise<Kept> {
 
 // A post to the live session, answered as a form's is. One with no
 // answer it can read throws, which reads as being offline.
-async function told(url: string, fields: [string, string][]): Promise<Sent> {
+async function told(url: string, fields: [string, string][], signal: AbortSignal): Promise<Sent> {
   const body = new FormData()
   for (const [k, v] of fields) {
     body.append(k, v)
   }
-  const res = await fetch(url, { method: 'POST', body, headers: { accept: 'application/json' } })
+  const res = await fetch(url, { method: 'POST', body, headers: { accept: 'application/json' }, signal })
   if (res.status === 401) {
     return { ok: false, reason: 'sign in first' }
   }
@@ -60,7 +60,13 @@ async function told(url: string, fields: [string, string][]): Promise<Sent> {
 // write, each signed by this browser's device as every write is. It saves
 // at a pause and when it leaves the body, the page's unmounting or the
 // tab's hiding; the stream reopens with this browser's version vector, so
-// it misses nothing.
+// it misses nothing. A page the browser leaves for another document
+// (`pagehide`) makes no request after: its posts to the session in
+// flight are aborted, and the save its hiding asks for is made a task
+// later, after `pagehide` would have said so, and only where it did not,
+// since a request the browser cuts off as the document goes saves
+// nothing, and WebKit reports it as the page’s error. An abort sets no
+// problem the body shows.
 export class LiveState {
   readonly #live: Live
   readonly #at: Seat
@@ -75,11 +81,15 @@ export class LiveState {
   hash = $state('')
   #source: EventSource | null = null
   #stopped = true
+  // Whether the browser is leaving the page for another document, and
+  // what aborts the session's posts as it does.
+  #leaving = false
+  #abort = new AbortController()
 
   constructor(doc: LoroDoc, at: Seat) {
     this.#at = at
     const link: Link = {
-      post: (update) => told(at.live(), [['update', b64.encode(update)]]),
+      post: (update) => told(at.live(), [['update', b64.encode(update)]], this.#abort.signal),
       save: async (write, snapshot, contributors, base) =>
         sent(
           await at.save(write, [
@@ -88,7 +98,7 @@ export class LiveState {
             ...contributors.map((c): [string, string] => ['contributor', c]),
           ]),
         ),
-      saved: () => kept(at.live()),
+      saved: () => kept(at.live(), this.#abort.signal),
     }
     this.#live = new Live(doc, link)
     this.#live.changed = () => this.#show()
@@ -118,13 +128,32 @@ export class LiveState {
     const gone = () => {
       this.online = false
     }
+    // A tab hidden saves, a task later: a page being left fires
+    // `pagehide` after `visibilitychange` in the same task.
     const hidden = () => {
       if (document.visibilityState === 'hidden') {
-        void this.#live.save()
+        setTimeout(() => {
+          if (!this.#leaving) {
+            void this.#live.save()
+          }
+        }, 0)
+      }
+    }
+    const leaving = () => {
+      this.#leaving = true
+      this.#abort.abort()
+    }
+    // Back from the browser's cache, the page posts again.
+    const shown = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        this.#leaving = false
+        this.#abort = new AbortController()
       }
     }
     window.addEventListener('online', back)
     window.addEventListener('offline', gone)
+    window.addEventListener('pagehide', leaving)
+    window.addEventListener('pageshow', shown)
     document.addEventListener('visibilitychange', hidden)
     this.#open()
     return () => {
@@ -134,6 +163,8 @@ export class LiveState {
       }
       window.removeEventListener('online', back)
       window.removeEventListener('offline', gone)
+      window.removeEventListener('pagehide', leaving)
+      window.removeEventListener('pageshow', shown)
       document.removeEventListener('visibilitychange', hidden)
       // The stream stays open until the leaving save is made, so the
       // session still holds this peer when it posts and tells it.

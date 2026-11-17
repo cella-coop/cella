@@ -37,9 +37,7 @@ eachBrowser((name, launch) => {
       await signIn(context, base, yusuf)
       const page = await context.newPage()
       const errors: string[] = []
-      // WebKit names a request a navigation cut short, after a save has
-      // settled, as refused "due to access control checks": not the page's.
-      page.on('pageerror', (e) => /due to access control checks/.test(e.message) || errors.push(e.message))
+      page.on('pageerror', (e) => errors.push(e.message))
 
       await page.goto(`${base}/projects/halles-shop`)
       await page.waitForLoadState('networkidle')

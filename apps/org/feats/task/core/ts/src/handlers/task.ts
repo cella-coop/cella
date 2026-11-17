@@ -1,7 +1,7 @@
 import type { Outcome } from '@cella/org-actions'
 import { personal, write, type Deps, type Write } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
-import type { Complete, Create, Created, Move, Moved, Save, Saved } from '../models/task.ts'
+import type { Change, Changed, Complete, Create, Created, Move, Moved, Save, Saved } from '../models/task.ts'
 
 type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
@@ -48,6 +48,35 @@ export async function move(input: Move, deps: Deps): Out<'task:task:move', Moved
         throw new Error(`no task ${input.task}`)
       }
       return { task: input.task, status: input.status, completed: null }
+    },
+    payload: (v) => ({ ...v }),
+  })
+}
+
+// Sets the priority or the due day, whichever the input names; a due day
+// of null clears it. The entry carries what it changed, which its fold sets.
+export async function change(input: Change, deps: Deps): Out<'task:task:set', Changed> {
+  const changed: Changed = { task: input.task }
+  return write(deps, {
+    op: 'task:task:set' satisfies Action,
+    request: input,
+    state: async (tx) => {
+      const { rowCount } = await tx.query(
+        `UPDATE task.task
+         SET priority = coalesce($2::text, priority), due = CASE WHEN $3::boolean THEN $4::date ELSE due END
+         WHERE id = $1`,
+        [input.task, input.priority ?? null, input.due !== undefined, input.due ?? null],
+      )
+      if (!rowCount) {
+        throw new Error(`no task ${input.task}`)
+      }
+      if (input.priority !== undefined) {
+        changed.priority = input.priority
+      }
+      if (input.due !== undefined) {
+        changed.due = input.due
+      }
+      return changed
     },
     payload: (v) => ({ ...v }),
   })

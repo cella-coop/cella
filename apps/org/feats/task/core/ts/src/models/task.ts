@@ -73,3 +73,17 @@ export interface Saved {
   task: string
   circle: string
 }
+
+// A change of a task's priority or its due day, one at a time as the
+// page's popovers make them; a due day of null clears it.
+export interface Change {
+  task: string
+  priority?: Priority
+  due?: string | null
+}
+
+export interface Changed {
+  task: string
+  priority?: Priority
+  due?: string | null
+}

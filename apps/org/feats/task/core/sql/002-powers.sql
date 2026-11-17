@@ -7,6 +7,7 @@ INSERT INTO cella.power (op, power, amount, owner) VALUES
   ('task:task:create', 'edit-task', NULL, 'task'),
   ('task:task:move', 'edit-task', NULL, 'task'),
   ('task:task:complete', 'edit-task', NULL, 'task'),
+  ('task:task:set', 'edit-task', NULL, 'task'),
   ('task:body:save', 'discuss', NULL, 'task'),
   ('task:comment:post', 'discuss', NULL, 'task'),
   ('task:comment:resolve', 'discuss', NULL, 'task'),

@@ -59,3 +59,11 @@ test('each field is its own register: a move and a reprioritising both stand', a
   const { rows } = await db.query(`SELECT status, priority FROM task.task WHERE id = 't-2'`)
   assert.deepEqual(rows[0], { status: 'doing', priority: 'high' })
 })
+
+test('a change of priority or due is a write of its own, needing the power a move needs', async () => {
+  const { rows } = await db.query(`SELECT op, power FROM cella.power WHERE op IN ('task:task:move', 'task:task:set') ORDER BY op`)
+  assert.deepEqual(rows, [
+    { op: 'task:task:move', power: 'edit-task' },
+    { op: 'task:task:set', power: 'edit-task' },
+  ])
+})

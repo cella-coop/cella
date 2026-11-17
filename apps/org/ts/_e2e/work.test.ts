@@ -135,6 +135,16 @@ test('Thomas drags it into Doing, then Done, each drop a write signed as him', a
   })
   const into = await shell.act(`/tasks/${task}`, 'move', { to: 'done' }, thomas)
   assert.equal(into.state, 'failed', 'done is a completion, not a move')
+  // A task's priority and due day are registers of their own, changed
+  // one at a time from its page.
+  const set = await shell.act(`/tasks/${task}`, 'set', { set: 'priority', priority: 'urgent' }, thomas)
+  assert.deepEqual([set.op, set.state], ['task:task:set', 'settled'])
+  const due = await shell.act(`/tasks/${task}`, 'set', { set: 'due', due: '2026-11-20' }, thomas)
+  assert.equal(due.state, 'settled')
+  assert.deepEqual(await one(`SELECT priority, to_char(due, 'YYYY-MM-DD') AS due FROM task.task WHERE id = $1`, [task]), { priority: 'urgent', due: '2026-11-20' })
+  const cleared = await shell.act(`/tasks/${task}`, 'set', { set: 'due', due: '' }, thomas)
+  assert.equal(cleared.state, 'settled')
+  assert.deepEqual(await one(`SELECT priority, due FROM task.task WHERE id = $1`, [task]), { priority: 'urgent', due: null })
 })
 
 // The options a select of the page's offers, in order, by its name, as

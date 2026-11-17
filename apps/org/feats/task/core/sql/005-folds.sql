@@ -33,6 +33,17 @@ BEGIN ATOMIC
   WHERE id = fold_complete.entry -> 'payload' ->> 'task';
 END;
 
+-- task:task:set: the priority and the due day the entry carries, each
+-- only if it names it; a due day of null clears it.
+CREATE FUNCTION task.fold_set(entry jsonb) RETURNS void
+LANGUAGE sql
+BEGIN ATOMIC
+  UPDATE task.task
+  SET priority = coalesce(fold_set.entry -> 'payload' ->> 'priority', priority),
+      due = CASE WHEN fold_set.entry -> 'payload' ? 'due' THEN (fold_set.entry -> 'payload' ->> 'due')::date ELSE due END
+  WHERE id = fold_set.entry -> 'payload' ->> 'task';
+END;
+
 -- task:body:save: the body set to the snapshot its entry carries, in hex.
 CREATE FUNCTION task.fold_body_save(entry jsonb) RETURNS void
 LANGUAGE sql
@@ -87,6 +98,7 @@ $$;
 SELECT cella.lets_fold('task:task:create', 1, 'task.fold_create(jsonb)', 'task');
 SELECT cella.lets_fold('task:task:move', 1, 'task.fold_move(jsonb)', 'task');
 SELECT cella.lets_fold('task:task:complete', 1, 'task.fold_complete(jsonb)', 'task');
+SELECT cella.lets_fold('task:task:set', 1, 'task.fold_set(jsonb)', 'task');
 SELECT cella.lets_fold('task:body:save', 1, 'task.fold_body_save(jsonb)', 'task');
 SELECT cella.lets_fold('task:comment:post', 1, 'task.fold_comment_post(jsonb)', 'task');
 SELECT cella.lets_fold('task:comment:resolve', 1, 'task.fold_comment_resolve(jsonb)', 'task');

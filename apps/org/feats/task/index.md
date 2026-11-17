@@ -1,6 +1,6 @@
 +++
 title = "Task"
-updated = 2026-11-16
+updated = 2026-11-17
 +++
 
 Assignable work items: the atomic unit of the co-op's work. A task stands
@@ -33,6 +33,7 @@ the backlog, and subtasks wait for a need.
 | `task:task:create` | confluent | `edit-task` | a fact; numbered by the server until rung 2 gives devices ids of their own |
 | `task:task:move` | confluent | `edit-task` | the status is a register: the last writer wins |
 | `task:task:complete` | confluent | `edit-task` | sets the status done with its day; the last writer wins |
+| `task:task:set` | confluent | `edit-task` | the priority and the due day are registers: the last writer wins; the entry carries what it changed, and a due day of null clears it |
 | `task:body:save` | confluent | `discuss` | an editor's save of the merged body, signed by its device: each save carries the whole snapshot, so the later receipt holds every edit before it |
 | `task:comment:post` | confluent | `discuss` | a fact: comments are appended, each numbered by receipt |
 | `task:comment:resolve` | confluent | `discuss` | resolving a root or reopening it is a register: the last writer wins |
@@ -125,8 +126,9 @@ Each action folds by `core/sql/005-folds.sql` ([folds](../../../../_corpus/doc/a
 a task created under the id its entry names, its title as its
 commitment, its priority, due day and status as its entry carries them,
 on the entry's day; a move to the status its entry names, reopening a
-done task; a completion on the entry's day, keeping the first; a
-body's save, setting `body` to the snapshot its entry carries; a
+done task; a completion on the entry's day, keeping the first;
+a change of priority or due day, setting only what its entry carries, a due
+day of null clearing it; a body's save, setting `body` to the snapshot its entry carries; a
 comment's post, under the receipt its entry names, by its actor on its
 day, with the mentions it names, a reply reopening its root; and a
 resolve, setting the root resolved on the entry's day or reopening it.
@@ -139,7 +141,9 @@ assignee, a person, and project. Dragging a card into backlog, todo or doing is 
 `move`, into done the `complete`, posted with the column entered and
 signed as the acting member; a refused move leaves the card where it
 was. The board also groups by priority, assignee or project. A task's
-page, its header's crumb its id, moves and completes it in its header;
+page, its header's crumb its id, completes it in its header, its status,
+priority and due day each changed in the popover of its property (a status
+of done is the completion);
 its assignee and project are set in its Details, and its main area
 opens on its body in core body's editor over the live session, read-only
 for one who may read the task and not discuss it. Under it, past a

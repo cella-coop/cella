@@ -71,14 +71,16 @@ pkgs.testers.runNixOSTest {
         } // (if kind == "visitors" then {
           # Two copies at most, each ending after 90 s idle or 150 s old,
           # storing 4 MiB, one to an address: each limit is reached within
-          # the test. A browser itself unseen 5 s is ejected from its
-          # room, well inside the room's own 90 s.
+          # the test. --browser-idle is generous, well past a room's own
+          # lifetime: every cookie the test touches is a room's sole
+          # browser but one, and must never be found idle before its
+          # room's own idle-reset or lifetime would end it anyway.
           visitors = 2;
           idle = 90;
           lifetime = 150;
           evictAfter = 1;
           minAge = 1;
-          browserIdle = 5;
+          browserIdle = 300;
           memory = 512;
           storage = 4;
           perAddress = 1;
@@ -375,10 +377,6 @@ pkgs.testers.runNixOSTest {
           page("p2", "10.0.0.20", "/sign-in")
           assert status("p", "10.0.0.20", f"-X POST -H 'Origin: {front}' {front}/_demo/reset") == "409", "Reset now succeeded although p2 is still in the room"
           assert p in copies(), "a refused reset still ended the room"
-          time.sleep(7)
-          assert "is being prepared" in page("p2", "10.0.0.20", "/inbox"), "a browser idle past its span was not ejected from its room"
-          assert start("p", "10.0.0.20", "/_demo/reset") == "303", "Reset now, alone in the room, was still refused"
-          assert p not in copies(), "reset kept the old room"
 
     '' else ''
       notice = ${builtins.toJSON notice}

@@ -50,15 +50,19 @@
 </script>
 
 {#snippet body()}
-  {#if ref || who}
+  <!-- A reference heads the card with the avatar at its right; with none,
+       the avatar sits at the end of the title's first line, so no empty
+       row opens the card. -->
+  {#if ref}
     <span class="top">
-      <span class="ref">{ref ? show(ref.value(row), ref.kind) : ''}</span>
+      <span class="ref">{show(ref.value(row), ref.kind)}</span>
       {#if who}<span class="who" title="{who.label}: {name}"><Avatar {name} size="1.25rem" /></span>{/if}
     </span>
   {/if}
   <span class="title">
     {#if icon}<span class="mark" style={inked(inkOf(String(titled.value(row))))}><Icon {icon} /></span>{/if}
     <span class="text">{titled.value(row)}</span>
+    {#if who && !ref}<span class="who" title="{who.label}: {name}"><Avatar {name} size="1.25rem" /></span>{/if}
   </span>
   {#if chips.length}
     <span class="chips">
@@ -125,6 +129,10 @@
     display: inline-flex;
     margin-inline-start: auto;
   }
+  .title .who {
+    flex: none;
+    align-self: flex-start;
+  }
   .title {
     display: flex;
     align-items: baseline;
@@ -133,6 +141,8 @@
     line-height: 1.35;
   }
   .text {
+    flex: 1 1 auto;
+    min-width: 0;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;

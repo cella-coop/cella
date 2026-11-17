@@ -298,7 +298,9 @@ async function start(cookie, address) {
   // past `--storage`, when it takes no more writes; `join`, this room's
   // link's code, made afresh here so a reset or a recycled room never
   // keeps the one it had.
-  const copy = { name: null, child: null, seen: begun, made: begun, ends: begun + config.lifetime * 1000, ready: null, ended: false, cookie, address, size: 0, full: false, measured: 0, measuring: null, landed: [], flying: 0, uploads: 0, queue: [], join: joinCode() }
+  // `readied`: its server answers; a browser is never found idle before
+  // then, however long it took, since it is this very request waiting.
+  const copy = { name: null, child: null, seen: begun, made: begun, ends: begun + config.lifetime * 1000, ready: null, readied: false, ended: false, cookie, address, size: 0, full: false, measured: 0, measuring: null, landed: [], flying: 0, uploads: 0, queue: [], join: joinCode() }
   copies.set(cookie, copy)
   seenAt.set(cookie, begun)
   preparing++
@@ -346,6 +348,7 @@ async function start(cookie, address) {
         }
       })
       await answers(socket, copy)
+      copy.readied = true
       log(`${name} served, ${Date.now() - begun} ms from the request`)
     } finally {
       preparing--
@@ -502,10 +505,12 @@ setInterval(() => {
       end(copy, `its server passed ${config.memory} MiB`)
     }
   }
-  // A browser unseen 15 minutes is forgotten: its room keeps going, for
-  // another browser or a fresh join, but this one reaches it no more.
+  // A browser unseen past `--browser-idle` is forgotten: its room keeps
+  // going, for another browser or a fresh join, but this one reaches it
+  // no more. Never while its room is still being made, however long
+  // that takes: nothing but its own request is waiting on it yet.
   for (const [cookie, room] of [...copies]) {
-    if (!room.ended && now - (seenAt.get(cookie) ?? now) > config.browserIdle * 1000) {
+    if (!room.ended && room.readied && now - (seenAt.get(cookie) ?? now) > config.browserIdle * 1000) {
       copies.delete(cookie)
       seenAt.delete(cookie)
     }
@@ -734,14 +739,17 @@ function plain(res, status, text, headers = {}) {
 async function handle(req, res) {
   const path = (req.url ?? '/').split('?')[0]
   const cookie = cookieOf(req)
+  let copy = copyOf(cookie)
   // A browser found idle past `--browser-idle` is forgotten here, at
   // once, not only once the tick next sweeps it, so it reaches its old
   // room no more from the moment it is found idle, whichever asks first.
-  if (cookie && Date.now() - (seenAt.get(cookie) ?? 0) > config.browserIdle * 1000) {
+  // Never while its own room is still being made: a slow first request
+  // is this very browser's, not an idle one's.
+  if (copy && copy.readied && Date.now() - (seenAt.get(cookie) ?? 0) > config.browserIdle * 1000) {
     copies.delete(cookie)
     seenAt.delete(cookie)
+    copy = null
   }
-  const copy = copyOf(cookie)
 
   if (path === '/robots.txt') {
     return plain(res, 200, 'User-agent: *\nDisallow: /\n')
@@ -804,6 +812,11 @@ async function handle(req, res) {
       () => true,
       () => false,
     )
+    // Seen again now that it is made: its `seenAt` was stamped when this
+    // request began, which a slow copy can leave long past
+    // `--browser-idle`, found idle before the browser's first real page
+    // asks for anything.
+    seenAt.set(fresh, Date.now())
     if (ok) {
       counted(address)
     }

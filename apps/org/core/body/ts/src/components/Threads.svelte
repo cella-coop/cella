@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   import { Button, Field, Form, Hidden, Note } from '@cella/org-ui'
   import { label, threads, type Comment, type Named } from '../models/thread.ts'
   import { useThreads } from '../hooks/useThreads.ts'
@@ -11,9 +12,12 @@
   // their `@[address]`. One who may not discuss the record reads the
   // threads and has no box. Each comment takes reactions where
   // `reactions` says its circle has them on, toggled through `react`.
+  // `readers` is edit-time data: who the mention picker may offer, fetched
+  // in the browser once the box mounts, empty until it arrives, never
+  // awaited with the record at SSR.
   let {
     comments,
-    readers,
+    readers = async () => [],
     discuss,
     post,
     resolve,
@@ -21,7 +25,7 @@
     reactions = false,
   }: {
     comments: Comment[]
-    readers: Named[]
+    readers?: () => Promise<Named[]>
     discuss: boolean
     post: string
     resolve: string
@@ -31,8 +35,14 @@
 
   const box = useThreads(
     () => comments,
-    () => readers,
+    () => readers(),
   )
+  // Only a box that can be written in needs whom to mention.
+  onMount(() => {
+    if (discuss) {
+      box.load()
+    }
+  })
   const shown = $derived(threads(comments))
   const answering = $derived(shown.find((t) => t.root.id === box.reply)?.root ?? null)
   const posted = $derived(box.posted)

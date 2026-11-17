@@ -4,7 +4,7 @@ import { ThreadsState } from './ThreadsState.svelte.ts'
 
 const [get, set, has] = createContext<ThreadsState>()
 
-export function useThreads(comments: () => Comment[], readers: () => Named[]): ThreadsState {
+export function useThreads(comments: () => Comment[], readers: () => Promise<Named[]>): ThreadsState {
   if (has()) {
     return get()
   }

@@ -101,6 +101,11 @@ export interface Viewer {
 // page's slices draw, and who looks.
 export type Block<T = any> = Component<{ data: T; id: string; embeds?: Embeds; viewer?: Viewer | null }>
 
+// The comment box: a block that also reads whom a mention may name, by
+// fetching it once it mounts; edit-time data, never awaited with the
+// item at SSR.
+export type Comment<T = any> = Component<{ data: T; id: string; embeds?: Embeds; viewer?: Viewer | null; readers?: () => Promise<unknown[]> }>
+
 // A block in a tab of the item's page: a bare block sits in the first.
 // An extension's block names a tab its owner's page declares.
 export type Placed<T = any> = Block<T> | { tab: string; block: Block<T> }
@@ -137,7 +142,7 @@ export interface Page<T = any> {
   activity?: (data: T) => Event[]
   // The box that adds a comment, under the Activity, where the kind
   // takes comments.
-  comment?: Block<T>
+  comment?: Comment<T>
   // The page's tabs, the first its default, as pills in the header: at
   // most four, in order, chosen by the slice that owns the collection,
   // its extensions placing their blocks in them. A tab past the first

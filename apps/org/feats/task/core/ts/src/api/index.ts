@@ -5,7 +5,7 @@
 import { action, type Slice } from '@cella/org-db'
 import { complete, create, move, post, react, resolve, save } from '../handlers/index.ts'
 import { circleOf, listing, page, saved, tasks } from '../drivers/task.ts'
-import { mentions } from '../drivers/comment.ts'
+import { mentions, readers } from '../drivers/comment.ts'
 import * as forms from './forms.ts'
 import { contract } from './contract.ts'
 
@@ -21,6 +21,7 @@ export const slice: Slice = {
     tasks: {
       list: listing,
       item: page,
+      readers,
       index: async (db) => (await tasks(db)).map((t) => ({ id: t.id, title: t.title, sub: `${t.id}, ${t.status}` })),
       actions: {
         create: action('task:task:create', (form) => forms.create(form), create),

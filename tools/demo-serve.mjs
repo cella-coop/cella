@@ -1,57 +1,71 @@
 // demo-serve: the demo's front (`cella demo serve`), the one address a
-// host serves for its demo. Each visitor is served a copy of the template
-// of their own: a database made from it by CREATE DATABASE … TEMPLATE, a
-// login role that reaches that database alone, and a server of its own,
-// the built shell, as `cella-server` runs it, on a Unix socket, which the
-// front starts as a child and passes that visitor's requests to, and no
-// one else's.
+// host serves for its demo. Each visitor is served a copy of the template,
+// a room from here on: a database made from it by CREATE DATABASE …
+// TEMPLATE, a login role that reaches that database alone, and a server
+// of its own, the built shell, as `cella-server` runs it, on a Unix
+// socket, which the front starts as a child and passes every browser in
+// the room's requests to, and no other room's.
 //
-// The visitor is known by a cookie holding 32 random bytes and nothing
-// else; the front keeps, in memory alone, which copy it names and when
-// its visitor was last seen. Nothing about a visitor is written down: no
-// address, no name, no log line naming their cookie.
+// A browser is known by a cookie holding 32 random bytes and nothing
+// else; the front keeps, in memory alone, which room it is in and when
+// it was last seen. A room's Share this copy link carries a join code,
+// 16 more random bytes, compared in constant time and never logged: a
+// browser that opens it leaves whatever room it was in and joins this
+// one, a fresh cookie of its own, never the room's or the code. A room
+// holds more than one browser at once; its member leases, one fixture
+// member a browser at a time, are the server behind its socket's
+// (`apps/org/ts/src/lib/server/leases.ts`), told each browser by an id
+// the front derives from its cookie, a one-way hash, never the cookie
+// itself. A browser unseen 15 minutes is forgotten: the room forgets its
+// cookie, and its server's own idle sweep frees the member it leased.
+// Nothing about a visitor is written down: no address, no name, no log
+// line naming their cookie or a join code.
 //
-// A visitor arriving without a copy is shown a page saying their co-op is
+// A visitor arriving without a room is shown a page saying their co-op is
 // being prepared, whose script asks the front to make one (POST
 // /_demo/start), so a crawler that runs no script makes none; once made,
-// the page goes on to it. A copy ends after `--idle` seconds with no
-// request, `--lifetime` seconds after it was made however busy, when its
-// server passes `--memory` MiB, when it stores past twice `--storage`
-// MiB (past `--storage` it takes no more writes), the copy storing most
-// while the disk holds less than `--disk-floor` MiB free, at Reset now
-// (POST /_demo/reset, which makes a fresh one at once), and when a
-// visitor would pass `--cap`: the copy idle longest, if idle
-// `--evict-after` seconds, else the oldest, if older than `--min-age`;
-// else the newcomer is asked to come back. `--cap` unset, the host's
-// memory less `--reserve` over `--footprint` MiB a copy. A write takes
-// no body past `--upload` MiB. An address, an IPv6 one by its /64, holds
-// `--per-address` copies at most and makes `--per-address-rate` in
-// `--rate-window` seconds, the host `--per-minute`, `--concurrent` at
-// once; only a copy made counts. To end a copy is to stop its server,
-// then drop its database and its role. The front starts by ending every
-// copy an earlier run of it left.
+// the page goes on to it. Past `--cap` rooms at once, a newcomer sees a
+// plain, auto-retrying queue page instead. A room ends after `--idle`
+// seconds with no request from any browser in it, `--lifetime` seconds
+// after it was made however busy, when its server passes `--memory` MiB,
+// when it stores past twice `--storage` MiB (past `--storage` it takes no
+// more writes), the room storing most while the disk holds less than
+// `--disk-floor` MiB free, at Reset now (POST /_demo/reset, refused
+// unless its browser is alone in the room, which makes a fresh room at
+// once, its join code with it), and when a visitor would pass `--cap`:
+// the room idle longest, if idle `--evict-after` seconds, else the
+// oldest, if older than `--min-age`; else the newcomer is asked to come
+// back. `--cap` unset, the host's memory less `--reserve` over
+// `--footprint` MiB a room. A write takes no body past `--upload` MiB. An
+// address, an IPv6 one by its /64, holds `--per-address` rooms at most and
+// makes `--per-address-rate` in `--rate-window` seconds, the host
+// `--per-minute`, `--concurrent` at once; only a room made counts, never
+// one joined. To end a room is to stop its server, then drop its database
+// and its role. The front starts by ending every room an earlier run of
+// it left.
 //
 // It talks to Postgres as its own role over the cluster's socket, by the
 // PG* variables (`<database>_front` on `postgres`), a role that may make
 // databases and roles and grant `cella_app`, never be it: so it drops a
-// database only where it owns it, a copy it made, and it checks each
+// database only where it owns it, a room it made, and it checks each
 // name and comment before it does.
 //
 //   node tools/demo-serve.mjs --template NAME --server DIR [--port 3000]
 //     [--host 127.0.0.1] [--prefix NAME_v] [--sockets DIR] [--cap N]
 //     [--reserve 1536] [--footprint 160] [--idle 7200] [--lifetime 7200]
-//     [--evict-after 300] [--min-age 600] [--memory 192]
+//     [--evict-after 300] [--min-age 600] [--browser-idle 900] [--memory 192]
 //     [--connections 10] [--upload 2] [--storage 64] [--disk /var/lib]
 //     [--disk-floor 1024] [--per-address CAP-4] [--per-address-rate 30]
 //     [--rate-window 600] [--per-minute 60] [--concurrent 4] [--tick 30]
 //     [--trust-proxy]
 
 import { spawn } from 'node:child_process'
-import { randomBytes, timingSafeEqual } from 'node:crypto'
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import { mkdirSync, readFileSync, rmSync, statfsSync } from 'node:fs'
 import http from 'node:http'
 import { join } from 'node:path'
 import pg from 'pg'
+import { alone, joinCode, sameCode } from './demo-rooms.mjs'
 
 const args = process.argv.slice(2)
 const flag = (name, fallback) => {
@@ -95,6 +109,9 @@ const config = {
   lifetime: whole('--lifetime', 7200),
   evictAfter: whole('--evict-after', 300),
   minAge: whole('--min-age', 600),
+  // Fifteen minutes, as `leases.ts` defaults to on the server behind a
+  // room's socket, which `--browser-idle` and this must agree with.
+  browserIdle: whole('--browser-idle', 900),
   memory: whole('--memory', 192),
   connections: whole('--connections', 10),
   upload: whole('--upload', 2),
@@ -245,9 +262,31 @@ async function sweep() {
 
 // --- copies and their servers ------------------------------------------
 
-// The copies, by their visitor's cookie.
+// The rooms, by every browser's cookie that is in one; two or more
+// cookies may name the same room, a shared reference, where one browser
+// joined another's. `seenAt`, that cookie's own last request, apart from
+// `copy.seen`, the room's: a browser unseen `--browser-idle` seconds is
+// forgotten here, its room untouched.
 const copies = new Map()
+const seenAt = new Map()
 let preparing = 0
+
+// A room's browsers, by their cookie, each with when it was last seen:
+// what `alone` and the tick that forgets an idle one read.
+function browsersOf(room) {
+  const browsers = new Map()
+  for (const [cookie, r] of copies) {
+    if (r === room) {
+      browsers.set(cookie, seenAt.get(cookie) ?? 0)
+    }
+  }
+  return browsers
+}
+
+// The rooms held now, each once however many browsers are in it.
+function rooms() {
+  return new Set(copies.values())
+}
 
 function socketOf(name) {
   return join(config.sockets, `${name}.sock`)
@@ -256,9 +295,12 @@ function socketOf(name) {
 async function start(cookie, address) {
   const begun = Date.now()
   // `size`: the bytes its visitor stored, past the template's; `full` once
-  // past `--storage`, when it takes no more writes.
-  const copy = { name: null, child: null, seen: begun, made: begun, ends: begun + config.lifetime * 1000, ready: null, ended: false, cookie, address, size: 0, full: false, measured: 0, measuring: null, landed: [], flying: 0, uploads: 0, queue: [] }
+  // past `--storage`, when it takes no more writes; `join`, this room's
+  // link's code, made afresh here so a reset or a recycled room never
+  // keeps the one it had.
+  const copy = { name: null, child: null, seen: begun, made: begun, ends: begun + config.lifetime * 1000, ready: null, ended: false, cookie, address, size: 0, full: false, measured: 0, measuring: null, landed: [], flying: 0, uploads: 0, queue: [], join: joinCode() }
   copies.set(cookie, copy)
+  seenAt.set(cookie, begun)
   preparing++
   copy.ready = (async () => {
     try {
@@ -281,6 +323,8 @@ async function start(cookie, address) {
           CELLA_DEMO: '1',
           CELLA_DEMO_IDLE: String(config.idle),
           CELLA_DEMO_ENDS: String(Math.floor(copy.ends / 1000)),
+          CELLA_DEMO_JOIN: copy.join,
+          CELLA_DEMO_BROWSER_IDLE: String(config.browserIdle),
           PROTOCOL_HEADER: 'x-forwarded-proto',
           BODY_SIZE_LIMIT: `${config.upload}M`,
           NODE_OPTIONS: `--max-old-space-size=${Math.max(64, Math.floor(config.memory * 0.6))}`,
@@ -336,16 +380,21 @@ async function answers(socket, copy) {
   throw new Error('its server did not answer in 60 s')
 }
 
-// A copy ended: forgotten by its cookie at once, its server stopped, its
-// database and role dropped. Ending it again does nothing.
+// A copy ended: forgotten by every browser's cookie that was in its room
+// at once, so its join code, kept nowhere but on the room itself, goes
+// with it; its server stopped, its database and role dropped. Ending it
+// again does nothing.
 const ending = new Set()
 function end(copy, why) {
   if (copy.ended) {
     return copy.gone
   }
   copy.ended = true
-  if (copies.get(copy.cookie) === copy) {
-    copies.delete(copy.cookie)
+  for (const [cookie, room] of [...copies]) {
+    if (room === copy) {
+      copies.delete(cookie)
+      seenAt.delete(cookie)
+    }
   }
   ending.add(copy)
   copy.gone = (async () => {
@@ -444,13 +493,21 @@ function rss(child) {
 }
 setInterval(() => {
   const now = Date.now()
-  for (const copy of [...copies.values()]) {
+  for (const copy of rooms()) {
     if (now - copy.seen > config.idle * 1000) {
       end(copy, `idle ${Math.round((now - copy.seen) / 1000)} s`)
     } else if (now > copy.ends) {
       end(copy, `its lifetime of ${config.lifetime} s`)
     } else if (copy.child && rss(copy.child) > config.memory) {
       end(copy, `its server passed ${config.memory} MiB`)
+    }
+  }
+  // A browser unseen 15 minutes is forgotten: its room keeps going, for
+  // another browser or a fresh join, but this one reaches it no more.
+  for (const [cookie, room] of [...copies]) {
+    if (!room.ended && now - (seenAt.get(cookie) ?? now) > config.browserIdle * 1000) {
+      copies.delete(cookie)
+      seenAt.delete(cookie)
     }
   }
 }, config.tick * 1000).unref()
@@ -461,14 +518,14 @@ setInterval(async () => {
   }
   watching = true
   try {
-    await measure([...copies.values()])
+    await measure([...rooms()])
   } catch (e) {
     log(`the copies could not be measured: ${e.message}`)
   }
   try {
     let short = config.diskFloor - freeDisk()
     if (short > 0) {
-      for (const copy of [...copies.values()].filter((c) => c.name).sort((a, b) => b.size - a.size)) {
+      for (const copy of [...rooms()].filter((c) => c.name).sort((a, b) => b.size - a.size)) {
         if (short <= 0) {
           break
         }
@@ -525,7 +582,7 @@ function prune(now) {
 // and the disk.
 function refusal(address, resetting) {
   prune(Date.now())
-  const held = [...copies.values()].filter((c) => c.address === address && c !== resetting).length
+  const held = [...rooms()].filter((c) => c.address === address && c !== resetting).length
   if (preparing >= config.concurrent) {
     return [503, 'Several copies are being prepared; yours is next in a moment.']
   }
@@ -549,11 +606,11 @@ function counted(address) {
 // ended, if idle `--evict-after` seconds, or else the oldest, if older
 // than `--min-age`; else none.
 async function room() {
-  if (copies.size + ending.size < config.cap) {
+  if (rooms().size + ending.size < config.cap) {
     return true
   }
   const now = Date.now()
-  const all = [...copies.values()]
+  const all = [...rooms()]
   const idlest = all.filter((c) => now - c.seen >= config.evictAfter * 1000).sort((a, b) => a.seen - b.seen)[0]
   const oldest = all.filter((c) => now - c.made >= config.minAge * 1000).sort((a, b) => a.made - b.made)[0]
   const out = idlest ?? oldest
@@ -561,7 +618,7 @@ async function room() {
     return false
   }
   await end(out, idlest ? 'the idlest, at the cap' : 'the oldest, at the cap')
-  return copies.size + ending.size < config.cap
+  return rooms().size + ending.size < config.cap
 }
 
 // --- the visitor's cookie ----------------------------------------------
@@ -638,12 +695,17 @@ ${lines.map((l) => `<p>${l}</p>`).join('\n')}
   res.end(body)
 }
 
-function prepare(res, again) {
+// A visitor with no room, shown while the front makes one, polling
+// `/_demo/start`: `queued`, every room full already, says so plainly
+// instead, the same script retrying it until one frees up.
+function prepare(res, { again = false, queued = false } = {}) {
   page(res, 200, {
-    title: 'Preparing your co-op',
+    title: queued ? 'Waiting for a free copy' : 'Preparing your co-op',
     lines: [
       ...(again ? ['Your earlier copy was reset.'] : []),
-      'Your copy of Lanterne, a mock co-op, is being prepared: it is yours alone, nobody else sees what you do in it, and nobody signs up.',
+      queued
+        ? 'Every copy of Lanterne, a mock co-op, is in use right now. This page asks again every few seconds and goes on as soon as one frees up.'
+        : 'Your copy of Lanterne, a mock co-op, is being prepared: it is yours to share, nobody outside it sees what you do, and nobody signs up.',
       `It resets after ${hours()} with no visit.`,
       '<noscript>Preparing it needs JavaScript.</noscript><span id="state"></span>',
     ],
@@ -672,13 +734,37 @@ function plain(res, status, text, headers = {}) {
 async function handle(req, res) {
   const path = (req.url ?? '/').split('?')[0]
   const cookie = cookieOf(req)
+  // A browser found idle past `--browser-idle` is forgotten here, at
+  // once, not only once the tick next sweeps it, so it reaches its old
+  // room no more from the moment it is found idle, whichever asks first.
+  if (cookie && Date.now() - (seenAt.get(cookie) ?? 0) > config.browserIdle * 1000) {
+    copies.delete(cookie)
+    seenAt.delete(cookie)
+  }
   const copy = copyOf(cookie)
 
   if (path === '/robots.txt') {
     return plain(res, 200, 'User-agent: *\nDisallow: /\n')
   }
   if (path === '/_demo/health') {
-    return plain(res, 200, `${copies.size} of ${config.cap}\n`)
+    return plain(res, 200, `${rooms().size} of ${config.cap}\n`)
+  }
+  if (path === '/_demo/join') {
+    req.resume()
+    if (req.method !== 'GET') {
+      return plain(res, 405, 'A room’s link is opened, not posted to.')
+    }
+    // The code, compared in constant time against every room's, as a
+    // cookie is; never logged, by this request's path or any other.
+    const code = new URL(req.url ?? '/', 'http://_').searchParams.get('code') ?? ''
+    const target = [...rooms()].find((c) => !c.ended && sameCode(c.join, code))
+    if (!target) {
+      return plain(res, 404, 'This room’s link is no longer good; it may have reset.')
+    }
+    const fresh = randomBytes(32).toString('base64url')
+    copies.set(fresh, target)
+    seenAt.set(fresh, Date.now())
+    return plain(res, 303, 'Joined.', { 'set-cookie': setCookie(fresh), location: '/' })
   }
   if (path === '/_demo/start' || path === '/_demo/reset') {
     req.resume()
@@ -691,6 +777,9 @@ async function handle(req, res) {
       }
       if (Date.now() - copy.made < 20_000) {
         return plain(res, 303, 'Your copy is fresh already.', { location: '/' })
+      }
+      if (!alone(browsersOf(copy), cookie, Date.now(), config.browserIdle * 1000)) {
+        return plain(res, 409, 'Reset now works only while you are alone in this room; another browser is still in it.')
       }
     } else if (copy) {
       await copy.ready.catch(() => {})
@@ -728,17 +817,18 @@ async function handle(req, res) {
   if (!copy) {
     req.resume()
     if (req.method === 'GET' || req.method === 'HEAD') {
-      return prepare(res, !!cookie)
+      return prepare(res, { again: !!cookie, queued: rooms().size >= config.cap })
     }
     return plain(res, 409, 'Your copy was reset; reload the page.')
   }
 
   copy.seen = Date.now()
+  seenAt.set(cookie, copy.seen)
   try {
     await copy.ready
   } catch {
     req.resume()
-    return prepare(res, true)
+    return prepare(res, { again: true })
   }
   // A write: no body past `--upload` MiB, nor of no stated length, and
   // none past what the copy may yet store of `--storage` MiB, by a reading
@@ -810,6 +900,10 @@ async function handle(req, res) {
     delete headers.cookie
   }
   delete headers['x-forwarded-for']
+  // Which browser this is, to the room's server alone: a one-way hash of
+  // its cookie, which member leases are bound to
+  // (`apps/org/ts/src/lib/server/leases.ts`), never the cookie itself.
+  headers['x-cella-browser'] = createHash('sha256').update(cookie).digest('hex')
   const upstream = http.request({ socketPath: socketOf(copy.name), path: req.url, method: req.method, headers }, (up) => {
     res.writeHead(up.statusCode ?? 502, up.headers)
     up.pipe(res)
@@ -860,7 +954,7 @@ front.listen(config.port, config.host, () => {
 
 async function stop() {
   front.close()
-  await Promise.all([...copies.values()].map((c) => end(c, 'the front stopped')))
+  await Promise.all([...rooms()].map((c) => end(c, 'the front stopped')))
   await Promise.all([...ending].map((c) => c.gone))
   process.exit(0)
 }

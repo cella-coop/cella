@@ -401,6 +401,26 @@ copy, and the front passes each of their requests to that copy's server
 and to no other, the cookie itself stripped from what the server is
 handed.
 
+A copy is a room: more than one browser's cookie may name it, where one
+joined another's. Its banner offers Share this copy, a link carrying a
+join code the front makes afresh for the room, 16 random bytes compared
+in constant time and never logged (`/_demo/join?code=…`); a browser that
+opens it leaves whatever room it was in and gets a fresh cookie of its
+own in this one. The front hands the room's server each browser's id, a
+one-way hash of its cookie, never the cookie itself
+(`x-cella-browser`), which its member leases are bound to: a fixture
+member is one browser's at a time there
+(`apps/org/ts/src/lib/server/leases.ts`), a second browser refused it
+until the first signs out or goes 15 minutes unseen, when the lease is
+freed and the front itself forgets that browser's cookie, though the
+room goes on for the rest. Reset now is refused unless its browser is
+alone in the room; a reset or a room recycled at the cap makes a fresh
+one, its join code with it, so the old link names nothing from then on.
+Past the cap, a newcomer with no room of their own sees a plain page
+saying so, asking again every few seconds, in place of the one saying
+its copy is being prepared; neither counts against the rate limits a
+copy made does, and joining never does either.
+
 The front is a single process, not a unit per visitor: one unit's
 limits hold every copy, and the front needs no right to start units.
 Each copy is still a process of its own, so what one visitor's server

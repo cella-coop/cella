@@ -201,8 +201,8 @@ in
             };
             idle = mkOption {
               type = types.ints.positive;
-              default = 7200;
-              description = "Seconds with no request before a visitor's copy ends: its server stopped, its database and role dropped.";
+              default = 900;
+              description = "Seconds with no request from any browser in a visitor's room before it ends: its server stopped, its database and role dropped. A browser itself, idle this long, is forgotten by its room apart, its member lease freed.";
             };
             lifetime = mkOption {
               type = types.ints.positive;
@@ -218,6 +218,11 @@ in
               type = types.ints.positive;
               default = 600;
               description = "Seconds old a copy is before a newcomer at the cap may end it, the oldest, where none is idle `evictAfter`; while none is, the newcomer is asked to come back.";
+            };
+            browserIdle = mkOption {
+              type = types.ints.positive;
+              default = 900;
+              description = "Seconds a browser in a room may go unseen before the front forgets it and the room's own server frees the fixture member it leased, Reset now asking it be alone first.";
             };
             memory = mkOption {
               type = types.ints.positive;
@@ -539,6 +544,7 @@ in
               inherit (s.demo) reserve footprint idle lifetime memory connections upload storage concurrent;
               evict-after = s.demo.evictAfter;
               min-age = s.demo.minAge;
+              browser-idle = s.demo.browserIdle;
               disk-floor = s.demo.diskFloor;
               per-address-rate = s.demo.perAddressRate;
               per-minute = s.demo.perMinute;

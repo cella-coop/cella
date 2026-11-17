@@ -700,6 +700,11 @@
     min-height: 0;
     padding: var(--space-3) var(--space-3) var(--space-1);
   }
+  /* The first group has nothing above it but the filter bar, which keeps
+     its own gap: no room of its own above it. */
+  .list li.group:first-child {
+    padding-top: 0;
+  }
   /* Grouped, the rows sit inset from their group's bar at both ends, so
      each reads as held by the header above it. */
   .list.nested li:not(.group) {

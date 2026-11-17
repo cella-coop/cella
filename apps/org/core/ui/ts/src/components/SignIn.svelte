@@ -11,11 +11,17 @@
   // a demo's room, one member is one browser's at a time: a member
   // another browser there leased reads `taken`, drawn disabled and
   // greyed, so this browser cannot sign in as them until they are freed.
-  // A demo leads with this list; a browser holding no device of its own
-  // reads why and what to do about it below it, collapsed, since the
-  // members above are almost always what it came for. Each row reads the
-  // same way: the person's name, then the circles they sit in, the
-  // assembly left out since every member is in it; never their device.
+  // A demo's fixture keys are derived from the address alone, so a member
+  // this browser has already signed in as is both a kept device and a
+  // fixture row: rather than show it twice, as its own unlabelled group
+  // on top, it floats to the top of the one list with a quiet "recent"
+  // mark. Outside a demo, the kept devices stay their own group, under a
+  // small "On this browser" heading. A browser holding no device of its
+  // own reads why and what to do about it below the list, collapsed,
+  // since the members above are almost always what it came for. Each row
+  // reads the same way: the person's name on the left, the circles they
+  // sit in as chips on the right, the assembly left out since every
+  // member is in it; never their device.
   let {
     scope,
     back,
@@ -32,16 +38,23 @@
     () => scope,
     () => back,
   )
+
+  // In a demo, a fixture address this browser already keeps a device
+  // for; those rows float to the top of the one list, each marked.
+  const recent = $derived(new Set(state.devices.map((d) => d.address)))
+  const ordered = $derived(demo ? [...fixtures].sort((a, b) => Number(recent.has(b.address)) - Number(recent.has(a.address))) : fixtures)
 </script>
 
 <h1 class="title">Sign in</h1>
 
-{#if state.devices.length}
+{#if !demo && state.devices.length}
+  <p class="label">On this browser</p>
   <div class="list">
     {#each state.devices as d (d.key)}
-      <Button busy={state.busy} onclick={() => state.as(d)}
-        >{d.name ?? d.address}{#each d.circles ?? [] as c (c)} <Badge>{c}</Badge>{/each}</Button
-      >
+      <Button busy={state.busy} onclick={() => state.as(d)}>
+        <span class="name">{d.name ?? d.address}</span>
+        <span class="chips">{#each d.circles ?? [] as c (c)} <Badge>{c}</Badge>{/each}</span>
+      </Button>
     {/each}
   </div>
 {/if}
@@ -53,14 +66,16 @@
     device's label, which anyone can do.
   </p>
   <div class="list">
-    {#each fixtures as f (f.address)}
+    {#each ordered as f (f.address)}
       <Button
         title={f.taken ? `${f.address}: signed in on another browser already` : f.address}
         busy={state.busy}
         disabled={f.taken}
         onclick={() => state.fixture(f.address, f.label)}
-        >{f.name}{#each f.circles as c (c)} <Badge>{c}</Badge>{/each}{#if f.taken} <span class="taken">taken</span>{/if}</Button
       >
+        <span class="name">{f.name}{#if recent.has(f.address)} <span class="recent">recent</span>{/if}</span>
+        <span class="chips">{#each f.circles as c (c)} <Badge>{c}</Badge>{/each}{#if f.taken} <span class="taken">taken</span>{/if}</span>
+      </Button>
     {/each}
   </div>
 {:else if fixtures.length}
@@ -68,9 +83,10 @@
   <p class="hint">Their keys are derived from their address and their device's label, which anyone can do.</p>
   <div class="list">
     {#each fixtures as f (f.address)}
-      <Button title={f.address} busy={state.busy} onclick={() => state.fixture(f.address, f.label)}
-        >{f.name}{#each f.circles as c (c)} <Badge>{c}</Badge>{/each}</Button
-      >
+      <Button title={f.address} busy={state.busy} onclick={() => state.fixture(f.address, f.label)}>
+        <span class="name">{f.name}</span>
+        <span class="chips">{#each f.circles as c (c)} <Badge>{c}</Badge>{/each}</span>
+      </Button>
     {/each}
   </div>
 {/if}
@@ -121,17 +137,35 @@
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-2);
   }
-  /* A row's name, circles and badge can run long together; let it wrap
-     onto a second line rather than push the card wider than the panel
+  /* A row's name on the left, its circles as chips on the right; a long
+     name wraps rather than push the card wider than the panel
      (`Button`'s own rows stay single-line elsewhere, so overridden here
-     alone). */
+     alone), and the chips wrap among themselves, confined to the row's
+     right side, never under the name. */
   .list :global(.button) {
     height: auto;
     min-height: var(--row);
     white-space: normal;
-    flex-wrap: wrap;
-    justify-content: flex-start;
+    justify-content: space-between;
     text-align: start;
+  }
+  .name {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .chips {
+    display: flex;
+    flex: 0 1 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-1);
+    max-width: 60%;
+  }
+  .recent {
+    margin-inline-start: var(--space-1);
+    color: var(--text-subtle);
+    font-size: var(--text-2xs);
+    font-weight: 400;
   }
   .label {
     margin: 0;

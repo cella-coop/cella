@@ -25,9 +25,10 @@
   // from, copied to the clipboard, or opened as the join page itself
   // where a browser holds none. The page using it pads its own foot by
   // `--demo-banner-h`, which this sets as it mounts, so the strip hides
-  // nothing; dismissed, it is 0, and the strip is a small watermark
-  // instead, which brings it back (`DismissState`). The idle warning
-  // brings the strip back on its own.
+  // nothing; dismissed, the strip is gone and a small watermark takes
+  // its corner instead, which brings it back (`DismissState`); the page
+  // pads by `--demo-watermark-h` instead, set the same way. The idle
+  // warning brings the strip back on its own.
   let { copy = 0, ends = 0, join = '' }: { copy?: number; ends?: number; join?: string } = $props()
 
   const id = $props.id()
@@ -63,6 +64,22 @@
     return () => {
       ro.disconnect()
       root.style.removeProperty('--demo-banner-h')
+    }
+  }
+
+  // The watermark the strip is dismissed to sits in its own corner, not
+  // flush with the viewport's foot, so its reach from the foot is its
+  // distance from the viewport's bottom, not its own height alone.
+  function reserveWatermark(node: HTMLElement) {
+    const root = node.ownerDocument.documentElement
+    const view = node.ownerDocument.defaultView ?? window
+    const set = () => root.style.setProperty('--demo-watermark-h', `${view.innerHeight - node.getBoundingClientRect().top}px`)
+    set()
+    const ro = new ResizeObserver(set)
+    ro.observe(node)
+    return () => {
+      ro.disconnect()
+      root.style.removeProperty('--demo-watermark-h')
     }
   }
 </script>
@@ -107,7 +124,7 @@
     </span>
   </div>
 {:else}
-  <p class="watermark">
+  <p class="watermark" {@attach reserveWatermark}>
     <Icon icon={TestTube} size="1rem" />
     <span>Prototype</span>
     {#if countdown.active}

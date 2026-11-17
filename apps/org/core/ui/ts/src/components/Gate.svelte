@@ -8,7 +8,8 @@
   // What a person reaches before signing in, alone on the page: the
   // co-op's mark and name above one panel, the sign-in or an invitation;
   // in a demo build, the demo's banner, one fixed strip at the viewport's
-  // foot, which pads the page by its own height so it hides nothing.
+  // foot, which pads the page by its own height so it hides nothing, or,
+  // dismissed, by its watermark's reach from the foot instead.
   let {
     scope,
     demo = false,
@@ -44,7 +45,7 @@
     place-items: center;
     min-height: 100dvh;
     padding: var(--space-4);
-    padding-bottom: calc(var(--space-4) + var(--demo-banner-h, 0px));
+    padding-bottom: calc(var(--space-4) + var(--demo-banner-h, 0px) + var(--demo-watermark-h, 0px));
   }
   .panel {
     display: grid;

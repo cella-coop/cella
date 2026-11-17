@@ -422,8 +422,7 @@ function end(copy, why) {
     }
   }
   ending.add(copy)
-  copy.gone = (async () => {
-    const child = copy.child
+  const stop = async (child) => {
     if (child && child.exitCode === null && child.signalCode === null) {
       const exited = new Promise((r) => child.once('exit', r))
       child.kill('SIGTERM')
@@ -431,19 +430,25 @@ function end(copy, why) {
       await exited
       clearTimeout(late)
     }
+  }
+  copy.gone = (async () => {
+    await stop(copy.child)
+    // A copy ended while it was still being made learns its name, and
+    // perhaps its server, only once its making settles, which, ended, it
+    // soon does; so wait for that before dropping what it made.
+    await copy.ready?.catch(() => {})
+    await stop(copy.child)
     if (copy.name) {
       rmSync(socketOf(copy.name), { force: true })
-      // A copy made but failing at once may still be making its database.
-      await copy.ready?.catch(() => {})
       await admin((db) => drop(db, copy.name))
       log(`${copy.name} ended: ${why}`)
     }
+    // Only a copy whose database is gone leaves the registry: one that
+    // failed to end keeps counting against the caps, never forgotten.
+    unregister(registry, copy.id)
   })()
-    .catch((e) => log(`${copy.name} did not end cleanly: ${e.message}`))
-    .finally(() => {
-      ending.delete(copy)
-      unregister(registry, copy.id)
-    })
+    .catch((e) => log(`${copy.name} did not end cleanly, still counted: ${e.message}`))
+    .finally(() => ending.delete(copy))
   return copy.gone
 }
 
@@ -703,7 +708,7 @@ const withoutOurs = (header) =>
 // believed in its place.
 function schemeOf(req) {
   const proto = config.trustProxy ? req.headers['x-forwarded-proto'] : undefined
-  return typeof proto === 'string' && proto ? proto : 'http'
+  return proto === 'https' || proto === 'http' ? proto : 'http'
 }
 
 // A POST from this host's own pages, as a browser says it: its Origin is
@@ -807,7 +812,7 @@ function joinPage(res) {
     lines: ['Opening the room this link shares…', '<noscript>Joining a room needs JavaScript.</noscript><span id="state"></span>'],
     headers: {
       'referrer-policy': 'no-referrer',
-      'content-security-policy': `default-src 'none'; script-src 'sha256-${hash}'; frame-ancestors 'none'`,
+      'content-security-policy': `default-src 'none'; script-src 'sha256-${hash}'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'`,
     },
     script: `<script>${script}</script>`,
   })

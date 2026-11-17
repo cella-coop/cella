@@ -647,11 +647,9 @@ draws.
   where it does not), `Ordered` (a list a slice's writes reorder, as an
   agenda: each row numbered, with its grip and its columns, what the
   slice puts at its end and a quiet removal when the slice offers one;
-  `fixed` drops both once the list may not change), `Prose`, `Note` (a quiet line), `Message` (one message of a thread:
-  who and when over what it says, set in by its depth as a reply, its
-  writes at its foot), `Reactions` (a message's reactions, a line at its
-  foot: each emoji with its count, each a write toggling the reader's
-  own, theirs filled, or read alone where the reader may not react),
+  `fixed` drops both once the list may not change), `Prose`, `Note` (a quiet line), the comment parts
+  ([comments](#comments)): `Conversation`, `Message`, `Reactions`,
+  `AddReaction`, `Remark`, `Rich` and `RichField`,
   `Mention` (a member or a document named inside a
   text, a quiet chip linking to it), `Icon`
   (Phosphor, duotone), `Outcome` (the last write's outcome, floating
@@ -732,6 +730,50 @@ than its text, and is hidden from assistive technology, since the text
 names the record. A collection that declares no icon, or that the shell
 does not mount, leaves the value bare; an enumeration, as a task's
 priority, names no record and wears none.
+
+### Comments
+
+Every comment is drawn by the same parts, as Linear draws them: a
+record's threads (core body's `Thread`), a motion's discussion and a
+document's comments alike, under the record's Activity.
+
+- `Conversation` is a thread: one quiet card, the board's tile's
+  hairline, its messages apart by space, replies set in under their
+  root, and at its foot the box that replies. A resolved thread folds to
+  one quiet line (`Resolved on` its day), which opens it.
+- `Message` is one comment: a small avatar, the author's name and a
+  quiet relative time on one line, the text under them at body size, and
+  under that its `foot`, as its reactions. Its `actions`, small icon
+  buttons (`Button`'s `icon`: Reply, Resolve, a smiley), sit at its top
+  right, shown on hover or focus, always where there is no hover.
+- `Reactions` draws a message's reactions only once one is given: a
+  small pill chip each, its emoji and count, the reader's own tinted
+  with `--accent-soft`, a click toggling theirs. `AddReaction` is the
+  smiley that opens the six in one tight row (`Popover`'s `icon`).
+- `Rich` draws a comment's text from its Markdown subset
+  (`models/rich.ts`): bold `**x**`, italic `*x*`, inline code, links
+  `[x](url)` to the web, mail or a path in the app, bullet and numbered
+  lists and quotes; a line break is a break and a blank line a
+  paragraph, so a plain comment reads as it was written. It is parsed
+  into nodes and drawn by them, never as HTML; a slice's `words` draws
+  each run of plain text, splitting out its mentions and links.
+- `RichField` writes it: a field with a faint edge, `rows` lines at
+  rest (two for a new comment, one for a reply, "Leave a reply…"),
+  growing as it is written, set as a document's text with no grip or
+  slash menu, and no label of its own (`label` names it to assistive
+  technology). A toolbar over a selection marks it bold, italic or
+  code, links it or makes it a list, as Ctrl or Cmd with B, I, E and K
+  do; `- `, `1. `, `> `, `**x**`, `*x*` and `` `x` `` typed become what
+  they say; Enter breaks the line. Its submit is a small round arrow
+  inside its bottom right, bright once there is text and dim before,
+  or Ctrl or Cmd with Enter, in a `Form` drawn `bare`. Where the slice
+  answers `suggest`, `@` or `[[` offers suggestions, picked by arrow and
+  Enter or a press, each put in as a chip that posts its token. It is
+  the browser's own editable text, read back as Markdown on each
+  change (`hooks/RichState.svelte.ts`), so the browser keeps the caret,
+  composition, undo and the clipboard; a paste is read as Markdown. Its
+  `head` sits inside its top: `Remark`, the quote a comment answers,
+  with a × that drops it, or read above a posted comment.
 
 ### Widgets
 

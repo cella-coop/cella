@@ -636,10 +636,15 @@ decided (whom it admits, the version it adopts, the outcome), what
 its actions change, each as its diff, and under
 them its Activity, the stances given in time order, their one home;
 Stances, the roll and the acting member's stance; Discussion, its
-deliberation, each message under the one it answers, a mention drawn by
+deliberation, drawn as every comment is
+([comments](../../core/ui/index.md#comments)): each conversation, a
+message that answers none with every reply under it, one card, each
+message in its rich text under the one it answers, a mention drawn by
 `membership-motion`'s `member` embed and a link by `document-motion`'s
-`document` embed, and while it is open a message as the acting member,
-or a reply to the one chosen; and Effects, what its actions do to the
+`document` embed; while it is open, a message's Reply, at its top right
+on hover, goes to the box at its card's foot, which answers the card's
+first message or the one Reply chose, said inside its top, and the box
+under the cards posts a message as the acting member; and Effects, what its actions do to the
 mandates and, once closed, the effects its close carried, or that it
 carries them at its close. Its diffs fill one slot by the kind of action:
 the graft that carries a kind out shows each change it makes as the UI

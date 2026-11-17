@@ -257,17 +257,24 @@ nothing of where the bytes are kept.
 A record's comments are its feat's own: each feat that has them keeps
 a comment table in its schema, with a foreign key to its record and the
 author's to `person.person`, and its own post and resolve actions and
-folds. What every feat shares is drawn here: `Thread`, a root comment
-with its flat replies under it, one level as in Linear, and its resolve
-on the root; under each comment its reactions, a fixed set of six,
-👍 ❤️ 😄 🎉 👀 🙏, each with its count and toggled by a click, shown
-where the record's circle has `reactions` on, the default
-([settings](../circle/index.md#settings)); the box that posts one; and the mention picker, which
-offers the people who may read the record and inserts a mention, a
+folds. What every feat shares is drawn here, in the UI core's comment
+parts ([comments](../ui/index.md#comments)): `Thread`, a root comment
+with its flat replies under it, one level as in Linear, in one quiet
+card, each comment in its rich text, and at the card's foot the box
+that replies; at a comment's top right, on hover, a smiley that adds a
+reaction, and on the root Reply, which goes to that box, and Resolve,
+which folds the thread to one line, `Resolved on` its day, opened to
+read and reopened there. Reactions are a fixed set of six, 👍 ❤️ 😄 🎉
+👀 🙏, drawn only once given, a chip each under the comment's text with
+its count, the reader's own tinted and toggled by a click, where the
+record's circle has `reactions` on, the default
+([settings](../circle/index.md#settings)). Under the threads, the box
+that starts one; in every box the mention picker, which offers the
+people who may read the record and puts in a mention as a chip, a
 reference to a core person by address, `@[address]` in the comment's
 text and a row of the feat's mention table, that the thread draws by
-their current name, an erased person's as erased. A thread's events sit in
-the record's Activity with the log's, and a mention is a row of the
+their current name, an erased person's as erased. A thread's events sit
+in the record's Activity with the log's, and a mention is a row of the
 person's Inbox: no page gathers every comment.
 
 A feat gains a body or threads by `cella scaffold body|comments <feat>`
@@ -313,6 +320,6 @@ are their feats' own, and not held.
   editing one task's body in two tabs, each browser's saves signed and
   naming both, and a reload opening on the save.
 - The threads' slice tests (`_tests/thread.test.ts`): a text's parts and
-  its mentions, each once in the order given; a box's typed `@name`
-  turned into `@[address]` for the people picked alone; and a record's
-  comments grouped into threads, each root with its replies in order.
+  its mentions, each once in the order given; a mention's label; and a
+  record's comments grouped into threads, each root with its replies in
+  order.

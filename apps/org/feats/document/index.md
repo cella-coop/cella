@@ -322,17 +322,20 @@ saying what it saves, the draft as the version it will number, and
 whether that is unchanged or changed since the latest one; it ends in
 Save version and Cancel, posting `version` and closing on a settled
 write, a refusal staying inside with its reason, and Cancel, Escape or
-a click outside it saves nothing. The comment box is always under its
-Activity, a text area and a Comment button at its end, and comments on
-the latest saved version as a whole. Text selected inside one block of
-the draft floats a Comment button at the selection's end, which attaches
-the selection to the box as its quote, shown read-only above the text
-area with the version it is on as a quiet line and a small × that drops
-it, as Escape in the box does, and puts the focus in the comment's text;
-another selection attached replaces it. A document with no version takes
-no comment. The box posts `comment`, each comment in the Activity with
-what it quotes, if anything, and a posted comment's quote is highlighted
-in the draft as the page refreshes. Its
+a click outside it saves nothing. Its comments are drawn as every
+comment is ([comments](../../core/ui/index.md#comments)), under its
+Activity, oldest first: each a card, in its rich text, under the
+version it is on and what it quotes, if anything, a resolved one folded
+to a line. Under them the comment box is always there, written rich,
+and comments on the latest saved version as a whole. Text selected
+inside one block of the draft floats a Comment button at the
+selection's end, which attaches the selection to the box as its quote,
+shown read-only inside the box's top with the version it is on as a
+quiet line and a small × that drops it, as Escape in the box does, and
+puts the focus in the comment's text; another selection attached
+replaces it. A document with no version takes no comment. The box posts
+`comment`, by its arrow or Ctrl or Cmd with Enter, and a posted
+comment's quote is highlighted in the draft as the page refreshes. Its
 saved versions, the data central to it, are the Versions tab after the
 draft. The server renders the draft read-only; the editor takes it
 over once the browser holds the Loro document. A generated document's

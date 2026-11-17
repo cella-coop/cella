@@ -87,25 +87,6 @@ export function label(named: Named | undefined, person: string): string {
   return named?.name ?? person
 }
 
-// A comment as its box posts it: what was typed, each `@name` of a person
-// picked from the mention picker turned into their `@[address]`, the
-// longest name first so one never takes another's start; a name typed by
-// hand that no one picked stays text.
-export function composed(typed: string, picked: Named[]): { text: string; mentions: string[] } {
-  let text = typed
-  for (const p of [...picked].filter((p) => p.name).sort((a, b) => (b.name ?? '').length - (a.name ?? '').length)) {
-    text = text.split(`@${p.name}`).join(`@[${p.person}]`)
-  }
-  return { text, mentions: mentioned(text) }
-}
-
-// The `@` being typed at the end of a box's text, which the picker
-// answers: the words after it, or none where no `@` is being typed.
-export function asking(typed: string): string | null {
-  const m = /(?:^|\s)@([^\s@[\]]*(?: [^\s@[\]]*)?)$/.exec(typed)
-  return m ? m[1] : null
-}
-
 // A record's comments as threads, oldest root first, each with its
 // replies oldest first; a reply whose root is not there is dropped.
 export function threads(comments: Comment[]): Thread[] {

@@ -150,18 +150,25 @@ eachBrowser((name, launch) => {
 
       // Léa gives 👍, takes it back and gives it again.
       const a = await task()
+      // None is drawn until one is given; the smiley at the comment's top
+      // right offers the six, and a chip given toggles the reader's own.
       const thumb = (page: Page) => page.locator(`[data-comment="${comment}"] [data-reaction="👍"]`)
-      assert.equal(await a.locator(`[data-comment="${comment}"] [data-reaction]`).count(), 6, `${name}: the six reactions under Amina's comment`)
-      await thumb(a).getByRole('button').click()
+      const give = async (page: Page) => {
+        await page.locator(`[data-comment="${comment}"]`).hover()
+        await page.locator(`[data-comment="${comment}"]`).getByRole('button', { name: 'Add a reaction' }).click()
+        await page.locator('[popover]:popover-open').getByRole('button', { name: '👍' }).click()
+      }
+      assert.equal(await a.locator(`[data-comment="${comment}"] [data-reaction]`).count(), 0, `${name}: no reaction is drawn under Amina's comment until one is given`)
+      await give(a)
       await until(mine, `${name}: Léa's 👍`)
       await a.waitForSelector(`[data-comment="${comment}"] [data-reaction="👍"][data-mine="true"][data-count="1"]`)
       const logged = await all<{ actor: string }>(`SELECT actor FROM cella.log WHERE op = 'task:comment:react' AND (form ->> 'comment') = $1`, [comment])
       assert.ok(logged.some((l) => l.actor === lea), `${name}: the reaction is logged as Léa's`)
       await a.screenshot({ path: `${shots}/reactions-${name}-light.png`, fullPage: true })
-      await thumb(a).getByRole('button').click()
+      await thumb(a).click()
       await until(async () => !(await mine()), `${name}: Léa's 👍 taken back`)
-      await a.waitForSelector(`[data-comment="${comment}"] [data-reaction="👍"][data-mine="false"][data-count="0"]`)
-      await thumb(a).getByRole('button').click()
+      await a.locator(`[data-comment="${comment}"] [data-reaction="👍"]`).waitFor({ state: 'detached' })
+      await give(a)
       await until(mine, `${name}: Léa's 👍 again`)
 
       // Web's rule turns them off: the thread draws none, and a reaction

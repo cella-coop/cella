@@ -7,7 +7,7 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { links, mentions, parts, threaded, type Message } from '../src/models/thread.ts'
+import { conversations, links, mentions, parts, threaded, type Message } from '../src/models/thread.ts'
 
 const db = new pg.Client()
 
@@ -99,4 +99,9 @@ test('a thread reads each reply under the message it answers', () => {
     [6, 1],
     [3, 0],
   ])
+  const cards = conversations([m(5, 1), m(1, null), m(3, null), m(7, 5), m(6, 1)]).map((c) => [c.root.receipt, c.messages.map((x) => x.receipt)])
+  assert.deepEqual(cards, [
+    [1, [1, 5, 7, 6]],
+    [3, [3]],
+  ], 'each root is a conversation holding every reply under it')
 })

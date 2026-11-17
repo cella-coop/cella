@@ -1,23 +1,16 @@
-import { asking, composed, type Comment, type Named } from '../models/thread.ts'
+import type { Suggestion, Trigger } from '@cella/org-ui'
+import type { Named } from '../models/thread.ts'
 
-// A record's threads while a comment is written: the root a reply
-// answers, chosen from its thread, what is typed and the people the
-// mention picker picked, all kept until a post grows the threads, when
-// the box opens empty again, or dropped. Who the picker may offer is
-// edit-time data: `load` fetches it once, in the browser, never awaited
-// at SSR with the record itself.
+// A record's threads while a comment is written: who the mention picker
+// may offer, and the way to a thread's reply. Who may be offered is
+// edit-time data: `load` fetches it once, in the browser, never awaited at
+// SSR with the record itself. What is typed is each box's own.
 export class ThreadsState {
-  readonly #comments: () => Comment[]
   readonly #fetch: () => Promise<Named[]>
   #loaded = false
   #readers = $state<Named[]>([])
-  #reply = $state<number | null>(null)
-  #typed = $state('')
-  #picked = $state<Named[]>([])
-  #at = $state(-1)
 
-  constructor(comments: () => Comment[], readers: () => Promise<Named[]>) {
-    this.#comments = comments
+  constructor(readers: () => Promise<Named[]>) {
     this.#fetch = readers
   }
 
@@ -40,64 +33,21 @@ export class ThreadsState {
       })
   }
 
-  // Whether what is kept was kept since the threads last grew.
-  get #current(): boolean {
-    return this.#at === this.#comments().length
-  }
-
-  #keep() {
-    if (!this.#current) {
-      this.#reply = null
-      this.#typed = ''
-      this.#picked = []
-      this.#at = this.#comments().length
-    }
-  }
-
-  get reply(): number | null {
-    return this.#current ? this.#reply : null
-  }
-
+  // A thread's Reply: the focus in the box at its foot.
   answer(root: number) {
-    this.#keep()
-    this.#reply = root
-  }
-
-  drop() {
-    this.#reply = null
-  }
-
-  get typed(): string {
-    return this.#current ? this.#typed : ''
-  }
-
-  set typed(value: string) {
-    this.#keep()
-    this.#typed = value
+    document.querySelector<HTMLElement>(`[data-thread="${root}"] [data-rich]`)?.focus()
   }
 
   // The people the picker offers for the `@` being typed: those who may
-  // read the record whose name or address holds what follows it.
-  get offered(): Named[] {
-    const q = asking(this.typed)
-    if (q === null) {
+  // read the record whose name or address holds what follows it, each
+  // put in as their `@[address]`.
+  suggest = (trigger: Trigger, query: string): Suggestion[] => {
+    if (trigger !== '@') {
       return []
     }
-    const want = q.toLowerCase()
+    const want = query.toLowerCase()
     return this.#readers
       .filter((r) => r.name && (r.name.toLowerCase().includes(want) || r.person.startsWith(want)))
-      .slice(0, 6)
-  }
-
-  // A person picked: the `@` being typed becomes their `@name`.
-  pick(person: Named) {
-    const q = asking(this.typed) ?? ''
-    this.typed = `${this.typed.slice(0, this.typed.length - q.length)}${person.name} `
-    this.#picked = [...this.#picked.filter((p) => p.person !== person.person), person]
-  }
-
-  // The comment as the box posts it.
-  get posted(): { text: string; mentions: string[] } {
-    return composed(this.typed, this.#current ? this.#picked : [])
+      .map((r) => ({ label: r.name!, token: `@[${r.person}]` }))
   }
 }

@@ -21,9 +21,12 @@
     wide = false,
     button = false,
     chip = false,
+    icon = false,
     open = false,
     onclose,
   }: {
+    // The trigger is an icon alone, as `Button`'s `icon`: named by `label`.
+    icon?: boolean
     // What the trigger opens: the popover's name, and the trigger's
     // description beside the name its visible text gives it, so a voice
     // naming what it sees reaches it.
@@ -96,7 +99,7 @@
   }
 </script>
 
-<button type="button" class="trigger" class:button class:chip popovertarget={id} aria-haspopup={menu ? 'menu' : 'dialog'} aria-describedby="{id}-about" style:anchor-name="--{id}">
+<button type="button" class="trigger" class:button class:chip class:icon popovertarget={id} title={icon ? label : undefined} aria-label={icon ? label : undefined} aria-haspopup={menu ? 'menu' : 'dialog'} aria-describedby="{id}-about" style:anchor-name="--{id}">
   {@render trigger()}
   <span id="{id}-about" hidden>{label}</span>
 </button>
@@ -107,6 +110,7 @@
   class="popover {side}"
   class:end={align === 'end'}
   class:wide
+  class:fit={icon}
   role={menu ? 'menu' : 'dialog'}
   aria-label={label}
   style:position-anchor="--{id}"
@@ -145,6 +149,17 @@
     justify-self: start;
     align-self: end;
   }
+  .icon {
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    color: var(--text-muted);
+    font-size: var(--text-md);
+  }
+  .icon:hover {
+    color: var(--text);
+  }
   .chip {
     width: auto;
     max-width: 100%;
@@ -177,6 +192,11 @@
   }
   .wide {
     width: 18rem;
+  }
+  /* An icon's popover is as wide as what it holds. */
+  .fit {
+    width: auto;
+    padding: var(--space-1);
   }
   .popover:popover-open {
     display: grid;

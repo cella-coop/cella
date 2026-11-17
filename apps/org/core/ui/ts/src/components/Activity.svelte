@@ -2,9 +2,11 @@
   import type { Event } from '../models/view.ts'
   import { date, relative } from '../models/format.ts'
   import Person from './Person.svelte'
+  import Rich from './Rich.svelte'
 
   // What happened to a record, a compact timeline, oldest first; a
-  // comment is its line with what it says under it. Enough of them
+  // comment is its line with what it says under it, in its rich text
+  // (`Rich`). Enough of them
   // crowd a flat line, so they group by day, each day's heading once.
   let { items }: { items: Event[] } = $props()
 
@@ -35,7 +37,7 @@
         <li class:said={e.body}>
           <span class="dot"></span>
           <span class="text">{#if e.who}<b><Person address={e.who} /></b>{' '}{/if}{e.text}<time>{relative(e.at)}</time></span>
-          {#if e.body}<p class="body">{e.body}</p>{/if}
+          {#if e.body}<div class="body"><Rich text={e.body} /></div>{/if}
         </li>
       {/each}
     </ol>

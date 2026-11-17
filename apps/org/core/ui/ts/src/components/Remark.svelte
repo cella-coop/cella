@@ -1,59 +1,48 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte'
   import { X } from '../icons.ts'
   import Icon from './Icon.svelte'
 
-  // The box that comments on a text, always there under its Activity:
-  // its fields, and above them, where the comment is on a quote, what it
-  // is on, quietly, and the quote set apart and read-only, with a small ×
-  // that drops it, as Escape inside the box does. Attaching a quote puts
-  // the focus in the first text area.
+  // The quote a comment answers: what it is on, quietly, and the quote set
+  // apart and read-only. Inside a box's top (`RichField`'s `head`) a small
+  // × drops it, as Escape in the box does, and attached, it puts the focus
+  // in the box's text; above a posted comment it is read.
   let {
     on,
-    quote = null,
+    quote,
     ondrop,
-    children,
   }: {
     on?: string
-    quote?: string | null
+    quote: string
     ondrop?: () => void
-    children: Snippet
   } = $props()
 
-  const focus = (el: HTMLElement) => {
-    if (quote) {
-      el.querySelector('textarea')?.focus()
-    }
-  }
-  const escape = (el: HTMLElement) => {
-    const key = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && quote) {
+  const hold = (el: HTMLElement) => {
+    const box = ondrop ? el.closest('[data-box-field]') : null
+    box?.querySelector<HTMLElement>('[contenteditable="true"]')?.focus()
+    const key = (e: Event) => {
+      if ((e as KeyboardEvent).key === 'Escape') {
         ondrop?.()
       }
     }
-    el.addEventListener('keydown', key)
-    return () => el.removeEventListener('keydown', key)
+    box?.addEventListener('keydown', key)
+    return () => box?.removeEventListener('keydown', key)
   }
 </script>
 
-<div class="remark" role="group" aria-label="Comment" {@attach focus} {@attach escape}>
-  {#if quote}
-    {#if on}<span class="on">{on}</span>{/if}
-    <div class="quoted">
-      <blockquote class="quote">{quote}</blockquote>
-      {#if ondrop}
-        <button type="button" class="drop" aria-label="Drop the quote" title="Drop the quote" onclick={ondrop}><Icon icon={X} /></button>
-      {/if}
-    </div>
-  {/if}
-  {@render children()}
+<div class="remark" {@attach hold}>
+  {#if on}<span class="on">{on}</span>{/if}
+  <div class="quoted">
+    <blockquote class="quote">{quote}</blockquote>
+    {#if ondrop}
+      <button type="button" class="drop" aria-label="Drop the quote" title="Drop the quote" onclick={ondrop}><Icon icon={X} /></button>
+    {/if}
+  </div>
 </div>
 
 <style>
   .remark {
     display: grid;
-    gap: var(--space-2);
-    padding-inline: var(--inset, 0);
+    gap: var(--space-1);
   }
   .on {
     font-size: var(--text-xs);
@@ -90,7 +79,7 @@
     cursor: pointer;
   }
   .drop:hover {
-    background: var(--sunk);
+    background: var(--hover);
     color: var(--text);
   }
 </style>

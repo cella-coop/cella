@@ -85,3 +85,17 @@ export function threaded(messages: Message[]): (Message & { depth: number })[] {
   walk(null, 0)
   return out
 }
+
+// A thread as conversations: each message that answers none with every
+// reply under it, in reading order.
+export function conversations(messages: Message[]): { root: Message; messages: (Message & { depth: number })[] }[] {
+  const out: { root: Message; messages: (Message & { depth: number })[] }[] = []
+  for (const m of threaded(messages)) {
+    if (m.depth === 0 || !out.length) {
+      out.push({ root: m, messages: [m] })
+    } else {
+      out.at(-1)!.messages.push(m)
+    }
+  }
+  return out
+}

@@ -47,7 +47,6 @@ export const app: App = {
           { label: 'Draft hash', value: short(d.hash, 16), kind: 'mono' },
         ],
         activity: (d: Page) => [
-          ...d.comments.map((c) => ({ at: c.at, who: c.author, text: `commented on ${c.version}${c.quote ? `, quoting “${c.quote}”` : ''}${c.resolved ? ', resolved' : ''}`, body: c.text })),
           ...d.updates.slice(0, 12).map((u) => ({ at: u.at, who: u.author ?? undefined, text: `${u.author ? 'edited' : 'carried over'}, receipt ${u.receipt}` })),
         ],
         // The draft is the content; its saved versions, the data central to

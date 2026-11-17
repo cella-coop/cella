@@ -11,9 +11,13 @@
     busy = false,
     disabled = false,
     onclick,
+    icon = false,
     'aria-label': ariaLabel,
     children,
   }: {
+    // Its icon alone, small and square, with no fill until hovered, as a
+    // comment's Reply; it is named by `aria-label` and `title`.
+    icon?: boolean
     tone?: 'primary' | 'quiet' | 'danger' | 'subtle'
     type?: 'button' | 'submit'
     href?: string
@@ -33,9 +37,9 @@
 </script>
 
 {#if href}
-  <a class="button {tone}" {href} {download} {title} {onclick} aria-label={ariaLabel}>{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}</a>
+  <a class="button {tone}" class:icon {href} {download} {title} {onclick} aria-label={ariaLabel}>{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}</a>
 {:else}
-  <button class="button {tone}" {type} {title} {onclick} {disabled} aria-busy={busy} aria-disabled={busy} aria-label={ariaLabel}>
+  <button class="button {tone}" class:icon {type} {title} {onclick} {disabled} aria-busy={busy} aria-disabled={busy} aria-label={ariaLabel}>
     {@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}
   </button>
 {/if}
@@ -54,6 +58,19 @@
     cursor: pointer;
     white-space: nowrap;
     transition: background var(--fast) var(--ease);
+  }
+  .button.icon {
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    background: none;
+    color: var(--text-muted);
+    font-size: var(--text-md);
+  }
+  .button.icon:hover {
+    background: var(--hover);
+    color: var(--text);
   }
   .button:disabled {
     opacity: 0.5;

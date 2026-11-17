@@ -60,10 +60,9 @@ const panel = (page: Page) => page.locator('section.card', { has: page.getByRole
 // its ground.
 async function drawn(page: Page) {
   return page.locator('.calendar').evaluate((el) => {
-    const legend = [...el.querySelectorAll('.legend li')].map((li) => {
-      const group = li.querySelector('span.group')
-      const count = group?.querySelector('.count')
-      const label = [...(group?.children ?? [])].filter((c) => c !== count).map((c) => c.textContent?.trim() ?? '').join(' ')
+    const legend = [...document.querySelectorAll('ul[aria-label^="By"] li')].map((li) => {
+      const count = li.querySelector('.count')
+      const label = li.querySelector('.prop, .none')?.textContent?.trim() ?? ''
       return { label, count: Number(count?.textContent ?? -1), swatch: getComputedStyle(li.querySelector('.swatch')!).backgroundColor }
     })
     const cards = [...el.querySelectorAll('li.entry')].map((e) => ({ inked: e.classList.contains('inked'), ground: getComputedStyle(e).backgroundColor, wash: getComputedStyle(e).getPropertyValue('--wash').trim() }))
@@ -77,7 +76,7 @@ async function drawn(page: Page) {
 // sRGB from a canvas, so a translucent or an OKLCH colour measures as
 // the browser draws it.
 async function contrasts(page: Page): Promise<{ text: string; ratio: number }[]> {
-  return page.locator('.calendar').evaluate((root) => {
+  return page.locator('.calendar').evaluate(() => {
     const canvas = document.createElement('canvas')
     canvas.width = canvas.height = 1
     const ctx = canvas.getContext('2d', { willReadFrequently: true })!
@@ -106,7 +105,7 @@ async function contrasts(page: Page): Promise<{ text: string; ratio: number }[]>
       return [...ctx.getImageData(0, 0, 1, 1).data.slice(0, 3)]
     }
     const out: { text: string; ratio: number }[] = []
-    for (const el of root.querySelectorAll('.legend li *, li.entry, li.entry *')) {
+    for (const el of document.querySelectorAll('ul[aria-label^="By"] li *, .calendar li.entry, .calendar li.entry *')) {
       const own = [...el.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && n.textContent?.trim())
       if (!own) {
         continue
@@ -140,7 +139,7 @@ eachBrowser((browserName, launch) => {
         // the calendar has no legend.
         await page.goto(`${base}/meetings?at=2026-10-01&by=`)
         await page.waitForLoadState('networkidle')
-        assert.equal(await page.locator('.calendar .legend').count(), 0, `${at}: grouped by nothing, no legend`)
+        assert.equal(await page.locator('ul[aria-label^="By"]').count(), 0, `${at}: grouped by nothing, no legend`)
 
         // Colour by the circle in the View panel: the address takes it.
         const view = panel(page)
@@ -182,10 +181,10 @@ eachBrowser((browserName, launch) => {
         await choose(panel(page).getByRole('combobox', { name: 'Colour by' }), { label: 'None' })
 
         await page.waitForURL((u) => u.searchParams.get('by') === '')
-        for (let tries = 0; tries < 60 && (await page.locator('.calendar .legend').count()) > 0; tries++) {
+        for (let tries = 0; tries < 60 && (await page.locator('ul[aria-label^="By"]').count()) > 0; tries++) {
           await page.waitForTimeout(250)
         }
-        assert.equal(await page.locator('.calendar .legend').count(), 0, `${at}: None draws no legend`)
+        assert.equal(await page.locator('ul[aria-label^="By"]').count(), 0, `${at}: None draws no legend`)
         assert.equal(await page.locator('.calendar li.entry.inked').count(), 0, `${at}: None inks no card`)
 
         assert.deepEqual(errors, [], `${at}: no page error`)

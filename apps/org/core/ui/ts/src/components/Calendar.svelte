@@ -6,16 +6,14 @@
   import { legend, placed, time, type Period } from '../models/calendar.ts'
   import { inked } from '../models/ink.ts'
   import Cell from './Cell.svelte'
-  import Group from './Group.svelte'
   import Icon from './Icon.svelte'
 
   // The one calendar: the rows on the days of a month, as weeks from
   // Monday, or of one week, placed by a date field, each entry its time
   // when the date holds one and its title, tinted by the first of the
   // view's fields that has a tone. Grouped by a field, each entry is
-  // tinted instead by its value's ink, and a legend over the days names
-  // each value, its colour and how many of the rows shown hold it, so no
-  // value is told by colour alone. A week shows the view's fields under
+  // tinted instead by its value's ink, which the drawer's Legend names
+  // (`Legend`), so no value is told by colour alone. A week shows the view's fields under
   // each title. The arrows and Today are links, so where the viewer is
   // stays in the address.
   let {
@@ -67,16 +65,6 @@
       <a href={link(period.next)} aria-label="Next {period.span}" title="Next {period.span}"><Icon icon={CaretRight} /></a>
     </nav>
   </div>
-  {#if by && keys.length}
-    <ul class="legend" aria-label="By {by.label.toLowerCase()}">
-      {#each keys as k (k.value)}
-        <li style={k.ink === null ? undefined : inked(k.ink)} class:inked={k.ink !== null}>
-          <span class="swatch" aria-hidden="true"></span>
-          <Group {by} row={k.row} value={k.value} count={k.count} compact />
-        </li>
-      {/each}
-    </ul>
-  {/if}
   <ol class="grid" aria-label="{period.label}, by {on.label.toLowerCase()}">
     {#each weekdays as w (w)}
       <li class="weekday" aria-hidden="true">{w}</li>
@@ -230,32 +218,6 @@
   .entry.inked {
     background: var(--wash);
     color: var(--on-wash);
-  }
-  .legend {
-    list-style: none;
-    margin: 0;
-    padding: 0 var(--space-1);
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1) var(--space-4);
-  }
-  .legend li {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-width: 0;
-  }
-  .swatch {
-    flex: none;
-    width: 0.75rem;
-    height: 0.75rem;
-    border-radius: 3px;
-    background: var(--neutral-soft);
-    box-shadow: inset 0 0 0 1px var(--line);
-  }
-  .inked .swatch {
-    background: var(--wash);
-    box-shadow: inset 0 0 0 1.5px var(--mark);
   }
   .time {
     font-variant-numeric: tabular-nums;

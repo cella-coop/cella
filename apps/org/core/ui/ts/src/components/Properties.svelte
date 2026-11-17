@@ -1,14 +1,12 @@
 <script lang="ts">
-  import type { Component } from 'svelte'
-  import Calendar from 'phosphor-svelte/lib/Calendar'
   import Plus from 'phosphor-svelte/lib/Plus'
-  import type { Kind, Prop } from '../models/view.ts'
+  import type { Prop } from '../models/view.ts'
   import { show } from '../models/format.ts'
   import { inked, inkOf } from '../models/ink.ts'
   import { useProps } from '../hooks/useProps.ts'
   import { useShell } from '../hooks/useShell.ts'
   import Avatar from './Avatar.svelte'
-  import Cell from './Cell.svelte'
+  import Value from './Value.svelte'
   import Icon from './Icon.svelte'
   import Pick from './Pick.svelte'
   import Popover from './Popover.svelte'
@@ -27,13 +25,11 @@
   const id = $props.id()
 
   const stamp = ['Created', 'Updated', 'Created by', 'Updated by']
-  const said: Kind[] = ['money', 'number', 'text', 'title', 'mono']
   const empty = (p: Prop) => (p.people ? p.people.length === 0 : show(p.value, p.kind) === '—')
 
   // The collection a property's link is a record of, where it is one:
   // `/<collection>/<id>`, whose icon its value wears.
   const record = (href: string | undefined) => href?.match(/^\/([\w-]+)\/[^/?#]+$/)?.[1]
-  const said_ = (p: Prop) => !p.people && !p.icon && !record(p.href) && said.includes(p.kind ?? 'text')
 
   // Added: the empty properties the reader asked for, shown for the
   // popover that sets each, opened as it is added.
@@ -70,7 +66,6 @@
   }
   const footer = $derived([line('Created', 'Created by', 'Created'), line('Updated', 'Updated by', 'Updated')].filter(Boolean).join(' · '))
 
-  const glyph = (p: Prop): Component<any> | undefined => (p.kind === 'date' ? Calendar : undefined)
   const add = (v: string | string[]) => state.add(Array.isArray(v) ? v[0] : v)
 </script>
 
@@ -78,31 +73,20 @@
   {#if empty(p)}
     <span class="blank">{p.label}</span>
   {:else}
-    {const g = glyph(p)}
     {#if p.icon}
       <span class="mark inked" style={inked(inkOf(p.ink ?? p.label))} aria-hidden="true"><Icon icon={p.icon} size="1em" /></span>
-    {:else if g}
-      <span class="mark" aria-hidden="true"><Icon icon={g} size="1em" /></span>
     {/if}
-    {#if said_(p)}<span class="name">{p.label}</span>{/if}
     {#if p.people}
       <span class="crew" aria-hidden="true">
         {#each p.people.slice(0, 4) as a (a)}<Avatar name={name(a)} size="1.25rem" />{/each}
       </span>
       <span class="who">{p.people.map(name).join(', ')}</span>
-    {:else if p.kind === 'person'}
-      <Avatar name={name(String(p.value))} size="1.25rem" />
-      {#if p.href}
-        <a class="who" href={p.href} onclick={(e) => e.stopPropagation()}>{name(String(p.value))}</a>
-      {:else}
-        <span class="who">{name(String(p.value))}</span>
-      {/if}
     {:else if p.icon}
       <span class="who">{show(p.value, p.kind)}</span>
     {:else if p.href}
-      <a href={p.href} onclick={(e) => e.stopPropagation()}><Cell value={p.value} kind={p.kind} tone={p.tone} record={record(p.href)} /></a>
+      <a href={p.href} onclick={(e) => e.stopPropagation()}><Value value={p.value} kind={p.kind} tone={p.tone} record={record(p.href)} size="drawer" label={p.label} /></a>
     {:else}
-      <Cell value={p.value} kind={p.kind} tone={p.tone} />
+      <Value value={p.value} kind={p.kind} tone={p.tone} size="drawer" label={p.label} />
     {/if}
   {/if}
 {/snippet}
@@ -214,9 +198,6 @@
   }
   .mark.inked {
     color: var(--mark);
-  }
-  .name {
-    color: var(--text-muted);
   }
   .blank {
     color: var(--text-subtle);

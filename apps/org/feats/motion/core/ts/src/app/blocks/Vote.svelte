@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { date, Badge, Cell, Form, Hidden, icons, Note, power, Row, Inlay, Tally, type Viewer } from '@cella/org-ui'
+  import { date, Value, Cell, Form, Hidden, icons, Note, power, Row, Inlay, Tally, type Viewer } from '@cella/org-ui'
   import { stances, type Detail, type Labelled, type Stance } from '../../models/motion.ts'
 
   // The motion's vote, one widget after the proposal: its state and
@@ -75,7 +75,7 @@
 
 <Inlay name="Vote" icon={icons.Scales}>
   {#snippet aside()}
-    <Badge tone={stateTone}>{state}</Badge>
+    <Value value={state} kind="badge" tone={stateTone} />
     <span>{closed ? 'Closed' : 'Closes'} {date(closed ? data.closed : data.deadline)}</span>
   {/snippet}
 

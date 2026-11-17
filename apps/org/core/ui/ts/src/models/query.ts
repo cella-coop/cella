@@ -18,12 +18,15 @@ export interface Field {
   label: string
   type: Type
   value: (row: any) => unknown
+  // The column's kind and record, which its values are drawn by.
+  kind?: Kind
+  record?: string
 }
 
-const types: Partial<Record<Kind, Type>> = { money: 'money', number: 'number', date: 'date', badge: 'enum', person: 'person', circle: 'circle' }
+const types: Partial<Record<Kind, Type>> = { money: 'money', number: 'number', date: 'date', badge: 'enum', priority: 'enum', person: 'person', circle: 'circle' }
 
 export const fields = (columns: Column[]): Field[] =>
-  columns.map((c) => ({ key: c.key, label: c.label, type: (c.kind && types[c.kind]) ?? 'text', value: c.value }))
+  columns.map((c) => ({ key: c.key, label: c.label, type: (c.kind && types[c.kind]) ?? 'text', value: c.value, kind: c.kind, record: c.record }))
 
 // The four fields the core read gives every collection's rows from the
 // log, which no slice declares: the dates and the actors of the first and

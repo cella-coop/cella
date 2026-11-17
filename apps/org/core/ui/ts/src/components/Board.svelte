@@ -4,7 +4,7 @@
   import { shift, type Shift } from '../models/query.ts'
   import { transfer } from '../attachments/transfer.ts'
   import { useDrag } from '../hooks/useDrag.ts'
-  import Cell from './Cell.svelte'
+  import Value from './Value.svelte'
   import Group from './Group.svelte'
   import Tile from './Tile.svelte'
 
@@ -78,7 +78,7 @@
       {const open = $derived(!!drag.carry.group && drag.carry.group === group && takes(drag.carry.origin, l))}
       <section class="lane" class:open class:aimed={drag.aimed(group, l)} data-drop-list={l} aria-label="{by.label}: {l}, {cards.length}">
         <h3>
-          {#if by.kind === 'person' || by.kind === 'circle'}<Cell value={l} kind={by.kind} />{:else}<span>{l}</span>{/if}
+          <Value value={l} kind={by.kind} tone={by.tone?.(cards[0] ?? {})} record={by.record} size="card" />
           <span class="count">{cards.length}</span>
         </h3>
         <div class="cards">

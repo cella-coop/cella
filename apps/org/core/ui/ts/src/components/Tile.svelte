@@ -5,7 +5,7 @@
   import { inked, inkOf } from '../models/ink.ts'
   import { useShell } from '../hooks/useShell.ts'
   import Avatar from './Avatar.svelte'
-  import Chip from './Chip.svelte'
+  import Value from './Value.svelte'
   import Icon from './Icon.svelte'
 
   // An item as a card in a gallery or on a board, laid out as Linear's:
@@ -67,7 +67,7 @@
   {#if chips.length}
     <span class="chips">
       {#each chips as c (c.key)}
-        <Chip value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} />
+        <Value value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} size="card" />
       {/each}
     </span>
   {/if}

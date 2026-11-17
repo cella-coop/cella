@@ -6,7 +6,6 @@ import Create from './blocks/Create.svelte'
 import Status from './blocks/Status.svelte'
 
 const tones: Record<Stage, Tone> = { backlog: 'neutral', todo: 'neutral', doing: 'accent', done: 'positive' }
-const urgency: Record<Priority, Tone> = { urgent: 'negative', high: 'warning', normal: 'neutral', low: 'neutral' }
 
 // The feat's client side: the tasks as a board by status, on which a card
 // dragged between columns is the move, or into Done the completion; a new
@@ -25,7 +24,7 @@ export const app: App = {
           { key: 'title', label: 'Task', kind: 'title', role: 'title', value: (t: Task) => t.title },
           { key: 'id', label: 'Id', kind: 'mono', role: 'hidden', value: (t: Task) => t.id },
           { key: 'circle', label: 'Circle', kind: 'circle', role: 'hidden', value: (t: Task & { circle?: string }) => t.circle },
-          { key: 'priority', label: 'Priority', kind: 'badge', role: 'meta', value: (t: Task) => t.priority, tone: (t: Task) => urgency[t.priority] },
+          { key: 'priority', label: 'Priority', kind: 'priority', role: 'meta', value: (t: Task) => t.priority },
           { key: 'due', label: 'Due', kind: 'date', role: 'meta', value: (t: Task) => t.due },
           { key: 'status', label: 'Status', kind: 'badge', role: 'meta', value: (t: Task) => t.status, tone: (t: Task) => tones[t.status] },
           { key: 'created', label: 'Created', kind: 'date', role: 'hidden', value: (t: Task) => t.created },
@@ -43,7 +42,7 @@ export const app: App = {
         subtitle: (t: Task) => t.id,
         properties: (t: Task) => [
           { label: 'Status', value: t.status, kind: 'badge', tone: tones[t.status] },
-          { label: 'Priority', value: t.priority, kind: 'badge', tone: urgency[t.priority] },
+          { label: 'Priority', value: t.priority, kind: 'priority' },
           { label: 'Due', value: t.due, kind: 'date' },
           { label: 'Created', value: t.created, kind: 'date' },
           { label: 'Completed', value: t.completed, kind: 'date' },

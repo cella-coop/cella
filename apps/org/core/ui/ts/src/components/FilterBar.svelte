@@ -8,7 +8,7 @@
   import { useCollection } from '../hooks/useCollection.ts'
   import { useShell } from '../hooks/useShell.ts'
   import Icon from './Icon.svelte'
-  import Person from './Person.svelte'
+  import Value from './Value.svelte'
   import Popover from './Popover.svelte'
 
   // The collection's filter bar: on the line above its rows once a
@@ -213,7 +213,7 @@
             {:else}
               {#each values[f.key] ?? [] as v (v)}
                 <button role="menuitemcheckbox" class="item" aria-checked={kept(f.key, v)} data-value={v} onclick={() => toggle(f.key, v)}>
-                  {#if f.type === 'person'}<Person address={v} />{:else}<span class="said">{named(f.key, v)}</span>{/if}{#if kept(f.key, v)}<Icon icon={Check} />{/if}
+                  <Value value={v} kind={f.kind ?? (f.type === 'enum' ? 'badge' : f.type)} record={f.record} />{#if kept(f.key, v)}<Icon icon={Check} />{/if}
                 </button>
               {/each}
             {/if}

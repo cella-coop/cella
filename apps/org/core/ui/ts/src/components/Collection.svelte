@@ -26,7 +26,7 @@
     type Widget,
     under,
   } from '../models/query.ts'
-  import { anchor, period } from '../models/calendar.ts'
+  import { anchor, legend, period, placed } from '../models/calendar.ts'
   import { widest } from '../models/format.ts'
   import { abandon } from '../models/navigation.ts'
   import { control, focused, typing } from '../models/keys.ts'
@@ -44,6 +44,7 @@
   import Board from './Board.svelte'
   import Button from './Button.svelte'
   import Calendar from './Calendar.svelte'
+  import Legend from './Legend.svelte'
   import Dialog from './Dialog.svelte'
   import Gallery from './Gallery.svelte'
   import Group from './Group.svelte'
@@ -279,6 +280,9 @@
   // one, and its values in its board's order, which hand out the inks.
   const tinted = $derived(spec.layout === 'calendar' && spec.by ? columns.find((c) => c.key === grouping(spec, typed)?.key && c.kind !== 'date') : undefined)
   const tints = $derived(tinted ? lanes(look, tinted.key, values[tinted.key] ?? []) : [])
+  // What the colours mean, over the rows the period shows: the drawer's
+  // Legend.
+  const keys = $derived(tinted && placing ? legend([...placed(state.shown, placing, shownPeriod, spec.sort !== null).values()].flat(), tinted.key, tints) : [])
 
   // A calendar draws its period even with no row on its days, so it keeps
   // its header and navigation; `kept` counts the view over the whole
@@ -443,6 +447,9 @@
     keep={saveView}
     discard={reset}
   />
+  {#if tinted && keys.length}
+    <Legend by={tinted} {keys} />
+  {/if}
 {/snippet}
 
 <Frame
@@ -602,7 +609,7 @@
                 <span class="title">{#if rowIcon}<span class="mark" style={inked(inkOf(String(titled.value(row))))}><Icon icon={rowIcon} /></span>{/if}{titled.value(row)}</span>
               {/if}
               {#each lines as c (c.key)}
-                <span class="sub"><Cell value={c.value(row)} kind={c.kind === 'badge' ? 'text' : c.kind} record={c.record} /></span>
+                <span class="sub"><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} /></span>
               {/each}
             </span>
             <span class="meta">

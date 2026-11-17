@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Badge, date } from '@cella/org-ui'
+  import { Value, date } from '@cella/org-ui'
   import type { Summary } from '../models/motion.ts'
 
   // A motion drawn as a card where another slice shows it, inside a
@@ -14,7 +14,7 @@
   {#if d}
     <a class="title" href="/motions/{d.id}">{d.title}</a>
     <div class="meta">
-      <Badge tone={d.closed ? 'neutral' : 'accent'}>{d.closed ? `closed ${date(d.closed)}` : `open until ${date(d.deadline)}`}</Badge>
+      <Value value={d.closed ? `closed ${date(d.closed)}` : `open until ${date(d.deadline)}`} kind="badge" tone={d.closed ? 'neutral' : 'accent'} />
       <span>{d.circleName} · put by {d.authorName} · {d.method}</span>
     </div>
   {:else}

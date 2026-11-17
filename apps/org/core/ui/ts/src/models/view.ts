@@ -18,7 +18,7 @@ export type Group = 'home' | 'platform'
 // A `person` is an address, shown as the person's chip: their name, the
 // address on hover, after the icon of the collection of people; a `circle`
 // is a circle's id, shown as its name.
-export type Kind = 'text' | 'title' | 'mono' | 'money' | 'date' | 'number' | 'badge' | 'person' | 'circle'
+export type Kind = 'text' | 'title' | 'mono' | 'money' | 'date' | 'number' | 'badge' | 'priority' | 'boolean' | 'person' | 'circle'
 
 export type Tone = 'neutral' | 'accent' | 'positive' | 'negative' | 'warning'
 

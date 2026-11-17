@@ -24,6 +24,10 @@ const seen = new Map<string, number>() // browser id -> last seen
 // When the room's lifetime ends, in seconds since 1970; 0 before the
 // first sign-in, outside a room, or where `lifetime` names none.
 let endsAt = 0
+// When this room's server started, about when the front made the room:
+// the front ends a room at its making plus twice its lifetime, signed in
+// or not, so the lifetime this server names never runs past that.
+const born = Date.now()
 
 function sweep(now: number) {
   for (const [id, at] of seen) {
@@ -72,7 +76,7 @@ export function grant(member: string, id: string | null | undefined): boolean {
   // The room's lifetime starts at its first sign-in ever, never again:
   // it runs on even once everyone signs out.
   if (!endsAt && lifetime) {
-    endsAt = now + lifetime * 1000
+    endsAt = Math.min(now + lifetime * 1000, born + 2 * lifetime * 1000)
   }
   return true
 }

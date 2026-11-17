@@ -134,11 +134,11 @@ export function registered(registry) {
 
 // The room's own lifetime end, read from its server's `x-cella-demo-ends`
 // (seconds since 1970, set once a member first signs in): accepted only
-// as a safe integer in the future, and clamped to at most `lifetimeS`
+// as a positive safe integer (one already past ends the room at once), and clamped to at most `lifetimeS`
 // seconds from `now`, so a copy's server can end a room's lifetime
 // earlier, reacting to its own signal, but never later than this front's
 // own `--lifetime` allows. Anything else (absent, not a number, not a
-// safe integer, zero or negative) is ignored, `null`.
+// positive safe integer) is ignored, `null`.
 export function demoEndsAt(until, now, lifetimeS) {
   const s = Number(until)
   if (!Number.isSafeInteger(s) || s <= 0) {

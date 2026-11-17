@@ -184,11 +184,17 @@ test('a lifetime signal past --lifetime is clamped to it, never later', () => {
   assert.equal(demoEndsAt(String(until), now, lifetime), now + lifetime * 1000)
 })
 
-test('a lifetime signal that is not a safe integer, or not past now, is refused, null', () => {
+test('a lifetime signal that is not a positive safe integer is refused, null', () => {
   const now = Date.now()
   for (const until of [undefined, '', 'soon', '12.5', '0', '-1', String(Number.MAX_SAFE_INTEGER + 1), 'NaN', 'Infinity']) {
     assert.equal(demoEndsAt(until, now, 7200), null, until)
   }
+})
+
+test('a lifetime signal already past is kept, so the room ends at once', () => {
+  const now = Date.now()
+  const until = Math.floor(now / 1000) - 60
+  assert.equal(demoEndsAt(String(until), now, 7200), until * 1000)
 })
 
 test('a room is too old at twice --lifetime past when it was made, not before', () => {

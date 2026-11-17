@@ -39,8 +39,12 @@
 // seconds with no request from any browser in it, `--lifetime` seconds
 // after its first member signs in however busy (its own server decides
 // when that is, `#lib/server/leases.ts`'s first grant, and says so on
-// every response, `x-cella-demo-ends`, never this front's own guess; a
-// room no one ever signs into outlives no lifetime, only its idle span),
+// every response, `x-cella-demo-ends`, never this front's own guess, nor
+// ever trusted from a browser's own request; accepted only as a safe
+// integer, clamped to at most `--lifetime` seconds out and never moved
+// later once held), and twice `--lifetime` seconds after it was made
+// however busy, its age cap, so a room no one ever signs into, whose
+// lifetime never otherwise starts, cannot outlive its idle span forever,
 // when its server passes `--memory` MiB,
 // when it stores past twice `--storage` MiB (past `--storage` it takes no
 // more writes), the room storing most while the disk holds less than
@@ -78,7 +82,7 @@ import { mkdirSync, readFileSync, rmSync, statfsSync } from 'node:fs'
 import http from 'node:http'
 import { join } from 'node:path'
 import pg from 'pg'
-import { alone, joinCode, joining, register, registered, roomFull, sameCode, unregister } from './demo-rooms.mjs'
+import { alone, demoEndsAt, joinCode, joining, register, registered, roomFull, sameCode, tooOld, unregister } from './demo-rooms.mjs'
 
 const args = process.argv.slice(2)
 const flag = (name, fallback) => {
@@ -328,7 +332,8 @@ async function start(cookie, address) {
   // `ends`: Infinity until its own server says its first member has
   // signed in (`x-cella-demo-ends`, read below as every response is
   // proxied), so the tick below never ends it on a lifetime that has not
-  // started.
+  // started; its age cap (`tooOld`, from `made` here) ends it anyway,
+  // twice `--lifetime` on, if it never does.
   const copy = { id: nextRoom++, name: null, child: null, seen: begun, made: begun, ends: Infinity, ready: null, readied: false, ended: false, cookie, address, size: 0, full: false, measured: 0, measuring: null, landed: [], flying: 0, uploads: 0, queue: [], join: joinCode() }
   copies.set(cookie, copy)
   seenAt.set(cookie, begun)
@@ -539,6 +544,8 @@ setInterval(() => {
       end(copy, `idle ${Math.round((now - copy.seen) / 1000)} s`)
     } else if (now > copy.ends) {
       end(copy, `its lifetime of ${config.lifetime} s`)
+    } else if (tooOld(copy.made, now, config.lifetime)) {
+      end(copy, `its age of ${2 * config.lifetime} s, twice its lifetime, however busy`)
     } else if (copy.child && rss(copy.child) > config.memory) {
       end(copy, `its server passed ${config.memory} MiB`)
     }
@@ -1055,6 +1062,9 @@ async function handle(req, res) {
     })
   }
   const headers = { ...req.headers, cookie: withoutOurs(req.headers.cookie) }
+  // A browser's own say-so, never trusted: only a room's server sets its
+  // lifetime, by this same header on its response, read above.
+  delete headers['x-cella-demo-ends']
   if (!headers.cookie) {
     delete headers.cookie
   }
@@ -1091,11 +1101,12 @@ async function handle(req, res) {
     // its data instead.
     const until = up.headers['x-cella-demo-ends']
     delete up.headers['x-cella-demo-ends']
-    if (until) {
-      const ms = Number(until) * 1000
-      if (Number.isFinite(ms) && ms > 0) {
-        copy.ends = ms
-      }
+    const ms = demoEndsAt(until, Date.now(), config.lifetime)
+    if (ms !== null) {
+      // Never later than what is already held: a copy's server resets
+      // nothing by sending it again, a middle request's reply arriving
+      // after a later one's never moves it back out.
+      copy.ends = Math.min(copy.ends, ms)
     }
     res.writeHead(up.statusCode ?? 502, up.headers)
     up.pipe(res)

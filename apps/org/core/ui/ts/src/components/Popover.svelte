@@ -91,7 +91,7 @@
   }
 </script>
 
-<button class="trigger" class:button class:chip popovertarget={id} aria-haspopup={menu ? 'menu' : 'dialog'} aria-describedby="{id}-about" style:anchor-name="--{id}">
+<button type="button" class="trigger" class:button class:chip popovertarget={id} aria-haspopup={menu ? 'menu' : 'dialog'} aria-describedby="{id}-about" style:anchor-name="--{id}">
   {@render trigger()}
   <span id="{id}-about" hidden>{label}</span>
 </button>

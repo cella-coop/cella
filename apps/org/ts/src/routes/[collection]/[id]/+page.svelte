@@ -108,9 +108,11 @@
       subtitle,
       writes,
       fields,
-      // The item's own icon, of the curated set, where it holds one,
-      // else the collection's, as the sidebar shows it.
-      icon: recordIcon((data.item as { icon?: string | null }).icon) ?? mounted?.view.icon,
+      // The item's own icon, of the curated set, where its kind of item
+      // carries one at all (a project's, a circle's): its own where it
+      // is set, else the collection's, as the sidebar shows it; a kind
+      // with no `icon` field wears none here, as before.
+      icon: 'icon' in Object(data.item) ? recordIcon((data.item as { icon?: string | null }).icon) ?? mounted?.view.icon : undefined,
     }
   }
 </script>

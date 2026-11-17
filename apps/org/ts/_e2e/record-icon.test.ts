@@ -19,9 +19,11 @@ const shots = process.env.SHOTS ?? '/tmp/cella-record-icon-shots'
 const yusuf = 'yusuf@lanterne.example'
 const title = 'Les Halles Paysannes, online shop'
 
-// The mark's SVG, read fresh each time: a bare presence check cannot
-// tell Briefcase from Rocket, so the scenario compares what it draws.
-const markOf = (locator: Locator) => locator.locator('.mark svg').innerHTML()
+// The mark's SVG, read fresh each time, its hydration comments stripped
+// (Svelte places them differently by its nesting, never by its icon): a
+// bare presence check cannot tell Briefcase from Rocket, so the scenario
+// compares the paths it draws.
+const markOf = async (locator: Locator) => (await locator.locator('.mark svg').innerHTML()).replace(/<!--.*?-->/gs, '')
 
 eachBrowser((name, launch) => {
   test(`${name}: Yusuf picks a project's own icon, sees it replace the collection's, and clears it back`, async () => {
@@ -46,11 +48,11 @@ eachBrowser((name, launch) => {
       await page.getByRole('tab', { name: 'Details' }).click()
       const drawer = page.getByRole('complementary', { name: 'Details' })
       const section = drawer.locator('section', { has: page.getByRole('heading', { name: 'Icon', exact: true }) })
-      const trigger = section.getByRole('button', { name: 'Icon' })
+      const trigger = section.getByRole('button', { name: 'Icon', exact: true })
       await trigger.waitFor()
 
       await trigger.click()
-      const grid = page.getByRole('menu', { name: 'Icon' })
+      const grid = page.getByRole('menu', { name: 'Icon', exact: true })
       await grid.waitFor()
       await grid.getByRole('textbox', { name: 'Search icons' }).fill('Rocket')
       await grid.getByRole('menuitemradio', { name: 'Rocket', exact: true }).click()

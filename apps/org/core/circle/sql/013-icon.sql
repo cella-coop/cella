@@ -8,6 +8,8 @@
 -- collection's icon instead, as today.
 ALTER TABLE circle.circle ADD COLUMN icon text CHECK (icon IS NULL OR icon ~ '^[a-z0-9-]{1,40}$');
 
+GRANT UPDATE (icon) ON circle.circle TO cella_app;
+
 INSERT INTO cella.power (op, power, amount, owner) VALUES
   ('circle:circle:icon', 'arrange-features', NULL, 'circle');
 

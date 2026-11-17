@@ -184,9 +184,15 @@
 
   const hidden = $derived(new Set(spec.hide))
   const titled = $derived(columns.find((c) => c.role === 'title') ?? columns[0])
-  // A row's own icon, of the curated set, where it holds one in its own
-  // `icon` field (a project's, a circle's), else the collection's.
-  const markOf = (row: unknown) => recordIcon((row as { icon?: string | null })?.icon) ?? icon
+  // A row's own icon, of the curated set, where its collection's rows
+  // carry one (a project's, a circle's): its own where it is set, else
+  // the collection's, as a reference to one wears elsewhere (`Cell`).
+  // A collection whose rows carry no `icon` field at all wears none here,
+  // as before.
+  const markOf = (row: unknown) => {
+    const icoded = row as { icon?: string | null }
+    return icoded && 'icon' in icoded ? (recordIcon(icoded.icon) ?? icon) : undefined
+  }
   const subs = $derived(columns.filter((c) => c.role === 'sub'))
   const metas = $derived(columns.filter((c) => c.role === 'meta'))
   // A table's columns, but the one its rows are grouped by, which each

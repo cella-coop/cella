@@ -12,7 +12,7 @@
 // a slice's SQL registers how its entry applies to the state before it
 // (architecture.md, "Folds").
 
-import { existsSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
@@ -232,17 +232,44 @@ export function whole(feats, ops, found) {
       ...(folds.has(op) ? [] : [`${file}: ${op} has no fold, so ${what} would not fold: register it by cella.lets_fold`]),
     ]
   }
+  // A feat with one body names it the entity `body`, `${F}:body:save` (as
+  // task's, project's do), served at POST /api/<feat>/save — but
+  // report's own `save` already takes that verb, so its body's is given
+  // one by hand.
+  const singleVerb = { report: 'save-body' }
   for (const { name: F, file, mounts } of feats) {
-    const body = (found.columns ?? []).find((c) => c.key.split('.')[0] === F && c.key.endsWith('.body') && c.type === 'bytea')
-    if (body) {
+    // Its address is POST /api/<feat>/<verb>, the entity playing no part
+    // in it, so a feat with several bodies (account's, patronage's) needs
+    // a verb of its own for each: its guard's function is still named by
+    // its table, `based_<table>`, which finds it whatever its verb is,
+    // `save-<table>`.
+    const bodies = (found.columns ?? []).filter((c) => c.key.split('.')[0] === F && c.key.endsWith('.body') && c.type === 'bytea')
+    for (const body of bodies) {
+      const table = body.key.split('.')[1]
       const what = `a body in ${body.key}`
-      out.push(...needs(file, F, what, `${F}:body:save`))
-      if (!(found.guards ?? []).some((g) => g.op === `${F}:body:save` && g.fn === `${F}.based(jsonb)`)) {
-        out.push(`${file}: ${F} keeps ${what} but no guard ${F}.based on ${F}:body:save: a save whose base is not the body it replaces would erase another editor's`)
+      if (bodies.length === 1) {
+        const op = `${F}:body:${singleVerb[F] ?? 'save'}`
+        out.push(...needs(file, F, what, op))
+        if (!(found.guards ?? []).some((g) => g.op === op && g.fn === `${F}.based(jsonb)`)) {
+          out.push(`${file}: ${F} keeps ${what} but no guard ${F}.based on ${op}: a save whose base is not the body it replaces would erase another editor's`)
+        }
+        continue
       }
-      if (!mounts) {
-        out.push(`${file}: ${F} keeps ${what} but mounts none in core body's session: its collection names body: { circle, saved, save }`)
+      const based = `${F}.based_${table}`
+      const guard = (found.guards ?? []).find((g) => g.fn === `${based}(jsonb)`)
+      if (!guard) {
+        out.push(`${file}: ${F} keeps ${what} but no guard ${based} on its save: a save whose base is not the body it replaces would erase another editor's`)
+        continue
       }
+      out.push(...needs(file, F, what, guard.op))
+    }
+    if (bodies.length && mounts < bodies.length) {
+      const named = bodies.map((b) => b.key).join(', ')
+      out.push(
+        mounts
+          ? `${file}: ${F} keeps bodies in ${named} but mounts only ${mounts} in core body's session: each collection names body: { circle, saved, save }`
+          : `${file}: ${F} keeps a body in ${named} but mounts none in core body's session: its collection names body: { circle, saved, save }`,
+      )
     }
     if (tables.has(`${F}.comment`) && (found.columns ?? []).some((c) => c.key === `${F}.comment.parent`)) {
       const what = `threads in ${F}.comment`
@@ -254,6 +281,84 @@ export function whole(feats, ops, found) {
       }
       if (!(found.guards ?? []).some((g) => g.op === `${F}:comment:react` && g.owner === F)) {
         out.push(`${file}: ${F} keeps ${what} but no guard on ${F}:comment:react: a reaction is refused where its circle turned reactions off`)
+      }
+    }
+  }
+  return out
+}
+
+// The feats, or one feat's one kind, whose record keeps no body of its
+// own, by architecture, not by oversight: a motion's text is its own,
+// adopted once and never a live document (architecture.md, "Threads"); a
+// document's content keeps its drafts and versions already, core body's
+// own blocks under a richer session than a single save (core/body's
+// index.md, "The model"); patronage's statements are a view grouping
+// `patronage.part`'s rows, kept by the distribution's approval, with no
+// row of its own a column could be added to.
+const bodyless = new Set(['document', 'motion', 'patronage/statements'])
+
+// A top-level key's whole object literal, by brace depth, from the first
+// `collections: {` the text holds: `{ accounts: '… accounts: { … } …',
+// periods: '…' }`. Both a slice's `api/index.ts` (or `api/slice.ts`,
+// where a graft's writes move it there) and its `app/index.ts` shape
+// their collections the same way, so the one reader finds a collection's
+// mount and its page alike.
+function blocks(text, of) {
+  const m = text.match(new RegExp(`\\b${of}:\\s*\\{`))
+  const out = {}
+  if (!m) {
+    return out
+  }
+  let i = m.index + m[0].length
+  let depth = 1
+  while (i < text.length && depth > 0) {
+    if (depth === 1) {
+      const key = /^\s*(\w+):\s*\{/.exec(text.slice(i))
+      if (key) {
+        const at = i + key[0].length - 1
+        let d = 1
+        let j = at + 1
+        while (j < text.length && d > 0) {
+          d += text[j] === '{' ? 1 : text[j] === '}' ? -1 : 0
+          j++
+        }
+        out[key[1]] = text.slice(at, j)
+        i = j
+        continue
+      }
+    }
+    depth += text[i] === '{' ? 1 : text[i] === '}' ? -1 : 0
+    i++
+  }
+  return out
+}
+
+// Every kind a record page shows mounts a body: `cella scaffold body
+// <feat>`, or by hand for a feat with more than one kind, as account's
+// and patronage's are. `feats` is `whole`'s list, with each feat's
+// package directory added; a feat with no `app/index.ts` (none today) is
+// skipped, and so is one core's own rule governs (circles, people,
+// mandates, the log), since core is not a feat `embodied` is given.
+export function embodied(repo, feats) {
+  const out = []
+  for (const { name: F, dir } of feats) {
+    if (bodyless.has(F)) {
+      continue
+    }
+    const appIndex = join(repo, dir, 'src', 'app', 'index.ts')
+    if (!existsSync(appIndex)) {
+      continue
+    }
+    const api = join(repo, dir, 'src', 'api')
+    const apiText = existsSync(join(api, 'index.ts')) ? readFileSync(join(api, 'index.ts'), 'utf8') : ''
+    const apiBlocks = { ...blocks(apiText, 'collections'), ...(existsSync(join(api, 'slice.ts')) ? blocks(readFileSync(join(api, 'slice.ts'), 'utf8'), 'collections') : {}) }
+    const pages = blocks(readFileSync(appIndex, 'utf8'), 'collections')
+    for (const [kind, page] of Object.entries(pages)) {
+      if (!/\bpage:\s*\{/.test(page) || bodyless.has(`${F}/${kind}`)) {
+        continue
+      }
+      if (!/^\s+body:\s*[{\w]/m.test(apiBlocks[kind] ?? '')) {
+        out.push(`${appIndex}: ${F}'s ${kind} has a record page but mounts no body: every record has one, by cella scaffold body ${F}, or by hand where ${F} keeps more than one kind's`)
       }
     }
   }

@@ -55,7 +55,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve } from 'node:path'
 import { checkSql, placed, schemaName, undeclared, unowned, unread, definers, unshared } from './sql-check.mjs'
-import { agree, covered, declared, granted, mandates, unfolded, unfollowed, whole } from './powers.mjs'
+import { agree, covered, declared, embodied, granted, mandates, unfolded, unfollowed, whole } from './powers.mjs'
 import { checkUi } from './ui-check.mjs'
 import { checkTabs } from './tabs.mjs'
 import { refuse, scanTs } from './writes.mjs'
@@ -589,10 +589,16 @@ if (sql) {
     .filter(([, p]) => p?.kind === 'core' && parentOf(p.node) && !p.lib && !p.graft)
     .map(([d, p]) => {
       const api = join(repo, d, 'src', 'api')
-      const mounts = existsSync(api) && readdirSync(api).some((f) => /^\s+body:\s*[{\w]/m.test(readFileSync(join(api, f), 'utf8')))
-      return { name: basename(p.node), file: join(d, 'src', 'models', 'actions.ts'), mounts }
+      // A feat mounts one body per kind it keeps one for; several where
+      // more than one of its collections does, as account's and
+      // patronage's do.
+      const mounts = existsSync(api)
+        ? readdirSync(api).reduce((n, f) => n + (readFileSync(join(api, f), 'utf8').match(/^\s+body:\s*[{\w]/gm) ?? []).length, 0)
+        : 0
+      return { name: basename(p.node), dir: d, file: join(d, 'src', 'models', 'actions.ts'), mounts }
     })
   errors.push(...whole(feats, ops, found))
+  errors.push(...embodied(repo, feats))
   // The mandates each app's fixtures adopt, which every power must be
   // among.
   const { parse } = await import('smol-toml')

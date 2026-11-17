@@ -11,6 +11,7 @@
     "@cella/org-sign": "workspace:*",
     "devalue": "5.9.4",
     "phosphor-svelte": "3.1.1",
+    "qrcode-generator": "^2.0.4",
     "svelte": "5.57.2"
   }
 }

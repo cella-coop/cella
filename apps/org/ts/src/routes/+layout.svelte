@@ -1,11 +1,13 @@
 <script lang="ts">
   import { afterNavigate } from '$app/navigation'
+  import { page } from '$app/state'
   import { Gate, Shell, useWrites } from '@cella/org-ui'
   import { index } from '#lib/remote/collection.remote.ts'
   import { shell } from '#lib/remote/session.remote.ts'
   import { nav } from '#lib/slices.ts'
 
   let { children } = $props()
+  const sign = $derived(page.route.id === '/sign-in')
 
   // The last write's outcome, from whichever write the page posted, until
   // the next page; its context is set before the script awaits.
@@ -32,7 +34,7 @@
     {@render children()}
   </Shell>
 {:else}
-  <Gate scope={data.scope} demo={data.demo} copy={data.copy} ends={data.ends} join={data.join}>
+  <Gate wide={sign} scope={data.scope} demo={data.demo} copy={data.copy} ends={data.ends} join={data.join}>
     {@render children()}
   </Gate>
 {/if}

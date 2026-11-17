@@ -31,4 +31,4 @@
 <Section title="Profile">
   <Settings {settings} />
 </Section>
-<Devices {data} id={data.address} {viewer} />
+<Devices {data} id={data.address} {viewer} enrolling />

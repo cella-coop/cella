@@ -11,6 +11,7 @@
   // foot, which pads the page by its own height so it hides nothing, or,
   // dismissed, by its watermark's reach from the foot instead.
   let {
+    wide = false,
     scope,
     demo = false,
     copy = 0,
@@ -18,6 +19,8 @@
     join = '',
     children,
   }: {
+    // The sign-in's: no panel of its own, for it lays out cards.
+    wide?: boolean
     scope: { address: string; name: string; legal: string | null }
     demo?: boolean
     copy?: number
@@ -32,7 +35,7 @@
 </svelte:head>
 
 <div class="gate">
-  <div class="panel">
+  <div class="panel" class:wide>
     <p class="coop"><span class="mark">{scope.name.slice(0, 1).toUpperCase()}</span><b>{scope.name}</b></p>
     {@render children()}
   </div>
@@ -54,6 +57,14 @@
     padding: var(--space-5);
     background: var(--panel);
     border-radius: var(--radius-panel);
+  }
+  .panel.wide {
+    width: 100%;
+    padding: 0;
+    background: none;
+  }
+  .wide .coop {
+    justify-content: center;
   }
   .coop {
     display: flex;

@@ -67,3 +67,9 @@ export async function remember(scope: string, address: string, name: string, cir
     }
   }
 }
+
+// Forgets a device of a scope this browser keeps, by its public key: this
+// browser can no longer sign in with it, and nothing is revoked.
+export async function forget(scope: string, key: string): Promise<void> {
+  await using('readwrite', (s) => s.delete([scope, key]))
+}

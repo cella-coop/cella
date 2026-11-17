@@ -16,6 +16,7 @@
     trigger,
     children,
     side = 'bottom',
+    align = 'start',
     menu = true,
     wide = false,
     button = false,
@@ -30,6 +31,10 @@
     trigger: Snippet
     children: Snippet
     side?: 'bottom' | 'top'
+    // Which edge of its trigger it lines up with: opening rightward from
+    // the left edge, or leftward from the right edge, as a trigger at the
+    // end of a row needs.
+    align?: 'start' | 'end'
     menu?: boolean
     wide?: boolean
     // The trigger reads as a quiet button, as wide as its text, as on a
@@ -100,6 +105,7 @@
   {id}
   popover="auto"
   class="popover {side}"
+  class:end={align === 'end'}
   class:wide
   role={menu ? 'menu' : 'dialog'}
   aria-label={label}
@@ -179,6 +185,12 @@
   .bottom {
     position-area: bottom span-right;
     margin-top: var(--space-1);
+  }
+  .bottom.end {
+    position-area: bottom span-left;
+  }
+  .top.end {
+    position-area: top span-left;
   }
   .top {
     position-area: top span-right;

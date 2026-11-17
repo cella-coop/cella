@@ -324,7 +324,10 @@
     overflow-x: hidden;
     overflow-y: auto;
     min-width: 0;
-    padding: var(--space-4);
+    /* No inset of its own on the content's side: the content's padding
+       alone is the gap, as wide as the content's own edge by the sidebar
+       (the operator, 17 Nov). */
+    padding: var(--space-4) var(--space-4) var(--space-4) 0;
   }
   .panel {
     display: grid;
@@ -348,6 +351,7 @@
       z-index: 2;
       width: min(var(--drawer), 100%);
       height: 100%;
+      padding-left: var(--space-4);
       border-left: 1px solid var(--line);
       background: var(--float);
       box-shadow: var(--shadow-float);

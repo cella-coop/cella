@@ -46,8 +46,11 @@ test('circles never nest, and one circle only is the assembly', async () => {
   const columns = await db.query<{ c: string }>(
     `SELECT column_name AS c FROM information_schema.columns WHERE table_schema = 'circle' AND table_name = 'circle' ORDER BY ordinal_position`,
   )
-  assert.deepEqual(columns.rows.map((r) => r.c), ['id', 'name', 'assembly', 'purpose', 'procedure'])
-  assert.equal((await db.query(`SELECT FROM cella.guard WHERE op LIKE 'circle:circle:%'`)).rowCount, 0)
+  assert.deepEqual(columns.rows.map((r) => r.c), ['id', 'name', 'assembly', 'purpose', 'procedure', 'icon'])
+  // A circle changes by motion, unguarded, save its icon: a holder of
+  // `arrange-features` sets it at once, judged by its power alone.
+  const guards = await db.query<{ op: string; fn: string }>(`SELECT op, fn::text FROM cella.guard WHERE op LIKE 'circle:circle:%' ORDER BY op, fn`)
+  assert.deepEqual(guards.rows, [{ op: 'circle:circle:icon', fn: 'circle_person.empowered(jsonb)' }])
 })
 
 test('a mandate keeps its grant, and a revoked one stays revoked, from its day or an earlier one', async () => {

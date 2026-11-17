@@ -486,7 +486,7 @@ test('the log the shell wrote verifies, and Activity reads it as a list whose ev
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
   const { text } = await page('/log')
   assert.ok(text.includes('verifies'))
-  assert.match(text, /class="list"/, 'Activity opens as a list')
+  assert.match(text, /class="list[\s"]/, 'Activity opens as a list')
   // Julien's issue, said from its op and linked to its invoice by the id
   // `cella.records` reads.
   assert.match(text, /<a href="\/invoices\/F-2026-0056" class="title stretched[^"]*"[^>]*>issued invoice F-2026-0056<\/a>/)

@@ -240,15 +240,6 @@
       </button>
     {/if}
   {/snippet}
-  {#if changed && keep && discard}
-    <div class="unsaved" role="status">
-      <span>Unsaved changes</span>
-      <span class="keep">
-        <Button onclick={discard}>Reset</Button>
-        <Button tone="primary" onclick={keep}>Save</Button>
-      </span>
-    </div>
-  {/if}
   <div class="views" role="group" aria-label="Layout">
     {#each layouts as l (l.id)}
       <button class:on={spec.layout === l.id} aria-pressed={spec.layout === l.id} aria-label={l.label} title={l.label} onclick={() => change({ layout: l.id })}>
@@ -395,6 +386,15 @@
       </div>
     {/if}
   </div>
+  {#if changed && keep && discard}
+    <div class="unsaved" role="status">
+      <span>Unsaved changes</span>
+      <span class="keep">
+        <Button onclick={discard}>Reset</Button>
+        <Button tone="primary" onclick={keep}>Save</Button>
+      </span>
+    </div>
+  {/if}
 </Card>
 
 <style>
@@ -511,8 +511,11 @@
     gap: var(--space-2);
   }
   /* Changes this page made to the open view: one quiet line at the panel's
-     top, what keeps or drops them at its end. */
+     foot, under a hairline, what keeps or drops them at its end. */
   .unsaved {
+    margin-top: var(--space-2);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line);
     display: flex;
     align-items: center;
     justify-content: space-between;

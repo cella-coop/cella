@@ -127,7 +127,7 @@ draws.
   reads whole. A sign-in clears it, so it lands in the assembly. Then,
   always shown, the Inbox, whole whatever the lens, since it is what
   waits on the member, where `/` and the sign-in land, and Activity,
-  the log read as a feed of who did what; then Pinned, the one place
+  the log read as a list of who did what; then Pinned, the one place
   the same in every circle: the views the member pinned, a collection's
   preset or one of their own, each its icon and its name, opening its
   view at its own address, in the circle the member is in unless the
@@ -292,13 +292,13 @@ draws.
 - `Collection`: the one collection component, the same header, view bar
   and rows for every collection, and a drawer holding one panel, View
   (`Viewing`), of one shape for every collection, as Linear's display
-  menu. At its top the layout, a segmented control of icons (list · feed ·
+  menu. At its top the layout, a segmented control of icons (list ·
   table · gallery · board · calendar · dashboard, those the
   collection's fields allow), then the search box (Search), then the
   same rows in the same order everywhere, each a label and a dropdown,
   ending on one right edge: Group by
   (any enumeration, person or circle field, a date by its month, or
-  None: a board's columns, never a month, and in a list, a feed, a
+  None: a board's columns, never a month, and in a list, a
   table and a gallery a header over each group's rows, naming its
   value, a date's month in full, and its count as a board's column
   does, the field leaving the rows, as its header names it; a
@@ -314,8 +314,7 @@ draws.
   without it, a person's and a circle's among them; the conditions
   under it as chips); then Display, a
   row that opens a popover of what is shown (in a list, the fields under
-  and after each row's title, in a feed, the fields after each line's
-  title, in a table, its columns, in
+  and after each row's title, in a table, its columns, in
   a gallery or on a board, its cards' fields, in a calendar, its cards'
   fields, in a dashboard, its widgets); then Circles, what the view
   reads: This circle, the lens's, or Every circle, which drops the
@@ -348,7 +347,7 @@ draws.
   chooses them; a table shows them once a view does, as the shell's
   look of every collection hides them (`hide`), and a list, a gallery,
   a board and a calendar as a view's fields. So every collection holds
-  a date and a person, and offers a feed and a calendar. Its rows
+  a date and a person, and offers a calendar. Its rows
   are the server's, kept, filtered, ordered and paged in SQL, and only
   the lensed circle's where the member has a lens, but in a view across
   circles: a collection whose
@@ -356,12 +355,12 @@ draws.
   leaves it whole
   ([reading at scale](../../../../_corpus/doc/architecture.md#reading-at-scale),
   [the lens](../../../../_corpus/doc/architecture.md#the-lens)):
-  a list, a feed, a table and a gallery draw a hundred rows at a time
+  a list, a table and a gallery draw a hundred rows at a time
   (`PAGE`), with a button under them that asks the address for the
   next hundred (`n`) and how many of the rows are drawn; the keyboard
   moving past the last drawn row asks for the next page, and the text
   filter goes into the address once the typing pauses, which draws the
-  first page again. A grouped list, feed, table or gallery reads its
+  first page again. A grouped list, table or gallery reads its
   rows group by group, the groups in the order a board's columns take
   (`lanes`), any other value after them, months among them, the way the
   view's sort runs, a row with no value for the field in a last group,
@@ -376,11 +375,7 @@ draws.
   and, where the collection offers New, a + ("Create in …", never
   named New, so the two are never confused by a voice or a test) opens
   the same dialog (`Group`, `models/query.ts`'s `groupTint`). A
-  board and a calendar place every row the view keeps. The feed draws each row as one line of who did what and when,
-  as a record's Activity reads: its first person column as their chip,
-  then its title, linked, then its first date, and the time links to
-  the row's own page where the view links its title elsewhere; it is
-  offered only where a column is a person and one a date. `Gallery`
+  board and a calendar place every row the view keeps. `Gallery`
   lays the items out as cards (`Tile`); `Board` puts them in a column
   per value of an enumeration, a person or a circle, each with its
   count, the board offered only where a field is one of them; `Calendar` puts them on the days of a
@@ -408,7 +403,7 @@ draws.
   no row at all says it is empty. A view, its extensions overriding it part by
   part, declares its `look`: its default layout, the field every layout
   groups by (`by`: a board's columns, a calendar's colours, a list's,
-  a feed's, a table's and a gallery's headers), the order it sorts by
+  a table's and a gallery's headers), the order it sorts by
   (`sort`) and the tiebreak after any sort (`then`, as the inbox's
   since, so an ask with no due date follows those with one, the
   longest waiting first), its groups' and columns' order (`lanes`), its
@@ -419,7 +414,7 @@ draws.
   a list grouped by it (invoices, bills, periods; timesheets as a
   table, the approval queue); a circle's records group by circle
   (projects, documents, mandates by their issuer), and history by its
-  month (transactions, payslips); the log opens as a feed, circles as a
+  month (transactions, payslips); the log opens as a list, circles as a
   gallery, accounts and timesheets as tables, where figures line up,
   meetings as a calendar of months tinted by circle. In a list, a
   row's trailing date takes the width of the widest date, in tabular
@@ -472,7 +467,7 @@ draws.
   read orders by first (`ordered`), where one select reads its rows and
   its order leads with a field by name. Clicking a table's header orders
   by its field, and again turns the direction. The view's order is
-  every layout's: a list's, a feed's, a table's and a gallery's rows, a
+  every layout's: a list's, a table's and a gallery's rows, a
   board's cards in each column and a calendar's in each day, each read
   in that order by the one statement, so the next hundred continue it.
 - `Detail`: the one record page, the same for every collection, as
@@ -663,10 +658,9 @@ A `Column` places itself in the list view by `role`: the title, the line
 under it, the trailing meta, or the table alone. Its role is where it
 goes and what a list shows before a view chooses; a view's Display
 chooses which of a list's columns show, the title always among them,
-and which fields a feed's line shows after its title, both kept as
-`cards` in the view and its address, so a column the table alone shows
+kept as `cards` in the view and its address, so a column the table alone shows
 by default can be put in a list's meta. A look's cards' fields are its
-cards', not a list's or a feed's: either shows its own default until
+own, not a list's: it shows its own default until
 the view chooses otherwise.
 
 A value that names a record wears its collection's icon before it,

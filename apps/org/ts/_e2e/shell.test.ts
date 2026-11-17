@@ -482,18 +482,16 @@ test("withholding open books ends the disclosure rule in force and nothing else:
   assert.equal(await withholdings(), proposed, 'nothing is proposed')
 })
 
-test('the log the shell wrote verifies, and Activity reads it as a feed whose every line opens its record', async () => {
+test('the log the shell wrote verifies, and Activity reads it as a list whose every line opens its record', async () => {
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
   const { text } = await page('/log')
   assert.ok(text.includes('verifies'))
-  assert.match(text, /class="list feed[\s"]/, 'Activity opens as a feed')
+  assert.match(text, /class="list[\s"]/, 'Activity opens as a list')
   // Julien's issue, said from its op and linked to its invoice by the id
   // `cella.records` reads.
-  assert.match(text, /<a href="\/invoices\/F-2026-0056" class="what stretched[^"]*"[^>]*>issued invoice F-2026-0056<\/a>/)
+  assert.match(text, /<a href="\/invoices\/F-2026-0056" class="title stretched[^"]*"[^>]*>issued invoice F-2026-0056<\/a>/)
   assert.match(text, /closed motion m-2026-012/)
-  // The time of a line that links to its record opens the entry itself.
-  assert.match(text, /<a href="\/log\/\d+" class="when[\s"]/)
-  const lines = [...text.matchAll(/<a href="([^"]+)" class="what stretched[\s"]/g)].map((m) => m[1].replaceAll('&amp;', '&'))
+  const lines = [...text.matchAll(/<a href="([^"]+)" class="title stretched[\s"]/g)].map((m) => m[1].replaceAll('&amp;', '&'))
   assert.ok(lines.length > 0)
   for (const href of new Set(lines)) {
     assert.equal((await page(href)).status, 200, `${href} opens`)

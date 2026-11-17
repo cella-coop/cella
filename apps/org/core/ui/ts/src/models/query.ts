@@ -275,8 +275,13 @@ export function result(w: Widget, measured: number | null | { label: string; val
   return { kind: 'chart', title: w.title, format: format(w.measure, fs), line, points }
 }
 
-export const layouts = ['list', 'feed', 'table', 'gallery', 'board', 'calendar', 'dashboard'] as const
+export const layouts = ['list', 'table', 'gallery', 'board', 'calendar', 'dashboard'] as const
 export type Layout = (typeof layouts)[number]
+
+// A layout as a view, a URL or a browser's saved one named it: the feed
+// is gone, folded into the list it always was, so a spec still naming it
+// opens as a list rather than breaking.
+export const asLayout = (raw: string | null | undefined): Layout | undefined => (raw === 'feed' ? 'list' : layouts.find((l) => l === raw))
 
 // The order a view sorts its rows in: by one field, ascending or
 // descending; the server reads them so, in SQL.
@@ -333,7 +338,7 @@ export const opens = (rows: Record<string, unknown>[], i: number, key: string, m
 export const groupTint = (by: Column, value: string, month: boolean): number | null =>
   by.record && !by.tone && !month && value !== '' ? inkOf(value) : null
 
-// How a list, a feed, a table and a gallery draw the rows grouped by a
+// How a list, a table and a gallery draw the rows grouped by a
 // field: the column and how many rows each value holds across every
 // page, a date's by its month; the values the viewer collapsed, by
 // value, and what collapses one; and, where the collection offers New,
@@ -351,7 +356,7 @@ export interface Grouping {
 // the text filter, the table's hidden columns and its columns' order (the
 // keys it moved; the rest follow as declared), the field the rows are
 // sorted by and which way, null for the collection's own order, the
-// enumeration, person or circle a list, a feed, a table, a gallery or a
+// enumeration, person or circle a list, a table, a gallery or a
 // board groups by, null for none, the fields a gallery's or a board's
 // cards show, the date a calendar places the rows by and whether it
 // shows a month or a week, and the dashboard's widgets, null for the
@@ -497,7 +502,7 @@ export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[], look
   const id = preset?.id ?? (asked && /^c-[\w-]{1,40}$/.test(asked) ? asked : all.id)
   const base = spec(preset ?? ps.find((p) => p.id === id) ?? all, look)
   const errors: string[] = []
-  const layout = layouts.find((l) => l === params.get('view')) ?? base.layout
+  const layout = asLayout(params.get('view')) ?? base.layout
   let where = base.where
   const w = json(params.get('where'))
   if (w !== undefined) {
@@ -623,7 +628,7 @@ export function saved(x: unknown): Saved {
     if (Array.isArray(list)) {
       store.views[name] = list
         .filter((c) => typeof c?.id === 'string' && /^c-[\w-]{1,40}$/.test(c.id) && typeof c.name === 'string' && typeof c.spec === 'object')
-        .map((c) => ({ ...c, spec: { ...spec(), ...c.spec } }))
+        .map((c) => ({ ...c, spec: { ...spec(), ...c.spec, layout: asLayout(c.spec?.layout) ?? 'list' } }))
     }
   }
   const pins: unknown = (x as Saved).pins

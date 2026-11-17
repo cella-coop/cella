@@ -1,8 +1,8 @@
 // A view orders its rows by any field, either way, in every browser:
 // signed in as Julien on the dev server, the expenses ordered by their
 // amount and by the day they were spent, each way, in a list, a table, a
-// gallery, a board and a calendar, and the files, the collection that
-// offers a feed, by the day they were uploaded and by their size, shown
+// gallery, a board and a calendar, and the files, by the day they were
+// uploaded and by their size, shown
 // as text; each layout draws its rows in the order the scenario works out
 // from the rows themselves, a number by its amount, a board's in each
 // column and a calendar's on each day. Order by and its direction put the
@@ -57,7 +57,7 @@ async function expected(name: string, sort: Sort): Promise<string[]> {
 const panel = (page: Page) => page.locator('section.card', { has: page.getByRole('heading', { name: 'View', exact: true }) })
 
 // The ids a layout draws, in order, in each of its groups: a board's
-// columns, a calendar's days, a feed's lines, else the rows as one.
+// columns, a calendar's days, else the rows as one.
 async function drawn(page: Page, name: string, layout: string): Promise<string[][]> {
   // The collection's rows, not the View panel's.
   const rows = page.locator('div.rows:not(:has(> .label))')
@@ -151,9 +151,9 @@ eachBrowser((browserName, launch) => {
         await ordering('expenses', layout, ['total', 'day'], '-day')
       }
 
-      await visit('/files?view=feed&by=')
-      assert.equal(await panel(page).getByRole('button', { name: 'Feed', exact: true }).getAttribute('aria-pressed'), 'true', `${browserName}: files in a feed`)
-      await ordering('files', 'feed', ['uploaded', 'size'], '-uploaded')
+      await visit('/files?view=list&by=')
+      assert.equal(await panel(page).getByRole('button', { name: 'List', exact: true }).getAttribute('aria-pressed'), 'true', `${browserName}: files in a list`)
+      await ordering('files', 'list', ['uploaded', 'size'], '-uploaded')
 
       // A table's header orders by its column, and again turns it; the
       // header says so.

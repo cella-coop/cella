@@ -5,7 +5,7 @@ import Guards from './blocks/Guards.svelte'
 
 const owners = (e: Entry) => e.guards.map((r) => r.owner).join(', ')
 
-// The log's client side: Activity, a feed of who did what and when, newest
+// The log's client side: Activity, a list of who did what and when, newest
 // first, each line linking to its record, and the whole log's verifying;
 // and each entry's page, its receipt, signatures and deciding guards.
 export const app: App = {
@@ -26,7 +26,7 @@ export const app: App = {
           { kind: 'kpi', title: 'This month', measure: { op: 'count' }, where: [{ field: 'date', within: 'month' }] },
           { kind: 'chart', title: 'Entries by month', measure: { op: 'count' }, by: 'date' },
         ],
-        look: { layout: 'feed' },
+        look: { layout: 'list' },
         empty: 'No write has reached the notary yet: the seed is the state before the log.',
         columns: [
           { key: 'what', label: 'What', role: 'title', value: (e: Entry) => said(e.op, e.records).text },

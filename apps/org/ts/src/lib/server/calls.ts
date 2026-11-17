@@ -65,8 +65,8 @@ export const collection = {
     // member reads.
     const from = source(name, spec.across ? null : await lensed(db, who.cookies, who.actor)) ?? named
     const day = await today(db)
-    const paged = spec.layout === 'list' || spec.layout === 'feed' || spec.layout === 'table' || spec.layout === 'gallery'
-    // The field a list, a feed, a table or a gallery groups its rows by,
+    const paged = spec.layout === 'list' || spec.layout === 'table' || spec.layout === 'gallery'
+    // The field a list, a table or a gallery groups its rows by,
     // read group by group in its board's order, and the one a board's
     // columns are, and the one a calendar's cards are coloured by; each
     // answered with all its values, as a board's columns are drawn from

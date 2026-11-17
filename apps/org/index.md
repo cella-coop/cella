@@ -1,6 +1,6 @@
 +++
 title = "Org"
-updated = 2026-11-14
+updated = 2026-11-16
 +++
 
 The cooperative workspace, for member-governed organisations. One deployment
@@ -60,7 +60,7 @@ the platform's are Settings', the member's Devices
 under Personal and the co-op's Imports under Organization, and Files is
 reached by the command menu ([the shell](core/ui/index.md#components)).
 Every collection is the same component, its drawer's View panel of one shape holding the
-layout (list, feed, table, gallery, board, calendar or dashboard), the filter, Group by,
+layout (list, table, gallery, board, calendar or dashboard), the filter, Group by,
 Order by, Filter and Display, and every item the same detail view, its
 drawer's cards filled by the feat and the grafts that join it.
 Ctrl-K jumps to any collection or item.

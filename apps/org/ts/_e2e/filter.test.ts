@@ -1,8 +1,8 @@
 // A view filters on any field with a handful of values, in every
 // browser: signed in as Julien on the dev server, the expenses filtered
 // by their status, an enumeration, in a list, a table, a gallery, a board
-// and a calendar; the files, the collection that offers a feed, by who
-// uploaded them, a person, in a feed and a list; and the mandates by the
+// and a calendar; the files, by who
+// uploaded them, a person, in a list; and the mandates by the
 // circle that issued them, a circle, in a list and on a board. Filter
 // offers each field, its chip's popover its values, a person and a circle
 // by name, and each layout draws only the rows the condition keeps, as
@@ -165,7 +165,7 @@ eachBrowser((browserName, launch) => {
       assert.ok(uploaders.length > 1, 'more than one person uploaded the files Julien reads')
       const names = Object.fromEntries((await people(app)).map((p) => [p.address, p.name]))
       const uploader = uploaders[0]
-      for (const layout of ['feed', 'list']) {
+      for (const layout of ['list']) {
         await visit(`/files?view=${layout}&by=&sort=`)
         await filtering('files', layout, { key: 'uploader', label: 'By' }, uploader, names[uploader] ?? uploader)
       }

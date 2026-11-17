@@ -203,11 +203,12 @@ pkgs.testers.runNixOSTest {
       def probe_refused(db, who, ip):
           return host.fail(f"""${as "PROBE_COOKIE=__Host-cella-visitor={jar[who]} PGDATABASE={db} PGUSER=postgres node ${probeTs} {front}"} 2>&1""")
 
-      # Opens a room's Share this copy link as a fresh browser, `who`
-      # holding none yet: the status it answered, and, joined, its cookie
-      # kept under `who` as any other browser's is.
-      def join_room(who, ip, code):
-          out = host.succeed(curl(who, ip, f"-D - -o /dev/null {front}/_demo/join?code={code}"))
+      # Posts a room's join code as its own page's script would, `who`
+      # holding no room yet: the status it answered, and, joined, its
+      # cookie kept under `who` as any other browser's is. `origin`
+      # stands for the page's own, same-origin by default.
+      def join_room(who, ip, code, origin=None):
+          out = host.succeed(curl(who, ip, f"-D - -o /dev/null -X POST -H 'Origin: {origin or front}' --data-raw '{code}' {front}/_demo/join"))
           status_line = out.split()[1]
           set = re.search(r"(?im)^set-cookie: __Host-cella-visitor=([A-Za-z0-9_-]+);.*Secure", out)
           if set:
@@ -357,19 +358,29 @@ pkgs.testers.runNixOSTest {
           host.wait_until_succeeds(f"curl -sf {front}/_demo/health", timeout=120)
           assert copies() == [] and roles() == [], f"{copies()} {roles()} left"
 
-      with subtest("a room's Share this copy link lets another browser join it, not counted against its address' limits"):
+      with subtest("a room's Share this copy link carries its code in the fragment, which a GET never reads"):
           p, psignin = visit("p", "10.0.0.20")
-          found = re.search(r"/_demo/join\?code=([A-Za-z0-9_-]+)", psignin)
-          assert found, "the banner offers no Share this copy link"
+          found = re.search(r"/_demo/join#([A-Za-z0-9_-]+)", psignin)
+          assert found, "the banner offers no Share this copy link, its code in the fragment"
           code = found.group(1)
-          assert join_room("p2", "10.0.0.20", code) == "303", "opening the link did not join the room"
+          assert status("p2", "10.0.0.20", f"{front}/_demo/join") == "200", "the join page itself answers nothing of a code"
+          assert status("p2", "10.0.0.20", f"{front}/_demo/join?code={code}") == "200", "a code in the query is no longer read; the join page is served all the same"
+          assert copies() == [p], f"opening the join page made a copy: {copies()}"
+
+      with subtest("posting the code same-origin joins the room, not counted against its address' limits"):
+          assert join_room("p2", "10.0.0.20", code) == "303", "posting the code did not join the room"
           assert copies() == [p], f"joining made a copy of its own: {copies()}"
           joined = page("p2", "10.0.0.20", "/sign-in")
           assert "Camille Martin" in joined and notice in joined, "the joined browser does not read the same room"
           assert code in joined, "the joined browser's own banner still offers the room's link"
           assert status("p2", "10.0.0.20", f"-X POST -H 'Origin: {front}' {front}/_demo/start") == "200", "the joined browser has no room of its own"
           assert copies() == [p], f"asking again made a copy: {copies()}"
-          assert status("p3", "10.0.0.20", f"{front}/_demo/join?code=wrong") == "404", "a wrong code was not refused"
+          assert join_room("p3", "10.0.0.20", "wrong") == "404", "a wrong code was not refused"
+
+      with subtest("a cross-origin post of a room's code is refused, as a cross-site start or reset is"):
+          refused = join_room("p4", "10.0.0.20", code, origin="http://elsewhere.example")
+          assert refused == "403", f"a cross-site join answered {refused}"
+          assert "p4" not in jar, "a refused cross-site join still set a cookie"
 
       with subtest("a fixture member is one browser's at a time in a room; a second browser already there is refused it"):
           probe(p, "p", "10.0.0.20")

@@ -24,8 +24,10 @@
 // A visitor arriving without a room is shown a page saying their co-op is
 // being prepared, whose script asks the front to make one (POST
 // /_demo/start), so a crawler that runs no script makes none; once made,
-// the page goes on to it. Past `--cap` rooms at once, a newcomer sees a
-// plain, auto-retrying queue page instead. A room ends after `--idle`
+// the page goes on to it. Past `--cap` rooms at once, with none to evict,
+// that POST answers plainly that every copy is in use, which the same
+// script shows and keeps retrying: a newcomer is queued, without a page
+// of its own. A room ends after `--idle`
 // seconds with no request from any browser in it, `--lifetime` seconds
 // after it was made however busy, when its server passes `--memory` MiB,
 // when it stores past twice `--storage` MiB (past `--storage` it takes no
@@ -700,17 +702,19 @@ ${lines.map((l) => `<p>${l}</p>`).join('\n')}
   res.end(body)
 }
 
-// A visitor with no room, shown while the front makes one, polling
-// `/_demo/start`: `queued`, every room full already, says so plainly
-// instead, the same script retrying it until one frees up.
-function prepare(res, { again = false, queued = false } = {}) {
+// A visitor with no room, shown while the front makes one, its script
+// polling `/_demo/start`, so a crawler that runs no script makes none.
+// Past the cap with nothing to evict, that POST answers 503, "Every copy
+// the demo holds is in use; try again in a few minutes.", which the same
+// script shows in place of this page's own line and retries: a newcomer
+// is queued, plainly, without this page itself guessing whether the cap
+// holds (an idle or oldest room may still be evicted for it).
+function prepare(res, { again = false } = {}) {
   page(res, 200, {
-    title: queued ? 'Waiting for a free copy' : 'Preparing your co-op',
+    title: 'Preparing your co-op',
     lines: [
       ...(again ? ['Your earlier copy was reset.'] : []),
-      queued
-        ? 'Every copy of Lanterne, a mock co-op, is in use right now. This page asks again every few seconds and goes on as soon as one frees up.'
-        : 'Your copy of Lanterne, a mock co-op, is being prepared: it is yours to share, nobody outside it sees what you do, and nobody signs up.',
+      'Your copy of Lanterne, a mock co-op, is being prepared: it is yours to share, nobody outside it sees what you do, and nobody signs up.',
       `It resets after ${hours()} with no visit.`,
       '<noscript>Preparing it needs JavaScript.</noscript><span id="state"></span>',
     ],
@@ -830,7 +834,7 @@ async function handle(req, res) {
   if (!copy) {
     req.resume()
     if (req.method === 'GET' || req.method === 'HEAD') {
-      return prepare(res, { again: !!cookie, queued: rooms().size >= config.cap })
+      return prepare(res, { again: !!cookie })
     }
     return plain(res, 409, 'Your copy was reset; reload the page.')
   }

@@ -3,7 +3,7 @@ import { priorities, statuses, type Page, type Priority, type Status as Stage, t
 import Body from './blocks/Body.svelte'
 import Comments from './blocks/Comments.svelte'
 import Create from './blocks/Create.svelte'
-import Status from './blocks/Status.svelte'
+import Complete from './blocks/Complete.svelte'
 
 const tones: Record<Stage, Tone> = { backlog: 'neutral', todo: 'neutral', doing: 'accent', done: 'positive' }
 
@@ -41,7 +41,21 @@ export const app: App = {
         title: (t: Page) => t.title,
         subtitle: (t: Task) => t.id,
         properties: (t: Task) => [
-          { label: 'Status', value: t.status, kind: 'badge', tone: tones[t.status] },
+          {
+            label: 'Status',
+            value: t.status,
+            kind: 'badge',
+            tone: tones[t.status],
+            edit: {
+              kind: 'pick' as const,
+              write: 'move',
+              field: 'status',
+              current: t.status,
+              // Done is a completion, which sets its day.
+              writes: { done: 'complete' },
+              options: statuses.map((s) => ({ value: s, label: s, kind: 'badge' as const, tone: tones[s] })),
+            },
+          },
           { label: 'Priority', value: t.priority, kind: 'priority' },
           { label: 'Due', value: t.due, kind: 'date' },
           { label: 'Created', value: t.created, kind: 'date' },
@@ -50,7 +64,7 @@ export const app: App = {
         activity: (t: Task) => [...(t.completed ? [{ at: t.completed, text: 'completed' }] : []), { at: t.created, text: 'created' }],
         blocks: [Body],
         comment: Comments,
-        actions: Status,
+        actions: Complete,
       },
     },
   },

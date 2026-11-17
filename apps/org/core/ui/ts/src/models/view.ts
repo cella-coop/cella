@@ -60,6 +60,11 @@ export interface Edit {
   none?: string
   number?: boolean
   extra?: [string, string][]
+  // Where a choice is another write than `write`, by the choice's value: a
+  // task's status moves, but done is a completion.
+  writes?: Record<string, string>
+  // What a typed value is asked in, as its placeholder: euros for a sum.
+  hint?: string
 }
 
 // A property whose edit is a slice's own: a block drawn in its popover,

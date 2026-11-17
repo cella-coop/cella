@@ -58,7 +58,14 @@ export const app: App = {
           { label: 'Started', value: p.started, kind: 'date', group: 'Dates' },
           { label: 'Due', value: p.due, kind: 'date', group: 'Dates' },
           ...(p.archived ? [{ label: 'Archived', value: p.archived, kind: 'date' as const, group: 'Dates' }] : []),
-          { label: 'Budget', value: p.budget, kind: 'money', group: 'Money' },
+          {
+            label: 'Budget',
+            value: p.budget,
+            kind: 'money',
+            group: 'Money',
+            // Typed in euros; ordered, and refused below what was shared from it.
+            edit: p.archived ? undefined : { kind: 'text' as const, number: true, write: 'budget', field: 'amount', current: p.budget === null ? '' : String(p.budget / 100), hint: 'Budget in euros, 48000' },
+          },
         ],
         history: false,
         activity: (p: Detail) => [

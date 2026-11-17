@@ -21,7 +21,7 @@
 
   async function commit(e: Edit, value: string) {
     s.problem = ''
-    const answer = await writes.shown(writes.send(e.write, [[e.field, value], ...(e.extra ?? [])]))
+    const answer = await writes.shown(writes.send(e.writes?.[value] ?? e.write, [[e.field, value], ...(e.extra ?? [])]))
     if (!took(answer)) {
       s.problem = 'The change was not made.'
     }
@@ -67,7 +67,7 @@
       }}
     >
       <!-- svelte-ignore a11y_autofocus -->
-      <input type={edit.number ? 'number' : 'text'} aria-label={label} value={s.typed ?? text(edit)} oninput={(ev) => (s.typed = ev.currentTarget.value)} autofocus />
+      <input type={edit.number ? 'number' : 'text'} aria-label={label} placeholder={edit.hint} value={s.typed ?? text(edit)} oninput={(ev) => (s.typed = ev.currentTarget.value)} autofocus />
     </form>
   {/if}
   {#if s.problem}<p class="problem" role="alert">{s.problem}</p>{/if}

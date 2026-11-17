@@ -27,10 +27,10 @@ export const variables = defineEnvVars({
       "A visitor's copy of the demo, as `cella demo serve` starts each: how many seconds with no request before the copy resets, which the demo's banner counts down beside its Reset now. Unset, a demo that is no visitor's copy, with neither.",
     schema: (v) => (v ? whole(v, 'CELLA_DEMO_IDLE') : 0),
   },
-  CELLA_DEMO_ENDS: {
+  CELLA_DEMO_LIFETIME: {
     description:
-      "A visitor's copy of the demo: when it resets however busy, in seconds since 1970, which `cella demo serve` sets from its lifetime; the banner counts down to it where it comes before the idle reset. Unset, no such end.",
-    schema: (v) => (v ? whole(v, 'CELLA_DEMO_ENDS') : 0),
+      "A visitor's copy of the demo, now a room: how many seconds it may run, however busy, once its first member signs in, which `cella demo serve` passes from its own `--lifetime` so this process, not the front, decides when that clock starts (`#lib/server/leases.ts`'s first grant); the banner counts the room's lifetime down from then. Unset, no such lifetime.",
+    schema: (v) => (v ? whole(v, 'CELLA_DEMO_LIFETIME') : 0),
   },
   CELLA_DEMO_JOIN: {
     description:

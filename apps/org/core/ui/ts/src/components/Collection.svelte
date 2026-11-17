@@ -15,6 +15,7 @@
     opens,
     PAGE,
     spec as preset,
+    swimlane,
     type Custom,
     type Pin,
     type Look,
@@ -213,9 +214,14 @@
 
   // The gallery's and the board's cards: the view's fields, or the
   // collection's lines under a title and its trailing meta; and the
-  // board's enumeration, person or circle, when the view names none the
-  // one the collection's look names, else its first enumeration.
-  const grouped = $derived(columns.find((c) => c.key === grouping({ layout: 'board', by: spec.by }, typed, look)?.key))
+  // board's columns, an enumeration, person or circle: the view's own
+  // `columns`, else, migrated in code, the one its `by` named before a
+  // board had columns of its own, else the one the collection's look
+  // names, else its first enumeration.
+  const grouped = $derived(columns.find((c) => c.key === grouping({ layout: 'board', by: spec.by, columns: spec.columns }, typed, look)?.key))
+  // A board's swimlanes: the field its rows group by, each lane holding
+  // the whole set of columns; none for a single lane.
+  const laning = $derived(columns.find((c) => c.key === swimlane(spec, typed)?.key))
   // The field a list, a table or a gallery groups its rows by,
   // where the view names one: a header over each group's rows, with its
   // value and how many rows it holds across every page, a chevron that
@@ -242,7 +248,7 @@
   const shown = $derived(
     choosing ? chosen(fixed)
     : spec.layout === 'list' ? [...subs, ...metas].filter((c) => c !== group?.by)
-    : [...subs, ...metas].filter((c) => c !== grouped && c !== group?.by),
+    : [...subs, ...metas].filter((c) => c !== grouped && c !== laning && c !== group?.by),
   )
   // A list places each field it shows by its role: a line under the title
   // goes under it, any other after it, with the meta.
@@ -390,6 +396,7 @@
     {shown}
     {choices}
     grouped={grouped?.key}
+    swimlane={laning?.key}
     placing={placing?.key}
     {declared}
     opened={base}
@@ -515,6 +522,10 @@
         rows={state.shown}
         by={grouped}
         lanes={lanes(look, grouped.key, values[grouped.key] ?? [])}
+        swimlane={laning}
+        swimlanes={laning ? lanes(look, laning.key, values[laning.key] ?? []) : []}
+        collapsed={state.collapsed}
+        oncollapse={(v) => state.toggleGroup(v)}
         {titled}
         {shown}
         {href}

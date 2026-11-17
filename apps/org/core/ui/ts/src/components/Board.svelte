@@ -4,13 +4,18 @@
   import { transfer } from '../attachments/transfer.ts'
   import { useDrag } from '../hooks/useDrag.ts'
   import Cell from './Cell.svelte'
+  import Group from './Group.svelte'
   import Tile from './Tile.svelte'
 
   // The one board: a column per value of the enumeration, the person or
   // the circle it groups by, a person's under their chip and a circle's
   // under its name, in the declared order, each with its count and its
   // cards. A card drags only into a column the collection's moves make a
-  // write, which `onshift` runs; every other column takes no drop.
+  // write, which `onshift` runs; every other column takes no drop. Where
+  // the view also groups by a field of its own, `swimlane`, the rows
+  // split first into a lane per its value, each a group bar
+  // (`Group.svelte`, the same as a list's), collapsible, holding the
+  // whole set of columns again; none splits them into one.
   let {
     rows,
     by,
@@ -20,6 +25,10 @@
     href,
     shifts,
     onshift,
+    swimlane,
+    swimlanes = [],
+    collapsed,
+    oncollapse,
   }: {
     rows: any[]
     by: Column
@@ -29,47 +38,80 @@
     href?: (row: any) => string | undefined
     shifts: Shift[]
     onshift: (id: string, move: Shift, from: string, to: string) => void
+    swimlane?: Column
+    swimlanes?: string[]
+    collapsed?: Set<string>
+    oncollapse?: (value: string) => void
   } = $props()
 
   const drag = useDrag()
   const lane = (row: any) => String(by.value(row) ?? '—')
   const takes = (from: string, to: string) => !!shift(shifts, by.key, from, to)
   const label = (id: string) => String(titled.value(rows.find((r) => r.id === id)) ?? id)
+  const laid = (row: any) => String(swimlane?.value(row) ?? '')
 </script>
 
-<div
-  class="board"
-  {@attach transfer(drag, {
-    group: 'board',
-    lists: () => lanes,
-    takes: (_, from, to) => takes(from, to),
-    label,
-    ondrop: (id, from, to) => {
-      const move = shift(shifts, by.key, from, to)
-      if (move) {
-        onshift(id, move, from, to)
-      }
-    },
-  })}
->
-  {#each lanes as l (l)}
-    {const cards = $derived(rows.filter((r) => lane(r) === l))}
-    {const open = $derived(!!drag.carry.group && takes(drag.carry.origin, l))}
-    <section class="lane" class:open class:aimed={drag.aimed('board', l)} data-drop-list={l} aria-label="{by.label}: {l}, {cards.length}">
-      <h3>
-        {#if by.kind === 'person' || by.kind === 'circle'}<Cell value={l} kind={by.kind} />{:else}<span>{l}</span>{/if}
-        <span class="count">{cards.length}</span>
-      </h3>
-      <div class="cards">
-        {#each cards as row (row.id)}
-          <Tile {row} {titled} {shown} href={href?.(row)} group="board" from={l} dragging={drag.carrying('board', row.id)} />
-        {/each}
-      </div>
-    </section>
-  {/each}
-</div>
+<!-- The columns of one lane, or of the whole board where it has no
+     swimlanes: a card drags only within the group it opens in. -->
+{#snippet columns(of: any[], group: string)}
+  <div
+    class="board"
+    {@attach transfer(drag, {
+      group,
+      lists: () => lanes,
+      takes: (_, from, to) => takes(from, to),
+      label,
+      ondrop: (id, from, to) => {
+        const move = shift(shifts, by.key, from, to)
+        if (move) {
+          onshift(id, move, from, to)
+        }
+      },
+    })}
+  >
+    {#each lanes as l (l)}
+      {const cards = $derived(of.filter((r) => lane(r) === l))}
+      {const open = $derived(!!drag.carry.group && drag.carry.group === group && takes(drag.carry.origin, l))}
+      <section class="lane" class:open class:aimed={drag.aimed(group, l)} data-drop-list={l} aria-label="{by.label}: {l}, {cards.length}">
+        <h3>
+          {#if by.kind === 'person' || by.kind === 'circle'}<Cell value={l} kind={by.kind} />{:else}<span>{l}</span>{/if}
+          <span class="count">{cards.length}</span>
+        </h3>
+        <div class="cards">
+          {#each cards as row (row.id)}
+            <Tile {row} {titled} {shown} href={href?.(row)} {group} from={l} dragging={drag.carrying(group, row.id)} />
+          {/each}
+        </div>
+      </section>
+    {/each}
+  </div>
+{/snippet}
+
+{#if swimlane}
+  <div class="swimlanes">
+    {#each swimlanes as s (s)}
+      {const of = $derived(rows.filter((r) => laid(r) === s))}
+      <section class="swimlane">
+        <Group by={swimlane} row={of[0] ?? {}} value={s} count={of.length} collapsed={collapsed?.has(s) ?? false} oncollapse={oncollapse && (() => oncollapse(s))} />
+        {#if !collapsed?.has(s)}
+          {@render columns(of, `board-${s}`)}
+        {/if}
+      </section>
+    {/each}
+  </div>
+{:else}
+  {@render columns(rows, 'board')}
+{/if}
 
 <style>
+  .swimlanes {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .swimlane {
+    display: grid;
+    gap: var(--space-2);
+  }
   .board {
     display: grid;
     grid-auto-flow: column;

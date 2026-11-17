@@ -2,13 +2,17 @@
 // signed in as Camille on the dev server, each collection the sidebar
 // mounts draws, under its layout and its text filter, the same rows in
 // the same order, Group by, Order by, Filter, Display and Circles,
-// whatever its fields. On tasks, a board, Group by is its enumeration; a
-// field chosen in Filter opens its chip's popover, a value picked there
-// keeps the rows in the address and names itself on the chip, and Remove
-// takes the condition away; Display opens a popover of the cards' fields. On
-// meetings, a calendar, Group by is its date and span. Light and dark,
-// `SHOTS` names where its screenshots go. Nothing is written. Run by
-// `cella test e2e view`; Group by is driven by its keyboard too.
+// whatever its fields; on a board, Columns above Grouping instead, as
+// Linear's. On tasks, a board, Columns is its enumeration, migrated from
+// the grouping an older view named, and Grouping opens on None, one
+// lane, until it names a field of its own, each lane the whole set of
+// columns; a field chosen in Filter opens its chip's popover, a value
+// picked there keeps the rows in the address and names itself on the
+// chip, and Remove takes the condition away; Display opens a popover of
+// the cards' fields. On meetings, a calendar, Group by is its date and
+// span. Light and dark, `SHOTS` names where its screenshots go. Nothing
+// is written. Run by `cella test e2e view`; Columns is driven by its
+// keyboard too.
 // covers: all
 
 import { test } from 'node:test'
@@ -20,6 +24,7 @@ import { choose, chosen, offered } from './controls.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-view-shots'
 const rows = ['Group by', 'Order by', 'Filter', 'Display', 'Circles']
+const boardRows = ['Columns', 'Grouping', 'Order by', 'Filter', 'Display', 'Circles']
 
 const panel = (page: Page) => page.locator('section.card', { has: page.getByRole('heading', { name: 'View', exact: true }) })
 
@@ -63,7 +68,9 @@ eachBrowser((name, launch) => {
               continue
             }
             seen++
-            assert.deepEqual(await view.locator('.rows > .label').allTextContents(), rows, `${at}: ${path}'s View panel has the one shape`)
+            const boardBtn = view.getByRole('button', { name: 'Board', exact: true })
+            const board = (await boardBtn.count()) > 0 && (await boardBtn.getAttribute('aria-pressed')) === 'true'
+            assert.deepEqual(await view.locator('.rows > .label').allTextContents(), board ? boardRows : rows, `${at}: ${path}'s View panel has the one shape`)
             assert.equal(await view.getByRole('group', { name: 'Layout' }).count(), 1, `${at}: ${path}'s layout is on top`)
           }
           assert.ok(seen > 10, `${at}: the panel is checked on most collections, ${seen}`)
@@ -71,7 +78,10 @@ eachBrowser((name, launch) => {
 
         await visit('/tasks')
         const view = panel(page)
-        assert.equal(await chosen(view.getByLabel('Group by')), 'status', `${at}: a board groups by its enumeration`)
+        // Columns, above Grouping, migrated from the status an older
+        // view grouped by; Grouping opens on None, one lane.
+        assert.equal(await chosen(view.getByLabel('Columns')), 'status', `${at}: a board's columns are its enumeration`)
+        assert.equal(await chosen(view.getByLabel('Grouping')), '', `${at}: a board opens with one lane`)
         await page.screenshot({ path: `${shots}/tasks-${name}-${scheme}.png` })
         // Order by names a field alone, never "Default", its direction
         // before it, so every control ends on the panel's one right edge;
@@ -86,21 +96,21 @@ eachBrowser((name, launch) => {
         const ordering = await view.getByRole('combobox', { name: 'Order by' }).boundingBox()
         assert.ok(direction && ordering && direction.x + direction.width <= ordering.x + 1, `${at}: the direction sits before Order by`)
         assert.ok(direction && ordering && Math.abs(direction.y - ordering.y) < 8, `${at}: the direction and Order by share a row`)
-        for (const control of ['Order by', 'Filter', 'Circles']) {
-          assert.ok(Math.abs((await edge(control)) - (await edge('Group by'))) < 1.5, `${at}: ${control} ends on Group by's right edge`)
+        for (const control of ['Grouping', 'Order by', 'Filter', 'Circles']) {
+          assert.ok(Math.abs((await edge(control)) - (await edge('Columns'))) < 1.5, `${at}: ${control} ends on Columns's right edge`)
         }
         const save = view.getByRole('button', { name: 'Save', exact: true })
         const pin = view.getByRole('button', { name: 'Pin', exact: true })
         assert.equal(await save.count(), 0, `${at}: no Save before the view changes`)
         assert.equal(await pin.locator('svg').count(), 1, `${at}: Pin wears its pin`)
         assert.equal(await view.getByPlaceholder('Search').count(), 1, `${at}: the search box says Search`)
-        // Group by answers the keyboard: an arrow opens its list on the
+        // Columns answers the keyboard: an arrow opens its list on the
         // option chosen, which wears the check, as the active descendant;
         // Escape closes it, choosing nothing, the focus staying on it.
-        const by = view.getByRole('combobox', { name: 'Group by' })
+        const by = view.getByRole('combobox', { name: 'Columns' })
         await by.focus()
         await page.keyboard.press('ArrowDown')
-        assert.equal(await by.getAttribute('aria-expanded'), 'true', `${at}: an arrow opens Group by`)
+        assert.equal(await by.getAttribute('aria-expanded'), 'true', `${at}: an arrow opens Columns`)
         const active = () => by.evaluate((el) => document.getElementById(el.getAttribute('aria-activedescendant') ?? '')?.dataset.value ?? null)
         assert.equal(await active(), 'status', `${at}: on the option chosen`)
         const list = page.locator(`[id="${await by.getAttribute('aria-controls')}"]`)

@@ -194,7 +194,12 @@ saves nothing itself, since the server signs with none
 - **Saving.** An editor's browser saves through the feat's save action,
   signed by its device as a document's edits are: after a pause of 3
   seconds in its edits, and when it leaves the body, the page's
-  unmounting or the tab's hiding. It posts to the session first every
+  unmounting or the tab's hiding, the hiding's save made a task later
+  and only where the browser is not leaving the page for another
+  document (`pagehide`), whose posts to the session in flight are
+  aborted: a request the browser cuts off as the document goes saves
+  nothing, and WebKit reports it as the page's error. It posts to the
+  session first every
   edit it holds that the session lacks, its own and those it heard from
   other editors, and saves only once the session accepted all of them,
   its version vector holding the browser's, and once the browser holds

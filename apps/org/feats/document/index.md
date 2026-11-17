@@ -19,7 +19,7 @@ at each adoption ([generated documents](#generated-documents)).
 | document | `id`, `title` | its binding version is its latest adoption's |
 | update | `n`, `receipt`, `author`, `at`, `bytes` | a Loro update; the draft is their merge |
 | version | `id`, `saved`, `snapshot`, `canonical`, `hash`, `plain`, `frontier`, `vv` | the document at a Loro frontier; `id` is `<document>@<n>` |
-| comment | `version`, `author`, `at`, `quote`, `anchor`, `text`, `resolved` | on the text it quotes, anchored by Loro cursors |
+| comment | `version`, `author`, `at`, `quote`, `anchor`, `text`, `resolved` | on the version as a whole, or on the text it quotes, anchored by Loro cursors |
 | adoption | `n`, `receipt`, `version`, `base`, `adopted` | makes a version binding, naming the one it replaces |
 | generated | `document`, `circle`, `template` | a document generated from a circle's policies, around its template |
 | generation | `document`, `version`, `motion`, `day` | what a generated version cites and the day it reads; a motion is cited by no version but the adopted one and those after it |
@@ -113,10 +113,10 @@ draft, and the next adoption names a later version.
 - **version** saves a snapshot of the document at the frontier the saver
   read, or at the merged draft's, as a numbered, immutable version; the
   log commits to its hash.
-- **comment** adds a comment to a version, on text it quotes, anchored by
-  Loro cursors at the quote's ends in the block that holds it; a cursor
-  names characters, not offsets, so the draft finds the quote however the
-  text around it moves.
+- **comment** adds a comment to a version: on the version as a whole,
+  quoting nothing, or on text it quotes, anchored by Loro cursors at the
+  quote's ends in the block that holds it; a cursor names characters, not
+  offsets, so the draft finds the quote however the text around it moves.
 - **adopt** makes a version binding. It names the version it adopts and
   the adopted version it replaces (`base: 'adopted'`); the notary refuses
   it if another adoption settled in between. The log commits to the
@@ -184,7 +184,9 @@ adopting motion names its circle).
   canonical form cannot be inserted.
 - `document.comment`: a version, author, day, quote, anchor (`{ block,
   from, to }`, the cursors in base64), text and whether it is resolved.
-  A trigger refuses a quote the version's text does not hold.
+  A comment on the version as a whole has neither quote nor anchor, and
+  only a quoted comment is anchored. A trigger refuses a quote the
+  version's text does not hold, and checks nothing where there is none.
 - `document.adoption`: an adoption, numbered by `n`, at its write's
   receipt: the version, its base and the day it was adopted, ordered by
   receipt, then `n`. `document.adopted` is each document's latest. It reads as its reader.
@@ -248,9 +250,11 @@ circle whose policies it reads, which it names always.
   given frontier or the latest, and saves it with its frontier and version
   vector; the payload carries the hash the database computed, and the
   snapshot, frontier and version vector in hex.
-- `comment` (confluent): anchors the quote in the version's snapshot and
-  adds the comment; refused at rung 1 if the quote is not in the version.
-  Submits the quote and the anchor as they are, and the text marked
+- `comment` (confluent): anchors the quote, where it has one, in the
+  version's snapshot and adds the comment; an empty or absent quote
+  comments on the version as a whole. Refused at rung 1 if the quote is
+  not in the version. Submits the quote and the anchor as they are, each
+  null for a comment on the whole, and the text marked
   personal: a comment is its author's words, personal data of class
   `profile`, so the log keeps its commitment and the vault its value.
 - `adopt` (ordered, `base: 'adopted'`): records the adoption with a receipt
@@ -298,8 +302,9 @@ under its number and receipt, its bytes the entry's, refusing bytes
 whose digest is not the entry's; a version saves the entry's snapshot,
 frontier and version vector, refusing a snapshot that hashes otherwise;
 a comment adds the comment on the quote and anchor its entry carries,
-its text as its commitment, and `document.quotes` refuses a quote the
-folded version does not hold; an adoption records it from the base it
+or on the version as a whole where both are null, its text as its
+commitment, and `document.quotes` refuses a quote the folded version
+does not hold; an adoption records it from the base it
 names; a generation writes, in its order, the update where the draft
 changed, the version and its adoption, as the entry carries them.
 
@@ -317,16 +322,17 @@ saying what it saves, the draft as the version it will number, and
 whether that is unchanged or changed since the latest one; it ends in
 Save version and Cancel, posting `version` and closing on a settled
 write, a refusal staying inside with its reason, and Cancel, Escape or
-a click outside it saves nothing. A comment starts from a
-selection: text selected inside one block of the draft floats a Comment
-button at the selection's end, which opens the box under its Activity
-with the selection shown as a read-only quote, the version it is on (the
-latest saved) as a quiet line, and the focus in the comment's text;
-Escape or Cancel closes it. With nothing selected the box says to select
-text, and a document with no version takes no comment. The box posts
-`comment`, each comment in the Activity with what it quotes, and a
-posted comment's quote is highlighted in the draft as the page
-refreshes. Its
+a click outside it saves nothing. The comment box is always under its
+Activity, a text area and a Comment button at its end, and comments on
+the latest saved version as a whole. Text selected inside one block of
+the draft floats a Comment button at the selection's end, which attaches
+the selection to the box as its quote, shown read-only above the text
+area with the version it is on as a quiet line and a small × that drops
+it, as Escape in the box does, and puts the focus in the comment's text;
+another selection attached replaces it. A document with no version takes
+no comment. The box posts `comment`, each comment in the Activity with
+what it quotes, if anything, and a posted comment's quote is highlighted
+in the draft as the page refreshes. Its
 saved versions, the data central to it, are the Versions tab after the
 draft. The server renders the draft read-only; the editor takes it
 over once the browser holds the Loro document. A generated document's
@@ -343,11 +349,15 @@ too, draws a version read-only on a motion's page.
 
 - Slice tests (`core/ts/_tests/`): a version's generated columns and
   immutability, its hash the blocks' canonical form's
-  ([blocks](../../core/body/index.md#tests)); and the
+  ([blocks](../../core/body/index.md#tests)); a comment on a quote the
+  version holds, one on the version as a whole with no quote or anchor,
+  and a quote the version lacks refused; and the
   folds (`folds.test.ts`): a document started, edited, saved, commented
-  on and adopted, and a generation, each folded from its entry.
+  on, with a quote and without, a quote the version lacks refused, and
+  adopted, and a generation, each folded from its entry.
 - `_e2e/document.test.ts`: concurrent edits, versions named by hash,
-  comments by cursor, adoption by hash under m-2026-011.
+  comments by cursor and on the version as a whole, adoption by hash
+  under m-2026-011.
 - `_e2e/capital.test.ts`: once the assembly adopts new capital terms,
   the statutes' next version is generated and adopted with the new
   sentence where the founding one read, its hash in its log entry and
@@ -386,7 +396,8 @@ too, draws a version read-only on a motion's page.
   holding its text; chosen blocks copied and pasted, and a comment's
   text cut and copied while blocks are chosen, the blocks left in the
   draft and the clipboard holding the text; a comment quoting
-  the selection, highlighted once posted; and the toolbar following its
+  the selection, highlighted once posted; a comment on the document as a
+  whole, its attached quote dropped first; and the toolbar following its
   selection as the window narrows. Real IMEs, touch, screen readers and
   right-to-left text are not tested.
 

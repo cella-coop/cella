@@ -33,7 +33,8 @@ export const slice: Slice = {
         version: action('document:document:version', (_, id) => ({ document: id ?? '' }), version),
         comment: action(
           'document:document:comment',
-          (form) => ({ version: form.get('version'), quote: form.get('quote'), text: form.get('text') }),
+          // No quote, or an empty one, comments on the document as a whole.
+          (form) => ({ version: form.get('version'), quote: form.get('quote') || null, text: form.get('text') }),
           comment,
         ),
       },

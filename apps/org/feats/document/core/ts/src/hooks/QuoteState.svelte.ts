@@ -1,26 +1,23 @@
 import { onMount } from 'svelte'
 
-// What a comment quotes: the text selected in the draft, inside one block,
-// as a quote's anchor is, and where its end is on screen, so the button
-// that opens the comment box floats there. The box keeps the quote it was
-// opened on until it is closed, or the page has a new comment (its count
-// moves), which closes it. The selection is the browser's, so it is
-// followed from the block's mount.
+// What a comment quotes, if anything: the text selected in the draft,
+// inside one block, as a quote's anchor is, and where its end is on
+// screen, so the button that attaches it to the comment box floats there.
+// The box keeps the quote attached until it is dropped, another is
+// attached, or the page has a new comment (its count moves), which posted
+// it. The selection is the browser's, so it is followed from the block's
+// mount.
 export class QuoteState {
   text = $state('')
   at = $state<{ x: number; y: number } | null>(null)
-  #opened = $state<number | null>(null)
   #count: () => number
-  #quote = $state('')
+  #quote = $state<{ text: string; count: number } | null>(null)
 
   constructor(count: () => number) {
     this.#count = count
     onMount(() => {
       const block = (n: Node) => (n instanceof Element ? n : n.parentElement)?.closest('[data-editor] [data-block]')
       const seen = () => {
-        if (this.open) {
-          return
-        }
         const s = document.getSelection()
         const a = s?.anchorNode
         const f = s?.focusNode
@@ -45,23 +42,18 @@ export class QuoteState {
     })
   }
 
-  get open(): boolean {
-    return this.#opened !== null && this.#opened === this.#count()
+  // The quote attached to the box, or null for a comment on the whole.
+  get quote(): string | null {
+    const q = this.#quote
+    return q && q.count === this.#count() ? q.text : null
   }
 
-  // The quote the box is on.
-  get quote(): string {
-    return this.#quote
-  }
-
-  begin() {
-    this.#quote = this.text
-    this.#opened = this.#count()
+  attach() {
+    this.#quote = { text: this.text, count: this.#count() }
     this.at = null
   }
 
-  close() {
-    this.#opened = null
-    this.text = ''
+  drop() {
+    this.#quote = null
   }
 }

@@ -173,6 +173,13 @@ test('a comment quotes its version, anchored by cursors; a quote the version lac
   assert.equal(await head(), before)
 })
 
+test('a comment quoting nothing is on the version as a whole, unanchored', async () => {
+  const whole = await comment({ version: 'rate-card-2027@3', quote: null, text: 'Ready for the assembly?' }, as(camille))
+  assert.equal(whole.state, 'settled')
+  const row = await one<{ quote: string | null; anchor: unknown }>('SELECT quote, anchor FROM document.comment WHERE id = $1', [whole.value.comment])
+  assert.deepEqual(row, { quote: null, anchor: null })
+})
+
 test('adopting rate-card-2027@2 under m-2026-011 is refused while Malik objects and the motion fails', async () => {
   assert.equal(await passes('m-2026-011'), false)
   const before = await head()

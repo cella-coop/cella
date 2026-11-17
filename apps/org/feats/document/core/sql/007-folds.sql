@@ -80,9 +80,10 @@ BEGIN ATOMIC
 END;
 
 -- document:document:comment: the comment under the id its entry names, by
--- its actor on its day, on the text it quotes and anchored where the entry
--- says, its text as its commitment; `document.quotes` refuses a quote the
--- folded version does not hold, as it did when it was made.
+-- its actor on its day, on the document as a whole where the entry quotes
+-- nothing, else on the text it quotes and anchored where the entry says,
+-- its text as its commitment; `document.quotes` refuses a quote the folded
+-- version does not hold, as it did when it was made.
 CREATE FUNCTION document.fold_comment(entry jsonb) RETURNS void
 LANGUAGE plpgsql AS $$
 DECLARE

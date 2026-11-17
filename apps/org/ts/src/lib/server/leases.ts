@@ -73,6 +73,24 @@ export function taken(member: string, id: string | null | undefined): boolean {
   return !!holder && holder !== id
 }
 
+// Whether `id` currently holds `member`'s lease: outside a room there is
+// none to hold, so every browser does; inside one, only the browser
+// `held` names, which a sign-in sets (`grant`) and an eject, a sign-out
+// or the front's own join (switching rooms) clears (`release`). Call it
+// on every authenticated request, not only a sign-in: once a lease moves
+// on, the session that opened it authorizes nothing more, whoever still
+// holds its cookie.
+export function holds(member: string, id: string | null | undefined): boolean {
+  if (!copy) {
+    return true
+  }
+  if (!id) {
+    return false
+  }
+  sweep(Date.now())
+  return held.get(member) === id
+}
+
 // Releases every member `id` holds, as signing out does.
 export function release(id: string | null | undefined) {
   if (!id) {

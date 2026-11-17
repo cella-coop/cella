@@ -1,7 +1,7 @@
 import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
-import type { Add, Added, Archive, Archived, Budget, Budgeted, Complete, Completed, Create, Created } from '../models/project.ts'
+import type { Add, Added, Archive, Archived, Budget, Budgeted, Complete, Completed, Create, Created, Icon, Iconed } from '../models/project.ts'
 
 type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
@@ -120,6 +120,26 @@ export async function archive(input: Archive, deps: Deps): Out<'project:project:
         throw new Error(`no project ${input.project}`)
       }
       return { project: input.project, circle: rows[0].circle, archived: rows[0].archived }
+    },
+    payload: (v) => ({ ...v }),
+  })
+}
+
+// Sets or clears a project's own icon, a cosmetic setting apart from the
+// rest: the last write wins.
+export async function icon(input: Icon, deps: Deps): Out<'project:project:icon', Iconed> {
+  return write(deps, {
+    op: 'project:project:icon' satisfies Action,
+    request: input,
+    state: async (tx) => {
+      const { rows } = await tx.query<{ circle: string }>(
+        'UPDATE project.project SET icon = $2 WHERE id = $1 RETURNING circle',
+        [input.project, input.icon],
+      )
+      if (!rows[0]) {
+        throw new Error(`no project ${input.project}`)
+      }
+      return { project: input.project, circle: rows[0].circle, icon: input.icon }
     },
     payload: (v) => ({ ...v }),
   })

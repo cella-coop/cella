@@ -1,7 +1,7 @@
 import type { Db, Read } from '@cella/org-db'
 import type { Detail, Milestone, Offered, Project } from '../models/project.ts'
 
-const columns = `p.id, p.title, p.circle, to_char(p.started, 'YYYY-MM-DD') AS started, to_char(p.due, 'YYYY-MM-DD') AS due,
+const columns = `p.id, p.title, p.circle, p.icon, to_char(p.started, 'YYYY-MM-DD') AS started, to_char(p.due, 'YYYY-MM-DD') AS due,
   cella.cents(p.budget) AS budget, g.milestones AS total, g.completed, g.next`
 
 // The projects not archived as the collection lists them, the latest

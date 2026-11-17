@@ -14,6 +14,9 @@ export interface Project {
   completed: number
   next: string | null
   state: State
+  // Its own icon, a slug of the curated set, replacing the collection's;
+  // none wears the collection's instead.
+  icon: string | null
 }
 
 export interface Milestone {
@@ -94,5 +97,15 @@ export interface Archived {
 }
 
 export interface Budgeted extends Budget {
+  circle: string
+}
+
+export interface Icon {
+  project: string
+  // A slug of the curated set, or none, which clears it.
+  icon: string | null
+}
+
+export interface Iconed extends Icon {
   circle: string
 }

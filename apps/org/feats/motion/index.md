@@ -1,9 +1,11 @@
 +++
 title = "Motion"
-updated = 2026-11-16
+updated = 2026-11-17
 +++
 
 How a circle acts as a whole: motions, proposed, voted on and closed, each carrying the actions it decides beyond its text, or none. A passed motion is a decision in plain speech; the code keeps no row and no name called decision. An outcome is computed from the signed votes, never claimed; each member's latest vote counts once. Each action a passed motion carries is an effect in the close's transaction, citing it, its actor whoever closed it, judged by its own guards, and what follows it, such as the capital a departure moves, is the reaction of the graft that knows it ([trust](../../../../_corpus/doc/trust.md#three-kinds-of-action)). A motion may adopt a policy, a sentence its circle binds itself by, which the register in org's core keeps ([policies](../../../../_corpus/doc/architecture.md#policies)).
+
+A motion's page reads as its proposal, in its proposer's words, then one Vote widget (`Inlay`, [the UI core](../../core/ui/index.md#widgets)): its state and deadline, the tally, where it stands by its procedure, a button for each stance with the reader's own marked, and what it decides, each action with its arguments as chips, a policy linking to the motion that made it. The title is not repeated.
 
 ## Actions
 

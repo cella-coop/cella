@@ -32,7 +32,7 @@
     {/snippet}
   </Message>
 {:else}
-  <Note text="No one has said anything yet." />
+  <Note text="No comments yet" quiet />
 {/each}
 {#if !data.closed}
   {#if thread.answering}

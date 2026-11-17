@@ -715,6 +715,11 @@ names the record. A collection that declares no icon, or that the shell
 does not mount, leaves the value bare; an enumeration, as a task's
 priority, names no record and wears none.
 
+### Widgets
+
+A record's body is its blocks, and everything else stays out of their way. What a slice shows inside it that is not a block is a widget: one inline panel, as a figure or a chart sits among text, a faint fill and a hairline, a muted header with an icon and a name and, at its end, a state (`Inlay`, whose `aside` fills the header's end). A widget may be interactive, is always distinguished as one, and takes the body's column. What it holds is composed of `Row` (items side by side, wrapping), `Tally` (a count per answer as one thin proportional bar over its counts), `Note`, `Cell` and a form; inside it `--inset` is nil, so these sit flush to its padding. A slice puts one widget where it has custom content, never a stack of sections beside its text: the motion's Vote is one, after the proposal. `Note` takes `quiet` for an empty state, italic, small and the dimmest shade ("No comments yet").
+
+
 ## Never native
 
 **Never native components.** Every control is the UI core's own,

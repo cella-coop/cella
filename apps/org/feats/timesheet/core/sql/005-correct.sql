@@ -29,6 +29,13 @@ CREATE FUNCTION timesheet.lowers() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
   approved date;
 BEGIN
+  -- Its body, a free-form discussion, is not logged time: it changes
+  -- still, whether or not its month is approved.
+  IF NEW.body IS DISTINCT FROM OLD.body
+    AND (NEW.id, NEW.circle, NEW.member, NEW.day, NEW.minutes, NEW.billable, NEW.note)
+      IS NOT DISTINCT FROM (OLD.id, OLD.circle, OLD.member, OLD.day, OLD.minutes, OLD.billable, OLD.note) THEN
+    RETURN NEW;
+  END IF;
   IF (NEW.id, NEW.circle, NEW.member, NEW.day, NEW.billable, NEW.note) IS DISTINCT FROM (OLD.id, OLD.circle, OLD.member, OLD.day, OLD.billable, OLD.note)
     OR NEW.minutes > OLD.minutes THEN
     RAISE EXCEPTION 'entry % is corrected only by lowering its time', OLD.id

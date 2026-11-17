@@ -10,4 +10,6 @@ export const actions = {
   // names the entry it corrects; whether it also needs a vote is a
   // circle setting, not part of the label
   'transaction:transaction:adjust': ordered({ base: 'corrected', power: 'record-entry' }),
+  // each save carries the whole merged snapshot, so the later receipt holds every edit before it
+  'transaction:body:save': confluent({ power: 'discuss' }),
 } satisfies Actions

@@ -103,6 +103,13 @@ BEGIN
     END IF;
     RETURN NEW;
   END IF;
+  -- A payslip's body, a free-form discussion, is not its figures: it
+  -- changes still, whether or not its run is approved.
+  IF TG_OP = 'UPDATE' AND NEW.body IS DISTINCT FROM OLD.body
+    AND (NEW.circle, NEW.month, NEW.member, NEW.minutes, NEW.gross, NEW.employee, NEW.employer, NEW.net)
+      IS NOT DISTINCT FROM (OLD.circle, OLD.month, OLD.member, OLD.minutes, OLD.gross, OLD.employee, OLD.employer, OLD.net) THEN
+    RETURN NEW;
+  END IF;
   IF EXISTS (SELECT FROM payslip.run r WHERE r.month = coalesce(NEW.month, OLD.month) AND r.approved IS NOT NULL) THEN
     RAISE EXCEPTION 'the % run is approved: its payslips never change', coalesce(NEW.month, OLD.month)
       USING ERRCODE = 'triggered_action_exception';

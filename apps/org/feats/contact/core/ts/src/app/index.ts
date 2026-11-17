@@ -2,6 +2,7 @@ import { icons, type App } from '@cella/org-ui'
 import type { Contact } from '../models/contact.ts'
 import Client from './blocks/Client.svelte'
 import Note from './blocks/Note.svelte'
+import Body from './blocks/Body.svelte'
 
 // The feat's client side: the contacts, with a view of the clients among
 // them, and a contact's page with its client role and its note, the
@@ -47,7 +48,7 @@ export const app: App = {
           { id: 'projects', label: 'Projects' },
           { id: 'invoices', label: 'Invoices' },
         ],
-        blocks: [Client, Note],
+        blocks: [Body, Client, Note],
       },
     },
   },

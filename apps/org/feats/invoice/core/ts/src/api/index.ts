@@ -6,4 +6,5 @@ export { annul, issue, issuing, paying, payment, send, voiding } from '../handle
 export { invoice, invoices, offered, printed } from '../drivers/invoice.ts'
 export { pdf } from './pdf.ts'
 export * as forms from './forms.ts'
+export { saveBody } from '../handlers/body.ts'
 export { slice } from './slice.ts'

@@ -3,6 +3,7 @@ import type { Detail, Meeting, Status } from '../models/meeting.ts'
 import Agenda from './blocks/Agenda.svelte'
 import Create from './blocks/Create.svelte'
 import Settle from './blocks/Settle.svelte'
+import Body from './blocks/Body.svelte'
 
 const tones: Record<Status, Tone> = { scheduled: 'accent', held: 'positive', cancelled: 'neutral' }
 
@@ -56,7 +57,7 @@ export const app: App = {
           { id: 'overview', label: 'Overview' },
           { id: 'agenda', label: 'Agenda' },
         ],
-        blocks: [{ tab: 'agenda', block: Agenda }],
+        blocks: [Body, { tab: 'agenda', block: Agenda }],
         actions: Settle,
       },
     },

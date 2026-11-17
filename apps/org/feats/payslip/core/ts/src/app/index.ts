@@ -3,6 +3,7 @@ import { states, tones, type Payslip } from '../models/payslip.ts'
 import Prepare from './blocks/Prepare.svelte'
 import Run from './blocks/Run.svelte'
 import Slip from './blocks/Slip.svelte'
+import Body from './blocks/Body.svelte'
 
 // The feat's client side: every payslip in a table, with a dashboard of
 // the payroll by month; preparing a month's run; and a payslip's page,
@@ -59,7 +60,7 @@ export const app: App = {
           { id: 'overview', label: 'Overview' },
           { id: 'lines', label: 'Lines' },
         ],
-        blocks: [{ tab: 'lines', block: Slip }],
+        blocks: [Body, { tab: 'lines', block: Slip }],
         actions: Run,
       },
     },

@@ -2,6 +2,7 @@ import { icons, type App, type Tone } from '@cella/org-ui'
 import { categories, statuses, type Expense, type Status as Stage } from '../models/expense.ts'
 import Capture from './blocks/Capture.svelte'
 import Status from './blocks/Status.svelte'
+import Body from './blocks/Body.svelte'
 
 const tones: Record<Stage, Tone> = { draft: 'neutral', submitted: 'accent', approved: 'accent', refused: 'negative', reimbursed: 'positive' }
 const category = (e: Expense) => categories.find((c) => c.code === e.category)?.label ?? e.category
@@ -50,6 +51,7 @@ export const app: App = {
         ],
       },
       page: {
+        blocks: [Body],
         eyebrow: 'Expense',
         title: (e: Expense) => e.label,
         subtitle: (e: Expense) => e.id,

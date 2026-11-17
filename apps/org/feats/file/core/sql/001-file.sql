@@ -43,9 +43,15 @@ CREATE TABLE file.record PARTITION OF file.file FOR VALUES IN ('profile');
 CREATE INDEX ON file.file (hash);
 CREATE INDEX ON file.file (subject);
 
--- A file never changes, but by the notary's redaction.
+-- A file never changes, but by the notary's redaction. Its body, a
+-- free-form discussion, is not the file: it changes still.
 CREATE FUNCTION file.fixed() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
+  IF NEW.body IS DISTINCT FROM OLD.body
+    AND (NEW.circle, NEW.id, NEW.class, NEW.subject, NEW.name, NEW.type, NEW.size, NEW.bytes, NEW.uploader, NEW.uploaded)
+      IS NOT DISTINCT FROM (OLD.circle, OLD.id, OLD.class, OLD.subject, OLD.name, OLD.type, OLD.size, OLD.bytes, OLD.uploader, OLD.uploaded) THEN
+    RETURN NEW;
+  END IF;
   IF NOT cella.redacting() THEN
     RAISE EXCEPTION '% never changes once uploaded', OLD.id
       USING ERRCODE = 'triggered_action_exception';

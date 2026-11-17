@@ -7,6 +7,8 @@ import { save } from '../handlers/index.ts'
 import { draw, listing, reports } from '../drivers/report.ts'
 import { margins } from '../drivers/margin.ts'
 import { contract } from './contract.ts'
+import { bodyActions, bodyMount } from './body.ts'
+import { bodied } from '../drivers/body.ts'
 
 export { save, saving } from '../handlers/index.ts'
 export { draw, report, reports } from '../drivers/report.ts'
@@ -14,6 +16,7 @@ export { chosen, spans, statement } from '../drivers/statement.ts'
 export { margins, threshold, watch } from '../drivers/margin.ts'
 export { federation } from '../drivers/federation.ts'
 export { custom } from '../drivers/custom.ts'
+export { saveBody } from '../handlers/body.ts'
 
 // A custom report's id from its title: lowercase words joined by hyphens.
 export const slug = (title: string) =>
@@ -48,9 +51,17 @@ export function reporting(port: Analytics): Slice {
     collections: {
       reports: {
         list: listing,
-        item: (db, id, query) => draw(scoped(port, db), db, id, query),
+        // Drawn is nested (its id and title are `report.id`/`report.title`,
+        // not its own): flattened here so the body's editor, which reads a
+        // record's id and title at its own top level, finds them.
+        item: async (db, id, query) => {
+          const drawn = await draw(scoped(port, db), db, id, query)
+          return drawn && { ...drawn, id: drawn.report.id, title: drawn.report.title, ...(await bodied(db, id)) }
+        },
         index: async (db) => (await reports(db)).map((r) => ({ id: r.id, title: r.title, sub: r.kind })),
+        body: bodyMount,
         actions: {
+          ...bodyActions,
           save: action(
             'report:report:save',
             (form) => {

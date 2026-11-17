@@ -5,9 +5,11 @@ import type { Form, Slice } from '@cella/org-db'
 import { listing, next, payslip, payslips } from '../drivers/payslip.ts'
 import type { Run } from '../models/payslip.ts'
 import { contract } from './contract.ts'
+import { bodyActions, bodyMount, withBody } from './body.ts'
 
 export { approve, approving, generate, generating, pay, paying, timing } from '../handlers/index.ts'
 export { next, payslip, payslips } from '../drivers/payslip.ts'
+export { saveBody } from '../handlers/body.ts'
 
 // The run a form names, `YYYY-MM`, or the run of the payslip a page shows.
 export function run(form: Form, id: string | undefined): Run {
@@ -28,8 +30,12 @@ export const slice: Slice = {
     payslips: {
       list: listing,
       about: next,
-      item: payslip,
+      item: withBody(payslip),
       index: async (db) => (await payslips(db)).map((p) => ({ id: p.id, title: `Payslip ${p.month}`, sub: `${p.member}, ${p.state}` })),
+      body: bodyMount,
+      actions: {
+        ...bodyActions,
+      },
     },
   },
 }

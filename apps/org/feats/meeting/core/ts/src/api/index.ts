@@ -6,10 +6,12 @@ import { add, cancel, hold, minute, move, remove, schedule } from '../handlers/i
 import { item, listing, meetings, offered } from '../drivers/meeting.ts'
 import * as forms from './forms.ts'
 import { contract } from './contract.ts'
+import { bodyActions, bodyMount, withBody } from './body.ts'
 
 export { add, adding, cancel, hold, minute, minuting, move, remove, schedule } from '../handlers/index.ts'
 export { agenda, item as meeting, meetings, offered } from '../drivers/meeting.ts'
 export * as forms from './forms.ts'
+export { saveBody } from '../handlers/body.ts'
 
 export const slice: Slice = {
   name: 'meeting',
@@ -18,9 +20,11 @@ export const slice: Slice = {
     meetings: {
       list: listing,
       about: offered,
-      item,
+      item: withBody(item),
       index: async (db) => (await meetings(db)).map((m) => ({ id: m.id, title: m.title, sub: `${m.circle}, ${m.at.slice(0, 10)}` })),
+      body: bodyMount,
       actions: {
+        ...bodyActions,
         schedule: action('meeting:meeting:schedule', (form) => forms.schedule(form), schedule),
         item: action('meeting:item:add', (form, id) => forms.add(form, id ?? ''), add),
         move: action('meeting:item:move', (form, id) => forms.move(form, id ?? ''), move),

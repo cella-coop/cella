@@ -10,4 +10,6 @@ export const actions = {
   'invoice:invoice:payment': confluent({ power: 'record-receipt' }),
   // ordered against the payments
   'invoice:invoice:void': ordered({ power: 'issue-invoice' }),
+  // each save carries the whole merged snapshot, so the later receipt holds every edit before it
+  'invoice:body:save': confluent({ power: 'discuss' }),
 } satisfies Actions

@@ -13,4 +13,6 @@ export const actions = {
   // closes the period to new entries: ordered against the logs, it fixes
   // which entries were approved; never one's own
   'timesheet:period:approve': ordered({ power: 'approve-time' }),
+  // each save carries the whole merged snapshot, so the later receipt holds every edit before it
+  'timesheet:body:save': confluent({ power: 'discuss' }),
 } satisfies Actions

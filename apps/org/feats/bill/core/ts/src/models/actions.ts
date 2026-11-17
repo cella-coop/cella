@@ -8,4 +8,6 @@ export const actions = {
   'bill:bill:approve': ordered({ power: 'approve-bill', amount: 'amount' }),
   // money leaves the bank, once, within the payer's limit
   'bill:bill:pay': ordered({ power: 'pay-supplier', amount: 'amount' }),
+  // each save carries the whole merged snapshot, so the later receipt holds every edit before it
+  'bill:body:save': confluent({ power: 'discuss' }),
 } satisfies Actions

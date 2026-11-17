@@ -5,9 +5,11 @@
 import type { Slice } from '@cella/org-db'
 import { listing, run, runs } from '../drivers/run.ts'
 import { contract } from './contract.ts'
+import { bodyActions, bodyMount, withBody } from './body.ts'
 
 export { record } from '../handlers/index.ts'
 export { run, runs } from '../drivers/run.ts'
+export { saveBody } from '../handlers/body.ts'
 
 export const slice: Slice = {
   name: 'import',
@@ -15,9 +17,13 @@ export const slice: Slice = {
   collections: {
     imports: {
       list: listing,
-      item: run,
+      item: withBody(run),
       about: async () => ({ kinds: [] }),
       index: async (db) => (await runs(db)).map((r) => ({ id: r.id, title: `${r.name}, ${r.kind}`, sub: `${r.id}, ${r.day}` })),
+      body: bodyMount,
+      actions: {
+        ...bodyActions,
+      },
     },
   },
 }

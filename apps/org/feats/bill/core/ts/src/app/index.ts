@@ -3,6 +3,7 @@ import { categories, type Detail, type Listed } from '../models/bill.ts'
 import Lines from './blocks/Lines.svelte'
 import Record from './blocks/Record.svelte'
 import Status from './blocks/Status.svelte'
+import Body from './blocks/Body.svelte'
 
 const tones: { [s in Listed['standing']]: Tone } = { recorded: 'accent', approved: 'accent', paid: 'positive', overdue: 'warning' }
 const category = (b: Listed) => categories.find((c) => c.code === b.category)?.label ?? b.category
@@ -70,7 +71,7 @@ export const app: App = {
           { id: 'lines', label: 'Lines' },
           { id: 'postings', label: 'Postings' },
         ],
-        blocks: [{ tab: 'lines', block: Lines }],
+        blocks: [Body, { tab: 'lines', block: Lines }],
         actions: Status,
       },
     },

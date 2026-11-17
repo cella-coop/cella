@@ -2,6 +2,7 @@ import { icons, type App } from '@cella/org-ui'
 import type { Listed, Run } from '../models/run.ts'
 import Create from './blocks/Create.svelte'
 import Lines from './blocks/Lines.svelte'
+import Body from './blocks/Body.svelte'
 
 // The feat's client side: the imports made, a file imported or tried in a
 // dry run from the list, and each import's lines on its page.
@@ -43,7 +44,7 @@ export const app: App = {
           { label: 'By', value: r.actor, kind: 'person' },
         ],
         activity: (r: Run) => [{ at: r.day, text: r.dry ? 'tried in a dry run' : 'imported', who: r.actor }],
-        blocks: [Lines],
+        blocks: [Body, Lines],
       },
     },
   },

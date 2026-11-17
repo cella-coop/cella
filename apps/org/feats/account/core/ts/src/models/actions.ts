@@ -34,4 +34,9 @@ export const actions = {
   // the same withdrawal of capital as the associate's own, once they
   // withdrew by their right
   'account:own:withdraw': ordered({ power: 'withdraw-membership' }),
+  // each save carries the whole merged snapshot, so the later receipt holds every edit before it;
+  // one body per collection, so each needs its own verb: the entity plays no part in /api/<feat>/<verb>
+  'account:body:save-account': confluent({ power: 'discuss' }),
+  'account:body:save-period': confluent({ power: 'discuss' }),
+  'account:body:save-terms': confluent({ power: 'discuss' }),
 } satisfies Actions

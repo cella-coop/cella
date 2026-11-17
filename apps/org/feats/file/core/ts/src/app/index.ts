@@ -1,6 +1,7 @@
 import { icons, type App, type Tone } from '@cella/org-ui'
 import { kinds, sized, type Class, type File, type Listed } from '../models/file.ts'
 import Upload from './blocks/Upload.svelte'
+import Body from './blocks/Body.svelte'
 
 const tones: Record<Class, Tone> = { none: 'neutral', 'expense-receipt': 'accent', payroll: 'warning', profile: 'positive' }
 
@@ -38,6 +39,7 @@ export const app: App = {
         look: { by: 'class', sort: { field: 'uploaded', dir: 'desc' }, lanes: { class: ['expense-receipt', 'payroll', 'profile', 'none'] } },
       },
       page: {
+        blocks: [Body],
         eyebrow: 'File',
         title: (f: File) => f.name,
         subtitle: (f: File) => `${f.id}, ${kinds[f.class]}`,

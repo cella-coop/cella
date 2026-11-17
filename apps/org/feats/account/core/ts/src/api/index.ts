@@ -6,11 +6,17 @@ import { close, nextPeriod, open } from '../handlers/index.ts'
 import { account, accounts, chart, period, periods } from '../drivers/account.ts'
 import { term, terms } from '../drivers/terms.ts'
 import { contract } from './contract.ts'
+import { bodyActionsAccount, bodyMountAccount, withBodyAccount } from './body-account.ts'
+import { bodyActionsPeriod, bodyMountPeriod, withBodyPeriod } from './body-period.ts'
+import { bodyActionsTerms, bodyMountTerms, withBodyTerms } from './body-terms.ts'
 
 export { adopt, close, freeze, freezeOwn, freezing, holding, nextPeriod, open, opening } from '../handlers/index.ts'
 export { account, accounts, period, periods } from '../drivers/account.ts'
 export { term, terms } from '../drivers/terms.ts'
 export { report, reports } from '../drivers/report.ts'
+export { saveBodyAccount } from '../handlers/body-account.ts'
+export { saveBodyPeriod } from '../handlers/body-period.ts'
+export { saveBodyTerms } from '../handlers/body-terms.ts'
 
 // The chart, the periods and the statutes' capital clauses; opening the
 // next period, and
@@ -23,22 +29,32 @@ export const slice: Slice = {
   collections: {
     accounts: {
       list: chart,
-      item: account,
+      item: withBodyAccount(account),
       index: async (db) => (await accounts(db)).map((a) => ({ id: a.id, title: `${a.code} ${a.label}`, sub: a.kind })),
+      body: bodyMountAccount,
+      actions: {
+        ...bodyActionsAccount,
+      },
     },
     periods: {
       list: periods,
-      item: period,
+      item: withBodyPeriod(period),
       // The month the books open next.
       about: async (db) => nextPeriod(db),
+      body: bodyMountPeriod,
       actions: {
+        ...bodyActionsPeriod,
         open: action('account:period:open', (form) => ({ month: form.get('month') }), open),
         close: action('account:period:close', (_, id) => ({ month: id ?? '' }), close),
       },
     },
     terms: {
       list: terms,
-      item: term,
+      item: withBodyTerms(term),
+      body: bodyMountTerms,
+      actions: {
+        ...bodyActionsTerms,
+      },
     },
   },
 }

@@ -5,6 +5,8 @@ import type { Sheet, Statement } from '../models/statement.ts'
 import Shares from './blocks/Shares.svelte'
 import Basis from './blocks/Basis.svelte'
 import Draft from './blocks/Draft.svelte'
+import BodyDistribution from './blocks/BodyDistribution.svelte'
+import BodyTerms from './blocks/BodyTerms.svelte'
 
 const tones: Record<ReturnType<typeof stage>, Tone> = { draft: 'neutral', approved: 'accent', distributed: 'positive' }
 // A row as its collection lists it: its state, and how terms divide, as
@@ -56,7 +58,7 @@ export const app: App = {
           { id: 'return', label: 'Return' },
         ],
         related: (d: Detail) => (d.approved ? [{ label: `${d.year} statements`, sub: 'each worker’s part', href: '/statements' }] : []),
-        blocks: [{ tab: 'split', block: Shares }],
+        blocks: [BodyDistribution, { tab: 'split', block: Shares }],
       },
     },
     bases: {
@@ -87,6 +89,7 @@ export const app: App = {
           { label: 'Interest on capital at most %', value: t.interest, kind: 'number' },
           { label: 'Adopted on', value: t.adopted, kind: 'date' },
         ],
+        blocks: [BodyTerms],
       },
     },
     statements: {

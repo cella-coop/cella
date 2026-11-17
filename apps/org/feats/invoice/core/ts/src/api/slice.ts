@@ -4,6 +4,7 @@ import { invoice, invoices, listing, offered, printed } from '../drivers/invoice
 import * as forms from './forms.ts'
 import { pdf } from './pdf.ts'
 import { contract } from './contract.ts'
+import { bodyActions, bodyMount, withBody } from './body.ts'
 
 // The feat's server side as the shell mounts it: the invoices, what a new
 // one may be issued in, and its writes. A graft that posts an invoice's
@@ -17,13 +18,15 @@ export const slice: Slice = {
     invoices: {
       list: listing,
       about: offered,
-      item: invoice,
+      item: withBody(invoice),
       content: async (db, id) => {
         const found = await printed(db, id)
         return found && { name: `${id}.pdf`, type: 'application/pdf', bytes: pdf(found), open: true }
       },
       index: async (db) => (await invoices(db)).map((i) => ({ id: i.id, title: i.id, sub: `${i.bill_to}, ${i.label}` })),
+      body: bodyMount,
       actions: {
+        ...bodyActions,
         issue: action('invoice:invoice:issue', (form) => forms.issue(form), issue),
         send: action('invoice:invoice:send', (_, id) => forms.sending(id ?? ''), send),
         payment: action('invoice:invoice:payment', (form, id) => forms.payment(form, id ?? ''), payment),

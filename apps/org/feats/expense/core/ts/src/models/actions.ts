@@ -13,4 +13,6 @@ export const actions = {
   // money leaves the bank, under its own power and limit; an expense is
   // reimbursed once
   'expense:expense:reimburse': ordered({ power: 'reimburse-expense', amount: 'amount' }),
+  // each save carries the whole merged snapshot, so the later receipt holds every edit before it
+  'expense:body:save': confluent({ power: 'discuss' }),
 } satisfies Actions

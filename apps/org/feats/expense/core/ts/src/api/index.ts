@@ -6,10 +6,12 @@ import { capture, refuse, submit } from '../handlers/index.ts'
 import { expense, expenses, listing } from '../drivers/expense.ts'
 import * as forms from './forms.ts'
 import { contract } from './contract.ts'
+import { bodyActions, bodyMount, withBody } from './body.ts'
 
 export { approve, approving, capture, capturing, refuse, reimburse, reimbursing, submit } from '../handlers/index.ts'
 export { expense, expenses } from '../drivers/expense.ts'
 export * as forms from './forms.ts'
+export { saveBody } from '../handlers/body.ts'
 
 // The expenses, a claim as the acting member, and on an expense's page
 // submitting or refusing it. Approving and reimbursing post to the books,
@@ -21,9 +23,11 @@ export const slice: Slice = {
     expenses: {
       list: listing,
       about: async (db) => ({ today: await today(db) }),
-      item: expense,
+      item: withBody(expense),
       index: async (db) => (await expenses(db)).map((e) => ({ id: e.id, title: e.label, sub: `${e.id}, ${e.status}` })),
+      body: bodyMount,
       actions: {
+        ...bodyActions,
         capture: action('expense:expense:capture', (form, _, deps) => forms.capture(form, deps.actor), capture),
         submit: action('expense:expense:submit', (_, id) => ({ expense: id ?? '' }), submit),
         refuse: action('expense:expense:refuse', (_, id) => ({ expense: id ?? '' }), refuse),

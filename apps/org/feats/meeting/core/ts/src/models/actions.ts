@@ -15,4 +15,6 @@ export const actions = {
   'meeting:meeting:cancel': ordered({ power: 'schedule-meeting' }),
   // idempotent: the first day the minutes were begun stands
   'meeting:meeting:minute': confluent({ power: 'keep-minutes' }),
+  // each save carries the whole merged snapshot, so the later receipt holds every edit before it
+  'meeting:body:save': confluent({ power: 'discuss' }),
 } satisfies Actions

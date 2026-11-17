@@ -6,6 +6,7 @@ import { contact, contacts, listing } from '../drivers/contact.ts'
 import { stages, type Stage } from '../models/contact.ts'
 import { contacts as imported } from './imports.ts'
 import { contract } from './contract.ts'
+import { bodyActions, bodyMount, withBody } from './body.ts'
 
 export { add, archive, erase, update } from '../handlers/index.ts'
 export { contact, contacts } from '../drivers/contact.ts'
@@ -21,6 +22,7 @@ function stage(typed: string): Stage | null {
   }
   return s
 }
+export { saveBody } from '../handlers/body.ts'
 
 export const slice: Slice = {
   name: 'contact',
@@ -29,9 +31,11 @@ export const slice: Slice = {
   collections: {
     contacts: {
       list: listing,
-      item: contact,
+      item: withBody(contact),
       index: async (db) => (await contacts(db)).map((c) => ({ id: c.id, title: c.name, sub: c.form ?? c.kind })),
+      body: bodyMount,
       actions: {
+        ...bodyActions,
         client: action('contact:contact:update', (form, id) => ({ id: id ?? '', fields: { client: stage(form.get('client')) } }), update),
         note: action('contact:contact:update', (form, id) => ({ id: id ?? '', fields: { note: form.get('note') } }), update),
       },

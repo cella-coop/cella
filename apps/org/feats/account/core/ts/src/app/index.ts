@@ -3,6 +3,9 @@ import type { Account, Period } from '../models/account.ts'
 import type { Terms } from '../models/terms.ts'
 import Close from './blocks/Close.svelte'
 import Open from './blocks/Open.svelte'
+import BodyAccount from './blocks/BodyAccount.svelte'
+import BodyPeriod from './blocks/BodyPeriod.svelte'
+import BodyTerms from './blocks/BodyTerms.svelte'
 
 // A row as its collection lists it: its state, and an account cash or
 // other, as their badges show them.
@@ -45,6 +48,7 @@ export const app: App = {
           { id: 'overview', label: 'Overview' },
           { id: 'ledger', label: 'Ledger' },
         ],
+        blocks: [BodyAccount],
       },
     },
     periods: {
@@ -71,6 +75,7 @@ export const app: App = {
           { id: 'overview', label: 'Overview' },
           { id: 'entries', label: 'Entries' },
         ],
+        blocks: [BodyPeriod],
         actions: Close,
       },
     },
@@ -101,6 +106,7 @@ export const app: App = {
           { label: 'Yearly repayments', value: t.repayments, kind: 'number' },
           { label: 'Adopted on', value: t.adopted, kind: 'date' },
         ],
+        blocks: [BodyTerms],
       },
     },
   },

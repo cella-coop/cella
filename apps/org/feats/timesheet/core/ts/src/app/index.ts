@@ -3,6 +3,7 @@ import type { Detail, Entry, Listed, State } from '../models/timesheet.ts'
 import Log from './blocks/Log.svelte'
 import Period from './blocks/Period.svelte'
 import Sheet from './blocks/Sheet.svelte'
+import Body from './blocks/Body.svelte'
 
 const tones: Record<State, Tone> = { open: 'neutral', submitted: 'accent', approved: 'positive' }
 const kind = (e: Entry) => (e.billable ? 'billable' : 'internal')
@@ -56,7 +57,7 @@ export const app: App = {
           { id: 'overview', label: 'Overview' },
           { id: 'month', label: 'Month' },
         ],
-        blocks: [{ tab: 'month', block: Period }],
+        blocks: [Body, { tab: 'month', block: Period }],
         actions: Sheet,
       },
     },

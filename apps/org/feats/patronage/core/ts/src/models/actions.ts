@@ -16,4 +16,8 @@ export const actions = {
   // what an associate's part buys in shares credited to their capital,
   // once; it follows the distribution, citing the motion that approved it
   'patronage:part:employ': ordered({ power: 'approve-distribution' }),
+  // each save carries the whole merged snapshot, so the later receipt holds every edit before it;
+  // one body per collection, so each needs its own verb: the entity plays no part in /api/<feat>/<verb>
+  'patronage:body:save-distribution': confluent({ power: 'discuss' }),
+  'patronage:body:save-terms': confluent({ power: 'discuss' }),
 } satisfies Actions

@@ -5,10 +5,12 @@ import { upload } from '../handlers/index.ts'
 import { content, file, files, listing } from '../drivers/file.ts'
 import * as forms from './forms.ts'
 import { contract } from './contract.ts'
+import { bodyActions, bodyMount, withBody } from './body.ts'
 
 export { committed, request, storing, upload, uploading } from '../handlers/index.ts'
 export { content, file, files } from '../drivers/file.ts'
 export * as forms from './forms.ts'
+export { saveBody } from '../handlers/body.ts'
 
 // The files the co-op keeps, each one's bytes for whoever may open them,
 // and a file of the co-op's own uploaded from the collection's page.
@@ -18,10 +20,12 @@ export const slice: Slice = {
   collections: {
     files: {
       list: listing,
-      item: file,
+      item: withBody(file),
       content,
       index: async (db) => (await files(db)).map((f) => ({ id: f.id, title: f.name, sub: `${f.id}, ${f.type}` })),
+      body: bodyMount,
       actions: {
+        ...bodyActions,
         upload: action('file:file:upload', (form) => forms.store(form, 'file', 'none', null), upload),
       },
     },

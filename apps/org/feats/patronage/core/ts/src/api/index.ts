@@ -8,11 +8,15 @@ import { basis, bases } from '../drivers/terms.ts'
 import { parts, statement, statements } from '../drivers/statement.ts'
 import * as forms from './forms.ts'
 import { contract } from './contract.ts'
+import { bodyActionsDistribution, bodyMountDistribution, withBodyDistribution } from './body-distribution.ts'
+import { bodyActionsTerms, bodyMountTerms, withBodyTerms } from './body-terms.ts'
 
 export { adopt, approve, distributing, draft } from '../handlers/index.ts'
 export { distribution, distributions } from '../drivers/distribution.ts'
 export { basis, bases } from '../drivers/terms.ts'
 export { statement, statements } from '../drivers/statement.ts'
+export { saveBodyDistribution } from '../handlers/body-distribution.ts'
+export { saveBodyTerms } from '../handlers/body-terms.ts'
 
 // Each year's distribution and its split, the statutes' terms for the
 // work share and each worker's statement; drafting a split, which finance
@@ -26,19 +30,29 @@ export const slice: Slice = {
   collections: {
     distributions: {
       list: years,
-      item: distribution,
+      item: withBodyDistribution(distribution),
       index: async (db) => (await distributions(db)).map((d) => ({ id: d.id, title: `${d.year} distribution`, sub: d.distributed ? 'distributed' : d.approved ? 'approved' : 'draft' })),
       // The year a new draft is for unless finance says otherwise: the last.
       about: async (db) => ({ year: Number((await today(db)).slice(0, 4)) - 1 }),
+      body: bodyMountDistribution,
       actions: {
+        ...bodyActionsDistribution,
         draft: action('patronage:distribution:draft', (form) => forms.draft(form), draft),
         approve: action('patronage:distribution:approve', (form, id) => ({ distribution: id ?? '', motion: form.get('motion') }), approve),
       },
     },
     bases: {
       list: bases,
-      item: basis,
+      item: withBodyTerms(basis),
+      body: bodyMountTerms,
+      actions: {
+        ...bodyActionsTerms,
+      },
     },
+    // `statements` has no body: `patronage.statement` is a view grouping
+    // `patronage.part`'s rows, kept by the distribution's approval
+    // (`patronage.part_fixed`), with no row of its own a column could be
+    // added to.
     statements: {
       list: parts,
       item: statement,

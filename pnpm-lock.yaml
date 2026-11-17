@@ -177,6 +177,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../core/actions/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../../core/body/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
@@ -192,6 +195,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../core/actions/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../../core/body/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
@@ -210,6 +216,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../core/actions/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../../core/body/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
@@ -271,6 +280,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../core/actions/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../../core/body/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
@@ -286,6 +298,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../core/actions/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../../core/body/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
@@ -305,6 +320,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../core/actions/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../../core/body/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
@@ -324,6 +342,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../core/actions/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../../core/body/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
@@ -349,6 +370,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../core/actions/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../../core/body/ts
       '@cella/org-circle':
         specifier: workspace:*
         version: link:../../../../core/circle/ts
@@ -418,6 +442,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../core/actions/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../../core/body/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
@@ -433,6 +460,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../core/actions/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../../core/body/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
@@ -469,6 +499,9 @@ importers:
       '@cella/org-analytics':
         specifier: workspace:*
         version: link:../../../../core/analytics/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../../core/body/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
@@ -505,6 +538,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../core/actions/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../../core/body/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
@@ -520,6 +556,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../core/actions/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../../core/body/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts

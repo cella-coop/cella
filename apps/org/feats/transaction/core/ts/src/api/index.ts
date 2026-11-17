@@ -4,9 +4,11 @@
 import type { Slice } from '@cella/org-db'
 import { entry, journal, listing } from '../drivers/journal.ts'
 import { contract } from './contract.ts'
+import { bodyActions, bodyMount, withBody } from './body.ts'
 
 export { adjust, adjusting, logged, pay, paying, post, posting, record } from '../handlers/index.ts'
 export { entry, journal } from '../drivers/journal.ts'
+export { saveBody } from '../handlers/body.ts'
 
 // The journal, as the shell's transactions. Posting through the shell is
 // not offered yet: the pilot's entries come from invoices, through the
@@ -17,8 +19,12 @@ export const slice: Slice = {
   collections: {
     transactions: {
       list: listing,
-      item: entry,
+      item: withBody(entry),
       index: async (db) => (await journal(db)).map((e) => ({ id: e.id, title: e.id, sub: e.label })),
+      body: bodyMount,
+      actions: {
+        ...bodyActions,
+      },
     },
   },
 }

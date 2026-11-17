@@ -1,6 +1,7 @@
 import { icons, type App } from '@cella/org-ui'
 import type { Detail, Journaled } from '../models/transaction.ts'
 import Lines from './blocks/Lines.svelte'
+import Body from './blocks/Body.svelte'
 
 // The feat's client side: the journal as the shell's transactions, and an
 // entry's page, named by its label, its lines in a tab of their own.
@@ -37,7 +38,7 @@ export const app: App = {
           { id: 'overview', label: 'Overview' },
           { id: 'lines', label: 'Lines' },
         ],
-        blocks: [{ tab: 'lines', block: Lines }],
+        blocks: [Body, { tab: 'lines', block: Lines }],
       },
     },
   },

@@ -8,8 +8,9 @@
     "./app": "./src/app/index.ts"
   },
   "dependencies": {
-    "@cella/org-db": "workspace:*",
     "@cella/org-actions": "workspace:*",
+    "@cella/org-body": "workspace:*",
+    "@cella/org-db": "workspace:*",
     "@cella/org-ui": "workspace:*",
     "svelte": "5.57.2"
   }

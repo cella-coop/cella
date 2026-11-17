@@ -5,7 +5,9 @@
 // uploaded them, a person, in a list, a table, a gallery and on a
 // board; and the mandates by the circle that issued them, a circle, in a
 // list, a table, a gallery and on a board. Group by offers each field and
-// None; a list, a table and a gallery draw a header over each
+// None; a board's Columns offers each field too, but never None, migrated
+// from an older view's grouping where it is unset. A list, a table and a
+// gallery draw a header over each
 // group's rows, naming its value, a person and a circle by name, and how
 // many rows it holds, the groups in the order a board's columns take and
 // the rows in the collection's order within each, as the scenario works
@@ -13,7 +15,10 @@
 // view saved with its group restores it from its tab, the address alone
 // draws it, and None draws the rows as one again. In a table, a group's
 // bar collapses its own rows alone by its chevron, and its + ("Create
-// in …", never named New) opens New's own dialog (F32). `SHOTS` names
+// in …", never named New) opens New's own dialog (F32). Setting a board's
+// Grouping too, its swimlanes wear the same bar, collapsible the same
+// way, each holding the whole set of columns, Columns locked at what
+// already drew. `SHOTS` names
 // where its screenshots go. Nothing is written but what New's cancel
 // undoes. Run
 // by `cella test e2e group`.
@@ -159,27 +164,34 @@ eachBrowser((browserName, launch) => {
         await page.waitForLoadState('networkidle')
       }
 
-      // Group by a field in the View panel: Group by offers it, the address
-      // takes it and the layout draws its groups.
+      // Group by a field in the View panel, or a board's Columns: either
+      // offers it, the address takes it (`by`, or a board's `columns`,
+      // which `by` still means until it is set) and the layout draws its
+      // groups.
       const grouping = async (name: string, layout: string, field: { key: string; label: string }, want: Drawn[]) => {
         const view = panel(page)
         assert.equal(await view.getByRole('button', { name: layout[0].toUpperCase() + layout.slice(1), exact: true }).getAttribute('aria-pressed'), 'true', `${browserName}: ${name} in a ${layout}`)
-        const by = view.getByRole('combobox', { name: 'Group by' })
+        const label = layout === 'board' ? 'Columns' : 'Group by'
+        const param = layout === 'board' ? 'columns' : 'by'
+        const by = view.getByRole('combobox', { name: label })
         if (layout !== 'board') {
           assert.equal(await chosen(by), '', `${browserName}: ${name}'s ${layout} groups by nothing at first`)
         }
-        // A board already grouped by the field keeps it: choosing it again
-        // changes nothing, as the browser's own select did not.
+        // A board already columned by the field keeps it: choosing it
+        // again changes nothing, as the browser's own select did not.
         if ((await chosen(by)) !== field.key) {
           await choose(by, { label: field.label })
           // The address names the field, or nothing where it is the one the
           // collection groups by.
-          await page.waitForURL((u) => u.searchParams.get('by') === field.key || !u.searchParams.has('by'))
+          await page.waitForURL((u) => u.searchParams.get(param) === field.key || !u.searchParams.has(param))
         }
 
         await view.getByRole('heading', { name: 'View', exact: true }).hover()
         await groups(page, name, layout, want, `${browserName} ${name} ${layout} by ${field.key}`)
       }
+
+      // A person, by name.
+      const names = Object.fromEntries((await people(app)).map((p) => [p.address, p.name]))
 
       // An enumeration, in its board's declared order.
       const byStatus = await expected('expenses', 'status', [...statuses], (v) => v)
@@ -216,8 +228,73 @@ eachBrowser((browserName, launch) => {
       await page.getByRole('dialog', { name: 'New in Expenses' }).waitFor()
       await page.getByRole('button', { name: 'Cancel' }).click()
 
-      // A person, by name.
-      const names = Object.fromEntries((await people(app)).map((p) => [p.address, p.name]))
+      // Setting a board's Grouping too, as the operator asked: the
+      // expenses split into a swimlane per member, each the whole set of
+      // status columns, Columns locking in at status, which already drew.
+      await visit('/expenses?view=board&by=&sort=')
+      const byMember = await expected('expenses', 'member', [], (v) => names[v] ?? v)
+      const members = byMember.filter((g) => g.label !== 'None')
+      assert.ok(members.length > 1, `${browserName}: more than one member submitted the expenses Julien reads`)
+      {
+        const view = panel(page)
+        assert.equal(await chosen(view.getByRole('combobox', { name: 'Columns' })), 'status', `${browserName}: Columns already drew status`)
+        await choose(view.getByRole('combobox', { name: 'Grouping' }), { label: 'Member' })
+        await page.waitForURL((u) => u.searchParams.get('by') === 'member')
+        // Columns stays status: locked in rather than stolen by Grouping.
+        assert.equal(await chosen(view.getByRole('combobox', { name: 'Columns' })), 'status', `${browserName}: Grouping locks Columns at status`)
+        assert.equal(new URL(page.url()).searchParams.get('columns'), 'status', `${browserName}: the address names Columns too`)
+
+        const prefix = '/expenses/'
+        const swum = () =>
+          page.locator('section.swimlane').evaluateAll(
+            (els, prefix) =>
+              els.map((el) => {
+                const bar = el.querySelector('span.group')
+                const count = bar?.querySelector('.count')
+                const label = [...(bar?.children ?? [])].filter((c) => c !== count).map((c) => c.textContent?.trim() ?? '').join(' ')
+                const columns = el.querySelectorAll('section.lane').length
+                const ids = [...el.querySelectorAll(`a[href^="${prefix}"]`)].map((a) => decodeURIComponent(new URL((a as HTMLAnchorElement).href).pathname.slice(prefix.length)))
+                return { label, count: Number(count?.textContent ?? -1), columns, ids }
+              }),
+            prefix,
+          )
+        let lanes: { label: string; count: number; columns: number; ids: string[] }[] = []
+        for (let tries = 0; tries < 60; tries++) {
+          lanes = await swum()
+          if (lanes.length === members.length) {
+            break
+          }
+          await page.waitForTimeout(250)
+        }
+        assert.equal(lanes.length, members.length, `${browserName}: a swimlane per member`)
+        for (const m of members) {
+          const got = lanes.find((l) => l.label === m.label)
+          assert.ok(got, `${browserName}: a swimlane for ${m.label}`)
+          assert.equal(got!.count, m.count, `${browserName}: ${m.label}'s swimlane counts its own rows`)
+          assert.equal(got!.columns, statuses.length, `${browserName}: ${m.label}'s swimlane holds the whole set of columns`)
+          assert.deepEqual([...got!.ids].sort(), [...m.ids].sort(), `${browserName}: ${m.label}'s swimlane holds its own rows`)
+        }
+        mkdirSync(shots, { recursive: true })
+        await page.screenshot({ path: `${shots}/expenses-swimlanes-${browserName}.png` })
+
+        // The swimlane's bar collapses the same way a list group's does.
+        const first = page.locator('section.swimlane').first()
+        const untilLanes = async (want: (n: number) => boolean, at: string) => {
+          let got = -1
+          for (let tries = 0; tries < 40 && !want(got); tries++) {
+            got = await first.locator('section.lane').count()
+            if (!want(got)) {
+              await page.waitForTimeout(100)
+            }
+          }
+          assert.ok(want(got), `${at}: ${got}`)
+        }
+        await first.getByRole('button', { name: /^Hide /, exact: false }).click()
+        await untilLanes((n) => n === 0, `${browserName}: the swimlane's chevron hides its columns`)
+        await first.getByRole('button', { name: /^Show /, exact: false }).click()
+        await untilLanes((n) => n > 0, `${browserName}: it shows them again`)
+      }
+
       const byUploader = await expected('files', 'uploader', [], (v) => names[v] ?? v)
       assert.ok(byUploader.length > 1, 'more than one person uploaded the files Julien reads')
       for (const layout of ['list', 'table', 'gallery', 'board']) {

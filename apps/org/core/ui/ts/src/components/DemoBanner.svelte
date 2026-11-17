@@ -4,14 +4,16 @@
   // A demo build's banner, on every page it serves, signed in or not: that
   // this is a prototype for demo purposes and no place for real work, and
   // that its co-op is a mock anyone may sign in to. On a visitor's copy,
-  // which `cella demo serve` serves (`copy`, the seconds idle before it
-  // resets, and `ends`, when it resets however busy), also that the copy
-  // is the visitor's own, when it resets, and its Reset now, a post the
-  // front answers with a fresh copy. It is never dismissed. `floating`
-  // sets it over the content's foot, where the shell puts it, out of the
-  // way of every page's own header; otherwise it sits in the flow, as the
-  // gate's.
-  let { floating = false, copy = 0, ends = 0 }: { floating?: boolean; copy?: number; ends?: number } = $props()
+  // now a room, which `cella demo serve` serves (`copy`, the seconds idle
+  // before it resets, `ends`, when it resets however busy, and `join`,
+  // its link's code), also that the copy is the visitor's own, when it
+  // resets, its Reset now, a post the front answers with a fresh copy,
+  // refused while another browser is still in the room, and Share this
+  // copy, whose link's `href` resolves to the room another browser opens
+  // it from. It is never dismissed. `floating` sets it over the content's
+  // foot, where the shell puts it, out of the way of every page's own
+  // header; otherwise it sits in the flow, as the gate's.
+  let { floating = false, copy = 0, ends = 0, join = '' }: { floating?: boolean; copy?: number; ends?: number; join?: string } = $props()
 
   const countdown = useCountdown(
     () => copy,
@@ -27,11 +29,18 @@
   {#if copy}
     <div class="line">
       <span
-        >Lanterne is a mock co-op, and this copy of it is yours alone. It resets after {countdown.span} idle{#if ends}, or when its time runs out{/if}:
-        <time {@attach countdown.run}>{countdown.left}</time> left.</span
+        >Lanterne is a mock co-op, and this copy of it is yours alone to share. It resets after {countdown.span} idle{#if ends}, or when
+        its time runs out{/if}: <time {@attach countdown.run}>{countdown.left}</time> left.</span
       >
       <form method="post" action="/_demo/reset"><button type="submit">Reset now</button></form>
     </div>
+    {#if join}
+      <p class="line">
+        <span
+          >Share this copy: whoever opens <a href="/_demo/join?code={join}">its link</a> joins this room, as one of its members.</span
+        >
+      </p>
+    {/if}
   {:else}
     <p><span>Lanterne is a mock co-op: anyone may sign in as its members, whose keys anyone can derive.</span></p>
   {/if}
@@ -64,6 +73,10 @@
   }
   .demo time {
     font-variant-numeric: tabular-nums;
+  }
+  .demo a {
+    color: inherit;
+    text-decoration: underline;
   }
   .demo form {
     display: inline;

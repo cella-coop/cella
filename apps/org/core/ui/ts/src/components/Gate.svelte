@@ -13,8 +13,16 @@
     demo = false,
     copy = 0,
     ends = 0,
+    join = '',
     children,
-  }: { scope: { address: string; name: string; legal: string | null }; demo?: boolean; copy?: number; ends?: number; children: Snippet } = $props()
+  }: {
+    scope: { address: string; name: string; legal: string | null }
+    demo?: boolean
+    copy?: number
+    ends?: number
+    join?: string
+    children: Snippet
+  } = $props()
 </script>
 
 <svelte:head>
@@ -23,7 +31,7 @@
 
 <div class="gate">
   <div class="panel">
-    {#if demo}<DemoBanner {copy} {ends} />{/if}
+    {#if demo}<DemoBanner {copy} {ends} {join} />{/if}
     <p class="coop"><span class="mark">{scope.name.slice(0, 1).toUpperCase()}</span><b>{scope.name}</b></p>
     {@render children()}
   </div>

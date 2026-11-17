@@ -393,7 +393,7 @@
     border: none;
     border-radius: var(--radius-control);
     background: none;
-    color: var(--text-muted);
+    color: var(--text-subtle);
     cursor: pointer;
   }
   .icon:hover {
@@ -417,10 +417,10 @@
     height: var(--bar-h);
     padding: 0 var(--space-2);
     gap: var(--space-1);
-    border: 1px dashed var(--line);
+    border: 1px dashed color-mix(in oklab, var(--line) 60%, transparent);
     border-radius: var(--radius-pill);
     background: none;
-    color: var(--text-muted);
+    color: var(--text-subtle);
     font-size: var(--text-xs);
     cursor: pointer;
   }

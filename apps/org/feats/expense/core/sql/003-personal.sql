@@ -11,12 +11,12 @@ COMMENT ON COLUMN expense.expense.decider IS 'not personal: the decider''s pseud
 
 -- As before, but for the notary's redaction (`cella.redacting()`), the one
 -- change of its figures a submitted expense takes. Its body, its
--- free-form discussion, is not its figures nor its step: an update that
--- changes no other column, its id included, passes at any step, and when
--- repeated.
+-- free-form discussion, is not its figures nor its step: `moves` fires
+-- on an update that sets any column but the body (`001-expense.sql`), so
+-- a save of the body alone passes at any step, and when repeated.
 CREATE OR REPLACE FUNCTION expense.moves() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  IF cella.redacting() OR to_jsonb(NEW) - 'body' = to_jsonb(OLD) - 'body' THEN
+  IF cella.redacting() THEN
     RETURN NEW;
   END IF;
   IF NEW.status <> OLD.status AND (OLD.status, NEW.status) NOT IN (

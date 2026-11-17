@@ -95,7 +95,7 @@ sweep` redacts them, the one change a submitted expense takes
 
 An expense keeps a body, its free-form discussion, a Loro snapshot of core body's blocks, saved by `expense:body:save` (`sql/006-body.sql`). A save needs `discuss` in the record's circle and that the saver reads the record, by the terms of its row-level policy rather than the whole state a write's transaction sees (`expense.legible`), and `based` refuses one that did not merge the body it replaces.
 
-`expense.moves` leaves the body free: an update that changes no other column, keys included, passes once the record is fixed and when repeated, and one that changes another column beside it is refused as that column alone is.
+`expense.moves` leaves the body free: it fires on an update that sets any column but the body (`BEFORE UPDATE OF`), not by the values it changes, so a save of the body alone passes once the record is fixed and when repeated, one that sets another column beside it is refused as that column alone is, and a step taken again, which sets the status it holds, is refused as already taken. `core/ts/_tests/body.test.ts` holds that every column but the body fires it.
 
 `core/ts/_tests/body.test.ts` saves a body after the record is fixed, again the same and by its fold, and is refused with another column beside it.
 

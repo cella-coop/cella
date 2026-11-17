@@ -114,7 +114,7 @@ makes its bill names it itself.
 
 A bill keeps a body, its free-form discussion, a Loro snapshot of core body's blocks, saved by `bill:body:save` (`sql/006-body.sql`). A save needs `discuss` in the record's circle and that the saver reads the record, by the terms of its row-level policy rather than the whole state a write's transaction sees (`bill.legible`), and `based` refuses one that did not merge the body it replaces.
 
-`bill.moves` leaves the body free: an update that changes no other column, keys included, passes once the record is fixed and when repeated, and one that changes another column beside it is refused as that column alone is.
+`bill.moves` leaves the body free: it fires on an update of a bill that sets any column but the body (`BEFORE UPDATE OF`), not by the values it changes, so a save of the body alone passes once the record is fixed and when repeated, one that sets another column beside it is refused as that column alone is, and approving or paying a bill again, which sets the status it holds, is refused as already done. `core/ts/_tests/body.test.ts` holds that every column but the body fires it.
 
 `core/ts/_tests/body.test.ts` saves a body after the record is fixed, again the same and by its fold, and is refused with another column beside it.
 

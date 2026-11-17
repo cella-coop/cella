@@ -259,7 +259,7 @@ has left restricts it until `cella vault sweep` redacts it.
 
 A period, capital terms and an account each keep a body, its free-form discussion, a Loro snapshot of core body's blocks, saved by `account:body:save-period`, `-terms` and `-account` (`sql/012`–`014`). A save needs `discuss` in the record's circle and that the saver reads the record, by the terms of its row-level policy rather than the whole state a write's transaction sees (`account.legible_<kind>`), and `based` refuses one that did not merge the body it replaces.
 
-`stays_closed` and `stays_adopted` leave the body free: an update that changes no other column, keys included, passes once the record is fixed and when repeated, and one that changes another column beside it is refused as that column alone is.
+`stays_closed` and `stays_adopted` leave the body free, and an update that changes another column beside it is refused as that column alone is. `stays_adopted` passes an update that changes no column but the body, keys included. `stays_closed` fires on an update that sets any column but the body (`BEFORE UPDATE OF`), not by the values it changes: a save of the body alone passes once the period is closed and when repeated, and closing it again on the day it closed, which sets `closed` to the date it holds, is refused as on any other day; `core/ts/_tests/body.test.ts` holds that every column but the body fires it.
 
 `core/ts/_tests/body.test.ts` saves a body after the record is fixed, again the same and by its fold, and is refused with another column beside it, and by one who does not read the record.
 

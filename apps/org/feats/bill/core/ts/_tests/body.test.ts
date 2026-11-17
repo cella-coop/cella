@@ -62,3 +62,14 @@ test('a paid bill\'s body saved with another column beside it is refused, its id
   await refused(() => db.query(`UPDATE bill.bill SET body = $2, id = 'bi-other' WHERE id = $1`, [id, body('x')]), / was recorded: its figures never change/)
   await refused(() => db.query(`UPDATE bill.bill SET body = $2, paid = '2041-01-21' WHERE id = $1`, [id, body('x')]), / is paid already/)
 })
+
+test('a paid bill paid again, setting the status it holds, is refused: the trigger fires by the columns an update sets, every one but the body', async () => {
+  await refused(() => db.query(`UPDATE bill.bill SET status = 'paid' WHERE id = $1`, [id]), / is paid already/)
+  const { rows } = await db.query<{ unguarded: string[] }>(
+    `SELECT coalesce(array_agg(a.attname::text ORDER BY a.attname), '{}') AS unguarded
+     FROM pg_attribute a, pg_trigger t
+     WHERE a.attrelid = 'bill.bill'::regclass AND a.attnum > 0 AND NOT a.attisdropped
+       AND t.tgrelid = a.attrelid AND t.tgname = 'moves' AND NOT a.attnum = ANY (t.tgattr::int2[])`,
+  )
+  assert.deepEqual(rows[0].unguarded, ['body'], 'every column but the body fires moves')
+})

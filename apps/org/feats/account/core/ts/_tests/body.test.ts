@@ -116,3 +116,14 @@ test('a capital account\'s body is saved by its holder or whoever keeps the book
   assert.equal(await legible(camille, '9013'), null, 'an account that is no one\'s, by whoever reads its circle')
   await db.query(`SELECT set_config('cella.actor', '', true), set_config('cella.writing', '', true)`)
 })
+
+test('a closed period closed again on its day is refused: the trigger fires by the columns an update sets, every one but the body', async () => {
+  await refused(() => db.query(`UPDATE account.period SET closed = '2041-02-05' WHERE month = '2041-01'`), /2041-01 closed on 2041-02-05/)
+  const { rows } = await db.query<{ unguarded: string[] }>(
+    `SELECT coalesce(array_agg(a.attname::text ORDER BY a.attname), '{}') AS unguarded
+     FROM pg_attribute a, pg_trigger t
+     WHERE a.attrelid = 'account.period'::regclass AND a.attnum > 0 AND NOT a.attisdropped
+       AND t.tgrelid = a.attrelid AND t.tgname = 'stays_closed' AND NOT a.attnum = ANY (t.tgattr::int2[])`,
+  )
+  assert.deepEqual(rows[0].unguarded, ['body'], 'every column but the body fires stays_closed')
+})

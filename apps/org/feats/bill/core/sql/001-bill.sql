@@ -92,9 +92,12 @@ CREATE CONSTRAINT TRIGGER adds_up AFTER INSERT ON bill.line
 
 -- A bill moves only along its lifecycle, recorded, approved, then paid,
 -- each once; its figures and its lines never change once recorded. Its
--- body, its free-form discussion, is neither: an update of a bill that
--- changes no other column, its id included, passes at any step, and
--- when repeated.
+-- body, its free-form discussion, is neither: the trigger on a bill fires
+-- on an update that sets any column but the body, so a save of the body
+-- alone passes at any step, and when repeated. It fires by the columns an
+-- update sets, not by the values it changes: approving or paying a bill
+-- a second time sets its status to the one it holds, and is refused as
+-- "already". A column `bill.bill` gains is added to its list.
 CREATE FUNCTION bill.moves() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
   IF TG_TABLE_NAME = 'line' THEN
@@ -104,9 +107,6 @@ BEGIN
   IF TG_OP = 'DELETE' THEN
     RAISE EXCEPTION '% was recorded and is never deleted', OLD.id
       USING ERRCODE = 'triggered_action_exception';
-  END IF;
-  IF to_jsonb(NEW) - 'body' = to_jsonb(OLD) - 'body' THEN
-    RETURN NEW;
   END IF;
   IF (NEW.id, NEW.supplier, NEW.reference, NEW.issued, NEW.due, NEW.label, NEW.category,
       cella.cents(NEW.net), cella.cents(NEW.vat), cella.cents(NEW.total), NEW.recorded, NEW.recorder)
@@ -128,7 +128,7 @@ BEGIN
 END
 $$;
 
-CREATE TRIGGER moves BEFORE UPDATE OR DELETE ON bill.bill
+CREATE TRIGGER moves BEFORE UPDATE OF circle, id, supplier, reference, issued, due, label, category, net, vat, total, status, recorded, recorder, approved, approver, paid OR DELETE ON bill.bill
   FOR EACH ROW EXECUTE FUNCTION bill.moves();
 CREATE TRIGGER moves BEFORE UPDATE OR DELETE ON bill.line
   FOR EACH ROW EXECUTE FUNCTION bill.moves();

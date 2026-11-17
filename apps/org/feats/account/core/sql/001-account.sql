@@ -27,13 +27,14 @@ LANGUAGE sql IMMUTABLE
 RETURN (to_date(month, 'YYYY-MM') + interval '1 month')::date;
 
 -- A closed period stays closed, and closes once. Its body, its free-form
--- discussion, is not part of what closes: an update that changes no
--- other column, its month included, passes, so a save repeated does too.
+-- discussion, is not part of what closes: the trigger fires on an update
+-- that sets any column but the body, so a save of the body alone passes,
+-- and when repeated. It fires by the columns an update sets, not by the
+-- values it changes: closing a period again on the day it closed sets
+-- `closed` to the date it holds, and is refused as on any other day. A
+-- column `account.period` gains is added to its list.
 CREATE FUNCTION account.stays_closed() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  IF to_jsonb(NEW) - 'body' = to_jsonb(OLD) - 'body' THEN
-    RETURN NEW;
-  END IF;
   IF OLD.closed IS NOT NULL THEN
     RAISE EXCEPTION '% closed on %', OLD.month, OLD.closed
       USING ERRCODE = 'triggered_action_exception';
@@ -42,7 +43,7 @@ BEGIN
 END
 $$;
 
-CREATE TRIGGER stays_closed BEFORE UPDATE ON account.period
+CREATE TRIGGER stays_closed BEFORE UPDATE OF circle, month, closed ON account.period
   FOR EACH ROW EXECUTE FUNCTION account.stays_closed();
 
 -- account:period:close — the write closed the period on the verdict date,

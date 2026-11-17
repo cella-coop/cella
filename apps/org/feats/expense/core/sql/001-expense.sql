@@ -62,7 +62,12 @@ BEGIN
 END
 $$;
 
-CREATE TRIGGER moves BEFORE UPDATE ON expense.expense
+-- It fires by the columns an update sets, every one but the body, which
+-- `006-body.sql` adds, not by the values it changes: approving,
+-- refusing or reimbursing an expense a second time sets its status to
+-- the one it holds, and is refused as "already". A column
+-- `expense.expense` gains is added to its list.
+CREATE TRIGGER moves BEFORE UPDATE OF circle, id, member, day, label, category, net, vat, receipt, status, submitted, decided, decider, reimbursed ON expense.expense
   FOR EACH ROW EXECUTE FUNCTION expense.moves();
 
 -- expense:expense:capture — an expense is the actor's own, spent on a day

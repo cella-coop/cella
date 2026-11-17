@@ -61,3 +61,14 @@ test('a reimbursed expense\'s body saved with another column beside it is refuse
   await refused(() => db.query(`UPDATE expense.expense SET body = $2, category = '6256' WHERE id = $1`, [id, body('x')]), / was submitted: its figures never change/)
   await refused(() => db.query(`UPDATE expense.expense SET body = $2, id = 'ex-other' WHERE id = $1`, [id, body('x')]), / is reimbursed already/)
 })
+
+test('a reimbursed expense reimbursed again, setting the status it holds, is refused: the trigger fires by the columns an update sets, every one but the body', async () => {
+  await refused(() => db.query(`UPDATE expense.expense SET status = 'reimbursed' WHERE id = $1`, [id]), / is reimbursed already/)
+  const { rows } = await db.query<{ unguarded: string[] }>(
+    `SELECT coalesce(array_agg(a.attname::text ORDER BY a.attname), '{}') AS unguarded
+     FROM pg_attribute a, pg_trigger t
+     WHERE a.attrelid = 'expense.expense'::regclass AND a.attnum > 0 AND NOT a.attisdropped
+       AND t.tgrelid = a.attrelid AND t.tgname = 'moves' AND NOT a.attnum = ANY (t.tgattr::int2[])`,
+  )
+  assert.deepEqual(rows[0].unguarded, ['body'], 'every column but the body fires moves')
+})

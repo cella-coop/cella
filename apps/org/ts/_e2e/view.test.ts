@@ -8,7 +8,7 @@
 // grouping an older view named, and Grouping opens on None, one lane,
 // until it names a field of its own, each lane the whole set of columns;
 // Display opens a popover of the cards' fields. On meetings, a calendar,
-// Group by is its date and span. Light and dark, `SHOTS` names where its
+// rows name its Date, Show (a month or a week) and Colour by, never Group by. Light and dark, `SHOTS` names where its
 // screenshots go. Nothing is written. Run by `cella test e2e view`;
 // Columns is driven by its keyboard too.
 // covers: all
@@ -128,7 +128,8 @@ eachBrowser((name, launch) => {
         await page.keyboard.press('Escape')
 
         await visit('/meetings')
-        assert.ok(await panel(page).getByLabel('Span').isVisible(), `${at}: a calendar groups by its date and span`)
+        assert.ok(await panel(page).getByLabel('Show').isVisible(), `${at}: a calendar names its date, its span and its colour`)
+        assert.equal(await panel(page).getByText('Group by').count(), 0, `${at}: a calendar groups nothing`)
         await page.screenshot({ path: `${shots}/meetings-${name}-${scheme}.png` })
 
         await visit('/timesheets')

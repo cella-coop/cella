@@ -257,6 +257,27 @@
       </div>
     {/if}
 
+    {#if spec.layout === 'calendar'}
+      <!-- A calendar groups nothing: it places its rows by a date, shows
+           a month or a week, and colours its entries by a field. -->
+      <span class="label" id="{id}-date">Date</span>
+      <div class="control">
+        <Select fit labelledby="{id}-date" options={dates.map((f) => ({ value: f.key, label: f.label }))} bind:value={() => placing ?? '', (v) => change({ on: v })} />
+      </div>
+      <span class="label" id="{id}-span">Show</span>
+      <div class="control">
+        <Select
+          fit
+          labelledby="{id}-span"
+          options={spans.map((s) => ({ value: s, label: s === 'month' ? 'Month' : 'Week' }))}
+          bind:value={() => spec.span ?? '', (v) => change({ span: v as Spec['span'] })}
+        />
+      </div>
+      <span class="label" id="{id}-colour">Colour by</span>
+      <div class="control">
+        <Select fit labelledby="{id}-colour" options={[none, ...as(lanes)]} bind:value={() => spec.by ?? '', (v) => change({ by: v || null })} />
+      </div>
+    {:else}
     <span class="label" id="{id}-group">{spec.layout === 'board' ? 'Grouping' : 'Group by'}</span>
     <div class="control">
       {#if spec.layout === 'board'}
@@ -264,21 +285,13 @@
              drew; a field splits it into a swimlane per value, each
              holding the whole set of columns. -->
         <Select fit labelledby="{id}-group" options={[none, ...as(lanes)]} bind:value={() => swimlane ?? '', (v) => swimlaned(v)} />
-      {:else if spec.layout === 'calendar'}
-        <Select fit labelledby="{id}-group" options={as(dates)} bind:value={() => placing ?? '', (v) => change({ on: v })} />
-        <Select
-          fit
-          label="Span"
-          options={spans.map((s) => ({ value: s, label: s === 'month' ? 'Month' : 'Week' }))}
-          bind:value={() => spec.span ?? '', (v) => change({ span: v as Spec['span'] })}
-        />
-        <Select fit label="Colour by" options={[none, ...as(lanes)]} bind:value={() => spec.by ?? '', (v) => change({ by: v || null })} />
       {:else if spec.layout === 'dashboard'}
         <Select fit labelledby="{id}-group" options={[none]} disabled />
       {:else}
         <Select fit labelledby="{id}-group" options={[none, ...as(groups)]} bind:value={() => spec.by ?? '', (v) => change({ by: v || null })} />
       {/if}
     </div>
+    {/if}
 
     <span class="label" id="{id}-order">Order by</span>
     <!-- The direction before the field, so every control ends on the

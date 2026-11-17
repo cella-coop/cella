@@ -29,6 +29,7 @@
     fields,
     values,
     onchange,
+    lens = null,
   }: {
     spec: Spec
     // What the open view (a preset or the viewer's own) shows before this
@@ -39,7 +40,16 @@
     fields: Field[]
     values: Record<string, string[]>
     onchange: (spec: Spec) => void
+    // The circle the sidebar's lens narrows the rows to, where it does:
+    // its scope is a chip like any filter's (the operator, 17 Nov: "should
+    // this be a filter?"), "Circle is <name>", plain since it comes from
+    // where the reader is; removing it reads every circle's rows
+    // (`across`), and the Filter menu offers it back.
+    lens?: string | null
   } = $props()
+
+  const scoped = $derived(!!lens && !spec.across)
+  const scopeChanged = $derived(!!spec.across !== !!base.across)
 
   const state = useCollection()
   const shell = useShell()
@@ -173,6 +183,14 @@
   </div>
 
   <ul class="chips">
+    {#if scoped}
+      <li>
+        <span class="chip" class:added={scopeChanged}>
+          <span class="said-trigger"><span class="said">Circle</span> <span class="op">is</span> <span class="said">{lens}</span>{#if scopeChanged}<span class="dot" aria-hidden="true"></span><span class="visually-hidden">, changed</span>{/if}</span>
+          <button type="button" class="remove" aria-label="Read every circle's rows" title="Every circle" onclick={() => onchange({ ...spec, across: true })}><Icon icon={X} /></button>
+        </span>
+      </li>
+    {/if}
     {#each conditions as f (f.key)}
       <li>
         <span class="chip" class:added={changed(f.key)}>
@@ -219,6 +237,9 @@
   <span class="adder" {@attach captureAdder}>
     <Popover label="Filter by a field" button>
       {#snippet trigger()}<Icon icon={Funnel} /><span>Filter</span>{/snippet}
+      {#if lens && !scoped}
+        <button type="button" role="menuitem" class="item" onclick={() => onchange({ ...spec, across: false })}>Circle: {lens}</button>
+      {/if}
       {#each offered as f (f.key)}
         <button type="button" role="menuitem" class="item" data-field={f.key} onclick={(e) => pick(e, f.key)}>{labelled(f)}</button>
       {:else}

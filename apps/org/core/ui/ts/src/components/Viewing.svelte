@@ -114,8 +114,6 @@
   const views = useViews(() => name)
   const shell = useShell()
   const pinned = usePinned()
-  // Circles chooses only where a lens narrows the rows.
-  const narrowed = $derived(!!shell.lens && !whole)
 
   const groups = $derived(fields.filter(groupable))
   const lanes = $derived(fields.filter(laned))
@@ -334,22 +332,6 @@
       {/if}
     </div>
 
-    <!-- What the view reads: the lens's circle, or every circle's rows
-         the reader reads; with no lens, or where the lens leaves the
-         collection whole, it already reads every circle. -->
-    <span class="label" id="{id}-circles">Circles</span>
-    <div class="control">
-      <Select
-        fit
-        labelledby="{id}-circles"
-        options={[
-          { value: 'this', label: 'This circle' },
-          { value: 'every', label: 'Every circle' },
-        ]}
-        disabled={!narrowed}
-        bind:value={() => (narrowed && !spec.across ? 'this' : 'every'), (v) => change({ across: v === 'every' })}
-      />
-    </div>
   </div>
 
   <!-- The foot, one row: Pin, which pins the open view under Pinned in

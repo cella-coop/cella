@@ -516,7 +516,7 @@
   </nav>
   {/snippet}
 
-  <FilterBar {spec} {base} fields={typed} {values} onchange={change} />
+  <FilterBar {spec} {base} fields={typed} {values} onchange={change} lens={shell.lens && !whole ? shell.lens.name : null} />
 
   {#if errors.length}
     <div role="status">

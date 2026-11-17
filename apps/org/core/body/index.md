@@ -1,6 +1,6 @@
 +++
 title = "Body"
-updated = 2026-11-16
+updated = 2026-11-17
 +++
 
 Core's body: free-form content as a Loro tree of blocks, its
@@ -69,6 +69,26 @@ hold the two to the same bytes on 300 random bodies.
 Loro is `loro-crdt`, pinned to an exact version, in this package only
 among the TypeScript packages, and the `loro` crate pinned to it in the
 notary's.
+
+## Arriving
+
+A record's page never waits on the live session for its first paint. The
+slice that keeps a body reads its own record with one query, in the same
+statement as the rest of the row, `cella.document_canonical(body)` beside
+it (as the task feat's driver does); that query is the page's own remote
+function (`#lib/remote/item.remote.ts`, a SvelteKit `query` from
+`$app/server`, never a route `load`, which `ui-check` refuses), awaited in
+the page's component, so it runs during SSR and its canonical form is
+serialized into the page the server sends: the page shows, and its body
+reads, whole, at once, hydration finding the same data already there and
+fetching nothing again for it. Only once the page has mounted does a
+slice's `BodyState` (or a document's `DraftState`) build the Loro document
+from that same read's snapshot and open the live stream
+(`/<collection>/<record>/body/live`) to hydrate it for editing: the
+`Reader` draws the canonical form the whole time until then, and the
+`Editor` takes over once the session has joined and said this browser may
+write. A session that joins slowly, or not at all, delays only who may
+edit, never what is shown.
 
 ## The editor
 

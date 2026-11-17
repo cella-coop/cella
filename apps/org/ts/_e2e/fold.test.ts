@@ -5,7 +5,8 @@
 // payroll and the capital paid in, drawn on, repaid and withdrawn; the
 // projects, each with a body, a thread and its crew, their tasks with theirs and
 // their reactions, and time, the files, documents and meetings go
-// on; the assembly passes motions whose closes carry their effects, one
+// on; a body is kept on a record of every other kind that has one;
+// the assembly passes motions whose closes carry their effects, one
 // forgoing one; the 2025 and 2026 distributions are approved and the
 // year's periods closed; a member erases her data; and a year after his
 // hire, Bastien applies to join. The log then names every op `cella.fold`
@@ -23,44 +24,46 @@ import { arrange, icon as circleIcon } from '@cella/org-circle/api'
 import { accept, erase, invite, link, withdraw } from '@cella/org-membership/api'
 import { apply, close, propose } from '@cella/org-graft-membership-motion/api'
 import { post as message, vote } from '@cella/org-motion/api'
-import { archive as archiveContact, erase as eraseContact, update as updateContact } from '@cella/org-contact/api'
+import { archive as archiveContact, erase as eraseContact, saveBody as contactBody, update as updateContact } from '@cella/org-contact/api'
 import { link as bill_to } from '@cella/org-graft-contact-invoice/api'
 import { link as clientOf } from '@cella/org-graft-contact-project/api'
 import { link as charge } from '@cella/org-graft-invoice-project/api'
 import { annul, issue, payment } from '@cella/org-graft-invoice-transaction/api'
-import { send } from '@cella/org-invoice/api'
-import { adjust, pay as paySupplier, post } from '@cella/org-transaction/api'
-import { record as recordBill } from '@cella/org-bill/api'
+import { saveBody as invoiceBody, send } from '@cella/org-invoice/api'
+import { adjust, pay as paySupplier, post, saveBody as entryBody } from '@cella/org-transaction/api'
+import { record as recordBill, saveBody as billBody } from '@cella/org-bill/api'
 import { approve as approveBill, pay as payBill } from '@cella/org-graft-bill-transaction/api'
-import { capture as captureAlone, refuse, submit as claim } from '@cella/org-expense/api'
+import { capture as captureAlone, refuse, saveBody as expenseBody, submit as claim } from '@cella/org-expense/api'
 import { attach as receipt, capture } from '@cella/org-graft-expense-file/api'
 import { approve as approveExpense, reimburse } from '@cella/org-graft-expense-transaction/api'
 import { rebill } from '@cella/org-graft-expense-project/api'
 import { add as milestone, archive, budget, complete as reach, create as createProject, icon as projectIcon, postComment as discussProject, reactToComment as reactOnProject, resolveComment as settleProject, saveBody as saveBrief } from '@cella/org-project/api'
 import { crew, share } from '@cella/org-graft-membership-project/api'
-import { complete, create as createTask, move, post as postComment, react, resolve, save as saveBody } from '@cella/org-task/api'
+import { change as setTask, complete, create as createTask, move, post as postComment, react, resolve, save as saveBody } from '@cella/org-task/api'
 import { file as fileTask } from '@cella/org-graft-project-task/api'
 import { assign } from '@cella/org-graft-membership-task/api'
-import { approve as approveTime, correct, log as logTime, submit as submitTime } from '@cella/org-timesheet/api'
+import { approve as approveTime, correct, log as logTime, saveBody as timeBody, submit as submitTime } from '@cella/org-timesheet/api'
 import { book } from '@cella/org-graft-project-timesheet/api'
 import { hire } from '@cella/org-employment/api'
 import { attach as contract } from '@cella/org-graft-employment-file/api'
-import { upload } from '@cella/org-file/api'
+import { saveBody as fileBody, upload } from '@cella/org-file/api'
 import { attach as record } from '@cella/org-graft-file-membership/api'
 import { adopt as adoptVersion, comment, create as createDocument, edit, merged, version } from '@cella/org-document/api'
 import { createDoc, edits, order } from '@cella/org-body/models'
 import { read } from '@cella/org-graft-document-membership/api'
-import { add as item, cancel, hold, move as moveItem, remove, schedule } from '@cella/org-meeting/api'
+import { add as item, cancel, hold, move as moveItem, remove, saveBody as meetingBody, schedule } from '@cella/org-meeting/api'
 import { table } from '@cella/org-graft-meeting-motion/api'
 import { minute } from '@cella/org-graft-document-meeting/api'
 import { mark, record as attended } from '@cella/org-graft-meeting-membership/api'
-import { save } from '@cella/org-report/api'
-import { close as closePeriod, nextPeriod, open } from '@cella/org-account/api'
+import { save, saveBody as reportBody } from '@cella/org-report/api'
+import { close as closePeriod, nextPeriod, open, saveBodyAccount, saveBodyPeriod, saveBodyTerms as accountTermsBody } from '@cella/org-account/api'
 import { draw, pay as payIn, repay } from '@cella/org-graft-account-membership-transaction/api'
 import { spread } from '@cella/org-graft-account-membership-payslip-transaction/api'
 import { generate } from '@cella/org-graft-payslip-timesheet/api'
 import { approve as approveRun, pay as payRun } from '@cella/org-graft-payslip-transaction/api'
-import { approve as approveSplit, draft } from '@cella/org-patronage/api'
+import { approve as approveSplit, draft, saveBodyDistribution, saveBodyTerms as patronageTermsBody } from '@cella/org-patronage/api'
+import { saveBody as payslipBody } from '@cella/org-payslip/api'
+import { saveBody as importBody } from '@cella/org-import/api'
 import type { Deps } from '@cella/org-db'
 import { fixture, generate as device, random, sha256, signer } from '@cella/org-sign'
 import { folded, tables, unfold } from './fold.ts'
@@ -199,6 +202,7 @@ test('24 October: contacts are kept, archived and erased, and the work goes on: 
   settled(await fileTask({ task, project }, as(hugo)))
   settled(await assign({ task, member: sofia }, as(hugo)))
   settled(await move({ task, status: 'doing' }, as(sofia)))
+  settled(await setTask({ task, priority: 'urgent', due: '2026-11-05' }, as(sofia)))
   const notes = createDoc()
   edits.paste(notes, undefined, 0, [{ type: 'todo', checked: false, runs: [{ text: 'Send the redrawn vine to the printer' }], children: [] }])
   notes.commit()
@@ -351,6 +355,34 @@ test('2 November: October\'s time is approved and its pay run paid; Thomas draws
   settled(await hire({ worker: bastien, name: 'Bastien Roux', job: 'apprentice developer', contract: 'apprenticeship', start: '2026-11-02', until: '2028-08-31', minutes: 35 * 60, key: laptop.key, label: 'laptop' }, as(camille)))
   settled(await open(await nextPeriod(app as pg.Client), as(julien)))
   settled(await closePeriod({ month: '2026-10' }, as(julien)))
+})
+
+test('3 November: Camille keeps a body on a record of every other kind that has one, closed, approved and distributed ones among them', async () => {
+  await on('2026-11-03')
+  const first = async (sql: string) => (await one<{ id: string }>(sql)).id
+  const note = (text: string) => {
+    const doc = createDoc()
+    edits.paste(doc, undefined, 0, [{ type: 'paragraph', runs: [{ text }], children: [] }])
+    doc.commit()
+    return { snapshot: doc.export({ mode: 'snapshot' }), base: '', contributors: [camille] }
+  }
+  const by = as(camille)
+  settled(await saveBodyAccount({ account: await first(`SELECT code AS id FROM account.account WHERE code = '512'`), ...note('The current account at the Crédit Coopératif') }, by))
+  settled(await saveBodyPeriod({ period: '2026-10', ...note('October closed with the pay run paid') }, by))
+  settled(await accountTermsBody({ terms: await first('SELECT id FROM account.terms ORDER BY id LIMIT 1'), ...note('Why the accounts bear no interest') }, by))
+  settled(await billBody({ bill: await first('SELECT id FROM bill.bill ORDER BY id LIMIT 1'), ...note('Paid by transfer on approval') }, by))
+  settled(await contactBody({ contact: await first(`SELECT id FROM contact.contact WHERE kind = 'company' ORDER BY id LIMIT 1`), ...note('Prefers proofs by post') }, by))
+  settled(await expenseBody({ expense: await first('SELECT id FROM expense.expense ORDER BY id LIMIT 1'), ...note('The train was the cheapest fare') }, by))
+  settled(await fileBody({ file: await first('SELECT id FROM file.file ORDER BY id LIMIT 1'), ...note('Kept for the auditors') }, by))
+  settled(await importBody({ import: await first('SELECT id FROM import.run ORDER BY id LIMIT 1'), ...note('October’s FEC, as the bank sent it') }, by))
+  settled(await invoiceBody({ invoice: await first('SELECT id FROM invoice.invoice ORDER BY id LIMIT 1'), ...note('Paid on time') }, by))
+  settled(await meetingBody({ meeting: await first('SELECT id FROM meeting.meeting ORDER BY id LIMIT 1'), ...note('Coffee from the corner shop') }, by))
+  settled(await saveBodyDistribution({ distribution: '2025', ...note('Approved as the assembly moved it') }, by))
+  settled(await patronageTermsBody({ terms: await first('SELECT id FROM patronage.terms ORDER BY id LIMIT 1'), ...note('Why pay alone weighs') }, by))
+  settled(await payslipBody({ payslip: await first(`SELECT id FROM payslip.payslip WHERE month = '2026-10' AND member = '${camille}'`), ...note('Overtime agreed with the circle') }, by))
+  settled(await reportBody({ report: await first('SELECT id FROM report.report ORDER BY id LIMIT 1'), ...note('Read at the assembly') }, by))
+  settled(await timeBody({ timesheet: await first(`SELECT id::text AS id FROM timesheet.entry WHERE member = '${camille}' ORDER BY id LIMIT 1`), ...note('The Halles shop’s proofs') }, by))
+  settled(await entryBody({ transaction: await first('SELECT id FROM transaction.entry ORDER BY id LIMIT 1'), ...note('Supplies, as the receipt shows') }, by))
 })
 
 test('November: Malik is excluded, his capital frozen and withdrawn; the motion suspending him forgoes it, suspends Chloé and unseats Sofia from Design; Amina withdraws with her capital; Paul is repaid', async () => {

@@ -287,15 +287,16 @@ export function whole(feats, ops, found) {
   return out
 }
 
-// The feats, or one feat's one kind, whose record keeps no body of its
+// The kinds, each a feat's collection, whose record keeps no body of its
 // own, by architecture, not by oversight: a motion's text is its own,
 // adopted once and never a live document (architecture.md, "Threads"); a
 // document's content keeps its drafts and versions already, core body's
 // own blocks under a richer session than a single save (core/body's
 // index.md, "The model"); patronage's statements are a view grouping
 // `patronage.part`'s rows, kept by the distribution's approval, with no
-// row of its own a column could be added to.
-const bodyless = new Set(['document', 'motion', 'patronage/statements'])
+// row of its own a column could be added to. Each is named exactly, so a
+// kind document or motion adds later mounts a body as any other does.
+const bodyless = new Set(['document/documents', 'motion/motions', 'patronage/statements'])
 
 // A top-level key's whole object literal, by brace depth, from the first
 // `collections: {` the text holds: `{ accounts: '… accounts: { … } …',
@@ -342,9 +343,6 @@ function blocks(text, of) {
 export function embodied(repo, feats) {
   const out = []
   for (const { name: F, dir } of feats) {
-    if (bodyless.has(F)) {
-      continue
-    }
     const appIndex = join(repo, dir, 'src', 'app', 'index.ts')
     if (!existsSync(appIndex)) {
       continue

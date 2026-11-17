@@ -1,9 +1,9 @@
 // Every kind a record page shows mounts a body (apps/org/core/body's
 // index.md, "Threads"): the feat check refuses a collection whose
 // `app/index.ts` declares a `page` but whose slice names no `body` for
-// it, names the feat it is not named for (document's, motion's,
-// patronage's statements), and passes once the collection's `body` is
-// mounted.
+// it, but the three kinds whose body is their own, each named exactly
+// (document's documents, motion's motions, patronage's statements), and
+// passes once the collection's `body` is mounted.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -12,9 +12,9 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { embodied } from '../powers.mjs'
 
-// A feat's folder, its app a collection with a page, its api a slice
-// whose collection names no body unless `withBody` is given.
-function tree(withBody = false) {
+// A feat's folder, its app a collection of `kind` with a page, its api a
+// slice whose collection names no body unless `withBody` is given.
+function tree(withBody = false, kind = 'notes') {
   const repo = mkdtempSync(join(tmpdir(), 'embodied-'))
   const at = (p, text) => {
     mkdirSync(dirname(join(repo, p)), { recursive: true })
@@ -23,11 +23,11 @@ function tree(withBody = false) {
   const dir = 'apps/org/feats/note/core/ts'
   at(
     `${dir}/src/api/index.ts`,
-    `export const slice = {\n  name: 'note',\n  collections: {\n    notes: {\n      item,\n${withBody ? '      body: bodyMount,\n' : ''}      actions: {},\n    },\n  },\n}\n`,
+    `export const slice = {\n  name: 'note',\n  collections: {\n    ${kind}: {\n      item,\n${withBody ? '      body: bodyMount,\n' : ''}      actions: {},\n    },\n  },\n}\n`,
   )
   at(
     `${dir}/src/app/index.ts`,
-    `export const app = {\n  name: 'note',\n  collections: {\n    notes: {\n      page: {\n        eyebrow: 'Note',\n        title: (n) => n.title,\n      },\n    },\n  },\n}\n`,
+    `export const app = {\n  name: 'note',\n  collections: {\n    ${kind}: {\n      page: {\n        eyebrow: 'Note',\n        title: (n) => n.title,\n      },\n    },\n  },\n}\n`,
   )
   return { repo, dir }
 }
@@ -54,13 +54,27 @@ test('a collection with a record page and a mounted body passes', () => {
   }
 })
 
-test("document, motion and patronage's statements are left out: their body, if any, is their own", () => {
-  const { repo, dir } = tree(false)
-  try {
-    assert.deepEqual(embodied(repo, [{ name: 'document', dir }]), [])
-    assert.deepEqual(embodied(repo, [{ name: 'motion', dir }]), [])
-  } finally {
-    rmSync(repo, { recursive: true, force: true })
+test("document's documents, motion's motions and patronage's statements are left out: their body, if any, is their own", () => {
+  for (const [name, kind] of [['document', 'documents'], ['motion', 'motions'], ['patronage', 'statements']]) {
+    const { repo, dir } = tree(false, kind)
+    try {
+      assert.deepEqual(embodied(repo, [{ name, dir }]), [], `${name}'s ${kind}`)
+    } finally {
+      rmSync(repo, { recursive: true, force: true })
+    }
+  }
+})
+
+test('any other kind of document, motion or patronage is refused as any feat\'s is', () => {
+  for (const name of ['document', 'motion', 'patronage']) {
+    const { repo, dir } = tree(false)
+    try {
+      assert.deepEqual(embodied(repo, [{ name, dir }]), [
+        `${join(repo, dir, 'src', 'app', 'index.ts')}: ${name}'s notes has a record page but mounts no body: every record has one, by cella scaffold body ${name}, or by hand where ${name} keeps more than one kind's`,
+      ])
+    } finally {
+      rmSync(repo, { recursive: true, force: true })
+    }
   }
 })
 

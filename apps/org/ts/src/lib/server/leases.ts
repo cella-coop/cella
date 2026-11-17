@@ -1,4 +1,4 @@
-import { browserIdle, copy } from './device.ts'
+import { browserIdle, copy, lifetime } from './device.ts'
 
 // A room's member leases, a visiting demo alone: a fixture member is one
 // browser's at a time, `id` the room's front hands it
@@ -12,9 +12,22 @@ import { browserIdle, copy } from './device.ts'
 // caller through unleased. Outside a room every call lets its caller
 // through, since no room asks; inside one, a grant with no id is refused
 // outright, never let through as if no one asked.
+//
+// This process alone decides when the room's lifetime starts: at the
+// first member ever granted here, never at `/_demo/start`. The front
+// learns of it from `ends()`, which every response carries once it holds
+// (`hooks.server.ts`), and times the room's end from that, never guessing
+// it on its own (`tools/demo-serve.mjs`).
 
 const held = new Map<string, string>() // member address -> browser id
 const seen = new Map<string, number>() // browser id -> last seen
+// When the room's lifetime ends, in seconds since 1970; 0 before the
+// first sign-in, outside a room, or where `lifetime` names none.
+let endsAt = 0
+// When this room's server started, about when the front made the room:
+// the front ends a room at its making plus twice its lifetime, signed in
+// or not, so the lifetime this server names never runs past that.
+const born = Date.now()
 
 function sweep(now: number) {
   for (const [id, at] of seen) {
@@ -60,7 +73,19 @@ export function grant(member: string, id: string | null | undefined): boolean {
   }
   held.set(member, id)
   seen.set(id, now)
+  // The room's lifetime starts at its first sign-in ever, never again:
+  // it runs on even once everyone signs out.
+  if (!endsAt && lifetime) {
+    endsAt = Math.min(now + lifetime * 1000, born + 2 * lifetime * 1000)
+  }
   return true
+}
+
+// When the room's lifetime ends, in seconds since 1970; 0 before the
+// first sign-in, outside a room, or where `lifetime` names none. What
+// the banner counts down to, once it holds.
+export function ends(): number {
+  return endsAt ? Math.floor(endsAt / 1000) : 0
 }
 
 // Whether `member` is leased to a browser other than `id`.

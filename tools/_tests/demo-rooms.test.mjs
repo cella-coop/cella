@@ -2,14 +2,18 @@
 // and compared in constant time; a browser idle past its span is ejected
 // from its room and the member it leased is freed; a room with more than
 // one browser present is not alone; a room stays in a front's registry
-// until it is unregistered, never only until its last browser is; and
-// joining a room already held is idempotent.
+// until it is unregistered, never only until its last browser is;
+// joining a room already held is idempotent; a room's lifetime signal is
+// accepted only as a safe integer and never clamped past `--lifetime`,
+// nor ever moved later once held; and a room passes its age cap at twice
+// `--lifetime` past when it was made, signed in or not.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   EJECT_IDLE_MS,
   alone,
+  demoEndsAt,
   eject,
   joinCode,
   joining,
@@ -22,6 +26,7 @@ import {
   roomFull,
   sameCode,
   stale,
+  tooOld,
   unregister,
 } from '../demo-rooms.mjs'
 
@@ -163,4 +168,38 @@ test('joining the room a browser is already in is idempotent; a different one sw
   assert.equal(joining(roomA, roomA), 'same')
   assert.equal(joining(roomA, roomB), 'switch')
   assert.equal(joining(null, roomB), 'fresh')
+})
+
+test('a lifetime signal within --lifetime is taken as told, in milliseconds', () => {
+  const now = Date.now()
+  const lifetime = 7200
+  const until = Math.floor(now / 1000) + 60
+  assert.equal(demoEndsAt(String(until), now, lifetime), until * 1000)
+})
+
+test('a lifetime signal past --lifetime is clamped to it, never later', () => {
+  const now = Date.now()
+  const lifetime = 7200
+  const until = Math.floor(now / 1000) + lifetime + 3600
+  assert.equal(demoEndsAt(String(until), now, lifetime), now + lifetime * 1000)
+})
+
+test('a lifetime signal that is not a positive safe integer is refused, null', () => {
+  const now = Date.now()
+  for (const until of [undefined, '', 'soon', '12.5', '0', '-1', String(Number.MAX_SAFE_INTEGER + 1), 'NaN', 'Infinity']) {
+    assert.equal(demoEndsAt(until, now, 7200), null, until)
+  }
+})
+
+test('a lifetime signal already past is kept, so the room ends at once', () => {
+  const now = Date.now()
+  const until = Math.floor(now / 1000) - 60
+  assert.equal(demoEndsAt(String(until), now, 7200), until * 1000)
+})
+
+test('a room is too old at twice --lifetime past when it was made, not before', () => {
+  const made = Date.now()
+  const lifetime = 7200
+  assert.equal(tooOld(made, made + 2 * lifetime * 1000 - 1, lifetime), false)
+  assert.equal(tooOld(made, made + 2 * lifetime * 1000 + 1, lifetime), true)
 })

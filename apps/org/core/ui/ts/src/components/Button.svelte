@@ -30,7 +30,7 @@
 </script>
 
 {#if href}
-  <a class="button {tone}" {href} {download} {title}>{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}</a>
+  <a class="button {tone}" {href} {download} {title} {onclick}>{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}</a>
 {:else}
   <button class="button {tone}" {type} {title} {onclick} {disabled} aria-busy={busy} aria-disabled={busy}>
     {@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}

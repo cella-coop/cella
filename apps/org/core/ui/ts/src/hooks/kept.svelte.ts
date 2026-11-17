@@ -8,6 +8,12 @@ export interface Kept extends Device {
   // The scope the device is enrolled in, and the person it signs as.
   scope: string
   label: string
+  // The person's name and the circles they sit in, the assembly left
+  // out, as the shell last read them signed in: the sign-in page's own
+  // way to show who a kept device is without asking the server while
+  // signed out (`remember`).
+  name?: string
+  circles?: string[]
 }
 
 const STORE = 'devices'
@@ -48,4 +54,16 @@ export async function kept(scope: string): Promise<Kept[]> {
 // The device of a scope this browser keeps by its public key, if any.
 export async function held(scope: string, key: string): Promise<Kept | null> {
   return (await using<Kept | undefined>('readonly', (s) => s.get([scope, key]))) ?? null
+}
+
+// Remembers a person's name and circles on every device of theirs this
+// browser keeps for the scope, read while signed in as them (the shell's
+// own read, already made), so the sign-in page can show who a kept
+// device is without asking the server while signed out.
+export async function remember(scope: string, address: string, name: string, circles: string[]): Promise<void> {
+  for (const d of await kept(scope)) {
+    if (d.address === address && (d.name !== name || d.circles?.join() !== circles.join())) {
+      await keep({ ...d, name, circles })
+    }
+  }
 }

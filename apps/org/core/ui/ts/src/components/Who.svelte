@@ -2,6 +2,7 @@
   import HardDrives from 'phosphor-svelte/lib/HardDrives'
   import LockSimple from 'phosphor-svelte/lib/LockSimple'
   import Scales from 'phosphor-svelte/lib/Scales'
+  import { tip } from '../attachments/tip.ts'
   import type { Who } from '../models/settings.ts'
   import Icon from './Icon.svelte'
 
@@ -9,50 +10,14 @@
   // scales where a circle changes it by motion, the same in the accent
   // where the reader's change waits among the changes to propose, a host's
   // drives where a host sets it, a lock where nothing the reader may write
-  // changes it. Its name says it in a few words and its tooltip explains,
-  // shown as the pointer rests on it or the keyboard focuses it, and read
-  // as its description by assistive technology; Escape hides it.
+  // changes it. Its name says it in a few words and its tooltip explains
+  // (`../attachments/tip.ts`), shown as the pointer rests on it or the
+  // keyboard focuses it, and read as its description by assistive
+  // technology; Escape hides it.
   let { who }: { who: Who } = $props()
 
   const id = $props.id()
   const icons = { motion: Scales, proposed: Scales, host: HardDrives, locked: LockSimple }
-
-  // The tooltip in the top layer, under the icon, kept inside the window.
-  const tip = (el: HTMLElement) => {
-    const button = el.previousElementSibling as HTMLElement
-    const margin = 8
-    const show = () => {
-      if (!el.matches(':popover-open')) {
-        el.showPopover()
-      }
-      const r = button.getBoundingClientRect()
-      const w = el.offsetWidth
-      el.style.left = `${Math.max(margin, Math.min(r.left + r.width / 2 - w / 2, window.innerWidth - margin - w))}px`
-      el.style.top = `${r.bottom + 6}px`
-    }
-    const hide = () => {
-      if (el.matches(':popover-open')) {
-        el.hidePopover()
-      }
-    }
-    const key = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && el.matches(':popover-open')) {
-        e.stopPropagation()
-        hide()
-      }
-    }
-    for (const [type, fn] of [['pointerenter', show], ['focus', show], ['pointerleave', hide], ['blur', hide]] as const) {
-      button.addEventListener(type, fn)
-    }
-    button.addEventListener('keydown', key)
-    return () => {
-      hide()
-      for (const [type, fn] of [['pointerenter', show], ['focus', show], ['pointerleave', hide], ['blur', hide]] as const) {
-        button.removeEventListener(type, fn)
-      }
-      button.removeEventListener('keydown', key)
-    }
-  }
 </script>
 
 <span class="who">

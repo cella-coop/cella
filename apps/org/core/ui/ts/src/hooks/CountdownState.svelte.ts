@@ -1,46 +1,76 @@
-// A visitor's copy of the demo counting down to its reset: `seconds`
-// with no request end it, as does its lifetime's end, whichever comes
-// first. The idle count starts again at each page and at each touch or
-// key the visitor gives it, which nearly always asks the server
-// something. It runs in the browser alone, once attached; the
-// server renders the whole span.
+// A visitor's copy of the demo, and its room's lifetime once it runs:
+// `idle` resets the copy with no request for that long, counted again at
+// each page and at each touch or key the visitor gives it, which nearly
+// always asks the server something; `ends`, when the room's lifetime
+// ends however busy, in seconds since 1970, 0 before its first member
+// signs in. The strip shows no countdown with neither pressing: the idle
+// span alone, far off, says nothing worth watching, and the lifetime has
+// not started. Once it has, the lifetime counts down; the idle span
+// stays quiet until its last two minutes, when it warns instead, taking
+// the strip over, since by then it is the sooner of the two. It runs in
+// the browser alone, once attached; the server renders the whole span.
+const WARN = 120
+
 export class CountdownState {
-  readonly #seconds: () => number
-  // When the copy resets however busy, in seconds since 1970; 0, never.
+  readonly #idle: () => number
   readonly #ends: () => number
   #since = $state(0)
   #now = $state(0)
 
-  constructor(seconds: () => number, ends: () => number) {
-    this.#seconds = seconds
+  constructor(idle: () => number, ends: () => number) {
+    this.#idle = idle
     this.#ends = ends
   }
 
-  get seconds(): number {
-    return this.#seconds()
+  // Seconds left of this browser's own idle span; Infinity where none
+  // runs (no copy).
+  get idleLeft(): number {
+    if (!this.#idle()) {
+      return Infinity
+    }
+    const now = this.#now || Date.now()
+    const gone = this.#since ? (now - this.#since) / 1000 : 0
+    return Math.max(0, this.#idle() - gone)
   }
 
-  // What is left, as `1:59:30`; the whole span before it runs.
-  get left(): string {
-    const gone = this.#since ? Math.floor((this.#now - this.#since) / 1000) : 0
+  // Seconds left of the room's lifetime; null before it starts.
+  get lifeLeft(): number | null {
+    if (!this.#ends()) {
+      return null
+    }
     const now = this.#now || Date.now()
-    const life = this.#ends() ? Math.floor(this.#ends() - now / 1000) : Infinity
-    const s = Math.max(0, Math.min(this.seconds - gone, life))
+    return Math.max(0, this.#ends() - now / 1000)
+  }
+
+  // The idle reset is close enough to warn about, its last two minutes.
+  get warn(): boolean {
+    return this.idleLeft <= WARN
+  }
+
+  // Whether the strip has a countdown to show at all.
+  get active(): boolean {
+    return this.warn || this.lifeLeft !== null
+  }
+
+  // What is left, as `1:59:30`: the idle warning where it holds, since it
+  // is the sooner by then, else the lifetime.
+  get left(): string {
+    const s = Math.floor(this.warn ? this.idleLeft : (this.lifeLeft ?? 0))
     const two = (n: number) => String(n).padStart(2, '0')
     return `${Math.floor(s / 3600)}:${two(Math.floor((s % 3600) / 60))}:${two(s % 60)}`
   }
 
-  // The span, said in words: `2 hours`, `90 minutes`.
+  // The idle span, said in words: `2 hours`, `90 minutes`.
   get span(): string {
-    const h = this.seconds / 3600
+    const h = this.#idle() / 3600
     if (Number.isInteger(h)) {
       return h === 1 ? '1 hour' : `${h} hours`
     }
-    const m = Math.round(this.seconds / 60)
+    const m = Math.round(this.#idle() / 60)
     return m === 1 ? '1 minute' : `${m} minutes`
   }
 
-  // Attached to the banner: a tick each second, and the count started
+  // Attached to the banner: a tick each second, and the idle span started
   // again by the visitor's touch or key.
   run = (node: HTMLElement) => {
     const again = () => {

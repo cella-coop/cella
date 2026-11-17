@@ -7,7 +7,8 @@
 
   // What a person reaches before signing in, alone on the page: the
   // co-op's mark and name above one panel, the sign-in or an invitation;
-  // in a demo build, the demo's banner above them.
+  // in a demo build, the demo's banner, one fixed strip at the viewport's
+  // foot, which pads the page by its own height so it hides nothing.
   let {
     scope,
     demo = false,
@@ -31,11 +32,11 @@
 
 <div class="gate">
   <div class="panel">
-    {#if demo}<DemoBanner {copy} {ends} {join} />{/if}
     <p class="coop"><span class="mark">{scope.name.slice(0, 1).toUpperCase()}</span><b>{scope.name}</b></p>
     {@render children()}
   </div>
 </div>
+{#if demo}<DemoBanner {copy} {ends} {join} />{/if}
 
 <style>
   .gate {
@@ -43,6 +44,7 @@
     place-items: center;
     min-height: 100dvh;
     padding: var(--space-4);
+    padding-bottom: calc(var(--space-4) + var(--demo-banner-h, 0px));
   }
   .panel {
     display: grid;

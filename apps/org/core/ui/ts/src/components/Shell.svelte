@@ -336,9 +336,6 @@
 
   <main class="main">
     {@render children()}
-    {#if demo}
-      <DemoBanner floating {copy} {ends} {join} />
-    {/if}
     {#if dev}
       <!-- Dev mode, where anyone signs in as a fixture member: a watermark
            at the content's foot, by the drawer. Its word is drawn by CSS,
@@ -349,6 +346,9 @@
     {/if}
   </main>
 </div>
+{#if demo}
+  <DemoBanner {copy} {ends} {join} />
+{/if}
 
 {#if state.outcome}
   <Outcome outcome={state.outcome} ondismiss={() => state.dismiss()} />
@@ -359,6 +359,10 @@
     display: grid;
     grid-template-columns: var(--sidebar) minmax(0, 1fr);
     height: 100dvh;
+    /* The demo's banner, a fixed strip at the viewport's foot
+       (`DemoBanner.svelte`), sets this as it mounts; 0 outside a demo. */
+    padding-bottom: var(--demo-banner-h, 0px);
+    box-sizing: border-box;
   }
   /* Top and foot stay put; only the middle scrolls. */
   .sidebar {

@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-16
+updated = 2026-11-17
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -174,23 +174,30 @@ draws.
   opens). The account menu's Settings opens
   it at Personal's first page, the co-op menu's at Organization's. In
   dev mode a faint upright "prototype" with a test tube sits at the
-  content's bottom right. A demo build's banner (`DemoBanner`) floats
-  at the content's bottom left, never dismissed: the operator's notice,
-  "This is a prototype environment for demo purposes and can't be used
-  for real work.", then, on a visitor's copy, that Lanterne is a mock
-  and the copy the visitor's own, the time left before it resets, which
-  starts again at each page and each touch or key, and Reset now, a
-  plain form posting to the demo's front. The last write's outcome
-  floats above.
+  content's bottom right. A demo build's banner (`DemoBanner`) is one
+  fixed strip along the viewport's foot, on every page, never dismissed,
+  which pads the page it sits on by its own height so it hides nothing: a
+  flask, "Prototype · mock co-op", its tooltip the operator's notice and,
+  on a visitor's copy, that Lanterne is a mock and the copy the
+  visitor's own; a timer and the time left, shown once there is one to
+  watch, the room's lifetime once its first member has signed in, else
+  the idle reset's own last two minutes, a warning; Reset, a quiet
+  button posting to the demo's front; and, in a room, Copy invite, the
+  filled primary button, which copies the room's link and confirms
+  Copied, or opens it where the clipboard refuses. The last write's
+  outcome floats above.
 - `Gate`: what a person reaches before signing in, alone on the page,
   the co-op's mark and name above one panel, in a demo build the same
-  banner atop the panel; `SignIn` in it, a button for
+  banner at the viewport's foot; `SignIn` in it, a button for
   each device this browser keeps for the scope, which signs the server's
-  challenge, the fixture members on the dev server, and a key made here
-  for its person to enrol from a device they hold; and `Join`, an
+  challenge, the fixture members on the dev server, a demo's leading the
+  panel under one demo tag on their heading; and `Join`, an
   invitation's link opened, whose one button makes the invitee's first
   device in this browser and takes the invitation up with it, then
-  loads the invitee's own page afresh, reading nothing again first. Until the
+  loads the invitee's own page afresh, reading nothing again first. A
+  browser holding no device of its own reads why, collapsed, below the
+  members; a key made here for its person to enrol from a device they
+  hold sits under its own disclosure too. Until the
   browser runs the page's script, their buttons read as busy, since a
   click before it would do nothing.
 - `Popover`: the one popover and menu, opened from its trigger in the

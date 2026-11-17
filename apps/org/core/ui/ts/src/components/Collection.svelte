@@ -557,15 +557,9 @@
             <span class="main">
               {const rowIcon = $derived(markOf(row))}
               {#if to}
-                <a href={to} class="title stretched" tabindex="-1">
-                  {#if rowIcon}<span class="mark" style={inked(inkOf(String(titled.value(row))))}><Icon icon={rowIcon} /></span>{/if}
-                  {titled.value(row)}
-                </a>
+                <a href={to} class="title stretched" tabindex="-1">{#if rowIcon}<span class="mark" style={inked(inkOf(String(titled.value(row))))}><Icon icon={rowIcon} /></span>{/if}{titled.value(row)}</a>
               {:else}
-                <span class="title">
-                  {#if rowIcon}<span class="mark" style={inked(inkOf(String(titled.value(row))))}><Icon icon={rowIcon} /></span>{/if}
-                  {titled.value(row)}
-                </span>
+                <span class="title">{#if rowIcon}<span class="mark" style={inked(inkOf(String(titled.value(row))))}><Icon icon={rowIcon} /></span>{/if}{titled.value(row)}</span>
               {/if}
               {#each lines as c (c.key)}
                 <span class="sub"><Cell value={c.value(row)} kind={c.kind === 'badge' ? 'text' : c.kind} record={c.record} /></span>

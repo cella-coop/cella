@@ -19,7 +19,7 @@ import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { enrol, forget, profile, revoke } from '@cella/org-person/api'
-import { arrange } from '@cella/org-circle/api'
+import { arrange, icon as circleIcon } from '@cella/org-circle/api'
 import { accept, erase, invite, link, withdraw } from '@cella/org-membership/api'
 import { apply, close, propose } from '@cella/org-graft-membership-motion/api'
 import { post as message, vote } from '@cella/org-motion/api'
@@ -36,7 +36,7 @@ import { capture as captureAlone, refuse, submit as claim } from '@cella/org-exp
 import { attach as receipt, capture } from '@cella/org-graft-expense-file/api'
 import { approve as approveExpense, reimburse } from '@cella/org-graft-expense-transaction/api'
 import { rebill } from '@cella/org-graft-expense-project/api'
-import { add as milestone, archive, budget, complete as reach, create as createProject, postComment as discussProject, reactToComment as reactOnProject, resolveComment as settleProject, saveBody as saveBrief } from '@cella/org-project/api'
+import { add as milestone, archive, budget, complete as reach, create as createProject, icon as projectIcon, postComment as discussProject, reactToComment as reactOnProject, resolveComment as settleProject, saveBody as saveBrief } from '@cella/org-project/api'
 import { crew, share } from '@cella/org-graft-membership-project/api'
 import { complete, create as createTask, move, post as postComment, react, resolve, save as saveBody } from '@cella/org-task/api'
 import { file as fileTask } from '@cella/org-graft-project-task/api'
@@ -186,6 +186,7 @@ test('24 October: contacts are kept, archived and erased, and the work goes on: 
   settled(await crew({ project, lead: hugo, members: [sofia] }, as(hugo)))
   settled(await milestone({ project, title: 'Proofs approved', due: '2026-11-20' }, as(hugo)))
   settled(await reach({ project, n: 1 }, as(hugo)))
+  settled(await projectIcon({ project, icon: 'palette' }, as(hugo)))
   const brief = createDoc()
   edits.paste(brief, undefined, 0, [{ type: 'paragraph', runs: [{ text: 'Three labels, one vine, printed by Imprimerie Sud' }], children: [] }])
   brief.commit()
@@ -283,6 +284,7 @@ test('24 October: the assembly and coordination put their motions, which are dis
   const founding = (await one<{ policy: string }>(`SELECT policy FROM account.terms WHERE id = 'm-2021-001-43'`)).policy
   const patronage = (await one<{ policy: string }>(`SELECT policy FROM patronage.terms ORDER BY id LIMIT 1`)).policy
   settled(await arrange({ circle: 'web', features: 'contact, project, task, timesheet, file' }, as(yusuf)))
+  settled(await circleIcon({ circle: 'web', icon: 'rocket' }, as(yusuf)))
   await proposed('assembly', 'ag', 'Admit Nadia, create Design, amend Web and its roles, adopt the handbook and the new terms', [
     { kind: 'admit', args: { member: nadia, shares: 20 } },
     { kind: 'circle', args: { id: 'design', name: 'Design', purpose: 'product and service design' } },

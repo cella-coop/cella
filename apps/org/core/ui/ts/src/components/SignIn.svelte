@@ -7,8 +7,11 @@
   // Signing in: each device this browser keeps for the scope signs the
   // server's challenge with its own key; on the dev server, the fixture
   // members too, whose keys anyone can derive, and in a demo build the
-  // same members, each marked as a demo member. A browser holding none is
-  // pointed to an invitation's link, or makes a key to enrol from a
+  // same members, each marked as a demo member. In a demo's room, one
+  // member is one browser's at a time: a member another browser there
+  // leased reads `taken`, drawn disabled and greyed, so this browser
+  // cannot sign in as them until they are freed. A browser holding none
+  // is pointed to an invitation's link, or makes a key to enrol from a
   // device its person holds. Each row reads the same way: the person's
   // name, then the circles they sit in, the assembly left out since
   // every member is in it; never their device.
@@ -20,7 +23,7 @@
   }: {
     scope: string
     back: string
-    fixtures: { address: string; name: string; label: string; circles: string[] }[]
+    fixtures: { address: string; name: string; label: string; circles: string[]; taken?: boolean }[]
     demo?: boolean
   } = $props()
 
@@ -55,8 +58,14 @@
   </p>
   <div class="list">
     {#each fixtures as f (f.address)}
-      <Button title={f.address} busy={state.busy} onclick={() => state.fixture(f.address, f.label)}
-        >{f.name}{#each f.circles as c (c)} <Badge>{c}</Badge>{/each} <span class="dev">demo member</span></Button
+      <Button
+        title={f.taken ? `${f.address}: signed in on another browser already` : f.address}
+        busy={state.busy}
+        disabled={f.taken}
+        onclick={() => state.fixture(f.address, f.label)}
+        >{f.name}{#each f.circles as c (c)} <Badge>{c}</Badge>{/each} <span class="dev">demo member</span>{#if f.taken}<span class="taken"
+            >taken</span
+          >{/if}</Button
       >
     {/each}
   </div>
@@ -124,6 +133,9 @@
   }
   .dev {
     color: var(--warning-text);
+  }
+  .taken {
+    color: var(--text-muted);
   }
   .problem {
     margin: 0;

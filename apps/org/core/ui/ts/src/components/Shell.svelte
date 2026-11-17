@@ -50,6 +50,7 @@
     demo = false,
     copy = 0,
     ends = 0,
+    join = '',
     theme,
     outcome,
     source,
@@ -71,6 +72,8 @@
     copy?: number
     // When it resets however busy, in seconds since 1970; 0, never.
     ends?: number
+    // The copy's room's join code; '', no link to share.
+    join?: string
     theme: Theme
     outcome: Done | null
     // What the command menu searches, read by the shell's query.
@@ -334,7 +337,7 @@
   <main class="main">
     {@render children()}
     {#if demo}
-      <DemoBanner floating {copy} {ends} />
+      <DemoBanner floating {copy} {ends} {join} />
     {/if}
     {#if dev}
       <!-- Dev mode, where anyone signs in as a fixture member: a watermark

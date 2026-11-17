@@ -401,6 +401,38 @@ copy, and the front passes each of their requests to that copy's server
 and to no other, the cookie itself stripped from what the server is
 handed.
 
+A copy is a room: more than one browser's cookie may name it, where one
+joined another's. Its banner offers Share this copy, a link carrying a
+join code the front makes afresh for the room, 16 random bytes compared
+in constant time and never logged, in the link's fragment, which no
+browser ever sends a server (`/_demo/join#…`). Opening it loads a small
+same-origin page, served whether or not the code still names a room,
+whose script reads the fragment and posts the code here, in its body,
+never a query string; the front answers that POST only from this host's
+own pages, as it does `/_demo/start` and `/_demo/reset`, so a cross-site
+page can never join a room on a visitor's behalf. A browser that posts
+its code leaves whatever room it was in and gets a fresh cookie of its
+own in this one, by the same redirect a reset gives; a room holds
+`room-browsers` at once (8 unset), and a join past it, like one past the
+demo's own cap, is refused with the same retrying message, and now
+counts, like a copy made, against the address and host rate limits
+below, so neither making nor joining is a way around the other's. The
+front hands the room's server each browser's id, a one-way hash of its
+cookie, never the cookie itself (`x-cella-browser`), which its member
+leases are bound to, gated on being in a room at all, never a shared
+demo's single copy, which has none to hand: a fixture member is one
+browser's at a time there (`apps/org/ts/src/lib/server/leases.ts`), a
+sign-in naming no browser id refused outright rather than let through
+unleased, a second browser's refused it until the first signs out or
+goes 15 minutes unseen, when the lease is freed and the front itself
+forgets that browser's cookie, though the room goes on for the rest.
+Reset now is refused unless its browser is alone in the room; a reset or
+a room recycled at the cap makes a fresh one, its join code with it, so
+the old link names nothing from then on. Past the cap, a newcomer with
+no room of their own sees a plain page saying so, asking again every few
+seconds, in place of the one saying its copy is being prepared; neither
+counts against the rate limits a copy made does.
+
 The front is a single process, not a unit per visitor: one unit's
 limits hold every copy, and the front needs no right to start units.
 Each copy is still a process of its own, so what one visitor's server
@@ -443,14 +475,17 @@ room full of people arriving at once behind one NAT address:
   At the cap, a newcomer ends the copy idle longest if idle 5 minutes
   (`evictAfter`), else the oldest if 10 minutes old (`minAge`), and is
   otherwise asked to come back in a minute.
+- **How many browsers a room holds**: 8 at once (`roomBrowsers`); a join
+  past it, like a copy past the cap, is refused the same way.
 - **What one address may take**: all but four of the cap held at once
   (`perAddress`, null so derived), so a room behind one NAT address
   fills most of the host and leaves a few copies for others, and 30
-  made in ten minutes (`perAddressRate`), an IPv6 address counted by
-  its /64; 60 made a minute across the host (`perMinute`), 4 at once
-  (`concurrent`). Only a copy made counts: a refused or failed attempt
-  costs the address nothing, so a page asking again locks no one out.
-  A public demo with no room to host sets `perAddress` lower, to 2 say.
+  made or joined in ten minutes (`perAddressRate`), an IPv6 address
+  counted by its /64; 60 made or joined a minute across the host
+  (`perMinute`), 4 made at once (`concurrent`). Only a copy made or a
+  join that finds its room counts: a refused or failed attempt costs the
+  address nothing, so a page asking again locks no one out. A public
+  demo with no room to host sets `perAddress` lower, to 2 say.
 - **What a copy may hold**: its server 192 MiB resident (`memory`),
   past which it ends; 10 connections (`connections`) and 128 MB of
   temporary files; a request's body 2 MB (`upload`), so a file too,

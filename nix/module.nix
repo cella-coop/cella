@@ -201,8 +201,8 @@ in
             };
             idle = mkOption {
               type = types.ints.positive;
-              default = 7200;
-              description = "Seconds with no request before a visitor's copy ends: its server stopped, its database and role dropped.";
+              default = 900;
+              description = "Seconds with no request from any browser in a visitor's room before it ends: its server stopped, its database and role dropped. A browser itself, idle this long, is forgotten by its room apart, its member lease freed.";
             };
             lifetime = mkOption {
               type = types.ints.positive;
@@ -218,6 +218,16 @@ in
               type = types.ints.positive;
               default = 600;
               description = "Seconds old a copy is before a newcomer at the cap may end it, the oldest, where none is idle `evictAfter`; while none is, the newcomer is asked to come back.";
+            };
+            browserIdle = mkOption {
+              type = types.ints.positive;
+              default = 900;
+              description = "Seconds a browser in a room may go unseen before the front forgets it and the room's own server frees the fixture member it leased, Reset now asking it be alone first.";
+            };
+            roomBrowsers = mkOption {
+              type = types.ints.positive;
+              default = 8;
+              description = "Browsers a room holds at once; past it, Share this copy's link is refused, as a copy past the cap is.";
             };
             memory = mkOption {
               type = types.ints.positive;
@@ -252,12 +262,12 @@ in
             perAddressRate = mkOption {
               type = types.ints.positive;
               default = 30;
-              description = "Copies one address makes in ten minutes; only a copy made counts, never a refused attempt.";
+              description = "Copies one address makes or joins in ten minutes; only one made or a join that finds its room counts, never a refused attempt.";
             };
             perMinute = mkOption {
               type = types.ints.positive;
               default = 60;
-              description = "Copies the host makes in a minute, whoever asks.";
+              description = "Copies the host makes or joins in a minute, whoever asks.";
             };
             concurrent = mkOption {
               type = types.ints.positive;
@@ -539,6 +549,8 @@ in
               inherit (s.demo) reserve footprint idle lifetime memory connections upload storage concurrent;
               evict-after = s.demo.evictAfter;
               min-age = s.demo.minAge;
+              browser-idle = s.demo.browserIdle;
+              room-browsers = s.demo.roomBrowsers;
               disk-floor = s.demo.diskFloor;
               per-address-rate = s.demo.perAddressRate;
               per-minute = s.demo.perMinute;

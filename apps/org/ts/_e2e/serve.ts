@@ -13,6 +13,13 @@ import { parse, stringify } from 'devalue'
 import { bound } from '@cella/org-ui/models'
 import { fixture, open, signer, type Device, type Json } from '@cella/org-sign'
 
+// The shell stands where `cella demo serve`'s front would, so every request
+// names one browser (`x-cella-browser`), as the front's hash of a visitor's
+// cookie does; a visitor's copy is a room, which leases its members only to
+// a browser it can tell apart.
+const fetch: typeof globalThis.fetch = (input, init = {}) =>
+  globalThis.fetch(input, { ...init, headers: { 'x-cella-browser': 'e2e-shell', ...(init.headers as Record<string, string> | undefined) } })
+
 const entry = new URL('../build/index.js', import.meta.url).pathname
 // The TEST-ONLY crash point a scenario may load into the server.
 const crash = new URL('./crash.ts', import.meta.url).href

@@ -30,6 +30,7 @@ let
   probe = db: port: as "PGDATABASE=${db} PGUSER=postgres node ${self.packages.${pkgs.stdenv.hostPlatform.system}.cella-org}/share/cella/apps/org/ts/_e2e/probe.ts http://127.0.0.1:${toString port}";
   scope = if kind == "scope" then "scope" else "demo";
   probeTs = "${self.packages.${pkgs.stdenv.hostPlatform.system}.cella-org}/share/cella/apps/org/ts/_e2e/probe.ts";
+  sessionProbeTs = "${self.packages.${pkgs.stdenv.hostPlatform.system}.cella-org}/share/cella/apps/org/ts/_e2e/session-probe.ts";
   notice = "This is a prototype environment for demo purposes and can't be used for real work.";
   port = 3000;
 in
@@ -71,12 +72,16 @@ pkgs.testers.runNixOSTest {
         } // (if kind == "visitors" then {
           # Two copies at most, each ending after 90 s idle or 150 s old,
           # storing 4 MiB, one to an address: each limit is reached within
-          # the test.
+          # the test. --browser-idle is generous, well past a room's own
+          # lifetime: every cookie the test touches is a room's sole
+          # browser but one, and must never be found idle before its
+          # room's own idle-reset or lifetime would end it anyway.
           visitors = 2;
           idle = 90;
           lifetime = 150;
           evictAfter = 1;
           minAge = 1;
+          browserIdle = 300;
           memory = 512;
           storage = 4;
           perAddress = 1;
@@ -193,6 +198,37 @@ pkgs.testers.runNixOSTest {
       def probe(db, who, ip):
           print(host.succeed(f"""${as "PROBE_COOKIE=__Host-cella-visitor={jar[who]} PGDATABASE={db} PGUSER=postgres node ${probeTs} {front}"}"""))
 
+      # As `probe`, but the sign-in it opens is expected refused (a member
+      # already leased to another browser in the room): what the probe
+      # said on its standard error, the sign-in's reason among it.
+      def probe_refused(db, who, ip):
+          return host.fail(f"""${as "PROBE_COOKIE=__Host-cella-visitor={jar[who]} PGDATABASE={db} PGUSER=postgres node ${probeTs} {front}"} 2>&1""")
+
+      # Opens a session alone, no write, as `who`'s browser, already
+      # leased: the `cella-session` cookie the server set, apart from the
+      # front's own visitor cookie.
+      def session_cookie(db, who):
+          return host.succeed(f"""${as "PROBE_COOKIE=__Host-cella-visitor={jar[who]} PGDATABASE={db} PGUSER=postgres node ${sessionProbeTs} {front}"}""").strip()
+
+      # A protected page's status, `who`'s own visitor cookie (so its own
+      # browser's lease, if any, is what is read) carrying `session`'s
+      # cookie, another browser's own where a copied cookie is modelled.
+      def authed(who, ip, session, path="/inbox"):
+          cookie = f"-H 'Cookie: __Host-cella-visitor={jar[who]}; {session}'"
+          return host.execute(f"curl -s {cookie} -H 'X-Forwarded-For: {ip}' -o /dev/null -w '%{{http_code}}' {front}{path}")[1].strip()
+
+      # Posts a room's join code as its own page's script would, `who`
+      # holding no room yet: the status it answered, and, joined, its
+      # cookie kept under `who` as any other browser's is. `origin`
+      # stands for the page's own, same-origin by default.
+      def join_room(who, ip, code, origin=None):
+          out = host.succeed(curl(who, ip, f"-D - -o /dev/null -X POST -H 'Origin: {origin or front}' --data-raw '{code}' {front}/_demo/join"))
+          status_line = out.split()[1]
+          set = re.search(r"(?im)^set-cookie: __Host-cella-visitor=([A-Za-z0-9_-]+);.*Secure", out)
+          if set:
+              jar[who] = set.group(1)
+          return status_line
+
       def fill(db, mib):
           host.succeed(f"""${as "psql -X -q -d {db}"} -c "CREATE TABLE IF NOT EXISTS public.filler (b text STORAGE EXTERNAL); INSERT INTO public.filler SELECT string_agg(md5(random()::text), ''') FROM generate_series(1, 32), generate_series(1, {mib} * 1024) g GROUP BY g" """)
 
@@ -293,6 +329,10 @@ pkgs.testers.runNixOSTest {
 
       with subtest("a copy past its storage takes no write and says why, and past twice it ends, largest first"):
           fill(c, 6)
+          # fill() writes straight through psql, past the front's own
+          # tracking of what landed; past its 2 s reading cache, the next
+          # write finds it measured afresh.
+          time.sleep(3)
           out = host.execute(curl("c", "10.0.0.3", f"-X POST -H 'Origin: {front}' -d x=1 -w ' %{{http_code}}' {front}/session"))[1]
           assert out.endswith(" 507") and "Reset now for a fresh one" in out, f"a full copy answered {out}"
           assert "Camille Martin" in page("c", "10.0.0.3", "/sign-in"), "a full copy no longer reads"
@@ -331,6 +371,58 @@ pkgs.testers.runNixOSTest {
           host.succeed("systemctl kill -s KILL --kill-whom=main cella-${scope}.service")
           host.wait_until_succeeds(f"curl -sf {front}/_demo/health", timeout=120)
           assert copies() == [] and roles() == [], f"{copies()} {roles()} left"
+
+      with subtest("a room's Share this copy link carries its code in the fragment, which a GET never reads"):
+          p, psignin = visit("p", "10.0.0.20")
+          found = re.search(r"/_demo/join#([A-Za-z0-9_-]+)", psignin)
+          assert found, "the banner offers no Share this copy link, its code in the fragment"
+          code = found.group(1)
+          assert status("p2", "10.0.0.20", f"{front}/_demo/join") == "200", "the join page itself answers nothing of a code"
+          assert status("p2", "10.0.0.20", f"{front}/_demo/join?code={code}") == "200", "a code in the query is no longer read; the join page is served all the same"
+          assert copies() == [p], f"opening the join page made a copy: {copies()}"
+
+      with subtest("posting the code same-origin joins the room, not counted against its address' limits"):
+          assert join_room("p2", "10.0.0.20", code) == "303", "posting the code did not join the room"
+          assert copies() == [p], f"joining made a copy of its own: {copies()}"
+          joined = page("p2", "10.0.0.20", "/sign-in")
+          assert "Camille Martin" in joined and notice in joined, "the joined browser does not read the same room"
+          assert code in joined, "the joined browser's own banner still offers the room's link"
+          assert status("p2", "10.0.0.20", f"-X POST -H 'Origin: {front}' {front}/_demo/start") == "200", "the joined browser has no room of its own"
+          assert copies() == [p], f"asking again made a copy: {copies()}"
+          assert join_room("p3", "10.0.0.20", "wrong") == "404", "a wrong code was not refused"
+
+      with subtest("a cross-origin post of a room's code is refused, as a cross-site start or reset is"):
+          refused = join_room("p4", "10.0.0.20", code, origin="http://elsewhere.example")
+          assert refused == "403", f"a cross-site join answered {refused}"
+          assert "p4" not in jar, "a refused cross-site join still set a cookie"
+
+      with subtest("a fixture member is one browser's at a time in a room; a second browser already there is refused it"):
+          probe(p, "p", "10.0.0.20")
+          said = probe_refused(p, "p2", "10.0.0.20")
+          assert "signed in on another browser already" in said, said
+
+      with subtest("Reset now is refused unless its browser is alone in the room"):
+          time.sleep(21)
+          page("p2", "10.0.0.20", "/sign-in")
+          assert status("p", "10.0.0.20", f"-X POST -H 'Origin: {front}' {front}/_demo/reset") == "409", "Reset now succeeded although p2 is still in the room"
+          assert p in copies(), "a refused reset still ended the room"
+
+      with subtest("a session authorizes only the browser that holds its member's lease, and a released lease ends it"):
+          # p's own session, opened on the lease it still holds: carried
+          # with p's own visitor cookie, it reads a protected page; p2's
+          # visitor cookie, which names no lease of camille's, reads none
+          # though it carries the very same session cookie, as a copied
+          # one would.
+          psession = session_cookie(p, "p")
+          assert authed("p", "10.0.0.20", psession) != "401", "p's own session, holding its lease, was refused a protected page"
+          assert authed("p2", "10.0.0.20", psession) == "401", "p2, carrying p's session cookie but not its lease, still read a protected page"
+          # p signs out: its lease released, freed for p2 to take, and the
+          # very session that opened it authorizes nothing more, even
+          # presented again as p's own browser would.
+          signed_out = host.execute(f"curl -s -H 'Cookie: __Host-cella-visitor={jar['p']}; {psession}' -H 'X-Forwarded-For: 10.0.0.20' -H 'Origin: {front}' -X POST -o /dev/null -w '%{{http_code}}' {front}/sign-out")[1].strip()
+          assert signed_out == "303", f"p could not sign out: {signed_out}"
+          assert authed("p", "10.0.0.20", psession) == "401", "a released lease still authorized the session it opened"
+          probe(p, "p2", "10.0.0.20")
 
     '' else ''
       notice = ${builtins.toJSON notice}

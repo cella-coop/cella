@@ -37,7 +37,12 @@
     () => comments,
     () => readers(),
   )
-  onMount(() => box.load())
+  // Only a box that can be written in needs whom to mention.
+  onMount(() => {
+    if (discuss) {
+      box.load()
+    }
+  })
   const shown = $derived(threads(comments))
   const answering = $derived(shown.find((t) => t.root.id === box.reply)?.root ?? null)
   const posted = $derived(box.posted)

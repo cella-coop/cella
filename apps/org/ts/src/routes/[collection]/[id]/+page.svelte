@@ -147,7 +147,11 @@
 
     {#snippet commenting()}
       {#if v.comment}
-        <v.comment.block data={v.comment.data} id={data.id} embeds={v.embeds} viewer={data.viewer} readers={() => readRecordReaders({ name, id })} />
+        <!-- Keyed by the record shown, so a box reused for the next record
+             starts afresh and fetches that record's readers, never keeps the last. -->
+        {#key `${data.name}/${data.id}`}
+          <v.comment.block data={v.comment.data} id={data.id} embeds={v.embeds} viewer={data.viewer} readers={() => readRecordReaders({ name: data.name, id: data.id })} />
+        {/key}
       {/if}
     {/snippet}
 

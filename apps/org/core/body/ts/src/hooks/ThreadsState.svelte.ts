@@ -22,15 +22,22 @@ export class ThreadsState {
   }
 
   // Fetches who the mention picker may offer, once; called as the box
-  // mounts.
-  load(): void {
+  // mounts. A failed fetch is tried again a few seconds later, up to
+  // three times, so a passing error leaves no box without mentions.
+  load(tries = 3): void {
     if (this.#loaded) {
       return
     }
     this.#loaded = true
     this.#fetch()
       .then((r) => (this.#readers = r))
-      .catch(() => {})
+      .catch((e) => {
+        console.warn('mention readers failed to load', e)
+        this.#loaded = false
+        if (tries > 1) {
+          setTimeout(() => this.load(tries - 1), 3000)
+        }
+      })
   }
 
   // Whether what is kept was kept since the threads last grew.

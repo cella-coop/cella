@@ -305,17 +305,26 @@ export const groupable = (f: Field) => f.type === 'enum' || f.type === 'person' 
 export const laned = (f: Field) => groupable(f) && f.type !== 'date'
 
 // The field a view groups its rows by: its own, which the collection's
-// look gives it until a view changes it (`spec`), in every layout; a
-// board, which always groups, and never by a month, takes else the one
-// the look names, else the first enumeration, else the first person or
-// circle.
-export const grouping = (s: Pick<Spec, 'layout' | 'by'>, fs: Field[], look: Look = {}): Field | undefined => {
+// look gives it until a view changes it (`spec`), in every layout but a
+// board. A board's rows group by nothing, never a month: the field its
+// columns are, its own `columns`, else, migrated in code rather than in
+// SQL, the one an older view's `by` named before a board had columns of
+// its own; else the one the look names, else the first enumeration,
+// else the first person or circle.
+export const grouping = (s: Pick<Spec, 'layout' | 'by' | 'columns'>, fs: Field[], look: Look = {}): Field | undefined => {
   if (s.layout !== 'board') {
     return fs.find((f) => f.key === s.by && groupable(f))
   }
   const named = (key: string | null | undefined) => fs.find((f) => f.key === key && laned(f))
-  return named(s.by) ?? named(look.by) ?? fs.find((f) => f.type === 'enum') ?? fs.find(laned)
+  return named(s.columns ?? s.by) ?? named(look.by) ?? fs.find((f) => f.type === 'enum') ?? fs.find(laned)
 }
+
+// A board's swimlanes: the field its rows group by, an enumeration, a
+// person or a circle, never a date, each lane holding the whole set of
+// columns. None for a single lane, the board as it always drew; and
+// none while `columns` is unset, for `by` still means the field its
+// columns migrate from (`grouping`), not this.
+export const swimlane = (s: Pick<Spec, 'by' | 'columns'>, fs: Field[]): Field | undefined => (s.columns ? fs.find((f) => f.key === s.by && laned(f)) : undefined)
 
 // The group a row falls under: the value it holds under the field's key,
 // as text, a date's its month, `YYYY-MM`, the empty one where it holds
@@ -357,12 +366,15 @@ export interface Grouping {
 // keys it moved; the rest follow as declared), the field the rows are
 // sorted by and which way, null for the collection's own order, the
 // enumeration, person or circle a list, a table, a gallery or a
-// board groups by, null for none, the fields a gallery's or a board's
-// cards show, the date a calendar places the rows by and whether it
-// shows a month or a week, and the dashboard's widgets, null for the
-// declared or derived ones, and whether it reads across circles, every
-// circle's rows the reader may read, dropping the lens. Which month or
-// week a calendar shows is not
+// calendar groups by, null for none, and, on a board, the field its
+// swimlanes group by, null for a single lane; the field a board's
+// columns are, null to read it from `by` instead, as every board did
+// before it had columns of its own (`grouping`); the fields a gallery's
+// or a board's cards show, the date a calendar places the rows by and
+// whether it shows a month or a week, and the dashboard's widgets, null
+// for the declared or derived ones, and whether it reads across
+// circles, every circle's rows the reader may read, dropping the lens.
+// Which month or week a calendar shows is not
 // the view's: it is where the viewer is, `at` in the address beside it.
 export interface Spec {
   layout: Layout
@@ -372,6 +384,7 @@ export interface Spec {
   order: string[]
   sort: Sort | null
   by: string | null
+  columns: string | null
   cards: string[]
   on: string | null
   span: Span
@@ -434,6 +447,7 @@ export interface Preset {
   order?: string[]
   sort?: Sort
   by?: string
+  columns?: string
   cards?: string[]
   on?: string
   span?: Span
@@ -529,6 +543,12 @@ export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[], look
   // An empty `by` groups by nothing; none on a board means the first
   // enumeration, which the board chooses itself.
   const by = asks === '' ? null : asks && groups.includes(asks) ? asks : base.by && groups.includes(base.by) ? base.by : null
+  // A board's columns, never a date; an empty `columns` names none, read
+  // from `by` instead (`grouping`), as every board did before it had
+  // columns of its own.
+  const laneable = fs.filter(laned).map((f) => f.key)
+  const asksColumns = params.get('columns')
+  const columns = asksColumns === '' ? null : asksColumns && laneable.includes(asksColumns) ? asksColumns : base.columns && laneable.includes(base.columns) ? base.columns : null
   // None means the first date, which the calendar chooses itself.
   const dates = fs.filter((f) => f.type === 'date').map((f) => f.key)
   const placing = params.get('on')
@@ -537,7 +557,7 @@ export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[], look
   const across = params.has('across') ? params.get('across') === '1' : base.across
   return {
     id,
-    spec: { layout, where, q: (params.get('q') ?? '').slice(0, 200), hide: list('hide'), order: list('order'), sort, by, cards: list('cards'), on, span, widgets: ws, across },
+    spec: { layout, where, q: (params.get('q') ?? '').slice(0, 200), hide: list('hide'), order: list('order'), sort, by, columns, cards: list('cards'), on, span, widgets: ws, across },
     errors,
   }
 }
@@ -571,6 +591,9 @@ export function address(id: string, s: Spec, base: Spec): string {
   if (s.by !== base.by) {
     q.set('by', s.by ?? '')
   }
+  if (s.columns !== base.columns) {
+    q.set('columns', s.columns ?? '')
+  }
   if (s.on && s.on !== base.on) {
     q.set('on', s.on)
   }
@@ -603,6 +626,10 @@ export const spec = (p?: Preset, look: Look = {}): Spec => ({
   order: p?.order ?? [],
   sort: p?.sort ?? look.sort ?? null,
   by: p?.by ?? look.by ?? null,
+  // Unset until a view names its own: a board's columns read from `by`
+  // instead (`grouping`), as every board did before it had columns of
+  // its own.
+  columns: p?.columns ?? null,
   cards: p?.cards ?? look.cards ?? [],
   on: p?.on ?? look.on ?? null,
   span: p?.span ?? look.span ?? 'month',

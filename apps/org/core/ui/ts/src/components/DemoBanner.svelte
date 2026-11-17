@@ -29,8 +29,7 @@
   {#if copy}
     <div class="line">
       <span
-        >Lanterne is a mock co-op, and this copy of it is yours alone to share. It resets after {countdown.span} idle{#if ends}, or when
-        its time runs out{/if}: <time {@attach countdown.run}>{countdown.left}</time> left.</span
+        >Lanterne is a mock co-op, and this copy of it is yours alone to share. It resets after {countdown.span} idle{#if ends}, or when its time runs out{/if}: <time {@attach countdown.run}>{countdown.left}</time> left.</span
       >
       <form method="post" action="/_demo/reset"><button type="submit">Reset now</button></form>
     </div>

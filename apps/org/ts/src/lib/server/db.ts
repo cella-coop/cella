@@ -15,7 +15,17 @@ const connections = (max: number, application_name: string) =>
 
 // Eight connections: six for pages and writes, and two kept for reading
 // sessions, which nothing else takes, so pages and writes holding all six
-// keep no one from signing in and no proof from reaching its run.
+// keep no one from signing in and no proof from reaching its run. Left
+// at six, not raised: a visitor copy's own Postgres role has a
+// `CONNECTION LIMIT` of its own (`--connections`, `tools/demo-serve.mjs`,
+// defaulting to 10, never grepped higher here since production's own
+// flag is not this repo's to assume), tighter than Postgres's
+// `max_connections` across every copy; eight already fits it with room
+// to spare, and raising it to ten exactly reached that limit and the
+// front logged "too many connections for role" under this file's own
+// load. A record's several reads now borrow this same pool for each
+// at once (`#lib/remote/serve.ts`'s `borrow`) instead of queuing on one
+// connection, which is where the room for four browsers was needed.
 const pool = connections(6, 'cella')
 const sessions = connections(2, 'cella sessions')
 

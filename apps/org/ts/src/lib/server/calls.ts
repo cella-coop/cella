@@ -1,4 +1,4 @@
-import { ask as asking, counts, made, ordered, read, texts, today, type Db, type Source } from '@cella/org-db'
+import { ask as asking, counts, made, ordered, read, texts, today, type Borrow, type Db, type Source } from '@cella/org-db'
 import { scoped } from '@cella/org-analytics'
 import { anchor, defaults, fields, grouping, limits, logged, period, resolve, swimlane, wheres, widgets, type Field, type Sort, type Spec } from '@cella/org-ui/models'
 import { named } from '@cella/org-log/api'
@@ -151,7 +151,13 @@ async function measured(db: Db, from: Source, spec: Spec, fs: Field[], name: str
 // none to the reader.
 export const item = {
   schema: texts(['name', 'id', 'search']),
-  async run(db: Db, { name, id, search }: { name: string; id: string; search: string }, who: Reader) {
+  // `borrow`, where the caller has one, lends the page's other reads
+  // (each extension's own data on the item, and `jumps`, below) a
+  // connection of their own, so they run against Postgres together
+  // rather than queue, one after another, behind `db`'s; left out, as a
+  // slice's own test calling this with one `db` and nothing more does,
+  // they queue on it instead, as before.
+  async run(db: Db, { name, id, search }: { name: string; id: string; search: string }, who: Reader, borrow?: Borrow) {
     const m = mounted(name)
     const one = m?.collection.item
     if (!m || !one) {
@@ -162,7 +168,13 @@ export const item = {
       throw new Missing(`${name} has no ${id}`)
     }
     const added = await Promise.all(
-      m.extensions.filter((e) => e.extension.item).map(async (e) => [e.slice.name, await e.extension.item?.(db, id, who.actor)] as const),
+      m.extensions
+        .filter((e) => e.extension.item)
+        .map(async (e) => {
+          const fn = e.extension.item!
+          const read = (on: Db) => fn(on, id, who.actor)
+          return [e.slice.name, await (borrow ? borrow(read) : read(db))] as const
+        }),
     )
     const viewer = who.session && { actor: who.session.actor, device: who.session.device }
     return {
@@ -172,7 +184,7 @@ export const item = {
       added: Object.fromEntries(added),
       viewer,
       made: (await made(db, [id]))[id] ?? null,
-      jumps: await jumps(db, name, id, who),
+      jumps: await jumps(db, name, id, who, borrow),
     }
   },
 }
@@ -193,7 +205,7 @@ const naming = (from: string, collection: string): string | undefined => {
 // filtered to the record shows them, each counted in the core read's one
 // statement; a collection holding none is no jump, nor one of home or
 // Settings, what waits on the reader and their own.
-async function jumps(db: Db, name: string, id: string, who: Reader) {
+async function jumps(db: Db, name: string, id: string, who: Reader, borrow?: Borrow) {
   const lens = await lensed(db, who.cookies, who.actor)
   const found = await Promise.all(
     slices
@@ -206,7 +218,11 @@ async function jumps(db: Db, name: string, id: string, who: Reader) {
           return null
         }
         const where = [{ field: key, is: [id] }]
-        const [count = 0] = await counts(db, from, [{ where }])
+        // Every other collection's count, one statement each: borrowed
+        // its own connection, where the caller lent a way to, so a
+        // record naming many collections reads them together, never
+        // one after another behind `db`'s one connection.
+        const [count = 0] = await (borrow ? borrow((on) => counts(on, from, [{ where }])) : counts(db, from, [{ where }]))
         return count ? { collection: c, count, href: `/${c}?${new URLSearchParams({ where: JSON.stringify(where) })}` } : null
       }),
   )

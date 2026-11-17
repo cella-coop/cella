@@ -84,19 +84,11 @@
 
 {#snippet details()}
   {@render fields?.()}
-  {#if properties.length}
-    <Properties items={properties} />
-  {/if}
+  <Properties items={[...properties, ...history]} />
   {#if related.length}
     <section class="related" aria-labelledby="{id}-related">
       <h2 id="{id}-related">Related<span class="count">{related.length}</span></h2>
       <Related items={related} />
-    </section>
-  {/if}
-  {#if history.length}
-    <section class="history" aria-labelledby="{id}-history">
-      <h2 id="{id}-history">History</h2>
-      <Properties items={history} />
     </section>
   {/if}
 {/snippet}
@@ -176,23 +168,11 @@
   }
   .related {
     display: grid;
-    gap: var(--space-2);
+    gap: var(--space-1);
+    margin-top: var(--space-3);
+    padding-inline: var(--inset, 0);
   }
-  .related:not(:first-child) {
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--line);
-  }
-  /* Who touched the record, quieter than what it is: the drawer's last
-     word, never its first. */
-  .history {
-    display: grid;
-    gap: var(--space-2);
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--line);
-    font-size: var(--text-xs);
-    color: var(--text-subtle);
-  }
-  .history h2 {
-    color: var(--text-subtle);
+  .related:first-child {
+    margin-top: 0;
   }
 </style>

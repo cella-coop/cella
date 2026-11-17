@@ -164,6 +164,10 @@ export interface Collection {
   // Where its records keep a body, what core body's session reads of it,
   // which the shell hands the session as it mounts the slice.
   body?: Body
+  // Whom a mention of an item may name, for the comment box's mention
+  // picker: edit-time data, read by the browser only once the box
+  // mounts, never awaited at SSR with the item itself.
+  readers?(db: Db, id: string, actor: string | null): Promise<unknown>
 }
 
 // A collection's bodies, as core body's session reads them: a record's

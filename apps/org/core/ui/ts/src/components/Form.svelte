@@ -24,10 +24,17 @@
     end = false,
     reset = true,
     ready = true,
+    bare = false,
     children,
   }: {
     action: string
-    submit: string
+    // Its button's words; a bare form's button, its children's, is named
+    // by its own label.
+    submit?: string
+    // The form draws nothing of its own but a refusal: its children are
+    // its fields and its submit, as a comment box's arrow inside its text
+    // or a reaction's chip.
+    bare?: boolean
     tone?: 'primary' | 'quiet' | 'danger'
     inline?: boolean
     // The button alone, at its corner, where nothing else balances it,
@@ -95,15 +102,19 @@
   )
 </script>
 
-<form {...enhanced} enctype="multipart/form-data" class="form" class:inline data-write={action}>
-  {#if children}
+<form {...enhanced} enctype="multipart/form-data" class="form" class:inline class:bare data-write={action}>
+  {#if bare}
+    {@render children?.()}
+  {:else if children}
     <div class="fields">{@render children()}</div>
   {/if}
   {#if form.problem}<p class="problem" role="alert">{form.problem}</p>{/if}
-  <div class="submit" class:ends={!!create || end}>
-    {#if create}<Button onclick={() => create.close()}>Cancel</Button>{/if}
-    <Button type="submit" {tone} busy={form.pending} disabled={!ready}>{submit}</Button>
-  </div>
+  {#if !bare}
+    <div class="submit" class:ends={!!create || end}>
+      {#if create}<Button onclick={() => create.close()}>Cancel</Button>{/if}
+      <Button type="submit" {tone} busy={form.pending} disabled={!ready}>{submit}</Button>
+    </div>
+  {/if}
 </form>
 
 <style>
@@ -128,6 +139,9 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
     gap: var(--space-3);
+  }
+  .bare {
+    display: contents;
   }
   .inline {
     display: flex;

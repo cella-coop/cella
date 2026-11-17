@@ -20,7 +20,7 @@ import type { Page } from 'playwright-core'
 import { add, update } from '@cella/org-contact/api'
 import type { Deps } from '@cella/org-db'
 import { eachBrowser, serve, signIn } from './browser.ts'
-import { choose, chosen, offered } from './controls.ts'
+import { addFilter, choose, chosen, offered } from './controls.ts'
 import { reader, sign } from './lanterne.ts'
 
 const camille = 'camille@lanterne.example'
@@ -148,8 +148,9 @@ eachBrowser((browserName, launch) => {
         await page.waitForURL((u) => u.searchParams.get('sort') === '-updated')
         await until(() => listed(page), (ids) => ids[0] === 'logged-estampe' && ids[1] === 'logged-tampon', `${at}: descending, the 26th's first`)
 
-        // Filtered by Created by: Julien's alone.
-        await choose(panel(page).getByRole('combobox', { name: 'Filter' }), { label: 'Created by' })
+        // Filtered by Created by: Julien's alone, through the filter
+        // bar's + Filter, never the View panel's, which carries no Filter.
+        await addFilter(page, 'Created by')
 
         const his = page.locator(`[role="menuitemcheckbox"][data-value="${julien}"]`)
         await his.waitFor()
@@ -157,21 +158,15 @@ eachBrowser((browserName, launch) => {
         await page.waitForURL((u) => u.searchParams.has('where'))
         assert.deepEqual(JSON.parse(new URL(page.url()).searchParams.get('where') ?? '[]'), [{ field: 'created_by', is: [julien] }])
         await page.keyboard.press('Escape')
-        await panel(page).getByRole('heading', { name: 'View', exact: true }).hover()
+        await page.locator('h1').first().hover()
         await until(() => listed(page), (ids) => ids.length === 1 && ids[0] === 'logged-tampon', `${at}: Created by Julien keeps his contact alone`)
 
-        // The first's page: its properties end with its four.
+        // The first's page: the drawer ends with its four in one quiet line.
         await visit('/contacts/logged-estampe')
-        const props = await page.locator('dl.props').first().evaluate((dl) =>
-          [...dl.querySelectorAll('dt')].map((dt) => {
-            const dd = dt.nextElementSibling
-            return { label: dt.textContent?.trim() ?? '', text: dd?.textContent?.trim() ?? '', who: dd?.querySelector('.person')?.getAttribute('title') ?? null }
-          }),
-        )
-        const last = props.slice(-4)
-        assert.deepEqual(last.map((p) => p.label), ['Created', 'Updated', 'Created by', 'Updated by'], `${at}: the page's properties end with the four`)
-        assert.ok(last[0].text !== '—' && last[1].text !== '—' && last[0].text !== last[1].text, `${at}: created and updated on two days`)
-        assert.deepEqual([last[2].who, last[3].who], [camille, julien], `${at}: created by Camille, updated by Julien`)
+        const foot = (await page.locator('p.foot').first().textContent())?.trim() ?? ''
+        const [made, touched] = foot.split(' · ')
+        assert.ok(/^Created .+ by Camille/.test(made ?? '') && /^Updated .+ by Julien/.test(touched ?? ''), `${at}: the drawer's footer names who created and who updated it: ${foot}`)
+        assert.notEqual(made?.replace(/^Created (.+) by .*/, '$1'), touched?.replace(/^Updated (.+) by .*/, '$1'), `${at}: created and updated on two days`)
         await page.screenshot({ path: `${shots}/contact-${browserName}-${scheme}.png`, fullPage: true })
 
         // A meeting's calendar by its start, an invoice's by its due day,

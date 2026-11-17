@@ -1,26 +1,25 @@
 <script lang="ts">
-  import { tick } from 'svelte'
   import CaretUpDown from 'phosphor-svelte/lib/CaretUpDown'
-  import Check from 'phosphor-svelte/lib/Check'
-  import { grouped, type Option } from '../models/select.ts'
+  import type { Option } from '../models/select.ts'
   import { place } from '../models/place.ts'
   import { useSelect } from '../hooks/useSelect.ts'
+  import Choice from './Choice.svelte'
   import Icon from './Icon.svelte'
+  import Pick from './Pick.svelte'
 
-  // The one select, never the browser's: a combobox button that keeps the
-  // focus and a listbox in the top layer, so nothing clips it, anchored
-  // to the button and flipped to stay in the viewport. The arrows, Page
-  // Up and Down, Home and End move among the options past disabled ones,
-  // as the active descendant; typing a label's first letters reaches it;
-  // Enter or Space chooses, Escape and Tab close, and the focus stays on
-  // the button throughout. The chosen option wears a check, and one may
-  // be marked, quietly, as the default. Options take an icon and sit
-  // under a heading where they name a group. With a `name` it posts the
-  // value as a form's field, `required` holding the form back while none
-  // is chosen; without a placeholder and with no value of its own it
-  // reads as its first option, as the browser's would. A choice is handed
-  // to `onchange` and announced to what holds it as a `change` event, so a
-  // setting commits as it is made.
+  // The one select, never the browser's: a combobox button that opens the
+  // one picker, `Pick`, in the top layer, so nothing clips it, anchored
+  // to the button and flipped to stay in the viewport. Its options are
+  // drawn as the properties are elsewhere, with a search box once the list
+  // is long; the chosen one wears a check and one may be marked, quietly,
+  // as the default. Options take an icon, a tone, a kind or a person and
+  // sit under a heading where they name a group. Escape closes it, the
+  // focus back on the button. With a `name` it posts the value as a
+  // form's field, `required` holding the form back while none is chosen;
+  // without a placeholder and with no value of its own it reads as its
+  // first option, as the browser's would. A choice is handed to `onchange`
+  // and announced to what holds it as a `change` event, so a setting
+  // commits as it is made.
   let {
     options,
     value = $bindable(''),
@@ -67,8 +66,6 @@
   const own = $derived(options.find((o) => o.value === value))
   const shown = $derived(own ?? (placeholder === undefined ? options.find((o) => !o.disabled) : undefined))
   const current = $derived(shown?.value ?? '')
-  const groups = $derived(grouped(options))
-  const option = (at: number) => `${uid}-o${at}`
 
   const show = () => {
     // Shown from its button, so a press on the button closes it rather
@@ -78,121 +75,43 @@
       ;(list as HTMLElement & { showPopover(o?: { source?: HTMLElement }): void }).showPopover({ source: trigger })
     }
   }
-  const hide = () => {
-    s.close()
-    if (list.matches(':popover-open')) {
-      list.hidePopover()
-    }
-  }
 
-  async function reveal() {
-    await tick()
-    list?.querySelector(`#${CSS.escape(option(s.active))}`)?.scrollIntoView({ block: 'nearest' })
-  }
-
-  function choose(at: number) {
-    const o = options[at]
-    if (!o || o.disabled) {
-      return
-    }
-    hide()
+  function choose(v: string | string[]) {
+    const next = String(v)
     trigger.focus()
     // A choice may take the select away, as an embed's picker goes once
     // it picks; the button it was is still told.
     const button = trigger
-    if (o.value !== current || o.value !== value) {
-      value = o.value
-      onchange?.(o.value)
+    if (next !== current || next !== value) {
+      value = next
+      onchange?.(next)
       button.dispatchEvent(new Event('change', { bubbles: true }))
     }
-
   }
 
   function ontoggle(e: ToggleEvent) {
     if (e.newState === 'open') {
-      if (!s.open) {
-        s.start()
-      }
+      s.start()
       if (!CSS.supports('position-anchor', '--a')) {
         place(list, trigger, 'bottom')
         list.style.minWidth = `${trigger.getBoundingClientRect().width}px`
       }
-      reveal()
+      // The search takes the focus; with none, the chosen option does.
+      if (!list.querySelector('input')) {
+        ;(list.querySelector<HTMLElement>('[role="option"][aria-selected="true"]') ?? list.querySelector<HTMLElement>('[role="option"]:not([disabled])'))?.focus()
+      }
     } else {
       s.close()
     }
   }
 
-  const printable = (e: KeyboardEvent) => e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey
-
   function onkeydown(e: KeyboardEvent) {
-    if (disabled) {
-      return
-    }
-    const k = e.key
-    if (!s.open) {
-      if (['ArrowDown', 'ArrowUp', 'Enter', ' ', 'Home', 'End'].includes(k)) {
-        e.preventDefault()
-        s.start(k === 'Home' ? 'first' : k === 'End' ? 'last' : undefined)
-        show()
-      } else if (printable(e)) {
-        e.preventDefault()
-        s.start()
-        s.type(k)
-        show()
-      }
-      return
-    }
-    if (k === 'Tab') {
-      hide()
-      return
-    }
-    if (k === 'Escape') {
-      // Closes the list alone, never the dialog or the popover it sits in.
+    if (!disabled && ['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) {
       e.preventDefault()
-      e.stopPropagation()
-      hide()
-      return
-    }
-    const moves: Record<string, () => void> = {
-      ArrowDown: () => s.move(1),
-      ArrowUp: () => s.move(-1),
-      PageDown: () => s.move(10),
-      PageUp: () => s.move(-10),
-      Home: () => s.to('first'),
-      End: () => s.to('last'),
-      Enter: () => choose(s.active),
-      ' ': () => (s.typing ? s.type(' ') : choose(s.active)),
-    }
-    const act = moves[k] ?? (printable(e) ? () => s.type(k) : null)
-    if (act) {
-      e.preventDefault()
-      act()
-      reveal()
+      show()
     }
   }
 </script>
-
-{#snippet item(o: Option, at: number)}
-  {const chosen = $derived(o.value === current && !!shown)}
-  <!-- svelte-ignore a11y_interactive_supports_focus, a11y_click_events_have_key_events: an option is the combobox's active descendant; the combobox keeps the focus and answers the keys -->
-  <div
-    role="option"
-    id={option(at)}
-    class="option"
-    class:active={s.open && s.active === at}
-    aria-selected={chosen}
-    aria-disabled={o.disabled || undefined}
-    data-value={o.value}
-    onclick={() => choose(at)}
-    onpointermove={() => s.hover(at)}
-  >
-    {#if o.icon}<span class="icon"><Icon icon={o.icon} /></span>{/if}
-    <span class="text">{o.label}</span>
-    {#if o.default}<span class="default" aria-hidden="true">default</span><span class="visually-hidden">, the default</span>{/if}
-    <span class="check">{#if chosen}<Icon icon={Check} />{/if}</span>
-  </div>
-{/snippet}
 
 <span class="select" class:fit>
   <button
@@ -209,7 +128,6 @@
     aria-haspopup="listbox"
     aria-expanded={s.open}
     aria-controls="{uid}-list"
-    aria-activedescendant={s.open && s.active >= 0 ? option(s.active) : undefined}
     aria-label={label}
     aria-labelledby={labelledby}
     aria-required={required || undefined}
@@ -219,16 +137,10 @@
     popovertarget="{uid}-list"
     style:anchor-name="--{uid}"
     {onkeydown}
-    onkeyup={(e) => {
-      // Space chooses on its press; its release clicks nothing more.
-      if (e.key === ' ') {
-        e.preventDefault()
-      }
-    }}
-    onfocusout={hide}
   >
-    {#if shown?.icon}<span class="icon"><Icon icon={shown.icon} /></span>{/if}
-    <span class="value" class:placeholder={!shown}>{shown?.label ?? placeholder ?? ''}</span>
+    <span class="value" class:placeholder={!shown}>
+      {#if shown}<Choice o={shown} />{:else}{placeholder ?? ''}{/if}
+    </span>
     {#if !disabled}<span class="chevron"><Icon icon={CaretUpDown} /></span>{/if}
   </button>
   {#if name !== undefined && !required}
@@ -238,7 +150,6 @@
          holds the form back while none is chosen and sends the focus to
          the button. -->
     <input
-
       class="proxy"
       tabindex="-1"
       aria-hidden="true"
@@ -249,30 +160,10 @@
       oninvalid={() => trigger.focus()}
     />
   {/if}
-  <!-- svelte-ignore a11y_no_static_element_interactions: the combobox holds the keyboard; a press here keeps its focus -->
-  <div
-    bind:this={list}
-    id="{uid}-list"
-    popover="auto"
-    role="listbox"
-    class="list"
-    aria-label={s.open ? label : undefined}
-    aria-labelledby={s.open ? labelledby : undefined}
-    tabindex="-1"
-    style:position-anchor="--{uid}"
-    {ontoggle}
-    onmousedown={(e) => e.preventDefault()}
-  >
-    {#each groups as g, gi (gi)}
-      {#if g.label}
-        <div role="group" class="group" aria-labelledby="{uid}-g{gi}">
-          <div class="heading" id="{uid}-g{gi}" role="presentation">{g.label}</div>
-          {#each g.options as { option: o, at } (o.value)}{@render item(o, at)}{/each}
-        </div>
-      {:else}
-        {#each g.options as { option: o, at } (o.value)}{@render item(o, at)}{/each}
-      {/if}
-    {/each}
+  <div bind:this={list} id="{uid}-list" popover="auto" class="list" style:position-anchor="--{uid}" {ontoggle}>
+    {#key s.turn}
+      <Pick {options} value={current} label={label ?? ''} onpick={choose} />
+    {/key}
   </div>
 </span>
 
@@ -318,6 +209,9 @@
     cursor: default;
   }
   .value {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     flex: 1;
     min-width: 0;
     overflow: hidden;
@@ -327,14 +221,10 @@
   .placeholder {
     color: var(--text-subtle);
   }
-  .icon,
-  .chevron,
-  .check {
+  .chevron {
     display: grid;
     place-items: center;
     flex: none;
-  }
-  .chevron {
     color: var(--text-subtle);
   }
   .proxy {
@@ -363,60 +253,5 @@
     box-shadow: var(--shadow-float);
     position-area: bottom span-right;
     position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
-  }
-  .list:popover-open {
-    display: grid;
-    gap: 1px;
-  }
-  .group {
-    display: grid;
-    gap: 1px;
-  }
-  .group + .group,
-  .option + .group,
-  .group + .option {
-    margin-top: var(--space-1);
-    padding-top: var(--space-1);
-    border-top: 1px solid var(--line);
-  }
-  .heading {
-    padding: var(--space-1) var(--space-2) 2px;
-    font-size: var(--text-2xs);
-    color: var(--text-subtle);
-  }
-  .option {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: 1.9rem;
-    padding: var(--space-1) var(--space-2);
-    border-radius: var(--radius-control);
-    font-size: var(--text-sm);
-    cursor: pointer;
-    user-select: none;
-  }
-  .option.active {
-    background: var(--hover);
-  }
-  .option[aria-selected='true'] {
-    font-weight: 500;
-  }
-  .option[aria-disabled='true'] {
-    color: var(--text-subtle);
-    cursor: default;
-  }
-  .option .text {
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .default {
-    font-size: var(--text-2xs);
-    color: var(--text-subtle);
-  }
-  .check {
-    width: 1rem;
-    color: var(--text);
   }
 </style>

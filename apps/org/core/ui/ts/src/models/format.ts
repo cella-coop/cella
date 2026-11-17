@@ -93,6 +93,8 @@ export function show(value: unknown, kind?: string): string {
       return money(value)
     case 'date':
       return date(value)
+    case 'boolean':
+      return value === true || value === 'true' ? 'Yes' : 'No'
     default:
       return String(value)
   }

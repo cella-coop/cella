@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Badge, date } from '@cella/org-ui'
+  import { Value, date } from '@cella/org-ui'
   import type { Summary } from '../../models/minutes.ts'
 
   // A meeting drawn inside a document, as its minutes open with it: its
@@ -13,7 +13,7 @@
   {#if m}
     <a class="title" href="/meetings/{m.id}">{m.title}</a>
     <div class="meta">
-      <Badge tone={m.status === 'held' ? 'positive' : m.status === 'scheduled' ? 'accent' : 'neutral'}>{m.status}</Badge>
+      <Value value={m.status} kind="badge" tone={m.status === 'held' ? 'positive' : m.status === 'scheduled' ? 'accent' : 'neutral'} />
       <span>{m.circle} · {date(m.at)}, {m.at.slice(11, 16)}</span>
     </div>
   {:else}

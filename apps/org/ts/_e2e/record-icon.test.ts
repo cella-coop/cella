@@ -2,7 +2,7 @@
 // dev server: before anything is picked, the Shop's project wears its
 // collection's icon, Briefcase, in its header and in its row in the
 // Projects list, as every project does. Yusuf, Web's lead, picks Rocket
-// from the curated grid in the Details drawer's Icon section, and both
+// from the curated grid by the Details drawer's Icon property, and both
 // change to it, in the project's own ink; clearing it, with the grid's
 // None, takes it away from both, back to Briefcase, as before. `SHOTS`
 // names where its screenshots go. Run by `cella test e2e record-icon`.
@@ -49,18 +49,16 @@ eachBrowser((name, launch) => {
 
       await page.getByRole('tab', { name: 'Details' }).click()
       const drawer = page.getByRole('complementary', { name: 'Details' })
-      const section = drawer.locator('section', { has: page.getByRole('heading', { name: 'Icon', exact: true }) })
-      const trigger = section.getByRole('button', { name: 'Icon', exact: true })
-      await trigger.waitFor()
-
-      await trigger.click()
-      const grid = page.getByRole('menu', { name: 'Icon', exact: true })
+      // A project with no icon lists none; Add property offers it, and
+      // choosing it opens its popover.
+      await drawer.getByRole('button', { name: 'Add property' }).click()
+      await page.getByRole('option', { name: 'Icon', exact: true }).click()
+      const grid = page.getByRole('dialog', { name: 'Icon', exact: true })
       await grid.waitFor()
       await grid.getByRole('textbox', { name: 'Search icons' }).fill('Rocket')
       await grid.getByRole('menuitemradio', { name: 'Rocket', exact: true }).click()
       await grid.waitFor({ state: 'hidden' })
 
-      await section.getByRole('button', { name: 'Set icon' }).click()
       await page.getByRole('status').filter({ hasText: /Settled/ }).waitFor()
       const row = await su.query<{ icon: string | null }>('SELECT icon FROM project.project WHERE id = $1', ['halles-shop'])
       assert.equal(row.rows[0]?.icon, 'rocket', `${name}: the icon settled`)
@@ -76,16 +74,15 @@ eachBrowser((name, launch) => {
       assert.equal(await markOf(item.locator('.title')), rocket, `${name}: the list cell wears the same icon as the header`)
       await page.screenshot({ path: `${shots}/record-icon-${name}-list.png`, fullPage: true })
 
-      // Clearing it: the grid's None, then the same submit, takes it away
+      // Clearing it: the grid's None takes it away
       // from the header and the row, back to the collection's Briefcase.
       await page.goto(`${base}/projects/halles-shop`)
       await page.waitForLoadState('networkidle')
       await page.getByRole('tab', { name: 'Details' }).click()
-      await trigger.click()
+      await drawer.getByRole('button', { name: /^Icon/ }).click()
       await grid.waitFor()
       await grid.getByRole('menuitemradio', { name: 'None', exact: true }).click()
       await grid.waitFor({ state: 'hidden' })
-      await section.getByRole('button', { name: 'Change icon' }).click()
       await page.getByRole('status').filter({ hasText: /Settled/ }).waitFor()
       const cleared = await su.query<{ icon: string | null }>('SELECT icon FROM project.project WHERE id = $1', ['halles-shop'])
       assert.equal(cleared.rows[0]?.icon, null, `${name}: the icon cleared`)

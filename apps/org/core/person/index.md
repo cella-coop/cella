@@ -1,6 +1,6 @@
 +++
 title = "Person"
-updated = 2026-11-16
+updated = 2026-11-17
 +++
 
 Everyone the co-op knows, by the address they sign with, and their
@@ -313,8 +313,16 @@ none, the page says it is their only device. The same fields and
 devices are the acting person's Account settings, `/settings/account`
 ([settings](../ui/index.md#settings)), which this core's `./app`
 mounts in the Settings section, saving the name, email and phone each by
-`profile` as it is left. Enrolling a later device
-from a current one is not offered yet. The dev server signs as a person with a
+`profile` as it is left. Account settings also enrol a later device: a form for
+the key another browser made and a name for it, filled in from the link
+that browser's sign-in page shows (`?enrol=<key>&label=<name>`), posting
+`enrol` for the acting person's own address, signed by the device they use.
+A link carrying a key could come from anyone, so the form enrols only on a
+pairing code: a short code (`pairCode`, six base32 characters of a hash of
+the key) the new browser shows large beside its QR code, which the person
+types in, case and dashes ignored; the form derives it from the key and never
+takes it from the link, and Enrol stays disabled until the two match.
+The dev server signs as a person with a
 device's TEST-ONLY fixture key only when it is the key enrolled under that
 label and not revoked.
 

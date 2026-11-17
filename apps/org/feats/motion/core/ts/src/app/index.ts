@@ -8,8 +8,8 @@ import Proposal from './blocks/Proposal.svelte'
 import Vote from './blocks/Vote.svelte'
 
 // The feat's client side: the motions, open first, a new one with what
-// it decides, and a motion's page with where and how one votes first,
-// then its proposal, the stances given and its close, with what it does
+// it decides, and a motion's page with its proposal and then its Vote widget,
+// the stances given and its close, with what it does
 // and what the close carried; its deliberation is the shared thread
 // under its Overview, not a tab of its own.
 export const app: App = {
@@ -56,7 +56,7 @@ export const app: App = {
           { id: 'stances', label: 'Stances' },
           { id: 'effects', label: 'Effects' },
         ],
-        blocks: [Vote, Proposal, { tab: 'effects', block: Effects }],
+        blocks: [Proposal, Vote, { tab: 'effects', block: Effects }],
         // The deliberation, under the Activity like any record's.
         comment: Discussion,
         actions: Close,

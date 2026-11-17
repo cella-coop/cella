@@ -8,7 +8,7 @@
   import CaretLeft from 'phosphor-svelte/lib/CaretLeft'
   import CaretRight from 'phosphor-svelte/lib/CaretRight'
   import CaretUpDown from 'phosphor-svelte/lib/CaretUpDown'
-  import Check from 'phosphor-svelte/lib/Check'
+  import Tick from './Tick.svelte'
   import Desktop from 'phosphor-svelte/lib/Desktop'
   import Moon from 'phosphor-svelte/lib/Moon'
   import Plus from 'phosphor-svelte/lib/Plus'
@@ -19,6 +19,7 @@
   import type { Outcome as Done } from '../models/outcome.ts'
   import { useShell } from '../hooks/useShell.ts'
   import { usePinned } from '../hooks/usePinned.ts'
+  import Button from './Button.svelte'
   import { useRemember } from '../hooks/useRemember.ts'
   import { mark } from '../marks.ts'
   import { inked } from '../models/ink.ts'
@@ -235,13 +236,13 @@
               <b>{scope.name}</b>
               <span>{scope.legal ?? scope.address}</span>
             </span>
-            {#if !lens}<Icon icon={Check} />{/if}
+            {#if !lens}<Tick />{/if}
           </button>
           {#if sat.length}
             <p class="label">Circles</p>
             {#each sat as c (c.id)}
               <button role="menuitemradio" aria-checked={lens?.id === c.id} class="item" name="lens" value={c.id}>
-                {c.name}{#if lens?.id === c.id}<Icon icon={Check} />{/if}
+                {c.name}{#if lens?.id === c.id}<Tick />{/if}
               </button>
             {/each}
           {/if}
@@ -269,7 +270,7 @@
           {/each}
         </ul>
       {:else}
-        <p class="hint">Pin a view from its View panel.</p>
+        <p class="hint empty">Pin a view from its View panel.</p>
       {/if}
     </div>
 
@@ -294,7 +295,7 @@
           {@render links(run.items)}
         {/if}
       {/each}
-      {#if inside}<a class="more" href="/settings/features/{inside.id}"><Icon icon={Plus} size="0.8rem" />More…</a>{/if}
+      {#if inside}<span class="more"><Button tone="subtle" href="/settings/features/{inside.id}"><Icon icon={Plus} size="0.8rem" />More…</Button></span>{/if}
     </div>
     {/if}
 
@@ -477,20 +478,12 @@
   }
   /* The circle's features page, after its features: subtle, no filled
      background even when it stands current, its + at the row's end. */
+  /* More…: the standard subtle Button, at the list's right, set apart
+     from the features above it. */
   .more {
     display: flex;
-    align-items: center;
     justify-content: flex-end;
-    gap: var(--space-1);
-    height: 1.9rem;
-    margin-top: var(--space-1);
-    padding: 0 var(--space-2);
-    border-radius: var(--radius-control);
-    color: var(--text-subtle);
-  }
-  .more:hover {
-    background: var(--hover);
-    color: var(--text);
+    margin-top: var(--space-3);
   }
   /* Something in a shut accordion waits on the acting member. */
   .dot {
@@ -575,14 +568,6 @@
     text-align: start;
     cursor: pointer;
   }
-  .item:hover,
-  .item:focus-visible {
-    background: var(--hover);
-  }
-  .item :global(svg:last-child) {
-    margin-inline-start: auto;
-    color: var(--accent-text);
-  }
   .head-row {
     display: flex;
     align-items: center;
@@ -640,6 +625,13 @@
     font-size: var(--text-xs);
     color: var(--text-muted);
     padding: 0 var(--space-2) var(--space-1);
+  }
+  /* An empty section's prompt: quieter than anything it will hold, a step
+     below the subtle text, and set in a tad from its heading. */
+  .hint.empty {
+    font-style: italic;
+    color: oklch(var(--shade-5) var(--tone-base));
+    padding-inline-start: var(--space-3);
   }
   ul {
     list-style: none;

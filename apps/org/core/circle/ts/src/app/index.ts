@@ -1,7 +1,6 @@
-import { icons, power, type App } from '@cella/org-ui'
+import { icons, power, recordIcon, recordIcons, type App } from '@cella/org-ui'
 import type { Circle, Detail, Standing, Provenance } from '../models/circle.ts'
 import Chain from './blocks/Chain.svelte'
-import Icon from './blocks/Icon.svelte'
 import Structure from './blocks/Structure.svelte'
 import View from './blocks/View.svelte'
 import { cap, covers, tones } from '../bindings/words.ts'
@@ -33,6 +32,7 @@ export const app: App = {
         subtitle: (c: Detail) => c.id,
         summary: (c: Detail) => c.purpose,
         properties: (c: Detail) => [
+          { label: 'Icon', value: recordIcons.find((i) => i.slug === c.icon)?.name ?? null, icon: recordIcon(c.icon), ink: c.name, edit: { kind: 'icon' as const, write: 'icon', field: 'icon', current: c.icon } },
           { label: 'Id', value: c.id, kind: 'mono' },
           ...(c.assembly ? [{ label: 'The assembly', value: 'holds every power' }] : []),
           { label: 'Decides by', value: c.procedure, kind: 'badge' },
@@ -53,8 +53,6 @@ export const app: App = {
           { id: 'settings', label: 'Settings' },
         ],
         blocks: [{ tab: 'roles', block: Structure }],
-        // Its own icon, a cosmetic setting, in the drawer's Details.
-        details: [Icon],
       },
     },
     mandates: {

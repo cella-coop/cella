@@ -3,10 +3,9 @@ import { priorities, statuses, type Page, type Priority, type Status as Stage, t
 import Body from './blocks/Body.svelte'
 import Comments from './blocks/Comments.svelte'
 import Create from './blocks/Create.svelte'
-import Status from './blocks/Status.svelte'
+import Complete from './blocks/Complete.svelte'
 
 const tones: Record<Stage, Tone> = { backlog: 'neutral', todo: 'neutral', doing: 'accent', done: 'positive' }
-const urgency: Record<Priority, Tone> = { urgent: 'negative', high: 'warning', normal: 'neutral', low: 'neutral' }
 
 // The feat's client side: the tasks as a board by status, on which a card
 // dragged between columns is the move, or into Done the completion; a new
@@ -25,13 +24,13 @@ export const app: App = {
           { key: 'title', label: 'Task', kind: 'title', role: 'title', value: (t: Task) => t.title },
           { key: 'id', label: 'Id', kind: 'mono', role: 'hidden', value: (t: Task) => t.id },
           { key: 'circle', label: 'Circle', kind: 'circle', role: 'hidden', value: (t: Task & { circle?: string }) => t.circle },
-          { key: 'priority', label: 'Priority', kind: 'badge', role: 'meta', value: (t: Task) => t.priority, tone: (t: Task) => urgency[t.priority] },
+          { key: 'priority', label: 'Priority', kind: 'priority', role: 'meta', value: (t: Task) => t.priority },
           { key: 'due', label: 'Due', kind: 'date', role: 'meta', value: (t: Task) => t.due },
           { key: 'status', label: 'Status', kind: 'badge', role: 'meta', value: (t: Task) => t.status, tone: (t: Task) => tones[t.status] },
           { key: 'created', label: 'Created', kind: 'date', role: 'hidden', value: (t: Task) => t.created },
           { key: 'completed', label: 'Completed', kind: 'date', role: 'hidden', value: (t: Task) => t.completed },
         ],
-        look: { layout: 'board', by: 'status', lanes: { status: [...statuses], priority: [...priorities] }, cards: ['priority', 'due'] },
+        look: { layout: 'board', by: 'status', lanes: { status: [...statuses], priority: [...priorities] }, cards: ['priority', 'due', 'created'] },
         shifts: [
           { by: 'status', to: ['backlog', 'todo', 'doing'], action: 'move' },
           { by: 'status', to: ['done'], action: 'complete' },
@@ -42,16 +41,42 @@ export const app: App = {
         title: (t: Page) => t.title,
         subtitle: (t: Task) => t.id,
         properties: (t: Task) => [
-          { label: 'Status', value: t.status, kind: 'badge', tone: tones[t.status] },
-          { label: 'Priority', value: t.priority, kind: 'badge', tone: urgency[t.priority] },
-          { label: 'Due', value: t.due, kind: 'date' },
+          {
+            label: 'Status',
+            value: t.status,
+            kind: 'badge',
+            tone: tones[t.status],
+            edit: {
+              kind: 'pick' as const,
+              write: 'move',
+              field: 'status',
+              current: t.status,
+              // Done is a completion, which sets its day.
+              writes: { done: 'complete' },
+              options: statuses.map((s) => ({ value: s, label: s, kind: 'badge' as const, tone: tones[s] })),
+            },
+          },
+          {
+            label: 'Priority',
+            value: t.priority,
+            kind: 'priority',
+            edit: {
+              kind: 'pick' as const,
+              write: 'set',
+              field: 'priority',
+              extra: [['set', 'priority']],
+              current: t.priority,
+              options: priorities.map((p) => ({ value: p, label: p, kind: 'priority' as const })),
+            },
+          },
+          { label: 'Due', value: t.due, kind: 'date', edit: { kind: 'date' as const, write: 'set', field: 'due', extra: [['set', 'due']], current: t.due } },
           { label: 'Created', value: t.created, kind: 'date' },
           { label: 'Completed', value: t.completed, kind: 'date' },
         ],
         activity: (t: Task) => [...(t.completed ? [{ at: t.completed, text: 'completed' }] : []), { at: t.created, text: 'created' }],
         blocks: [Body],
         comment: Comments,
-        actions: Status,
+        actions: Complete,
       },
     },
   },

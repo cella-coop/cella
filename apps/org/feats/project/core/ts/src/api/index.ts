@@ -4,6 +4,7 @@
 import { action, type Slice } from '@cella/org-db'
 import { add, archive, budget, complete, create, icon } from '../handlers/index.ts'
 import { item, listing, offered, projects } from '../drivers/project.ts'
+import { readers } from '../drivers/comment.ts'
 import * as forms from './forms.ts'
 import { projects as imported } from './imports.ts'
 import { contract } from './contract.ts'
@@ -25,6 +26,7 @@ export const slice: Slice = {
       list: listing,
       about: offered,
       item: withThreads(withBody(item)),
+      readers,
       index: async (db) => (await projects(db)).map((p) => ({ id: p.id, title: p.title, sub: p.circle ?? undefined })),
       body: bodyMount,
       actions: {

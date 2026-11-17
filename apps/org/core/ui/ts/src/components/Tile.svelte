@@ -1,13 +1,21 @@
 <script lang="ts">
   import type { Component } from 'svelte'
   import type { Column } from '../models/view.ts'
+  import { show } from '../models/format.ts'
   import { inked, inkOf } from '../models/ink.ts'
-  import Cell from './Cell.svelte'
+  import { useShell } from '../hooks/useShell.ts'
+  import Avatar from './Avatar.svelte'
+  import Value from './Value.svelte'
   import Icon from './Icon.svelte'
 
-  // An item as a card in a gallery or on a board: its title and the
-  // fields the view chose, each under its label. The whole card opens the
-  // item; on a board, it is also what is dragged between columns.
+  // An item as a card in a gallery or on a board, laid out as Linear's:
+  // a muted reference (the first monospaced field the view chose) at the
+  // top left and, at the right, the avatar of the first field naming a
+  // person; then its title, two lines at most, after its own icon; then
+  // the other chosen fields as quiet chips, wrapping, none labelled and
+  // an empty one drawn not at all; and a muted line at the foot for the
+  // first created or updated date. The whole card opens the item; on a
+  // board, it is also what is dragged between columns.
   let {
     row,
     titled,
@@ -30,22 +38,41 @@
     // none.
     icon?: Component<any>
   } = $props()
+
+  const shell = useShell()
+  const filled = (c: Column) => show(c.value(row), c.kind) !== '—'
+  const ref = $derived(shown.find((c) => c.kind === 'mono' && filled(c)))
+  const who = $derived(shown.find((c) => c.kind === 'person' && filled(c)))
+  const dated = $derived(shown.find((c) => c.kind === 'date' && /^(created|updated)/i.test(c.label) && filled(c)))
+  const chips = $derived(shown.filter((c) => c !== ref && c !== who && c !== dated && filled(c)))
+  const address = $derived(who ? String(who.value(row)) : '')
+  const name = $derived(shell.name(address) ?? address)
 </script>
 
 {#snippet body()}
+  <!-- A reference heads the card with the avatar at its right; with none,
+       the avatar sits at the end of the title's first line, so no empty
+       row opens the card. -->
+  {#if ref}
+    <span class="top">
+      <span class="ref">{show(ref.value(row), ref.kind)}</span>
+      {#if who}<span class="who" title="{who.label}: {name}"><Avatar {name} size="1.25rem" /></span>{/if}
+    </span>
+  {/if}
   <span class="title">
     {#if icon}<span class="mark" style={inked(inkOf(String(titled.value(row))))}><Icon {icon} /></span>{/if}
-    {titled.value(row)}
+    <span class="text">{titled.value(row)}</span>
+    {#if who && !ref}<span class="who" title="{who.label}: {name}"><Avatar {name} size="1.25rem" /></span>{/if}
   </span>
-  {#if shown.length}
-    <dl>
-      {#each shown as c (c.key)}
-        <div>
-          <dt>{c.label}</dt>
-          <dd><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} /></dd>
-        </div>
+  {#if chips.length}
+    <span class="chips">
+      {#each chips as c (c.key)}
+        <Value value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} size="card" />
       {/each}
-    </dl>
+    </span>
+  {/if}
+  {#if dated}
+    <span class="foot">{dated.label} {show(dated.value(row), dated.kind)}</span>
   {/if}
 {/snippet}
 
@@ -74,48 +101,69 @@
     padding: var(--space-3);
     border-radius: var(--radius-panel);
     background: var(--raised);
+    border: 1px solid color-mix(in oklab, var(--text) 5%, transparent);
+    grid-template-columns: minmax(0, 1fr);
     min-width: 0;
     transition: background var(--fast) var(--ease);
   }
   a.tile:hover {
     background: var(--hover);
   }
-  .title {
-    display: inline-flex;
+  .top {
+    display: flex;
     align-items: center;
-    gap: var(--space-1);
-    font-weight: 500;
+    justify-content: space-between;
+    gap: var(--space-2);
+    min-height: 1.25rem;
+  }
+  .ref {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+  .who {
+    display: inline-flex;
+    margin-inline-start: auto;
+  }
+  .title .who {
+    flex: none;
+    align-self: flex-start;
+  }
+  .title {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    font-weight: 500;
+    line-height: 1.35;
+  }
+  .text {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
   }
   .mark {
     display: inline-flex;
     flex: none;
+    align-self: center;
     color: var(--mark);
   }
-  dl {
-    display: grid;
-    gap: var(--space-1);
-    margin: 0;
-    font-size: var(--text-sm);
-  }
-  dl div {
+  .chips {
+    min-width: 0;
     display: flex;
-    justify-content: space-between;
-    gap: var(--space-3);
-    min-width: 0;
+    flex-wrap: wrap;
+    gap: var(--space-1);
   }
-  dt {
+  .foot {
     color: var(--text-muted);
-    flex: none;
-  }
-  dd {
-    margin: 0;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    text-align: end;
+    font-size: var(--text-xs);
   }
 </style>

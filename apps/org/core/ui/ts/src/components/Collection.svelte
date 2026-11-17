@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, tick, type Component } from 'svelte'
+  import { onMount, type Component } from 'svelte'
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
   import SlidersHorizontal from 'phosphor-svelte/lib/SlidersHorizontal'
@@ -26,7 +26,7 @@
     type Widget,
     under,
   } from '../models/query.ts'
-  import { anchor, period } from '../models/calendar.ts'
+  import { anchor, legend, period, placed } from '../models/calendar.ts'
   import { widest } from '../models/format.ts'
   import { abandon } from '../models/navigation.ts'
   import { control, focused, typing } from '../models/keys.ts'
@@ -44,6 +44,7 @@
   import Board from './Board.svelte'
   import Button from './Button.svelte'
   import Calendar from './Calendar.svelte'
+  import Legend from './Legend.svelte'
   import Dialog from './Dialog.svelte'
   import Gallery from './Gallery.svelte'
   import Group from './Group.svelte'
@@ -51,21 +52,26 @@
   import Cell from './Cell.svelte'
   import Dashboard from './Dashboard.svelte'
   import DropIndicator from './DropIndicator.svelte'
+  import FilterBar from './FilterBar.svelte'
   import Frame from './PageFrame.svelte'
   import Icon from './Icon.svelte'
   import Table from './Table.svelte'
   import Viewing from './Viewing.svelte'
 
-  // The one collection component: the same header, view bar and rows for
-  // every collection, as a list, a table, a gallery, a board, a calendar
-  // or a dashboard, and the drawer's
-  // View panel holding how they are shown. The view bar's tabs are the
-  // collection's preset views, then the viewer's own; the active one, and
-  // anything changed from it, live in the address, so a view can be
-  // linked and the server renders it as it is. The rows are the server's,
-  // kept, filtered and paged in SQL: the page of them the address asks
-  // for, out of `kept`, of which `matched` hold the text filter.
-  // Keyboard first: j and k move, Enter opens, / filters, c creates.
+  // The one collection component: the same header, view bar, filter bar
+  // and rows for every collection, as a list, a table, a gallery, a
+  // board, a calendar or a dashboard, and the drawer's View panel holding
+  // how they are shown (layout, grouping, sort, fields; display only).
+  // The filter bar always draws on its own line under the header, above
+  // the rows, at one height: chips on the left, Search and + Filter on
+  // the right (`FilterBar`). The view
+  // bar's tabs are the collection's preset views, then the viewer's own;
+  // the active one, and anything changed from it, live in the address, so
+  // a view can be linked and the server renders it as it is. The rows are
+  // the server's, kept, filtered and paged in SQL: the page of them the
+  // address asks for, out of `kept`, of which `matched` hold the text
+  // filter. Keyboard first: j and k move, Enter opens, / filters, f adds
+  // a filter, c creates.
   let {
     name,
     title,
@@ -274,6 +280,9 @@
   // one, and its values in its board's order, which hand out the inks.
   const tinted = $derived(spec.layout === 'calendar' && spec.by ? columns.find((c) => c.key === grouping(spec, typed)?.key && c.kind !== 'date') : undefined)
   const tints = $derived(tinted ? lanes(look, tinted.key, values[tinted.key] ?? []) : [])
+  // What the colours mean, over the rows the period shows: the drawer's
+  // Legend.
+  const keys = $derived(tinted && placing ? legend([...placed(state.shown, placing, shownPeriod, spec.sort !== null).values()].flat(), tinted.key, tints) : [])
 
   // A calendar draws its period even with no row on its days, so it keeps
   // its header and navigation; `kept` counts the view over the whole
@@ -329,27 +338,41 @@
     }
   }
 
-  // The filter is in the drawer: / opens it first when it is closed.
-  async function filter() {
-    shell.show(true)
-    shell.choose('view')
-    await tick()
-    state.focus()
-  }
-
   function naming() {
     shell.choose('view')
     saved.naming = true
   }
 
+  // The filter bar's Save: through the view's own save, as its Save
+  // always went, a viewer's own view updated at once, a preset named as
+  // a new one, in the drawer's View panel.
+  function saveView() {
+    if (custom) {
+      saved.update(custom.id, { ...spec, q: state.filter })
+    } else {
+      naming()
+    }
+  }
+
+  // Reset: back to what the open view shows before this page's own
+  // changes, in the address and in the filter still being typed.
+  function reset() {
+    state.filter = base.q
+    state.adding = null
+    state.searching = false
+    change(base)
+    state.refocus()
+  }
+
   function onkeydown(e: KeyboardEvent) {
-    // While New's dialog is open, the rows behind it take no key.
-    if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented || create.open) {
+    // While a dialog is open, the rows behind it take no key.
+    if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented || create.open || document.querySelector('dialog[open], [aria-modal="true"]')) {
       return
     }
     if (typing(e)) {
       if (e.target === state.search && e.key === 'Escape') {
-        state.clear()
+        e.preventDefault()
+        state.collapse()
       }
       if (e.target === state.search && e.key === 'ArrowDown') {
         state.enter()
@@ -366,7 +389,10 @@
       open(state.active)
     } else if (e.key === '/') {
       e.preventDefault()
-      filter()
+      state.searching = true
+    } else if (e.key === 'f' || e.key === 'F') {
+      e.preventDefault()
+      state.openAdd()
     } else if (e.key === 'c' && creates.length) {
       create.show()
       e.preventDefault()
@@ -412,13 +438,18 @@
     {declared}
     opened={base}
     {custom}
-    {dirty}
     {pin}
     {whole}
     onchange={change}
     onsave={opened}
     onremove={remove}
+    changed={dirty}
+    keep={saveView}
+    discard={reset}
   />
+  {#if tinted && keys.length}
+    <Legend by={tinted} {keys} muted={state.muted} ontoggle={(v) => state.mute(v)} />
+  {/if}
 {/snippet}
 
 <Frame
@@ -426,9 +457,8 @@
   {icon}
   {count}
   {caption}
-  subtitle={whole && shell.lens ? `The lens on ${shell.lens.name} leaves ${title} whole: no circle owns its rows.` : spec.across && shell.lens ? `Across circles: every circle's ${noun} you read.` : undefined}
   badges={status.map((s) => s(about)).filter((b) => b !== undefined)}
-  panels={[{ id: 'view', label: 'View', icon: SlidersHorizontal, body: viewing }]}
+  panels={[{ id: 'view', label: 'View', icon: SlidersHorizontal, body: viewing, note: dirty ? 'unsaved changes' : undefined }]}
 >
   {#snippet actions()}
     {#if creates.length}
@@ -446,7 +476,11 @@
             on={view === v.id}
             icon={mark(v.icon ?? (v.id === 'all' ? 'all' : undefined))}
             title="View {v.name} {noun} {v.count}"
-            onclick={() => (state.filter = '')}
+            onclick={() => {
+              state.filter = ''
+              state.searching = false
+              state.adding = null
+            }}
           >
             {v.name}
           </Pill>
@@ -472,7 +506,11 @@
             title="View {c.name} {noun} {saved.tallies[c.id] ?? ''}"
             aria-roledescription="draggable view"
             data-drag-handle
-            onclick={() => (state.filter = c.spec.q)}
+            onclick={() => {
+              state.filter = c.spec.q
+              state.searching = false
+              state.adding = null
+            }}
           >
             {c.name}
           </Pill>
@@ -483,6 +521,8 @@
     <button class="new" title="Save this as a view" aria-label="Save this as a view" onclick={naming}><Icon icon={Plus} /></button>
   </nav>
   {/snippet}
+
+  <FilterBar {spec} {base} fields={typed} {values} onchange={change} lens={shell.lens && !whole ? shell.lens.name : null} />
 
   {#if errors.length}
     <div role="status">
@@ -546,9 +586,9 @@
         mark={markOf}
       />
     {:else if spec.layout === 'calendar' && placing}
-      <Calendar rows={state.shown} on={placing} period={shownPeriod} {titled} {shown} {href} link={at} sorted={spec.sort !== null} by={tinted} order={tints} />
+      <Calendar rows={state.shown} on={placing} period={shownPeriod} {titled} {shown} {href} link={at} sorted={spec.sort !== null} by={tinted} order={tints} muted={state.muted} />
     {:else}
-      <ul class="list">
+      <ul class="list" class:nested={!!group}>
         {#each state.shown as row, i (row.id)}
           {const to = $derived(href?.(row))}
           {#if opening(i)}{@render head(row)}{/if}
@@ -568,7 +608,7 @@
                 <span class="title">{#if rowIcon}<span class="mark" style={inked(inkOf(String(titled.value(row))))}><Icon icon={rowIcon} /></span>{/if}{titled.value(row)}</span>
               {/if}
               {#each lines as c (c.key)}
-                <span class="sub"><Cell value={c.value(row)} kind={c.kind === 'badge' ? 'text' : c.kind} record={c.record} /></span>
+                <span class="sub"><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} /></span>
               {/each}
             </span>
             <span class="meta">
@@ -668,6 +708,16 @@
   .list li.group {
     min-height: 0;
     padding: var(--space-3) var(--space-3) var(--space-1);
+  }
+  /* The first group has nothing above it but the filter bar, which keeps
+     its own gap: no room of its own above it. */
+  .list li.group:first-child {
+    padding-top: 0;
+  }
+  /* Grouped, the rows sit inset from their group's bar at both ends, so
+     each reads as held by the header above it. */
+  .list.nested li:not(.group) {
+    margin-inline: var(--space-3);
   }
   /* The title's link covers its row, so the whole row opens the item. */
   .stretched::after {

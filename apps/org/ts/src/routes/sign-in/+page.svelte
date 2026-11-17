@@ -20,5 +20,5 @@
   {/snippet}
   {const data = $derived(await offered)}
   {const s = $derived(await around)}
-  <SignIn scope={s.scope.address} back={data.back} fixtures={data.fixtures} demo={data.demo} />
+  <SignIn scope={s.scope.address} name={s.scope.name} back={data.back} fixtures={data.fixtures} demo={data.demo} />
 </svelte:boundary>

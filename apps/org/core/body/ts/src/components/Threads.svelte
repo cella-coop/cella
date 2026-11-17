@@ -1,19 +1,23 @@
 <script lang="ts">
-  import { Button, Field, Form, Hidden, Note } from '@cella/org-ui'
-  import { label, threads, type Comment, type Named } from '../models/thread.ts'
+  import { onMount } from 'svelte'
+  import { Form, Hidden, RichField } from '@cella/org-ui'
+  import { threads, type Comment, type Named } from '../models/thread.ts'
   import { useThreads } from '../hooks/useThreads.ts'
   import Thread from './Thread.svelte'
 
-  // A record's threads in its Activity, oldest first, and the box that
-  // posts a comment through the feat's `post` write, or a reply to the
-  // root chosen; typing `@` opens the mention picker, which offers the
-  // people who may read the record and inserts their `@name`, posted as
-  // their `@[address]`. One who may not discuss the record reads the
-  // threads and has no box. Each comment takes reactions where
-  // `reactions` says its circle has them on, toggled through `react`.
+  // A record's threads in its Activity, oldest first, each a card that
+  // replies at its foot, and under them the box that starts one, through
+  // the feat's `post` write, written rich (`RichField`); typing `@` opens
+  // the mention picker, which offers the people who may read the record
+  // and puts in their name as a chip, posted as their `@[address]`. One
+  // who may not discuss the record reads the threads and has no box.
+  // Each comment takes reactions where `reactions` says its circle has
+  // them on, toggled through `react`. `readers` is edit-time data: who the
+  // mention picker may offer, fetched in the browser once the box mounts,
+  // empty until it arrives, never awaited with the record at SSR.
   let {
     comments,
-    readers,
+    readers = async () => [],
     discuss,
     post,
     resolve,
@@ -21,7 +25,7 @@
     reactions = false,
   }: {
     comments: Comment[]
-    readers: Named[]
+    readers?: () => Promise<Named[]>
     discuss: boolean
     post: string
     resolve: string
@@ -29,35 +33,24 @@
     reactions?: boolean
   } = $props()
 
-  const box = useThreads(
-    () => comments,
-    () => readers,
-  )
+  const box = useThreads(() => readers())
+  // Only a box that can be written in needs whom to mention.
+  onMount(() => {
+    if (discuss) {
+      box.load()
+    }
+  })
   const shown = $derived(threads(comments))
-  const answering = $derived(shown.find((t) => t.root.id === box.reply)?.root ?? null)
-  const posted = $derived(box.posted)
 </script>
 
 {#each shown as t (t.root.id)}
-  <Thread thread={t} {resolve} {react} {reactions} {discuss} replying={box.reply === t.root.id} onreply={() => box.answer(t.root.id)} />
+  <Thread thread={t} {post} {resolve} {react} {reactions} {discuss} suggest={box.suggest} onreply={() => box.answer(t.root.id)} />
 {/each}
 {#if discuss}
-  {#if answering}
-    <Note text="Replying to {label({ person: answering.author, name: answering.name }, answering.author)}, {answering.posted}." />
-    <Button onclick={() => box.drop()}>Not a reply</Button>
-  {/if}
   <div data-box>
-    <Form action={post} submit={answering ? 'Reply' : 'Comment'} ready={posted.text.trim() !== ''} end>
-      <Hidden name="parent" value={answering?.id ?? ''} />
-      <Hidden name="text" value={posted.text} />
-      <Field label="Comment" name="typed" rows={3} placeholder="Say what you think; @ mentions someone" wide bind:value={box.typed} />
+    <Form action={post} bare>
+      <Hidden name="parent" value="" />
+      <RichField label="Comment" name="text" placeholder="Leave a comment…" send="Comment" suggest={box.suggest} />
     </Form>
-    {#if box.offered.length}
-      <div data-picker>
-        {#each box.offered as r (r.person)}
-          <Button onclick={() => box.pick(r)}>{r.name}</Button>
-        {/each}
-      </div>
-    {/if}
   </div>
 {/if}

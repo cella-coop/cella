@@ -18,12 +18,15 @@ export interface Field {
   label: string
   type: Type
   value: (row: any) => unknown
+  // The column's kind and record, which its values are drawn by.
+  kind?: Kind
+  record?: string
 }
 
-const types: Partial<Record<Kind, Type>> = { money: 'money', number: 'number', date: 'date', badge: 'enum', person: 'person', circle: 'circle' }
+const types: Partial<Record<Kind, Type>> = { money: 'money', number: 'number', date: 'date', badge: 'enum', priority: 'enum', person: 'person', circle: 'circle' }
 
 export const fields = (columns: Column[]): Field[] =>
-  columns.map((c) => ({ key: c.key, label: c.label, type: (c.kind && types[c.kind]) ?? 'text', value: c.value }))
+  columns.map((c) => ({ key: c.key, label: c.label, type: (c.kind && types[c.kind]) ?? 'text', value: c.value, kind: c.kind, record: c.record }))
 
 // The four fields the core read gives every collection's rows from the
 // log, which no slice declares: the dates and the actors of the first and
@@ -85,7 +88,7 @@ export type Widget = Kpi | Chart
 // server for more.
 export const PAGE = 100
 
-export const limits = { widgets: 12, title: 80, values: 24, value: 60 }
+export const limits = { widgets: 12, title: 80, values: 24, value: 60, group: 20 }
 
 const object = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x)
 
@@ -299,10 +302,22 @@ export const sorting = (raw: string | null, fs: Field[]): Sort | null => {
 }
 export const sortKey = (s: Sort | null): string => (s ? `${s.dir === 'desc' ? '-' : ''}${s.field}` : '')
 
-// What a view groups its rows by: an enumeration, a person, a circle, or
-// a date, by its month; and what a board's columns are, never months.
-export const groupable = (f: Field) => f.type === 'enum' || f.type === 'person' || f.type === 'circle' || f.type === 'date'
-export const laned = (f: Field) => groupable(f) && f.type !== 'date'
+// What a view groups its rows by: an enumeration, a person, a circle, a
+// date (by its month), a record link (a field naming a record, drawn by
+// its icon), a boolean, and a text field holding few distinct values,
+// `held` as the server read them: at least one and at most `limits.group`;
+// free text, money and numbers stay out. Where `held` is not known, as
+// when an address names the field before the rows are read, a text field
+// is allowed. A board's columns are the same but never a date.
+export const groupable = (f: Field, held?: string[]) =>
+  f.type === 'enum' ||
+  f.type === 'person' ||
+  f.type === 'circle' ||
+  f.type === 'date' ||
+  f.kind === 'boolean' ||
+  (!!f.record && f.type !== 'money' && f.type !== 'number') ||
+  (f.type === 'text' && (f.kind === undefined || f.kind === 'text') && (held === undefined || (held.length > 0 && held.length <= limits.group)))
+export const laned = (f: Field, held?: string[]) => groupable(f, held) && f.type !== 'date'
 
 // The field a view groups its rows by: its own, which the collection's
 // look gives it until a view changes it (`spec`), in every layout but a
@@ -316,7 +331,7 @@ export const grouping = (s: Pick<Spec, 'layout' | 'by' | 'columns'>, fs: Field[]
     return fs.find((f) => f.key === s.by && groupable(f))
   }
   const named = (key: string | null | undefined) => fs.find((f) => f.key === key && laned(f))
-  return named(s.columns ?? s.by) ?? named(look.by) ?? fs.find((f) => f.type === 'enum') ?? fs.find(laned)
+  return named(s.columns ?? s.by) ?? named(look.by) ?? fs.find((f) => f.type === 'enum') ?? fs.find((f) => laned(f) && f.type !== 'text')
 }
 
 // A board's swimlanes: the field its rows group by, an enumeration, a
@@ -538,7 +553,7 @@ export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[], look
     params.has(name) ? [...new Set((params.get(name) ?? '').split(','))].filter((k) => keys.has(k)) : base[name]
   // An empty sort is the collection's own order.
   const sort = params.has('sort') ? sorting(params.get('sort'), fs) : base.sort && keys.has(base.sort.field) ? base.sort : null
-  const groups = fs.filter(groupable).map((f) => f.key)
+  const groups = fs.filter((f) => groupable(f)).map((f) => f.key)
   const asks = params.get('by')
   // An empty `by` groups by nothing; none on a board means the first
   // enumeration, which the board chooses itself.
@@ -546,7 +561,7 @@ export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[], look
   // A board's columns, never a date; an empty `columns` names none, read
   // from `by` instead (`grouping`), as every board did before it had
   // columns of its own.
-  const laneable = fs.filter(laned).map((f) => f.key)
+  const laneable = fs.filter((f) => laned(f)).map((f) => f.key)
   const asksColumns = params.get('columns')
   const columns = asksColumns === '' ? null : asksColumns && laneable.includes(asksColumns) ? asksColumns : base.columns && laneable.includes(base.columns) ? base.columns : null
   // None means the first date, which the calendar chooses itself.
@@ -564,6 +579,14 @@ export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[], look
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
 
+// A condition with the values it keeps in order, for comparing
+// conditions by what they keep, not by the order they were picked in.
+export const canon = (w: Where): Where => ('is' in w ? { field: w.field, is: [...w.is].sort() } : w)
+const wheresame = (a: Where[] | undefined, b: Where[] | undefined) => {
+  const c = (ws: Where[] | undefined) => (ws ?? []).map(canon).sort((x, y) => x.field.localeCompare(y.field))
+  return same(c(a), c(b))
+}
+
 // The address of a view: its id, and what its spec changes from `base`,
 // what the server resolves the id to (a preset's spec over the
 // collection's look, or All's for a custom view), so a preset's own
@@ -577,7 +600,7 @@ export function address(id: string, s: Spec, base: Spec): string {
   if (s.layout !== base.layout) {
     q.set('view', s.layout)
   }
-  if (!same(s.where, base.where)) {
+  if (!wheresame(s.where, base.where)) {
     q.set('where', JSON.stringify(s.where))
   }
   for (const name of ['hide', 'order', 'cards'] as const) {
@@ -614,7 +637,7 @@ export function address(id: string, s: Spec, base: Spec): string {
 }
 
 // Whether two specs show the same thing.
-export const alike = (a: Spec, b: Spec) => same(a, b)
+export const alike = (a: Spec, b: Spec) => wheresame(a.where, b.where) && same({ ...a, where: [] }, { ...b, where: [] })
 
 // What a preset shows before the viewer changes anything, over the
 // collection's look.

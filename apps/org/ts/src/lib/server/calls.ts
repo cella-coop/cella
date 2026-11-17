@@ -2,6 +2,7 @@ import { ask as asking, counts, made, ordered, read, texts, today, type Db, type
 import { scoped } from '@cella/org-analytics'
 import { anchor, defaults, fields, grouping, limits, logged, period, resolve, swimlane, wheres, widgets, type Field, type Sort, type Spec } from '@cella/org-ui/models'
 import { named } from '@cella/org-log/api'
+import type { Named } from '@cella/org-body/models'
 import { people, person } from '@cella/org-person/api'
 import { lensed, lensing } from '#lib/server/lens.ts'
 import { drawn, keeping, run } from '#lib/server/reads.ts'
@@ -161,9 +162,12 @@ export const item = {
     if (!found) {
       throw new Missing(`${name} has no ${id}`)
     }
-    const added = await Promise.all(
-      m.extensions.filter((e) => e.extension.item).map(async (e) => [e.slice.name, await e.extension.item?.(db, id, who.actor)] as const),
-    )
+    // One after another: `db` is one connection, which runs one query at
+    // a time, so reading them at once would only queue them on it.
+    const added: (readonly [string, unknown])[] = []
+    for (const e of m.extensions.filter((e) => e.extension.item)) {
+      added.push([e.slice.name, await e.extension.item?.(db, id, who.actor)] as const)
+    }
     const viewer = who.session && { actor: who.session.actor, device: who.session.device }
     return {
       name,
@@ -174,6 +178,21 @@ export const item = {
       made: (await made(db, [id]))[id] ?? null,
       jumps: await jumps(db, name, id, who),
     }
+  },
+}
+
+// Whom a mention of an item may name, by the collection and the record:
+// edit-time data for the comment box's mention picker, read by the
+// browser only once the box mounts, never with the item at SSR.
+export const readers = {
+  schema: texts(['name', 'id']),
+  async run(db: Db, { name, id }: { name: string; id: string }, who: Reader): Promise<Named[]> {
+    const m = mounted(name)
+    const fn = m?.collection.readers
+    if (!m || !fn) {
+      throw new Missing(`There is no collection ${name} with readers`)
+    }
+    return (await fn(db, id, who.actor)) as Named[]
   },
 }
 
@@ -195,22 +214,21 @@ const naming = (from: string, collection: string): string | undefined => {
 // Settings, what waits on the reader and their own.
 async function jumps(db: Db, name: string, id: string, who: Reader) {
   const lens = await lensed(db, who.cookies, who.actor)
-  const found = await Promise.all(
-    slices
-      .flatMap((s) => Object.keys(s.collections ?? {}))
-      .filter((c) => c !== name && !owned(c)?.view.group)
-      .map(async (c) => {
-        const key = naming(c, name)
-        const from = key ? source(c, lens) : undefined
-        if (!key || !from) {
-          return null
-        }
-        const where = [{ field: key, is: [id] }]
-        const [count = 0] = await counts(db, from, [{ where }])
-        return count ? { collection: c, count, href: `/${c}?${new URLSearchParams({ where: JSON.stringify(where) })}` } : null
-      }),
-  )
-  return found.filter((j) => j !== null)
+  // One count after another, on `db`'s one connection, as above.
+  const found: { collection: string; count: number; href: string }[] = []
+  for (const c of slices.flatMap((s) => Object.keys(s.collections ?? {})).filter((c) => c !== name && !owned(c)?.view.group)) {
+    const key = naming(c, name)
+    const from = key ? source(c, lens) : undefined
+    if (!key || !from) {
+      continue
+    }
+    const where = [{ field: key, is: [id] }]
+    const [count = 0] = await counts(db, from, [{ where }])
+    if (count) {
+      found.push({ collection: c, count, href: `/${c}?${new URLSearchParams({ where: JSON.stringify(where) })}` })
+    }
+  }
+  return found
 }
 
 // Every item the command menu can jump to, from each collection's index.

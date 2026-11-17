@@ -1,9 +1,11 @@
 +++
 title = "Motion"
-updated = 2026-11-16
+updated = 2026-11-17
 +++
 
 How a circle acts as a whole: motions, proposed, voted on and closed, each carrying the actions it decides beyond its text, or none. A passed motion is a decision in plain speech; the code keeps no row and no name called decision. An outcome is computed from the signed votes, never claimed; each member's latest vote counts once. Each action a passed motion carries is an effect in the close's transaction, citing it, its actor whoever closed it, judged by its own guards, and what follows it, such as the capital a departure moves, is the reaction of the graft that knows it ([trust](../../../../_corpus/doc/trust.md#three-kinds-of-action)). A motion may adopt a policy, a sentence its circle binds itself by, which the register in org's core keeps ([policies](../../../../_corpus/doc/architecture.md#policies)).
+
+A motion's page reads as its proposal, in its proposer's words, then one Vote widget (`Inlay`, [the UI core](../../core/ui/index.md#widgets)): its state and deadline, the tally, where it stands by its procedure, a button for each stance with the reader's own marked, and what it decides, each action with its arguments as chips, a policy linking to the motion that made it. The title is not repeated.
 
 ## Actions
 
@@ -634,10 +636,15 @@ decided (whom it admits, the version it adopts, the outcome), what
 its actions change, each as its diff, and under
 them its Activity, the stances given in time order, their one home;
 Stances, the roll and the acting member's stance; Discussion, its
-deliberation, each message under the one it answers, a mention drawn by
+deliberation, drawn as every comment is
+([comments](../../core/ui/index.md#comments)): each conversation, a
+message that answers none with every reply under it, one card, each
+message in its rich text under the one it answers, a mention drawn by
 `membership-motion`'s `member` embed and a link by `document-motion`'s
-`document` embed, and while it is open a message as the acting member,
-or a reply to the one chosen; and Effects, what its actions do to the
+`document` embed; while it is open, a message's Reply, at its top right
+on hover, goes to the box at its card's foot, which answers the card's
+first message or the one Reply chose, said inside its top, and the box
+under the cards posts a message as the acting member; and Effects, what its actions do to the
 mandates and, once closed, the effects its close carried, or that it
 carries them at its close. Its diffs fill one slot by the kind of action:
 the graft that carries a kind out shows each change it makes as the UI

@@ -47,6 +47,17 @@ test('a task folds created, moved, completed and reopened', async () => {
   assert.deepEqual(await task(), { title: 'redacted', status: 'todo', priority: 'high', due: '2041-02-01', created: '2041-01-15', completed: null })
 })
 
+test('a task folds its priority and its due day changed, and a due day cleared', async () => {
+  await fold('fold_create', 20, 'task:task:create', '2041-02-01', { task: 't-9010', created: '2041-02-01', title: commitment, priority: 'normal', due: '2041-03-01', status: 'todo' })
+  const row = () => one(`SELECT priority, to_char(due, 'YYYY-MM-DD') AS due FROM task.task WHERE id = 't-9010'`)
+  await fold('fold_set', 21, 'task:task:set', '2041-02-02', { task: 't-9010', priority: 'urgent' })
+  assert.deepEqual(await row(), { priority: 'urgent', due: '2041-03-01' })
+  await fold('fold_set', 22, 'task:task:set', '2041-02-03', { task: 't-9010', due: '2041-04-01' })
+  assert.deepEqual(await row(), { priority: 'urgent', due: '2041-04-01' })
+  await fold('fold_set', 23, 'task:task:set', '2041-02-04', { task: 't-9010', due: null })
+  assert.deepEqual(await row(), { priority: 'urgent', due: null })
+})
+
 test('a body folds saved as the snapshot its entry carries, and a later save replaces it', async () => {
   const body = (text: string) => {
     const doc = createDoc(7n)

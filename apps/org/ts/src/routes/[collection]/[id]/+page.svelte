@@ -4,6 +4,7 @@
   import { Detail, Failed, recordIcon, Skeleton, useWrites, type Block, type Embeds, type Placed, type Tab } from '@cella/org-ui'
   import { stamps } from '@cella/org-ui/models'
   import { item as read } from '#lib/remote/item.remote.ts'
+  import { readers as readRecordReaders } from '#lib/remote/readers.remote.ts'
   import { collection, extensions } from '#lib/slices.ts'
   import { onCollection } from '#lib/writes.ts'
 
@@ -146,7 +147,11 @@
 
     {#snippet commenting()}
       {#if v.comment}
-        <v.comment.block data={v.comment.data} id={data.id} embeds={v.embeds} viewer={data.viewer} />
+        <!-- Keyed by the record shown, so a box reused for the next record
+             starts afresh and fetches that record's readers, never keeps the last. -->
+        {#key `${data.name}/${data.id}`}
+          <v.comment.block data={v.comment.data} id={data.id} embeds={v.embeds} viewer={data.viewer} readers={() => readRecordReaders({ name: data.name, id: data.id })} />
+        {/key}
       {/if}
     {/snippet}
 

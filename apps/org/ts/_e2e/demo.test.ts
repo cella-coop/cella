@@ -121,3 +121,27 @@ it('a successful Copy invite leaves the page where it is and shows Copied, never
     await browser.close()
   }
 })
+
+it('dismissing the banner leaves its watermark with the timer, + brings it back, and a reload keeps it dismissed', async () => {
+  await shell.start('2026-10-24', { CELLA_DEMO: '1', CELLA_DEMO_IDLE: '7200', CELLA_DEMO_LIFETIME: '7200' })
+  const browser = await chromium.launch()
+  try {
+    const context = await browser.newContext({ extraHTTPHeaders: { 'x-forwarded-proto': 'http', 'x-cella-browser': 'e2e-dismiss-banner' } })
+    await signIn(context, shell.base, camille)
+    const page = await context.newPage()
+    await page.goto(`${shell.base}/inbox`)
+    await page.getByRole('button', { name: 'Hide the demo banner' }).click()
+    assert.ok(await page.getByText('Prototype', { exact: true }).isVisible(), 'the watermark names the prototype')
+    await page.getByText(/\d:\d\d:\d\d/).waitFor()
+    const show = page.getByRole('button', { name: 'Show the demo banner' })
+    await show.waitFor()
+    await show.click()
+    await page.getByRole('button', { name: 'Hide the demo banner' }).waitFor()
+    await page.getByRole('button', { name: 'Hide the demo banner' }).click()
+    await page.reload()
+    await page.getByRole('button', { name: 'Show the demo banner' }).waitFor()
+    assert.equal(await page.getByRole('button', { name: 'Hide the demo banner' }).count(), 0, 'the strip stays dismissed across the reload')
+  } finally {
+    await browser.close()
+  }
+})

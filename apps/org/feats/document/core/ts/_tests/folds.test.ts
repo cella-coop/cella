@@ -76,6 +76,12 @@ test('a document folds started, edited, saved, commented on and adopted as its e
 
   await fold('fold_comment', 4, 'document:document:comment', '2041-01-13', { comment: 9003, version: 'folded-rules@1', quote: 'books open', anchor: null, text: { $commit: 'ab'.repeat(32) } })
   assert.deepEqual(await one(`SELECT author, text, anchor, resolved FROM document.comment WHERE id = 9003`), { author: camille, text: 'redacted', anchor: null, resolved: false })
+  await fold('fold_comment', 41, 'document:document:comment', '2041-01-13', { comment: 9007, version: 'folded-rules@1', quote: null, anchor: null, text: { $commit: 'cd'.repeat(32) } })
+  assert.deepEqual(await one(`SELECT quote, anchor FROM document.comment WHERE id = 9007`), { quote: null, anchor: null })
+  await refused(
+    () => fold('fold_comment', 42, 'document:document:comment', '2041-01-13', { comment: 9008, version: 'folded-rules@1', quote: 'books shut', anchor: null, text: { $commit: 'ef'.repeat(32) } }),
+    /folded-rules@1 does not hold the quoted text/,
+  )
 
   const adopt = (h: string) => ({ document: 'folded-rules', version: 'folded-rules@1', hash: h, adopted: '2041-01-14', receipt: 5, base: null, motion: 'm-2041-001', adoption: 9004 })
   await refused(() => fold('fold_adopt', 5, 'document:document:adopt', '2041-01-14', adopt('0'.repeat(64))), /entry 5 adopts folded-rules@1 hashed 0+, where the fold holds it hashed/)

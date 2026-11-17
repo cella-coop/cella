@@ -189,3 +189,25 @@ textarea {
     background: none !important;
   }
 }
+
+/* The rows of every list and menu, in one place: a neutral fill on hover
+   and under the keyboard, the chosen one tinted in the accent with its
+   text at full strength and a bare check at the end (`Tick`), and both
+   shown where the chosen row is hovered. */
+button[role='option']:not([aria-disabled='true'], :disabled):hover,
+button[role='option']:focus-visible,
+button[role^='menuitem']:hover,
+button[role^='menuitem']:focus-visible {
+  background: var(--hover);
+}
+button[role='option'][aria-selected='true'],
+button[role='menuitemradio'][aria-checked='true'],
+button[role='menuitemcheckbox'][aria-checked='true'] {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+button[role='option'][aria-selected='true']:hover,
+button[role='menuitemradio'][aria-checked='true']:hover,
+button[role='menuitemcheckbox'][aria-checked='true']:hover {
+  background: color-mix(in oklab, var(--hover) 55%, var(--accent-soft));
+}

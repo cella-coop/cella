@@ -54,11 +54,11 @@ export interface Saved {
   frontier: Frontier
 }
 
-// A comment on a version, on the text it quotes, which must lie within
-// one block of the version.
+// A comment on a version: on the document as a whole, with no quote, or on
+// the text it quotes, which the version must hold.
 export interface Comment {
   version: string
-  quote: string
+  quote: string | null
   text: string
 }
 
@@ -133,7 +133,8 @@ export interface Note {
   version: string
   author: string
   at: string
-  quote: string
+  // What it quotes; null for a comment on the document as a whole.
+  quote: string | null
   text: string
   resolved: boolean
   anchor: Anchor | null

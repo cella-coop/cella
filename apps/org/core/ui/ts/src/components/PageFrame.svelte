@@ -110,11 +110,12 @@
               class:on={shell.drawer && p === open}
               aria-selected={shell.drawer && p === open}
               aria-controls={id}
-              title={p.label}
-              aria-label={p.label}
+              title={p.note ? `${p.label}: ${p.note}` : p.label}
+              aria-label={p.note ? `${p.label}, ${p.note}` : p.label}
               onclick={() => choose(p.id)}
             >
               <Icon icon={p.icon} />
+              {#if p.note}<span class="note" aria-hidden="true"></span>{/if}
             </button>
           {/each}
         </div>
@@ -269,6 +270,19 @@
     background: var(--hover);
     color: var(--text);
   }
+  /* A panel's note while it is shut: a small dot at its tab's corner. */
+  .panels button {
+    position: relative;
+  }
+  .note {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-border);
+  }
   .panels button.on {
     background: var(--sunk);
     color: var(--text);
@@ -310,7 +324,10 @@
     overflow-x: hidden;
     overflow-y: auto;
     min-width: 0;
-    padding: var(--space-4);
+    /* No inset of its own on the content's side: the content's padding
+       alone is the gap, as wide as the content's own edge by the sidebar
+       (the operator, 17 Nov). */
+    padding: var(--space-4) var(--space-4) var(--space-4) 0;
   }
   .panel {
     display: grid;
@@ -334,6 +351,7 @@
       z-index: 2;
       width: min(var(--drawer), 100%);
       height: 100%;
+      padding-left: var(--space-4);
       border-left: 1px solid var(--line);
       background: var(--float);
       box-shadow: var(--shadow-float);

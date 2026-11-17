@@ -51,9 +51,10 @@ async function may(db: Db, id: string): Promise<{ discuss: boolean; reactions: b
   return rows[0] ?? { discuss: false, reactions: false }
 }
 
-// A project's threads as its page reads them.
+// A project's threads as its page reads them. Who may be mentioned is
+// edit-time data, read separately by the comment box once it mounts.
 export async function threaded(db: Db, id: string): Promise<Threaded> {
-  return { comments: await comments(db, id), readers: await readers(db, id), ...(await may(db, id)) }
+  return { comments: await comments(db, id), ...(await may(db, id)) }
 }
 
 // The mentions waiting on the reader, in their Inbox: each mention of them

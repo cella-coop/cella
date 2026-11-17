@@ -6,7 +6,6 @@ import Terms from './blocks/Terms.svelte'
 import Roles from './blocks/Roles.svelte'
 import Electorate from './blocks/Electorate.svelte'
 import Membership from './blocks/Membership.svelte'
-import Outcome from './blocks/Outcome.svelte'
 import Changes from './blocks/Changes.svelte'
 import Organization from './blocks/Organization.svelte'
 import Features from './blocks/Features.svelte'
@@ -49,7 +48,7 @@ export const app: App = {
         ],
         // What its actions change, as their diffs, on its Overview and its
         // Effects.
-        blocks: [Outcome, Changes, { tab: 'stances', block: Electorate }, { tab: 'effects', block: Changes }],
+        blocks: [Changes, { tab: 'stances', block: Electorate }, { tab: 'effects', block: Changes }],
       },
     },
     people: {

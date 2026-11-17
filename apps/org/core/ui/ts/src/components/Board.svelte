@@ -4,7 +4,7 @@
   import { shift, type Shift } from '../models/query.ts'
   import { transfer } from '../attachments/transfer.ts'
   import { useDrag } from '../hooks/useDrag.ts'
-  import Cell from './Cell.svelte'
+  import Value from './Value.svelte'
   import Group from './Group.svelte'
   import Tile from './Tile.svelte'
 
@@ -78,7 +78,7 @@
       {const open = $derived(!!drag.carry.group && drag.carry.group === group && takes(drag.carry.origin, l))}
       <section class="lane" class:open class:aimed={drag.aimed(group, l)} data-drop-list={l} aria-label="{by.label}: {l}, {cards.length}">
         <h3>
-          {#if by.kind === 'person' || by.kind === 'circle'}<Cell value={l} kind={by.kind} />{:else}<span>{l}</span>{/if}
+          <Value value={l} kind={by.kind} tone={by.tone?.(cards[0] ?? {})} record={by.record} size="card" />
           <span class="count">{cards.length}</span>
         </h3>
         <div class="cards">
@@ -120,14 +120,20 @@
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: minmax(15rem, 1fr);
-    gap: var(--space-3);
+    gap: var(--space-2);
     overflow-x: auto;
-    align-items: start;
+    align-items: stretch;
   }
+  /* A column is a faint band off the page, a few percent of the text's
+     own colour over it, so it reads alike in light and dark; the gutters
+     between are narrow. */
   .lane {
     display: grid;
     gap: var(--space-2);
+    align-content: start;
     padding: var(--space-2);
+    grid-template-columns: minmax(0, 1fr);
+    background: color-mix(in oklab, var(--text) 1.5%, transparent);
     border-radius: var(--radius-panel);
     outline: 2px dashed transparent;
     outline-offset: -2px;
@@ -161,6 +167,7 @@
   .cards {
     display: grid;
     gap: var(--space-2);
+    grid-template-columns: minmax(0, 1fr);
     min-height: 2.5rem;
   }
 </style>

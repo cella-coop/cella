@@ -1,7 +1,5 @@
 // The threads' model, pure: a comment's text in parts, its mentions each
-// once in the order given; a box's typed `@name` posted as `@[address]`
-// for the people the picker picked alone; the `@` being typed, which the
-// picker answers; a mention's label, erased once its person's name is;
+// once in the order given; a mention's label, erased once its person's name is;
 // a record's comments grouped into threads; and a comment's reactions
 // drawn as the six in order. Run by `cella test slice
 // body`.
@@ -23,25 +21,6 @@ test('a text reads in parts, each mention once in the order given', () => {
   ])
   assert.deepEqual(thread.mentioned(text), ['yusuf@lanterne.example', 'amina@lanterne.example'])
   assert.deepEqual(thread.mentioned('an address, yusuf@lanterne.example, is no mention'), [])
-})
-
-test('a box posts each picked person’s @name as their @[address], the longest name first, and leaves a name no one picked', () => {
-  const picked = [
-    { person: 'ana@x.example', name: 'Ana' },
-    { person: 'ana.b@x.example', name: 'Ana Bell' },
-  ]
-  assert.deepEqual(thread.composed('@Ana Bell and @Ana, not @Hugo', picked), {
-    text: '@[ana.b@x.example] and @[ana@x.example], not @Hugo',
-    mentions: ['ana.b@x.example', 'ana@x.example'],
-  })
-})
-
-test('the picker answers the @ being typed at the end, up to one space', () => {
-  assert.equal(thread.asking('Hello @yu'), 'yu')
-  assert.equal(thread.asking('@'), '')
-  assert.equal(thread.asking('Hello @Yusuf D'), 'Yusuf D')
-  assert.equal(thread.asking('mail me at a@b'), null)
-  assert.equal(thread.asking('Hello @Yusuf Demir and'), null)
 })
 
 test('a mention reads its person’s name, erased once it is, or the address where no one has it', () => {

@@ -11,9 +11,14 @@
     busy = false,
     disabled = false,
     onclick,
+    icon = false,
+    'aria-label': ariaLabel,
     children,
   }: {
-    tone?: 'primary' | 'quiet' | 'danger'
+    // Its icon alone, small and square, with no fill until hovered, as a
+    // comment's Reply; it is named by `aria-label` and `title`.
+    icon?: boolean
+    tone?: 'primary' | 'quiet' | 'danger' | 'subtle'
     type?: 'button' | 'submit'
     href?: string
     // A link that saves what it points to under this name, as an export.
@@ -25,14 +30,16 @@
     // Nothing to do yet, as a form with nothing changed.
     disabled?: boolean
     onclick?: (e: MouseEvent) => void
+    // An icon-only button's name, where its words say nothing of it.
+    'aria-label'?: string
     children: Snippet
   } = $props()
 </script>
 
 {#if href}
-  <a class="button {tone}" {href} {download} {title} {onclick}>{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}</a>
+  <a class="button {tone}" class:icon {href} {download} {title} {onclick} aria-label={ariaLabel}>{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}</a>
 {:else}
-  <button class="button {tone}" {type} {title} {onclick} {disabled} aria-busy={busy} aria-disabled={busy}>
+  <button class="button {tone}" class:icon {type} {title} {onclick} {disabled} aria-busy={busy} aria-disabled={busy} aria-label={ariaLabel}>
     {@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}
   </button>
 {/if}
@@ -52,6 +59,19 @@
     white-space: nowrap;
     transition: background var(--fast) var(--ease);
   }
+  .button.icon {
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    background: none;
+    color: var(--text-muted);
+    font-size: var(--text-md);
+  }
+  .button.icon:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
   .button:disabled {
     opacity: 0.5;
     cursor: default;
@@ -66,6 +86,16 @@
   }
   .quiet:hover {
     background: var(--hover);
+  }
+  /* A secondary way somewhere, as the sidebar's More…: no fill and the
+     dimmest text until hovered, so it never competes with what it follows. */
+  .subtle {
+    background: none;
+    color: oklch(var(--shade-5) var(--tone-base));
+  }
+  .subtle:hover {
+    background: var(--hover);
+    color: var(--text);
   }
   /* The one primary action, the site's own ink
      (`styles/base.css`'s `--primary-fill`, the ink specimen's lead). */

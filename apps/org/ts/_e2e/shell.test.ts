@@ -270,23 +270,23 @@ test('the stance form starts at the acting member\'s latest stance, and is not o
 
 test('a motion\'s overview says what is decided in full; its stances are their own tab', async () => {
   const overview = await page('/motions/m-2026-012')
-  for (const says of ['Overview', 'Stances', 'Proposal', 'admits', 'Inès Haddad', 'passes by consent', 'Deadline 31 Oct 2026']) {
+  for (const says of ['Overview', 'Stances', 'Vote', 'admits', 'Inès Haddad', 'passes by consent', 'Closes 31 Oct 2026']) {
     assert.ok(overview.text.includes(says), `the overview says ${says}`)
   }
   assert.ok(!overview.text.includes('Latest stance'), 'the roll is not on the overview')
   const stances = await page('/motions/m-2026-012?tab=stances')
-  assert.ok(stances.text.includes('Latest stance') && !stances.text.includes('>Proposal<'), 'the stances tab holds the roll alone')
+  assert.ok(stances.text.includes('Latest stance') && !stances.text.includes('data-widget="vote"'), 'the stances tab holds the roll alone')
 })
 
-test('a motion lands with its vote panel in view, above its body, and discussion is no tab of its own', async () => {
+test('a motion lands with its vote widget in view, after its body, and discussion is no tab of its own', async () => {
   const { text } = await page('/motions/m-2026-012')
   const at = (needle: string) => text.indexOf(needle)
   assert.ok(at('data-write="vote"') > 0, 'the vote write is on the page as it lands, needing no click to a tab')
-  assert.ok(at('data-write="vote"') < at('>Proposal<'), 'the vote panel sits above the proposal, its body')
+  assert.ok(at('class="prose') < at('data-write="vote"'), 'the vote widget sits after the proposal, its body')
   assert.ok(!text.includes('Discussion'), 'Discussion is no tab and no block of its own')
   // Asking for the tab it used to hold reads the overview instead, not a
   // tab that no longer exists.
-  assert.ok((await page('/motions/m-2026-012?tab=discussion')).text.includes('>Proposal<'), 'tab=discussion now reads as the overview')
+  assert.ok((await page('/motions/m-2026-012?tab=discussion')).text.includes('data-widget="vote"'), 'tab=discussion now reads as the overview')
 })
 
 test('a card dropped on a closed column is the close write; refused before the deadline, it stays open', async () => {

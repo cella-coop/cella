@@ -56,10 +56,32 @@ test('a version is generated from its snapshot, numbered, and never changes', as
 
 test('a comment quotes text its version holds', async () => {
   await db.query(`INSERT INTO document.comment (version, author, at, quote, text) VALUES ('card@1', 'malik@lanterne.example', '2026-10-24', 'Solidarity: 380 €', 'ok')`)
+})
+
+test('a comment that quotes nothing is on the document as a whole, and has no anchor', async () => {
+  const { rows } = await db.query<{ quote: string | null; anchor: unknown }>(
+    `INSERT INTO document.comment (version, author, at, quote, text) VALUES ('card@1', 'malik@lanterne.example', '2026-10-24', NULL, 'Is the card ready?')
+     RETURNING quote, anchor`,
+  )
+  assert.deepEqual(rows[0], { quote: null, anchor: null })
+  await db.query('SAVEPOINT s')
+  await assert.rejects(
+    db.query(`INSERT INTO document.comment (version, author, at, quote, anchor, text) VALUES ('card@1', 'malik@lanterne.example', '2026-10-24', NULL, '{"block":"b","from":"f","to":"t"}', 'no')`),
+    /violates check constraint/,
+  )
+  await db.query('ROLLBACK TO SAVEPOINT s')
+})
+
+test('a comment quoting text its version does not hold is refused', async () => {
   await db.query('SAVEPOINT s')
   await assert.rejects(
     db.query(`INSERT INTO document.comment (version, author, at, quote, text) VALUES ('card@1', 'malik@lanterne.example', '2026-10-24', '9 999 €', 'no')`),
-    /does not hold the quoted text/,
+    /card@1 does not hold the quoted text/,
+  )
+  await db.query('ROLLBACK TO SAVEPOINT s')
+  await assert.rejects(
+    db.query(`INSERT INTO document.comment (version, author, at, quote, text) VALUES ('card@1', 'malik@lanterne.example', '2026-10-24', '', 'no')`),
+    /violates check constraint/,
   )
   await db.query('ROLLBACK TO SAVEPOINT s')
 })

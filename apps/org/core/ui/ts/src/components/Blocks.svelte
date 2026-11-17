@@ -31,7 +31,7 @@
   .blocks {
     padding: var(--space-2) var(--space-2) var(--space-5) var(--space-5);
     font-family: var(--font-ui);
-    font-size: var(--text-lg);
+    font-size: var(--text-md);
     line-height: 1.55;
     max-width: 46rem;
     color: var(--text);
@@ -72,6 +72,18 @@
     cursor: grab;
     opacity: 0;
     transition: opacity var(--fast) var(--ease);
+  }
+  /* A heading's grip sits on its first line: past the heading's own top
+     margin, centred on a line of its size (1.25 its font, inside the
+     body's 1px and the text's 2px), the grip being 1.6rem tall. */
+  .blocks :global(.line:has(> .body .heading[data-level='1']) > .handle) {
+    margin-top: calc(var(--space-3) + 3px + var(--text-2xl) * 0.625 - 0.8rem);
+  }
+  .blocks :global(.line:has(> .body .heading[data-level='2']) > .handle) {
+    margin-top: calc(var(--space-3) + 3px + var(--text-xl) * 0.625 - 0.8rem);
+  }
+  .blocks :global(.line:has(> .body .heading[data-level='3']) > .handle) {
+    margin-top: calc(var(--space-2) + 3px + var(--text-lg) * 0.625 - 0.8rem);
   }
   .blocks :global(.line:hover > .handle),
   .blocks :global(.line > .handle:focus-visible),

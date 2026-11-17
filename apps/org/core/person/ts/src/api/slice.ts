@@ -1,5 +1,5 @@
 import { action, type Form, type Slice } from '@cella/org-db'
-import { forget, profile, revoke } from '../handlers/index.ts'
+import { enrol, forget, profile, revoke } from '../handlers/index.ts'
 import { devices, listing as listed } from '../drivers/device.ts'
 import { listing, people, person } from '../drivers/person.ts'
 import type { Profile } from '../models/person.ts'
@@ -12,8 +12,8 @@ import { contract } from './contract.ts'
 // and employment's. The inbox, what waits on the acting person, is filled by
 // the slices that know each kind of ask; this feat keeps none of its own.
 // Every device, listed. A person revokes one of their devices from
-// another, on their own page and in their Account settings; enrolling a
-// later device is not offered yet.
+// another, on their own page and in their Account settings; they enrol a
+// later device, a key another browser made, in their Account settings.
 export const slice: Slice = {
   name: 'person',
   queries: contract,
@@ -46,6 +46,7 @@ export const slice: Slice = {
       },
       actions: {
         profile: action('person:person:profile', (form, _, deps) => ({ person: deps.actor, ...given(form) }), profile),
+        enrol: action('person:device:enrol', (form, _, deps) => ({ address: deps.actor, key: form.get('key').trim(), label: form.get('label').trim() || 'new browser' }), enrol),
         revoke: action('person:device:revoke', (form) => ({ key: form.get('key') }), revoke),
       },
     },

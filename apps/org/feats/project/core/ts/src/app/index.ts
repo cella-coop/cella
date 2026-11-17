@@ -1,9 +1,8 @@
-import { icons, type App, type Tone } from '@cella/org-ui'
+import { icons, recordIcon, recordIcons, type App, type Tone } from '@cella/org-ui'
 import type { Detail, Project, State } from '../models/project.ts'
 import Archive from './blocks/Archive.svelte'
 import Budget from './blocks/Budget.svelte'
 import Create from './blocks/Create.svelte'
-import Icon from './blocks/Icon.svelte'
 import Milestones from './blocks/Milestones.svelte'
 import Body from './blocks/Body.svelte'
 import Comments from './blocks/Comments.svelte'
@@ -50,18 +49,25 @@ export const app: App = {
         // History at the drawer's foot instead, kept off this page's
         // crowded top (`history: false`, below).
         properties: (p: Detail) => [
+          // Its own icon, a cosmetic setting, picked in its popover.
+          { label: 'Icon', value: recordIcons.find((i) => i.slug === p.icon)?.name ?? null, icon: recordIcon(p.icon), ink: p.title, edit: { kind: 'icon' as const, write: 'icon', field: 'icon', current: p.icon } },
           { label: 'State', value: p.archived ? 'archived' : p.state, kind: 'badge', tone: p.archived ? 'neutral' : tones[p.state], group: 'State' },
           { label: 'Milestones', value: progress(p), group: 'State' },
           { label: 'Next', value: p.next, group: 'State' },
-          { label: 'Circle', value: p.circle, group: 'Circle' },
+          { label: 'Circle', value: p.circle, kind: 'circle' as const, group: 'Circle' },
           { label: 'Started', value: p.started, kind: 'date', group: 'Dates' },
           { label: 'Due', value: p.due, kind: 'date', group: 'Dates' },
           ...(p.archived ? [{ label: 'Archived', value: p.archived, kind: 'date' as const, group: 'Dates' }] : []),
-          { label: 'Budget', value: p.budget, kind: 'money', group: 'Money' },
+          {
+            label: 'Budget',
+            value: p.budget,
+            kind: 'money',
+            group: 'Money',
+            // Typed in euros; ordered, and refused below what was shared from it.
+            edit: p.archived ? undefined : { kind: 'text' as const, number: true, write: 'budget', field: 'amount', current: p.budget === null ? '' : String(p.budget / 100), hint: 'Budget in euros, 48000' },
+          },
         ],
         history: false,
-        // Its own icon, a cosmetic setting, in the drawer's Details.
-        details: [Icon],
         activity: (p: Detail) => [
           ...p.milestones.filter((m) => m.completed).map((m) => ({ at: m.completed ?? '', text: `completed ${m.title}` })),
           { at: p.started, text: 'started' },

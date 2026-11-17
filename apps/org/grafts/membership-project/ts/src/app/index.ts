@@ -6,7 +6,7 @@ import Shares from './blocks/Shares.svelte'
 
 // The graft's client side: what each project has shared out of its
 // budget, a project's shares and granting one in its Budget tab, its
-// crew, Linear's lead and members, set in its Details, and a member's
+// crew, Linear's lead and members, set in its People property's popover, and a member's
 // shares under Own and decide.
 export const app: App = {
   name: 'membership-project',
@@ -16,11 +16,14 @@ export const app: App = {
       page: {
         properties: (p: Pot) => [
           { label: 'Shared', value: p.shared, kind: 'money', group: 'Money' },
-          { label: 'Lead', value: p.lead?.address ?? null, kind: 'person', href: p.lead ? `/people/${p.lead.address}` : undefined, group: 'Lead and members' },
-          { label: 'Members', value: p.crew.length ? p.crew.map((m) => m.name).join(', ') : null, group: 'Lead and members' },
+          {
+            label: 'People',
+            value: null,
+            people: [...new Set([...(p.lead ? [p.lead.address] : []), ...p.crew.map((m) => m.address)])],
+            edit: { block: Crew, data: p },
+          },
         ],
         blocks: [{ tab: 'budget', block: Shares }],
-        details: [Crew],
       },
     },
     people: {

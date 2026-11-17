@@ -99,21 +99,23 @@
     background: var(--raised);
   }
   /* A state with a tone of its own: the same faint breath as an ink's,
-     of its soft tone, fading into the plain ground. */
+     of its soft tone, fading into the plain ground. Mixed in oklab, never
+     oklch, whose hue would travel the wheel between the tone and the
+     ground's and tint an amber bar green. */
   .bar[data-tone='positive'] {
-    background: linear-gradient(to right, color-mix(in oklch, var(--positive-soft) 50%, var(--raised)), var(--raised) 60%);
+    background: linear-gradient(to right, color-mix(in oklab, var(--positive-soft) 50%, var(--raised)), var(--raised) 60%);
   }
   .bar[data-tone='negative'] {
-    background: linear-gradient(to right, color-mix(in oklch, var(--negative-soft) 50%, var(--raised)), var(--raised) 60%);
+    background: linear-gradient(to right, color-mix(in oklab, var(--negative-soft) 50%, var(--raised)), var(--raised) 60%);
   }
   .bar[data-tone='warning'] {
-    background: linear-gradient(to right, color-mix(in oklch, var(--warning-soft) 50%, var(--raised)), var(--raised) 60%);
+    background: linear-gradient(to right, color-mix(in oklab, var(--warning-soft) 50%, var(--raised)), var(--raised) 60%);
   }
   /* A record's group: a faint breath of its ink at the start, fading
      into the plain ground (the operator, 16 Nov: much more subtle). The
      name keeps the usual text colour; its icon carries the ink. */
   .bar.inked {
-    background: linear-gradient(to right, color-mix(in oklch, var(--wash) 30%, var(--raised)), var(--raised) 60%);
+    background: linear-gradient(to right, color-mix(in oklab, var(--wash) 30%, var(--raised)), var(--raised) 60%);
   }
   .chevron,
   .create {

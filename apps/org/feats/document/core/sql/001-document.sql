@@ -44,18 +44,19 @@ CREATE TABLE document.version (
   CHECK (id = document || '@' || n)
 );
 
--- A comment on a version, on the text it quotes within one block, and
--- anchored there by Loro cursors at the quote's ends (`{ block, from, to }`,
--- each cursor in base64), which find the quote in the draft however the
--- text around it moves.
+-- A comment on a version: on the document as a whole, quoting nothing, or
+-- on the text it quotes, anchored where one block holds it by Loro cursors
+-- at the quote's ends (`{ block, from, to }`, each cursor in base64), which
+-- find the quote in the draft however the text around it moves. Only a
+-- quote is anchored.
 CREATE TABLE document.comment (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   version text NOT NULL REFERENCES document.version,
   author text NOT NULL,
   at date NOT NULL,
-  quote text NOT NULL CHECK (quote <> ''),
-  anchor jsonb CHECK (anchor IS NULL OR (anchor ? 'block' AND anchor ? 'from' AND anchor ? 'to')),
+  quote text CHECK (quote <> ''),
+  anchor jsonb CHECK (anchor IS NULL OR (quote IS NOT NULL AND anchor ? 'block' AND anchor ? 'from' AND anchor ? 'to')),
   text text NOT NULL,
   resolved boolean NOT NULL DEFAULT false
 );
@@ -120,10 +121,10 @@ CREATE TRIGGER permanent BEFORE UPDATE OR DELETE ON document.update
 CREATE TRIGGER permanent BEFORE UPDATE OR DELETE ON document.adoption
   FOR EACH ROW EXECUTE FUNCTION document.permanent();
 
--- A comment quotes text its version holds.
+-- A comment's quote, where it has one, is text its version holds.
 CREATE FUNCTION document.quotes() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  IF NOT EXISTS (SELECT FROM document.version v WHERE v.id = NEW.version AND strpos(v.plain, NEW.quote) > 0) THEN
+  IF NEW.quote IS NOT NULL AND NOT EXISTS (SELECT FROM document.version v WHERE v.id = NEW.version AND strpos(v.plain, NEW.quote) > 0) THEN
     RAISE EXCEPTION '% does not hold the quoted text', NEW.version
       USING ERRCODE = 'triggered_action_exception';
   END IF;

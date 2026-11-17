@@ -75,12 +75,13 @@ eachBrowser((name, launch) => {
     try {
       // Léa types `@Tho`, picks Thomas, and posts.
       const a = await open(lea, `/tasks/${task}`)
-      const field = box(a).locator('textarea')
+      const field = box(a).locator('[data-rich]')
       await field.waitFor()
-      await field.fill(`Can you check the wording in ${name}, @Tho`)
+      await field.click()
+      await a.keyboard.type(`Can you check the wording in ${name}, @Tho`)
       await box(a).locator('[data-picker] button', { hasText: 'Thomas Nguyen' }).click()
-      assert.equal(await field.inputValue(), `Can you check the wording in ${name}, @Thomas Nguyen `, `${name}: the picker puts Thomas's name in the box`)
-      await field.fill(`${await field.inputValue()}before Friday?`)
+      assert.equal(await field.locator('[data-token]').textContent(), '@Thomas Nguyen', `${name}: the picker puts Thomas's name in the box, as a chip`)
+      await a.keyboard.type('before Friday?')
       await box(a).getByRole('button', { name: 'Comment' }).click()
       await threads(a).first().waitFor({ timeout: 20_000 })
       await shows(a, '@Thomas Nguyen', `${name}: Léa's thread draws the mention by name`)
@@ -101,9 +102,10 @@ eachBrowser((name, launch) => {
       const b = await open(thomas, '/inbox')
       await shows(b, `Léa Bernard mentioned you on ${title}`, `${name}: Thomas's Inbox`)
       const b2 = await visit(b.context(), `/tasks/${task}`)
-      await threads(b2).first().getByRole('button', { name: 'Reply' }).click()
-      await box(b2).locator('textarea').fill('Checked: it reads well.')
-      await box(b2).getByRole('button', { name: 'Reply' }).click()
+      // Reply, at the root's top right, goes to the box at the thread's foot.
+      await threads(b2).first().locator('[data-comment]').first().getByRole('button', { name: 'Reply' }).click()
+      await b2.keyboard.type('Checked: it reads well.')
+      await threads(b2).first().locator('[data-box-field]').getByRole('button', { name: 'Reply' }).click()
       await shows(b2, 'Checked: it reads well.', `${name}: Thomas's reply`)
       assert.equal(await threads(b2).count(), 1, `${name}: the reply sits in Léa's thread`)
       const b3 = await visit(b.context(), '/inbox')
@@ -115,8 +117,8 @@ eachBrowser((name, launch) => {
       await a2.screenshot({ path: `${shots}/thread-${name}-light.png`, fullPage: true })
       await threads(a2).first().getByRole('button', { name: 'Resolve' }).click()
       await a2.waitForSelector('[data-thread]:not([data-resolved=""])', { timeout: 20_000 })
-      await shows(a2, 'Checked: it reads well.', `${name}: the resolved thread`, false)
-      await shows(a2, 'its reply folded away', `${name}: the resolved thread says what it folded`)
+      assert.equal(await a2.getByText('Checked: it reads well.').isVisible(), false, `${name}: the resolved thread folds its reply away`)
+      await shows(a2, 'Resolved on', `${name}: the resolved thread says so on its line`)
 
       // A reply to Thomas's reply is refused, naming the root.
       const reply = await su.query<{ id: string }>(`SELECT id FROM task.comment WHERE task = $1 AND author = $2`, [task, thomas])

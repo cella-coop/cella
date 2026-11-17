@@ -296,30 +296,29 @@ draws.
   without them and quiet lines where its content goes, static and
   holding no component with state; and when a query throws, not found
   or broken, with the error's status and message, inside the shell.
-- `Collection`: the one collection component, the same header, view bar
-  and rows for every collection, and a drawer holding one panel, View
-  (`Viewing`), of one shape for every collection, as Linear's display
-  menu. At its top the layout, a segmented control of icons (list ·
-  table · gallery · board · calendar · dashboard, those the
-  collection's fields allow), then the search box (Search), then the
-  same rows in the same order everywhere, each a label and a dropdown,
-  ending on one right edge: Group by
-  (any enumeration, person or circle field, a date by its month, or
-  None: a board's columns, never a month, and in a list, a
+- `Collection`: the one collection component, the same header, filter
+  bar, view bar and rows for every collection, and a drawer holding one
+  panel, View (`Viewing`), of one shape for every collection, as
+  Linear's display menu, display only: layout, grouping, sort and
+  fields. At its top the layout, a segmented control of icons (list ·
+  table · gallery · board · calendar, those the
+  collection's fields allow; a dashboard is no choice here, though a view
+  already laid out as one keeps showing it and rendering as it does), then the same rows in the same order
+  everywhere, each a label and a dropdown, ending on one right edge:
+  Group by (any enumeration, person or circle field, a record link, a
+  boolean, a text field holding few distinct values, at most 20 across
+  the rows, a date by its
+  month, or None: a board's columns, never a month, and in a list, a
   table and a gallery a header over each group's rows, naming its
   value, a date's month in full, and its count as a board's column
   does, the field leaving the rows, as its header names it; a
   calendar's date, and month or week, and a value that colours
   each card, a legend over the calendar naming each value with its
-  colour and count), Order by (the direction's toggle, ascending or
+  colour and count) and Order by (the direction's toggle, ascending or
   descending, before it, and the field alone, any of the collection's;
   the order the view opened with, else the field its read leads with,
   else As listed, is marked quietly in the options as the default,
-  never named in the panel) and Filter (a field to add a condition on: a date, or any field
-  with a handful of values, at most `limits.values`, an enumeration's
-  across every row and any other's across the rows the view would keep
-  without it, a person's and a circle's among them; the conditions
-  under it as chips); then Display, a
+  never named in the panel); then Display, a
   row that opens a popover of what is shown (in a list, the fields under
   and after each row's title, in a table, its columns, in
   a gallery or on a board, its cards' fields, in a calendar, its cards'
@@ -330,26 +329,58 @@ draws.
   read of its own for it
   ([the lens](../../../../_corpus/doc/architecture.md#the-lens)),
   disabled with no lens or where the lens leaves the collection whole;
-  and last, one row: Save, shown only once the view differs from what
-  it opened as, which keeps a view of the viewer's own or names a new
-  one, and Pin, with its pin icon, which pins the open view under
-  Pinned in the sidebar, or Unpin; on a view of the viewer's own, its
-  name over them and Delete after them. A row the layout has no use for is shown disabled, never
+  and last, on a view of the viewer's own, its name over its Delete. The
+  panel's pin is an icon alone, quiet, in its top-right corner on the
+  title's line (a filled pin once pinned, "Pin this view" or "Unpin this
+  view"), which pins the open view under Pinned in the sidebar. A row the layout has no use for is shown disabled, never
   dropped, so the rows never move; a control that offers no choice
   reads as its value, not as a control: a disabled field is muted, and
   a disabled select drops its field and chevron. What a collection offers lives only
   inside the dropdowns and popovers: its fields are a dropdown's
-  options, and a condition's values (a field's, each a person or a
-  circle by name, or a date's month or year) are picked in a popover
-  opened from its chip. A column says what it holds by its kind, and a
+  options. A column says what it holds by its kind, and a
   `person` or a `circle` column is a field of its own type, never text:
   it groups and filters by who or which circle, as an enumeration does
-  by its value. Every collection's fields end with the four the core
+  by its value.
+- `FilterBar`: the filter bar, always on its own line under the
+  collection's header and above its rows, at one height whether empty,
+  holding chips or searching, so nothing below it moves: chips on the
+  left, Search and + Filter on the right, a quiet empty line while no chip
+  holds. + Filter (key `F`) offers a
+  field to add a condition on: a date, or any field with a handful of
+  values, at most `limits.values`, an enumeration's across every row and
+  any other's across the rows the view would keep without it, a
+  person's and a circle's among them; choosing one opens its chip's
+  popover at once, a date keeping the current month, any other the
+  values it offers to pick among, a person's and a circle's by name.
+  Search (key `/`) is a magnifier that expands to an input, filtering
+  live as the typing pauses, in place on the bar's line (into the
+  address, as the view's text filter always did; the editor follows the
+  address, so back and forward, a view and Reset change what it holds)
+  and, on a blur, folding back to a chip, `Search contains "…"`, which
+  a click reopens to edit; Escape folds it back with its text kept, the
+  focus on its chip or magnifier. A chip reads its field, an operator and
+  its values: `is` for one value, `is any of` for several, `in` for a
+  date's month or year, `contains` for the search; the query model has no
+  other operators, so there is no operator step in adding one, and a
+  date's popover chooses between this month and this year. Every chip's
+  own × removes it at once, the focus going to + Filter; two conditions
+  keeping the same values are alike whatever order they were picked in;
+  a chip the open view's own saved form already held draws plain, one
+  this page added or changed since carries a small dot. While the view
+  differs from what it opened as, a small Save and Reset show at the
+  bar's end: Save goes through the same save the View panel's own always
+  did, a viewer's own view updated at once or a preset named as a new
+  one in the drawer; Reset returns to the view's own saved form, in the
+  address and in the search still being typed. Ad hoc filters live
+  wholly in the address (`where`, `q`), so they are shareable and
+  survive a reload; on a phone the chips scroll sideways, under the same
+  bar, and nothing wraps the page wider. Every collection's fields end
+  with the four the core
   read gives its rows from the log, which no slice declares (`logged`):
   Created and Updated, dates, and Created by and Updated by, people
   ([db](../db/index.md)), but where the collection has a field of the
   same key, as tasks' Created is their own (`logging`). They are fields
-  as any: Order by orders by them either way, Filter adds a condition on
+  as any: Order by orders by them either way, + Filter adds a condition on
   them, Group by groups by Created by and Updated by, and Display
   chooses them; a table shows them once a view does, as the shell's
   look of every collection hides them (`hide`), and a list, a gallery,
@@ -365,8 +396,8 @@ draws.
   a list, a table and a gallery draw a hundred rows at a time
   (`PAGE`), with a button under them that asks the address for the
   next hundred (`n`) and how many of the rows are drawn; the keyboard
-  moving past the last drawn row asks for the next page, and the text
-  filter goes into the address once the typing pauses, which draws the
+  moving past the last drawn row asks for the next page, and the search
+  goes into the address once the typing pauses, which draws the
   first page again. A grouped list, table or gallery reads its
   rows group by group, the groups in the order a board's columns take
   (`lanes`), any other value after them, months among them, the way the
@@ -383,7 +414,7 @@ draws.
   named New, so the two are never confused by a voice or a test) opens
   the same dialog (`Group`, `models/query.ts`'s `groupTint`). A
   board and a calendar place every row the view keeps. `Gallery`
-  lays the items out as cards (`Tile`); `Board` puts them in a column
+  lays the items out as cards (`Tile`, drawn as Linear's: a muted reference and a person's avatar on top, the title in two lines at most, the other fields as quiet unlabelled chips (`Chip`, a hairline outline with an icon or a tone's dot, none drawn for an empty field) and a muted created or updated line at the foot); `Board` puts them in a column
   per value of an enumeration, a person or a circle, each with its
   count, the board offered only where a field is one of them; `Calendar` puts them on the days of a
   month, in whole weeks from Monday, or of a week, by a date field, in
@@ -457,8 +488,8 @@ draws.
   the collection's `about` (the log verifies), since the page holds
   only a page of rows; a collection page renders nothing else, which the ui
   check enforces on the shell's `[collection]` page. Keyboard
-  first: `j`/`k` move, Enter opens, `/` filters (opening the drawer), `c`
-  opens New's dialog. The row `j`/`k` moves to takes the focus, one row in the
+  first: `j`/`k` move, Enter opens, `/` opens the filter bar's Search, `F`
+  its + Filter, `c` opens New's dialog. The row `j`/`k` moves to takes the focus, one row in the
   tab order at a time (a roving `tabindex`, the row's link out of it),
   so a screen reader reads it and the ring shows where the keyboard is;
   Tab leaves the rows from it and comes back to it, moving past the last
@@ -487,21 +518,37 @@ draws.
   takes comments (`comment`). Each slice gives its events newest first
   (`activity`), a comment's words as its `body`; the page merges every
   slice's and shows them oldest first, the box last. The drawer's
-  Details panel holds first the forms that set its structured fields,
-  where its slices set them there (`details`), as a task's assignee and
-  project, since a record whose content is its body keeps the main area
-  for it; then its properties, label and value rows on the drawer itself, with no card or panel around them, ending with the
-  record's Created, Updated, Created by and Updated by as the log has
-  them (`stamps`), the dates and actors of its first and latest
-  entries, which the item's read gives beside its data, but those its
-  slices' properties already name, as a task's Created; and under them
-  Related; nothing in the drawer is boxed. Related lists first its
+  Details panel holds its properties, in sections as Linear's drawer
+  has them, nothing boxed and no form in it: Properties, each one line,
+  an icon and its value, its name on hover and for a screen reader and
+  drawn beside the value only where the value cannot say what it is (a
+  figure, a count, a phrase; a status, a person, a circle, a date and a
+  record link go without); and Dates, each a calendar icon and the day.
+  A property with no value is not listed; Add property, at the end of
+  Properties, offers the empty ones that can be set. A press on a
+  property that can be changed (`edit` on its `Prop`) opens the popover
+  that changes it, through the write the property names, as a form
+  posts it: `Pick` for a choice among options, one or many, with a
+  search, each option with its icon, its tone's dot or its avatar and a
+  check on the chosen; the curated icon grid for a record's icon; a
+  calendar for a day; an input for text or a number; or, from a slice
+  that needs more (a project's lead and members), a block of its own
+  (`Editor`) drawn in the popover. A slice sets a property of a kind of
+  record from its `properties`, never a block in the Details. A
+  record's people are one property of avatars (`people`). Last, under
+  Related, one quiet line of the record's Created and Updated and by
+  whom as the log has them (`stamps`), the dates and actors of its
+  first and latest entries, which the item's read gives beside its
+  data, but those its slices' properties already name, as a task's
+  Created. Related, a section of its own, has each line one row with
+  its collection's icon in the record's ink and its title, ending in an
+  ellipsis, its kind on hover. Related lists first its
   jumps: each other collection whose rows name the record, by the
   collection's icon and name and how many of its rows the reader sees
   that name it, through their lens, counted in the core read's one
   statement as any other count is; the line opens that collection
   filtered to the record, the condition in the address (`?where=`) and
-  the view panel's Filter showing it. A row names a person by a person
+  the filter bar showing it as a chip. A row names a person by a person
   column's address, a circle by a circle column's id, and any other
   record by a column that says it is `of` that record's collection, as
   a task's hidden project id is a project's; never by who created or
@@ -600,11 +647,9 @@ draws.
   where it does not), `Ordered` (a list a slice's writes reorder, as an
   agenda: each row numbered, with its grip and its columns, what the
   slice puts at its end and a quiet removal when the slice offers one;
-  `fixed` drops both once the list may not change), `Prose`, `Note` (a quiet line), `Message` (one message of a thread:
-  who and when over what it says, set in by its depth as a reply, its
-  writes at its foot), `Reactions` (a message's reactions, a line at its
-  foot: each emoji with its count, each a write toggling the reader's
-  own, theirs filled, or read alone where the reader may not react),
+  `fixed` drops both once the list may not change), `Prose`, `Note` (a quiet line), the comment parts
+  ([comments](#comments)): `Conversation`, `Message`, `Reactions`,
+  `AddReaction`, `Remark`, `Rich` and `RichField`,
   `Mention` (a member or a document named inside a
   text, a quiet chip linking to it), `Icon`
   (Phosphor, duotone), `Outcome` (the last write's outcome, floating
@@ -685,6 +730,55 @@ than its text, and is hidden from assistive technology, since the text
 names the record. A collection that declares no icon, or that the shell
 does not mount, leaves the value bare; an enumeration, as a task's
 priority, names no record and wears none.
+
+### Comments
+
+Every comment is drawn by the same parts, as Linear draws them: a
+record's threads (core body's `Thread`), a motion's discussion and a
+document's comments alike, under the record's Activity.
+
+- `Conversation` is a thread: one quiet card, the board's tile's
+  hairline, its messages apart by space, replies set in under their
+  root, and at its foot the box that replies. A resolved thread folds to
+  one quiet line (`Resolved on` its day), which opens it.
+- `Message` is one comment: a small avatar, the author's name and a
+  quiet relative time on one line, the text under them at body size, and
+  under that its `foot`, as its reactions. Its `actions`, small icon
+  buttons (`Button`'s `icon`: Reply, Resolve, a smiley), sit at its top
+  right, shown on hover or focus, always where there is no hover.
+- `Reactions` draws a message's reactions only once one is given: a
+  small pill chip each, its emoji and count, the reader's own tinted
+  with `--accent-soft`, a click toggling theirs. `AddReaction` is the
+  smiley that opens the six in one tight row (`Popover`'s `icon`).
+- `Rich` draws a comment's text from its Markdown subset
+  (`models/rich.ts`): bold `**x**`, italic `*x*`, inline code, links
+  `[x](url)` to the web, mail or a path in the app, bullet and numbered
+  lists and quotes; a line break is a break and a blank line a
+  paragraph, so a plain comment reads as it was written. It is parsed
+  into nodes and drawn by them, never as HTML; a slice's `words` draws
+  each run of plain text, splitting out its mentions and links.
+- `RichField` writes it: a field with a faint edge, `rows` lines at
+  rest (two for a new comment, one for a reply, "Leave a reply…"),
+  growing as it is written, set as a document's text with no grip or
+  slash menu, and no label of its own (`label` names it to assistive
+  technology). A toolbar over a selection marks it bold, italic or
+  code, links it or makes it a list, as Ctrl or Cmd with B, I, E and K
+  do; `- `, `1. `, `> `, `**x**`, `*x*` and `` `x` `` typed become what
+  they say; Enter breaks the line. Its submit is a small round arrow
+  inside its bottom right, bright once there is text and dim before,
+  or Ctrl or Cmd with Enter, in a `Form` drawn `bare`. Where the slice
+  answers `suggest`, `@` or `[[` offers suggestions, picked by arrow and
+  Enter or a press, each put in as a chip that posts its token. It is
+  the browser's own editable text, read back as Markdown on each
+  change (`hooks/RichState.svelte.ts`), so the browser keeps the caret,
+  composition, undo and the clipboard; a paste is read as Markdown. Its
+  `head` sits inside its top: `Remark`, the quote a comment answers,
+  with a × that drops it, or read above a posted comment.
+
+### Widgets
+
+A record's body is its blocks, and everything else stays out of their way. What a slice shows inside it that is not a block is a widget: one inline panel, as a figure or a chart sits among text, a faint fill and a hairline, a muted header with an icon and a name and, at its end, a state (`Inlay`, whose `aside` fills the header's end). A widget may be interactive, is always distinguished as one, and takes the body's column. What it holds is composed of `Row` (items side by side, wrapping), `Tally` (a count per answer as one thin proportional bar over its counts), `Note`, `Cell` and a form; inside it `--inset` is nil, so these sit flush to its padding. A slice puts one widget where it has custom content, never a stack of sections beside its text: the motion's Vote is one, after the proposal. `Note` takes `quiet` for an empty state, italic, small and the dimmest shade ("No comments yet").
+
 
 ## Never native
 
@@ -896,6 +990,32 @@ what was typed and asks for a reload before it is sent again. The devices are ke
 `hooks/kept.svelte.ts` (`keep`, `kept`, `held`), each private key a
 CryptoKey the browser made, or derived for a fixture member, never
 exported.
+
+The sign-in page (`SignIn`) shows what a real member sees, in a card of
+its own on the pre-sign-in `Gate`, which is wide there to lay out the card
+and the test list. The card reads "Continue as" each person this browser
+keeps a key for, one full-width row each, the name alone, with a quiet
+remove at its right end that forgets the key in this browser (after a
+confirmation unless it is a fixture member's); with none it says this
+browser is not signed in and points to the invitation link or to Link
+device. Below the rows, "Link device" and, right-aligned, a quiet Help
+popover explaining the ways in: an invitation's link for a first device, or
+this browser approved from a device the person already uses; it opens
+leftward from its button (`Popover`'s `align="end"`). Link device is a
+step of its own: it takes over the whole card, with a Back at its top
+left that returns to the card as it was (Escape too, `SignInState.leave`).
+It asks for the person's address and a name for this browser, then
+makes a key here (`SignInState.make`) and shows its QR code and link,
+which open the person's Account settings on a device they are signed in
+on, with the key and its name filled in, and a pairing code (`pairCode`)
+to type there, since a link alone must not enrol a key; "I approved it,
+sign in" then signs in with the key. The dev server's fixture members,
+and a demo's members, are a list with no panel at the right edge of the
+screen ("Test accounts" or "Demo members"), below the card on a narrow
+one, each row with all its circles as compact chips on one line, the name
+giving way first; a person the card already shows is not offered again,
+and in a demo's room a member another browser leased reads `taken`,
+disabled.
 
 ## State
 

@@ -1,18 +1,16 @@
-// The View panel has one shape on every collection, in every browser:
-// signed in as Camille on the dev server, each collection the sidebar
-// mounts draws, under its layout and its text filter, the same rows in
-// the same order, Group by, Order by, Filter, Display and Circles,
-// whatever its fields; on a board, Columns above Grouping instead, as
-// Linear's. On tasks, a board, Columns is its enumeration, migrated from
-// the grouping an older view named, and Grouping opens on None, one
-// lane, until it names a field of its own, each lane the whole set of
-// columns; a field chosen in Filter opens its chip's popover, a value
-// picked there keeps the rows in the address and names itself on the
-// chip, and Remove takes the condition away; Display opens a popover of
-// the cards' fields. On meetings, a calendar, Group by is its date and
-// span. Light and dark, `SHOTS` names where its screenshots go. Nothing
-// is written. Run by `cella test e2e view`; Columns is driven by its
-// keyboard too.
+// The View panel has one shape on every collection, in every browser,
+// display only: signed in as Camille on the dev server, each collection
+// the sidebar mounts draws, under its layout, the same rows in the same
+// order, Group by, Order by, Display and Circles, whatever its fields,
+// and no Filter and no search box, which are the filter bar's (`filter`
+// covers those); on a board, Columns above Grouping instead, as Linear's.
+// On tasks, a board, Columns is its enumeration, migrated from the
+// grouping an older view named, and Grouping opens on None, one lane,
+// until it names a field of its own, each lane the whole set of columns;
+// Display opens a popover of the cards' fields. On meetings, a calendar,
+// rows name its Date, Show (a month or a week) and Colour by, never Group by. Light and dark, `SHOTS` names where its
+// screenshots go. Nothing is written. Run by `cella test e2e view`;
+// Columns is driven by its keyboard too.
 // covers: all
 
 import { test } from 'node:test'
@@ -20,11 +18,11 @@ import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
 import type { Page } from 'playwright-core'
 import { eachBrowser, serve, signIn } from './browser.ts'
-import { choose, chosen, offered } from './controls.ts'
+import { chosen } from './controls.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-view-shots'
-const rows = ['Group by', 'Order by', 'Filter', 'Display', 'Circles']
-const boardRows = ['Columns', 'Grouping', 'Order by', 'Filter', 'Display', 'Circles']
+const rows = ['Group by', 'Order by', 'Display', 'Circles']
+const boardRows = ['Columns', 'Grouping', 'Order by', 'Display', 'Circles']
 
 const panel = (page: Page) => page.locator('section.card', { has: page.getByRole('heading', { name: 'View', exact: true }) })
 
@@ -85,8 +83,8 @@ eachBrowser((name, launch) => {
         await page.screenshot({ path: `${shots}/tasks-${name}-${scheme}.png` })
         // Order by names a field alone, never "Default", its direction
         // before it, so every control ends on the panel's one right edge;
-        // the foot is one row, Pin with its icon, and Save only once the
-        // view changes.
+        // Pin is an icon in the corner. Filtering and Save are
+        // the filter bar's, never the panel's.
         assert.doesNotMatch((await view.textContent()) ?? '', /Default/, `${at}: the panel never says Default`)
         const edge = async (control: string) => {
           const box = await view.getByRole('combobox', { name: control }).boundingBox()
@@ -96,22 +94,22 @@ eachBrowser((name, launch) => {
         const ordering = await view.getByRole('combobox', { name: 'Order by' }).boundingBox()
         assert.ok(direction && ordering && direction.x + direction.width <= ordering.x + 1, `${at}: the direction sits before Order by`)
         assert.ok(direction && ordering && Math.abs(direction.y - ordering.y) < 8, `${at}: the direction and Order by share a row`)
-        for (const control of ['Grouping', 'Order by', 'Filter', 'Circles']) {
+        for (const control of ['Grouping', 'Order by', 'Circles']) {
           assert.ok(Math.abs((await edge(control)) - (await edge('Columns'))) < 1.5, `${at}: ${control} ends on Columns's right edge`)
         }
-        const save = view.getByRole('button', { name: 'Save', exact: true })
-        const pin = view.getByRole('button', { name: 'Pin', exact: true })
-        assert.equal(await save.count(), 0, `${at}: no Save before the view changes`)
-        assert.equal(await pin.locator('svg').count(), 1, `${at}: Pin wears its pin`)
-        assert.equal(await view.getByPlaceholder('Search').count(), 1, `${at}: the search box says Search`)
+        const pin = view.getByRole('button', { name: 'Pin this view', exact: true })
+        assert.equal(await view.getByRole('button', { name: 'Save', exact: true }).count(), 0, `${at}: no Save in the View panel, which the filter bar carries instead`)
+        assert.equal(await pin.locator('svg').count(), 1, `${at}: Pin is an icon alone`)
+        assert.equal(await view.getByRole('button', { name: 'Filter', exact: true }).count(), 0, `${at}: the View panel offers no Filter`)
+        assert.equal(await view.getByPlaceholder('Search').count(), 0, `${at}: the View panel has no search box`)
         // Columns answers the keyboard: an arrow opens its list on the
-        // option chosen, which wears the check, as the active descendant;
+        // option chosen, which wears the check and takes the focus;
         // Escape closes it, choosing nothing, the focus staying on it.
         const by = view.getByRole('combobox', { name: 'Columns' })
         await by.focus()
         await page.keyboard.press('ArrowDown')
         assert.equal(await by.getAttribute('aria-expanded'), 'true', `${at}: an arrow opens Columns`)
-        const active = () => by.evaluate((el) => document.getElementById(el.getAttribute('aria-activedescendant') ?? '')?.dataset.value ?? null)
+        const active = () => page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset.value ?? null)
         assert.equal(await active(), 'status', `${at}: on the option chosen`)
         const list = page.locator(`[id="${await by.getAttribute('aria-controls')}"]`)
         assert.equal(await list.locator('[role=option][aria-selected=true]').filter({ has: page.locator('svg') }).count(), 1, `${at}: the chosen option wears its check`)
@@ -121,28 +119,6 @@ eachBrowser((name, launch) => {
         assert.equal(await by.getAttribute('aria-expanded'), 'false', `${at}: Escape closes it`)
         assert.ok(await by.evaluate((el) => el === document.activeElement), `${at}: the focus stays on Group by`)
         assert.equal(await chosen(by), 'status', `${at}: Escape chooses nothing`)
-        const filter
- = view.getByLabel('Filter', { exact: true }).last()
-        const field = (await offered(filter))[0]?.value
-        assert.ok(field, `${at}: Filter offers a field`)
-        await choose(filter, field)
-
-        const menu = page.getByRole('menu', { name: /^Condition on / })
-        await menu.waitFor()
-        const value = (await menu.getByRole('menuitemcheckbox').first().textContent())!.trim()
-        await page.screenshot({ path: `${shots}/tasks-condition-${name}-${scheme}.png` })
-        await menu.getByRole('menuitemcheckbox').first().click()
-        await page.waitForURL(/[?&]where=/)
-        // The rows follow the address once its query answers.
-        await view.locator('.chips', { hasText: `: ${value}` }).waitFor()
-        await save.waitFor()
-        const [saving, pinning] = [await save.boundingBox(), await pin.boundingBox()]
-        assert.ok(saving && pinning && Math.abs(saving.y - pinning.y) < 4, `${at}: Save and Pin share one row once the view changes`)
-        assert.match((await view.locator('.chips').textContent()) ?? '', new RegExp(`: ${value}`), `${at}: the chip names what it keeps`)
-        await menu.getByRole('menuitem', { name: 'Remove' }).click()
-        await page.waitForURL((u) => !u.searchParams.has('where'))
-        await view.locator('.chips').waitFor({ state: 'detached' })
-        assert.equal(await view.locator('.chips').count(), 0, `${at}: Remove takes the condition away`)
 
         await view.getByRole('button', { name: /card fields$/ }).click()
         const display = page.getByRole('dialog', { name: 'Display' })
@@ -152,7 +128,8 @@ eachBrowser((name, launch) => {
         await page.keyboard.press('Escape')
 
         await visit('/meetings')
-        assert.ok(await panel(page).getByLabel('Span').isVisible(), `${at}: a calendar groups by its date and span`)
+        assert.ok(await panel(page).getByLabel('Show').isVisible(), `${at}: a calendar names its date, its span and its colour`)
+        assert.equal(await panel(page).getByText('Group by').count(), 0, `${at}: a calendar groups nothing`)
         await page.screenshot({ path: `${shots}/meetings-${name}-${scheme}.png` })
 
         await visit('/timesheets')

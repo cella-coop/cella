@@ -1,6 +1,6 @@
 import type { Form } from '@cella/org-db'
 import { b64 } from '@cella/org-body/models'
-import { priorities, statuses, type Create, type Move, type Priority, type Save } from '../models/task.ts'
+import { priorities, statuses, type Change, type Create, type Move, type Priority, type Save } from '../models/task.ts'
 import type { Post, React, Resolve } from '../models/comment.ts'
 
 // What the shell's forms send, read into the handlers' inputs.
@@ -73,4 +73,17 @@ export function react(form: Form): React {
     throw new Error(`“${comment}” is no comment to react to`)
   }
   return { comment: Number(comment), emoji: form.get('emoji'), on: form.get('on') === 'true' }
+}
+
+// A change of one property, which `set` names: a priority, or the due
+// day, emptied to clear it.
+export function change(form: Form, task: string): Change {
+  const set = form.get('set')
+  if (set === 'priority') {
+    return { task, priority: priority(form.get('priority')) }
+  }
+  if (set === 'due') {
+    return { task, due: form.get('due') || null }
+  }
+  throw new Error(`a task changes its priority or its due day, not “${set}”`)
 }

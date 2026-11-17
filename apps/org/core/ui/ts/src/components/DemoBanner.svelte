@@ -161,4 +161,20 @@
   .actions :global(form) {
     display: contents;
   }
+  /* Both buttons wear the strip's amber: Reset quiet, in a dim outline,
+     and Copy invite the one bright fill, so it reads first. Copy
+     invite's fill and label are fixed, not shaded by theme, so the
+     label keeps about 8:1 on it in light and dark alike. */
+  .actions :global(.button.quiet) {
+    background: oklch(var(--shade-4) var(--tone-warning) / 35%);
+    border-color: oklch(var(--shade-6) var(--tone-warning));
+    color: var(--warning-text);
+  }
+  .actions :global(.button.quiet:hover) {
+    background: oklch(var(--shade-4) var(--tone-warning) / 60%);
+  }
+  .actions :global(.button.primary) {
+    background: oklch(0.8 0.15 80);
+    color: oklch(0.25 0.05 80);
+  }
 </style>

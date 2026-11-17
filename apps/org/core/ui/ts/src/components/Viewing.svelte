@@ -56,6 +56,7 @@
     shown,
     choices,
     grouped,
+    swimlane,
     placing,
     declared = null,
     opened,
@@ -81,7 +82,13 @@
     // those Display offers; and the board's enumeration, person or circle.
     shown: Column[]
     choices: Column[]
+    // A board's columns: the enumeration, person or circle its rows are
+    // drawn under; always resolved, even where the view names none of
+    // its own, migrated from `by` (`grouping`).
     grouped?: string
+    // A board's swimlanes: the field its rows group by, resolved, or
+    // undefined for a single lane.
+    swimlane?: string
     // The date a calendar places the rows by.
     placing?: string
     // The field the collection's read orders by first, and which way,
@@ -170,6 +177,20 @@
   // month.
   const as = (fs: { key: string; label: string; type?: string }[]) => fs.map((f) => ({ value: f.key, label: f.type === 'date' ? `${f.label}, by month` : f.label }))
   const none = { value: '', label: 'None' }
+
+  // A board's columns, chosen for the first time: `by` still read as
+  // them (`grouped`, `grouping`), so choosing frees it, Grouping opening
+  // on None rather than inheriting whatever it named.
+  function columned(key: string) {
+    change({ columns: key, ...(spec.columns === null ? { by: null } : {}) })
+  }
+
+  // A board's swimlane, chosen for the first time, while `columns` is
+  // still unset: locks it at what already draws (`grouped`), so it
+  // keeps drawing once `by` means the swimlane instead.
+  function swimlaned(key: string) {
+    change({ by: key || null, ...(key && spec.columns === null ? { columns: grouped ?? null } : {}) })
+  }
 
   function card(key: string, on: boolean) {
     change({ cards: choices.filter((c) => (c.key === key ? on : showing.has(c.key))).map((c) => c.key) })
@@ -267,10 +288,23 @@
   </div>
 
   <div class="rows">
-    <span class="label" id="{id}-group">Group by</span>
+    {#if spec.layout === 'board'}
+      <!-- A board's columns, above its Grouping, as Linear's: the
+           enumeration, person or circle its cards stand in, always
+           chosen, never None. -->
+      <span class="label" id="{id}-columns">Columns</span>
+      <div class="control">
+        <Select fit labelledby="{id}-columns" options={as(lanes)} bind:value={() => grouped ?? '', (v) => columned(v)} />
+      </div>
+    {/if}
+
+    <span class="label" id="{id}-group">{spec.layout === 'board' ? 'Grouping' : 'Group by'}</span>
     <div class="control">
       {#if spec.layout === 'board'}
-        <Select fit labelledby="{id}-group" options={as(lanes)} bind:value={() => grouped ?? '', (v) => change({ by: v })} />
+        <!-- None splits the board into a single lane, as it always
+             drew; a field splits it into a swimlane per value, each
+             holding the whole set of columns. -->
+        <Select fit labelledby="{id}-group" options={[none, ...as(lanes)]} bind:value={() => swimlane ?? '', (v) => swimlaned(v)} />
       {:else if spec.layout === 'calendar'}
         <Select fit labelledby="{id}-group" options={as(dates)} bind:value={() => placing ?? '', (v) => change({ on: v })} />
         <Select

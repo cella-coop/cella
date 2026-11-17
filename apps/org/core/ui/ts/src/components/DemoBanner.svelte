@@ -4,8 +4,9 @@
   import Timer from 'phosphor-svelte/lib/Timer'
   import { tip } from '../attachments/tip.ts'
   import { useCountdown } from '../hooks/useCountdown.ts'
+  import { useDismiss } from '../hooks/useDismiss.ts'
   import { useInvite } from '../hooks/useInvite.ts'
-  import { TestTube } from '../icons.ts'
+  import { Plus, TestTube, X } from '../icons.ts'
   import Button from './Button.svelte'
   import Icon from './Icon.svelte'
 
@@ -21,9 +22,11 @@
   // copy, refused while another browser is still in the room; and Copy
   // invite, whose link resolves to the room another browser opens it
   // from, copied to the clipboard, or opened as the join page itself
-  // where a browser holds none. It is never dismissed. The page using it
-  // pads its own foot by `--demo-banner-h`, which this sets as it
-  // mounts, so the strip hides nothing.
+  // where a browser holds none. The page using it pads its own foot by
+  // `--demo-banner-h`, which this sets as it mounts, so the strip hides
+  // nothing; dismissed, it is 0, and the strip is a small watermark
+  // instead, which brings it back (`DismissState`). The idle warning
+  // brings the strip back on its own.
   let { copy = 0, ends = 0, join = '' }: { copy?: number; ends?: number; join?: string } = $props()
 
   const id = $props.id()
@@ -32,6 +35,7 @@
     () => ends,
   )
   const invite = useInvite()
+  const dismiss = useDismiss(() => countdown.warn)
 
   // Copies the room's link, so another browser that opens it joins as one
   // of this room's members; `invite.copied` confirms it, briefly.
@@ -54,37 +58,56 @@
   }
 </script>
 
-<div class="demo" role="note" {@attach countdown.run} {@attach reserve}>
-  <span class="about">
-    <button type="button" class="trigger" aria-describedby="{id}-tip">
-      <Icon icon={TestTube} />
-      <span>Prototype · mock co-op</span>
-    </button>
-    <span class="tip" id="{id}-tip" role="tooltip" popover="manual" {@attach tip}>
-      <span
-        >Lanterne is a mock co-op: anyone may sign in as its members, whose keys anyone can derive.{#if copy}
-          This copy of it is yours alone to share; it resets after {countdown.span} idle.{/if}</span
-      >
-      <span>This is a prototype environment for demo purposes and can't be used for real work.</span>
+{#if !dismiss.hidden}
+  <div class="demo" role="note" {@attach countdown.run} {@attach reserve}>
+    <span class="about">
+      <button type="button" class="trigger" aria-describedby="{id}-tip">
+        <Icon icon={TestTube} />
+        <span>Prototype · mock co-op</span>
+      </button>
+      <span class="tip" id="{id}-tip" role="tooltip" popover="manual" {@attach tip}>
+        <span
+          >Lanterne is a mock co-op: anyone may sign in as its members, whose keys anyone can derive.{#if copy}
+            This copy of it is yours alone to share; it resets after {countdown.span} idle.{/if}</span
+        >
+        <span>This is a prototype environment for demo purposes and can't be used for real work.</span>
+      </span>
     </span>
-  </span>
-  {#if countdown.active}
-    <span class="timer" class:warn={countdown.warn}>
-      <Icon icon={Timer} />
-      <time>{countdown.left}</time>
+    {#if countdown.active}
+      <span class="timer" class:warn={countdown.warn}>
+        <Icon icon={Timer} />
+        <time>{countdown.left}</time>
+      </span>
+    {/if}
+    <span class="actions">
+      {#if copy}
+        <form method="post" action="/_demo/reset">
+          <Button tone="quiet" type="submit"><Icon icon={ArrowCounterClockwise} size="0.95em" />Reset</Button>
+        </form>
+      {/if}
+      {#if join}
+        <Button tone="primary" href="/_demo/join#{join}" onclick={copyInvite}><Icon icon={LinkSimple} size="0.95em" />{invite.copied ? 'Copied' : 'Copy invite'}</Button>
+      {/if}
     </span>
-  {/if}
-  <span class="actions">
-    {#if copy}
-      <form method="post" action="/_demo/reset">
-        <Button tone="quiet" type="submit"><Icon icon={ArrowCounterClockwise} size="0.95em" />Reset</Button>
-      </form>
+    <span class="hide">
+      <Button tone="quiet" aria-label="Hide the demo banner" onclick={() => dismiss.hide()}><Icon icon={X} size="0.95em" /></Button>
+    </span>
+  </div>
+{:else}
+  <p class="watermark" {@attach countdown.run}>
+    <Icon icon={TestTube} size="1rem" />
+    <span>Prototype</span>
+    {#if countdown.active}
+      <span class="timer" class:warn={countdown.warn}>
+        <Icon icon={Timer} size="0.95em" />
+        <time>{countdown.left}</time>
+      </span>
     {/if}
-    {#if join}
-      <Button tone="primary" href="/_demo/join#{join}" onclick={copyInvite}><Icon icon={LinkSimple} size="0.95em" />{invite.copied ? 'Copied' : 'Copy invite'}</Button>
-    {/if}
-  </span>
-</div>
+    <span class="show">
+      <Button tone="quiet" aria-label="Show the demo banner" onclick={() => dismiss.show()}><Icon icon={Plus} size="0.95em" /></Button>
+    </span>
+  </p>
+{/if}
 
 <style>
   .demo {
@@ -95,9 +118,13 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-2) var(--space-3);
+    /* Padding, row gap and the buttons below are each 20% shorter than
+       before (var(--space-2), 0.5rem, is now 0.4rem; the buttons' 2rem
+       is 1.6rem): the strip's measured offsetHeight goes from 48px to
+       38px, 20% less tall. */
+    gap: 0.4rem var(--space-3);
     margin: 0;
-    padding: var(--space-2) var(--space-3);
+    padding: 0.4rem var(--space-3);
     background: var(--warning-soft);
     color: var(--warning-text);
     font-size: var(--text-sm);
@@ -176,5 +203,44 @@
   .actions :global(.button.primary) {
     background: oklch(0.8 0.15 80);
     color: oklch(0.25 0.05 80);
+  }
+  /* The strip's buttons, 20% shorter than Button's own 2rem, in step
+     with the padding and gap above. */
+  .actions :global(.button),
+  .hide :global(.button),
+  .show :global(.button) {
+    height: 1.6rem;
+  }
+  /* The close button: square, no label, the strip's own quiet amber. */
+  .hide :global(.button) {
+    padding: 0;
+    width: 1.6rem;
+    justify-content: center;
+    background: none;
+    color: var(--warning-text);
+  }
+  .hide :global(.button:hover) {
+    background: oklch(var(--shade-4) var(--tone-warning) / 35%);
+  }
+  /* A subtle watermark where the strip is dismissed: the bottom of the
+     drawer (the frame's own right column, `PageFrame.svelte`), since it
+     sits flush with the viewport's corner; where a page has none, or it
+     is shut, the same corner is the content's own. */
+  .watermark {
+    position: fixed;
+    right: var(--space-4);
+    bottom: var(--space-3);
+    z-index: 20;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin: 0;
+    color: var(--text-subtle);
+    font-size: var(--text-xs);
+  }
+  .show :global(.button) {
+    padding: 0;
+    width: 1.6rem;
+    justify-content: center;
   }
 </style>

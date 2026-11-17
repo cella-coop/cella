@@ -11,6 +11,7 @@
     busy = false,
     disabled = false,
     onclick,
+    'aria-label': ariaLabel,
     children,
   }: {
     tone?: 'primary' | 'quiet' | 'danger'
@@ -25,14 +26,16 @@
     // Nothing to do yet, as a form with nothing changed.
     disabled?: boolean
     onclick?: (e: MouseEvent) => void
+    // An icon-only button's name, where its words say nothing of it.
+    'aria-label'?: string
     children: Snippet
   } = $props()
 </script>
 
 {#if href}
-  <a class="button {tone}" {href} {download} {title} {onclick}>{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}</a>
+  <a class="button {tone}" {href} {download} {title} {onclick} aria-label={ariaLabel}>{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}</a>
 {:else}
-  <button class="button {tone}" {type} {title} {onclick} {disabled} aria-busy={busy} aria-disabled={busy}>
+  <button class="button {tone}" {type} {title} {onclick} {disabled} aria-busy={busy} aria-disabled={busy} aria-label={ariaLabel}>
     {@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}
   </button>
 {/if}

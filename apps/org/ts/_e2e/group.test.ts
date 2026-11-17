@@ -1,4 +1,4 @@
-// A view groups its rows by an enumeration, a person or a circle, in
+// A view groups its rows by an enumeration, a person or a circle (or, as D adds, a record link, a boolean or a text field of few values), in
 // every browser: signed in as Julien on the dev server, the expenses
 // grouped by their status, an enumeration, in a list, a table, a gallery
 // and on a board; the files, by who

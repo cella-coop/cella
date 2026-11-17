@@ -305,7 +305,9 @@ draws.
   collection's fields allow; a dashboard is no choice here, though a view
   already laid out as one keeps showing it and rendering as it does), then the same rows in the same order
   everywhere, each a label and a dropdown, ending on one right edge:
-  Group by (any enumeration, person or circle field, a date by its
+  Group by (any enumeration, person or circle field, a record link, a
+  boolean, a text field holding few distinct values, at most 20 across
+  the rows, a date by its
   month, or None: a board's columns, never a month, and in a list, a
   table and a gallery a header over each group's rows, naming its
   value, a date's month in full, and its count as a board's column

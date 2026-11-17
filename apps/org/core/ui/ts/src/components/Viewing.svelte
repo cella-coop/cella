@@ -115,8 +115,8 @@
   const shell = useShell()
   const pinned = usePinned()
 
-  const groups = $derived(fields.filter(groupable))
-  const lanes = $derived(fields.filter(laned))
+  const groups = $derived(fields.filter((f) => groupable(f, values[f.key] ?? [])))
+  const lanes = $derived(fields.filter((f) => laned(f, values[f.key] ?? [])))
   const dates = $derived(fields.filter((f) => f.type === 'date'))
   // Dashboard is not offered; a view already laid out as one keeps it
   // shown, and keeps rendering as it does.

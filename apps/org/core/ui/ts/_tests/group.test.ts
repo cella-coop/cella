@@ -7,7 +7,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import type { Column } from '../src/models/view.ts'
-import { groupTint } from '../src/models/query.ts'
+import { fields, groupable, groupTint, laned } from '../src/models/query.ts'
 import { HUES, inkOf, nth, ROLES } from '../src/models/ink.ts'
 
 const base = readFileSync(new URL('../src/styles/base.css', import.meta.url), 'utf8')
@@ -36,4 +36,23 @@ test('a month, no value, and no record take no ink either', () => {
 test('the primary button already wears the specimen\'s lead ink', () => {
   const lead = nth(0)
   assert.match(base, new RegExp(`--primary-fill: oklch\\(${ROLES.fill.light} ${ROLES.fill.c} ${HUES[lead]}\\);`), 'the fill is the lead ink, fixed in both themes')
+})
+
+test('a view groups by a record link, a boolean and a text field of few values, never free text, money or numbers', () => {
+  const [client, done, kind, title, budget, count, date] = fields([
+    { key: 'client', label: 'Client', kind: 'mono', record: 'contacts', value: () => undefined },
+    { key: 'done', label: 'Done', kind: 'boolean', value: () => undefined },
+    { key: 'kind', label: 'Kind', value: () => undefined },
+    { key: 'title', label: 'Title', kind: 'title', value: () => undefined },
+    { key: 'budget', label: 'Budget', kind: 'money', value: () => undefined },
+    { key: 'count', label: 'Count', kind: 'number', value: () => undefined },
+    { key: 'due', label: 'Due', kind: 'date', value: () => undefined },
+  ])
+  assert.ok(groupable(client) && groupable(done), 'a record link and a boolean')
+  assert.ok(groupable(kind), 'text, while the values are not yet known')
+  assert.ok(groupable(kind, ['a', 'b']), 'text with a few values')
+  assert.ok(!groupable(kind, []) && !groupable(kind, Array.from({ length: 21 }, (_, i) => String(i))), 'no values, or more than twenty')
+  assert.ok(!groupable(title, ['a']) && !groupable(budget) && !groupable(count), 'a title, money and numbers stay out')
+  assert.ok(groupable(date) && !laned(date), 'a date groups but never makes a board\'s column')
+  assert.ok(laned(done) && laned(client), 'a boolean and a record link lane a board')
 })

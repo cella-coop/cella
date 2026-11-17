@@ -1,4 +1,5 @@
 import { SvelteSet } from 'svelte/reactivity'
+import { tick } from 'svelte'
 import { step, stop } from '../models/keys.ts'
 
 // What a collection's page holds while it is looked at: the text filter
@@ -10,17 +11,28 @@ import { step, stop } from '../models/keys.ts'
 // the server reads the rows again; rows and what is left are read through
 // getters, so they follow the page's data.
 export class CollectionState {
-  #filter = $state('')
+  // The text being typed, which holds only until the address catches up:
+  // while a keystroke waits to be asked, or the address still holds what it
+  // did when typing began; after that the address's own text is the
+  // editor's, so history, a view and Reset change it.
+  #typed = $state<{ text: string; from: string; waiting: boolean } | null>(null)
   // The keyboard's row, back to none whenever the filter changes the rows
   // it would index.
   active = $derived.by(() => {
-    void this.#filter
+    void this.filter
     return -1
   })
-  // The field the View panel adds a condition on, while its popover picks
+  // The field the filter bar adds a condition on, while its popover picks
   // the first value it keeps.
   adding: string | null = $state(null)
+  // The filter bar's search: expanded to its input, which a blur or
+  // Escape collapses back, to its chip once it holds text, else to the
+  // magnifier alone.
+  searching = $state(false)
   search: HTMLInputElement | undefined = $state()
+  // The filter bar's + Filter, wherever it is mounted, header or bar, so
+  // "F" opens it as a click would.
+  adder: HTMLButtonElement | undefined = $state()
   // The groups the viewer collapsed, by value; a reload opens them
   // again, as a view the address alone draws has no viewer to keep it
   // for. `SvelteSet`, so adding or deleting a value is itself seen,
@@ -31,6 +43,7 @@ export class CollectionState {
   readonly #left: () => number
   readonly #ask: { filter(q: string): void; more(): void }
   #typing: ReturnType<typeof setTimeout> | undefined
+  readonly #q: () => string
 
   // `q`, the text filter the page opened with, as a view's address holds;
   // `ask` takes a filter or a next page to the address.
@@ -38,17 +51,23 @@ export class CollectionState {
     this.#rows = rows
     this.#left = left
     this.#ask = ask
-    this.#filter = q()
+    this.#q = q
   }
 
   get filter() {
-    return this.#filter
+    const t = this.#typed
+    return t && (t.waiting || this.#q() === t.from) ? t.text : this.#q()
   }
 
   set filter(q: string) {
-    this.#filter = q
+    this.#typed = { text: q, from: this.#q(), waiting: true }
     clearTimeout(this.#typing)
-    this.#typing = setTimeout(() => this.#ask.filter(q), 250)
+    this.#typing = setTimeout(() => {
+      if (this.#typed) {
+        this.#typed.waiting = false
+      }
+      this.#ask.filter(q)
+    }, 250)
   }
 
   get shown() {
@@ -78,13 +97,30 @@ export class CollectionState {
     return stop(this.active, this.shown.length)
   }
 
-  clear() {
-    this.filter = ''
+  // Escape: the search folds back, its text kept, and the focus goes to
+  // what stands for it, its chip or the magnifier.
+  collapse() {
+    this.searching = false
     this.search?.blur()
+    this.refocus('[data-search-trigger]')
+  }
+
+  // The focus, deliberately, once the bar has been drawn again.
+  refocus(selector?: string) {
+    tick().then(() => {
+      const to = selector ? document.querySelector<HTMLElement>(selector) : this.adder
+      ;(to ?? this.adder)?.focus()
+    })
   }
 
   focus() {
     this.search?.focus()
+  }
+
+  // "F": opens + Filter's list of fields, as a click on it would.
+  openAdd() {
+    this.adder?.focus()
+    this.adder?.click()
   }
 
   // From the filter into the rows.

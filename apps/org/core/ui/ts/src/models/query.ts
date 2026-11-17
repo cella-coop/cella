@@ -564,6 +564,14 @@ export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[], look
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
 
+// A condition with the values it keeps in order, for comparing
+// conditions by what they keep, not by the order they were picked in.
+export const canon = (w: Where): Where => ('is' in w ? { field: w.field, is: [...w.is].sort() } : w)
+const wheresame = (a: Where[] | undefined, b: Where[] | undefined) => {
+  const c = (ws: Where[] | undefined) => (ws ?? []).map(canon).sort((x, y) => x.field.localeCompare(y.field))
+  return same(c(a), c(b))
+}
+
 // The address of a view: its id, and what its spec changes from `base`,
 // what the server resolves the id to (a preset's spec over the
 // collection's look, or All's for a custom view), so a preset's own
@@ -577,7 +585,7 @@ export function address(id: string, s: Spec, base: Spec): string {
   if (s.layout !== base.layout) {
     q.set('view', s.layout)
   }
-  if (!same(s.where, base.where)) {
+  if (!wheresame(s.where, base.where)) {
     q.set('where', JSON.stringify(s.where))
   }
   for (const name of ['hide', 'order', 'cards'] as const) {
@@ -614,7 +622,7 @@ export function address(id: string, s: Spec, base: Spec): string {
 }
 
 // Whether two specs show the same thing.
-export const alike = (a: Spec, b: Spec) => same(a, b)
+export const alike = (a: Spec, b: Spec) => wheresame(a.where, b.where) && same({ ...a, where: [] }, { ...b, where: [] })
 
 // What a preset shows before the viewer changes anything, over the
 // collection's look.

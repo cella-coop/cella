@@ -1,6 +1,6 @@
 +++
 title = "Org"
-updated = 2026-11-16
+updated = 2026-11-17
 +++
 
 The cooperative workspace, for member-governed organisations. One deployment
@@ -59,10 +59,14 @@ under the circle's accordions ([features](core/circle/index.md#features));
 the platform's are Settings', the member's Devices
 under Personal and the co-op's Imports under Organization, and Files is
 reached by the command menu ([the shell](core/ui/index.md#components)).
-Every collection is the same component, its drawer's View panel of one shape holding the
-layout (list, table, gallery, board, calendar or dashboard), the filter, Group by,
-Order by, Filter and Display, and every item the same detail view, its
-drawer's cards filled by the feat and the grafts that join it.
+Every collection is the same component: a filter bar on the line under
+its header, above its rows, chips of its conditions and its search on
+the left, + Filter and Search on the right (folded into the header
+instead while no chip holds), and its drawer's View panel of one shape
+holding the layout (list, table, gallery, board, calendar or
+dashboard), Group by, Order by and Display; and every item the same
+detail view, its drawer's cards filled by the feat and the grafts that
+join it.
 Ctrl-K jumps to any collection or item.
 
 What it writes, as the member picked in the user menu (dev only), each

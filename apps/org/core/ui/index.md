@@ -296,30 +296,27 @@ draws.
   without them and quiet lines where its content goes, static and
   holding no component with state; and when a query throws, not found
   or broken, with the error's status and message, inside the shell.
-- `Collection`: the one collection component, the same header, view bar
-  and rows for every collection, and a drawer holding one panel, View
-  (`Viewing`), of one shape for every collection, as Linear's display
-  menu. At its top the layout, a segmented control of icons (list ·
-  table · gallery · board · calendar · dashboard, those the
-  collection's fields allow), then the search box (Search), then the
-  same rows in the same order everywhere, each a label and a dropdown,
-  ending on one right edge: Group by
-  (any enumeration, person or circle field, a date by its month, or
-  None: a board's columns, never a month, and in a list, a
+- `Collection`: the one collection component, the same header, filter
+  bar, view bar and rows for every collection, and a drawer holding one
+  panel, View (`Viewing`), of one shape for every collection, as
+  Linear's display menu, display only: layout, grouping, sort and
+  fields. At its top the layout, a segmented control of icons (list ·
+  table · gallery · board · calendar, those the
+  collection's fields allow; a dashboard is no choice here, though a view
+  already laid out as one keeps showing it and rendering as it does), then the same rows in the same order
+  everywhere, each a label and a dropdown, ending on one right edge:
+  Group by (any enumeration, person or circle field, a date by its
+  month, or None: a board's columns, never a month, and in a list, a
   table and a gallery a header over each group's rows, naming its
   value, a date's month in full, and its count as a board's column
   does, the field leaving the rows, as its header names it; a
   calendar's date, and month or week, and a value that colours
   each card, a legend over the calendar naming each value with its
-  colour and count), Order by (the direction's toggle, ascending or
+  colour and count) and Order by (the direction's toggle, ascending or
   descending, before it, and the field alone, any of the collection's;
   the order the view opened with, else the field its read leads with,
   else As listed, is marked quietly in the options as the default,
-  never named in the panel) and Filter (a field to add a condition on: a date, or any field
-  with a handful of values, at most `limits.values`, an enumeration's
-  across every row and any other's across the rows the view would keep
-  without it, a person's and a circle's among them; the conditions
-  under it as chips); then Display, a
+  never named in the panel); then Display, a
   row that opens a popover of what is shown (in a list, the fields under
   and after each row's title, in a table, its columns, in
   a gallery or on a board, its cards' fields, in a calendar, its cards'
@@ -330,26 +327,58 @@ draws.
   read of its own for it
   ([the lens](../../../../_corpus/doc/architecture.md#the-lens)),
   disabled with no lens or where the lens leaves the collection whole;
-  and last, one row: Save, shown only once the view differs from what
-  it opened as, which keeps a view of the viewer's own or names a new
-  one, and Pin, with its pin icon, which pins the open view under
-  Pinned in the sidebar, or Unpin; on a view of the viewer's own, its
-  name over them and Delete after them. A row the layout has no use for is shown disabled, never
+  and last, on a view of the viewer's own, its name over its Delete. The
+  panel's pin is an icon alone, quiet, in its top-right corner on the
+  title's line (a filled pin once pinned, "Pin this view" or "Unpin this
+  view"), which pins the open view under Pinned in the sidebar. A row the layout has no use for is shown disabled, never
   dropped, so the rows never move; a control that offers no choice
   reads as its value, not as a control: a disabled field is muted, and
   a disabled select drops its field and chevron. What a collection offers lives only
   inside the dropdowns and popovers: its fields are a dropdown's
-  options, and a condition's values (a field's, each a person or a
-  circle by name, or a date's month or year) are picked in a popover
-  opened from its chip. A column says what it holds by its kind, and a
+  options. A column says what it holds by its kind, and a
   `person` or a `circle` column is a field of its own type, never text:
   it groups and filters by who or which circle, as an enumeration does
-  by its value. Every collection's fields end with the four the core
+  by its value.
+- `FilterBar`: the filter bar, always on its own line under the
+  collection's header and above its rows, at one height whether empty,
+  holding chips or searching, so nothing below it moves: chips on the
+  left, Search and + Filter on the right, a quiet empty line while no chip
+  holds. + Filter (key `F`) offers a
+  field to add a condition on: a date, or any field with a handful of
+  values, at most `limits.values`, an enumeration's across every row and
+  any other's across the rows the view would keep without it, a
+  person's and a circle's among them; choosing one opens its chip's
+  popover at once, a date keeping the current month, any other the
+  values it offers to pick among, a person's and a circle's by name.
+  Search (key `/`) is a magnifier that expands to an input, filtering
+  live as the typing pauses, in place on the bar's line (into the
+  address, as the view's text filter always did; the editor follows the
+  address, so back and forward, a view and Reset change what it holds)
+  and, on a blur, folding back to a chip, `Search contains "…"`, which
+  a click reopens to edit; Escape folds it back with its text kept, the
+  focus on its chip or magnifier. A chip reads its field, an operator and
+  its values: `is` for one value, `is any of` for several, `in` for a
+  date's month or year, `contains` for the search; the query model has no
+  other operators, so there is no operator step in adding one, and a
+  date's popover chooses between this month and this year. Every chip's
+  own × removes it at once, the focus going to + Filter; two conditions
+  keeping the same values are alike whatever order they were picked in;
+  a chip the open view's own saved form already held draws plain, one
+  this page added or changed since carries a small dot. While the view
+  differs from what it opened as, a small Save and Reset show at the
+  bar's end: Save goes through the same save the View panel's own always
+  did, a viewer's own view updated at once or a preset named as a new
+  one in the drawer; Reset returns to the view's own saved form, in the
+  address and in the search still being typed. Ad hoc filters live
+  wholly in the address (`where`, `q`), so they are shareable and
+  survive a reload; on a phone the chips scroll sideways, under the same
+  bar, and nothing wraps the page wider. Every collection's fields end
+  with the four the core
   read gives its rows from the log, which no slice declares (`logged`):
   Created and Updated, dates, and Created by and Updated by, people
   ([db](../db/index.md)), but where the collection has a field of the
   same key, as tasks' Created is their own (`logging`). They are fields
-  as any: Order by orders by them either way, Filter adds a condition on
+  as any: Order by orders by them either way, + Filter adds a condition on
   them, Group by groups by Created by and Updated by, and Display
   chooses them; a table shows them once a view does, as the shell's
   look of every collection hides them (`hide`), and a list, a gallery,
@@ -365,8 +394,8 @@ draws.
   a list, a table and a gallery draw a hundred rows at a time
   (`PAGE`), with a button under them that asks the address for the
   next hundred (`n`) and how many of the rows are drawn; the keyboard
-  moving past the last drawn row asks for the next page, and the text
-  filter goes into the address once the typing pauses, which draws the
+  moving past the last drawn row asks for the next page, and the search
+  goes into the address once the typing pauses, which draws the
   first page again. A grouped list, table or gallery reads its
   rows group by group, the groups in the order a board's columns take
   (`lanes`), any other value after them, months among them, the way the
@@ -457,8 +486,8 @@ draws.
   the collection's `about` (the log verifies), since the page holds
   only a page of rows; a collection page renders nothing else, which the ui
   check enforces on the shell's `[collection]` page. Keyboard
-  first: `j`/`k` move, Enter opens, `/` filters (opening the drawer), `c`
-  opens New's dialog. The row `j`/`k` moves to takes the focus, one row in the
+  first: `j`/`k` move, Enter opens, `/` opens the filter bar's Search, `F`
+  its + Filter, `c` opens New's dialog. The row `j`/`k` moves to takes the focus, one row in the
   tab order at a time (a roving `tabindex`, the row's link out of it),
   so a screen reader reads it and the ring shows where the keyboard is;
   Tab leaves the rows from it and comes back to it, moving past the last
@@ -501,7 +530,7 @@ draws.
   that name it, through their lens, counted in the core read's one
   statement as any other count is; the line opens that collection
   filtered to the record, the condition in the address (`?where=`) and
-  the view panel's Filter showing it. A row names a person by a person
+  the filter bar showing it as a chip. A row names a person by a person
   column's address, a circle by a circle column's id, and any other
   record by a column that says it is `of` that record's collection, as
   a task's hidden project id is a project's; never by who created or
@@ -896,6 +925,32 @@ what was typed and asks for a reload before it is sent again. The devices are ke
 `hooks/kept.svelte.ts` (`keep`, `kept`, `held`), each private key a
 CryptoKey the browser made, or derived for a fixture member, never
 exported.
+
+The sign-in page (`SignIn`) shows what a real member sees, in a card of
+its own on the pre-sign-in `Gate`, which is wide there to lay out the card
+and the test list. The card reads "Continue as" each person this browser
+keeps a key for, one full-width row each, the name alone, with a quiet
+remove at its right end that forgets the key in this browser (after a
+confirmation unless it is a fixture member's); with none it says this
+browser is not signed in and points to the invitation link or to Link
+device. Below the rows, "Link device" and, right-aligned, a quiet Help
+popover explaining the ways in: an invitation's link for a first device, or
+this browser approved from a device the person already uses; it opens
+leftward from its button (`Popover`'s `align="end"`). Link device is a
+step of its own: it takes over the whole card, with a Back at its top
+left that returns to the card as it was (Escape too, `SignInState.leave`).
+It asks for the person's address and a name for this browser, then
+makes a key here (`SignInState.make`) and shows its QR code and link,
+which open the person's Account settings on a device they are signed in
+on, with the key and its name filled in, and a pairing code (`pairCode`)
+to type there, since a link alone must not enrol a key; "I approved it,
+sign in" then signs in with the key. The dev server's fixture members,
+and a demo's members, are a list with no panel at the right edge of the
+screen ("Test accounts" or "Demo members"), below the card on a narrow
+one, each row with all its circles as compact chips on one line, the name
+giving way first; a person the card already shows is not offered again,
+and in a demo's room a member another browser leased reads `taken`,
+disabled.
 
 ## State
 

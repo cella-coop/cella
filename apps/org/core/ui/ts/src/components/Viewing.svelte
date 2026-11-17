@@ -5,15 +5,12 @@
   import SquaresFour from 'phosphor-svelte/lib/SquaresFour'
   import Kanban from 'phosphor-svelte/lib/Kanban'
   import CalendarDots from 'phosphor-svelte/lib/CalendarDots'
-  import Check from 'phosphor-svelte/lib/Check'
   import SortAscending from 'phosphor-svelte/lib/SortAscending'
   import SortDescending from 'phosphor-svelte/lib/SortDescending'
   import PushPin from 'phosphor-svelte/lib/PushPin'
-  import PushPinSlash from 'phosphor-svelte/lib/PushPinSlash'
-  import type { Column } from '../models/view.ts'
+    import type { Column } from '../models/view.ts'
   import { spans } from '../models/calendar.ts'
-  import { show } from '../models/format.ts'
-  import { arranged, filtering, groupable, laned, type Custom, type Field, type Layout, type Pin, type Result, type Spec, type Where, type Widget } from '../models/query.ts'
+  import { arranged, groupable, laned, type Custom, type Field, type Layout, type Pin, type Result, type Spec, type Widget } from '../models/query.ts'
   import { reorder } from '../models/drag.ts'
   import { marks } from '../marks.ts'
   import { sortable } from '../attachments/sortable.ts'
@@ -28,23 +25,22 @@
   import DragHandle from './DragHandle.svelte'
   import DropIndicator from './DropIndicator.svelte'
   import Icon from './Icon.svelte'
-  import Person from './Person.svelte'
   import Popover from './Popover.svelte'
   import Select from './Select.svelte'
   import Widgets from './Widgets.svelte'
 
   // The drawer's View panel, of one shape for every collection, as
-  // Linear's display menu: the layout on top, the text filter, then the
-  // same rows in the same order, each a label and a dropdown, Group by,
-  // Order by and Filter, the conditions under it as chips; then Display,
-  // a popover of what is shown, and Circles, whether the view reads the
-  // lens's circle or every circle the reader reads; then saving what is
-  // shown as the viewer's own view, or, on one of theirs, its name, its
-  // changes and its removal, and pinning the open view under Pinned. What
-  // the collection offers lives only inside the dropdowns and popovers,
-  // and a row the layout has no use for is disabled, never dropped. A
-  // change hands the whole spec on to the collection, which puts it in
-  // the address.
+  // Linear's display menu: the layout on top, then the same rows in the
+  // same order, each a label and a dropdown, Group by, Order by and
+  // Display, a popover of what is shown, and Circles, whether the view
+  // reads the lens's circle or every circle the reader reads; then, on one of
+  // the viewer's own, its name and its removal; the pin of the open view
+  // under Pinned is an icon in the corner. Dashboard is not a layout it
+  // offers. Filtering, and Save, are the filter bar's,
+  // on the line above the collection (`FilterBar`). What the collection
+  // offers lives only inside the dropdowns and popovers, and a row the
+  // layout has no use for is disabled, never dropped. A change hands the
+  // whole spec on to the collection, which puts it in the address.
   let {
     name,
     spec,
@@ -61,7 +57,6 @@
     declared = null,
     opened,
     custom,
-    dirty,
     pin = null,
     whole = false,
     onchange,
@@ -73,9 +68,9 @@
     fields: Field[]
     columns: Column[]
     titled: Column
-    // Each field's values: an enumeration's over every row, and
-    // another's over the rows the view's other conditions keep, where
-    // they number a handful, what Filter offers.
+    // Each field's values, over every row: a dashboard widget's choices
+    // over an enumeration (the filter bar reads the same values for its
+    // own conditions).
     values: Record<string, string[]>
     dashboard: { custom: boolean; widgets: Widget[]; results: Result[]; errors: string[] } | null
     // The fields the layout shows, a list's or its cards', and
@@ -96,7 +91,6 @@
     declared?: { key: string; dir: 'ascending' | 'descending' } | null
     opened?: Spec
     custom?: Custom
-    dirty: boolean
     // The open view as Pinned holds it, and whether the lens leaves the
     // collection whole, its rows naming no circle that owns them.
     pin?: Pin | null
@@ -117,6 +111,8 @@
   const groups = $derived(fields.filter(groupable))
   const lanes = $derived(fields.filter(laned))
   const dates = $derived(fields.filter((f) => f.type === 'date'))
+  // Dashboard is not offered; a view already laid out as one keeps it
+  // shown, and keeps rendering as it does.
   // A board only where a field is one it groups by, an enumeration, a
   // person or a circle, a calendar only where one is a date.
   const layouts: { id: Layout; label: string; icon: typeof Rows }[] = $derived(
@@ -127,7 +123,7 @@
       { id: 'board' as const, label: 'Board', icon: Kanban },
       { id: 'calendar' as const, label: 'Calendar', icon: CalendarDots },
       { id: 'dashboard' as const, label: 'Dashboard', icon: ChartBar },
-    ].filter((l) => (l.id !== 'board' || lanes.length > 0) && (l.id !== 'calendar' || dates.length > 0)),
+    ].filter((l) => (l.id !== 'dashboard' || spec.layout === 'dashboard') && (l.id !== 'board' || lanes.length > 0) && (l.id !== 'calendar' || dates.length > 0)),
   )
   const showing = $derived(new Set(shown.map((c) => c.key)))
   const hidden = $derived(new Set(spec.hide))
@@ -153,14 +149,6 @@
     const dir = sorted?.dir ?? 'asc'
     change({ sort: !key || (!initial && key === fallback?.field && dir === fallback.dir) ? null : { field: key, dir } })
   }
-
-  // What a condition may be put on: a date, or any field with a handful
-  // of values to choose from, a person's and a circle's among them; each
-  // once.
-  const conditioned = $derived([...spec.where.map((w) => w.field), ...(state.adding && !spec.where.some((w) => w.field === state.adding) ? [state.adding] : [])])
-  const offered = $derived(fields.filter((f) => filtering(f, values[f.key]) && !conditioned.includes(f.key)))
-  const typed = (key: string) => fields.find((f) => f.key === key)
-  const conditions = $derived(conditioned.map(typed).filter((f) => f !== undefined))
 
   // What a row of the panel shows in its Display popover, by layout.
   const display = $derived(
@@ -196,52 +184,6 @@
     change({ cards: choices.filter((c) => (c.key === key ? on : showing.has(c.key))).map((c) => c.key) })
   }
 
-  const on = (key: string) => spec.where.find((w) => w.field === key)
-  const kept = (key: string, v: string) => {
-    const w = on(key)
-    return !!w && 'is' in w && w.is.includes(v)
-  }
-  const within = (key: string) => {
-    const w = on(key)
-    return w && 'within' in w ? w.within : ''
-  }
-  // A value as a condition names it: a person and a circle by name, an
-  // amount of money in euros, a date as a day, else as the row holds it.
-  const named = (key: string, v: string) => {
-    const t = typed(key)?.type
-    return t === 'person' ? (shell.name(v) ?? v) : t === 'circle' ? (shell.circle(v) ?? v) : show(v, t)
-  }
-  const said = (key: string) => {
-    const w = on(key)
-    return !w ? 'any' : 'is' in w ? w.is.map((v) => named(key, v)).join(', ') : w.within === 'month' ? 'this month' : 'this year'
-  }
-
-  // A condition added keeps its chip while the address catches up; one
-  // taken away takes it.
-  function where(key: string, w: Where | undefined) {
-    if (!w && state.adding === key) {
-      state.adding = null
-    }
-    change({ where: [...spec.where.filter((x) => x.field !== key), ...(w ? [w] : [])] })
-  }
-
-  function toggle(key: string, v: string) {
-    const w = on(key)
-    const is = w && 'is' in w ? w.is : []
-    const next = is.includes(v) ? is.filter((x) => x !== v) : [...is, v]
-    where(key, next.length ? { field: key, is: next } : undefined)
-  }
-
-  // A field chosen to filter on: a date keeps this month at once, any
-  // other opens its chip's popover to pick the values it keeps.
-  function add(key: string) {
-    if (typed(key)?.type === 'date') {
-      where(key, { field: key, within: 'month' })
-    } else {
-      state.adding = key
-    }
-  }
-
   function hide(key: string, off: boolean) {
     const keys = new Set(hidden)
     if (off) {
@@ -274,17 +216,27 @@
 {/snippet}
 
 <Card title="View">
+  {#snippet actions()}
+    {#if pin}
+      {const on = $derived(pinned.pinned(pin.collection, pin.view))}
+      <button
+        type="button"
+        class="pin"
+        aria-pressed={on}
+        aria-label={on ? 'Unpin this view' : 'Pin this view'}
+        title={on ? 'Unpin this view' : 'Pin this view'}
+        onclick={() => pin && (on ? pinned.unpin(pin.collection, pin.view) : pinned.pin(pin))}
+      >
+        <Icon icon={PushPin} weight={on ? 'fill' : 'regular'} />
+      </button>
+    {/if}
+  {/snippet}
   <div class="views" role="group" aria-label="Layout">
     {#each layouts as l (l.id)}
       <button class:on={spec.layout === l.id} aria-pressed={spec.layout === l.id} aria-label={l.label} title={l.label} onclick={() => change({ layout: l.id })}>
         <Icon icon={l.icon} />
       </button>
     {/each}
-  </div>
-
-  <div class="filter">
-    <input bind:this={state.search} bind:value={state.filter} placeholder="Search" aria-label="Search" />
-    <kbd>/</kbd>
   </div>
 
   <div class="rows">
@@ -336,53 +288,6 @@
       </button>
       <Select fit labelledby="{id}-order" options={orders} disabled={spec.layout === 'dashboard'} bind:value={() => sorted?.field ?? '', (key) => order(key)} />
     </div>
-
-    <span class="label" id="{id}-filter">Filter</span>
-    <div class="control">
-      <!-- An action more than a value: choosing a field adds its condition
-           and the select reads Add a condition again. -->
-      <Select
-        fit
-        labelledby="{id}-filter"
-        placeholder="Add a condition"
-        options={as(offered)}
-        disabled={offered.length === 0}
-        bind:value={() => '', (key) => key && add(key)}
-      />
-    </div>
-    {#if conditions.length}
-      <div class="chips">
-        {#each conditions as f (f.key)}
-          <Popover
-            label="Condition on {f.label}"
-            chip
-            open={state.adding === f.key}
-            onclose={() => {
-              if (state.adding === f.key) {
-                state.adding = null
-              }
-            }}
-          >
-            {#snippet trigger()}<span class="said">{f.label}: {said(f.key)}</span>{/snippet}
-            {#if f.type === 'date'}
-              {#each ['month', 'year'] as const as w (w)}
-                <button role="menuitemradio" class="item" aria-checked={within(f.key) === w} onclick={() => where(f.key, { field: f.key, within: w })}>
-                  {w === 'month' ? 'This month' : 'This year'}{#if within(f.key) === w}<Icon icon={Check} />{/if}
-                </button>
-              {/each}
-            {:else}
-              {#each values[f.key] ?? [] as v (v)}
-                <button role="menuitemcheckbox" class="item" aria-checked={kept(f.key, v)} data-value={v} onclick={() => toggle(f.key, v)}>
-                  {#if f.type === 'person'}<Person address={v} />{:else}<span class="said">{named(f.key, v)}</span>{/if}{#if kept(f.key, v)}<Icon icon={Check} />{/if}
-                </button>
-              {/each}
-            {/if}
-            <hr />
-            <button role="menuitem" class="item" onclick={() => where(f.key, undefined)}>Remove</button>
-          </Popover>
-        {/each}
-      </div>
-    {/if}
 
     <span class="label" id="{id}-display">Display</span>
     <div class="control">
@@ -438,11 +343,9 @@
     </div>
   </div>
 
-  <!-- The foot, one row: Save, only once the view differs from what it
-       opened as, which keeps a viewer's own view's changes or, on a
-       preset, names a new view of the viewer's; then Pin, which pins the
-       open view under Pinned in the sidebar, or unpins it; and, on a view
-       of the viewer's own, its removal. Its name edits above them. -->
+  <!-- The foot, one row: Pin, which pins the open view under Pinned in
+       the sidebar, or unpins it; and, on a view of the viewer's own, its
+       removal. Its name edits above them; Save is the filter bar's. -->
   <div class="saving">
     {#if custom}
       <label class="option">
@@ -468,15 +371,6 @@
       </form>
     {:else}
       <div class="foot">
-        {#if dirty}
-          <Button tone="primary" onclick={() => (custom ? views.update(custom.id, { ...spec, q: state.filter }) : (views.naming = true))}>Save</Button>
-        {/if}
-        {#if pin}
-          {const on = $derived(pinned.pinned(pin.collection, pin.view))}
-          <Button onclick={() => pin && (on ? pinned.unpin(pin.collection, pin.view) : pinned.pin(pin))}>
-            <Icon icon={on ? PushPinSlash : PushPin} />{on ? 'Unpin' : 'Pin'}
-          </Button>
-        {/if}
         {#if custom}
           <span class="end"><Button tone="danger" onclick={onremove}>Delete</Button></span>
         {/if}
@@ -486,24 +380,7 @@
 </Card>
 
 <style>
-  .filter {
-    position: relative;
-  }
-  .filter input {
-    padding-inline-end: 2rem;
-  }
-  .filter kbd {
-    position: absolute;
-    inset-inline-end: var(--space-2);
-    top: 50%;
-    translate: 0 -50%;
-    font-family: var(--font-ui);
-    font-size: var(--text-2xs);
-    color: var(--text-subtle);
-    pointer-events: none;
-  }
-  /* The rows, a label and its dropdown each, aligned in two columns;
-     the conditions' chips span both under Filter. */
+  /* The rows, a label and its dropdown each, aligned in two columns. */
   .rows {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
@@ -554,45 +431,6 @@
   .label {
     font-size: var(--text-sm);
     color: var(--text-muted);
-  }
-  /* A long condition ellipsises in its chip, never pushing the drawer's
-     card past its edge. */
-  .chips {
-    grid-column: 1 / -1;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1);
-    min-width: 0;
-  }
-  .said {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0;
-  }
-  .item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2);
-    width: 100%;
-    padding: var(--space-1) var(--space-2);
-    border: none;
-    border-radius: var(--radius-control);
-    background: none;
-    font-size: var(--text-sm);
-    color: var(--text);
-    text-align: start;
-    cursor: pointer;
-  }
-  .item:hover,
-  .item:focus-visible {
-    background: var(--hover);
-  }
-  hr {
-    margin: var(--space-1) 0;
-    border: none;
-    border-top: 1px solid var(--line);
   }
   fieldset {
     margin: 0;
@@ -654,7 +492,27 @@
     flex-wrap: wrap;
     gap: var(--space-2);
   }
-  /* The foot's one row: Save and Pin, and a view's Delete at its end. */
+  /* The pin: icon only, quiet, in the card's top-right corner. */
+  .pin {
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-control);
+    background: none;
+    color: var(--text-subtle);
+    cursor: pointer;
+  }
+  .pin:hover,
+  .pin[aria-pressed='true'] {
+    color: var(--text);
+  }
+  .pin:hover {
+    background: var(--hover);
+  }
+  /* The foot's one row: a view's Delete at its end. */
   .foot {
     display: flex;
     align-items: center;

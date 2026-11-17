@@ -80,3 +80,24 @@ export async function pickTime(button: Locator, time: string) {
   await list.locator(`[role=option][data-value="${time}"]`).click()
   await list.waitFor({ state: 'hidden' })
 }
+
+// The filter bar's Filter: a quiet button opening a menu of the fields to
+// filter by.
+export const filterButton = (page: Page) => page.locator('.bar .adder button.trigger')
+
+// Adds a condition on a field, by its label, through the Filter menu.
+export async function addFilter(page: Page, label: string) {
+  await filterButton(page).click()
+  await page.getByRole('menuitem', { name: label, exact: true }).click()
+}
+
+// The labels of the fields the Filter menu offers, opened and closed.
+export async function filterFields(page: Page): Promise<string[]> {
+  await filterButton(page).click()
+  const menu = page.getByRole('menu', { name: 'Filter by a field' })
+  await menu.waitFor()
+  const labels = (await menu.getByRole('menuitem').allTextContents()).map((t) => t.trim())
+  await page.keyboard.press('Escape')
+  await menu.waitFor({ state: 'hidden' })
+  return labels
+}

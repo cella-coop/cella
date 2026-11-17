@@ -19,6 +19,7 @@
   import type { Outcome as Done } from '../models/outcome.ts'
   import { useShell } from '../hooks/useShell.ts'
   import { usePinned } from '../hooks/usePinned.ts'
+  import Button from './Button.svelte'
   import { useRemember } from '../hooks/useRemember.ts'
   import { mark } from '../marks.ts'
   import { inked } from '../models/ink.ts'
@@ -294,7 +295,7 @@
           {@render links(run.items)}
         {/if}
       {/each}
-      {#if inside}<a class="more" href="/settings/features/{inside.id}"><Icon icon={Plus} size="0.8rem" />More…</a>{/if}
+      {#if inside}<span class="more"><Button tone="subtle" href="/settings/features/{inside.id}"><Icon icon={Plus} size="0.8rem" />More…</Button></span>{/if}
     </div>
     {/if}
 
@@ -477,20 +478,12 @@
   }
   /* The circle's features page, after its features: subtle, no filled
      background even when it stands current, its + at the row's end. */
+  /* More…: the standard subtle Button, at the list's right, set apart
+     from the features above it. */
   .more {
     display: flex;
-    align-items: center;
     justify-content: flex-end;
-    gap: var(--space-1);
-    height: 1.9rem;
-    margin-top: var(--space-1);
-    padding: 0 var(--space-2);
-    border-radius: var(--radius-control);
-    color: var(--text-subtle);
-  }
-  .more:hover {
-    background: var(--hover);
-    color: var(--text);
+    margin-top: var(--space-3);
   }
   /* Something in a shut accordion waits on the acting member. */
   .dot {

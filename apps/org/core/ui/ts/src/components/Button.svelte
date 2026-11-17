@@ -14,7 +14,7 @@
     'aria-label': ariaLabel,
     children,
   }: {
-    tone?: 'primary' | 'quiet' | 'danger'
+    tone?: 'primary' | 'quiet' | 'danger' | 'subtle'
     type?: 'button' | 'submit'
     href?: string
     // A link that saves what it points to under this name, as an export.
@@ -69,6 +69,16 @@
   }
   .quiet:hover {
     background: var(--hover);
+  }
+  /* A secondary way somewhere, as the sidebar's More…: no fill and the
+     dimmest text until hovered, so it never competes with what it follows. */
+  .subtle {
+    background: none;
+    color: oklch(var(--shade-5) var(--tone-base));
+  }
+  .subtle:hover {
+    background: var(--hover);
+    color: var(--text);
   }
   /* The one primary action, the site's own ink
      (`styles/base.css`'s `--primary-fill`, the ink specimen's lead). */

@@ -3,18 +3,34 @@ import { asking, composed, type Comment, type Named } from '../models/thread.ts'
 // A record's threads while a comment is written: the root a reply
 // answers, chosen from its thread, what is typed and the people the
 // mention picker picked, all kept until a post grows the threads, when
-// the box opens empty again, or dropped.
+// the box opens empty again, or dropped. Who the picker may offer is
+// edit-time data: `load` fetches it once, in the browser, never awaited
+// at SSR with the record itself.
 export class ThreadsState {
   readonly #comments: () => Comment[]
-  readonly #readers: () => Named[]
+  readonly #fetch: () => Promise<Named[]>
+  #loaded = false
+  #readers = $state<Named[]>([])
   #reply = $state<number | null>(null)
   #typed = $state('')
   #picked = $state<Named[]>([])
   #at = $state(-1)
 
-  constructor(comments: () => Comment[], readers: () => Named[]) {
+  constructor(comments: () => Comment[], readers: () => Promise<Named[]>) {
     this.#comments = comments
-    this.#readers = readers
+    this.#fetch = readers
+  }
+
+  // Fetches who the mention picker may offer, once; called as the box
+  // mounts.
+  load(): void {
+    if (this.#loaded) {
+      return
+    }
+    this.#loaded = true
+    this.#fetch()
+      .then((r) => (this.#readers = r))
+      .catch(() => {})
   }
 
   // Whether what is kept was kept since the threads last grew.
@@ -61,7 +77,7 @@ export class ThreadsState {
       return []
     }
     const want = q.toLowerCase()
-    return this.#readers()
+    return this.#readers
       .filter((r) => r.name && (r.name.toLowerCase().includes(want) || r.person.startsWith(want)))
       .slice(0, 6)
   }

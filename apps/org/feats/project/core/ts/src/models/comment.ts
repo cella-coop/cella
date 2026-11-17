@@ -1,16 +1,15 @@
-import type { Comment, Named } from '@cella/org-body/models'
+import type { Comment } from '@cella/org-body/models'
 
 // A project's threads, written by `cella scaffold comments project`: as its
-// page reads them, its comments oldest first, the people who may read it,
-// whom a mention may name, whether the reader may discuss it, posting,
-// resolving and reacting, and whether its circle has reactions on; and
-// the writes: a root or a reply to a root, its text the author's, each
-// `@[address]` in it a mention of a core person; a root resolved or
-// reopened; and a reaction toggled.
+// page reads them, its comments oldest first, whether the reader may
+// discuss it, posting, resolving and reacting, and whether its circle has
+// reactions on; and the writes: a root or a reply to a root, its text the
+// author's, each `@[address]` in it a mention of a core person; a root
+// resolved or reopened; and a reaction toggled. Whom a mention may name is
+// edit-time data, read by the comment box on its own once it mounts.
 
 export interface Threaded {
   comments: Comment[]
-  readers: Named[]
   discuss: boolean
   reactions: boolean
 }

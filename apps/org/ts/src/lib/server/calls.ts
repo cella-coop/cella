@@ -2,6 +2,7 @@ import { ask as asking, counts, made, ordered, read, texts, today, type Db, type
 import { scoped } from '@cella/org-analytics'
 import { anchor, defaults, fields, grouping, limits, logged, period, resolve, swimlane, wheres, widgets, type Field, type Sort, type Spec } from '@cella/org-ui/models'
 import { named } from '@cella/org-log/api'
+import type { Named } from '@cella/org-body/models'
 import { people, person } from '@cella/org-person/api'
 import { lensed, lensing } from '#lib/server/lens.ts'
 import { drawn, keeping, run } from '#lib/server/reads.ts'
@@ -177,6 +178,21 @@ export const item = {
       made: (await made(db, [id]))[id] ?? null,
       jumps: await jumps(db, name, id, who),
     }
+  },
+}
+
+// Whom a mention of an item may name, by the collection and the record:
+// edit-time data for the comment box's mention picker, read by the
+// browser only once the box mounts, never with the item at SSR.
+export const readers = {
+  schema: texts(['name', 'id']),
+  async run(db: Db, { name, id }: { name: string; id: string }, who: Reader): Promise<Named[]> {
+    const m = mounted(name)
+    const fn = m?.collection.readers
+    if (!m || !fn) {
+      throw new Missing(`There is no collection ${name} with readers`)
+    }
+    return (await fn(db, id, who.actor)) as Named[]
   },
 }
 

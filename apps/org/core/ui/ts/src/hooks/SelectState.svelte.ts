@@ -5,6 +5,9 @@ import { edge, indexOf, moved, typedTo, type Option } from '../models/select.ts'
 // which reach the option they start. Its moves are `models/select.ts`'s.
 export class SelectState {
   open = $state(false)
+  // Counts the closings, which a picker's search is drawn anew by, so it
+  // opens empty.
+  turn = $state(0)
   active = $state(-1)
   #typed = ''
   #quiet: ReturnType<typeof setTimeout> | undefined
@@ -26,6 +29,7 @@ export class SelectState {
 
   close() {
     this.open = false
+    this.turn++
     this.#typed = ''
   }
 

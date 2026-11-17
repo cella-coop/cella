@@ -1,9 +1,8 @@
 <script lang="ts">
-  import Check from 'phosphor-svelte/lib/Check'
+  import Tick from './Tick.svelte'
   import { useQuery } from '../hooks/useQuery.ts'
   import type { Option } from '../models/select.ts'
-  import Avatar from './Avatar.svelte'
-  import Icon from './Icon.svelte'
+  import Choice from './Choice.svelte'
 
   // What a property's popover offers, as Linear's does: a search box over
   // the options, each with its icon, its tone's dot or its avatar, the
@@ -20,6 +19,7 @@
     label,
     heading,
     stay = false,
+    search = options.length > 6,
     onpick,
   }: {
     options: Option[]
@@ -31,6 +31,8 @@
     heading?: string
     // A single choice leaves the popover open, as one of several does.
     stay?: boolean
+    // The search box over the options: by default only past a few.
+    search?: boolean
     onpick: (value: string | string[]) => void
   } = $props()
 
@@ -82,20 +84,17 @@
 
 <div class="pick" bind:this={list} role="presentation" {onkeydown}>
   {#if heading}<h3 class="heading">{heading}</h3>{/if}
-  <!-- svelte-ignore a11y_autofocus -->
-  <input type="text" class="search" placeholder="Type to filter…" aria-label="Filter {label}" bind:value={q.text} autocomplete="off" autofocus={!stay} />
+  {#if search}
+    <!-- svelte-ignore a11y_autofocus -->
+    <input type="text" class="search" placeholder="Type to filter…" aria-label="Filter {label}" bind:value={q.text} autocomplete="off" autofocus={!stay} />
+  {/if}
   <div role="listbox" aria-label={label} aria-multiselectable={multi} class="options">
-    {#each shown as o (o.value)}
-      <button type="button" role="option" class="option" aria-selected={on(o)} disabled={o.disabled} onclick={(e) => pick(e, o)}>
-        {#if o.who}
-          <Avatar name={o.who} size="1.25rem" />
-        {:else if o.icon}
-          <span class="mark"><Icon icon={o.icon} size="1em" /></span>
-        {:else if o.tone}
-          <span class="dot {o.tone}" aria-hidden="true"></span>
-        {/if}
-        <span class="text">{o.label}</span>
-        {#if on(o)}<span class="check"><Icon icon={Check} size="1em" /></span>{/if}
+    {#each shown as o, i (o.value)}
+      {#if o.group && o.group !== shown[i - 1]?.group}<div class="section" role="presentation">{o.group}</div>{/if}
+      <button type="button" role="option" class="option" aria-selected={on(o)} data-value={o.value} disabled={o.disabled} onclick={(e) => pick(e, o)}>
+        <Choice {o} />
+        {#if o.default}<span class="default" aria-hidden="true">default</span><span class="visually-hidden">, the default</span>{/if}
+        {#if on(o)}<Tick />{/if}
       </button>
     {:else}
       <p class="empty" id="{uid}-empty">Nothing named “{q.text}”.</p>
@@ -148,42 +147,14 @@
     text-align: start;
     cursor: pointer;
   }
-  .option:hover,
-  .option:focus-visible {
-    background: var(--hover);
+  .default {
+    font-size: var(--text-2xs);
+    color: var(--text-subtle);
   }
-  .text {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .mark,
-  .check {
-    display: inline-flex;
-    flex: none;
-    color: var(--text-muted);
-  }
-  .dot {
-    flex: none;
-    width: 0.5rem;
-    height: 0.5rem;
-    margin: 0 0.25rem;
-    border-radius: 50%;
-    background: var(--neutral-text);
-  }
-  .dot.accent {
-    background: var(--accent-text);
-  }
-  .dot.positive {
-    background: var(--positive-text);
-  }
-  .dot.negative {
-    background: var(--negative-text);
-  }
-  .dot.warning {
-    background: var(--warning-text);
+  .section {
+    padding: var(--space-1) var(--space-2) 2px;
+    font-size: var(--text-2xs);
+    color: var(--text-subtle);
   }
   .empty {
     margin: 0;

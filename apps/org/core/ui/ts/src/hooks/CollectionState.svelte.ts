@@ -38,6 +38,9 @@ export class CollectionState {
   // for. `SvelteSet`, so adding or deleting a value is itself seen,
   // which a plain `Set` under `$state` is not.
   collapsed: SvelteSet<string> = new SvelteSet()
+  // The values of the calendar's legend the viewer hid: their entries are
+  // not drawn and their rows dim.
+  muted: SvelteSet<string> = new SvelteSet()
 
   readonly #rows: () => any[]
   readonly #left: () => number
@@ -76,6 +79,15 @@ export class CollectionState {
 
   get left() {
     return this.#left()
+  }
+
+  // Hides a legend value's entries, or shows them again.
+  mute(value: string) {
+    if (this.muted.has(value)) {
+      this.muted.delete(value)
+    } else {
+      this.muted.add(value)
+    }
   }
 
   extend() {

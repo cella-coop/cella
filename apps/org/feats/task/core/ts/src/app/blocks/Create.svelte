@@ -6,7 +6,7 @@
   // are set on its page.
   let props: { rows: Task[]; about: unknown } = $props()
 
-  const options = priorities.map((p) => ({ value: p, label: p }))
+  const options = priorities.map((p) => ({ value: p, label: p, kind: 'priority' as const }))
 </script>
 
 <Form action="create" submit="Create task">

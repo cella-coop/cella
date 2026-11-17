@@ -1,7 +1,7 @@
 <script lang="ts">
   import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass'
   import Funnel from 'phosphor-svelte/lib/Funnel'
-  import Check from 'phosphor-svelte/lib/Check'
+  import Tick from './Tick.svelte'
   import X from 'phosphor-svelte/lib/X'
   import { show } from '../models/format.ts'
   import { canon, filtering, type Field, type Spec, type Where } from '../models/query.ts'
@@ -207,13 +207,13 @@
             {#if f.type === 'date'}
               {#each ['month', 'year'] as const as w (w)}
                 <button role="menuitemradio" class="item" aria-checked={within(f.key) === w} onclick={() => where(f.key, { field: f.key, within: w })}>
-                  {w === 'month' ? 'This month' : 'This year'}{#if within(f.key) === w}<Icon icon={Check} />{/if}
+                  {w === 'month' ? 'This month' : 'This year'}{#if within(f.key) === w}<Tick />{/if}
                 </button>
               {/each}
             {:else}
               {#each values[f.key] ?? [] as v (v)}
                 <button role="menuitemcheckbox" class="item" aria-checked={kept(f.key, v)} data-value={v} onclick={() => toggle(f.key, v)}>
-                  <Value value={v} kind={f.kind ?? (f.type === 'enum' ? 'badge' : f.type)} record={f.record} />{#if kept(f.key, v)}<Icon icon={Check} />{/if}
+                  <Value value={v} kind={f.kind ?? (f.type === 'enum' ? 'badge' : f.type)} record={f.record} />{#if kept(f.key, v)}<Tick />{/if}
                 </button>
               {/each}
             {/if}
@@ -370,10 +370,6 @@
     color: var(--text);
     text-align: start;
     cursor: pointer;
-  }
-  .item:hover,
-  .item:focus-visible {
-    background: var(--hover);
   }
   /* Search at the bar's start; the chips, then the Filter pill, at its
      end. */

@@ -8,7 +8,7 @@
   import CaretLeft from 'phosphor-svelte/lib/CaretLeft'
   import CaretRight from 'phosphor-svelte/lib/CaretRight'
   import CaretUpDown from 'phosphor-svelte/lib/CaretUpDown'
-  import Check from 'phosphor-svelte/lib/Check'
+  import Tick from './Tick.svelte'
   import Desktop from 'phosphor-svelte/lib/Desktop'
   import Moon from 'phosphor-svelte/lib/Moon'
   import Plus from 'phosphor-svelte/lib/Plus'
@@ -236,13 +236,13 @@
               <b>{scope.name}</b>
               <span>{scope.legal ?? scope.address}</span>
             </span>
-            {#if !lens}<Icon icon={Check} />{/if}
+            {#if !lens}<Tick />{/if}
           </button>
           {#if sat.length}
             <p class="label">Circles</p>
             {#each sat as c (c.id)}
               <button role="menuitemradio" aria-checked={lens?.id === c.id} class="item" name="lens" value={c.id}>
-                {c.name}{#if lens?.id === c.id}<Icon icon={Check} />{/if}
+                {c.name}{#if lens?.id === c.id}<Tick />{/if}
               </button>
             {/each}
           {/if}
@@ -567,14 +567,6 @@
     background: none;
     text-align: start;
     cursor: pointer;
-  }
-  .item:hover,
-  .item:focus-visible {
-    background: var(--hover);
-  }
-  .item :global(svg:last-child) {
-    margin-inline-start: auto;
-    color: var(--accent-text);
   }
   .head-row {
     display: flex;

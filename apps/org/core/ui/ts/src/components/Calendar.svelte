@@ -27,6 +27,7 @@
     sorted = false,
     by,
     order = [],
+    muted = new Set<string>(),
   }: {
     rows: any[]
     on: Field
@@ -43,11 +44,14 @@
     // and its values in its board's order, which hands out the inks.
     by?: Column
     order?: string[]
+    // The values of the field the legend hid.
+    muted?: Set<string>
   } = $props()
 
-  const days = $derived(placed(rows, on, period, sorted))
+  const all = $derived(placed(rows, on, period, sorted))
+  const days = $derived(by && muted.size ? new Map([...all].map(([d, rs]) => [d, rs.filter((r) => !muted.has(under(r, by.key)))])) : all)
   const toned = $derived(shown.find((c) => c.tone))
-  const keys = $derived(by ? legend([...days.values()].flat(), by.key, order) : [])
+  const keys = $derived(by ? legend([...all.values()].flat(), by.key, order) : [])
   const inks = $derived(new Map(keys.map((k) => [k.value, k.ink])))
   // An entry's ink, its value's; none where the rows are not grouped or
   // it holds no value.

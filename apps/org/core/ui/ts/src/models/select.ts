@@ -1,5 +1,5 @@
 import type { Component } from 'svelte'
-import type { Tone } from './view.ts'
+import type { Kind, Tone } from './view.ts'
 
 // A select's options as plain data, and the moves its keyboard makes over
 // them: the next option the arrows, Home and End reach, past disabled
@@ -12,6 +12,10 @@ export interface Option {
   icon?: Component<any>
   // A tone's dot drawn before the label where it has no icon, as a badge's.
   tone?: Tone
+  // The kind and record the value is drawn by, as a column's: a circle's
+  // icon in its ink, a priority's bars, a state's dot (`Value`).
+  kind?: Kind
+  record?: string
   // A person's name, drawn as their avatar before the label.
   who?: string
   // Chosen by nobody: shown, never picked.

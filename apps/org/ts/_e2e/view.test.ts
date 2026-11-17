@@ -103,13 +103,13 @@ eachBrowser((name, launch) => {
         assert.equal(await view.getByRole('button', { name: 'Filter', exact: true }).count(), 0, `${at}: the View panel offers no Filter`)
         assert.equal(await view.getByPlaceholder('Search').count(), 0, `${at}: the View panel has no search box`)
         // Columns answers the keyboard: an arrow opens its list on the
-        // option chosen, which wears the check, as the active descendant;
+        // option chosen, which wears the check and takes the focus;
         // Escape closes it, choosing nothing, the focus staying on it.
         const by = view.getByRole('combobox', { name: 'Columns' })
         await by.focus()
         await page.keyboard.press('ArrowDown')
         assert.equal(await by.getAttribute('aria-expanded'), 'true', `${at}: an arrow opens Columns`)
-        const active = () => by.evaluate((el) => document.getElementById(el.getAttribute('aria-activedescendant') ?? '')?.dataset.value ?? null)
+        const active = () => page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset.value ?? null)
         assert.equal(await active(), 'status', `${at}: on the option chosen`)
         const list = page.locator(`[id="${await by.getAttribute('aria-controls')}"]`)
         assert.equal(await list.locator('[role=option][aria-selected=true]').filter({ has: page.locator('svg') }).count(), 1, `${at}: the chosen option wears its check`)

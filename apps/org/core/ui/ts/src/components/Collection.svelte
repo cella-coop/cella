@@ -448,7 +448,7 @@
     discard={reset}
   />
   {#if tinted && keys.length}
-    <Legend by={tinted} {keys} />
+    <Legend by={tinted} {keys} muted={state.muted} ontoggle={(v) => state.mute(v)} />
   {/if}
 {/snippet}
 
@@ -586,7 +586,7 @@
         mark={markOf}
       />
     {:else if spec.layout === 'calendar' && placing}
-      <Calendar rows={state.shown} on={placing} period={shownPeriod} {titled} {shown} {href} link={at} sorted={spec.sort !== null} by={tinted} order={tints} />
+      <Calendar rows={state.shown} on={placing} period={shownPeriod} {titled} {shown} {href} link={at} sorted={spec.sort !== null} by={tinted} order={tints} muted={state.muted} />
     {:else}
       <ul class="list" class:nested={!!group}>
         {#each state.shown as row, i (row.id)}

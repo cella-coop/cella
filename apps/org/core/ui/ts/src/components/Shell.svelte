@@ -641,10 +641,12 @@
     color: var(--text-muted);
     padding: 0 var(--space-2) var(--space-1);
   }
-  /* An empty section's prompt: quieter than anything it will hold. */
+  /* An empty section's prompt: quieter than anything it will hold, a step
+     below the subtle text, and set in a tad from its heading. */
   .hint.empty {
     font-style: italic;
-    color: var(--text-subtle);
+    color: oklch(var(--shade-5) var(--tone-base));
+    padding-inline-start: var(--space-3);
   }
   ul {
     list-style: none;

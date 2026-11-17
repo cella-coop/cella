@@ -16,11 +16,6 @@ saved = 2026-05-28
 
 [[document.version.block]]
 type = "heading"
-level = 1
-text = "Internal rules"
-
-[[document.version.block]]
-type = "heading"
 level = 2
 text = "Working time"
 
@@ -80,11 +75,6 @@ title = "Rate card 2027"
 [[document.version]]
 id = "rate-card-2027@1"
 saved = 2026-10-09
-
-[[document.version.block]]
-type = "heading"
-level = 1
-text = "Rate card 2027"
 
 [[document.version.block]]
 runs = [
@@ -159,11 +149,6 @@ text = "Solidarity: from 2 400 €"
 [[document.version]]
 id = "rate-card-2027@2"
 saved = 2026-10-20
-
-[[document.version.block]]
-type = "heading"
-level = 1
-text = "Rate card 2027"
 
 [[document.version.block]]
 runs = [
@@ -271,11 +256,6 @@ title = "Minutes, Annual general assembly"
 [[document.version]]
 id = "minutes-ag-2026-06-20@1"
 saved = 2026-06-22
-
-[[document.version.block]]
-type = "heading"
-level = 1
-text = "Minutes, Annual general assembly"
 
 [[document.version.block]]
 type = "embed"
@@ -419,11 +399,6 @@ id = "accessibility-checklist@1"
 saved = 2026-10-19
 
 [[document.version.block]]
-type = "heading"
-level = 1
-text = "Accessibility checklist"
-
-[[document.version.block]]
 runs = [
   { text = "What someone who did not build a site checks before it ships, against " },
   { text = "WCAG 2.2", bold = true },
@@ -461,11 +436,6 @@ id = "print-specifications@1"
 saved = 2026-10-14
 
 [[document.version.block]]
-type = "heading"
-level = 1
-text = "Print specifications"
-
-[[document.version.block]]
 text = "What every file Brand sends to a printer holds."
 
 [[document.version.block]]
@@ -492,11 +462,6 @@ title = "Newsletter style guide"
 [[document.version]]
 id = "newsletter-style@1"
 saved = 2026-09-29
-
-[[document.version.block]]
-type = "heading"
-level = 1
-text = "Newsletter style guide"
 
 [[document.version.block]]
 text = "How the newsletters Marketing writes for clients read."
@@ -528,11 +493,6 @@ id = "month-end-close@1"
 saved = 2026-10-05
 
 [[document.version.block]]
-type = "heading"
-level = 1
-text = "Month-end close"
-
-[[document.version.block]]
 text = "What finance does before a month of the books closes."
 
 [[document.version.block]]
@@ -559,11 +519,6 @@ title = "Client handover"
 [[document.version]]
 id = "client-handover@1"
 saved = 2026-10-16
-
-[[document.version.block]]
-type = "heading"
-level = 1
-text = "Client handover"
 
 [[document.version.block]]
 text = "What a client is given when their site or identity is done."
@@ -594,11 +549,6 @@ id = "onboarding-guide@1"
 saved = 2026-10-09
 
 [[document.version.block]]
-type = "heading"
-level = 1
-text = "Onboarding guide"
-
-[[document.version.block]]
 text = "A new worker's first month at Lanterne."
 
 [[document.version.block]]
@@ -627,11 +577,6 @@ id = "care-charter@1"
 saved = 2026-10-02
 
 [[document.version.block]]
-type = "heading"
-level = 1
-text = "Care charter"
-
-[[document.version.block]]
 text = "How we look after each other."
 
 [[document.version.block]]
@@ -654,11 +599,6 @@ title = "Studio stack"
 [[document.version]]
 id = "studio-stack@1"
 saved = 2026-10-21
-
-[[document.version.block]]
-type = "heading"
-level = 1
-text = "Studio stack"
 
 [[document.version.block]]
 text = "What the studio runs on, and who keeps each part."

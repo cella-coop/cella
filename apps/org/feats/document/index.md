@@ -1,6 +1,6 @@
 +++
 title = "Document"
-updated = 2026-11-16
+updated = 2026-11-17
 +++
 
 The co-op's texts: statutes, internal rules, rate cards, policies and
@@ -307,19 +307,26 @@ changed, the version and its adoption, as the entry carries them.
 
 The `documents` collection, with a New form starting an empty document
 by its title; a document's page edits the draft in the block editor,
-over it where the draft stands (saved as the latest version, or changed
-since it), whether this member's edits are saved and that `/` adds a
-block, which an empty block it holds the caret in, and the last block
-when empty, also say; the draft's hash as the page was read is among
+over it one quiet line at the top right saying where the draft stands
+(saved as the latest version, or changed since it) and whether this
+member's edits are saved, with no heading of its own; `/` adds a block,
+which an empty block it holds the caret in, and the last block when
+empty, say; the draft's hash as the page was read is among
 its Properties. The header's New version opens the shared Dialog,
 saying what it saves, the draft as the version it will number, and
 whether that is unchanged or changed since the latest one; it ends in
 Save version and Cancel, posting `version` and closing on a settled
 write, a refusal staying inside with its reason, and Cancel, Escape or
-a click outside it saves nothing. The box under its Activity comments
-on one (`comment`), each comment in the Activity with what it quotes;
-the box's Quoting takes the text last selected in the draft, and a
-posted comment's quote is highlighted there as the page refreshes. Its
+a click outside it saves nothing. A comment starts from a
+selection: text selected inside one block of the draft floats a Comment
+button at the selection's end, which opens the box under its Activity
+with the selection shown as a read-only quote, the version it is on (the
+latest saved) as a quiet line, and the focus in the comment's text;
+Escape or Cancel closes it. With nothing selected the box says to select
+text, and a document with no version takes no comment. The box posts
+`comment`, each comment in the Activity with what it quotes, and a
+posted comment's quote is highlighted in the draft as the page
+refreshes. Its
 saved versions, the data central to it, are the Versions tab after the
 draft. The server renders the draft read-only; the editor takes it
 over once the browser holds the Loro document. A generated document's

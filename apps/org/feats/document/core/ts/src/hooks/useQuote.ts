@@ -1,6 +1,6 @@
 import { QuoteState } from './QuoteState.svelte.ts'
 
 // The quote a comment box offers, from the draft's selection.
-export function useQuote(): QuoteState {
-  return new QuoteState()
+export function useQuote(count: () => number): QuoteState {
+  return new QuoteState(count)
 }

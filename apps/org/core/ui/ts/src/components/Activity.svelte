@@ -54,12 +54,13 @@
     font-weight: 500;
     color: var(--text-subtle);
     margin: 0;
+    padding-inline-start: var(--space-4);
   }
   .line {
     position: relative;
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding: 0 0 0 var(--space-4);
     display: grid;
     gap: var(--space-3);
   }
@@ -67,7 +68,7 @@
   .line::before {
     content: '';
     position: absolute;
-    left: 2.5px;
+    left: calc(var(--space-4) + 2.5px);
     top: 6px;
     bottom: 6px;
     width: 1px;

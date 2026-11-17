@@ -502,11 +502,14 @@
     border: none;
     border-radius: var(--radius-control);
     background: none;
-    color: var(--text-subtle);
+    color: oklch(var(--shade-5) var(--tone-base));
     cursor: pointer;
   }
-  .pin:hover,
+  /* Quiet even pinned: its fill says so; hover brings it up. */
   .pin[aria-pressed='true'] {
+    color: var(--text-muted);
+  }
+  .pin:hover {
     color: var(--text);
   }
   .pin:hover {

@@ -10,10 +10,13 @@ COMMENT ON COLUMN expense.expense.net IS 'not personal: an amount of the books';
 COMMENT ON COLUMN expense.expense.decider IS 'not personal: the decider''s pseudonymous address';
 
 -- As before, but for the notary's redaction (`cella.redacting()`), the one
--- change a submitted expense takes.
+-- change of its figures a submitted expense takes. Its body, its
+-- free-form discussion, is not its figures nor its step: an update that
+-- changes no other column, its id included, passes at any step, and when
+-- repeated.
 CREATE OR REPLACE FUNCTION expense.moves() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  IF cella.redacting() THEN
+  IF cella.redacting() OR to_jsonb(NEW) - 'body' = to_jsonb(OLD) - 'body' THEN
     RETURN NEW;
   END IF;
   IF NEW.status <> OLD.status AND (OLD.status, NEW.status) NOT IN (

@@ -22,11 +22,18 @@ INSERT INTO cella.personal (schema, tab, col, class, subject, owner) VALUES
 COMMENT ON COLUMN payslip.run.approver IS 'not personal: the approver''s pseudonymous address';
 
 -- As before, but for the notary's redaction (`cella.redacting()`), the one
--- change an approved run's payslips take.
+-- change of its figures an approved run's payslips take. A payslip's
+-- body, its free-form discussion, is not its figures: an update that
+-- changes no other column, its month and member included, passes whether
+-- or not its run is approved, and when repeated. Its `id`, generated from
+-- its month and member, is not yet computed in NEW while this runs, so it
+-- is left out.
 CREATE OR REPLACE FUNCTION payslip.stays() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  IF TG_TABLE_NAME = 'payslip' AND TG_OP = 'UPDATE' AND cella.redacting() THEN
-    RETURN NEW;
+  IF TG_TABLE_NAME = 'payslip' AND TG_OP = 'UPDATE' THEN
+    IF cella.redacting() OR to_jsonb(NEW) - 'body' - 'id' = to_jsonb(OLD) - 'body' - 'id' THEN
+      RETURN NEW;
+    END IF;
   END IF;
   IF TG_TABLE_NAME = 'run' THEN
     IF OLD.approved IS NOT NULL AND (NEW.approved, NEW.approver) IS DISTINCT FROM (OLD.approved, OLD.approver) THEN

@@ -26,11 +26,12 @@ CREATE FUNCTION account.period_end(month text) RETURNS date
 LANGUAGE sql IMMUTABLE
 RETURN (to_date(month, 'YYYY-MM') + interval '1 month')::date;
 
--- A closed period stays closed, and closes once; its body, its free-form
--- discussion, changes still, since it is not part of what closes.
+-- A closed period stays closed, and closes once. Its body, its free-form
+-- discussion, is not part of what closes: an update that changes no
+-- other column, its month included, passes, so a save repeated does too.
 CREATE FUNCTION account.stays_closed() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  IF NEW.body IS DISTINCT FROM OLD.body AND (NEW.circle, NEW.closed) IS NOT DISTINCT FROM (OLD.circle, OLD.closed) THEN
+  IF to_jsonb(NEW) - 'body' = to_jsonb(OLD) - 'body' THEN
     RETURN NEW;
   END IF;
   IF OLD.closed IS NOT NULL THEN

@@ -47,9 +47,17 @@ END
 $$;
 
 -- As before, but for the notary's redaction (`cella.redacting()`), the one
--- change a person's line takes.
+-- change a person's line takes. An entry's body, its free-form
+-- discussion, is not a posting: an update of an entry that changes no
+-- other column, its id included, passes, and when repeated. A line has no
+-- body, and the check is the entry's alone.
 CREATE OR REPLACE FUNCTION transaction.permanent() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
+  IF TG_OP = 'UPDATE' AND TG_TABLE_NAME = 'entry' THEN
+    IF to_jsonb(NEW) - 'body' = to_jsonb(OLD) - 'body' THEN
+      RETURN NEW;
+    END IF;
+  END IF;
   IF TG_OP = 'UPDATE' AND TG_TABLE_NAME = 'line' THEN
     IF cella.redacting() AND NEW.amount IS NULL
       AND (NEW.circle, NEW.entry, NEW.n, NEW.account, NEW.side, NEW.person) IS NOT DISTINCT FROM (OLD.circle, OLD.entry, OLD.n, OLD.account, OLD.side, OLD.person) THEN

@@ -44,12 +44,13 @@ CREATE INDEX ON file.file (hash);
 CREATE INDEX ON file.file (subject);
 
 -- A file never changes, but by the notary's redaction. Its body, a
--- free-form discussion, is not the file: it changes still.
+-- free-form discussion, is not the file: an update that changes no other
+-- column, its key included, passes, so a save repeated does too. Its
+-- `hash`, generated from its bytes, which are compared, is not yet
+-- computed in NEW while this runs, so it is left out.
 CREATE FUNCTION file.fixed() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  IF NEW.body IS DISTINCT FROM OLD.body
-    AND (NEW.circle, NEW.id, NEW.class, NEW.subject, NEW.name, NEW.type, NEW.size, NEW.bytes, NEW.uploader, NEW.uploaded)
-      IS NOT DISTINCT FROM (OLD.circle, OLD.id, OLD.class, OLD.subject, OLD.name, OLD.type, OLD.size, OLD.bytes, OLD.uploader, OLD.uploaded) THEN
+  IF to_jsonb(NEW) - 'body' - 'hash' = to_jsonb(OLD) - 'body' - 'hash' THEN
     RETURN NEW;
   END IF;
   IF NOT cella.redacting() THEN

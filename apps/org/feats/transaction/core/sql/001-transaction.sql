@@ -68,15 +68,9 @@ CREATE CONSTRAINT TRIGGER balances AFTER INSERT ON transaction.entry
 CREATE CONSTRAINT TRIGGER balances AFTER INSERT ON transaction.line
   DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION transaction.balances();
 
--- Nothing in the journal changes: a correction is a new entry. An entry's
--- body, its free-form discussion, is not a posting: it changes still.
+-- Nothing in the journal changes: a correction is a new entry.
 CREATE FUNCTION transaction.permanent() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  IF TG_OP = 'UPDATE' AND TG_TABLE_NAME = 'entry' AND NEW.body IS DISTINCT FROM OLD.body
-    AND (NEW.circle, NEW.date, NEW.label, NEW.corrects, NEW.receipt)
-      IS NOT DISTINCT FROM (OLD.circle, OLD.date, OLD.label, OLD.corrects, OLD.receipt) THEN
-    RETURN NEW;
-  END IF;
   RAISE EXCEPTION 'the journal is permanent: a %''s rows never change; a correction is a new entry', TG_TABLE_NAME
     USING ERRCODE = 'triggered_action_exception';
 END

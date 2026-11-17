@@ -21,12 +21,15 @@ END
 $$;
 
 -- As before, but for the notary's redaction (`cella.redacting()`), the one
--- change an approved month's entries take.
+-- change of its time an approved month's entries take. An entry's body,
+-- its free-form discussion, is not logged time: an update that changes no
+-- other column, its id included, passes whether or not its month is
+-- approved, and when repeated.
 CREATE OR REPLACE FUNCTION timesheet.lowers() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
   approved date;
 BEGIN
-  IF cella.redacting() THEN
+  IF cella.redacting() OR to_jsonb(NEW) - 'body' = to_jsonb(OLD) - 'body' THEN
     RETURN NEW;
   END IF;
   IF (NEW.id, NEW.circle, NEW.member, NEW.day, NEW.billable, NEW.note) IS DISTINCT FROM (OLD.id, OLD.circle, OLD.member, OLD.day, OLD.billable, OLD.note)

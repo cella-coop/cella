@@ -26,13 +26,15 @@ CREATE TABLE account.terms (
 );
 
 -- Adopted terms never change; later terms replace them from their day.
--- Their body, a free-form discussion, is not a term: it changes still.
+-- Their body, a free-form discussion, is not a term: an update that
+-- changes no other column, their id included, passes, so a save repeated
+-- does too.
 CREATE FUNCTION account.stays_adopted() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  IF TG_OP = 'UPDATE' AND NEW.body IS DISTINCT FROM OLD.body
-    AND (NEW.circle, NEW.policy, NEW."from", NEW.share, NEW.minimum, NEW.instalments, NEW.delay, NEW.repayments, NEW.adopted)
-      IS NOT DISTINCT FROM (OLD.circle, OLD.policy, OLD."from", OLD.share, OLD.minimum, OLD.instalments, OLD.delay, OLD.repayments, OLD.adopted) THEN
-    RETURN NEW;
+  IF TG_OP = 'UPDATE' THEN
+    IF to_jsonb(NEW) - 'body' = to_jsonb(OLD) - 'body' THEN
+      RETURN NEW;
+    END IF;
   END IF;
   RAISE EXCEPTION '% were adopted on %', OLD.id, OLD.adopted
     USING ERRCODE = 'triggered_action_exception';

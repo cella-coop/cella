@@ -30,13 +30,15 @@ CREATE TABLE patronage.terms (
 COMMENT ON COLUMN patronage.terms.salary IS 'not personal: the weight the statutes give pay, a percent';
 
 -- Adopted terms never change; later terms replace them from their year.
--- Their body, a free-form discussion, is not a term: it changes still.
+-- Their body, a free-form discussion, is not a term: an update that
+-- changes no other column, their id included, passes, so a save repeated
+-- does too.
 CREATE FUNCTION patronage.stays_adopted() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  IF TG_OP = 'UPDATE' AND NEW.body IS DISTINCT FROM OLD.body
-    AND (NEW.circle, NEW.policy, NEW."from", NEW.salary, NEW.hours, NEW.equal, NEW.capital, NEW.interest, NEW.adopted)
-      IS NOT DISTINCT FROM (OLD.circle, OLD.policy, OLD."from", OLD.salary, OLD.hours, OLD.equal, OLD.capital, OLD.interest, OLD.adopted) THEN
-    RETURN NEW;
+  IF TG_OP = 'UPDATE' THEN
+    IF to_jsonb(NEW) - 'body' = to_jsonb(OLD) - 'body' THEN
+      RETURN NEW;
+    END IF;
   END IF;
   RAISE EXCEPTION '% were adopted on %', OLD.id, OLD.adopted
     USING ERRCODE = 'triggered_action_exception';
@@ -98,11 +100,10 @@ CREATE TABLE patronage.share (
 -- is distributed once, after it is approved.
 CREATE FUNCTION patronage.stays_approved() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  -- Its body, a free-form discussion, is not part of the split: it
-  -- changes still, before or after it is approved or distributed.
-  IF NEW.body IS DISTINCT FROM OLD.body
-    AND (NEW.circle, NEW.year, cella.cents(NEW.surplus), NEW.basis, NEW.approved, NEW.distributed)
-      IS NOT DISTINCT FROM (OLD.circle, OLD.year, cella.cents(OLD.surplus), OLD.basis, OLD.approved, OLD.distributed) THEN
+  -- Its body, a free-form discussion, is not part of the split: an
+  -- update that changes no other column, its id included, passes, before
+  -- or after it is approved or distributed, and when repeated.
+  IF to_jsonb(NEW) - 'body' = to_jsonb(OLD) - 'body' THEN
     RETURN NEW;
   END IF;
   IF OLD.distributed IS NOT NULL THEN

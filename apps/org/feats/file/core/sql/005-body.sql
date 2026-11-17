@@ -1,10 +1,16 @@
 -- file.file's body: its free-form content, a Loro snapshot of core
 -- body's blocks, set by each save an editor's browser signs, and always
 -- one with a canonical form. Saving it needs `discuss` in its circle,
--- which every seat there holds.
+-- which every seat there holds, and that the saver reads the record.
 ALTER TABLE file.file ADD COLUMN body bytea CHECK (body IS NULL OR cella.document_canonical(body) IS NOT NULL);
 
 GRANT UPDATE (body) ON file.file TO cella_app;
+
+-- A body's save updates its file, one of the rows the policy `reads`
+-- shows: in a write's transaction every file, whose guards judge the
+-- saver by the same terms as `reads`.
+CREATE POLICY changes ON file.file FOR UPDATE TO cella_app
+  USING ((class = 'none' AND circle = ANY ((SELECT circle.reads('{file}'))::text[])) OR (SELECT cella.sees('file')) OR cella.reader() IN (subject, uploader) OR cella.reaches('file', class));
 
 INSERT INTO cella.power (op, power, amount, owner) VALUES
   ('file:body:save', 'discuss', NULL, 'file');
@@ -40,6 +46,25 @@ BEGIN ATOMIC
 END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES ('file:body:save', 'file.based(jsonb)', 'file');
+
+-- file:body:save: the saver reads the file, by the terms its row-level
+-- policy reads it by, but for the whole state a write's transaction
+-- sees, so that `discuss` in its circle alone saves no body its holder
+-- cannot read: a file of no class by whoever reads its circle; any
+-- other by its subject, its uploader, or a power that reads its class.
+-- A write's transaction reads as its actor. Refused, it names the
+-- circle and what would let them.
+CREATE FUNCTION file.legible(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT 'a body''s save is by someone who does not read this file of ' || r.circle
+      || '; a mandate there that reads it would allow it'
+  FROM file.file r
+  WHERE r.id = (legible.payload ->> 'file')
+    AND ((r.class = 'none' AND r.circle = ANY (circle.reads('{file}'))) OR cella.reader() = r.subject OR cella.reader() = r.uploader OR cella.reaches('file', r.class)) IS NOT TRUE;
+END;
+
+INSERT INTO cella.guard (op, fn, owner) VALUES ('file:body:save', 'file.legible(jsonb)', 'file');
 
 -- file:body:save: the body set to the snapshot its entry carries, in hex.
 CREATE FUNCTION file.fold_body_save(entry jsonb) RETURNS void

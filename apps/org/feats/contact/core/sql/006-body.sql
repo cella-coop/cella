@@ -1,7 +1,7 @@
 -- contact.contact's body: its free-form content, a Loro snapshot of core
 -- body's blocks, set by each save an editor's browser signs, and always
 -- one with a canonical form. Saving it needs `discuss` in its circle,
--- which every seat there holds.
+-- which every seat there holds, and that the saver reads the record.
 ALTER TABLE contact.contact ADD COLUMN body bytea CHECK (body IS NULL OR cella.document_canonical(body) IS NOT NULL);
 
 GRANT UPDATE (body) ON contact.contact TO cella_app;
@@ -40,6 +40,24 @@ BEGIN ATOMIC
 END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES ('contact:body:save', 'contact.based(jsonb)', 'contact');
+
+-- contact:body:save: the saver reads the contact, by the terms its
+-- row-level policy reads it by, but for the whole state a write's
+-- transaction sees, so that `discuss` in its circle alone saves no body
+-- its holder cannot read: a mandate covering its circle for `read`, or
+-- for a power that reads the feat. A write's transaction reads as its
+-- actor. Refused, it names the circle and what would let them.
+CREATE FUNCTION contact.legible(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT 'a body''s save is by someone who does not read this contact of ' || r.circle
+      || '; a mandate there that reads it would allow it'
+  FROM contact.contact r
+  WHERE r.id = (legible.payload ->> 'contact')
+    AND (r.circle = ANY (circle.reads('{contact}'))) IS NOT TRUE;
+END;
+
+INSERT INTO cella.guard (op, fn, owner) VALUES ('contact:body:save', 'contact.legible(jsonb)', 'contact');
 
 -- contact:body:save: the body set to the snapshot its entry carries, in hex.
 CREATE FUNCTION contact.fold_body_save(entry jsonb) RETURNS void

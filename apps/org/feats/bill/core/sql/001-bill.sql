@@ -91,7 +91,10 @@ CREATE CONSTRAINT TRIGGER adds_up AFTER INSERT ON bill.line
   DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION bill.adds_up();
 
 -- A bill moves only along its lifecycle, recorded, approved, then paid,
--- each once; its figures and its lines never change once recorded.
+-- each once; its figures and its lines never change once recorded. Its
+-- body, its free-form discussion, is neither: an update of a bill that
+-- changes no other column, its id included, passes at any step, and
+-- when repeated.
 CREATE FUNCTION bill.moves() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
   IF TG_TABLE_NAME = 'line' THEN
@@ -101,6 +104,9 @@ BEGIN
   IF TG_OP = 'DELETE' THEN
     RAISE EXCEPTION '% was recorded and is never deleted', OLD.id
       USING ERRCODE = 'triggered_action_exception';
+  END IF;
+  IF to_jsonb(NEW) - 'body' = to_jsonb(OLD) - 'body' THEN
+    RETURN NEW;
   END IF;
   IF (NEW.id, NEW.supplier, NEW.reference, NEW.issued, NEW.due, NEW.label, NEW.category,
       cella.cents(NEW.net), cella.cents(NEW.vat), cella.cents(NEW.total), NEW.recorded, NEW.recorder)

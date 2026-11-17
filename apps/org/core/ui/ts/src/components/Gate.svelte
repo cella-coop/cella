@@ -36,7 +36,7 @@
 
 <div class="gate">
   <div class="panel" class:wide>
-    <p class="coop"><span class="mark">{scope.name.slice(0, 1).toUpperCase()}</span><b>{scope.name}</b></p>
+    {#if !wide}<p class="coop"><span class="mark">{scope.name.slice(0, 1).toUpperCase()}</span><b>{scope.name}</b></p>{/if}
     {@render children()}
   </div>
 </div>

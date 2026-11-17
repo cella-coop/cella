@@ -7,7 +7,6 @@
   import X from 'phosphor-svelte/lib/X'
   import Link from 'phosphor-svelte/lib/Link'
   import Question from 'phosphor-svelte/lib/Question'
-  import Laptop from 'phosphor-svelte/lib/Laptop'
   import Popover from './Popover.svelte'
   import { useSignIn } from '../hooks/useSignIn.ts'
   import Avatar from './Avatar.svelte'
@@ -75,10 +74,10 @@
 
 <div class="sign" class:two={offered.length > 0}>
   <section class="card" aria-labelledby="in">
+    <p class="coop"><span class="mark" aria-hidden="true">{name.slice(0, 1).toUpperCase()}</span><b>{name}</b></p>
     {#if !state.opened}
     {#if held.length}
       <h1 id="in" class="title">Welcome back</h1>
-      <p class="hint">Continue as</p>
       <div class="list">
         {#each held as d (d.key)}
           <div class="line">
@@ -100,7 +99,6 @@
       </div>
     {:else}
       <div class="empty">
-        <span class="badge" aria-hidden="true"><Icon icon={Laptop} size="1.25rem" /></span>
         <h1 id="in" class="title">This browser isn't signed in to {name} yet</h1>
       </div>
       <p class="hint">Open the invitation link you were sent, or link this browser from a device you already use.</p>
@@ -318,24 +316,38 @@
   }
   .title {
     margin: 0;
+    font-family: var(--font-ui);
+    font-size: var(--text-md);
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--text-muted);
+    text-align: center;
+  }
+  .coop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    margin: 0;
     font-family: var(--font-display);
+    font-size: var(--text-lg);
+  }
+  .coop b {
     font-weight: 500;
-    font-size: var(--text-xl);
-    line-height: 1.25;
+  }
+  .mark {
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: var(--radius-control);
+    background: var(--accent-fill);
+    color: var(--on-accent);
+    font-size: var(--text-md);
   }
   .empty {
     display: grid;
-    justify-items: start;
     gap: var(--space-3);
-  }
-  .badge {
-    display: grid;
-    place-items: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: var(--radius-control);
-    background: var(--sunk);
-    color: var(--text-muted);
   }
   .ways {
     display: grid;

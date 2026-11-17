@@ -135,10 +135,13 @@ export class ShellState {
     this.#dismissed = this.#outcome()
   }
 
-  // Whether an accordion is open: as the viewer left it, else open where
-  // it holds the page.
+  // Whether an accordion is open: as the viewer left it, else open (the
+  // operator, 17 Nov: "when entering the app, I want sidebar groups
+  // expanded by default"). `holds`, whether it holds the page, stays for
+  // the toggle's sake.
   expanded(key: string, holds: boolean): boolean {
-    return this.toggled[key] ?? holds
+    void holds
+    return this.toggled[key] ?? true
   }
 
   toggle(key: string, holds: boolean) {

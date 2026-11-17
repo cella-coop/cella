@@ -269,7 +269,7 @@
           {/each}
         </ul>
       {:else}
-        <p class="hint">Pin a view from its View panel.</p>
+        <p class="hint empty">Pin a view from its View panel.</p>
       {/if}
     </div>
 
@@ -640,6 +640,11 @@
     font-size: var(--text-xs);
     color: var(--text-muted);
     padding: 0 var(--space-2) var(--space-1);
+  }
+  /* An empty section's prompt: quieter than anything it will hold. */
+  .hint.empty {
+    font-style: italic;
+    color: var(--text-subtle);
   }
   ul {
     list-style: none;

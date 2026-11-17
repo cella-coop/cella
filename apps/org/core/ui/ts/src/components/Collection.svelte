@@ -548,7 +548,7 @@
     {:else if spec.layout === 'calendar' && placing}
       <Calendar rows={state.shown} on={placing} period={shownPeriod} {titled} {shown} {href} link={at} sorted={spec.sort !== null} by={tinted} order={tints} />
     {:else}
-      <ul class="list">
+      <ul class="list" class:nested={!!group}>
         {#each state.shown as row, i (row.id)}
           {const to = $derived(href?.(row))}
           {#if opening(i)}{@render head(row)}{/if}
@@ -668,6 +668,11 @@
   .list li.group {
     min-height: 0;
     padding: var(--space-3) var(--space-3) var(--space-1);
+  }
+  /* Grouped, the rows sit inset from their group's bar at both ends, so
+     each reads as held by the header above it. */
+  .list.nested li:not(.group) {
+    margin-inline: var(--space-3);
   }
   /* The title's link covers its row, so the whole row opens the item. */
   .stretched::after {

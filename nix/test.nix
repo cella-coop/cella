@@ -71,12 +71,14 @@ pkgs.testers.runNixOSTest {
         } // (if kind == "visitors" then {
           # Two copies at most, each ending after 90 s idle or 150 s old,
           # storing 4 MiB, one to an address: each limit is reached within
-          # the test.
+          # the test. A browser itself unseen 5 s is ejected from its
+          # room, well inside the room's own 90 s.
           visitors = 2;
           idle = 90;
           lifetime = 150;
           evictAfter = 1;
           minAge = 1;
+          browserIdle = 5;
           memory = 512;
           storage = 4;
           perAddress = 1;
@@ -192,6 +194,23 @@ pkgs.testers.runNixOSTest {
 
       def probe(db, who, ip):
           print(host.succeed(f"""${as "PROBE_COOKIE=__Host-cella-visitor={jar[who]} PGDATABASE={db} PGUSER=postgres node ${probeTs} {front}"}"""))
+
+      # As `probe`, but the sign-in it opens is expected refused (a member
+      # already leased to another browser in the room): what the probe
+      # said on its standard error, the sign-in's reason among it.
+      def probe_refused(db, who, ip):
+          return host.fail(f"""${as "PROBE_COOKIE=__Host-cella-visitor={jar[who]} PGDATABASE={db} PGUSER=postgres node ${probeTs} {front}"} 2>&1""")
+
+      # Opens a room's Share this copy link as a fresh browser, `who`
+      # holding none yet: the status it answered, and, joined, its cookie
+      # kept under `who` as any other browser's is.
+      def join_room(who, ip, code):
+          out = host.succeed(curl(who, ip, f"-D - -o /dev/null {front}/_demo/join?code={code}"))
+          status_line = out.split()[1]
+          set = re.search(r"(?im)^set-cookie: __Host-cella-visitor=([A-Za-z0-9_-]+);.*Secure", out)
+          if set:
+              jar[who] = set.group(1)
+          return status_line
 
       def fill(db, mib):
           host.succeed(f"""${as "psql -X -q -d {db}"} -c "CREATE TABLE IF NOT EXISTS public.filler (b text STORAGE EXTERNAL); INSERT INTO public.filler SELECT string_agg(md5(random()::text), ''') FROM generate_series(1, 32), generate_series(1, {mib} * 1024) g GROUP BY g" """)
@@ -331,6 +350,35 @@ pkgs.testers.runNixOSTest {
           host.succeed("systemctl kill -s KILL --kill-whom=main cella-${scope}.service")
           host.wait_until_succeeds(f"curl -sf {front}/_demo/health", timeout=120)
           assert copies() == [] and roles() == [], f"{copies()} {roles()} left"
+
+      with subtest("a room's Share this copy link lets another browser join it, not counted against its address' limits"):
+          p, psignin = visit("p", "10.0.0.20")
+          found = re.search(r"/_demo/join\?code=([A-Za-z0-9_-]+)", psignin)
+          assert found, "the banner offers no Share this copy link"
+          code = found.group(1)
+          assert join_room("p2", "10.0.0.20", code) == "303", "opening the link did not join the room"
+          assert copies() == [p], f"joining made a copy of its own: {copies()}"
+          joined = page("p2", "10.0.0.20", "/sign-in")
+          assert "Camille Martin" in joined and notice in joined, "the joined browser does not read the same room"
+          assert code in joined, "the joined browser's own banner still offers the room's link"
+          assert status("p2", "10.0.0.20", f"-X POST -H 'Origin: {front}' {front}/_demo/start") == "200", "the joined browser has no room of its own"
+          assert copies() == [p], f"asking again made a copy: {copies()}"
+          assert status("p3", "10.0.0.20", f"{front}/_demo/join?code=wrong") == "404", "a wrong code was not refused"
+
+      with subtest("a fixture member is one browser's at a time in a room; a second browser already there is refused it"):
+          probe(p, "p", "10.0.0.20")
+          said = probe_refused(p, "p2", "10.0.0.20")
+          assert "signed in on another browser already" in said, said
+
+      with subtest("Reset now is refused unless its browser is alone in the room"):
+          time.sleep(21)
+          page("p2", "10.0.0.20", "/sign-in")
+          assert status("p", "10.0.0.20", f"-X POST -H 'Origin: {front}' {front}/_demo/reset") == "409", "Reset now succeeded although p2 is still in the room"
+          assert p in copies(), "a refused reset still ended the room"
+          time.sleep(7)
+          assert "is being prepared" in page("p2", "10.0.0.20", "/inbox"), "a browser idle past its span was not ejected from its room"
+          assert start("p", "10.0.0.20", "/_demo/reset") == "303", "Reset now, alone in the room, was still refused"
+          assert p not in copies(), "reset kept the old room"
 
     '' else ''
       notice = ${builtins.toJSON notice}

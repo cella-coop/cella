@@ -1,13 +1,14 @@
 // A demo build, end to end on a seeded Lanterne: the built server outside
 // dev mode with `CELLA_DEMO`, as `cella serve --prod --demo` and the NixOS
 // module's demo option run it. Its sign-in offers Lanterne's fixture
-// members, each marked as a demo member, under the demo's banner, and a
-// member signed in with their TEST-ONLY device finds the banner on their
-// pages and writes through the notary. The same build without it, a
-// scope's server, offers no one and wears no banner. A visitor's copy,
-// as `cella demo serve` starts its server with `CELLA_DEMO_IDLE`, says on
-// every page it is the visitor's own, when it resets and how long is
-// left, and offers Reset now.
+// members, under one demo tag on the heading, and a member signed in with
+// their TEST-ONLY device finds the banner on their pages and writes
+// through the notary. The same build without it, a scope's server, offers
+// no one and wears no banner. A visitor's copy, as `cella demo serve`
+// starts its server with `CELLA_DEMO_IDLE`, says on every page it is the
+// visitor's own and offers Reset; a room's lifetime
+// (`CELLA_DEMO_LIFETIME`) counts down only once its first member signs
+// in, never before.
 // covers: core
 
 import { after, before, it } from 'node:test'
@@ -21,6 +22,11 @@ const shell = new Shell(su)
 const camille = 'camille@lanterne.example'
 const banner = "This is a prototype environment for demo purposes and can't be used for real work."
 
+// The demo banner's own markup, no deeper div nested in it, so a full
+// page's own content (a meeting's time, a task's, …) never reads as its
+// countdown.
+const strip = (text: string) => text.match(/<div class="demo[^>]*>[\s\S]*?<\/div>/)?.[0] ?? ''
+
 before(async () => {
   await su.connect()
 })
@@ -30,7 +36,7 @@ after(async () => {
   await su.end()
 })
 
-it('a demo build offers every fixture member at its sign-in, each marked as a demo member, under the demo banner', async () => {
+it('a demo build offers every fixture member at its sign-in, under one demo tag on the heading, under the demo banner', async () => {
   await shell.start('2026-10-24', { CELLA_DEMO: '1' })
   const { text } = await shell.page('/sign-in')
   // The members whose device in force is a fixture's, its key derived from
@@ -40,7 +46,8 @@ it('a demo build offers every fixture member at its sign-in, each marked as a de
   const members = new Set(derived.filter((a) => a !== null)).size
   assert.ok(members > 0, 'Lanterne enrols its members’ fixture devices')
   assert.match(text, /Demo members/)
-  assert.equal(text.split('demo member</span>').length - 1, members, 'each member offered is marked as a demo member')
+  assert.equal(text.split('>demo</span>').length - 1, 1, 'only the heading wears the demo tag, not each row')
+  assert.doesNotMatch(text, /demo member/, 'no row wears its own demo badge')
   assert.match(text, /Camille Martin/)
   assert.ok(text.includes(banner), 'the sign-in wears the demo’s banner')
   assert.doesNotMatch(text, /Fixture members/)
@@ -61,14 +68,26 @@ it('the same build with no demo offers no one and wears no banner', async () => 
   assert.ok(!text.includes(banner), 'a scope’s server wears no demo banner')
 })
 
-it("a visitor's copy says it is theirs, when it resets and how long is left, and offers Reset now, signed in or not", async () => {
+it("a visitor's copy says it is theirs and offers Reset, signed in or not, and shows no countdown far from either reset", async () => {
   await shell.start('2026-10-24', { CELLA_DEMO: '1', CELLA_DEMO_IDLE: '7200' })
   for (const [path, who] of [['/sign-in', undefined], ['/inbox', camille]] as const) {
     const { text } = await shell.page(path, who)
     assert.ok(text.includes(banner), `${path} wears the prototype notice`)
-    assert.match(text, /this copy of it is yours alone/, `${path} says the copy is the visitor’s own`)
+    assert.match(text, /This copy of it is yours alone/, `${path} says the copy is the visitor’s own`)
     assert.match(text, /resets after 2 hours idle/, `${path} says when the copy resets`)
-    assert.match(text, /2:00:00/, `${path} counts down to the reset`)
-    assert.match(text, /action="\/_demo\/reset"[^>]*>\s*<button[^>]*>Reset now</, `${path} offers Reset now`)
+    // No lifetime is set, and the idle reset is two hours off, nowhere
+    // near its last two minutes: the strip shows no countdown at all.
+    assert.doesNotMatch(strip(text), /\d:\d\d:\d\d/, `${path} shows a countdown with nothing close enough to warrant one`)
+    assert.match(text, /action="\/_demo\/reset"/, `${path} posts Reset to the front`)
+    assert.match(text, />Reset</, `${path} offers Reset`)
   }
+})
+
+it("a room's lifetime counts down only once its first member has signed in, never before", async () => {
+  await shell.start('2026-10-24', { CELLA_DEMO: '1', CELLA_DEMO_IDLE: '7200', CELLA_DEMO_LIFETIME: '7200' })
+  const before = await shell.page('/sign-in')
+  assert.doesNotMatch(strip(before.text), /\d:\d\d:\d\d/, 'no one has signed in: the strip shows no countdown yet')
+  const after = await shell.page('/inbox', camille)
+  assert.match(strip(after.text), /\d:\d\d:\d\d/, 'camille’s sign-in starts the room’s lifetime, which the strip now counts down')
+  assert.doesNotMatch(strip(after.text), />0:00:00</, 'the lifetime just started; it has not run out')
 })

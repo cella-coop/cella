@@ -97,15 +97,16 @@ CREATE TABLE patronage.share (
 );
 
 -- A distribution is approved once, and its split never changes after; it
--- is distributed once, after it is approved.
+-- is distributed once, after it is approved. Its body, a free-form
+-- discussion, is not part of the split: the trigger fires on an update
+-- that sets any column but the body, so a save of the body alone passes,
+-- before or after it is approved or distributed, and when repeated. It
+-- fires by the columns an update sets, not by the values it changes:
+-- distributing again on the day it was distributed sets `distributed`
+-- to the date it holds, and is refused as distributing on another day
+-- is. A column `patronage.distribution` gains is added to its list.
 CREATE FUNCTION patronage.stays_approved() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  -- Its body, a free-form discussion, is not part of the split: an
-  -- update that changes no other column, its id included, passes, before
-  -- or after it is approved or distributed, and when repeated.
-  IF to_jsonb(NEW) - 'body' = to_jsonb(OLD) - 'body' THEN
-    RETURN NEW;
-  END IF;
   IF OLD.distributed IS NOT NULL THEN
     RAISE EXCEPTION 'the % surplus was distributed on %', OLD.year, OLD.distributed
       USING ERRCODE = 'triggered_action_exception';
@@ -123,7 +124,7 @@ BEGIN
 END
 $$;
 
-CREATE TRIGGER stays_approved BEFORE UPDATE ON patronage.distribution
+CREATE TRIGGER stays_approved BEFORE UPDATE OF circle, id, year, surplus, basis, approved, distributed ON patronage.distribution
   FOR EACH ROW EXECUTE FUNCTION patronage.stays_approved();
 
 CREATE FUNCTION patronage.share_fixed() RETURNS trigger LANGUAGE plpgsql AS $$

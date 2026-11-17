@@ -221,9 +221,9 @@ L3243-4) and redacted after.
 
 Terms and a distribution each keep a body, its free-form discussion, a Loro snapshot of core body's blocks, saved by `patronage:body:save-terms` and `-distribution` (`sql/010`, `011`). A save needs `discuss` in the record's circle and that the saver reads the record, by the terms of its row-level policy rather than the whole state a write's transaction sees (`patronage.legible_<kind>`), and `based` refuses one that did not merge the body it replaces.
 
-`stays_adopted` and `stays_approved` leave the body free: an update that changes no other column, keys included, passes once the record is fixed and when repeated, and one that changes another column beside it is refused as that column alone is.
+`stays_adopted` and `stays_approved` leave the body free, and an update that changes another column beside it is refused as that column alone is. `stays_adopted` passes an update that changes no column but the body, keys included. `stays_approved` fires by the columns an update sets, every one but the body (`BEFORE UPDATE OF`), not by the values it changes: a save of the body alone passes once the split is fixed and when repeated, and distributing again on the day it was distributed, which sets `distributed` to the date it holds, is refused as on any other day.
 
-`core/ts/_tests/body.test.ts` saves a body after the record is fixed, again the same and by its fold, and is refused with another column beside it.
+`core/ts/_tests/body.test.ts` saves a body after the record is fixed, again the same and by its fold, is refused with another column beside it, refuses a distribution distributed again on its own day, and holds that every column of `patronage.distribution` but the body fires `stays_approved`.
 
 ## Guards
 

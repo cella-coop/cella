@@ -1,7 +1,8 @@
 // The bodies of patronage, on a database holding only the app's core and
 // this feat: adopted terms' and a distributed surplus's saved, saved again
 // the same and folded, what was adopted or split fixed all the while; and
-// refused with another column beside it, a key included. Run by `cella
+// refused with another column beside it, a key included, and a
+// distribution distributed again on its own day refused. Run by `cella
 // test slice patronage`.
 
 import { after, before, test } from 'node:test'
@@ -69,4 +70,15 @@ test('a distributed surplus takes its body, saved again the same, and folded fro
 test('a distributed surplus\'s body saved with another column beside it is refused, its id included', async () => {
   await refused(() => db.query(`UPDATE patronage.distribution SET body = $1, basis = 'equal' WHERE id = '2040'`, [body('x')]), /the 2040 surplus was distributed on 2041-03-01/)
   await refused(() => db.query(`UPDATE patronage.distribution SET body = $1, id = '2040b' WHERE id = '2040'`, [body('x')]), /the 2040 surplus was distributed on 2041-03-01/)
+})
+
+test('a distributed surplus distributed again on its day is refused, as on another: the guard fires by the columns an update sets, every one but the body', async () => {
+  await refused(() => db.query(`UPDATE patronage.distribution SET distributed = '2041-03-01' WHERE id = '2040'`), /the 2040 surplus was distributed on 2041-03-01/)
+  const { rows } = await db.query<{ unguarded: string[] }>(
+    `SELECT coalesce(array_agg(a.attname::text ORDER BY a.attname), '{}') AS unguarded
+     FROM pg_attribute a, pg_trigger t
+     WHERE a.attrelid = 'patronage.distribution'::regclass AND a.attnum > 0 AND NOT a.attisdropped
+       AND t.tgrelid = a.attrelid AND t.tgname = 'stays_approved' AND NOT a.attnum = ANY (t.tgattr::int2[])`,
+  )
+  assert.deepEqual(rows[0].unguarded, ['body'], 'every column but the body fires stays_approved')
 })

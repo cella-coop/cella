@@ -3,6 +3,7 @@ import type { Detail, Project, State } from '../models/project.ts'
 import Archive from './blocks/Archive.svelte'
 import Budget from './blocks/Budget.svelte'
 import Create from './blocks/Create.svelte'
+import Icon from './blocks/Icon.svelte'
 import Milestones from './blocks/Milestones.svelte'
 import Body from './blocks/Body.svelte'
 import Comments from './blocks/Comments.svelte'
@@ -59,6 +60,8 @@ export const app: App = {
           { label: 'Budget', value: p.budget, kind: 'money', group: 'Money' },
         ],
         history: false,
+        // Its own icon, a cosmetic setting, in the drawer's Details.
+        details: [Icon],
         activity: (p: Detail) => [
           ...p.milestones.filter((m) => m.completed).map((m) => ({ at: m.completed ?? '', text: `completed ${m.title}` })),
           { at: p.started, text: 'started' },

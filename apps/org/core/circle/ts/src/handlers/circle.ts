@@ -1,7 +1,7 @@
 import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
-import type { Amend, Amended, Arrange, Arranged, Create, Created, Terms } from '../models/circle.ts'
+import type { Amend, Amended, Arrange, Arranged, Create, Created, Icon, Iconed, Terms } from '../models/circle.ts'
 
 type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
@@ -71,5 +71,23 @@ export async function arrange(input: Arrange, deps: Deps): Out<'circle:circle:ar
       return { circle: input.circle, was: rows[0]?.was ?? '' }
     },
     payload: (v) => ({ circle: v.circle, features: input.features, was: v.was, ...(input.motion ? { motion: input.motion } : {}) }),
+  })
+}
+
+// Sets or clears a circle's own icon, a cosmetic setting apart from its
+// name, purpose, procedure and features, at once by a holder of
+// `arrange-features` over it: the last write wins.
+export async function icon(input: Icon, deps: Deps): Out<'circle:circle:icon', Iconed> {
+  return write(deps, {
+    op: 'circle:circle:icon' satisfies Action,
+    request: input,
+    state: async (tx) => {
+      const { rowCount } = await tx.query('UPDATE circle.circle SET icon = $2 WHERE id = $1', [input.circle, input.icon])
+      if (!rowCount) {
+        throw new Error(`no circle ${input.circle}`)
+      }
+      return { circle: input.circle, icon: input.icon }
+    },
+    payload: (v) => ({ ...v }),
   })
 }

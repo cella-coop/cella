@@ -1,11 +1,15 @@
 import type { Component } from 'svelte'
 import type { Outcome } from '../models/outcome.ts'
 import type { Nav } from '../models/view.ts'
+import { recordIcon } from '../record-icons.ts'
 
 // The circle a member lenses the co-op on, from the co-op selector.
 export interface Lens {
   id: string
   name: string
+  // Its own icon, a slug of the curated set, which a cell, a chip or a
+  // group's bar wears in place of the collection's.
+  icon?: string | null
 }
 
 // An accordion's key as its cookie spells it, a circle's accordion name
@@ -75,15 +79,22 @@ export class ShellState {
     this.toggled = parse(sections())
   }
 
-  // The icon a collection's view declares, by the collection's name, or
-  // none where it declares none or the shell mounts no such collection.
-  icon(collection: string | undefined): Component<any> | undefined {
+  // The icon a reference to one of the circles wears: its own, of the
+  // curated set, where it has one, else the collection's view declares,
+  // by the collection's name; none where it declares none or the shell
+  // mounts no such collection. `id` is read only for `circles`, the one
+  // collection read everywhere a reference to it is drawn.
+  icon(collection: string | undefined, id?: string): Component<any> | undefined {
     if (!collection) {
       return undefined
     }
-    return this.#nav()
-      .flatMap((g) => g.items)
-      .find((i) => i.href === `/${collection}`)?.icon
+    const own = collection === 'circles' && id ? recordIcon(this.#circles().find((c) => c.id === id)?.icon) : undefined
+    return (
+      own ??
+      this.#nav()
+        .flatMap((g) => g.items)
+        .find((i) => i.href === `/${collection}`)?.icon
+    )
   }
 
   // Keeps `left` on the page the viewer is on while it is not a page of

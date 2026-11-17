@@ -1,6 +1,7 @@
 import { icons, power, type App } from '@cella/org-ui'
 import type { Circle, Detail, Standing, Provenance } from '../models/circle.ts'
 import Chain from './blocks/Chain.svelte'
+import Icon from './blocks/Icon.svelte'
 import Structure from './blocks/Structure.svelte'
 import View from './blocks/View.svelte'
 import { cap, covers, tones } from '../bindings/words.ts'
@@ -52,6 +53,8 @@ export const app: App = {
           { id: 'settings', label: 'Settings' },
         ],
         blocks: [{ tab: 'roles', block: Structure }],
+        // Its own icon, a cosmetic setting, in the drawer's Details.
+        details: [Icon],
       },
     },
     mandates: {

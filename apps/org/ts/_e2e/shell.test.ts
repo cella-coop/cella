@@ -489,7 +489,11 @@ test('the log the shell wrote verifies, and Activity reads it as a list whose ev
   assert.match(text, /class="list[\s"]/, 'Activity opens as a list')
   // Julien's issue, said from its op and linked to its invoice by the id
   // `cella.records` reads.
-  assert.match(text, /<a href="\/invoices\/F-2026-0056" class="title stretched[^"]*"[^>]*>issued invoice F-2026-0056<\/a>/)
+  // A row's own icon, where its kind of record carries one, is a mark
+  // before its title; this entry's kind, an invoice, carries none, so
+  // its conditional's hydration comment is the only thing between the
+  // tag and the text.
+  assert.match(text, /<a href="\/invoices\/F-2026-0056" class="title stretched[^"]*"[^>]*>(?:<!--.*?-->)*issued invoice F-2026-0056<\/a>/)
   assert.match(text, /closed motion m-2026-012/)
   const lines = [...text.matchAll(/<a href="([^"]+)" class="title stretched[\s"]/g)].map((m) => m[1].replaceAll('&amp;', '&'))
   assert.ok(lines.length > 0)

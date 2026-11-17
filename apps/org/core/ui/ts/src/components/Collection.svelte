@@ -30,7 +30,9 @@
   import { widest } from '../models/format.ts'
   import { abandon } from '../models/navigation.ts'
   import { control, focused, typing } from '../models/keys.ts'
+  import { inked, inkOf } from '../models/ink.ts'
   import { mark } from '../marks.ts'
+  import { recordIcon } from '../record-icons.ts'
   import { sortable } from '../attachments/sortable.ts'
   import { useWrites } from '../hooks/useWrites.ts'
   import { useCollection } from '../hooks/useCollection.ts'
@@ -182,6 +184,15 @@
 
   const hidden = $derived(new Set(spec.hide))
   const titled = $derived(columns.find((c) => c.role === 'title') ?? columns[0])
+  // A row's own icon, of the curated set, where its collection's rows
+  // carry one (a project's, a circle's): its own where it is set, else
+  // the collection's, as a reference to one wears elsewhere (`Cell`).
+  // A collection whose rows carry no `icon` field at all wears none here,
+  // as before.
+  const markOf = (row: unknown) => {
+    const icoded = row as { icon?: string | null }
+    return icoded && 'icon' in icoded ? (recordIcon(icoded.icon) ?? icon) : undefined
+  }
   const subs = $derived(columns.filter((c) => c.role === 'sub'))
   const metas = $derived(columns.filter((c) => c.role === 'meta'))
   // A table's columns, but the one its rows are grouped by, which each
@@ -514,9 +525,10 @@
         {sorted}
         onsort={(key) => change({ ...spec, q: state.filter, sort: { field: key, dir: sorted?.key === key && sorted.dir === 'ascending' ? 'desc' : 'asc' } })}
         {group}
+        mark={markOf}
       />
     {:else if spec.layout === 'gallery'}
-      <Gallery rows={state.shown} {titled} {shown} {href} {group} />
+      <Gallery rows={state.shown} {titled} {shown} {href} {group} mark={markOf} />
     {:else if spec.layout === 'board' && grouped}
       <Board
         rows={state.shown}
@@ -531,6 +543,7 @@
         {href}
         {shifts}
         onshift={(id, s, _, to) => move(id, s, to)}
+        mark={markOf}
       />
     {:else if spec.layout === 'calendar' && placing}
       <Calendar rows={state.shown} on={placing} period={shownPeriod} {titled} {shown} {href} link={at} sorted={spec.sort !== null} by={tinted} order={tints} />
@@ -548,10 +561,11 @@
             {@attach focused(i === state.active)}
           >
             <span class="main">
+              {const rowIcon = $derived(markOf(row))}
               {#if to}
-                <a href={to} class="title stretched" tabindex="-1">{titled.value(row)}</a>
+                <a href={to} class="title stretched" tabindex="-1">{#if rowIcon}<span class="mark" style={inked(inkOf(String(titled.value(row))))}><Icon icon={rowIcon} /></span>{/if}{titled.value(row)}</a>
               {:else}
-                <span class="title">{titled.value(row)}</span>
+                <span class="title">{#if rowIcon}<span class="mark" style={inked(inkOf(String(titled.value(row))))}><Icon icon={rowIcon} /></span>{/if}{titled.value(row)}</span>
               {/if}
               {#each lines as c (c.key)}
                 <span class="sub"><Cell value={c.value(row)} kind={c.kind === 'badge' ? 'text' : c.kind} record={c.record} /></span>
@@ -670,8 +684,16 @@
     overflow: hidden;
   }
   .title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
     font-weight: 500;
     white-space: nowrap;
+  }
+  .title .mark {
+    display: inline-flex;
+    flex: none;
+    color: var(--mark);
   }
   .sub {
     color: var(--text-muted);

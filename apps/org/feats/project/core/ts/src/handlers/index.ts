@@ -1,1 +1,1 @@
-export { add, archive, budget, complete, create, slug } from './project.ts'
+export { add, archive, budget, complete, create, icon, slug } from './project.ts'

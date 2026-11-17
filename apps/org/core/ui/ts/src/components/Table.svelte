@@ -1,7 +1,9 @@
 <script lang="ts">
+  import type { Component } from 'svelte'
   import type { Column } from '../models/view.ts'
   import { opens, under, type Grouping } from '../models/query.ts'
   import { focused, scroller } from '../models/keys.ts'
+  import { inked, inkOf } from '../models/ink.ts'
   import { useSection } from '../hooks/useSection.ts'
   import SortAscending from 'phosphor-svelte/lib/SortAscending'
   import SortDescending from 'phosphor-svelte/lib/SortDescending'
@@ -29,6 +31,7 @@
     onsort,
     empty,
     group,
+    mark,
   }: {
     columns: Column[]
     rows: any[]
@@ -40,6 +43,9 @@
     onsort?: (key: string) => void
     empty?: string
     group?: Grouping
+    // A row's own icon, in place of the title column's first cell's;
+    // none draws none.
+    mark?: (row: any) => Component<any> | undefined
   } = $props()
 
   const section = useSection()
@@ -96,10 +102,15 @@
               {@attach focused(i === active)}
             >
               {#each columns as c, j (c.key)}
+                {const rowIcon = $derived(c.role === 'title' ? mark?.(row) : undefined)}
                 <td class:end={end(c)}>
                   {#if link && j === 0}
-                    <a href={link} class="stretched" tabindex={stop < 0 ? undefined : -1}><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} /></a>
+                    <a href={link} class="stretched" tabindex={stop < 0 ? undefined : -1}>
+                      {#if rowIcon}<span class="mark" style={inked(inkOf(String(c.value(row))))}><Icon icon={rowIcon} /></span>{/if}
+                      <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} />
+                    </a>
                   {:else}
+                    {#if rowIcon}<span class="mark" style={inked(inkOf(String(c.value(row))))}><Icon icon={rowIcon} /></span>{/if}
                     <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} />
                   {/if}
                 </td>
@@ -188,6 +199,13 @@
     content: '';
     position: absolute;
     inset: 0;
+  }
+  .mark {
+    display: inline-flex;
+    flex: none;
+    vertical-align: middle;
+    margin-inline-end: var(--space-1);
+    color: var(--mark);
   }
   td:first-child,
   th:first-child {

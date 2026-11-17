@@ -12,6 +12,8 @@ export const actions = {
   'project:project:budget': ordered({ power: 'set-budget', amount: 'amount' }),
   // hides the project and freezes it; archiving twice changes nothing
   'project:project:archive': confluent({ power: 'manage-project' }),
+  // a cosmetic setting, apart from what it manages; the last writer wins
+  'project:project:icon': confluent({ power: 'manage-project' }),
   // each save carries the whole merged snapshot, so the later receipt holds every edit before it
   'project:body:save': confluent({ power: 'discuss' }),
   // a fact: comments are appended, each numbered by receipt

@@ -9,14 +9,17 @@
 
   // A value as a cell, a card's field or a property draws it. One that
   // names a record, of the collection `record` names, wears that
-  // collection's icon before it, in the record's own ink
-  // (`models/ink.ts`'s `inkOf`); a person is always one of `people`.
+  // record's own icon where it has one, else that collection's, before
+  // it, in the record's own ink (`models/ink.ts`'s `inkOf`); a person is
+  // always one of `people`.
   let { value, kind = 'text', tone, record }: { value: unknown; kind?: Kind; tone?: Tone; record?: string } = $props()
   const text = $derived(show(value, kind))
   const shell = useShell()
   // A circle's id is drawn as its name, where the member reads it.
   const shown = $derived(kind === 'circle' ? (shell.circle(text) ?? text) : text)
-  const icon = $derived(text === '—' ? undefined : shell.icon(record ?? (kind === 'person' ? 'people' : undefined)))
+  // The id a reference names, to look its own icon by: a circle's, the
+  // value itself before its name replaces it.
+  const icon = $derived(text === '—' ? undefined : shell.icon(record ?? (kind === 'person' ? 'people' : undefined), kind === 'circle' ? text : undefined))
   const tint = $derived(icon && record ? inkOf(shown) : null)
   // A chip always shows a colour: its record's ink, its tone's where the
   // tone has one, else an ink seeded by its value (the operator, 16 Nov).

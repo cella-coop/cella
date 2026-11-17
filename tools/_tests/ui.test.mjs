@@ -5,7 +5,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { inlineCreates, pageSaves, problems } from '../ui-check.mjs'
+import { inlineCreates, pageSaves, problems, recordIconOverlap } from '../ui-check.mjs'
 
 const block = 'apps/org/feats/invoice/core/ts/src/app/blocks/Lines.svelte'
 const component = (script, markup = '<p>x</p>') => `<script lang="ts">\n${script}\n</script>\n\n${markup}\n`
@@ -264,4 +264,19 @@ test('a Form with a Save submit drawn on a page is refused by name; a modal may 
   // A submit not starting with Save passes.
   const other = { path: 'apps/org/feats/project/core/ts/src/app/blocks/Budget.svelte', text: component('', '<Form action="budget" submit="Set budget" inline />') }
   assert.deepEqual(pageSaves([other]), [])
+})
+
+test('a curated record icon overlapping a feature\'s or a collection\'s icon is refused', () => {
+  const curated = { path: 'apps/org/core/ui/ts/src/record-icons.ts', text: "import Rocket from 'phosphor-svelte/lib/Rocket'\nimport Briefcase from 'phosphor-svelte/lib/Briefcase'\nexport const recordIcons = [{ slug: 'rocket', name: 'Rocket', icon: Rocket }, { slug: 'briefcase', name: 'Briefcase', icon: Briefcase }]\n" }
+  // icons.ts, the single list features and collections draw their icon
+  // from, imports Briefcase for project's: the overlap the curated set
+  // may never repeat.
+  const icons = { path: 'apps/org/core/ui/ts/src/icons.ts', text: "export { default as Briefcase } from 'phosphor-svelte/lib/Briefcase'\n" }
+  assert.deepEqual(recordIconOverlap([curated, icons]), [
+    `${curated.path}: curates Briefcase, which a feature's or a collection's icon already draws; pick another`,
+  ])
+
+  const none = { path: 'apps/org/core/ui/ts/src/icons.ts', text: "export { default as X } from 'phosphor-svelte/lib/X'\n" }
+  assert.deepEqual(recordIconOverlap([curated, none]), [], 'no overlap, no complaint')
+  assert.deepEqual(recordIconOverlap([icons]), [], 'no curated file in the sources, nothing to check')
 })

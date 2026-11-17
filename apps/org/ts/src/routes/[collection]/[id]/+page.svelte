@@ -1,7 +1,7 @@
 <script lang="ts">
   import { browser } from '$app/env'
   import { page as here } from '$app/state'
-  import { Detail, Failed, Skeleton, useWrites, type Block, type Embeds, type Placed, type Tab } from '@cella/org-ui'
+  import { Detail, Failed, recordIcon, Skeleton, useWrites, type Block, type Embeds, type Placed, type Tab } from '@cella/org-ui'
   import { stamps } from '@cella/org-ui/models'
   import { item as read } from '#lib/remote/item.remote.ts'
   import { collection, extensions } from '#lib/slices.ts'
@@ -108,6 +108,11 @@
       subtitle,
       writes,
       fields,
+      // The item's own icon, of the curated set, where its kind of item
+      // carries one at all (a project's, a circle's): its own where it
+      // is set, else the collection's, as the sidebar shows it; a kind
+      // with no `icon` field wears none here, as before.
+      icon: 'icon' in Object(data.item) ? recordIcon((data.item as { icon?: string | null }).icon) ?? mounted?.view.icon : undefined,
     }
   }
 </script>
@@ -148,6 +153,7 @@
     <Detail
       eyebrow={page.eyebrow}
       title={page.title(data.item)}
+      icon={v.icon}
       subtitle={v.subtitle}
       summary={page.summary?.(data.item)}
       back={{ href: `/${data.name}`, label: mounted.view.title }}

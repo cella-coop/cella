@@ -1,6 +1,9 @@
 <script lang="ts">
+  import type { Component } from 'svelte'
   import type { Column } from '../models/view.ts'
+  import { inked, inkOf } from '../models/ink.ts'
   import Cell from './Cell.svelte'
+  import Icon from './Icon.svelte'
 
   // An item as a card in a gallery or on a board: its title and the
   // fields the view chose, each under its label. The whole card opens the
@@ -13,6 +16,7 @@
     group,
     from,
     dragging = false,
+    icon,
   }: {
     row: any
     titled: Column
@@ -22,11 +26,17 @@
     group?: string
     from?: string
     dragging?: boolean
+    // The row's own icon, before its title, in its own ink; none draws
+    // none.
+    icon?: Component<any>
   } = $props()
 </script>
 
 {#snippet body()}
-  <span class="title">{titled.value(row)}</span>
+  <span class="title">
+    {#if icon}<span class="mark" style={inked(inkOf(String(titled.value(row))))}><Icon {icon} /></span>{/if}
+    {titled.value(row)}
+  </span>
   {#if shown.length}
     <dl>
       {#each shown as c (c.key)}
@@ -71,10 +81,18 @@
     background: var(--hover);
   }
   .title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
     font-weight: 500;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .mark {
+    display: inline-flex;
+    flex: none;
+    color: var(--mark);
   }
   dl {
     display: grid;

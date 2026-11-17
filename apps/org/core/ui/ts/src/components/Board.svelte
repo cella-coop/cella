@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Component } from 'svelte'
   import type { Column } from '../models/view.ts'
   import { shift, type Shift } from '../models/query.ts'
   import { transfer } from '../attachments/transfer.ts'
@@ -29,6 +30,7 @@
     swimlanes = [],
     collapsed,
     oncollapse,
+    mark,
   }: {
     rows: any[]
     by: Column
@@ -42,6 +44,8 @@
     swimlanes?: string[]
     collapsed?: Set<string>
     oncollapse?: (value: string) => void
+    // A card's own icon, before its title; none draws none.
+    mark?: (row: any) => Component<any> | undefined
   } = $props()
 
   const drag = useDrag()
@@ -79,7 +83,7 @@
         </h3>
         <div class="cards">
           {#each cards as row (row.id)}
-            <Tile {row} {titled} {shown} href={href?.(row)} {group} from={l} dragging={drag.carrying(group, row.id)} />
+            <Tile {row} {titled} {shown} href={href?.(row)} {group} from={l} dragging={drag.carrying(group, row.id)} icon={mark?.(row)} />
           {/each}
         </div>
       </section>

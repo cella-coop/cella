@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Component } from 'svelte'
   import type { Column } from '../models/view.ts'
   import { opens, under, type Grouping } from '../models/query.ts'
   import Group from './Group.svelte'
@@ -14,12 +15,15 @@
     shown,
     href,
     group,
+    mark,
   }: {
     rows: any[]
     titled: Column
     shown: Column[]
     href?: (row: any) => string | undefined
     group?: Grouping
+    // A row's own icon, before its card's title; none draws none.
+    mark?: (row: any) => Component<any> | undefined
   } = $props()
 </script>
 
@@ -41,7 +45,7 @@
       </li>
     {/if}
     {#if !group || !group.collapsed.has(value)}
-      <li><Tile {row} {titled} {shown} href={href?.(row)} /></li>
+      <li><Tile {row} {titled} {shown} href={href?.(row)} icon={mark?.(row)} /></li>
     {/if}
   {/each}
 </ul>

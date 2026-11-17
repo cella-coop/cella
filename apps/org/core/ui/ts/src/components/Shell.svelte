@@ -82,7 +82,7 @@
     // The circles the member reads, the assembly first, then those they
     // sit in, each with its features spelt as one listing, and the one
     // they lensed the co-op on, if any, the circle they are in.
-    circles?: { id: string; name: string; sits: boolean; assembly?: boolean; features?: string }[]
+    circles?: { id: string; name: string; sits: boolean; assembly?: boolean; features?: string; icon?: string | null }[]
     lens?: { id: string; name: string; features?: string } | null
     children: Snippet
   } = $props()

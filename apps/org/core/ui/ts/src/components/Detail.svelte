@@ -1,13 +1,15 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte'
+  import type { Component, Snippet } from 'svelte'
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
   import Info from 'phosphor-svelte/lib/Info'
   import type { Event, Link, Prop, Tab } from '../models/view.ts'
   import { typing } from '../models/keys.ts'
   import { abandon } from '../models/navigation.ts'
+  import { inked, inkOf } from '../models/ink.ts'
   import Activity from './Activity.svelte'
   import Frame from './PageFrame.svelte'
+  import Icon from './Icon.svelte'
   import Pill from './Pill.svelte'
   import Properties from './Properties.svelte'
   import Prose from './Prose.svelte'
@@ -25,6 +27,7 @@
   let {
     eyebrow,
     title,
+    icon,
     subtitle,
     summary,
     back,
@@ -41,6 +44,9 @@
   }: {
     eyebrow: string
     title: string
+    // The record's own icon where it has one, else its collection's;
+    // drawn in the record's own ink before its title. None draws none.
+    icon?: Component<any>
     subtitle?: string
     // The record's own words, under its title on the first tab.
     summary?: string | null
@@ -112,7 +118,10 @@
       </nav>
     {/if}
   {/snippet}
-  <h1 class="record">{title}</h1>
+  <h1 class="record">
+    {#if icon}<span class="mark" style={inked(inkOf(title))}><Icon {icon} /></span>{/if}
+    {title}
+  </h1>
   {#if first && summary}<Prose text={summary} />{/if}
   {@render children?.()}
   {#if first && (activity.length || comment)}
@@ -130,9 +139,17 @@
     gap: var(--space-1);
   }
   .record {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     font-size: var(--text-2xl);
     padding-inline: var(--inset);
     overflow-wrap: anywhere;
+  }
+  .mark {
+    display: inline-flex;
+    flex: none;
+    color: var(--mark);
   }
   /* The Activity under a hairline, its heading quiet. */
   .activity {

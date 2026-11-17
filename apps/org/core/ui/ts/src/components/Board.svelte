@@ -120,7 +120,7 @@
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: minmax(15rem, 1fr);
-    gap: var(--space-1);
+    gap: var(--space-2);
     overflow-x: auto;
     align-items: stretch;
   }

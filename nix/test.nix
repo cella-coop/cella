@@ -314,6 +314,10 @@ pkgs.testers.runNixOSTest {
 
       with subtest("a copy past its storage takes no write and says why, and past twice it ends, largest first"):
           fill(c, 6)
+          # fill() writes straight through psql, past the front's own
+          # tracking of what landed; past its 2 s reading cache, the next
+          # write finds it measured afresh.
+          time.sleep(3)
           out = host.execute(curl("c", "10.0.0.3", f"-X POST -H 'Origin: {front}' -d x=1 -w ' %{{http_code}}' {front}/session"))[1]
           assert out.endswith(" 507") and "Reset now for a fresh one" in out, f"a full copy answered {out}"
           assert "Camille Martin" in page("c", "10.0.0.3", "/sign-in"), "a full copy no longer reads"

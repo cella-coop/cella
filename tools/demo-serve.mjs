@@ -921,6 +921,15 @@ async function handle(req, res) {
   // its cookie, which member leases are bound to
   // (`apps/org/ts/src/lib/server/leases.ts`), never the cookie itself.
   headers['x-cella-browser'] = createHash('sha256').update(cookie).digest('hex')
+  // Its own scheme, so the copy's server, which trusts this header alone
+  // for its origin (`PROTOCOL_HEADER`), never assumes the `https` its kit
+  // defaults to: the host's own proxy sets this before the front ever
+  // sees the request, forwarded here as is; absent that, as in a bare
+  // test or a direct address, the front's own socket is never TLS, so it
+  // is `http`.
+  if (!headers['x-forwarded-proto']) {
+    headers['x-forwarded-proto'] = 'http'
+  }
   const upstream = http.request({ socketPath: socketOf(copy.name), path: req.url, method: req.method, headers }, (up) => {
     res.writeHead(up.statusCode ?? 502, up.headers)
     up.pipe(res)

@@ -22,8 +22,9 @@ export const copy = CELLA_DEMO && CELLA_DEMO_IDLE ? CELLA_DEMO_IDLE : 0
 // And when it resets however busy, in seconds since 1970, else 0.
 export const ends = copy ? CELLA_DEMO_ENDS : 0
 // A visitor's copy, now a room others may join: the code its link
-// carries (`/_demo/join?code=…`), which `cella demo serve` makes afresh
-// for each copy and this process never writes down; else ''.
+// carries, in its fragment, never a server's query or log
+// (`/_demo/join#…`), which `cella demo serve` makes afresh for each copy
+// and this process never writes down; else ''.
 export const join = copy ? CELLA_DEMO_JOIN : ''
 // How long a browser in this room may go unseen before `leases.ts`
 // forgets it; 900 (fifteen minutes) where `cella demo serve` does not

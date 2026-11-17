@@ -5,7 +5,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { EJECT_IDLE_MS, alone, eject, joinCode, lease, leased, present, release, sameCode, stale } from '../demo-rooms.mjs'
+import { EJECT_IDLE_MS, alone, eject, joinCode, lease, leased, present, release, roomFull, sameCode, stale } from '../demo-rooms.mjs'
 
 test('a join code is 16 random bytes, over 128 bits, and two are never alike', () => {
   const a = joinCode()
@@ -81,6 +81,18 @@ test('eject forgets every stale browser and frees the member each leased, keepin
   assert.deepEqual([...browsers.keys()], ['a'])
   assert.equal(leases.get('camille'), 'a', 'a kept their lease; they were not stale')
   assert.equal(leases.has('sasha'), false, 'b’s lease was freed when b was ejected')
+})
+
+test('a room is full once as many browsers are present as its cap, an idle one never counted', () => {
+  const now = Date.now()
+  const browsers = new Map([
+    ['a', now],
+    ['b', now],
+    ['c', now - EJECT_IDLE_MS - 1],
+  ])
+  assert.equal(roomFull(browsers, 2, now), true, 'two present browsers fill a cap of two')
+  assert.equal(roomFull(browsers, 3, now), false, 'the third is stale, not present, so the cap of three still has room')
+  assert.equal(roomFull(new Map(), 1, now), false, 'an empty room is never full')
 })
 
 test('a member is leased to the first browser that takes it, and refused to a second', () => {

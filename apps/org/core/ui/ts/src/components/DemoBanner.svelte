@@ -36,7 +36,7 @@
     {#if join}
       <p class="line">
         <span
-          >Share this copy: whoever opens <a href="/_demo/join?code={join}">its link</a> joins this room, as one of its members.</span
+          >Share this copy: whoever opens <a href="/_demo/join#{join}">its link</a> joins this room, as one of its members.</span
         >
       </p>
     {/if}

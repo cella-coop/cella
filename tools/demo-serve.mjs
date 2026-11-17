@@ -9,11 +9,19 @@
 // A browser is known by a cookie holding 32 random bytes and nothing
 // else; the front keeps, in memory alone, which room it is in and when
 // it was last seen. A room's Share this copy link carries a join code,
-// 16 more random bytes, compared in constant time and never logged: a
-// browser that opens it leaves whatever room it was in and joins this
-// one, a fresh cookie of its own, never the room's or the code. A room
-// holds more than one browser at once; its member leases, one fixture
-// member a browser at a time, are the server behind its socket's
+// 16 more random bytes, compared in constant time and never logged, in
+// the link's fragment, which no browser ever sends a server
+// (`/_demo/join#…`); opening it loads a small same-origin page whose
+// script reads the fragment and posts the code here in its body, which
+// this host's own pages alone may ask (`sameOrigin`, as `/_demo/start`
+// and `/_demo/reset` are), so a cross-site page can never join a room on
+// a visitor's behalf. A browser that posts its code leaves whatever room
+// it was in and joins this one, a fresh cookie of its own, never the
+// room's or the code; a room holds `--room-browsers` at once, past which
+// a join is refused, as a copy made past `--cap` is, and counts against
+// the same per-address and host limits a copy made does. A room holds
+// more than one browser at once; its member leases, one fixture member a
+// browser at a time, are the server behind its socket's
 // (`apps/org/ts/src/lib/server/leases.ts`), told each browser by an id
 // the front derives from its cookie, a one-way hash, never the cookie
 // itself. A browser unseen 15 minutes is forgotten: the room forgets its
@@ -40,11 +48,10 @@
 // back. `--cap` unset, the host's memory less `--reserve` over
 // `--footprint` MiB a room. A write takes no body past `--upload` MiB. An
 // address, an IPv6 one by its /64, holds `--per-address` rooms at most and
-// makes `--per-address-rate` in `--rate-window` seconds, the host
-// `--per-minute`, `--concurrent` at once; only a room made counts, never
-// one joined. To end a room is to stop its server, then drop its database
-// and its role. The front starts by ending every room an earlier run of
-// it left.
+// makes or joins `--per-address-rate` in `--rate-window` seconds, the host
+// `--per-minute`, `--concurrent` at once. To end a room is to stop its
+// server, then drop its database and its role. The front starts by ending
+// every room an earlier run of it left.
 //
 // It talks to Postgres as its own role over the cluster's socket, by the
 // PG* variables (`<database>_front` on `postgres`), a role that may make
@@ -55,11 +62,11 @@
 //   node tools/demo-serve.mjs --template NAME --server DIR [--port 3000]
 //     [--host 127.0.0.1] [--prefix NAME_v] [--sockets DIR] [--cap N]
 //     [--reserve 1536] [--footprint 160] [--idle 7200] [--lifetime 7200]
-//     [--evict-after 300] [--min-age 600] [--browser-idle 900] [--memory 192]
-//     [--connections 10] [--upload 2] [--storage 64] [--disk /var/lib]
-//     [--disk-floor 1024] [--per-address CAP-4] [--per-address-rate 30]
-//     [--rate-window 600] [--per-minute 60] [--concurrent 4] [--tick 30]
-//     [--trust-proxy]
+//     [--evict-after 300] [--min-age 600] [--browser-idle 900]
+//     [--room-browsers 8] [--memory 192] [--connections 10] [--upload 2]
+//     [--storage 64] [--disk /var/lib] [--disk-floor 1024]
+//     [--per-address CAP-4] [--per-address-rate 30] [--rate-window 600]
+//     [--per-minute 60] [--concurrent 4] [--tick 30] [--trust-proxy]
 
 import { spawn } from 'node:child_process'
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
@@ -67,7 +74,7 @@ import { mkdirSync, readFileSync, rmSync, statfsSync } from 'node:fs'
 import http from 'node:http'
 import { join } from 'node:path'
 import pg from 'pg'
-import { alone, joinCode, sameCode } from './demo-rooms.mjs'
+import { alone, joinCode, roomFull, sameCode } from './demo-rooms.mjs'
 
 const args = process.argv.slice(2)
 const flag = (name, fallback) => {
@@ -114,6 +121,9 @@ const config = {
   // Fifteen minutes, as `leases.ts` defaults to on the server behind a
   // room's socket, which `--browser-idle` and this must agree with.
   browserIdle: whole('--browser-idle', 900),
+  // Browsers a room holds at once: past it, Share this copy's link is
+  // refused, so a room cannot be grown without bound.
+  roomBrowsers: whole('--room-browsers', 8),
   memory: whole('--memory', 192),
   connections: whole('--connections', 10),
   upload: whole('--upload', 2),
@@ -569,9 +579,10 @@ function addressOf(req) {
   return `${groups.slice(0, 4).map((g) => (parseInt(g, 16) || 0).toString(16)).join(':')}::/64`
 }
 
-// The copies each address made lately, and the host this minute, each
-// counted once made, so a refused or failed attempt costs nothing: in
-// memory alone, forgotten once its window is past.
+// The copies each address made or joined lately, and the host this
+// minute, each counted once made or joined, so a refused or failed
+// attempt costs nothing: in memory alone, forgotten once its window is
+// past.
 const made = new Map()
 let minute = { at: 0, n: 0 }
 function prune(now) {
@@ -583,10 +594,17 @@ function prune(now) {
     kept.length ? made.set(k, kept) : made.delete(k)
   }
 }
+// Whether `address` has made or joined `--per-address-rate` rooms in
+// `--rate-window` seconds, or the host `--per-minute` between them all: a
+// join counts the same as a copy made, so neither is a way around the
+// other's limit. Call `prune` first.
+function rateLimited(address) {
+  return (made.get(address) ?? []).length >= config.perAddressRate || minute.n >= config.perMinute
+}
 // Why a copy cannot be made for `address` now, with the status to answer,
 // or null: copies being made at once, the copies it holds (`--per-address`,
-// the one a reset ends aside), the copies it made lately, the host's rate,
-// and the disk.
+// the one a reset ends aside), the copies and joins it made lately, the
+// host's rate, and the disk.
 function refusal(address, resetting) {
   prune(Date.now())
   const held = [...rooms()].filter((c) => c.address === address && c !== resetting).length
@@ -596,7 +614,7 @@ function refusal(address, resetting) {
   if (held >= config.perAddress) {
     return [429, `Your network holds ${held} copies of the demo already, as many as one may; try again once one resets.`]
   }
-  if ((made.get(address) ?? []).length >= config.perAddressRate || minute.n >= config.perMinute) {
+  if (rateLimited(address)) {
     return [429, 'Many copies were made from here lately; try again in a few minutes.']
   }
   if (freeDisk() < config.diskFloor) {
@@ -733,6 +751,30 @@ function prepare(res, { again = false } = {}) {
   })
 }
 
+// A room's Share this copy link, opened: never the code itself, which
+// sits in the link's fragment, after `#`, that no browser ever sends a
+// server; its script reads it from `location.hash` and posts it here, in
+// the body, same-origin, which `handle` checks as it does `/_demo/start`
+// and `/_demo/reset`. `Referrer-Policy: no-referrer`, since the fragment
+// lives in the page's own address even once it moves on.
+function joinPage(res) {
+  page(res, 200, {
+    title: 'Joining a room',
+    lines: ['Opening the room this link shares…', '<noscript>Joining a room needs JavaScript.</noscript><span id="state"></span>'],
+    headers: { 'referrer-policy': 'no-referrer' },
+    script: `<script>
+(async () => {
+  const state = document.getElementById('state')
+  const code = location.hash.slice(1)
+  if (!code) { state.textContent = 'This room’s link is missing its code.'; return }
+  const res = await fetch('/_demo/join', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'text/plain' }, body: code }).catch(() => null)
+  if (res && res.redirected) { location.href = res.url; return }
+  state.textContent = res ? await res.text() : 'The demo cannot be reached.'
+})()
+</script>`,
+  })
+}
+
 function plain(res, status, text, headers = {}) {
   res.writeHead(status, { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', ...headers })
   res.end(text)
@@ -762,17 +804,51 @@ async function handle(req, res) {
     return plain(res, 200, `${rooms().size} of ${config.cap}\n`)
   }
   if (path === '/_demo/join') {
-    req.resume()
-    if (req.method !== 'GET') {
-      return plain(res, 405, 'A room’s link is opened, not posted to.')
+    if (req.method === 'GET' || req.method === 'HEAD') {
+      req.resume()
+      return joinPage(res)
     }
-    // The code, compared in constant time against every room's, as a
-    // cookie is; never logged, by this request's path or any other.
-    const code = new URL(req.url ?? '/', 'http://_').searchParams.get('code') ?? ''
+    if (req.method !== 'POST') {
+      req.resume()
+      return plain(res, 405, 'A room’s link is opened, or posted to by its own page alone.')
+    }
+    if (!sameOrigin(req)) {
+      req.resume()
+      return plain(res, 403, 'Only this demo’s own pages ask to join a room.')
+    }
+    // The code, posted in the body, never a query string or a log line:
+    // short, so a stray large body is refused before it is read whole.
+    if (Number(req.headers['content-length'] ?? 0) > 1024) {
+      req.resume()
+      return plain(res, 413, 'A join code is short.')
+    }
+    const chunks = []
+    let read = 0
+    for await (const chunk of req) {
+      read += chunk.length
+      if (read > 1024) {
+        return plain(res, 413, 'A join code is short.')
+      }
+      chunks.push(chunk)
+    }
+    const code = Buffer.concat(chunks).toString('utf8').trim()
+    // A join counts against the same per-address and host limits a copy
+    // made does, so neither is a way around the other's.
+    const address = addressOf(req)
+    prune(Date.now())
+    if (rateLimited(address)) {
+      return plain(res, 429, 'Many copies were made or joined from here lately; try again in a few minutes.', { 'retry-after': '60' })
+    }
+    // Compared in constant time against every room's, as a cookie is;
+    // never logged, by this request's path or any other.
     const target = [...rooms()].find((c) => !c.ended && sameCode(c.join, code))
     if (!target) {
       return plain(res, 404, 'This room’s link is no longer good; it may have reset.')
     }
+    if (roomFull(browsersOf(target), config.roomBrowsers, Date.now(), config.browserIdle * 1000)) {
+      return plain(res, 503, 'This room holds as many browsers as one may; try again in a few minutes.', { 'retry-after': '60' })
+    }
+    counted(address)
     const fresh = randomBytes(32).toString('base64url')
     copies.set(fresh, target)
     seenAt.set(fresh, Date.now())

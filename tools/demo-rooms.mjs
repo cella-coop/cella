@@ -49,6 +49,14 @@ export function stale(browsers, now = Date.now(), ms = EJECT_IDLE_MS) {
   return [...browsers.entries()].filter(([, seen]) => now - seen > ms).map(([id]) => id)
 }
 
+// Whether a room already holds `max` browsers or more, counting only
+// those present (never one idle past `ms`, which a join would find gone
+// anyway): a join past it is refused, so Share this copy cannot grow a
+// room without bound.
+export function roomFull(browsers, max, now = Date.now(), ms = EJECT_IDLE_MS) {
+  return present(browsers, now, ms).length >= max
+}
+
 // Whether `id` is alone in its room: present, and no other browser is.
 export function alone(browsers, id, now = Date.now(), ms = EJECT_IDLE_MS) {
   const here = present(browsers, now, ms)

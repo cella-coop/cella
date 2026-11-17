@@ -36,7 +36,10 @@ reads = ["**", "!apps/site/src", "!apps/site/public", "!apps/site/test", "!apps/
 # `cella test` needs the dev cluster, which a fresh checkout has not
 # made: it is started on ports of the run's own, so lanes gating at once
 # on the box never meet on one, and stopped after, pass or fail, since
-# the checkout it lives in is removed when the run ends.
+# the checkout it lives in is removed when the run ends. Its ports sit
+# below the kernel's ephemeral range (32768 and up), where an outgoing
+# connection could already hold one: Postgres 10000 to 18999, analytics
+# 20000 to 28999 and each worker 100 past it.
 #
 # A lane's `cella-test` runs the e2e scenarios its change reaches
 # (apps/org/rs/index.md, Gates): `--since` main as the lane fetched it,
@@ -49,14 +52,14 @@ reads = ["**", "!apps/site/src", "!apps/site/public", "!apps/site/test", "!apps/
 # push runs, so main is still guarded in Chromium, Firefox and WebKit.
 [[op]]
 name = "cella-test"
-run = ["nix", "develop", "-c", "sh", "-c", "export CELLA_PGPORT=$((20000 + $$ % 20000)) CELLA_ANALYTICS_PORT=$((40000 + $$ % 20000)) BROWSERS=chromium; base=$(git rev-parse -q --verify origin/main || git rev-parse -q --verify main); cella db start && cella test ${base:+--since $base}; status=$?; cella db stop; exit $status"]
+run = ["nix", "develop", "-c", "sh", "-c", "export CELLA_PGPORT=$((10000 + $$ % 9000)) CELLA_ANALYTICS_PORT=$((20000 + $$ % 9000)) BROWSERS=chromium; base=$(git rev-parse -q --verify origin/main || git rev-parse -q --verify main); cella db start && cella test ${base:+--since $base}; status=$?; cella db stop; exit $status"]
 kind = "check"
 needs = ["cella-check"]
 reads = ["**", "!apps/site/src", "!apps/site/public", "!apps/site/test", "!apps/site/index.md", "!apps/site/astro.config.mjs", "!apps/site/tsconfig.json", "!apps/site/.prettierrc.json", "!packages/diagrams/src", "!packages/diagrams/index.md", "!packages/diagrams/tsconfig.json"]
 
 [[op]]
 name = "cella-test-all"
-run = ["nix", "develop", "-c", "sh", "-c", "export CELLA_PGPORT=$((20000 + $$ % 20000)) CELLA_ANALYTICS_PORT=$((40000 + $$ % 20000)); cella db start && cella test; status=$?; cella db stop; exit $status"]
+run = ["nix", "develop", "-c", "sh", "-c", "export CELLA_PGPORT=$((10000 + $$ % 9000)) CELLA_ANALYTICS_PORT=$((20000 + $$ % 9000)); cella db start && cella test; status=$?; cella db stop; exit $status"]
 kind = "check"
 needs = ["cella-check"]
 reads = ["**", "!apps/site/src", "!apps/site/public", "!apps/site/test", "!apps/site/index.md", "!apps/site/astro.config.mjs", "!apps/site/tsconfig.json", "!apps/site/.prettierrc.json", "!packages/diagrams/src", "!packages/diagrams/index.md", "!packages/diagrams/tsconfig.json"]
@@ -78,7 +81,7 @@ reads = ["apps/site", "packages/brand", "packages/diagrams", "apps/org/rs", "app
 # ports, stopped after, pass or fail.
 [[op]]
 name = "cella-scale"
-run = ["nix", "develop", "-c", "sh", "-c", "pnpm fetch --silent && export CELLA_PGPORT=$((20000 + $$ % 20000)) CELLA_ANALYTICS_PORT=$((40000 + $$ % 20000)); cella db start && cella test scale --members 1000; status=$?; cella db stop; exit $status"]
+run = ["nix", "develop", "-c", "sh", "-c", "pnpm fetch --silent && export CELLA_PGPORT=$((10000 + $$ % 9000)) CELLA_ANALYTICS_PORT=$((20000 + $$ % 9000)); cella db start && cella test scale --members 1000; status=$?; cella db stop; exit $status"]
 kind = "check"
 
 # The integrator's pass (apps/org/rs/index.md, Gates): `merge` is corpus's

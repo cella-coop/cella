@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, tick, type Component } from 'svelte'
+  import { onMount, type Component } from 'svelte'
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
   import SlidersHorizontal from 'phosphor-svelte/lib/SlidersHorizontal'
@@ -51,21 +51,26 @@
   import Cell from './Cell.svelte'
   import Dashboard from './Dashboard.svelte'
   import DropIndicator from './DropIndicator.svelte'
+  import FilterBar from './FilterBar.svelte'
   import Frame from './PageFrame.svelte'
   import Icon from './Icon.svelte'
   import Table from './Table.svelte'
   import Viewing from './Viewing.svelte'
 
-  // The one collection component: the same header, view bar and rows for
-  // every collection, as a list, a table, a gallery, a board, a calendar
-  // or a dashboard, and the drawer's
-  // View panel holding how they are shown. The view bar's tabs are the
-  // collection's preset views, then the viewer's own; the active one, and
-  // anything changed from it, live in the address, so a view can be
-  // linked and the server renders it as it is. The rows are the server's,
-  // kept, filtered and paged in SQL: the page of them the address asks
-  // for, out of `kept`, of which `matched` hold the text filter.
-  // Keyboard first: j and k move, Enter opens, / filters, c creates.
+  // The one collection component: the same header, view bar, filter bar
+  // and rows for every collection, as a list, a table, a gallery, a
+  // board, a calendar or a dashboard, and the drawer's View panel holding
+  // how they are shown (layout, grouping, sort, fields; display only).
+  // The filter bar draws on the line under the header, above the rows,
+  // once a condition or the search holds one; while neither does, Search
+  // and + Filter fold into the header instead (`FilterBar`). The view
+  // bar's tabs are the collection's preset views, then the viewer's own;
+  // the active one, and anything changed from it, live in the address, so
+  // a view can be linked and the server renders it as it is. The rows are
+  // the server's, kept, filtered and paged in SQL: the page of them the
+  // address asks for, out of `kept`, of which `matched` hold the text
+  // filter. Keyboard first: j and k move, Enter opens, / filters, f adds
+  // a filter, c creates.
   let {
     name,
     title,
@@ -206,6 +211,11 @@
   const resolved = (id: string) => preset(views.find((v) => v.id === id), look)
   const base = $derived(custom?.spec ?? resolved(view))
   const dirty = $derived(!alike({ ...spec, q: state.filter }, base))
+  // The filter bar draws once a condition or the search holds, or one is
+  // being typed or picked, or the view differs from its saved form, for
+  // its Save and Reset; while none of these, Search and + Filter fold
+  // into the header instead.
+  const barFull = $derived(spec.where.length > 0 || spec.q !== '' || !!state.adding || state.searching || dirty)
 
   const count = $derived(spec.q ? `${matched} of ${kept} · “${spec.q}”` : String(kept))
   const noun = $derived(title.toLowerCase())
@@ -329,17 +339,29 @@
     }
   }
 
-  // The filter is in the drawer: / opens it first when it is closed.
-  async function filter() {
-    shell.show(true)
-    shell.choose('view')
-    await tick()
-    state.focus()
-  }
-
   function naming() {
     shell.choose('view')
     saved.naming = true
+  }
+
+  // The filter bar's Save: through the view's own save, as its Save
+  // always went, a viewer's own view updated at once, a preset named as
+  // a new one, in the drawer's View panel.
+  function saveView() {
+    if (custom) {
+      saved.update(custom.id, { ...spec, q: state.filter })
+    } else {
+      naming()
+    }
+  }
+
+  // Reset: back to what the open view shows before this page's own
+  // changes, in the address and in the filter still being typed.
+  function reset() {
+    state.filter = base.q
+    state.adding = null
+    state.searching = false
+    change(base)
   }
 
   function onkeydown(e: KeyboardEvent) {
@@ -366,7 +388,10 @@
       open(state.active)
     } else if (e.key === '/') {
       e.preventDefault()
-      filter()
+      state.searching = true
+    } else if (e.key === 'f' || e.key === 'F') {
+      e.preventDefault()
+      state.openAdd()
     } else if (e.key === 'c' && creates.length) {
       create.show()
       e.preventDefault()
@@ -412,7 +437,6 @@
     {declared}
     opened={base}
     {custom}
-    {dirty}
     {pin}
     {whole}
     onchange={change}
@@ -431,6 +455,9 @@
   panels={[{ id: 'view', label: 'View', icon: SlidersHorizontal, body: viewing }]}
 >
   {#snippet actions()}
+    {#if !barFull}
+      <FilterBar compact {spec} {base} fields={typed} {values} {dirty} onchange={change} onsave={saveView} onreset={reset} />
+    {/if}
     {#if creates.length}
       <Button tone="primary" kbd="C" onclick={() => create.show()}><Icon icon={Plus} />New</Button>
     {/if}
@@ -446,7 +473,11 @@
             on={view === v.id}
             icon={mark(v.icon ?? (v.id === 'all' ? 'all' : undefined))}
             title="View {v.name} {noun} {v.count}"
-            onclick={() => (state.filter = '')}
+            onclick={() => {
+              state.filter = ''
+              state.searching = false
+              state.adding = null
+            }}
           >
             {v.name}
           </Pill>
@@ -472,7 +503,11 @@
             title="View {c.name} {noun} {saved.tallies[c.id] ?? ''}"
             aria-roledescription="draggable view"
             data-drag-handle
-            onclick={() => (state.filter = c.spec.q)}
+            onclick={() => {
+              state.filter = c.spec.q
+              state.searching = false
+              state.adding = null
+            }}
           >
             {c.name}
           </Pill>
@@ -483,6 +518,10 @@
     <button class="new" title="Save this as a view" aria-label="Save this as a view" onclick={naming}><Icon icon={Plus} /></button>
   </nav>
   {/snippet}
+
+  {#if barFull}
+    <FilterBar {spec} {base} fields={typed} {values} {dirty} onchange={change} onsave={saveView} onreset={reset} />
+  {/if}
 
   {#if errors.length}
     <div role="status">

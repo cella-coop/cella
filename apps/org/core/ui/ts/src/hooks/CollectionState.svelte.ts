@@ -17,10 +17,17 @@ export class CollectionState {
     void this.#filter
     return -1
   })
-  // The field the View panel adds a condition on, while its popover picks
+  // The field the filter bar adds a condition on, while its popover picks
   // the first value it keeps.
   adding: string | null = $state(null)
+  // The filter bar's search: expanded to its input, which a blur or
+  // Escape collapses back, to its chip once it holds text, else to the
+  // magnifier alone.
+  searching = $state(false)
   search: HTMLInputElement | undefined = $state()
+  // The filter bar's + Filter, wherever it is mounted, header or bar, so
+  // "F" opens it as a click would.
+  adder: HTMLButtonElement | undefined = $state()
   // The groups the viewer collapsed, by value; a reload opens them
   // again, as a view the address alone draws has no viewer to keep it
   // for. `SvelteSet`, so adding or deleting a value is itself seen,
@@ -85,6 +92,12 @@ export class CollectionState {
 
   focus() {
     this.search?.focus()
+  }
+
+  // "F": opens + Filter's list of fields, as a click on it would.
+  openAdd() {
+    this.adder?.focus()
+    this.adder?.click()
   }
 
   // From the filter into the rows.

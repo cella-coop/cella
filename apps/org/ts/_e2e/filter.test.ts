@@ -1,17 +1,22 @@
-// A view filters on any field with a handful of values, in every
-// browser: signed in as Julien on the dev server, the expenses filtered
-// by their status, an enumeration, in a list, a table, a gallery, a board
-// and a calendar; the files, by who
+// A view filters on any field with a handful of values, through the
+// filter bar's + Filter, in every browser: signed in as Julien on the
+// dev server, the expenses filtered by their status, an enumeration, in
+// a list, a table, a gallery, a board and a calendar; the files, by who
 // uploaded them, a person, in a list; and the mandates by the
-// circle that issued them, a circle, in a list and on a board. Filter
+// circle that issued them, a circle, in a list and on a board. + Filter
 // offers each field, its chip's popover its values, a person and a circle
 // by name, and each layout draws only the rows the condition keeps, as
-// the scenario reads them itself. A view saved with a condition restores
-// it from its tab, and the address alone draws it. Filter offers a
-// field's values among the rows the other conditions keep: the mandates'
-// powers, too many across them all, once Issued by keeps one circle's,
-// and only the powers that circle's mandates hold. `SHOTS` names where
-// its screenshots go. Nothing is written. Run by `cella test e2e filter`.
+// the scenario reads them itself; the chip it adds carries a dot, unsaved.
+// A view saved with a condition restores it from its tab, and the
+// address alone draws it. + Filter offers a field's values among the
+// rows the other conditions keep: the mandates' powers, too many across
+// them all, once Issued by keeps one circle's, and only the powers that
+// circle's mandates hold. A second scenario covers the bar itself: a
+// chip's x removes it, a click reopens it; Search expands, filters live
+// and commits as a chip; "/" and "F" open them; a filter in the address
+// survives a reload; Save and Reset act on a changed view; the View
+// panel carries no Filter. `SHOTS` names where its screenshots go.
+// Nothing is written. Run by `cella test e2e filter`.
 // covers: expense file
 
 import { after, before, test } from 'node:test'
@@ -123,12 +128,12 @@ eachBrowser((browserName, launch) => {
       }
       const condition = () => JSON.parse(new URL(page.url()).searchParams.get('where') ?? '[]')
 
-      // Filter on a field in the View panel: Filter offers it, its chip's
-      // popover the value, named as a person or a circle is; the address
-      // takes the condition and the layout draws only what it keeps.
+      // Filter on a field through the filter bar's + Filter: it offers
+      // the field, its chip's popover the value, named as a person or a
+      // circle is; the address takes the condition and the layout draws
+      // only what it keeps, the chip carrying a dot, unsaved.
       const filtering = async (name: string, layout: string, field: { key: string; label: string }, value: string, said: string) => {
-        const view = panel(page)
-        await choose(view.getByRole('combobox', { name: 'Filter' }), { label: field.label })
+        await choose(page.getByRole('combobox', { name: 'Filter' }), { label: field.label })
         const item = page.locator(`[role="menuitemcheckbox"][data-value="${value}"]`)
         await item.waitFor()
         assert.equal((await item.innerText()).trim(), said, `${browserName}: ${name}'s ${field.label} offers ${value} as ${said}`)
@@ -136,13 +141,15 @@ eachBrowser((browserName, launch) => {
         await page.waitForURL((u) => u.searchParams.has('where'))
         assert.deepEqual(condition(), [{ field: field.key, is: [value] }])
         await page.keyboard.press('Escape')
-        // The pointer rests on the panel's heading, never on a row's link
+        // The pointer rests on the page's title, never on a row's link
         // the popover uncovered, whose preload the next visit would abort.
-        await view.getByRole('heading', { name: 'View', exact: true }).hover()
+        await page.locator('h1').first().hover()
         const want = (await rows(name, [{ field: field.key, is: [value] }])).map((r) => r.id)
         assert.ok(want.length > 0 && want.length < (await rows(name)).length, `${name} by ${field.key} keeps some rows and not all`)
         await keeps(page, name, layout, want, `${browserName} ${name} ${layout} by ${field.key}`)
-        assert.match(await view.locator('.chips').innerText(), new RegExp(`${field.label}: ${said}`))
+        const chip = page.locator('.bar .chip', { hasText: `${field.label}: ${said}` })
+        await chip.waitFor()
+        assert.equal(await chip.locator('.dot').count(), 1, `${browserName}: ${name}'s unsaved ${field.label} chip carries a dot`)
       }
 
       // The day most expenses were spent on, which the calendar opens on,
@@ -180,9 +187,10 @@ eachBrowser((browserName, launch) => {
         await filtering('mandates', layout, { key: 'issuer', label: 'Issued by' }, issuer, named)
       }
 
-      // A view saved with its condition restores it from its tab.
+      // A view saved with its condition restores it from its tab: the
+      // filter bar's Save, through the View panel's own naming form.
       const want = (await rows('mandates', [{ field: 'issuer', is: [issuer] }])).map((r) => r.id)
-      await panel(page).getByRole('button', { name: 'Save', exact: true }).click()
+      await page.getByRole('button', { name: 'Save', exact: true }).click()
       await panel(page).getByLabel('View name').fill('Issued by one')
       await panel(page).getByRole('button', { name: 'Save view' }).click()
       await page.waitForURL((u) => u.searchParams.get('v')?.startsWith('c-') ?? false)
@@ -196,7 +204,7 @@ eachBrowser((browserName, launch) => {
       // The address alone draws the condition, from the server.
       await visit(`/mandates?view=table&by=&sort=&where=${encodeURIComponent(JSON.stringify([{ field: 'issuer', is: [issuer] }]))}`)
       await keeps(page, 'mandates', 'table', want, `${browserName}: the address`)
-      assert.match(await panel(page).locator('.chips').innerText(), new RegExp(`Issued by: ${named}`))
+      assert.match(await page.locator('.bar').innerText(), new RegExp(`Issued by: ${named}`))
       mkdirSync(shots, { recursive: true })
       await page.screenshot({ path: `${shots}/mandates-${browserName}.png` })
 
@@ -218,12 +226,12 @@ eachBrowser((browserName, launch) => {
       const own = await powers([{ field: 'issuer', is: [narrow] }])
       const others = (await powers([])).filter((p) => !own.includes(p))
       assert.ok(others.length > 0, 'other circles issued powers this one did not')
-      const offers = async () => (await listed(panel(page).getByRole('combobox', { name: 'Filter' }))).map((o) => o.label)
+      const offers = async () => (await listed(page.getByRole('combobox', { name: 'Filter' }))).map((o) => o.label)
       await visit('/mandates?view=list')
-      assert.ok(!(await offers()).includes('Power'), `${browserName}: Filter offers no Power across every mandate`)
+      assert.ok(!(await offers()).includes('Power'), `${browserName}: + Filter offers no Power across every mandate`)
       await visit(`/mandates?view=list&where=${encodeURIComponent(JSON.stringify([{ field: 'issuer', is: [narrow] }]))}`)
-      assert.ok((await offers()).includes('Power'), `${browserName}: Filter offers Power once Issued by keeps one circle's mandates`)
-      await choose(panel(page).getByRole('combobox', { name: 'Filter' }), { label: 'Power' })
+      assert.ok((await offers()).includes('Power'), `${browserName}: + Filter offers Power once Issued by keeps one circle's mandates`)
+      await choose(page.getByRole('combobox', { name: 'Filter' }), { label: 'Power' })
 
       const menu = page.locator('[aria-label="Condition on Power"]')
       await menu.locator('[role="menuitemcheckbox"]').first().waitFor()
@@ -231,6 +239,179 @@ eachBrowser((browserName, launch) => {
       assert.deepEqual([...offered].sort(), own, `${browserName}: Power offers the powers of the mandates Issued by keeps, and only those`)
       assert.ok(!offered.some((p) => others.includes(p)), `${browserName}: no power only another circle's mandates hold is offered`)
       await page.keyboard.press('Escape')
+
+      assert.deepEqual(errors, [], `${browserName}: no page error`)
+      await context.close()
+    } finally {
+      await browser.close()
+      await stop()
+    }
+  })
+})
+
+eachBrowser((browserName, launch) => {
+  test(`${browserName}: the filter bar's chips, its Search and + Filter, "/" and "F", a reload, and Save and Reset`, async () => {
+    const { base, stop } = await serve()
+    const browser = await launch()
+    try {
+      const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
+      await signIn(context, base, julien)
+      const page = await context.newPage()
+      const errors: string[] = []
+      page.on('pageerror', (e) => errors.push(`${page.url()}: ${e.message}`))
+
+      const expenses = await rows('expenses')
+      const [a, b] = await held('expenses', 'status')
+      assert.ok(a && b && a !== b, 'expenses stand in at least two statuses')
+
+      // Expenses' own look is a board; bare, it draws its own default
+      // form, nothing changed from it.
+      await page.goto(`${base}/expenses`)
+      await page.waitForLoadState('networkidle')
+
+      // Nothing is filtered, the view its own default form: no bar above
+      // the rows, and the View panel itself offers no Filter and no
+      // search box, which are the bar's alone.
+      assert.equal(await page.locator('.content > div.bar').count(), 0, `${browserName}: no bar above the rows while nothing is filtered`)
+      assert.equal(await panel(page).getByRole('combobox', { name: 'Filter' }).count(), 0, `${browserName}: the View panel offers no Filter`)
+      assert.equal(await panel(page).getByPlaceholder('Search').count(), 0, `${browserName}: the View panel has no search box`)
+      await page.getByRole('button', { name: 'Search' }).waitFor()
+      await page.getByRole('combobox', { name: 'Filter' }).waitFor()
+
+      // "/" opens Search, focused, drawing the bar at once; an empty blur
+      // folds it back into the header.
+      await page.keyboard.press('/')
+      const search = page.getByRole('textbox', { name: 'Search' })
+      await search.waitFor()
+      assert.ok(await search.evaluate((el) => el === document.activeElement), `${browserName}: / focuses Search`)
+      assert.equal(await page.locator('.content > div.bar').count(), 1, `${browserName}: the bar draws above the rows once Search is open`)
+      await search.blur()
+      assert.equal(await page.locator('.content > div.bar').count(), 0, `${browserName}: an empty Search folds back into the header on blur`)
+
+      // Grouped by nothing and in the collection's own order, for a
+      // deterministic check that typing filters live.
+      await page.goto(`${base}/expenses?view=list&by=&sort=`)
+      await page.waitForLoadState('networkidle')
+      await page.keyboard.press('/')
+      await search.waitFor()
+      await search.fill(a)
+      await page.waitForURL((u) => u.searchParams.get('q') === a)
+      const wantA = (await rows('expenses', [{ field: 'status', is: [a] }])).map((r) => r.id)
+      assert.ok(wantA.length > 0 && wantA.length < expenses.length, 'status a keeps some expenses and not all')
+      await keeps(page, 'expenses', 'list', wantA, `${browserName}: Search filters live`)
+
+      // A blur commits it as a chip, which a click reopens, its text kept.
+      await search.blur()
+      const searchChip = page.locator('.bar .chip', { hasText: `Search: "${a}"` })
+      await searchChip.waitFor()
+      assert.equal(await page.getByRole('textbox', { name: 'Search' }).count(), 0, `${browserName}: the input folds to its chip on blur`)
+      await searchChip.getByRole('button', { name: new RegExp(`^Search: "${a}"`) }).click()
+      await search.waitFor()
+      assert.equal(await search.inputValue(), a, `${browserName}: reopening the chip keeps what was typed`)
+
+      // Its own × removes it at once, without the typing's debounce.
+      await search.blur()
+      await searchChip.waitFor()
+      await searchChip.getByRole('button', { name: 'Remove the search' }).click()
+      await page.waitForURL((u) => !u.searchParams.has('q'))
+      await searchChip.waitFor({ state: 'detached' })
+      assert.equal(await page.locator('.bar .chip', { hasText: 'Search:' }).count(), 0, `${browserName}: × removes the search at once`)
+
+      // "F" opens + Filter's list of fields, as a click on it would.
+      await page.keyboard.press('f')
+      const addFilter = page.getByRole('combobox', { name: 'Filter' })
+      await addFilter.waitFor()
+      const addList = page.locator(`[id="${await addFilter.getAttribute('aria-controls')}"]`)
+      const statusOption = addList.locator('[role="option"][data-value="status"]')
+      await statusOption.waitFor()
+      assert.equal(await addFilter.getAttribute('aria-expanded'), 'true', `${browserName}: F opens + Filter`)
+      await statusOption.click()
+      const statusMenu = page.locator('[aria-label="Condition on Status"]')
+      await statusMenu.locator(`[role="menuitemcheckbox"][data-value="${a}"]`).waitFor()
+      await statusMenu.locator(`[role="menuitemcheckbox"][data-value="${a}"]`).click()
+      await page.waitForURL((u) => u.searchParams.has('where'))
+      await page.keyboard.press('Escape')
+      await page.locator('h1').first().hover()
+
+      // Clicking the chip (not its ×) reopens its popover, the value it
+      // keeps checked.
+      const statusChip = page.locator('.bar .chip', { hasText: `Status: ${a}` })
+      await statusChip.waitFor()
+      await statusChip.getByRole('button', { name: new RegExp(`^Status: ${a}`) }).click()
+      await statusMenu.waitFor()
+      assert.equal(await statusMenu.locator(`[role="menuitemcheckbox"][data-value="${a}"]`).getAttribute('aria-checked'), 'true', `${browserName}: the chip reopens on the value it keeps`)
+      await page.keyboard.press('Escape')
+      await page.locator('h1').first().hover()
+
+      // Its own × removes it too.
+      await statusChip.getByRole('button', { name: 'Remove the Status filter' }).click()
+      await page.waitForURL((u) => !u.searchParams.has('where'))
+      await statusChip.waitFor({ state: 'detached' })
+      assert.equal(await page.locator('.bar .chip', { hasText: 'Status:' }).count(), 0, `${browserName}: × removes the condition at once`)
+
+      // A filter in the address is shareable and survives a reload.
+      const direct = `${base}/expenses?view=list&by=&sort=&where=${encodeURIComponent(JSON.stringify([{ field: 'status', is: [a] }]))}`
+      await page.goto(direct)
+      await page.waitForLoadState('networkidle')
+      await page.locator('.bar .chip', { hasText: `Status: ${a}` }).waitFor()
+      await page.reload()
+      await page.waitForLoadState('networkidle')
+      assert.equal(new URL(page.url()).searchParams.get('where'), JSON.stringify([{ field: 'status', is: [a] }]), `${browserName}: the filter survives a reload, in the address`)
+      await page.locator('.bar .chip', { hasText: `Status: ${a}` }).waitFor()
+      mkdirSync(shots, { recursive: true })
+      await page.screenshot({ path: `${shots}/bar-1280-${browserName}.png` })
+
+      // On a phone the bar's chips scroll sideways; the page itself never
+      // wraps wider than the viewport.
+      const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
+      await signIn(phone, base, julien)
+      // Shut, so the screenshot shows the collection, the bar above it,
+      // not the View panel over it.
+      await phone.addCookies([{ name: 'cella-drawer', value: 'closed', url: base }])
+      const phonePage = await phone.newPage()
+      await phonePage.goto(direct)
+      await phonePage.waitForLoadState('networkidle')
+      await phonePage.locator('.bar .chip', { hasText: `Status: ${a}` }).waitFor()
+      await phonePage.screenshot({ path: `${shots}/bar-390-${browserName}.png` })
+      const widths = await phonePage.evaluate(() => ({ doc: document.documentElement.scrollWidth, view: document.documentElement.clientWidth }))
+      assert.ok(widths.doc <= widths.view + 1, `${browserName}: at 390px the page itself does not scroll wider (${widths.doc} vs ${widths.view})`)
+      const overflowsX = await phonePage.locator('.bar .chips').evaluate((el) => el.scrollWidth > el.clientWidth || getComputedStyle(el).overflowX === 'auto')
+      assert.ok(overflowsX, `${browserName}: at 390px the chips scroll sideways within the bar`)
+      await phone.close()
+
+      // Save and Reset, at the bar's end, once the view differs from All.
+      await page.goto(`${base}/expenses`)
+      await page.waitForLoadState('networkidle')
+      await choose(page.getByRole('combobox', { name: 'Filter' }), { label: 'Status' })
+      await statusMenu.locator(`[role="menuitemcheckbox"][data-value="${a}"]`).waitFor()
+      await statusMenu.locator(`[role="menuitemcheckbox"][data-value="${a}"]`).click()
+      await page.waitForURL((u) => u.searchParams.has('where'))
+      await page.keyboard.press('Escape')
+      await page.locator('h1').first().hover()
+      await page.getByRole('button', { name: 'Save', exact: true }).waitFor()
+      await page.getByRole('button', { name: 'Reset', exact: true }).click()
+      await page.waitForURL((u) => !u.searchParams.has('where'))
+      await page.locator('.content > div.bar').waitFor({ state: 'detached' })
+      assert.equal(await page.locator('.content > div.bar').count(), 0, `${browserName}: Reset returns to All's own form, the bar folding back into the header`)
+
+      // Save, through the View panel's own naming form, since All is no
+      // viewer's own.
+      await choose(page.getByRole('combobox', { name: 'Filter' }), { label: 'Status' })
+      await statusMenu.locator(`[role="menuitemcheckbox"][data-value="${a}"]`).waitFor()
+      await statusMenu.locator(`[role="menuitemcheckbox"][data-value="${a}"]`).click()
+      await page.waitForURL((u) => u.searchParams.has('where'))
+      await page.keyboard.press('Escape')
+      await page.locator('h1').first().hover()
+      await page.getByRole('button', { name: 'Save', exact: true }).click()
+      await panel(page).getByLabel('View name').fill('Status a')
+      await panel(page).getByRole('button', { name: 'Save view' }).click()
+      await page.waitForURL((u) => u.searchParams.get('v')?.startsWith('c-') ?? false)
+      await page.waitForLoadState('networkidle')
+      await page.getByRole('button', { name: 'Save', exact: true }).waitFor({ state: 'detached' })
+      assert.equal(await page.getByRole('button', { name: 'Save', exact: true }).count(), 0, `${browserName}: Save is gone once the view is saved`)
+      const savedChip = page.locator('.bar .chip', { hasText: `Status: ${a}` })
+      await savedChip.waitFor()
+      assert.equal(await savedChip.locator('.dot').count(), 0, `${browserName}: the saved view's own chip draws plain, no dot`)
 
       assert.deepEqual(errors, [], `${browserName}: no page error`)
       await context.close()

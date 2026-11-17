@@ -16,11 +16,11 @@
   // each an icon and its value, its name on hover and for a screen reader
   // and drawn only where the value cannot say what it is (a figure, a
   // count, a phrase); a press opens the popover that changes it, where it
-  // can be changed. The record's dates sit in a section of their own, the
-  // log's four in one quiet footer line. A property with no value is not
-  // listed, but Add property offers the ones that can be set; a section
-  // with nothing in it does not render.
-  let { items, part = 'main' }: { items: Prop[]; part?: 'main' | 'foot' } = $props()
+  // can be changed. The record's dates sit in a section of their own, its
+  // Created and Updated last among them, each its day and who. A property
+  // with no value is not listed, but Add property offers the ones that can
+  // be set; a section with nothing in it does not render.
+  let { items }: { items: Prop[] } = $props()
   const shell = useShell()
   const id = $props.id()
 
@@ -55,16 +55,17 @@
     return out
   })
 
+  // The log's stamps, rows of Dates as any date is: when, then who.
   const name = (a: string) => shell.name(a) ?? a
   const get = (label: string) => log.find((p) => p.label === label)
-  const day = (p: Prop | undefined) => (p ? show(p.value, 'date') : null)
-  const by = (p: Prop | undefined) => (p ? name(String(p.value)) : null)
-  const line = (when: string, who: string, verb: string) => {
-    const w = day(get(when))
-    const a = by(get(who))
-    return w || a ? [verb, w, a ? `by ${a}` : null].filter(Boolean).join(' ') : null
-  }
-  const footer = $derived([line('Created', 'Created by', 'Created'), line('Updated', 'Updated by', 'Updated')].filter(Boolean).join(' · '))
+  const stamps = $derived(
+    [
+      ['Created', 'Created by'],
+      ['Updated', 'Updated by'],
+    ]
+      .map(([when, who]) => ({ label: when, when: get(when), who: get(who) }))
+      .filter((s) => s.when || s.who),
+  )
 
   const add = (v: string | string[]) => state.add(Array.isArray(v) ? v[0] : v)
 </script>
@@ -112,7 +113,7 @@
   </li>
 {/snippet}
 
-{#if part === 'main' && (groups.length || offered.length)}
+{#if groups.length || offered.length}
   <section class="sect" aria-labelledby="{id}-props">
     <h2 id="{id}-props">Properties</h2>
     {#each groups as g (g.name)}
@@ -131,17 +132,24 @@
   </section>
 {/if}
 
-{#if part === 'main' && dates.length}
+{#if dates.length || stamps.length}
   <section class="sect" aria-labelledby="{id}-dates">
     <h2 id="{id}-dates">Dates</h2>
     <ul class="props">
       {#each dates as p (p.label)}{@render row(p)}{/each}
+      {#each stamps as s (s.label)}
+        <li class="row">
+          <span class="line plain" title={s.label}>
+            {#if s.when}<Value value={s.when.value} kind="date" size="drawer" label={s.label} />{:else}<span>{s.label}</span>{/if}
+            {#if s.who}
+              <span class="crew" aria-hidden="true"><Avatar name={name(String(s.who.value))} size="1.25rem" /></span>
+              <span class="who"><span class="visually-hidden">by </span>{name(String(s.who.value))}</span>
+            {/if}
+          </span>
+        </li>
+      {/each}
     </ul>
   </section>
-{/if}
-
-{#if part === 'foot' && footer}
-  <p class="foot">{footer}</p>
 {/if}
 
 <style>
@@ -150,8 +158,7 @@
     gap: var(--space-1);
     padding-inline: var(--inset, 0);
   }
-  .sect:not(:first-child),
-  .foot {
+  .sect:not(:first-child) {
     margin-top: var(--space-3);
   }
   h2 {
@@ -221,13 +228,5 @@
   a:hover {
     text-decoration: underline;
     text-decoration-color: var(--accent-border);
-  }
-  /* Who touched the record, quieter than what it is: the drawer's last
-     word, never its first. */
-  .foot {
-    margin-block-end: 0;
-    padding-inline: var(--inset, 0);
-    font-size: var(--text-xs);
-    color: var(--text-subtle);
   }
 </style>

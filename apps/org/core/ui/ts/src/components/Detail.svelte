@@ -91,7 +91,6 @@
       <Related items={related} />
     </section>
   {/if}
-  <Properties items={[...properties, ...history]} part="foot" />
 {/snippet}
 
 <Frame

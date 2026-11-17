@@ -32,6 +32,16 @@ export const variables = defineEnvVars({
       "A visitor's copy of the demo: when it resets however busy, in seconds since 1970, which `cella demo serve` sets from its lifetime; the banner counts down to it where it comes before the idle reset. Unset, no such end.",
     schema: (v) => (v ? whole(v, 'CELLA_DEMO_ENDS') : 0),
   },
+  CELLA_DEMO_JOIN: {
+    description:
+      "A visitor's copy of the demo, now a room: the join code its link carries, which `cella demo serve` makes afresh for each copy and never logs, so the banner can offer Share this copy. Unset, no such link.",
+    schema: (v) => v || '',
+  },
+  CELLA_DEMO_BROWSER_IDLE: {
+    description:
+      "A visitor's room: how many seconds a browser in it may go unseen before `#lib/server/leases.ts` forgets it and frees the fixture member it leased, as `cella demo serve`'s own `--browser-idle` agrees. Unset, 900 (fifteen minutes).",
+    schema: (v) => (v ? whole(v, 'CELLA_DEMO_BROWSER_IDLE') : 0),
+  },
   CELLA_SESSION_KEY_FILE: {
     description: 'The 32-byte key the server MACs its sessions with. Unset, a fresh key per process, whose sessions end with it.',
     schema: (v) => v || undefined,

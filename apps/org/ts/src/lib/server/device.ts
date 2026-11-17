@@ -1,7 +1,7 @@
 import { today } from '@cella/org-db'
 import { circles, sitting } from '@cella/org-circle/api'
 import { devices, person } from '@cella/org-person/api'
-import { CELLA_DEMO, CELLA_DEMO_ENDS, CELLA_DEMO_IDLE, CELLA_DEV } from '$app/env/private'
+import { CELLA_DEMO, CELLA_DEMO_BROWSER_IDLE, CELLA_DEMO_ENDS, CELLA_DEMO_IDLE, CELLA_DEMO_JOIN, CELLA_DEV } from '$app/env/private'
 import { using } from './db.ts'
 import { own } from './fixture.ts'
 
@@ -21,6 +21,14 @@ export const demo = CELLA_DEMO
 export const copy = CELLA_DEMO && CELLA_DEMO_IDLE ? CELLA_DEMO_IDLE : 0
 // And when it resets however busy, in seconds since 1970, else 0.
 export const ends = copy ? CELLA_DEMO_ENDS : 0
+// A visitor's copy, now a room others may join: the code its link
+// carries (`/_demo/join?code=…`), which `cella demo serve` makes afresh
+// for each copy and this process never writes down; else ''.
+export const join = copy ? CELLA_DEMO_JOIN : ''
+// How long a browser in this room may go unseen before `leases.ts`
+// forgets it; 900 (fifteen minutes) where `cella demo serve` does not
+// say otherwise, or this is no room.
+export const browserIdle = copy && CELLA_DEMO_BROWSER_IDLE ? CELLA_DEMO_BROWSER_IDLE : 900
 
 // Who the sign-in page offers in dev mode or a demo: everyone with a
 // fixture device in force, that device's label, by name, and the circles

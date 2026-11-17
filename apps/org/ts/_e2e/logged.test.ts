@@ -96,7 +96,7 @@ eachBrowser((browserName, launch) => {
           // changed next is changed from it.
           await until(() => panel(page).getByRole('button', { name, exact: true }).getAttribute('aria-pressed'), (p) => p === 'true', `${name} is drawn`)
         }
-        const date = () => panel(page).getByRole('combobox', { name: 'Group by' })
+        const date = () => panel(page).getByRole('combobox', { name: 'Date' })
 
         // A calendar of contacts, by Created: each on the day it was added;
         // grouped by nothing, so the table later reads as one.

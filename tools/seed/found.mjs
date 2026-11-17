@@ -114,12 +114,14 @@ export async function seed(db, read, { from, dir }) {
     // circle, the root's where it names none.
     const structure = read('circle')
     for (const c of structure.circle ?? []) {
-      await db.query('INSERT INTO circle.circle (id, name, assembly, purpose, procedure) VALUES ($1, $2, $3, $4, $5)', [
+      // its own icon too, a slug of the curated set (`record-icons.ts`), or none
+      await db.query('INSERT INTO circle.circle (id, name, assembly, purpose, procedure, icon) VALUES ($1, $2, $3, $4, $5, $6)', [
         c.id,
         c.name,
         c.assembly ?? false,
         c.purpose ?? '',
         c.procedure ?? 'consent',
+        c.icon ?? null,
       ])
     }
     for (const r of structure.role ?? []) {

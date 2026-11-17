@@ -8,52 +8,62 @@
 [[circle]]
 id = "ag"
 name = "Assembly"
+icon = "hand-palm"
 assembly = true
 purpose = "every member, one vote: statutes, admissions, accounts and surplus"
 
 [[circle]]
 id = "coordination"
 name = "Coordination"
+icon = "compass"
 purpose = "weekly: pipeline, staffing and anything that crosses circles"
 
 [[circle]]
 id = "web"
 name = "Web"
+icon = "globe"
 purpose = "sites, shops and applications"
 
 [[circle]]
 id = "brand"
 name = "Brand"
+icon = "palette"
 purpose = "identity, print, packaging, illustration and motion"
 
 [[circle]]
 id = "marketing"
 name = "Marketing"
+icon = "megaphone"
 purpose = "strategy, content, social media and campaigns"
 
 [[circle]]
 id = "operations"
 name = "Operations"
+icon = "gear-six"
 purpose = "finance, administration, contracts and tools"
 
 [[circle]]
 id = "clients"
 name = "Clients"
+icon = "heart"
 purpose = "client relationships: briefs, proposals, renewals and care after launch"
 
 [[circle]]
 id = "hiring"
 name = "Hiring"
+icon = "binoculars"
 purpose = "recruitment, onboarding and the path to membership"
 
 [[circle]]
 id = "care"
 name = "Care"
+icon = "flower-lotus"
 purpose = "wellbeing, workload, conflict and peer support"
 
 [[circle]]
 id = "tools"
 name = "Tools"
+icon = "wrench"
 purpose = "the studio's own stack: hosting, accounts, licences and internal tooling"
 
 # The features each circle enabled, in its order, an accordion's run

@@ -8,13 +8,16 @@
 // starts its server with `CELLA_DEMO_IDLE`, says on every page it is the
 // visitor's own and offers Reset; a room's lifetime
 // (`CELLA_DEMO_LIFETIME`) counts down only once its first member signs
-// in, never before.
+// in, never before; and, in a real browser, a successful Copy invite
+// stays on the page and shows Copied, never following the link.
 // covers: core
 
 import { after, before, it } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
+import { chromium } from 'playwright-core'
 import { fixture, random, sha256 } from '@cella/org-sign'
+import { signIn } from './browser.ts'
 import { Shell } from './serve.ts'
 
 const su = new pg.Client()
@@ -90,4 +93,31 @@ it("a room's lifetime counts down only once its first member has signed in, neve
   const after = await shell.page('/inbox', camille)
   assert.match(strip(after.text), /\d:\d\d:\d\d/, 'camille’s sign-in starts the room’s lifetime, which the strip now counts down')
   assert.doesNotMatch(strip(after.text), />0:00:00</, 'the lifetime just started; it has not run out')
+})
+
+// browsers: Chromium alone: clipboard permissions are its own to grant.
+it('a successful Copy invite leaves the page where it is and shows Copied, never following the link', async () => {
+  const join = 'e2e-join-code'
+  await shell.start('2026-10-24', { CELLA_DEMO: '1', CELLA_DEMO_IDLE: '7200', CELLA_DEMO_JOIN: join })
+  const browser = await chromium.launch()
+  try {
+    // A real browser against the bare shell, never through the room's own
+    // front (`tools/demo-serve.mjs`): `x-cella-browser` stands in for what
+    // the front would hand it, so this one browser may hold camille's
+    // lease at all (`#lib/server/leases.ts`'s `grant`, which refuses a
+    // sign-in naming none, inside a room).
+    const context = await browser.newContext({ extraHTTPHeaders: { 'x-forwarded-proto': 'http', 'x-cella-browser': 'e2e-copy-invite' } })
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: shell.base })
+    await signIn(context, shell.base, camille)
+    const page = await context.newPage()
+    await page.goto(`${shell.base}/inbox`)
+    const link = page.getByRole('link', { name: 'Copy invite' })
+    await link.click()
+    await page.getByRole('link', { name: 'Copied' }).waitFor()
+    assert.equal(page.url(), `${shell.base}/inbox`, 'the click never followed the link')
+    const clipboard = await page.evaluate(() => navigator.clipboard.readText())
+    assert.match(clipboard, new RegExp(`/_demo/join#${join}$`), 'the room’s own link, join code and all, is what was copied')
+  } finally {
+    await browser.close()
+  }
 })

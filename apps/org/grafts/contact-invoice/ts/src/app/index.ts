@@ -1,9 +1,8 @@
 import type { App } from '@cella/org-ui'
 import type { Bill, Billed, Owing } from '../models/billing.ts'
 import Bills from './blocks/Bills.svelte'
-import Contact from './blocks/Contact.svelte'
 
-// The graft's client side: the contact an invoice bills and the form that
+// The graft's client side: the contact an invoice bills and the popover that
 // links it, and what a contact owes and, in its Invoices tab, the
 // invoices that bill it.
 export const app: App = {
@@ -12,9 +11,15 @@ export const app: App = {
     invoices: {
       columns: [{ key: 'contact', label: 'Client', role: 'hidden', value: (r: { contact?: string }) => r.contact }],
       page: {
-        properties: (b: Billed) => [{ label: 'Client', value: b.contact?.name ?? 'unbilled', href: b.contact ? `/contacts/${b.contact.id}` : undefined }],
+        properties: (b: Billed) => [
+          {
+            label: 'Client',
+            value: b.contact?.name ?? null,
+            href: b.contact ? `/contacts/${b.contact.id}` : undefined,
+            edit: { kind: 'pick' as const, write: 'link', field: 'contact', current: b.contact?.id ?? '', options: b.contacts.map((c) => ({ value: c.id, label: c.name })) },
+          },
+        ],
         related: (b: Billed) => (b.contact ? [{ label: b.contact.name, sub: 'client', href: `/contacts/${b.contact.id}` }] : []),
-        blocks: [Contact],
       },
     },
     contacts: {

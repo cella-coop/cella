@@ -1,10 +1,9 @@
 import type { App } from '@cella/org-ui'
 import type { Filed, Tasks as Listed } from '../models/filing.ts'
-import Place from './blocks/Place.svelte'
 import Tasks from './blocks/Tasks.svelte'
 
 // The graft's client side: each task's project, a column a board may group
-// by, and filing a task in its page's Details; on a project's page, the
+// by, and filing a task by a popover on its property; on a project's page, the
 // Tasks tab its owner gives it, a list long enough to crowd the overview,
 // with a new task already in the project.
 export const app: App = {
@@ -17,11 +16,21 @@ export const app: App = {
       ],
       page: {
         properties: (f: Filed) => [
-          { label: 'Project', value: f.place?.title ?? 'none', href: f.place ? `/projects/${f.place.project}` : undefined },
+          {
+            label: 'Project',
+            value: f.place?.title ?? null,
+            href: f.place ? `/projects/${f.place.project}` : undefined,
+            edit: {
+              kind: 'pick' as const,
+              write: 'file',
+              field: 'place',
+              current: f.place ? (f.place.milestone ? `${f.place.project}#${f.place.milestone}` : f.place.project) : '',
+              options: f.options,
+            },
+          },
           ...(f.place?.phase ? [{ label: 'Milestone', value: f.place.phase }] : []),
         ],
         related: (f: Filed) => (f.place ? [{ label: f.place.title, sub: 'project', href: `/projects/${f.place.project}` }] : []),
-        details: [Place],
       },
     },
     projects: {

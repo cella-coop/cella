@@ -516,15 +516,31 @@ draws.
   takes comments (`comment`). Each slice gives its events newest first
   (`activity`), a comment's words as its `body`; the page merges every
   slice's and shows them oldest first, the box last. The drawer's
-  Details panel holds first the forms that set its structured fields,
-  where its slices set them there (`details`), as a task's assignee and
-  project, since a record whose content is its body keeps the main area
-  for it; then its properties, label and value rows on the drawer itself, with no card or panel around them, ending with the
-  record's Created, Updated, Created by and Updated by as the log has
-  them (`stamps`), the dates and actors of its first and latest
-  entries, which the item's read gives beside its data, but those its
-  slices' properties already name, as a task's Created; and under them
-  Related; nothing in the drawer is boxed. Related lists first its
+  Details panel holds its properties, in sections as Linear's drawer
+  has them, nothing boxed and no form in it: Properties, each one line,
+  an icon and its value, its name on hover and for a screen reader and
+  drawn beside the value only where the value cannot say what it is (a
+  figure, a count, a phrase; a status, a person, a circle, a date and a
+  record link go without); and Dates, each a calendar icon and the day.
+  A property with no value is not listed; Add property, at the end of
+  Properties, offers the empty ones that can be set. A press on a
+  property that can be changed (`edit` on its `Prop`) opens the popover
+  that changes it, through the write the property names, as a form
+  posts it: `Pick` for a choice among options, one or many, with a
+  search, each option with its icon, its tone's dot or its avatar and a
+  check on the chosen; the curated icon grid for a record's icon; a
+  calendar for a day; an input for text or a number; or, from a slice
+  that needs more (a project's lead and members), a block of its own
+  (`Editor`) drawn in the popover. A slice sets a property of a kind of
+  record from its `properties`, never a block in the Details. A
+  record's people are one property of avatars (`people`). Last, under
+  Related, one quiet line of the record's Created and Updated and by
+  whom as the log has them (`stamps`), the dates and actors of its
+  first and latest entries, which the item's read gives beside its
+  data, but those its slices' properties already name, as a task's
+  Created. Related, a section of its own, has each line one row with
+  its collection's icon in the record's ink and its title, ending in an
+  ellipsis, its kind on hover. Related lists first its
   jumps: each other collection whose rows name the record, by the
   collection's icon and name and how many of its rows the reader sees
   that name it, through their lens, counted in the core read's one

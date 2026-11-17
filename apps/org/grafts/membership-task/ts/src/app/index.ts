@@ -1,11 +1,10 @@
 import type { App } from '@cella/org-ui'
 import type { Assigned } from '../models/assignment.ts'
-import Assignee from './blocks/Assignee.svelte'
 
 // The graft's client side: who does each task, a column a board may group
 // by, and by address the column a member's page jumps to their tasks by,
 // in its Related; giving a task to someone on its page, the assignee set
-// in the task's Details.
+// by a popover on its property.
 export const app: App = {
   name: 'membership-task',
   extends: {
@@ -17,9 +16,21 @@ export const app: App = {
       ],
       page: {
         properties: (a: Assigned) => [
-          { label: 'Assignee', value: a.assignee?.name ?? 'no one', href: a.assignee ? `/people/${a.assignee.address}` : undefined },
+          {
+            label: 'Assignee',
+            value: a.assignee?.address ?? null,
+            kind: 'person' as const,
+            href: a.assignee ? `/people/${a.assignee.address}` : undefined,
+            edit: {
+              kind: 'pick' as const,
+              write: 'assign',
+              field: 'member',
+              current: a.assignee?.address ?? '',
+              none: 'No one',
+              options: a.members.map((m) => ({ value: m.address, label: m.name, who: m.name })),
+            },
+          },
         ],
-        details: [Assignee],
       },
     },
   },

@@ -1,4 +1,5 @@
 import type { Component } from 'svelte'
+import type { Tone } from './view.ts'
 
 // A select's options as plain data, and the moves its keyboard makes over
 // them: the next option the arrows, Home and End reach, past disabled
@@ -9,6 +10,10 @@ export interface Option {
   label: string
   // A Phosphor icon drawn before the label, in the option and the trigger.
   icon?: Component<any>
+  // A tone's dot drawn before the label where it has no icon, as a badge's.
+  tone?: Tone
+  // A person's name, drawn as their avatar before the label.
+  who?: string
   // Chosen by nobody: shown, never picked.
   disabled?: boolean
   // What the view takes when nothing is chosen, marked subtly in the list.

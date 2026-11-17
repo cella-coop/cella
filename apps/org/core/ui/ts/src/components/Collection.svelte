@@ -457,7 +457,6 @@
   {icon}
   {count}
   {caption}
-  subtitle={whole && shell.lens ? `The lens on ${shell.lens.name} leaves ${title} whole: no circle owns its rows.` : spec.across && shell.lens ? `Across circles: every circle's ${noun} you read.` : undefined}
   badges={status.map((s) => s(about)).filter((b) => b !== undefined)}
   panels={[{ id: 'view', label: 'View', icon: SlidersHorizontal, body: viewing, note: dirty ? 'unsaved changes' : undefined }]}
 >

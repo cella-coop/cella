@@ -1,11 +1,29 @@
 // demo-rooms's own logic, apart from any server: a join code is 128 bits
 // and compared in constant time; a browser idle past its span is ejected
 // from its room and the member it leased is freed; a room with more than
-// one browser present is not alone.
+// one browser present is not alone; a room stays in a front's registry
+// until it is unregistered, never only until its last browser is; and
+// joining a room already held is idempotent.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { EJECT_IDLE_MS, alone, eject, joinCode, lease, leased, present, release, roomFull, sameCode, stale } from '../demo-rooms.mjs'
+import {
+  EJECT_IDLE_MS,
+  alone,
+  eject,
+  joinCode,
+  joining,
+  lease,
+  leased,
+  present,
+  register,
+  registered,
+  release,
+  roomFull,
+  sameCode,
+  stale,
+  unregister,
+} from '../demo-rooms.mjs'
 
 test('a join code is 16 random bytes, over 128 bits, and two are never alike', () => {
   const a = joinCode()
@@ -112,4 +130,37 @@ test('releasing a browser frees every member it held and none other', () => {
   ])
   release(leases, 'a')
   assert.deepEqual([...leases.keys()], ['toussaint'])
+})
+
+test('a room stays in the registry once its last browser’s cookie is gone, until it is explicitly unregistered', () => {
+  const registry = new Map()
+  const cookies = new Map() // a front's own cookie -> room, apart from the registry
+  const room = { name: 'demo_v_abc' }
+  register(registry, room.name, room)
+  cookies.set('cookie-a', room)
+  // A browser forgotten idle, as a front's own tick does: the room keeps
+  // no cookie naming it, but the registry still holds it.
+  cookies.delete('cookie-a')
+  assert.deepEqual(registered(registry), new Set([room]), 'an orphaned room fell out of the registry')
+  unregister(registry, room.name)
+  assert.deepEqual(registered(registry), new Set(), 'unregistering it leaves the registry empty')
+})
+
+test('a registry holds more than one room at once, each by its own id', () => {
+  const registry = new Map()
+  const a = { name: 'a' }
+  const b = { name: 'b' }
+  register(registry, 'a', a)
+  register(registry, 'b', b)
+  assert.deepEqual(registered(registry), new Set([a, b]))
+  unregister(registry, 'a')
+  assert.deepEqual(registered(registry), new Set([b]))
+})
+
+test('joining the room a browser is already in is idempotent; a different one switches it; none is a fresh join', () => {
+  const roomA = { name: 'a' }
+  const roomB = { name: 'b' }
+  assert.equal(joining(roomA, roomA), 'same')
+  assert.equal(joining(roomA, roomB), 'switch')
+  assert.equal(joining(null, roomB), 'fresh')
 })

@@ -104,3 +104,39 @@ export function release(leases, id) {
     }
   }
 }
+
+// --- a front's room registry ----------------------------------------
+
+// Adds `room` to `registry` under its own id, never a browser's cookie:
+// a room's last browser forgotten leaves it here still, so whatever
+// reads `registry` (a cap, an eviction, a quota's tick, a shutdown)
+// keeps reaching a room no browser is in, until `unregister` says it is
+// truly gone.
+export function register(registry, id, room) {
+  registry.set(id, room)
+}
+
+// Removes it; called once a room's own end finishes, never when merely
+// its last browser leaves.
+export function unregister(registry, id) {
+  registry.delete(id)
+}
+
+// The rooms a registry holds now, whether or not a browser is in one.
+export function registered(registry) {
+  return new Set(registry.values())
+}
+
+// --- joining a room --------------------------------------------------
+
+// Where a browser already in `current` posts `target`'s own code,
+// idempotent: it keeps its membership, 'same', no fresh cookie minted
+// and nothing charged against its address again. Switching from another
+// room, 'switch': detached from it first, its lease and presence there
+// released, as an idle eject's are. With no room yet, 'fresh'.
+export function joining(current, target) {
+  if (current === target) {
+    return 'same'
+  }
+  return current ? 'switch' : 'fresh'
+}

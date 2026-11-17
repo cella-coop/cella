@@ -74,7 +74,7 @@ import { mkdirSync, readFileSync, rmSync, statfsSync } from 'node:fs'
 import http from 'node:http'
 import { join } from 'node:path'
 import pg from 'pg'
-import { alone, joinCode, roomFull, sameCode } from './demo-rooms.mjs'
+import { alone, joinCode, joining, register, registered, roomFull, sameCode, unregister } from './demo-rooms.mjs'
 
 const args = process.argv.slice(2)
 const flag = (name, fallback) => {
@@ -283,6 +283,14 @@ const copies = new Map()
 const seenAt = new Map()
 let preparing = 0
 
+// Every room the front holds, by an id of its own, independent of which
+// browsers are in it: a room whose last browser is forgotten above stays
+// here, so the tick that ends an idle room, the quota that measures one,
+// the cap that counts it and the shutdown that ends it all keep reaching
+// it. Kept until a room's own `end` finishes, never only until it begins.
+const registry = new Map()
+let nextRoom = 0
+
 // A room's browsers, by their cookie, each with when it was last seen:
 // what `alone` and the tick that forgets an idle one read.
 function browsersOf(room) {
@@ -295,9 +303,10 @@ function browsersOf(room) {
   return browsers
 }
 
-// The rooms held now, each once however many browsers are in it.
+// The rooms held now, from the registry alone, whether or not a browser
+// is in one this moment.
 function rooms() {
-  return new Set(copies.values())
+  return registered(registry)
 }
 
 function socketOf(name) {
@@ -312,9 +321,10 @@ async function start(cookie, address) {
   // keeps the one it had.
   // `readied`: its server answers; a browser is never found idle before
   // then, however long it took, since it is this very request waiting.
-  const copy = { name: null, child: null, seen: begun, made: begun, ends: begun + config.lifetime * 1000, ready: null, readied: false, ended: false, cookie, address, size: 0, full: false, measured: 0, measuring: null, landed: [], flying: 0, uploads: 0, queue: [], join: joinCode() }
+  const copy = { id: nextRoom++, name: null, child: null, seen: begun, made: begun, ends: begun + config.lifetime * 1000, ready: null, readied: false, ended: false, cookie, address, size: 0, full: false, measured: 0, measuring: null, landed: [], flying: 0, uploads: 0, queue: [], join: joinCode() }
   copies.set(cookie, copy)
   seenAt.set(cookie, begun)
+  register(registry, copy.id, copy)
   preparing++
   copy.ready = (async () => {
     try {
@@ -430,7 +440,10 @@ function end(copy, why) {
     }
   })()
     .catch((e) => log(`${copy.name} did not end cleanly: ${e.message}`))
-    .finally(() => ending.delete(copy))
+    .finally(() => {
+      ending.delete(copy)
+      unregister(registry, copy.id)
+    })
   return copy.gone
 }
 
@@ -631,7 +644,7 @@ function counted(address) {
 // ended, if idle `--evict-after` seconds, or else the oldest, if older
 // than `--min-age`; else none.
 async function room() {
-  if (rooms().size + ending.size < config.cap) {
+  if (rooms().size < config.cap) {
     return true
   }
   const now = Date.now()
@@ -643,7 +656,7 @@ async function room() {
     return false
   }
   await end(out, idlest ? 'the idlest, at the cap' : 'the oldest, at the cap')
-  return rooms().size + ending.size < config.cap
+  return rooms().size < config.cap
 }
 
 // --- the visitor's cookie ----------------------------------------------
@@ -681,7 +694,21 @@ const withoutOurs = (header) =>
     .filter((p) => p && !p.startsWith(`${COOKIE}=`))
     .join('; ')
 
-// A POST from this host's own pages, as a browser says it.
+// The scheme this host answers as, to compare an Origin against and to
+// tell a room's server (`x-forwarded-proto`): the outer proxy's own
+// header, trusted only where this front is configured to sit behind one
+// (`--trust-proxy`, which nix/module.nix sets for app.cella.coop, behind
+// its own); a bare test or a direct address is never TLS at this front's
+// own socket, so `http`, and a client's own header, untrusted, is never
+// believed in its place.
+function schemeOf(req) {
+  const proto = config.trustProxy ? req.headers['x-forwarded-proto'] : undefined
+  return typeof proto === 'string' && proto ? proto : 'http'
+}
+
+// A POST from this host's own pages, as a browser says it: its Origin is
+// this host's own canonical scheme, host and port, not the host alone,
+// which a differing scheme or port would otherwise let slip through.
 function sameOrigin(req) {
   const origin = req.headers.origin
   const site = req.headers['sec-fetch-site']
@@ -692,7 +719,8 @@ function sameOrigin(req) {
     return !!site
   }
   try {
-    return new URL(origin).host === req.headers.host
+    const o = new URL(origin)
+    return o.protocol === `${schemeOf(req)}:` && o.host === req.headers.host
   } catch {
     return false
   }
@@ -716,7 +744,10 @@ main{max-width:32rem}p.notice{background:var(--soft);color:var(--soft-fg);paddin
 <p class="notice" role="note"><b>Prototype.</b> ${NOTICE}</p>
 ${lines.map((l) => `<p>${l}</p>`).join('\n')}
 </main>${script}</body></html>`
-  res.writeHead(status, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-robots-tag': 'noindex', ...headers })
+  // `frame-ancestors 'none'`: never framed, by this host's own pages or
+  // anyone else's, so a click or a keystroke meant for one is never
+  // relayed through a frame around it.
+  res.writeHead(status, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-robots-tag': 'noindex', 'content-security-policy': "frame-ancestors 'none'", ...headers })
   res.end(body)
 }
 
@@ -758,11 +789,9 @@ function prepare(res, { again = false } = {}) {
 // and `/_demo/reset`. `Referrer-Policy: no-referrer`, since the fragment
 // lives in the page's own address even once it moves on.
 function joinPage(res) {
-  page(res, 200, {
-    title: 'Joining a room',
-    lines: ['Opening the room this link shares…', '<noscript>Joining a room needs JavaScript.</noscript><span id="state"></span>'],
-    headers: { 'referrer-policy': 'no-referrer' },
-    script: `<script>
+  // Hashed, not inlined loose: its own `content-security-policy` names no
+  // other script, so an injected one, however it got there, never runs.
+  const script = `
 (async () => {
   const state = document.getElementById('state')
   const code = location.hash.slice(1)
@@ -771,7 +800,16 @@ function joinPage(res) {
   if (res && res.redirected) { location.href = res.url; return }
   state.textContent = res ? await res.text() : 'The demo cannot be reached.'
 })()
-</script>`,
+`
+  const hash = createHash('sha256').update(script).digest('base64')
+  page(res, 200, {
+    title: 'Joining a room',
+    lines: ['Opening the room this link shares…', '<noscript>Joining a room needs JavaScript.</noscript><span id="state"></span>'],
+    headers: {
+      'referrer-policy': 'no-referrer',
+      'content-security-policy': `default-src 'none'; script-src 'sha256-${hash}'; frame-ancestors 'none'`,
+    },
+    script: `<script>${script}</script>`,
   })
 }
 
@@ -845,10 +883,25 @@ async function handle(req, res) {
     if (!target) {
       return plain(res, 404, 'This room’s link is no longer good; it may have reset.')
     }
+    // Already a member of this room: idempotent, its membership kept, no
+    // fresh cookie minted and nothing charged against its address for
+    // asking again.
+    const transition = joining(copy, target)
+    if (transition === 'same') {
+      seenAt.set(cookie, Date.now())
+      return plain(res, 303, 'Joined.', { location: '/' })
+    }
     if (roomFull(browsersOf(target), config.roomBrowsers, Date.now(), config.browserIdle * 1000)) {
       return plain(res, 503, 'This room holds as many browsers as one may; try again in a few minutes.', { 'retry-after': '60' })
     }
     counted(address)
+    if (transition === 'switch') {
+      // Switching rooms: this browser's membership in its old room ends
+      // with it, its lease and presence there released, as an idle
+      // eject's are.
+      copies.delete(cookie)
+      seenAt.delete(cookie)
+    }
     const fresh = randomBytes(32).toString('base64url')
     copies.set(fresh, target)
     seenAt.set(fresh, Date.now())
@@ -992,20 +1045,31 @@ async function handle(req, res) {
   if (!headers.cookie) {
     delete headers.cookie
   }
-  delete headers['x-forwarded-for']
+  // Every header a client could use to forge its address, its scheme, or
+  // a hop meant for this connection alone, stripped before the trusted
+  // values below replace what matters: `connection` and whatever it
+  // names, never carried to a copy's server, which speaks plain HTTP over
+  // a Unix socket and is offered no upgrade this front proxies.
+  const hopByHop = new Set(['connection', 'keep-alive', 'te', 'trailer', 'transfer-encoding', 'upgrade'])
+  for (const named of String(req.headers.connection ?? '').split(',')) {
+    const name = named.trim().toLowerCase()
+    if (name) {
+      hopByHop.add(name)
+    }
+  }
+  for (const name of Object.keys(headers)) {
+    if (hopByHop.has(name) || name === 'forwarded' || name === 'x-real-ip' || name.startsWith('x-forwarded-') || name.startsWith('proxy-')) {
+      delete headers[name]
+    }
+  }
   // Which browser this is, to the room's server alone: a one-way hash of
   // its cookie, which member leases are bound to
   // (`apps/org/ts/src/lib/server/leases.ts`), never the cookie itself.
   headers['x-cella-browser'] = createHash('sha256').update(cookie).digest('hex')
   // Its own scheme, so the copy's server, which trusts this header alone
   // for its origin (`PROTOCOL_HEADER`), never assumes the `https` its kit
-  // defaults to: the host's own proxy sets this before the front ever
-  // sees the request, forwarded here as is; absent that, as in a bare
-  // test or a direct address, the front's own socket is never TLS, so it
-  // is `http`.
-  if (!headers['x-forwarded-proto']) {
-    headers['x-forwarded-proto'] = 'http'
-  }
+  // defaults to, and never a client's own say-so either.
+  headers['x-forwarded-proto'] = schemeOf(req)
   const upstream = http.request({ socketPath: socketOf(copy.name), path: req.url, method: req.method, headers }, (up) => {
     res.writeHead(up.statusCode ?? 502, up.headers)
     up.pipe(res)

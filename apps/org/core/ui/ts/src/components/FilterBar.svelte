@@ -7,7 +7,6 @@
   import { canon, filtering, type Field, type Spec, type Where } from '../models/query.ts'
   import { useCollection } from '../hooks/useCollection.ts'
   import { useShell } from '../hooks/useShell.ts'
-  import Button from './Button.svelte'
   import Icon from './Icon.svelte'
   import Person from './Person.svelte'
   import Popover from './Popover.svelte'
@@ -29,21 +28,17 @@
     base,
     fields,
     values,
-    dirty,
     onchange,
-    onsave,
-    onreset,
   }: {
     spec: Spec
     // What the open view (a preset or the viewer's own) shows before this
-    // page's own changes: a chip's dot, and what Reset returns to.
+    // page's own changes: a chip's dot. Saving or resetting the view is
+    // the View panel's (the operator, 17 Nov: "what is this save / reset
+    // business? maybe belongs in the view panel?").
     base: Spec
     fields: Field[]
     values: Record<string, string[]>
-    dirty: boolean
     onchange: (spec: Spec) => void
-    onsave: () => void
-    onreset: () => void
   } = $props()
 
   const state = useCollection()
@@ -231,13 +226,6 @@
       {/each}
     </Popover>
   </span>
-
-  <div class="save">
-    {#if dirty}
-      <Button tone="primary" onclick={onsave}>Save</Button>
-      <Button onclick={onreset}>Reset</Button>
-    {/if}
-  </div>
 </div>
 
 <style>
@@ -367,9 +355,8 @@
     background: var(--hover);
   }
   /* Search at the bar's start; the chips, then the Filter pill, at its
-     end, and Save and Reset after it. */
-  .lead,
-  .save {
+     end. */
+  .lead {
     display: flex;
     align-items: center;
     gap: var(--space-1);

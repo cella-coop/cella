@@ -1,5 +1,6 @@
 import type { Component, Snippet } from 'svelte'
 import type { Look, Preset, Shift, Widget } from './query.ts'
+import type { Option } from './select.ts'
 
 // The client side of a slice: what a feat's collections look like, and
 // what a graft adds to the collections of the feats it joins. Views and
@@ -40,17 +41,55 @@ export interface Column<R = any> {
   of?: string
 }
 
-// A label and value row in the drawer's Details; one whose `href` is a
-// record's, `/<collection>/<id>`, wears that collection's icon.
+// How a property is changed, in the popover its row opens: `pick` among
+// options, one or many (searchable, each with its icon, dot or avatar),
+// `icon` from the curated grid, `date` on a calendar, `text` typed. The
+// choice goes through the named `write`, as the field `field` (many
+// comma-separated) beside any `extra` fields, the record being the
+// page's own, as a form posts it.
+export interface Edit {
+  kind: 'pick' | 'icon' | 'date' | 'text'
+  write: string
+  field: string
+  // What it holds now: an option's value, the values chosen, an icon's
+  // slug, a day, the text.
+  current?: string | string[] | null
+  options?: Option[]
+  multi?: boolean
+  // The choice that clears it, for a single pick.
+  none?: string
+  number?: boolean
+  extra?: [string, string][]
+}
+
+// A property whose edit is a slice's own: a block drawn in its popover,
+// given its data, closing it through `close`.
+export interface Editor<D = any> {
+  block: Component<{ data: D; close: () => void }>
+  data: D
+}
+
+// A row in the drawer's Properties: an icon and a value, its `label` on
+// hover and for a screen reader, drawn beside the value only where the
+// value cannot say what it is (a figure, a count, a phrase). One with no
+// value is not listed, but offered under Add property where it can be
+// `edit`ed; one whose `href` is a record's, `/<collection>/<id>`, wears
+// that collection's icon.
 export interface Prop {
   label: string
   value: unknown
   kind?: Kind
   tone?: Tone
   href?: string
-  // The subheading a crowded drawer clusters it under, in the order its
-  // first property names it; a property naming none sits above every
-  // group, as a drawer with none shows one plain list.
+  // A glyph of its own, in the ink seeded by `ink`, as a record's icon.
+  icon?: Component<any>
+  ink?: string
+  // Several people, by address, as a row of avatars, instead of a value;
+  // the first leads.
+  people?: string[]
+  edit?: Edit | Editor
+  // Clustered with its neighbours of the same group, a little apart from
+  // the rest, in the order its first names it.
   group?: string
 }
 
@@ -163,6 +202,9 @@ export interface Panel {
   label: string
   icon: Component<any>
   body: Snippet
+  // Something the panel wants seen while it is shut, as the View panel's
+  // unsaved changes: a small dot on its tab, and said in its label.
+  note?: string
 }
 
 // A badge beside the header's count, over the collection's `about`: the

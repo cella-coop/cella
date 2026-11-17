@@ -439,6 +439,9 @@
     onchange={change}
     onsave={opened}
     onremove={remove}
+    changed={dirty}
+    keep={saveView}
+    discard={reset}
   />
 {/snippet}
 
@@ -449,7 +452,7 @@
   {caption}
   subtitle={whole && shell.lens ? `The lens on ${shell.lens.name} leaves ${title} whole: no circle owns its rows.` : spec.across && shell.lens ? `Across circles: every circle's ${noun} you read.` : undefined}
   badges={status.map((s) => s(about)).filter((b) => b !== undefined)}
-  panels={[{ id: 'view', label: 'View', icon: SlidersHorizontal, body: viewing }]}
+  panels={[{ id: 'view', label: 'View', icon: SlidersHorizontal, body: viewing, note: dirty ? 'unsaved changes' : undefined }]}
 >
   {#snippet actions()}
     {#if creates.length}
@@ -513,7 +516,7 @@
   </nav>
   {/snippet}
 
-  <FilterBar {spec} {base} fields={typed} {values} {dirty} onchange={change} onsave={saveView} onreset={reset} />
+  <FilterBar {spec} {base} fields={typed} {values} onchange={change} />
 
   {#if errors.length}
     <div role="status">

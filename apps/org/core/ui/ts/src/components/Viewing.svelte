@@ -62,6 +62,9 @@
     onchange,
     onsave,
     onremove,
+    changed = false,
+    keep,
+    discard,
   }: {
     name: string
     spec: Spec
@@ -98,6 +101,12 @@
     onchange: (spec: Spec) => void
     onsave: (view: Custom) => void
     onremove: () => void
+    // Whether this page has changed the open view since it was opened (a
+    // filter, a search, a layout), and what keeps or drops those changes:
+    // the view's own Save and Reset, here rather than in the filter bar.
+    changed?: boolean
+    keep?: () => void
+    discard?: () => void
   } = $props()
 
   const id = $props.id()
@@ -231,6 +240,15 @@
       </button>
     {/if}
   {/snippet}
+  {#if changed && keep && discard}
+    <div class="unsaved" role="status">
+      <span>Unsaved changes</span>
+      <span class="keep">
+        <Button onclick={discard}>Reset</Button>
+        <Button tone="primary" onclick={keep}>Save</Button>
+      </span>
+    </div>
+  {/if}
   <div class="views" role="group" aria-label="Layout">
     {#each layouts as l (l.id)}
       <button class:on={spec.layout === l.id} aria-pressed={spec.layout === l.id} aria-label={l.label} title={l.label} onclick={() => change({ layout: l.id })}>
@@ -491,6 +509,20 @@
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
+  }
+  /* Changes this page made to the open view: one quiet line at the panel's
+     top, what keeps or drops them at its end. */
+  .unsaved {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
+  .unsaved .keep {
+    display: flex;
+    gap: var(--space-1);
   }
   /* The pin: icon only, quiet, in the card's top-right corner. */
   .pin {

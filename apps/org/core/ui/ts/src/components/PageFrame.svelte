@@ -110,11 +110,12 @@
               class:on={shell.drawer && p === open}
               aria-selected={shell.drawer && p === open}
               aria-controls={id}
-              title={p.label}
-              aria-label={p.label}
+              title={p.note ? `${p.label}: ${p.note}` : p.label}
+              aria-label={p.note ? `${p.label}, ${p.note}` : p.label}
               onclick={() => choose(p.id)}
             >
               <Icon icon={p.icon} />
+              {#if p.note}<span class="note" aria-hidden="true"></span>{/if}
             </button>
           {/each}
         </div>
@@ -268,6 +269,19 @@
   .toggle:hover {
     background: var(--hover);
     color: var(--text);
+  }
+  /* A panel's note while it is shut: a small dot at its tab's corner. */
+  .panels button {
+    position: relative;
+  }
+  .note {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-border);
   }
   .panels button.on {
     background: var(--sunk);

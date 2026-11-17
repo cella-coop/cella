@@ -5,8 +5,8 @@ import { scope } from '@cella/org-log/api'
 import { safe } from '#lib/server/back.ts'
 import { shell as call } from '#lib/server/calls.ts'
 import { using } from '#lib/server/db.ts'
-import { copy, demo, dev, ends, fixtures, join } from '#lib/server/device.ts'
-import { taken } from '#lib/server/leases.ts'
+import { copy, demo, dev, fixtures, join } from '#lib/server/device.ts'
+import { ends, taken } from '#lib/server/leases.ts'
 import { answered, proof, relay } from '#lib/server/relay.ts'
 import { keep } from '#lib/server/session.ts'
 import { joining } from '#lib/server/slices.ts'
@@ -20,17 +20,18 @@ import { answer, poster } from './write.ts'
 // read again after a write that took or reached a verdict, as its counts
 // may have moved: with the theme the viewer wears, whether the dev server
 // or a demo build serves it, a visitor's copy with the seconds idle
-// before it resets and when it resets however busy, and whether the viewer left the drawer open,
-// which the shell's toggle keeps in a cookie. Signed out, the scope and
-// whether it is a demo's, which the sign-in page and an invitation's link
-// wear.
+// before it resets and, once its room's first member has signed in, when
+// its lifetime ends however busy (`ends`, 0 before then), and whether the
+// viewer left the drawer open, which the shell's toggle keeps in a
+// cookie. Signed out, the scope and whether it is a demo's, which the
+// sign-in page and an invitation's link wear.
 export const shell = query(() =>
   served(async (db, who) => ({
     ...(await call.run(db, who)),
     dev,
     demo,
     copy,
-    ends,
+    ends: ends(),
     join,
     theme: getRequestEvent().locals.theme,
     drawer: who.cookies.get('cella-drawer') !== 'closed',

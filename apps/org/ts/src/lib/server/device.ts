@@ -1,7 +1,7 @@
 import { today } from '@cella/org-db'
 import { circles, sitting } from '@cella/org-circle/api'
 import { devices, person } from '@cella/org-person/api'
-import { CELLA_DEMO, CELLA_DEMO_BROWSER_IDLE, CELLA_DEMO_ENDS, CELLA_DEMO_IDLE, CELLA_DEMO_JOIN, CELLA_DEV } from '$app/env/private'
+import { CELLA_DEMO, CELLA_DEMO_BROWSER_IDLE, CELLA_DEMO_IDLE, CELLA_DEMO_JOIN, CELLA_DEMO_LIFETIME, CELLA_DEV } from '$app/env/private'
 import { using } from './db.ts'
 import { own } from './fixture.ts'
 
@@ -19,8 +19,9 @@ export const demo = CELLA_DEMO
 // A visitor's copy, served by `cella demo serve`: the seconds idle before
 // it resets, else 0.
 export const copy = CELLA_DEMO && CELLA_DEMO_IDLE ? CELLA_DEMO_IDLE : 0
-// And when it resets however busy, in seconds since 1970, else 0.
-export const ends = copy ? CELLA_DEMO_ENDS : 0
+// A room's lifetime, in seconds, once its first member signs in
+// (`#lib/server/leases.ts`'s `ends`); else 0.
+export const lifetime = copy && CELLA_DEMO_LIFETIME ? CELLA_DEMO_LIFETIME : 0
 // A visitor's copy, now a room others may join: the code its link
 // carries, in its fragment, never a server's query or log
 // (`/_demo/join#…`), which `cella demo serve` makes afresh for each copy

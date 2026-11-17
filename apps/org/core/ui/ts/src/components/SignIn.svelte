@@ -7,14 +7,15 @@
   // Signing in: each device this browser keeps for the scope signs the
   // server's challenge with its own key; on the dev server, the fixture
   // members too, whose keys anyone can derive, and in a demo build the
-  // same members, each marked as a demo member. In a demo's room, one
-  // member is one browser's at a time: a member another browser there
-  // leased reads `taken`, drawn disabled and greyed, so this browser
-  // cannot sign in as them until they are freed. A browser holding none
-  // is pointed to an invitation's link, or makes a key to enrol from a
-  // device its person holds. Each row reads the same way: the person's
-  // name, then the circles they sit in, the assembly left out since
-  // every member is in it; never their device.
+  // same members, under one tag on their heading, not each row's own. In
+  // a demo's room, one member is one browser's at a time: a member
+  // another browser there leased reads `taken`, drawn disabled and
+  // greyed, so this browser cannot sign in as them until they are freed.
+  // A demo leads with this list; a browser holding no device of its own
+  // reads why and what to do about it below it, collapsed, since the
+  // members above are almost always what it came for. Each row reads the
+  // same way: the person's name, then the circles they sit in, the
+  // assembly left out since every member is in it; never their device.
   let {
     scope,
     back,
@@ -43,11 +44,6 @@
       >
     {/each}
   </div>
-{:else}
-  <p class="hint">
-    This browser holds no device of {scope}. To join, open the invitation link you were sent. To sign in here from a
-    device you already hold, make a key below and enrol it there, under Devices.
-  </p>
 {/if}
 
 {#if fixtures.length && demo}
@@ -63,9 +59,7 @@
         busy={state.busy}
         disabled={f.taken}
         onclick={() => state.fixture(f.address, f.label)}
-        >{f.name}{#each f.circles as c (c)} <Badge>{c}</Badge>{/each} <span class="dev">demo member</span>{#if f.taken}<span class="taken"
-            >taken</span
-          >{/if}</Button
+        >{f.name}{#each f.circles as c (c)} <Badge>{c}</Badge>{/each}{#if f.taken} <span class="taken">taken</span>{/if}</Button
       >
     {/each}
   </div>
@@ -79,6 +73,23 @@
       >
     {/each}
   </div>
+{/if}
+
+{#if !state.devices.length}
+  {#if demo}
+    <details class="no-device">
+      <summary>This browser holds no device of {scope}</summary>
+      <p class="hint">
+        To join, open the invitation link you were sent. To sign in here from a device you already hold, make a key
+        below and enrol it there, under Devices.
+      </p>
+    </details>
+  {:else}
+    <p class="hint">
+      This browser holds no device of {scope}. To join, open the invitation link you were sent. To sign in here from a
+      device you already hold, make a key below and enrol it there, under Devices.
+    </p>
+  {/if}
 {/if}
 
 <details class="make">
@@ -107,7 +118,20 @@
   .list,
   .fields {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-2);
+  }
+  /* A row's name, circles and badge can run long together; let it wrap
+     onto a second line rather than push the card wider than the panel
+     (`Button`'s own rows stay single-line elsewhere, so overridden here
+     alone). */
+  .list :global(.button) {
+    height: auto;
+    min-height: var(--row);
+    white-space: normal;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    text-align: start;
   }
   .label {
     margin: 0;
@@ -115,16 +139,21 @@
     font-weight: 500;
   }
   .hint,
-  .make summary {
+  .make summary,
+  .no-device summary {
     margin: 0;
     font-size: var(--text-sm);
     color: var(--text-muted);
   }
-  .make summary {
+  .make summary,
+  .no-device summary {
     cursor: pointer;
   }
   .make .fields {
     margin-top: var(--space-3);
+  }
+  .no-device .hint {
+    margin-top: var(--space-2);
   }
   code {
     font-family: var(--font-mono, monospace);

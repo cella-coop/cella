@@ -469,12 +469,16 @@ room full of people arriving at once behind one NAT address:
   Postgres connections. That is **6 copies per GiB of RAM** past the
   reserve: about 15 on a cx23 (4 GiB, of which the kernel keeps a
   little), 40 on a cx33 (8 GiB), 90 on a cx43 (16 GiB). Twenty to forty people arriving at once want 8 GiB.
-- **How long a copy lives**: two hours with no request (`idle`), and two
-  hours after it was made however busy (`lifetime`), so no visitor
-  holds one for good; the banner counts down to whichever comes first.
-  At the cap, a newcomer ends the copy idle longest if idle 5 minutes
-  (`evictAfter`), else the oldest if 10 minutes old (`minAge`), and is
-  otherwise asked to come back in a minute.
+- **How long a copy lives**: two hours with no request (`idle`), counted
+  from when it was made, and two hours after its first member signs in
+  however busy (`lifetime`), so no visitor holds a room for good; its
+  own server, never the front, decides when that is and says so on
+  every response once it holds (`x-cella-demo-ends`), which the front
+  reads to time the room's end and the banner counts down once it runs.
+  A room no one ever signs into outlives no lifetime, only its idle
+  span. At the cap, a newcomer ends the copy idle longest if idle 5
+  minutes (`evictAfter`), else the oldest if 10 minutes old (`minAge`),
+  and is otherwise asked to come back in a minute.
 - **How many browsers a room holds**: 8 at once (`roomBrowsers`); a join
   past it, like a copy past the cap, is refused the same way.
 - **What one address may take**: all but four of the cap held at once
@@ -530,18 +534,25 @@ and prepares a fresh one at once, under a new cookie; a copy less than
 left, and a stopped front ends its copies before it goes, so an
 upgrade, which builds the template again, leaves no copy older than it.
 
-Every page of a visitor's copy wears the demo's banner, never
-dismissed, at the content's foot as every demo page does and atop the
-sign-in's panel: the operator's notice, "This is a prototype
-environment for demo purposes and can't be used for real work.", that
-its co-op is Lanterne, a mock, and this copy is the visitor's own, that
-it resets after two hours idle or when its time runs out and how long
-is left (`CELLA_DEMO_IDLE` and `CELLA_DEMO_ENDS`, which the front hands
-each server), and its Reset now, a form posting to the front. A demo
-that is no visitor's copy carries the same notice. Nobody signs up or
-sets a password: the sign-in offers Lanterne's members, as the demo's
-always does. The org app sends no mail, in a demo or a scope, and a
-demo's unit reaches nothing outside its host.
+Every page of a demo build wears its banner, never dismissed, one fixed
+strip along the viewport's foot, which pads the page it sits on by its
+own height so it hides nothing: a flask, "Prototype · mock co-op",
+whose tooltip carries the operator's notice, "This is a prototype
+environment for demo purposes and can't be used for real work.", and,
+on a visitor's copy, that Lanterne is a mock and this copy is the
+visitor's own; a timer and the time left, shown once there is one worth
+watching, the room's lifetime once its first member has signed in
+(`CELLA_DEMO_IDLE` and `CELLA_DEMO_LIFETIME`, which the front hands
+each server, the second read against the room's own first sign-in, not
+a fixed end), else the idle reset's own last two minutes, a warning;
+Reset, a quiet button posting to the front; and, in a room, Copy
+invite, the filled primary button, which copies the room's link and
+confirms Copied, or opens it where the clipboard refuses. Nobody signs
+up or sets a password: the sign-in offers Lanterne's members, as the
+demo's always does, leading its panel, a browser holding no device of
+its own reading why below them, collapsed. The org app sends no mail,
+in a demo or a scope, and a demo's unit reaches nothing outside its
+host.
 
 `checks.visitors` boots a demo serving each visitor a copy, the cap at
 two, the idle span 90 s, the lifetime 150 s, storage 4 MiB and one copy

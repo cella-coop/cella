@@ -1,6 +1,6 @@
 import type { Handle } from '@sveltejs/kit/hooks'
 import { reading } from '#lib/server/db.ts'
-import { holds, touch } from '#lib/server/leases.ts'
+import { ends, holds, touch } from '#lib/server/leases.ts'
 import { end, read } from '#lib/server/session.ts'
 
 const themes = ['light', 'dark', 'system'] as const
@@ -54,5 +54,15 @@ export const handle: Handle = async ({ event, resolve }) => {
     return new Response(null, { status: 307, headers: { location: '/inbox' } })
   }
   const attribute = event.locals.theme === 'system' ? '' : event.locals.theme
-  return resolve(event, { transformPageChunk: ({ html }) => html.replace('%cella.theme%', attribute) })
+  const response = await resolve(event, { transformPageChunk: ({ html }) => html.replace('%cella.theme%', attribute) })
+  // Once this room's lifetime is counting (`leases.ts`'s first grant),
+  // every response says so, so the room's own front (`tools/demo-serve.mjs`,
+  // never this process) learns of it and times the room's end from it,
+  // rather than guessing at `/_demo/start`. Never sent to the browser, a
+  // page's own data carries it instead (`#lib/remote/session.remote.ts`).
+  const until = ends()
+  if (until) {
+    response.headers.set('x-cella-demo-ends', String(until))
+  }
+  return response
 }

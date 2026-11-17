@@ -8,7 +8,10 @@
 // id of their own, never a cookie. One unseen past `EJECT_IDLE_MS` is
 // ejected: forgotten from the room, and the member it leased, if any,
 // freed for another. A room with at most one browser present is alone,
-// which Reset now requires.
+// which Reset now requires. It also holds a room's lifetime: the clamp
+// that keeps a copy's own signal from buying it more than this front's
+// `--lifetime` allows, and the age cap that ends one however busy, never
+// signed into or not, past twice `--lifetime`.
 //
 // Every function here is pure: it reads and writes the maps it is given
 // and nothing else, so it is tested without a server, a socket or
@@ -125,6 +128,31 @@ export function unregister(registry, id) {
 // The rooms a registry holds now, whether or not a browser is in one.
 export function registered(registry) {
   return new Set(registry.values())
+}
+
+// --- a room's lifetime -------------------------------------------------
+
+// The room's own lifetime end, read from its server's `x-cella-demo-ends`
+// (seconds since 1970, set once a member first signs in): accepted only
+// as a positive safe integer (one already past ends the room at once), and clamped to at most `lifetimeS`
+// seconds from `now`, so a copy's server can end a room's lifetime
+// earlier, reacting to its own signal, but never later than this front's
+// own `--lifetime` allows. Anything else (absent, not a number, not a
+// positive safe integer) is ignored, `null`.
+export function demoEndsAt(until, now, lifetimeS) {
+  const s = Number(until)
+  if (!Number.isSafeInteger(s) || s <= 0) {
+    return null
+  }
+  return Math.min(s * 1000, now + lifetimeS * 1000)
+}
+
+// Whether a room has passed its age cap, made plus twice `lifetimeS`,
+// however busy: a room no one ever signs into, whose own lifetime never
+// starts (`demoEndsAt` never called), cannot live forever on its idle
+// span alone.
+export function tooOld(made, now, lifetimeS) {
+  return now - made > 2 * lifetimeS * 1000
 }
 
 // --- joining a room --------------------------------------------------

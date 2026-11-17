@@ -37,7 +37,15 @@
 // script shows and keeps retrying: a newcomer is queued, without a page
 // of its own. A room ends after `--idle`
 // seconds with no request from any browser in it, `--lifetime` seconds
-// after it was made however busy, when its server passes `--memory` MiB,
+// after its first member signs in however busy (its own server decides
+// when that is, `#lib/server/leases.ts`'s first grant, and says so on
+// every response, `x-cella-demo-ends`, never this front's own guess, nor
+// ever trusted from a browser's own request; accepted only as a safe
+// integer, clamped to at most `--lifetime` seconds out and never moved
+// later once held), and twice `--lifetime` seconds after it was made
+// however busy, its age cap, so a room no one ever signs into, whose
+// lifetime never otherwise starts, cannot outlive its idle span forever,
+// when its server passes `--memory` MiB,
 // when it stores past twice `--storage` MiB (past `--storage` it takes no
 // more writes), the room storing most while the disk holds less than
 // `--disk-floor` MiB free, at Reset now (POST /_demo/reset, refused
@@ -74,7 +82,7 @@ import { mkdirSync, readFileSync, rmSync, statfsSync } from 'node:fs'
 import http from 'node:http'
 import { join } from 'node:path'
 import pg from 'pg'
-import { alone, joinCode, joining, register, registered, roomFull, sameCode, unregister } from './demo-rooms.mjs'
+import { alone, demoEndsAt, joinCode, joining, register, registered, roomFull, sameCode, tooOld, unregister } from './demo-rooms.mjs'
 
 const args = process.argv.slice(2)
 const flag = (name, fallback) => {
@@ -321,7 +329,12 @@ async function start(cookie, address) {
   // keeps the one it had.
   // `readied`: its server answers; a browser is never found idle before
   // then, however long it took, since it is this very request waiting.
-  const copy = { id: nextRoom++, name: null, child: null, seen: begun, made: begun, ends: begun + config.lifetime * 1000, ready: null, readied: false, ended: false, cookie, address, size: 0, full: false, measured: 0, measuring: null, landed: [], flying: 0, uploads: 0, queue: [], join: joinCode() }
+  // `ends`: Infinity until its own server says its first member has
+  // signed in (`x-cella-demo-ends`, read below as every response is
+  // proxied), so the tick below never ends it on a lifetime that has not
+  // started; its age cap (`tooOld`, from `made` here) ends it anyway,
+  // twice `--lifetime` on, if it never does.
+  const copy = { id: nextRoom++, name: null, child: null, seen: begun, made: begun, ends: Infinity, ready: null, readied: false, ended: false, cookie, address, size: 0, full: false, measured: 0, measuring: null, landed: [], flying: 0, uploads: 0, queue: [], join: joinCode() }
   copies.set(cookie, copy)
   seenAt.set(cookie, begun)
   register(registry, copy.id, copy)
@@ -346,7 +359,7 @@ async function start(cookie, address) {
           DATABASE_URL: `postgresql://${name}:${password}@/${name}?host=${encodeURIComponent(process.env.PGHOST ?? '/run/postgresql')}`,
           CELLA_DEMO: '1',
           CELLA_DEMO_IDLE: String(config.idle),
-          CELLA_DEMO_ENDS: String(Math.floor(copy.ends / 1000)),
+          CELLA_DEMO_LIFETIME: String(config.lifetime),
           CELLA_DEMO_JOIN: copy.join,
           CELLA_DEMO_BROWSER_IDLE: String(config.browserIdle),
           PROTOCOL_HEADER: 'x-forwarded-proto',
@@ -510,12 +523,12 @@ function freeDisk() {
   }
 }
 
-// Every tick: a copy idle past `--idle` ends, one older than `--lifetime`
-// however busy, and one whose server holds more than `--memory` MiB
-// resident. Every five seconds: each copy is measured, one storing past
-// twice `--storage` ends, and while the disk holds less than
-// `--disk-floor` MiB free, the copies storing most end, as many as it
-// takes to bring it back above.
+// Every tick: a copy idle past `--idle` ends, one whose room's lifetime
+// has run out, once its own server set `copy.ends` below, however busy,
+// and one whose server holds more than `--memory` MiB resident. Every
+// five seconds: each copy is measured, one storing past twice `--storage`
+// ends, and while the disk holds less than `--disk-floor` MiB free, the
+// copies storing most end, as many as it takes to bring it back above.
 function rss(child) {
   try {
     const m = /VmRSS:\s+(\d+) kB/.exec(readFileSync(`/proc/${child.pid}/status`, 'utf8'))
@@ -531,6 +544,8 @@ setInterval(() => {
       end(copy, `idle ${Math.round((now - copy.seen) / 1000)} s`)
     } else if (now > copy.ends) {
       end(copy, `its lifetime of ${config.lifetime} s`)
+    } else if (tooOld(copy.made, now, config.lifetime)) {
+      end(copy, `its age of ${2 * config.lifetime} s, twice its lifetime, however busy`)
     } else if (copy.child && rss(copy.child) > config.memory) {
       end(copy, `its server passed ${config.memory} MiB`)
     }
@@ -1047,6 +1062,9 @@ async function handle(req, res) {
     })
   }
   const headers = { ...req.headers, cookie: withoutOurs(req.headers.cookie) }
+  // A browser's own say-so, never trusted: only a room's server sets its
+  // lifetime, by this same header on its response, read above.
+  delete headers['x-cella-demo-ends']
   if (!headers.cookie) {
     delete headers.cookie
   }
@@ -1076,6 +1094,20 @@ async function handle(req, res) {
   // defaults to, and never a client's own say-so either.
   headers['x-forwarded-proto'] = schemeOf(req)
   const upstream = http.request({ socketPath: socketOf(copy.name), path: req.url, method: req.method, headers }, (up) => {
+    // The room's own server, never this front, decides when its lifetime
+    // starts (its first member's sign-in, `#lib/server/leases.ts`), and
+    // says so on every response once it holds: read here, never guessed,
+    // and never passed on to the browser, whose own page reads it from
+    // its data instead.
+    const until = up.headers['x-cella-demo-ends']
+    delete up.headers['x-cella-demo-ends']
+    const ms = demoEndsAt(until, Date.now(), config.lifetime)
+    if (ms !== null) {
+      // Never later than what is already held: a copy's server resets
+      // nothing by sending it again, a middle request's reply arriving
+      // after a later one's never moves it back out.
+      copy.ends = Math.min(copy.ends, ms)
+    }
     res.writeHead(up.statusCode ?? 502, up.headers)
     up.pipe(res)
   })

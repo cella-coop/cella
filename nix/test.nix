@@ -9,16 +9,17 @@
 #   whose log verifies at the same head.
 # - `demo`: a demo scope. Its template is built at the unit's first start,
 #   and the scope serves a copy of it: its sign-in offers Lanterne's
-#   members, each marked as a demo member, under the demo's banner, and
-#   one signs in and signs a write. The template built again from nothing
-#   holds the same log, and both verify.
+#   members, under one demo tag on its heading, under the demo's banner,
+#   and one signs in and signs a write. The template built again from
+#   nothing holds the same log, and both verify.
 # - `visitors`: a demo serving each visitor a copy of their own through
 #   its front. A request with no cookie makes none; two visitors get two
 #   copies, and one's write reaches neither the other's nor the template;
-#   a copy's role reaches its own database alone; Reset now drops a copy
+#   a copy's role reaches its own database alone; Reset drops a copy
 #   for a fresh one; at the cap the idlest ends; one address is refused
 #   past its rate; an idle copy ends leaving no database, role, server or
-#   socket; and a front killed outright has its copies ended by the next.
+#   socket; a busy one still ends at its lifetime once its first member
+#   signs in; and a front killed outright has its copies ended by the next.
 { self, pkgs, kind }:
 let
   keys = "/var/lib/cella-keys";
@@ -101,12 +102,14 @@ pkgs.testers.runNixOSTest {
           host.succeed("""${psql "postgres" "SELECT datistemplate AND NOT datallowconn FROM pg_database WHERE datname = 'demo_template'"} | grep -qx t""")
           host.succeed("""${psql "postgres" "SELECT shobj_description(oid, 'pg_database') FROM pg_database WHERE datname = 'demo'"} | grep -q '^a copy of demo_template: cella demo template: '""")
 
-      with subtest("the demo's sign-in offers Lanterne's members, each marked as a demo member, under its banner"):
+      with subtest("the demo's sign-in offers Lanterne's members, under one demo tag on the heading, under its banner"):
           page = host.succeed("curl -sf http://127.0.0.1:${toString port}/sign-in")
           members = int(host.succeed("""${psql "demo" "SELECT count(DISTINCT address) FROM person.device WHERE revoked IS NULL"} """).strip())
           assert "Demo members" in page, "the sign-in offers no demo members"
           assert "Camille Martin" in page, "Camille is not offered"
-          assert page.count("demo member</span>") == members, f"{page.count('demo member</span>')} marked, of {members} members"
+          assert members > 1, "the fixture seeds more than one member to mark"
+          assert page.count('>demo</span>') == 1, "only the heading wears the demo tag, not each row"
+          assert "demo member" not in page, "no row wears its own demo badge"
           assert notice in page, "the sign-in wears no demo banner"
 
       with subtest("a demo member signs in with their derived key and signs a write"):
@@ -246,8 +249,12 @@ pkgs.testers.runNixOSTest {
           host.succeed(f"""${psql "postgres" "SELECT shobj_description(oid, 'pg_database') FROM pg_database WHERE datname = '{a}'"} | grep -q '^a copy of demo_template: cella demo template: '""")
           assert "Demo members" in signin and "Camille Martin" in signin, "the copy's sign-in offers no demo members"
           assert notice in signin, "the copy's sign-in wears no prototype notice"
-          assert "yours alone" in signin and "Reset now" in signin, "the banner says nothing of the visitor's copy"
-          assert "minutes idle" in signin and "or when its time runs out" in signin and "0:01:30" in signin, "the banner says nothing of when the copy resets"
+          assert "yours alone" in signin, "the banner says nothing of the visitor's copy"
+          assert "Reset" in signin, "the banner offers no Reset"
+          # No one has signed in yet, so the room's own lifetime is not
+          # counting; the strip still warns of the idle reset, 90 s away,
+          # already inside its last two minutes.
+          assert "minutes idle" in signin and "0:01:30" in signin, "the banner says nothing of when the copy resets"
           pw, pid = password(a)
           rss = int(host.succeed(f"ps -o rss= -p {pid}").strip()) // 1024
           print(f"one visitor's server holds {rss} MiB resident")
@@ -299,7 +306,7 @@ pkgs.testers.runNixOSTest {
           assert head(a2) == base, "the fresh copy is not the template's"
           jar["a-old"] = old
           assert "Your earlier copy was reset." in page("a-old", "10.0.0.1", "/")
-          assert "Reset now" in page("a", "10.0.0.1", "/sign-in")
+          assert "Reset" in page("a", "10.0.0.1", "/sign-in")
 
       with subtest("at the cap a newcomer ends the copy idle longest"):
           page("a", "10.0.0.1", "/sign-in")
@@ -353,8 +360,12 @@ pkgs.testers.runNixOSTest {
           host.succeed("test -z \"$(ls /run/cella-${scope})\"")
           assert "Your earlier copy was reset." in page("c", "10.0.0.3", "/")
 
-      with subtest("a copy kept busy still ends at its lifetime"):
+      with subtest("a copy kept busy still ends at its lifetime, once its first member has signed in"):
           g, _ = visit("g", "10.0.0.7")
+          # The room's lifetime starts at its first sign-in, not at
+          # /_demo/start: busy with no one signed in, it would never end
+          # on its lifetime at all, only idle, so this signs in once first.
+          probe(g, "g", "10.0.0.7")
           begun = time.monotonic()
           while g in copies():
               assert time.monotonic() - begun < 240, "a busy copy outlived its lifetime"

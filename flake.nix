@@ -382,6 +382,9 @@
         } ''
           export HOME=$TMPDIR
           cp -r ${self} src && chmod -R u+w src
+          # The tabs check parses TypeScript: its parser comes from the npm
+          # install the built app already holds.
+          ln -s ${cellaOrg pkgs}/share/cella/node_modules src/node_modules
           node src/tools/feat-check.mjs --no-sql src
           touch $out
         '';

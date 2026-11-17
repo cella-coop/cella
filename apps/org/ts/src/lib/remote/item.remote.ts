@@ -4,4 +4,4 @@ import { served } from './serve.ts'
 
 // An item with each extension's data on it, as the `[collection]/[id]`
 // page reads it.
-export const item = query(call.schema, (arg) => served((db, who, borrow) => call.run(db, arg, who, borrow)))
+export const item = query(call.schema, (arg) => served((db, who) => call.run(db, arg, who)))

@@ -1,4 +1,4 @@
-import { ask as asking, counts, made, ordered, read, texts, today, type Borrow, type Db, type Source } from '@cella/org-db'
+import { ask as asking, counts, made, ordered, read, texts, today, type Db, type Source } from '@cella/org-db'
 import { scoped } from '@cella/org-analytics'
 import { anchor, defaults, fields, grouping, limits, logged, period, resolve, swimlane, wheres, widgets, type Field, type Sort, type Spec } from '@cella/org-ui/models'
 import { named } from '@cella/org-log/api'
@@ -151,13 +151,7 @@ async function measured(db: Db, from: Source, spec: Spec, fs: Field[], name: str
 // none to the reader.
 export const item = {
   schema: texts(['name', 'id', 'search']),
-  // `borrow`, where the caller has one, lends the page's other reads
-  // (each extension's own data on the item, and `jumps`, below) a
-  // connection of their own, so they run against Postgres together
-  // rather than queue, one after another, behind `db`'s; left out, as a
-  // slice's own test calling this with one `db` and nothing more does,
-  // they queue on it instead, as before.
-  async run(db: Db, { name, id, search }: { name: string; id: string; search: string }, who: Reader, borrow?: Borrow) {
+  async run(db: Db, { name, id, search }: { name: string; id: string; search: string }, who: Reader) {
     const m = mounted(name)
     const one = m?.collection.item
     if (!m || !one) {
@@ -167,15 +161,12 @@ export const item = {
     if (!found) {
       throw new Missing(`${name} has no ${id}`)
     }
-    const added = await Promise.all(
-      m.extensions
-        .filter((e) => e.extension.item)
-        .map(async (e) => {
-          const fn = e.extension.item!
-          const read = (on: Db) => fn(on, id, who.actor)
-          return [e.slice.name, await (borrow ? borrow(read) : read(db))] as const
-        }),
-    )
+    // One after another: `db` is one connection, which runs one query at
+    // a time, so reading them at once would only queue them on it.
+    const added: (readonly [string, unknown])[] = []
+    for (const e of m.extensions.filter((e) => e.extension.item)) {
+      added.push([e.slice.name, await e.extension.item?.(db, id, who.actor)] as const)
+    }
     const viewer = who.session && { actor: who.session.actor, device: who.session.device }
     return {
       name,
@@ -184,7 +175,7 @@ export const item = {
       added: Object.fromEntries(added),
       viewer,
       made: (await made(db, [id]))[id] ?? null,
-      jumps: await jumps(db, name, id, who, borrow),
+      jumps: await jumps(db, name, id, who),
     }
   },
 }
@@ -205,28 +196,23 @@ const naming = (from: string, collection: string): string | undefined => {
 // filtered to the record shows them, each counted in the core read's one
 // statement; a collection holding none is no jump, nor one of home or
 // Settings, what waits on the reader and their own.
-async function jumps(db: Db, name: string, id: string, who: Reader, borrow?: Borrow) {
+async function jumps(db: Db, name: string, id: string, who: Reader) {
   const lens = await lensed(db, who.cookies, who.actor)
-  const found = await Promise.all(
-    slices
-      .flatMap((s) => Object.keys(s.collections ?? {}))
-      .filter((c) => c !== name && !owned(c)?.view.group)
-      .map(async (c) => {
-        const key = naming(c, name)
-        const from = key ? source(c, lens) : undefined
-        if (!key || !from) {
-          return null
-        }
-        const where = [{ field: key, is: [id] }]
-        // Every other collection's count, one statement each: borrowed
-        // its own connection, where the caller lent a way to, so a
-        // record naming many collections reads them together, never
-        // one after another behind `db`'s one connection.
-        const [count = 0] = await (borrow ? borrow((on) => counts(on, from, [{ where }])) : counts(db, from, [{ where }]))
-        return count ? { collection: c, count, href: `/${c}?${new URLSearchParams({ where: JSON.stringify(where) })}` } : null
-      }),
-  )
-  return found.filter((j) => j !== null)
+  // One count after another, on `db`'s one connection, as above.
+  const found: { collection: string; count: number; href: string }[] = []
+  for (const c of slices.flatMap((s) => Object.keys(s.collections ?? {})).filter((c) => c !== name && !owned(c)?.view.group)) {
+    const key = naming(c, name)
+    const from = key ? source(c, lens) : undefined
+    if (!key || !from) {
+      continue
+    }
+    const where = [{ field: key, is: [id] }]
+    const [count = 0] = await counts(db, from, [{ where }])
+    if (count) {
+      found.push({ collection: c, count, href: `/${c}?${new URLSearchParams({ where: JSON.stringify(where) })}` })
+    }
+  }
+  return found
 }
 
 // Every item the command menu can jump to, from each collection's index.

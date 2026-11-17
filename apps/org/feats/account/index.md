@@ -1,6 +1,6 @@
 +++
 title = "Account"
-updated = 2026-11-16
+updated = 2026-11-17
 +++
 
 The co-op's accounts and what its members own: the chart of accounts,
@@ -254,6 +254,14 @@ A capital account's label names its member: personal data of class
 `books`, registered by its holder (`006-personal.sql`), which the law
 keeps ten years (Code de commerce, art. L123-22). Erasing a member who
 has left restricts it until `cella vault sweep` redacts it.
+
+## Body
+
+A period, capital terms and an account each keep a body, its free-form discussion, a Loro snapshot of core body's blocks, saved by `account:body:save-period`, `-terms` and `-account` (`sql/012`–`014`). A save needs `discuss` in the record's circle and that the saver reads the record, by the terms of its row-level policy rather than the whole state a write's transaction sees (`account.legible_<kind>`), and `based` refuses one that did not merge the body it replaces.
+
+`stays_closed` and `stays_adopted` leave the body free: an update that changes no other column, keys included, passes once the record is fixed and when repeated, and one that changes another column beside it is refused as that column alone is.
+
+`core/ts/_tests/body.test.ts` saves a body after the record is fixed, again the same and by its fold, and is refused with another column beside it, and by one who does not read the record.
 
 ## Guards
 

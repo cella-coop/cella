@@ -1,6 +1,6 @@
 +++
 title = "Invoice"
-updated = 2026-11-16
+updated = 2026-11-17
 +++
 
 What the co-op bills: issue an invoice, send it, record what is paid
@@ -152,6 +152,10 @@ Every record names its owning circle, `circle`, a foreign key into
 core's circles ([owning
 circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
 assembly's, unless the write that makes it names another.
+
+## Body
+
+An invoice keeps a body, its free-form discussion, a Loro snapshot of core body's blocks, saved by `invoice:body:save` (`sql/011-body.sql`). A save needs `discuss` in the record's circle and that the saver reads the record, by the terms of its row-level policy rather than the whole state a write's transaction sees (`invoice.legible`), and `based` refuses one that did not merge the body it replaces.
 
 ## Guards
 

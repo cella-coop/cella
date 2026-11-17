@@ -1,6 +1,6 @@
 +++
 title = "Meeting"
-updated = 2026-11-16
+updated = 2026-11-17
 +++
 
 Circles meeting: when and where, what is on the agenda, and whether the
@@ -143,6 +143,10 @@ feat's guard reads a mandate's scope against
 Lanterne: the assembly needs half its members and adopts its minutes by
 motion, at its next session; coordination needs half its seats and
 keeps its minutes as written.
+
+## Body
+
+A meeting keeps a body, its free-form discussion, a Loro snapshot of core body's blocks, saved by `meeting:body:save` (`sql/007-body.sql`). A save needs `discuss` in the record's circle and that the saver reads the record, by the terms of its row-level policy rather than the whole state a write's transaction sees (`meeting.legible`), and `based` refuses one that did not merge the body it replaces.
 
 ## Guards
 

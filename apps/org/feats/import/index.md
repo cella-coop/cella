@@ -1,6 +1,6 @@
 +++
 title = "Import"
-updated = 2026-11-13
+updated = 2026-11-17
 +++
 
 What a co-op brings in from the tools it leaves, the five to eight a small
@@ -63,6 +63,10 @@ a person's name: a person among the contacts is `a person, line 4`.
 | Action | Label | Why |
 |---|---|---|
 | `POST /api/import/record` | confluent, `record-import` | the record of an import is a fact, the importer's own; every person's right |
+
+## Body
+
+An import run keeps a body, its free-form discussion, a Loro snapshot of core body's blocks, saved by `import:body:save` (`sql/003-body.sql`). A save needs `discuss` in the record's circle and that the saver reads the record, by the terms of its row-level policy rather than the whole state a write's transaction sees (`import.legible`), and `based` refuses one that did not merge the body it replaces.
 
 ## Guards
 

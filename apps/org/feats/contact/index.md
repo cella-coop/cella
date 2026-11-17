@@ -1,6 +1,6 @@
 +++
 title = "Contact"
-updated = 2026-11-16
+updated = 2026-11-17
 +++
 
 The organisations and people the co-op deals with: its CRM. Companies
@@ -227,3 +227,7 @@ contact's form matters to the rate card.
 ## Analytics
 
 Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `contact.contacts` to the analytics shell: each contact, by kind, client stage and whether it is archived. A company's name is shared; a person contact is shared by the address core person knows them by, whose name is core's, and no contact details are shared. It is scoped by `circle`, the circle that owns the contact. Its view is declared a published query, in `core/ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.
+
+## Body
+
+A contact keeps a body, its free-form discussion, a Loro snapshot of core body's blocks, saved by `contact:body:save` (`sql/006-body.sql`). A save needs `discuss` in the record's circle and that the saver reads the record, by the terms of its row-level policy rather than the whole state a write's transaction sees (`contact.legible`), and `based` refuses one that did not merge the body it replaces.

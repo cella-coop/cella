@@ -1,6 +1,6 @@
 +++
 title = "Expense"
-updated = 2026-11-16
+updated = 2026-11-17
 +++
 
 What the co-op's workers spend for it from their own pocket, to be paid back:
@@ -90,6 +90,14 @@ years (Code de commerce, art. L123-22). A capture's payload commits to
 them; erasing a member who has left restricts them until `cella vault
 sweep` redacts them, the one change a submitted expense takes
 (`cella.redacting()` in `expense.moves`). Its figures are the books'.
+
+## Body
+
+An expense keeps a body, its free-form discussion, a Loro snapshot of core body's blocks, saved by `expense:body:save` (`sql/006-body.sql`). A save needs `discuss` in the record's circle and that the saver reads the record, by the terms of its row-level policy rather than the whole state a write's transaction sees (`expense.legible`), and `based` refuses one that did not merge the body it replaces.
+
+`expense.moves` leaves the body free: an update that changes no other column, keys included, passes once the record is fixed and when repeated, and one that changes another column beside it is refused as that column alone is.
+
+`core/ts/_tests/body.test.ts` saves a body after the record is fixed, again the same and by its fold, and is refused with another column beside it.
 
 ## Guards
 

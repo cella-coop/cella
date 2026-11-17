@@ -1,6 +1,6 @@
 +++
 title = "Report"
-updated = 2026-11-13
+updated = 2026-11-17
 +++
 
 The co-op's reports: what the books and the work add up to, read through
@@ -132,6 +132,10 @@ report is saved, and saved again under its id by its owner.
 | Action | Power | Lanterne |
 |---|---|---|
 | save | `save-report`, every member's right: their own | every member |
+
+## Body
+
+A report keeps a body, its free-form discussion, a Loro snapshot of core body's blocks, saved by `report:body:save-body` (`sql/003-body.sql`). A save needs `discuss` in the record's circle and that the saver reads the record, by the terms of its row-level policy rather than the whole state a write's transaction sees (`report.legible`), and `based` refuses one that did not merge the body it replaces.
 
 ## Guards
 

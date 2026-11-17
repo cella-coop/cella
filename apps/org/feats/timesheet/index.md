@@ -1,6 +1,6 @@
 +++
 title = "Timesheet"
-updated = 2026-11-16
+updated = 2026-11-17
 +++
 
 Time worked, by worker and day, member or not, and each worker's
@@ -181,3 +181,11 @@ a lead's `approve-time` holds on their own circle alone.
 ## Analytics
 
 Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `timesheet.months` to the analytics shell: each month's time in minutes, summed over every entry. An entry is its member's, so no row is one member's time. It is shared by `month`. Each month is counted: `timesheet.months_contributions` holds each person's minutes in it, which only the port reads, to withhold a month from a reader where open books does not share it ([what is withheld](../../core/analytics/index.md#what-is-withheld)). Each of its views but the contributions is declared a published query, in `core/ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.
+
+## Body
+
+An entry keeps a body, its free-form discussion, a Loro snapshot of core body's blocks, saved by `timesheet:body:save` (`sql/008-body.sql`). A save needs `discuss` in the record's circle and that the saver reads the record, by the terms of its row-level policy rather than the whole state a write's transaction sees (`timesheet.legible`), and `based` refuses one that did not merge the body it replaces.
+
+`timesheet.lowers` leaves the body free: an update that changes no other column, keys included, passes once the record is fixed and when repeated, and one that changes another column beside it is refused as that column alone is.
+
+`core/ts/_tests/body.test.ts` saves a body after the record is fixed, again the same and by its fold, and is refused with another column beside it, and by one who does not read the record.

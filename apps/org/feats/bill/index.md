@@ -1,6 +1,6 @@
 +++
 title = "Bill"
-updated = 2026-11-16
+updated = 2026-11-17
 +++
 
 What the co-op is billed: a supplier's bill recorded as it came, with its
@@ -109,6 +109,14 @@ assembly's, unless the write that makes it names another.
 record names; its lines are in its circle, which `bill.in_its_circle`
 copies into each as it is made, and a line made in the statement that
 makes its bill names it itself.
+
+## Body
+
+A bill keeps a body, its free-form discussion, a Loro snapshot of core body's blocks, saved by `bill:body:save` (`sql/006-body.sql`). A save needs `discuss` in the record's circle and that the saver reads the record, by the terms of its row-level policy rather than the whole state a write's transaction sees (`bill.legible`), and `based` refuses one that did not merge the body it replaces.
+
+`bill.moves` leaves the body free: an update that changes no other column, keys included, passes once the record is fixed and when repeated, and one that changes another column beside it is refused as that column alone is.
+
+`core/ts/_tests/body.test.ts` saves a body after the record is fixed, again the same and by its fold, and is refused with another column beside it.
 
 ## Guards
 

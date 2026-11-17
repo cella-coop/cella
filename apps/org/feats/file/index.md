@@ -1,6 +1,6 @@
 +++
 title = "File"
-updated = 2026-11-16
+updated = 2026-11-17
 +++
 
 The files the co-op keeps: its own papers, members' receipts, workers'
@@ -66,6 +66,14 @@ what a file records opens it to more: `file-membership` to whoever
 holds a power over expenses, pay or members. The shell serves the bytes at
 `/files/<id>/content` only where one of them opens it, as an attachment
 unless it is a picture, a PDF or plain text, and sandboxed.
+
+## Body
+
+A file keeps a body, its free-form discussion, a Loro snapshot of core body's blocks, saved by `file:body:save` (`sql/005-body.sql`), through its own update policy, `changes`, on the terms of `reads`. A save needs `discuss` in the record's circle and that the saver reads the record, by the terms of its row-level policy rather than the whole state a write's transaction sees (`file.legible`), and `based` refuses one that did not merge the body it replaces.
+
+`file.fixed` leaves the body free: an update that changes no other column, keys included, passes once the record is fixed and when repeated, and one that changes another column beside it is refused as that column alone is.
+
+`core/ts/_tests/body.test.ts` saves a body after the record is fixed, again the same and by its fold, and is refused with another column beside it, and by one who does not read the record.
 
 ## Guards
 

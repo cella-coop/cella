@@ -1,6 +1,6 @@
 +++
 title = "Transaction"
-updated = 2026-11-13
+updated = 2026-11-17
 +++
 
 The journal: every movement of money in the co-op, as balanced
@@ -146,6 +146,14 @@ core's circles ([owning
 circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
 assembly's, unless the write that makes it names another.
 `transaction.journal`, the counter, is a registry and names none.
+
+## Body
+
+A journal entry keeps a body, its free-form discussion, a Loro snapshot of core body's blocks, saved by `transaction:body:save` (`sql/011-body.sql`), through its own update policy, `changes`, on the terms of `reads`. A save needs `discuss` in the record's circle and that the saver reads the record, by the terms of its row-level policy rather than the whole state a write's transaction sees (`transaction.legible`), and `based` refuses one that did not merge the body it replaces.
+
+`transaction.permanent` leaves the body free: an update that changes no other column, keys included, passes once the record is fixed and when repeated, and one that changes another column beside it is refused as that column alone is.
+
+`core/ts/_tests/body.test.ts` saves a body after the record is fixed, again the same and by its fold, and is refused with another column beside it, and by one who does not read the record.
 
 ## Guards
 

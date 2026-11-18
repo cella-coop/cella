@@ -1,7 +1,7 @@
 import { done, write, type Deps, type Done } from '@cella/org-db'
 import type { Pending, Permission, Refused, Settled } from '@cella/org-actions'
 import { admitting, exclude, suspend } from '@cella/org-membership/api'
-import { add, amend, arrange, create, make, remake, remove, seatRole, seating, unseatRole } from '@cella/org-circle/api'
+import { add, amend, arrange, create, hide, make, remake, remove, seatRole, seating, show, unseatRole } from '@cella/org-circle/api'
 import { circles } from '@cella/org-motion/api'
 
 type Args = Record<string, string | number | null | undefined>
@@ -11,6 +11,9 @@ const text = (v: unknown) => (v === undefined || v === null ? null : String(v))
 // A cap as the motion gives it: a count, or none, null, where it is given
 // blank or as none.
 const count = (v: unknown) => (v === undefined || v === null || v === '' ? null : Number(v))
+
+// A row's `yes` or `no` as the motion gives it.
+const yes = (v: unknown) => String(v ?? '').trim().toLowerCase() === 'yes'
 
 // A member a passing close admitted, with their shares and the seat it
 // gave them.
@@ -64,6 +67,16 @@ const writes: Record<string, { op: Permission; run: (a: Args, motion: string, de
   'arrange-features': {
     op: 'circle:circle:arrange',
     run: (a, motion, deps) => arrange({ circle: String(a.circle), features: String(a.features ?? ''), motion }, deps),
+  },
+  // A row's yes or no as the motion gives it; anything else is refused at
+  // its proposal (`membership_motion.arrange_asks`).
+  'show-group': {
+    op: 'circle:circle:show',
+    run: (a, motion, deps) => show({ circle: String(a.circle), group: String(a.group), shown: yes(a.shown), motion }, deps),
+  },
+  'hide-feature': {
+    op: 'circle:circle:hide',
+    run: (a, motion, deps) => hide({ circle: String(a.circle), feature: String(a.feature), hidden: yes(a.hidden), motion }, deps),
   },
   role: {
     op: 'circle:role:make',

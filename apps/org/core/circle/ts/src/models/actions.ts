@@ -12,14 +12,28 @@ export const actions = {
   // ordered, since the procedure it sets decides the motions put to the
   // circle after it
   'circle:circle:amend': ordered({ power: 'amend-circle' }),
-  // a circle's features, by the motion it cites, of a circle holding
-  // `arrange-features` over it, the circle itself among them; ordered, as
-  // what a motion carries is
+  // the co-op's layout of features, at its root, by the motion it cites,
+  // of a circle holding `arrange-features` over the root; ordered, as
+  // what a motion carries is, and since it replaces the whole layout
   'circle:circle:arrange': ordered({ power: 'arrange-features' }),
-  // a circle's features, at once, by whoever holds `arrange-features`
-  // over it by a seat; ordered, since it replaces the whole listing from
-  // the one its entry says it was, so two saves at once do not commute
+  // the co-op's layout of features, at once, by whoever holds
+  // `arrange-features` over the root by a seat; ordered, since it replaces
+  // the whole layout from the one its entry says it was, so two saves at
+  // once do not commute
   'circle:feature:arrange': ordered({ power: 'arrange-features' }),
+  // a group of the layout a circle shows or not, by the motion it cites;
+  // confluent: one row, a register, so two rows' writes commute and two of
+  // one leave the later, needing no order over the whole listing
+  'circle:circle:show': confluent({ power: 'arrange-features' }),
+  // a feature a circle hides or not, by the motion it cites; confluent, a
+  // register as a group's row is
+  'circle:circle:hide': confluent({ power: 'arrange-features' }),
+  // a group a circle shows or not, at once by whoever holds
+  // `arrange-features` over it by a seat; confluent, a register
+  'circle:group:show': confluent({ power: 'arrange-features' }),
+  // a feature a circle hides or not, at once by whoever holds
+  // `arrange-features` over it by a seat; confluent, a register
+  'circle:feature:hide': confluent({ power: 'arrange-features' }),
   // a new role in a circle, or a `*` role every working circle has, by the
   // motion it cites; ordered, since the same motion's later actions seat
   // people in it

@@ -93,3 +93,14 @@ test('an accordion renamed renames each of its choices, joining another of that 
   assert.equal(spell(renamed(items, 'Payments', '')), 'Books: account, transaction, report; invoice, bill, contact, employment')
   assert.equal(spell(gathered(listed('Work: project; file; Work: task'))), 'Work: project, task; file')
 })
+
+test('grouped, a lifted choice lands only in a group or off, and a group still moves between the groups', () => {
+  const layout = listed('Books: account, transaction; Pay: invoice, bill')
+  const choice = targets(layout, { kind: 'choice', value: 'invoice' }, [], true)
+  assert.ok(choice.targets.every((t) => t.kind === 'off' || t.group !== null), 'no place at the top level')
+  assert.deepEqual(choice.targets.at(-1), { kind: 'off' })
+  assert.equal(choice.targets.length, 6, 'before or after each feature of each group, and off')
+  const group = targets(layout, { kind: 'accordion', group: 'Pay' }, [], true)
+  assert.ok(group.targets.some((t) => t.kind === 'at' && t.group === null && t.index === 0), 'a group lands first')
+  assert.equal(spell(landed(layout, { kind: 'accordion', group: 'Pay' }, { kind: 'at', group: null, index: 0 })), 'Pay: invoice, bill; Books: account, transaction')
+})

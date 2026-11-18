@@ -40,8 +40,9 @@
   // sidebar shows the circle the member is in: its top stays put, the
   // co-op selector, the Inbox, Activity and Pinned, the views the
   // member pinned, the same in every circle. Its middle, which alone
-  // scrolls, lists the circle's enabled features, in its order, under its
-  // accordions, then More…. Its foot stays put too: the command menu and
+  // scrolls, lists the features the circle shows, each under its group,
+  // in the co-op's layout's order, so a feature two circles show sits in
+  // the same group in the same place in both, then More…. Its foot stays put too: the command menu and
   // the acting member's account.
   let {
     scope,
@@ -129,9 +130,10 @@
   // The circle the member is in: their lens, or the assembly where they
   // lensed none, which reads whole.
   const inside = $derived(lens ?? circles.find((c) => c.assembly) ?? null)
-  // Its features in its order, as runs: an accordion's features together
-  // under its name, a feature under none a run of its own; each drawn as
-  // the collections its feat owns that the sidebar lists.
+  // Its features in the layout's order, as runs: a group's features
+  // together under its name, what the circle does not show left out,
+  // never moved (`circle.features`); each drawn as the collections its
+  // feat owns that the sidebar lists.
   const owned = (feature: string) => (nav.find((g) => g.group === 'feature')?.items ?? []).filter((i) => i.feature === feature && i.listed !== false)
   const features = $derived(
     runs(listed(inside?.features ?? ''))

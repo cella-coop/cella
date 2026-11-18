@@ -4,8 +4,8 @@
 // issued or issued under a parent its issuer holds, narrower than it in
 // cap, scope and term, and revoking one revokes every mandate issued
 // under it; a role's holder cap counts its holders on each day; and a
-// circle's features read from a listing, judged, and fold as an
-// arrangement says; and
+// co-op's layout read from a listing, judged, its groups keeping their
+// ids, and a circle's rows of it, each folding as its entry says; and
 // a circle reads a setting as its own rule set it, else the assembly's,
 // else its default. Run by `cella test slice circle`.
 
@@ -49,8 +49,15 @@ test('circles never nest, and one circle only is the assembly', async () => {
   assert.deepEqual(columns.rows.map((r) => r.c), ['id', 'name', 'assembly', 'purpose', 'procedure', 'icon'])
   // A circle changes by motion, unguarded, save its icon: a holder of
   // `arrange-features` sets it at once, judged by its power alone.
+  // The layout and a circle's rows, by motion, are judged as sound and as
+  // the entry says, as a holder's own are.
   const guards = await db.query<{ op: string; fn: string }>(`SELECT op, fn::text FROM cella.guard WHERE op LIKE 'circle:circle:%' ORDER BY op, fn`)
-  assert.deepEqual(guards.rows, [{ op: 'circle:circle:icon', fn: 'circle_person.empowered(jsonb)' }])
+  assert.deepEqual(guards.rows, [
+    { op: 'circle:circle:arrange', fn: 'circle.arranged(jsonb)' },
+    { op: 'circle:circle:hide', fn: 'circle.hid(jsonb)' },
+    { op: 'circle:circle:icon', fn: 'circle_person.empowered(jsonb)' },
+    { op: 'circle:circle:show', fn: 'circle.showed(jsonb)' },
+  ])
 })
 
 test('a mandate keeps its grant, and a revoked one stays revoked, from its day or an earlier one', async () => {
@@ -211,7 +218,7 @@ test('a role\'s holder cap counts the holders on each day, never every tenure a 
   }
 })
 
-test('a circle\'s features are read from a listing in order, under their accordions, spelt one way, judged before they are arranged, and an arrangement\'s fold replaces them', async () => {
+test('the co-op\'s layout is read from a listing in order, under its groups, spelt one way, judged before it is arranged, keeps a renamed group\'s id, and its fold and a circle\'s rows fold as they say', async () => {
   const listed = await db.query(`SELECT feat, position, "group" FROM circle.listed($1)`, [' Books:account ,transaction; contact,, ; Pay: bill '])
   assert.deepEqual(listed.rows, [
     { feat: 'account', position: 0, group: 'Books' },
@@ -221,7 +228,7 @@ test('a circle\'s features are read from a listing in order, under their accordi
   ])
   const spelt = async (listing: string | null) => (await db.query<{ s: string }>('SELECT circle.spelt($1) AS s', [listing])).rows[0].s
   assert.equal(await spelt(' Books:account ,transaction; contact,, ; Pay: bill '), 'Books: account, transaction; contact; Pay: bill')
-  assert.equal(await spelt('a; b, c; G: d; G: e'), 'a, b, c; G: d, e', 'a run of one accordion, or of none, is spelt once')
+  assert.equal(await spelt('a; b, c; G: d; G: e'), 'a, b, c; G: d, e', 'a run of one group, or of none, is spelt once')
   assert.equal(await spelt(''), '')
   assert.equal(await spelt(null), '')
   const installed = (await db.query<{ i: string }>('SELECT i FROM circle.installed() i')).rows.map((r) => r.i)
@@ -232,24 +239,56 @@ test('a circle\'s features are read from a listing in order, under their accordi
 
   await db.query('BEGIN')
   try {
-    const features = async () => (await db.query<{ f: string }>(`SELECT circle.features('brand') AS f`)).rows[0].f
-    assert.equal(await features(), '', 'a circle enables nothing until it says so')
-    const flaw = async (listing: string, was = '') => (await db.query<{ f: string | null }>(`SELECT circle.listing_flaw('brand', $1, $2) AS f`, [listing, was])).rows[0].f
-    assert.equal(await flaw('Work: circle, person; policy'), null, 'a sound listing of installed features')
-    assert.match((await flaw('circle, people')) ?? '', /people is no feature the co-op has installed: give brand features of .*circle/)
-    assert.match((await flaw('circle, person, circle')) ?? '', /the features of brand name circle twice: list each once/)
-    assert.match((await flaw(' : circle; person')) ?? '', /an accordion of brand's features has a blank name/)
-    assert.match((await flaw('W: circle; person; W: policy')) ?? '', /the features of brand list the W accordion's apart: list them together/)
-    assert.match((await flaw('circle ,person', 'circle, person')) ?? '', /the arrangement of brand changes nothing: its features are circle, person already/)
-    assert.match((await db.query<{ f: string }>(`SELECT circle.listing_flaw('nowhere', 'circle', '') AS f`)).rows[0].f, /no circle nowhere/)
-    const fold = (payload: object) => db.query('SELECT circle.fold_arrange($1)', [{ n: 7, date: '2026-11-14', payload: { circle: 'brand', motion: 'm-1', ...payload } }])
-    await fold({ features: 'Work: task, project; file', was: '' })
-    assert.equal(await features(), 'Work: task, project; file')
+    const features = async (circle = 'ag') => (await db.query<{ f: string }>(`SELECT circle.features($1) AS f`, [circle])).rows[0].f
+    const ids = async () => (await db.query<{ g: string[] }>(`SELECT circle.groups() AS g`)).rows[0].g
+    assert.equal(await features(), '', 'the co-op enables nothing until it says so')
+    const flaw = async (listing: string, was = '', circle = 'ag') =>
+      (await db.query<{ f: string | null }>(`SELECT circle.listing_flaw($3, $1, $2) AS f`, [listing, was, circle])).rows[0].f
+    assert.equal(await flaw('Work: circle, person; Rules: policy'), null, 'a sound listing of installed features')
+    assert.match((await flaw('W: circle, people')) ?? '', /people is no feature the co-op has installed: give ag features of .*circle/)
+    assert.match((await flaw('W: circle, person, circle')) ?? '', /the features of ag name circle twice: list each once/)
+    assert.match((await flaw(' : circle; W: person')) ?? '', /a group of ag's features has a blank name/)
+    assert.match((await flaw('W: circle; person')) ?? '', /the features of ag put person under no group: list it under one/)
+    assert.match((await flaw('W: circle; V: person; W: policy')) ?? '', /the features of ag list the W group's apart: list them together/)
+    assert.match((await flaw('W: circle ,person', 'W: circle, person')) ?? '', /the arrangement of ag changes nothing: its features are W: circle, person already/)
+    assert.match((await flaw('W: circle', '', 'brand')) ?? '', /brand is no root: the co-op's features are arranged at ag/)
+    assert.match((await flaw('W: circle', '', 'nowhere')) ?? '', /no circle nowhere/)
+    const fold = (payload: object) => db.query('SELECT circle.fold_arrange($1)', [{ n: 7, date: '2026-11-14', payload: { circle: 'ag', motion: 'm-1', ...payload } }])
+    await fold({ features: 'Work: circle, person; Rules: policy', groups: ['work', 'rules'], was: '' })
+    assert.equal(await features(), 'Work: circle, person; Rules: policy')
+    assert.deepEqual(await ids(), ['work', 'rules'])
     await db.query('SAVEPOINT stale')
-    await assert.rejects(fold({ features: 'task', was: 'task' }), /entry 7 says the features of brand were task, where the fold has Work: task, project; file/)
+    await assert.rejects(fold({ features: 'W: person', groups: ['w'], was: 'W: person' }), /entry 7 says the features of ag were W: person, where the fold has Work: circle, person; Rules: policy/)
     await db.query('ROLLBACK TO SAVEPOINT stale')
-    await fold({ features: 'file', was: 'Work: task, project; file' })
-    assert.deepEqual((await db.query(`SELECT feat, position, "group" FROM circle.feature WHERE circle = 'brand'`)).rows, [{ feat: 'file', position: 0, group: null }])
+
+    // A circle shows a group and hides a feature in it, row by row; the
+    // root shows the whole layout, and a circle never moves what it shows.
+    const row = (fn: string, payload: object) => db.query(`SELECT circle.${fn}($1)`, [{ n: 8, date: '2026-11-14', payload: { circle: 'brand', ...payload } }])
+    assert.equal(await features('brand'), '', 'a circle shows no group until it says so')
+    await row('fold_show', { group: 'work', shown: true })
+    await row('fold_show', { group: 'rules', shown: true })
+    await row('fold_hide', { feature: 'circle', hidden: true })
+    assert.equal(await features('brand'), 'Work: person; Rules: policy')
+    const flawed = async (circle: string, group: string | null, feature: string | null) =>
+      (await db.query<{ f: string | null }>(`SELECT circle.row_flaw($1, $2, $3) AS f`, [circle, group, feature])).rows[0].f
+    assert.match((await flawed('ag', 'work', null)) ?? '', /ag is the root, which shows every feature/)
+    assert.match((await flawed('brand', 'nope', null)) ?? '', /no group nope in the co-op's layout: show one of work, rules/)
+    assert.match((await flawed('brand', null, 'task')) ?? '', /task is no feature of the co-op's layout/)
+
+    // Renamed, a group keeps its id and every circle's choice of it; a
+    // feature moved shows where its new group is shown, still hidden where
+    // it was; a group dropped drops every circle's row of it.
+    const grouped = async (listing: string) => (await db.query<{ g: string[] }>(`SELECT circle.grouped($1) AS g`, [listing])).rows[0].g
+    assert.deepEqual(await grouped('Rules: policy; People: circle, person'), ['rules', 'work'], 'Work renamed People keeps its id')
+    assert.deepEqual(await grouped('Rules: policy; Work Two: circle; Work: person'), ['rules', 'work-two', 'work'], 'a new group is minted from its name')
+    await fold({ features: 'Rules: policy; People: circle, person', groups: ['rules', 'work'], was: 'Work: circle, person; Rules: policy' })
+    assert.equal(await features('brand'), 'Rules: policy; People: person', 'brand still shows the renamed group, in the layout\'s order')
+    await fold({ features: 'Rules: policy, circle, person', groups: ['rules'], was: 'Rules: policy; People: circle, person' })
+    assert.equal(await features('brand'), 'Rules: policy, person', 'circle moved into Rules stays hidden in brand; People dropped')
+    assert.deepEqual((await db.query(`SELECT "group" FROM circle.shown WHERE circle = 'brand'`)).rows, [{ group: 'rules' }])
+    await row('fold_hide', { feature: 'circle', hidden: false })
+    await row('fold_show', { group: 'rules', shown: false })
+    assert.equal(await features('brand'), '')
   } finally {
     await db.query('ROLLBACK')
   }

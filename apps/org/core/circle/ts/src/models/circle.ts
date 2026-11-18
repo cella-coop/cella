@@ -113,21 +113,43 @@ export interface Amended {
   was: Terms
 }
 
-// A circle's features arranged, replaced by one listing, in the circle's
-// order, an accordion's run after its name and a colon, the runs
-// separated by semicolons: `Books: account, transaction; contact`. By
-// the motion it cites, of a circle holding `arrange-features` over it,
-// or, with none, at once by a holder of it over the circle.
+// The co-op's layout of features arranged at its root, `circle`,
+// replaced by one listing in its order, each feature under a group, a
+// group's run after its name and a colon, the runs separated by
+// semicolons: `Books: account, transaction; Work: project`. By the motion
+// it cites, of a circle holding `arrange-features` over the root, or,
+// with none, at once by a holder of it over the root.
 export interface Arrange {
   circle: string
   features: string
   motion?: string
 }
 
-// The circle arranged and the listing its features replaced.
+// The root arranged, the ids its groups keep, in its order, and the
+// listing the layout replaced.
 export interface Arranged {
   circle: string
+  groups: string[]
   was: string
+}
+
+// A group of the layout a circle other than the root shows or not, by
+// its id, by the motion it cites or, with none, at once by a holder of
+// `arrange-features` over the circle.
+export interface Show {
+  circle: string
+  group: string
+  shown: boolean
+  motion?: string
+}
+
+// A feature of the layout a circle other than the root hides or not, as
+// a group is shown.
+export interface Hide {
+  circle: string
+  feature: string
+  hidden: boolean
+  motion?: string
 }
 
 // A circle's own icon, set or cleared at once by a holder of

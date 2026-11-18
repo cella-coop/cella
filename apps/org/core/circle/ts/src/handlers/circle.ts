@@ -1,7 +1,7 @@
 import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
-import type { Amend, Amended, Arrange, Arranged, Create, Created, Icon, Iconed, Terms } from '../models/circle.ts'
+import type { Amend, Amended, Arrange, Arranged, Create, Created, Hide, Icon, Iconed, Show, Terms } from '../models/circle.ts'
 
 type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
@@ -50,29 +50,64 @@ export async function amend(input: Amend, deps: Deps): Out<'circle:circle:amend'
   })
 }
 
-// Arranges a circle's features, replaced by the listing given: citing the
-// motion that arranges them, `circle:circle:arrange`, or, citing none, at
-// once by the actor's own power over the circle, `circle:feature:arrange`.
-// Its entry carries the listing and the one it replaced, each as
-// `circle.features` spells them, so a motion's and a holder's fold alike.
+// Arranges the co-op's layout of features at its root, replaced by the
+// listing given: citing the motion that arranges it,
+// `circle:circle:arrange`, or, citing none, at once by the actor's own
+// power over the root, `circle:feature:arrange`. Each group keeps its id
+// where the listing keeps or renames it (`circle.grouped`). Its entry
+// carries the listing, the ids of its groups in order and the layout it
+// replaced, as `circle.features` spells it, so a motion's and a holder's
+// fold alike.
 export async function arrange(input: Arrange, deps: Deps): Out<'circle:circle:arrange' | 'circle:feature:arrange', Arranged> {
   return write(deps, {
     op: (input.motion ? 'circle:circle:arrange' : 'circle:feature:arrange') satisfies Action,
     request: input,
     state: async (tx) => {
-      const { rows } = await tx.query<{ was: string }>(`SELECT circle.features(id) AS was FROM circle.circle WHERE id = $1 FOR UPDATE`, [input.circle])
-      await tx.query(`DELETE FROM circle.feature WHERE circle = $1`, [input.circle])
-      await tx.query(
-        `INSERT INTO circle.feature (circle, feat, position, "group")
-         SELECT $1, l.feat, l.position, l."group" FROM circle.listed($2) l
-         ON CONFLICT DO NOTHING`,
+      const { rows } = await tx.query<{ was: string; groups: string[] }>(
+        `SELECT circle.features(id) AS was, circle.grouped($2) AS groups FROM circle.circle WHERE id = $1 AND assembly FOR UPDATE`,
         [input.circle, input.features],
       )
-      return { circle: input.circle, was: rows[0]?.was ?? '' }
+      const groups = rows[0]?.groups ?? []
+      if (rows[0]) {
+        await tx.query(`SELECT circle.lay($1, $2)`, [input.features, groups])
+      }
+      return { circle: input.circle, groups, was: rows[0]?.was ?? '' }
     },
-    payload: (v) => ({ circle: v.circle, features: input.features, was: v.was, ...(input.motion ? { motion: input.motion } : {}) }),
+    payload: (v) => ({ circle: v.circle, features: input.features, groups: v.groups, was: v.was, ...(input.motion ? { motion: input.motion } : {}) }),
   })
 }
+
+// Shows a group of the layout in a circle, or stops: citing the motion
+// that does, `circle:circle:show`, or, citing none, at once by the
+// actor's own power over the circle, `circle:group:show`. One row, which
+// its entry carries whole.
+export async function show(input: Show, deps: Deps): Out<'circle:circle:show' | 'circle:group:show', Show> {
+  return write(deps, {
+    op: (input.motion ? 'circle:circle:show' : 'circle:group:show') satisfies Action,
+    request: input,
+    state: async (tx) => {
+      await tx.query(`SELECT circle.show($1, $2, $3)`, [input.circle, input.group, input.shown])
+      return input
+    },
+    payload: (v) => ({ circle: v.circle, group: v.group, shown: v.shown, ...(v.motion ? { motion: v.motion } : {}) }),
+  })
+}
+
+// Hides a feature of the layout in a circle, or stops: citing the motion
+// that does, `circle:circle:hide`, or, citing none, at once,
+// `circle:feature:hide`, as a group is shown.
+export async function hide(input: Hide, deps: Deps): Out<'circle:circle:hide' | 'circle:feature:hide', Hide> {
+  return write(deps, {
+    op: (input.motion ? 'circle:circle:hide' : 'circle:feature:hide') satisfies Action,
+    request: input,
+    state: async (tx) => {
+      await tx.query(`SELECT circle.hide($1, $2, $3)`, [input.circle, input.feature, input.hidden])
+      return input
+    },
+    payload: (v) => ({ circle: v.circle, feature: v.feature, hidden: v.hidden, ...(v.motion ? { motion: v.motion } : {}) }),
+  })
+}
+
 
 // Sets or clears a circle's own icon, a cosmetic setting apart from its
 // name, purpose, procedure and features, at once by a holder of

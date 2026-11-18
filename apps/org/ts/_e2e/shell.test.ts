@@ -139,7 +139,7 @@ test('the co-op selector lists the circles the member sits in, and the one chose
   assert.equal(await logged(), before, 'and nothing of it enters the log')
 })
 
-test('a lensed collection lists only its circle’s rows, and a registry says the lens leaves it whole', async () => {
+test('a lensed collection lists only its circle’s rows, and a registry reads whole regardless, with no word about it', async () => {
   const session = await shell.signIn(camille)
   const seen = async (path: string, lens?: string) => {
     const res = await fetch(`${shell.base}${path}`, { headers: { accept: 'text/html', cookie: lens ? `${session}; cella-lens=${lens}` : session } })
@@ -163,10 +163,10 @@ test('a lensed collection lists only its circle’s rows, and a registry says th
   const chart = await seen('/accounts', 'web')
   const counted = (html: string) => Number(/class="count[^"]*">(\d+)</.exec(html)?.[1] ?? NaN)
   const unlensed = await seen('/accounts')
-  assert.match(chart, /The lens on Web leaves Accounts whole: no circle owns its rows\./, 'a registry says the lens leaves it whole')
+  assert.ok(!chart.includes('leaves Accounts whole'), 'a registry no circle owns reads whole with no word about it')
   assert.ok(counted(chart) > 0, 'the chart of accounts holds rows')
   assert.equal(counted(chart), counted(unlensed), 'and keeps every one of them under the lens')
-  assert.ok(!unlensed.includes('leaves Accounts whole'), 'with no lens it says nothing')
+  assert.ok(!unlensed.includes('leaves Accounts whole'), 'with no lens it says nothing either')
 })
 
 test('an accordion the viewer shut or opened stays so across page loads, by its cookie', async () => {
@@ -182,7 +182,7 @@ test('an accordion the viewer shut or opened stays so across page loads, by its 
   const key = encodeURIComponent('feature:Governance')
   assert.ok(open(await seen(`${key}:1`), 'Governance'), 'an accordion opened stays open')
   assert.ok(!open(await seen(`${key}:0`), 'Governance'), 'an accordion shut stays shut')
-  assert.ok(!open(await seen(`${key}:1;;`), 'Governance'), 'a malformed cookie is ignored')
+  assert.ok(open(await seen(`${key}:1;;`), 'Governance'), 'a malformed cookie is ignored, and an accordion left unset opens by default')
 })
 
 test('the sidebar’s counts narrow with the lens, and the Inbox and a shut accordion’s dot stay whole', async () => {
@@ -235,7 +235,11 @@ test('widgets reordered as the keyboard drops them stay in their new order', asy
   assert.ok(move)
   const moved = drag.reorder(ws, move.from, move.to)
   const { text } = await page(`/invoices?view=dashboard&w=${encodeURIComponent(JSON.stringify(moved))}`)
-  const at = (title: string) => text.indexOf(`>${title}<`)
+  // Scoped to the dashboard's own div: a field picker's options list a
+  // field by the same name it titles a widget with (here "Owed"), and
+  // read unscoped, the first match may be its menu item, not its card.
+  const dashboard = text.slice(text.indexOf('class="dashboard'))
+  const at = (title: string) => dashboard.indexOf(`>${title}<`)
   assert.ok(at('Overdue') > 0 && at('Overdue') < at('By standing') && at('By standing') < at('Owed'), 'the dashboard renders in the dropped order')
 })
 
@@ -264,7 +268,7 @@ test('the stance form starts at the acting member\'s latest stance, and is not o
   assert.match(hugos, /aria-selected="true" data-value="consent"/, 'Hugo\'s select holds his latest stance, consent')
 
   assert.ok(hugos.includes('Change stance'), 'and offers to change it')
-  assert.ok(hugos.includes('Now: consent · receipt 57'), 'saying which receipt it is')
+  assert.ok(hugos.includes('Now: consent · receipt 63'), 'saying which receipt it is')
   assert.ok((await as('/motions/m-2026-012?tab=stances', ines)).includes("Not on this motion's roll."), 'Inès, invited, reads the assembly\'s motion as every seat does, and is on no roll')
 })
 

@@ -81,7 +81,7 @@
       <div class="list">
         {#each held as d (d.key)}
           <div class="line">
-            {@render row(d.name ?? d.address, [], d.address, () => state.as(d))}
+            {@render row(d.name ?? d.address, d.circles ?? [], d.address, () => state.as(d))}
             <button class="x" type="button" title="Remove from this browser" aria-label="Remove {d.name ?? d.address} from this browser" onclick={() => (fixtures.some((f) => f.address === d.address) ? state.forget(d) : (state.confirming = d.key))}>
               <Icon icon={X} size="0.9rem" />
             </button>

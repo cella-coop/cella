@@ -9,8 +9,11 @@ import { inkAction, type House, type ToneName } from './house.ts'
 
 export type Theme = 1 | -1
 
-/** The sheet's ladder, shade 0 (the panel) to shade 9 (the text). */
-export const K = [0.39, 0.355, 0.32, 0.27, 0.19, 0.06, -0.1, -0.17, -0.27, -0.36]
+/** The sheet's ladder, shade 0 (the panel) to shade 9 (the text); shade
+ * 6's rung (`text-subtle`, `accent-border`) keeps text-subtle at or
+ * above 4.5:1 against the ground in both themes, checked against the
+ * paper's own tone, not loosened at the e2e scan that reads it. */
+export const K = [0.39, 0.355, 0.32, 0.27, 0.19, 0.06, -0.12, -0.17, -0.27, -0.36]
 /** Dark's surfaces, shades 0 to 3, before depth spreads them. */
 export const DARK = [0.215, 0.245, 0.185, 0.28]
 /** The well's rung. */

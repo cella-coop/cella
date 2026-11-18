@@ -74,7 +74,7 @@
   --shade-3: calc(0.61 + var(--theme) * 0.265);
   --shade-4: calc(0.61 + var(--theme) * 0.1748);
   --shade-5: calc(0.61 + var(--theme) * 0.0552);
-  --shade-6: calc(0.61 + var(--theme) * -0.092);
+  --shade-6: calc(0.61 + var(--theme) * -0.1104);
   --shade-7: calc(0.61 + var(--theme) * -0.1564);
   --shade-8: calc(0.61 + var(--theme) * -0.2484);
   --shade-9: calc(0.61 + var(--theme) * -0.3312);

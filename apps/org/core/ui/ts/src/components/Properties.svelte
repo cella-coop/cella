@@ -1,5 +1,6 @@
 <script lang="ts">
   import Plus from 'phosphor-svelte/lib/Plus'
+  import PencilSimple from 'phosphor-svelte/lib/PencilSimple'
   import type { Prop } from '../models/view.ts'
   import { show } from '../models/format.ts'
   import { inked, inkOf } from '../models/ink.ts'
@@ -70,7 +71,7 @@
   const add = (v: string | string[]) => state.add(Array.isArray(v) ? v[0] : v)
 </script>
 
-{#snippet value(p: Prop)}
+{#snippet value(p: Prop, bare: boolean = false)}
   {#if empty(p)}
     <span class="blank">{p.label}</span>
   {:else}
@@ -84,17 +85,32 @@
       <span class="who">{p.people.map(name).join(', ')}</span>
     {:else if p.icon}
       <span class="who">{show(p.value, p.kind)}</span>
-    {:else if p.href}
+    {:else if p.href && !bare}
+      <!-- A plain property's own link; one also edited renders it a
+           level up, a sibling of the button that edits it, never its
+           own interactive descendant. -->
       <a href={p.href} onclick={(e) => e.stopPropagation()}><Value value={p.value} kind={p.kind} tone={p.tone} record={record(p.href)} size="drawer" label={p.label} /></a>
     {:else}
-      <Value value={p.value} kind={p.kind} tone={p.tone} size="drawer" label={p.label} />
+      <Value value={p.value} kind={p.kind} tone={p.tone} record={p.href && bare ? record(p.href) : undefined} size="drawer" label={p.label} />
     {/if}
   {/if}
 {/snippet}
 
 {#snippet row(p: Prop)}
   <li class="row">
-    {#if p.edit}
+    {#if p.edit && p.href}
+      <!-- A record both linked and edited: the link stands apart from
+           the button that opens its editor, each its own interactive
+           element, never one inside the other. -->
+      <span class="line" title={p.label}>
+        <span class="visually-hidden">{p.label}: </span>
+        <a href={p.href} onclick={(e) => e.stopPropagation()}>{@render value(p, true)}</a>
+        <Popover label="Change {p.label}" icon menu={false} wide open={state.fresh === p.label} onclose={() => (state.fresh = null)}>
+          {#snippet trigger()}<Icon icon={PencilSimple} size="0.85em" />{/snippet}
+          <PropEdit edit={p.edit} label={p.label} />
+        </Popover>
+      </span>
+    {:else if p.edit}
       <Popover label={p.label} menu={false} wide open={state.fresh === p.label} onclose={() => (state.fresh = null)}>
         {#snippet trigger()}
           <span class="line" title={p.label}>

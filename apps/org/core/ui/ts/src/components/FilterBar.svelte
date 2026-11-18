@@ -386,8 +386,10 @@
   .adder {
     flex: none;
   }
+  /* Quieter than the field and the value either side of it, never so
+     quiet the chip's own accent-text falls under AA. */
   .op {
-    opacity: 0.65;
+    opacity: 0.9;
   }
   .icon {
     display: grid;

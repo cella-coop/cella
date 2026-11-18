@@ -23,7 +23,6 @@
     font-size: var(--text-xs);
     font-style: italic;
     color: var(--text-subtle);
-    opacity: 0.7;
   }
   .end {
     text-align: right;

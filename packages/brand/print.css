@@ -4,11 +4,11 @@
    since a print is a physical thing. */
 :root {
   --print-paper: oklch(0.9688 0.004 250);
-  --print-error-deep: oklch(0.518 0.085 30);
-  --print-warning-deep: oklch(0.518 0.085 80);
-  --print-success-deep: oklch(0.518 0.085 159);
-  --print-info-deep: oklch(0.518 0.085 237);
-  --print-help-deep: oklch(0.518 0.085 295);
+  --print-error-deep: oklch(0.4996 0.085 30);
+  --print-warning-deep: oklch(0.4996 0.085 80);
+  --print-success-deep: oklch(0.4996 0.085 159);
+  --print-info-deep: oklch(0.4996 0.085 237);
+  --print-help-deep: oklch(0.4996 0.085 295);
   --print-text: oklch(0.2788 0.004 250);
   --print-muted: oklch(0.4536 0.004 250);
   --print-accent-fill: oklch(0.2788 0.004 250);

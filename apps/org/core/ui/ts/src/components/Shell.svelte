@@ -629,10 +629,11 @@
     padding: 0 var(--space-2) var(--space-1);
   }
   /* An empty section's prompt: quieter than anything it will hold, a step
-     below the subtle text, and set in a tad from its heading. */
+     below the muted text, text-subtle the dimmest that still clears AA,
+     and set in a tad from its heading. */
   .hint.empty {
     font-style: italic;
-    color: oklch(var(--shade-5) var(--tone-base));
+    color: var(--text-subtle);
     padding-inline-start: var(--space-3);
   }
   ul {

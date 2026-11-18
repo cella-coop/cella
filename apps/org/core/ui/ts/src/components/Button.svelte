@@ -87,11 +87,12 @@
   .quiet:hover {
     background: var(--hover);
   }
-  /* A secondary way somewhere, as the sidebar's More…: no fill and the
-     dimmest text until hovered, so it never competes with what it follows. */
+  /* A secondary way somewhere, as the sidebar's More…: no fill and
+     text-subtle, the dimmest that still clears AA, until hovered, so it
+     never competes with what it follows. */
   .subtle {
     background: none;
-    color: oklch(var(--shade-5) var(--tone-base));
+    color: var(--text-subtle);
   }
   .subtle:hover {
     background: var(--hover);

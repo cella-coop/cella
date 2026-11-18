@@ -245,39 +245,68 @@ test('Yusuf, Web\'s lead, shows and hides Web\'s at once by his own write; Léa,
   assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, web)
 })
 
-// A connection of its own as `cella_app`, and the deps of a write of
-// `actor` on it, the shell's reactions among them, so a close carries
-// its effects in its own transaction as the shell's does.
-async function connection() {
+// A worker: a connection of its own as `cella_app` and its backend's pid,
+// and the deps of a write of `actor` on it, the shell's reactions among
+// them, so a close carries its effects in its own transaction as the
+// shell's does.
+interface Worker {
+  c: pg.Client
+  pid: number
+}
+async function worker(): Promise<Worker> {
   const c = new pg.Client({ user: 'cella_app' })
   await c.connect()
-  return c
+  const { rows } = await c.query<{ pid: number }>('SELECT pg_backend_pid() AS pid')
+  return { c, pid: rows[0]!.pid }
 }
-const on_ = (c: pg.Client, actor: string): Deps => reacting({ db: reader(c, actor), actor, sign: sign(actor) })
+const on_ = (w: Worker, actor: string): Deps => reacting({ db: reader(w.c, actor), actor, sign: sign(actor) })
 
-// Waits, a few seconds at most, until `n` writes wait on a lock.
-async function waiting(n: number) {
+// Waits, a few seconds at most, until the worker's write waits on a lock.
+async function waiting(w: Worker) {
   for (let i = 0; i < 200; i++) {
-    const { w } = await one<{ w: number }>(
-      `SELECT count(*)::int AS w FROM pg_stat_activity WHERE datname = current_database() AND usename = 'cella_app' AND wait_event_type = 'Lock'`,
-    )
-    if (w >= n) {
+    const { waits } = await one<{ waits: boolean }>(`SELECT coalesce((SELECT wait_event_type = 'Lock' FROM pg_stat_activity WHERE pid = $1), false) AS waits`, [w.pid])
+    if (waits) {
       return
     }
     await new Promise((r) => setTimeout(r, 50))
   }
-  throw new Error(`fewer than ${n} writes wait on a lock`)
+  throw new Error(`the write on backend ${w.pid} never waited on a lock`)
 }
 
-// A superuser's transaction holding a lock `sql` takes, until `release`.
+// A superuser's transaction holding a lock `sql` takes, until it is
+// released, once.
 async function gate(sql: string) {
   const g = new pg.Client()
   await g.connect()
   await g.query('BEGIN')
   await g.query(sql)
+  let open = true
   return async () => {
-    await g.query('COMMIT')
-    await g.end()
+    if (open) {
+      open = false
+      await g.query('COMMIT')
+      await g.end()
+    }
+  }
+}
+
+// Two workers for `run`, every gate it opens released, then the workers
+// ended, whatever it threw.
+async function racing(run: (a: Worker, b: Worker, gated: (sql: string) => Promise<() => Promise<void>>) => Promise<void>) {
+  const [a, b] = [await worker(), await worker()]
+  const gates: (() => Promise<void>)[] = []
+  try {
+    await run(a, b, async (sql) => {
+      const release = await gate(sql)
+      gates.push(release)
+      return release
+    })
+  } finally {
+    for (const release of gates) {
+      await release()
+    }
+    await a.c.end()
+    await b.c.end()
   }
 }
 
@@ -303,23 +332,19 @@ test('the manager, granted arrange-features over the root, arranges the layout a
   assert.match(reason(await arrange({ circle: 'ag', features: layout.replace('Work: ', '') }, as(camille))), /the features of ag put project under no group: list it under one/)
   assert.equal((await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f, layout, 'nothing was laid')
 
-  // The root held, two arrangements start, each on its connection, and
-  // wait; released, the second reads the layout the first left as its `was`.
-  const [one_, two] = [await connection(), await connection()]
-  try {
-    const release = await gate(`SELECT id FROM circle.circle WHERE id = 'ag' FOR NO KEY UPDATE`)
-    const first = arrange({ circle: 'ag', features: layout.replace('Members:', 'People:') }, on_(one_, camille))
-    await waiting(1)
-    const second = arrange({ circle: 'ag', features: layout.replace('Books:', 'Ledger:') }, on_(two, camille))
-    await waiting(2)
+  // The root held, two arrangements start, each on its worker, and wait;
+  // released, the second reads the layout the first left as its `was`.
+  await racing(async (a, b, gated) => {
+    const release = await gated(`SELECT id FROM circle.circle WHERE id = 'ag' FOR NO KEY UPDATE`)
+    const first = arrange({ circle: 'ag', features: layout.replace('Members:', 'People:') }, on_(a, camille))
+    await waiting(a)
+    const second = arrange({ circle: 'ag', features: layout.replace('Books:', 'Ledger:') }, on_(b, camille))
+    await waiting(b)
     await release()
     for (const out of await Promise.all([first, second])) {
       settled(out)
     }
-  } finally {
-    await one_.end()
-    await two.end()
-  }
+  })
   const [later, earlier] = (await all<{ p: { features: string; was: string } }>(
     `SELECT cella.opened(n) AS p FROM cella.log WHERE op = 'circle:feature:arrange' ORDER BY n DESC LIMIT 2`,
   )).map((e) => e.p)
@@ -336,47 +361,86 @@ test('a close carrying a circle\'s row and a write of that circle at once, both 
     await propose({ circle: 'web', title: 'Show Payments in Web', deadline: fortnight(), body: '', actions: [{ kind: 'show-group', args: { circle: 'web', group: 'payments', shown: 'yes' } }] }, as(lea)),
   ) as { motion: string }
   await due(shows.motion)
-  let [one_, two] = [await connection(), await connection()]
-  try {
-    // The head held: the close waits on it first, then Yusuf's own hide.
-    let release = await gate('SELECT n FROM cella.head FOR UPDATE')
-    const closing = close({ motion: shows.motion }, on_(one_, lea))
-    await waiting(1)
-    const hiding = hide({ circle: 'web', feature: 'contact', hidden: true }, on_(two, yusuf))
-    await waiting(2)
+  // The head held: the close waits on it first, then Yusuf's own hide.
+  await racing(async (a, b, gated) => {
+    const release = await gated('SELECT n FROM cella.head FOR UPDATE')
+    const closing = close({ motion: shows.motion }, on_(a, lea))
+    await waiting(a)
+    const hiding = hide({ circle: 'web', feature: 'contact', hidden: true }, on_(b, yusuf))
+    await waiting(b)
     await release()
     const [closed, hid] = await Promise.all([closing, hiding])
     settled(closed)
     settled(hid)
-    assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, `${web.replace(', contact', '')}; Payments: invoice, bill, expense, payslip`)
+  })
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, `${web.replace(', contact', '')}; Payments: invoice, bill, expense, payslip`)
 
-    // The same for the root: a close carrying an arrangement, then the
-    // manager's own.
-    const arranges = settled(
-      await propose({ circle: 'ag', title: 'Rename Books', deadline: fortnight(), body: '', actions: [{ kind: 'arrange-features', args: { circle: 'ag', features: layout.replace('Books:', 'Ledger:') } }] }, as(camille)),
-    ) as { motion: string }
-    await due(arranges.motion)
-    // Fresh connections, which read the clock moved to its deadline.
-    await one_.end()
-    await two.end()
-    ;[one_, two] = [await connection(), await connection()]
-    release = await gate('SELECT n FROM cella.head FOR UPDATE')
-    const closingRoot = close({ motion: arranges.motion }, on_(one_, camille))
-    await waiting(1)
-    const arranging_ = arrange({ circle: 'ag', features: layout.replace('Members:', 'People:') }, on_(two, camille))
-    await waiting(2)
+  // The same for the root: a close carrying an arrangement, then the
+  // manager's own, on workers reading the clock moved to its deadline.
+  const arranges = settled(
+    await propose({ circle: 'ag', title: 'Rename Books', deadline: fortnight(), body: '', actions: [{ kind: 'arrange-features', args: { circle: 'ag', features: layout.replace('Books:', 'Ledger:') } }] }, as(camille)),
+  ) as { motion: string }
+  await due(arranges.motion)
+  await racing(async (a, b, gated) => {
+    const release = await gated('SELECT n FROM cella.head FOR UPDATE')
+    const closing = close({ motion: arranges.motion }, on_(a, camille))
+    await waiting(a)
+    const own = arrange({ circle: 'ag', features: layout.replace('Members:', 'People:') }, on_(b, camille))
+    await waiting(b)
     await release()
-    const [rootClosed, own] = await Promise.all([closingRoot, arranging_])
-    settled(rootClosed)
-    assert.equal((settled(own) as { was: string }).was, layout.replace('Books:', 'Ledger:'), 'the manager\'s replaced the layout the close left')
-  } finally {
-    await one_.end()
-    await two.end()
-  }
+    const [closed, mine] = await Promise.all([closing, own])
+    settled(closed)
+    assert.equal((settled(mine) as { was: string }).was, layout.replace('Books:', 'Ledger:'), 'the manager\'s replaced the layout the close left')
+  })
   settled(await arrange({ circle: 'ag', features: layout }, as(camille)))
   settled(await hide({ circle: 'web', feature: 'contact', hidden: false }, as(yusuf)))
   settled(await show({ circle: 'web', group: 'payments', shown: false }, as(yusuf)))
   assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, web)
+})
+
+test('a close dropping a group of the layout while a write shows that group in a circle deadlocks, and settles by retry: the show refused for its group gone, or both landing, and the log folds', async () => {
+  const layout = (await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f
+  const dropped = layout.replace('; Payments: ', ', ')
+  const drops = settled(
+    await propose({ circle: 'ag', title: 'Payments into Books', deadline: fortnight(), body: '', actions: [{ kind: 'arrange-features', args: { circle: 'ag', features: dropped } }] }, as(camille)),
+  ) as { motion: string }
+  await due(drops.motion)
+  const deadlocks = async () => {
+    await su.query('SELECT pg_stat_clear_snapshot()')
+    return Number((await one<{ d: string }>('SELECT deadlocks AS d FROM pg_stat_database WHERE datname = current_database()')).d)
+  }
+  const before = await deadlocks()
+  // The head held: the close waits on it first, holding the root; then
+  // Yusuf's show of Payments in Web takes the group's key and waits on the
+  // head too. Released, the close's arrangement deletes the group, waiting
+  // on that key, while the show waits on the head: a deadlock, which
+  // Postgres breaks by rolling one back, and the write layer runs it again.
+  await racing(async (a, b, gated) => {
+    const release = await gated('SELECT n FROM cella.head FOR UPDATE')
+    const closing = close({ motion: drops.motion }, on_(a, camille))
+    await waiting(a)
+    const showing = show({ circle: 'web', group: 'payments', shown: true }, on_(b, yusuf))
+    await waiting(b)
+    await release()
+    const [closed, shown] = await Promise.all([closing, showing])
+    settled(closed)
+    if (shown.state === 'refused') {
+      assert.match(shown.reason ?? '', /no group payments in the co-op's layout/, 'the show is refused for its group gone')
+    } else {
+      assert.equal(shown.state, 'settled')
+    }
+  })
+  let after = await deadlocks()
+  for (let i = 0; i < 40 && after === before; i++) {
+    await new Promise((r) => setTimeout(r, 50))
+    after = await deadlocks()
+  }
+  assert.ok(after > before, 'Postgres found the deadlock, and the retry settled it')
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f, dropped, 'the close dropped Payments')
+  assert.deepEqual(await all(`SELECT "group" FROM circle.shown WHERE "group" = 'payments'`), [], 'and every circle\'s showing of it')
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, web)
+  settled(await arrange({ circle: 'ag', features: layout }, as(camille)))
+  assert.deepEqual(await all(`SELECT id FROM circle.feature_group ORDER BY position`), ['governance', 'work', 'books', 'payments', 'members'].map((id) => ({ id })))
 })
 
 test('a motion carrying a row that is so by its close still passes, its action forgone, and the log folds', async () => {

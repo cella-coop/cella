@@ -36,7 +36,7 @@ export async function amend(input: Amend, deps: Deps): Out<'circle:circle:amend'
     request: input,
     state: async (tx) => {
       const { rows } = await tx.query<Required<Terms>>(
-        `SELECT name, purpose, procedure FROM circle.circle WHERE id = $1 FOR UPDATE`,
+        `SELECT name, purpose, procedure FROM circle.circle WHERE id = $1 FOR NO KEY UPDATE`,
         [input.circle],
       )
       const was: Terms = Object.fromEntries(Object.keys(given).map((t) => [t, rows[0]?.[t as keyof Terms] ?? null]))

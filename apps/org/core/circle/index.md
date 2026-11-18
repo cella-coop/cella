@@ -615,7 +615,10 @@ hidden or not, never the whole listing. Its handler takes the circle's
 lock, no key lock, before its submit takes the log's head, as an
 arrangement takes the root's and a close every circle its motion's
 actions name (`hold`), so a close and a write at once take the circle
-and the head in one order and never deadlock; then it reads what the
+and the head in one order; a deadlock no order rules out, as an
+arrangement dropping a group while a circle's write of it waits, is
+rolled back by Postgres and run again whole by the write layer, the
+row then refused for its group gone; then it reads what the
 row was, `was`, which its entry carries; a write
 that changes nothing, as one whose `was` went stale, is refused, and the
 fold compares `was` as it compares an arrangement's. So writes of one

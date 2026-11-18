@@ -401,14 +401,18 @@ END;
 
 -- A circle's row set as a write gives it: a group shown or not, a
 -- feature hidden or not; none where the circle, the group or the feature
--- is none there is, for the guard to refuse. Its handler and its fold
+-- is none there is, for the guard to refuse: the group or the feature
+-- is locked as it is read, so one an arrangement drops meanwhile is read
+-- as gone once it commits, never a key it no longer has. Its handler and its fold
 -- write it alike.
 CREATE FUNCTION circle.show(circle text, "group" text, shown boolean) RETURNS void
 LANGUAGE sql
 BEGIN ATOMIC
   DELETE FROM circle.shown s WHERE s.circle = show.circle AND s."group" = show."group" AND NOT show.shown;
-  INSERT INTO circle.shown (circle, "group") SELECT show.circle, show."group" WHERE show.shown
-    AND EXISTS (SELECT FROM circle.circle c WHERE c.id = show.circle) AND EXISTS (SELECT FROM circle.feature_group g WHERE g.id = show."group")
+  INSERT INTO circle.shown (circle, "group")
+  SELECT show.circle, g.id FROM circle.feature_group g
+  WHERE g.id = show."group" AND show.shown AND EXISTS (SELECT FROM circle.circle c WHERE c.id = show.circle)
+  FOR KEY SHARE OF g
   ON CONFLICT DO NOTHING;
 END;
 
@@ -416,8 +420,10 @@ CREATE FUNCTION circle.hide(circle text, feature text, hidden boolean) RETURNS v
 LANGUAGE sql
 BEGIN ATOMIC
   DELETE FROM circle.hidden h WHERE h.circle = hide.circle AND h.feat = hide.feature AND NOT hide.hidden;
-  INSERT INTO circle.hidden (circle, feat) SELECT hide.circle, hide.feature WHERE hide.hidden
-    AND EXISTS (SELECT FROM circle.circle c WHERE c.id = hide.circle) AND EXISTS (SELECT FROM circle.feature f WHERE f.feat = hide.feature)
+  INSERT INTO circle.hidden (circle, feat)
+  SELECT hide.circle, f.feat FROM circle.feature f
+  WHERE f.feat = hide.feature AND hide.hidden AND EXISTS (SELECT FROM circle.circle c WHERE c.id = hide.circle)
+  FOR KEY SHARE OF f
   ON CONFLICT DO NOTHING;
 END;
 

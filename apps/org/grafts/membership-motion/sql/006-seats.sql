@@ -394,7 +394,9 @@ RETURN CASE lower(btrim(yes.said)) WHEN 'yes' THEN true WHEN 'no' THEN false END
 -- that circle, a sound row (`circle.row_flaw`), `yes` or `no`, that
 -- changes what the circle shows. A motion carries each once: one
 -- arranging the co-op's features twice, or setting one row twice, is
--- refused, since its second action could only be forgone.
+-- refused, since its second action could only be forgone: a row by its
+-- key, a group's by its circle and group, a feature's by its circle and
+-- feature, the layout once a motion.
 CREATE FUNCTION membership_motion.arrange_asks(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -402,8 +404,12 @@ BEGIN ATOMIC
     SELECT coalesce(
       CASE WHEN EXISTS (
         SELECT FROM motion.action o
-        WHERE o.motion = m.motion AND o.n < m.n AND o.kind = m.kind AND o.args ->> 'circle' IS NOT DISTINCT FROM m.args ->> 'circle'
-          AND o.args ->> 'group' IS NOT DISTINCT FROM m.args ->> 'group' AND o.args ->> 'feature' IS NOT DISTINCT FROM m.args ->> 'feature'
+        WHERE o.motion = m.motion AND o.n < m.n AND o.kind = m.kind
+          AND CASE m.kind
+            WHEN 'show-group' THEN (o.args ->> 'circle', o.args ->> 'group') IS NOT DISTINCT FROM (m.args ->> 'circle', m.args ->> 'group')
+            WHEN 'hide-feature' THEN (o.args ->> 'circle', o.args ->> 'feature') IS NOT DISTINCT FROM (m.args ->> 'circle', m.args ->> 'feature')
+            ELSE true
+          END
       ) THEN 'the motion ' || CASE m.kind WHEN 'arrange-features' THEN 'arranges the co-op''s features'
           WHEN 'show-group' THEN 'sets whether ' || coalesce(m.args ->> 'circle', 'a circle') || ' shows ' || coalesce(m.args ->> 'group', 'a group')
           ELSE 'sets whether ' || coalesce(m.args ->> 'circle', 'a circle') || ' hides ' || coalesce(m.args ->> 'feature', 'a feature') END

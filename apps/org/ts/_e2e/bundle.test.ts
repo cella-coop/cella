@@ -129,12 +129,12 @@ test('the assembly creates Design by motion and seats Inès and its lead in it, 
 
 test('with no further motion, Design\'s lead runs its projects, and Inès, seated there, reads them', async () => {
   await on('2026-11-09')
-  const made = settled(await create({ id: 'design-system', title: 'Design system', circle: 'design' }, as(chloe)))
+  const made = settled(await create({ id: 'design-first', title: 'Design system', circle: 'design' }, as(chloe)))
   assert.equal(made.circle, 'design')
   const astray = await create({ id: 'design-astray', title: 'Not Hugo\'s to start', circle: 'design' }, as(hugo))
   assert.match(reason(astray), /holds manage-project by no mandate covering design's records/, 'Brand\'s lead covers Brand alone')
 
-  assert.deepEqual(await reading(ines, `SELECT id FROM project.project WHERE circle = 'design'`), [{ id: 'design-system' }], 'Inès reads Design\'s project')
+  assert.deepEqual(await reading(ines, `SELECT id FROM project.project WHERE circle = 'design'`), [{ id: 'design-first' }], 'Inès reads Design\'s project')
   assert.deepEqual(await reading(ines, `SELECT id FROM project.project WHERE circle = 'brand'`), [], 'and no Brand project: no member, she holds no open books')
 })
 

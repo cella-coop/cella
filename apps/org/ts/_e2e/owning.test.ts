@@ -100,10 +100,19 @@ test('Lanterne\'s records are owned as its fixtures place them', async () => {
     { id: 'ex-0009', circle: 'hiring' },
     { id: 'ex-0010', circle: 'care' },
     { id: 'ex-0011', circle: 'tools' },
+    { id: 'ex-0012', circle: 'operations' },
+    { id: 'ex-0013', circle: 'operations' },
+    { id: 'ex-0014', circle: 'tools' },
+    { id: 'ex-0015', circle: 'tools' },
   ])
   assert.deepEqual(await all('SELECT id, circle FROM bill.bill ORDER BY id'), [
     { id: 'bi-0001', circle: 'brand' },
     { id: 'bi-0002', circle: 'ag' },
+    { id: 'bi-0003', circle: 'brand' },
+    { id: 'bi-0004', circle: 'brand' },
+    { id: 'bi-0005', circle: 'operations' },
+    { id: 'bi-0006', circle: 'operations' },
+    { id: 'bi-0007', circle: 'operations' },
   ])
   // A project's milestones, a meeting's agenda and a motion's stances are
   // in its circle.

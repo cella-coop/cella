@@ -91,7 +91,7 @@ test('a psql write is refused, as the app or as a superuser', async () => {
       return true
     })
   }
-  assert.equal(await contacts(), 9)
+  assert.equal(await contacts(), 10)
 })
 
 test('a handler that skips submit commits nothing', async () => {
@@ -238,5 +238,5 @@ test('only a superuser unbinds', async () => {
   await su.query('SET LOCAL cella.unbound = on')
   await su.query(`INSERT INTO contact.contact (id, kind, name) VALUES ('cl-unbound', 'company', 'Unbound')`)
   await su.query('ROLLBACK')
-  assert.equal(await contacts(), 9)
+  assert.equal(await contacts(), 10)
 })

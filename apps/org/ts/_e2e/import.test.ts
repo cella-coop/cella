@@ -101,15 +101,15 @@ test('Julien carries October over from the old books: two entries posted, the re
 test('Julien issues the spreadsheet\'s invoices, numbered in the series and posted; one with no client and one with no address are refused', async () => {
   const { lines } = await run('invoices', 'invoices.csv', julien)
   assert.deepEqual(states(lines), { 2: 'settled', 4: 'settled', 5: 'failed', 6: 'refused' })
-  assert.match(lines[3].done.reason ?? '', /F-2026-0058 does not issue without the address it bills/)
+  assert.match(lines[3].done.reason ?? '', /F-2026-0061 does not issue without the address it bills/)
   const issued = await all<{ id: string; bill_to: string; total: string }>(
     `SELECT i.id, i.bill_to, cella.cents(i.total)::text AS total FROM invoice.invoice i WHERE i.bill_to IN ('Atelier Ondine', 'Vélo Solidaire') AND i.issued = '2026-10-24' ORDER BY i.id`,
   )
   assert.deepEqual(issued, [
-    { id: 'F-2026-0056', bill_to: 'Atelier Ondine', total: '176400' },
-    { id: 'F-2026-0057', bill_to: 'Vélo Solidaire', total: '42000' },
+    { id: 'F-2026-0059', bill_to: 'Atelier Ondine', total: '176400' },
+    { id: 'F-2026-0060', bill_to: 'Vélo Solidaire', total: '42000' },
   ])
-  const posted = await one<{ n: number }>(`SELECT count(*)::int AS n FROM invoice_transaction.posting WHERE invoice IN ('F-2026-0056', 'F-2026-0057') AND event = 'issue'`)
+  const posted = await one<{ n: number }>(`SELECT count(*)::int AS n FROM invoice_transaction.posting WHERE invoice IN ('F-2026-0059', 'F-2026-0060') AND event = 'issue'`)
   assert.equal(posted.n, 2)
 })
 

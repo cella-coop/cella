@@ -102,14 +102,14 @@ test('2026\'s statements reconcile with the trial balance: income less expenses,
   assert.ok(year)
   const income = (await statement(port(), 'income', year)).rubrics
   assert.equal(figure(income, 'result'), -(t.income + t.expense))
-  assert.equal(figure(income, 'result'), -265_00)
-  assert.equal(figure(income, 'production-sold'), 121_200_00)
+  assert.equal(figure(income, 'result'), 1_715_00)
+  assert.equal(figure(income, 'production-sold'), 123_180_00)
   const balance = (await statement(port(), 'balance', year)).rubrics
   assert.equal(figure(balance, 'assets-total'), figure(balance, 'liabilities-total'))
   assert.equal(figure(balance, 'assets-total'), t.asset)
-  assert.equal(figure(balance, 'assets-total'), 97_001_80)
+  assert.equal(figure(balance, 'assets-total'), 99_377_80)
   assert.equal(figure(balance, 'to-allocate'), 61_400_00, 'the 2025 result is not allocated yet')
-  assert.equal(figure(balance, 'cash'), 39_190_40)
+  assert.equal(figure(balance, 'cash'), 40_270_40)
 })
 
 test('months add up to their quarter, and quarters to their year', async () => {

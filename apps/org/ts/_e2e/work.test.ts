@@ -45,7 +45,7 @@ test('the seed holds Lanterne\'s work: its projects, tasks and two months of tim
             (SELECT count(*) FROM timesheet.entry) AS entries,
             (SELECT count(*) FROM timesheet.period WHERE month = '2026-09' AND approved IS NOT NULL) AS approved`,
   )
-  assert.deepEqual(counts, { projects: '15', tasks: '48', entries: '868', approved: '11' })
+  assert.deepEqual(counts, { projects: '24', tasks: '58', entries: '907', approved: '11' })
   const days = await one<{ off: string }>(
     `SELECT count(*) AS off FROM (SELECT member, day FROM timesheet.entry GROUP BY member, day HAVING sum(minutes) <> 420) d`,
   )
@@ -110,7 +110,7 @@ test('Thomas creates a task; Yusuf gives it to him and files it under the shop\'
   const created = await shell.act('/tasks', 'create', { title: 'Audit the checkout for RGAA', priority: 'high', due: '2026-10-30' }, thomas)
   assert.equal(created.state, 'settled', created.reason)
   task = (await one<{ id: string }>(`SELECT id FROM task.task WHERE title = 'Audit the checkout for RGAA'`)).id
-  assert.equal(task, 't-49', 'numbered on from the seed')
+  assert.equal(task, 't-59', 'numbered on from the seed')
   const assigned = await shell.act(`/tasks/${task}`, 'assign', { member: thomas }, yusuf)
   assert.equal(assigned.state, 'settled', assigned.reason)
   const filed = await shell.act(`/tasks/${task}`, 'file', { place: 'halles-shop#4' }, yusuf)

@@ -57,7 +57,7 @@ test('the seed holds Lanterne\'s meetings: the June assembly, coordination every
             (SELECT count(*) FROM meeting_motion.tabled) AS tabled,
             (SELECT count(*) FROM document_meeting.minutes) AS minutes`,
   )
-  assert.deepEqual(counts, { meetings: '20', held: '11', marks: '54', tabled: '9', minutes: '1' })
+  assert.deepEqual(counts, { meetings: '27', held: '11', marks: '54', tabled: '9', minutes: '1' })
   const june = await one('SELECT seats, present, needed FROM meeting_membership.quorum WHERE meeting = $1', ['ag-2026-06-20'])
   assert.deepEqual(june, { seats: 10, present: 10, needed: 5 })
   const guests = await all<{ member: string }>('SELECT member FROM meeting_membership.roll WHERE NOT seated')

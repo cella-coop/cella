@@ -76,11 +76,11 @@ test('the seed carries the books over: the trial balance is the fixture\'s', asy
   for (const [code, cents] of want) {
     assert.equal(have.get(code), cents, `account ${code}`)
   }
-  assert.equal(have.get('512'), 39_190_40, 'the bank holds 39 190,40 €')
-  assert.equal(have.get('411'), 57_180_00, 'clients owe 57 180 €')
+  assert.equal(have.get('512'), 40_270_40, 'the bank holds 40 270,40 €')
+  assert.equal(have.get('411'), 58_476_00, 'clients owe 58 476 €')
 })
 
-test('issuing F-2026-0056 takes the next number and posts a balanced entry', async () => {
+test('issuing F-2026-0059 takes the next number and posts a balanced entry', async () => {
   const issued = await issue({
     series: 'F-2026',
     bill_to: 'Maison Ferrand',
@@ -94,10 +94,10 @@ test('issuing F-2026-0056 takes the next number and posts a balanced entry', asy
   assert.deepEqual(issued, {
     state: 'settled',
     entry: 2,
-    value: { invoice: 'F-2026-0056', issued: '2026-10-24', net: 1480_00, vat: 296_00, total: 1776_00, entry: 'je-0044' },
+    value: { invoice: 'F-2026-0059', issued: '2026-10-24', net: 1480_00, vat: 296_00, total: 1776_00, entry: 'je-0048' },
   })
-  assert.equal(Number((await one<{ next: number }>(`SELECT next FROM invoice.series WHERE name = 'F-2026'`)).next), 57)
-  assert.deepEqual(await lines('je-0044'), [
+  assert.equal(Number((await one<{ next: number }>(`SELECT next FROM invoice.series WHERE name = 'F-2026'`)).next), 60)
+  assert.deepEqual(await lines('je-0048'), [
     { account: '411', side: 'debit', cents: 1776_00 },
     { account: '706', side: 'credit', cents: 1480_00 },
     { account: '44571', side: 'credit', cents: 296_00 },
@@ -105,7 +105,7 @@ test('issuing F-2026-0056 takes the next number and posts a balanced entry', asy
   const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = 2')
   assert.deepEqual(logged.guards.map((r) => r.owner), ['circle-person', 'invoice', 'invoice', 'invoice-transaction'])
 
-  const linked = await link({ invoice: 'F-2026-0056', contact: 'ferrand' }, as(julien))
+  const linked = await link({ invoice: 'F-2026-0059', contact: 'ferrand' }, as(julien))
   assert.equal(linked.state, 'settled')
   assert.equal(linked.entry, 3)
 })
@@ -113,19 +113,19 @@ test('issuing F-2026-0056 takes the next number and posts a balanced entry', asy
 test('a gap or a reused number is refused, and uses no verdict number', async () => {
   const draft = { series: 'F-2026', bill_to: 'Atelier Ondine', bill_address: '11 rue Kléber\n93100 Montreuil', label: 'Shop upkeep', lines: [{ description: 'Upkeep', quantity: '1', unit_price: 300_00, vat_rate: 2000 }] }
 
-  await su.query(`UPDATE invoice.series SET next = 58 WHERE name = 'F-2026'`)
+  await su.query(`UPDATE invoice.series SET next = 61 WHERE name = 'F-2026'`)
   const gap = await issue(draft, as(julien))
   assert.equal(gap.state, 'refused')
-  assert.match(reason(gap), /F-2026-0058 leaves a gap: F-2026-0057 was never issued/)
+  assert.match(reason(gap), /F-2026-0061 leaves a gap: F-2026-0060 was never issued/)
 
-  await su.query(`UPDATE invoice.series SET next = 56 WHERE name = 'F-2026'`)
+  await su.query(`UPDATE invoice.series SET next = 59 WHERE name = 'F-2026'`)
   const reused = await issue(draft, as(julien))
   assert.equal(reused.state, 'refused')
-  assert.match(reason(reused), /F-2026-0056 is already issued: a number is never reused/)
+  assert.match(reason(reused), /F-2026-0059 is already issued: a number is never reused/)
 
-  await su.query(`UPDATE invoice.series SET next = 57 WHERE name = 'F-2026'`)
+  await su.query(`UPDATE invoice.series SET next = 60 WHERE name = 'F-2026'`)
   assert.equal(await head(), 3)
-  assert.equal(Number((await one<{ count: string }>(`SELECT count(*) FROM invoice.invoice`)).count), 16)
+  assert.equal(Number((await one<{ count: string }>(`SELECT count(*) FROM invoice.invoice`)).count), 19)
 })
 
 test('a payment posts', async () => {
@@ -177,7 +177,7 @@ test('voiding a paid invoice is refused, and uses no verdict number', async () =
 })
 
 test('voiding an unpaid invoice posts a credit note', async () => {
-  const voided = await annul({ invoice: 'F-2026-0056', reason: 'issued against the wrong range' }, as(julien))
+  const voided = await annul({ invoice: 'F-2026-0059', reason: 'issued against the wrong range' }, as(julien))
   assert.equal(voided.state, 'settled')
   const entry = voided.state === 'settled' ? voided.value.entry ?? '' : ''
   assert.deepEqual(await lines(entry), [
@@ -185,9 +185,9 @@ test('voiding an unpaid invoice posts a credit note', async () => {
     { account: '706', side: 'debit', cents: 1480_00 },
     { account: '44571', side: 'debit', cents: 296_00 },
   ])
-  const s = await standing('F-2026-0056')
+  const s = await standing('F-2026-0059')
   assert.deepEqual([s.state, Number(s.owed)], ['voided', 0])
-  const unsent = await send({ invoice: 'F-2026-0056' }, as(julien))
+  const unsent = await send({ invoice: 'F-2026-0059' }, as(julien))
   assert.equal(unsent.state, 'settled')
   assert.equal(unsent.value.sent, null, 'a voided invoice is not sent')
   const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [voided.state === 'settled' && voided.entry])
@@ -315,7 +315,7 @@ async function probe(body: string, opts = '') {
 
 test('guards run as cella_guards, which reads the scope and can neither write nor read the key', async () => {
   assert.equal(await probe('SELECT current_user::text'), 'cella_guards')
-  assert.equal(await probe(`SELECT 'reads ' || count(*) FROM invoice.invoice`), 'reads 16')
+  assert.equal(await probe(`SELECT 'reads ' || count(*) FROM invoice.invoice`), 'reads 19')
 
   await su.query('CREATE SCHEMA scribble')
   await su.query(`CREATE FUNCTION scribble.write() RETURNS text LANGUAGE sql VOLATILE AS $$

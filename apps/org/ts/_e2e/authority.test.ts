@@ -78,7 +78,7 @@ test('the seed enrols every fixture device, and Hugo\'s old laptop is revoked', 
   assert.equal((await one<{ key: string }>(`SELECT encode(key, 'hex') AS key FROM person.device WHERE address = $1 AND label = 'laptop'`, [hugo])).key, laptop.key)
 })
 
-test('Julien issues F-2026-0056 under his issue-invoice mandate, and it settles', async () => {
+test('Julien issues F-2026-0059 under his issue-invoice mandate, and it settles', async () => {
   const issued = await issue({
     series: 'F-2026',
     bill_to: 'Maison Ferrand',
@@ -87,7 +87,7 @@ test('Julien issues F-2026-0056 under his issue-invoice mandate, and it settles'
     lines: [{ description: 'Print preparation, days', quantity: '2.5', unit_price: 520_00, vat_rate: 2000 }],
   }, as(julien))
   assert.equal(issued.state, 'settled')
-  assert.equal(issued.state === 'settled' && issued.value.invoice, 'F-2026-0056')
+  assert.equal(issued.state === 'settled' && issued.value.invoice, 'F-2026-0059')
   const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [issued.state === 'settled' && issued.entry])
   assert.deepEqual(logged.guards.map((r) => r.owner), ['circle-person', 'invoice', 'invoice', 'invoice-transaction'])
 })

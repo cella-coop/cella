@@ -75,7 +75,7 @@ test('the seed carries July to September\'s pay runs, each posted in its carried
     { month: '2026-09', gross: '2600000', entry: 'je-0031' },
   ])
   // After the runs, je-0042 reimbursed ex-0005 from the bank on 15 October.
-  assert.equal(await balance('512'), 39_190_40)
+  assert.equal(await balance('512'), 40_270_40)
   await balanced()
 })
 

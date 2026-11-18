@@ -76,11 +76,16 @@ after(async () => {
   await su.end()
 })
 
-test('the seed carries two bills, recorded and not yet in the books', async () => {
+test('the seed carries seven bills, recorded and not yet in the books', async () => {
   const bills = await all<{ id: string; status: string; total: string }>('SELECT id, status, cella.cents(total) AS total FROM bill.bill ORDER BY id')
   assert.deepEqual(bills, [
     { id: 'bi-0001', status: 'recorded', total: '144000' },
     { id: 'bi-0002', status: 'recorded', total: '108000' },
+    { id: 'bi-0003', status: 'recorded', total: '30600' },
+    { id: 'bi-0004', status: 'recorded', total: '151200' },
+    { id: 'bi-0005', status: 'recorded', total: '43200' },
+    { id: 'bi-0006', status: 'recorded', total: '21600' },
+    { id: 'bi-0007', status: 'recorded', total: '28800' },
   ])
   assert.deepEqual(await all('SELECT * FROM bill_transaction.posting'), [])
   before401 = await balance('401')

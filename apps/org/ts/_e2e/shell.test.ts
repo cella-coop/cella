@@ -376,7 +376,7 @@ test('Hugo edits the internal rules as the editor does: one Loro update, settled
   assert.equal(junk.state, 'failed', 'bytes that are not a Loro update are not written')
 })
 
-test('Julien issues F-2026-0056, posted to the books, and its PDF opens from its page; Camille, without the power, is refused', async () => {
+test('Julien issues F-2026-0059, posted to the books, and its PDF opens from its page; Camille, without the power, is refused', async () => {
   const fields = {
     series: 'F-2026',
     bill_to: 'Vélo Solidaire',
@@ -393,19 +393,19 @@ test('Julien issues F-2026-0056, posted to the books, and its PDF opens from its
   const issued = await act('/invoices', 'issue', fields, julien)
   assert.deepEqual(issued, { op: 'invoice:invoice:issue', state: 'settled', entry: 3, then: [] })
   const made = await one<{ total: string; entry: string }>(
-    `SELECT cella.cents(i.total) AS total, p.entry FROM invoice.invoice i JOIN invoice_transaction.posting p ON p.invoice = i.id WHERE i.id = 'F-2026-0056'`,
+    `SELECT cella.cents(i.total) AS total, p.entry FROM invoice.invoice i JOIN invoice_transaction.posting p ON p.invoice = i.id WHERE i.id = 'F-2026-0059'`,
   )
-  assert.deepEqual(made, { total: '122460', entry: 'je-0044' })
-  const { text } = await page('/invoices/F-2026-0056')
-  assert.ok(text.includes('Workshop on accessibility') && text.includes('je-0044'))
+  assert.deepEqual(made, { total: '122460', entry: 'je-0048' })
+  const { text } = await page('/invoices/F-2026-0059')
+  assert.ok(text.includes('Workshop on accessibility') && text.includes('je-0048'))
   assert.ok(text.includes('Download PDF'), 'the page offers the invoice as a PDF')
-  const printed = await page('/invoices/F-2026-0056/content')
+  const printed = await page('/invoices/F-2026-0059/content')
   assert.equal(printed.status, 200)
   assert.equal(printed.type, 'application/pdf')
-  for (const mention of ['%PDF-1.4', '(INVOICE)', '(No. F-2026-0056)', '(42 rue de Romainville)', '(93100 Montreuil)', 'RCS Bobigny', 'L441-10']) {
+  for (const mention of ['%PDF-1.4', '(INVOICE)', '(No. F-2026-0059)', '(42 rue de Romainville)', '(93100 Montreuil)', 'RCS Bobigny', 'L441-10']) {
     assert.ok(printed.text.includes(mention), `the PDF prints ${mention}`)
   }
-  const linked = await act('/invoices/F-2026-0056', 'link', { contact: 'velo' }, julien)
+  const linked = await act('/invoices/F-2026-0059', 'link', { contact: 'velo' }, julien)
   assert.equal(linked.state, 'settled')
 })
 
@@ -493,7 +493,7 @@ test('the log the shell wrote verifies, and Activity reads it as a list whose ev
   // before its title; this entry's kind, an invoice, carries none, so
   // its conditional's hydration comment is the only thing between the
   // tag and the text.
-  assert.match(text, /<a href="\/invoices\/F-2026-0056" class="title stretched[^"]*"[^>]*>(?:<!--.*?-->)*issued invoice F-2026-0056<\/a>/)
+  assert.match(text, /<a href="\/invoices\/F-2026-0059" class="title stretched[^"]*"[^>]*>(?:<!--.*?-->)*issued invoice F-2026-0059<\/a>/)
   assert.match(text, /closed motion m-2026-012/)
   const lines = [...text.matchAll(/<a href="([^"]+)" class="title stretched[\s"]/g)].map((m) => m[1].replaceAll('&amp;', '&'))
   assert.ok(lines.length > 0)
@@ -503,6 +503,6 @@ test('the log the shell wrote verifies, and Activity reads it as a list whose ev
   // An entry keeps no record id but under its op's thing or slices.
   assert.deepEqual(
     await one<{ r: unknown }>(`SELECT cella.records(n) AS r FROM cella.log WHERE op = 'invoice:invoice:issue' ORDER BY n DESC LIMIT 1`),
-    { r: { invoice: 'F-2026-0056' } },
+    { r: { invoice: 'F-2026-0059' } },
   )
 })

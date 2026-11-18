@@ -1,6 +1,6 @@
 +++
 title = "Lanterne"
-updated = 2026-11-16
+updated = 2026-11-18
 +++
 
 # Lanterne
@@ -292,14 +292,19 @@ assembly, and no one opens a candidacy for another.
   style guide and Operations' month-end close; and Clients' client
   handover, Hiring's onboarding guide, Care's charter and Tools' studio
   stack.
-- **Invoices (bounded).** Fifteen invoices in the series F-2026, 0041 to
-  0055; the next is 0056, each the circle's whose project it bills, Web's,
-  Brand's or Marketing's. Clients owe 57 180 €. Compagnie Mauve Horizon's
+- **Invoices (bounded).** Eighteen invoices in the series F-2026, 0041 to
+  0058; the next is 0059, each the circle's whose project it bills, Web's,
+  Brand's or Marketing's, but the last three, Operations' own: consulting
+  for Coopérative La Ruche on its own move into cella, unrelated to any
+  project, the first paid. Clients owe 58 476 €, 57 180 € of it the three
+  work circles' client invoices, the rest Operations' consulting unpaid.
+  Compagnie Mauve Horizon's
   posters (0044) are three months overdue, Vélo Solidaire has paid half of
   0051, and 0050 was voided and reissued at the solidarity rate.
 - **Books.** Carried over from the previous tool on 1 July; July to September
-  are closed, October to December are open. The bank holds 39 190,40 € after
-  October's rent, tools and Yusuf's reimbursed train. Each member's capital, their shares at 50 €,
+  are closed, October to December are open. The bank holds 40 270,40 € after
+  October's rent, tools, Yusuf's reimbursed train and La Ruche's first
+  payment. Each member's capital, their shares at 50 €,
   is in an account of their own; each may draw up to 500 € on it. The
   assembly approved the 2025 split of 61 400 € in June (m-2026-006), as
   Act No. 78-763, article 33 allows: 27 630 € to the members for their work,
@@ -351,15 +356,17 @@ assembly, and no one opens a candidacy for another.
   record a bill, approves Imprimerie du Parc's 1 440 € over her limit
   and Atelier Lumen's rent outside her scope, and each is refused
   saying so.
-- **Work (confluent, bounded and ordered).** Eleven projects: eight, one per
+- **Work (confluent, bounded and ordered).** Sixteen projects: eight, one per
   commission, each invoice naming its own: the Halles shop launched on 8 October and is in care until
   November, Ferrand's packaging waits on its press check, Terres Vives's
-  microsite is under way, Ondine's shop is archived; and three of the
+  microsite is under way, Ondine's shop is archived; and eight of the
   circles' own, for no client: the assembly's revision of the statutes
-  for 2027, coordination's pipeline and staffing for 2027, and the move
-  of the books into cella, Operations'. Thirty-seven tasks on the board,
-  each its circle's, its project's where it is filed in one, mostly with
-  a member of that circle.
+  for 2027, coordination's pipeline and staffing for 2027 and its
+  federation day and onboarding playbook, the move of the books into
+  cella, Operations', Marketing's newsletter relaunch and its case
+  studies under CC BY, and Web's shared design system. Fifty-eight
+  tasks on the board, each its circle's, its project's where it is
+  filed in one, mostly with a member of that circle.
   Timesheets began on 1 September: seven hours a working day for everyone,
   under a third billable at 80 € an hour; an hour costs the co-op
   23,64 €. Four members hold shares of project budgets. September is

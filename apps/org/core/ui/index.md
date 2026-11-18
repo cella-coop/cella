@@ -548,9 +548,13 @@ draws.
   is dropped too once the write it carries lands, or is refused outright
   (never retried with the same stale value), or once a day has passed
   unreplayed; and all of it, a body's draft and a property's alike, is
-  dropped at once on sign-out and on a demo's Reset now, since an
-  earlier session's name, or an earlier copy's, answers to neither
-  browser nor record again. Last, under
+  dropped at once whenever who is signed in changes, on sign-out, on a
+  demo's Reset now and otherwise, and on another tab of this browser
+  reconciling to a different one, since an earlier session's name, or
+  an earlier copy's, answers to neither browser nor record again. The
+  check against the value a draft replaces is this browser's own
+  alone, not the server's; a server-side conditional write for it
+  waits until after the demo. Last, under
   Related, one quiet line of the record's Created and Updated and by
   whom as the log has them (`stamps`), the dates and actors of its
   first and latest entries, which the item's read gives beside its

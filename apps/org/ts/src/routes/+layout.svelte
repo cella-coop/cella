@@ -25,7 +25,9 @@
   // Named on the one state every page's writes already share, so a
   // slice that keeps a draft (a body, a drawer property) namespaces it
   // by who is signed in and which demo copy without asking the server
-  // of its own; read lazily, so it always answers with `data`'s latest.
+  // of its own; read lazily, so it always answers with `data`'s latest,
+  // and reconciles every draft this origin keeps against it, now and
+  // whenever it changes.
   writes.identify(
     () => data.actor?.address ?? '',
     () => data.join ?? '',

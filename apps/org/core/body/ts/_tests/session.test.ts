@@ -196,6 +196,7 @@ async function browser(w: World, actor: string, record = 't-1', device?: Device)
         return asKept(p)
       },
     },
+    () => actor,
     { clock: w.clock },
   )
   doc.subscribeLocalUpdates(() => live.edited())

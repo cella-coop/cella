@@ -272,10 +272,31 @@ saves nothing itself, since the server signs with none
   is named by who is signed in and, on a demo, the copy's own join code,
   fresh on every copy and on every reset of one, so a draft never
   replays for another person who signs in on the same browser, or into
-  a copy a reset has moved past; signing out, or Reset now on a demo,
-  drops every draft this origin holds at once, body's and a drawer
-  property's alike. A draft older than a day is never replayed, only
-  dropped, so a tab left open for days never resurfaces a stale edit.
+  a copy a reset has moved past; every draft this origin holds, body's
+  and a drawer property's alike, is dropped at once whenever that
+  changes, by the two forms that clear on the spot (sign-out, a demo's
+  Reset now) and, reactively, by anything else that changes who
+  `shell()` answers with (a session that expired, a device revoked, a
+  direct `/sign-out`), and the same tab's own reconcile is what another
+  tab of this browser hears of over `storage`, so it drops what it held
+  too rather than wait for its own next page. A draft older than a day
+  is never replayed, only dropped, so a tab left open for days never
+  resurfaces a stale edit.
+- **Open across a change.** A body already open when who is signed in
+  changes stays bound to who it was opened as: before every reconnect
+  and before posting any edit it makes afterwards, `LiveState` checks
+  this browser's identity again, and where it no longer matches, stops
+  the session at once, drops the edit instead of posting it and removes
+  its own draft, never waiting for the reload that would otherwise
+  notice. The session's own `joined` carries the actor the server holds
+  this browser as; `Live` refuses it outright, as a drop, where it
+  names a different one than this instance opened as, rather than trust
+  the stream over what it itself knows. Two tabs of the same identity
+  each keep their own draft of a body under one key, the later write
+  the one `localStorage` holds; a tab's own save clears it only where
+  it still names the token that tab itself last stashed or replayed, so
+  a newer, unsent snapshot another tab kept under the same key survives
+  a save that carries an older one.
 
 A slice mounts the editor over the session's stream, handing `LiveState`
 the Loro document, the session's address and the feat's save write,

@@ -58,6 +58,7 @@ export interface Timing {
 export class Live {
   readonly doc: LoroDoc
   readonly #link: Link
+  readonly #expect: () => string
   readonly #t: Required<Timing>
   writable = false
   actor = ''
@@ -97,9 +98,14 @@ export class Live {
   // Called whenever what it shows changes.
   changed: () => void = () => {}
 
-  constructor(doc: LoroDoc, link: Link, t: Timing = {}) {
+  // `expect` names who this browser believes it joins as, empty where
+  // it does not yet know or does not care; `joined` refuses a session
+  // that answers with another actor, rather than trust the stream over
+  // what this browser itself holds.
+  constructor(doc: LoroDoc, link: Link, expect: () => string = () => '', t: Timing = {}) {
     this.doc = doc
     this.#link = link
+    this.#expect = expect
     this.#t = { clock: real, send: 250, pause: 3_000, retry: 2_000, ...t }
   }
 
@@ -157,7 +163,15 @@ export class Live {
   // where the session lacks edits this browser holds, as after a restart
   // of the server, one post of all of them, its own and others', and a
   // save at the pause, made only once the session took that post.
+  // Refused, naming who it was named instead, where this browser
+  // expects a particular actor and the session answers with another:
+  // never trusted over what this browser itself knows it is.
   async joined(j: Joined): Promise<void> {
+    const expected = this.#expect()
+    if (expected && j.actor !== expected) {
+      this.dropped(`joined the session as ${j.actor}, not ${expected}: refused`)
+      return
+    }
     this.writable = j.writable
     this.actor = j.actor
     this.#action = j.save

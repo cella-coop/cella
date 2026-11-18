@@ -477,3 +477,69 @@ for (const [name, launch] of browsers().filter(([n]) => n in signOutTasks)) {
     }
   })
 }
+
+// Who is signed in can change without either form: a session cookie
+// cleared directly (an expiry or a revoked device reads the same way
+// to this browser), never `/sign-out`'s own `onsubmit`. The root
+// layout reconciles against it all the same, the next time it reads
+// who is signed in, so Léa's draft is dropped before Thomas, signed in
+// right after on the same browser, ever mounts a page that could
+// replay it. In every browser.
+const cookieTasks: Record<string, string> = { chromium: 't-44', firefox: 't-45', webkit: 't-58' }
+for (const [name, launch] of browsers().filter(([n]) => n in cookieTasks)) {
+  test(`${name}: the session cookie cleared directly, without signing out, still drops a draft before another person sees it`, async () => {
+    const task = cookieTasks[name]
+    const su = new pg.Client()
+    await su.connect()
+    const { base, stop } = await serve()
+    const browser = await launch()
+    const errors: string[] = []
+    try {
+      const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
+      await signIn(context, base, lea)
+      const page = await context.newPage()
+      page.on('pageerror', (e) => errors.push(`${name}: ${e.message}`))
+      await page.goto(`${base}/tasks/${task}`)
+      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+
+      const block = (route: Route) => (route.request().method() === 'POST' ? route.abort() : route.continue())
+      await page.route('**/_app/remote/**', block)
+      await page.route('**/body/live', block)
+
+      const line = `Léa's edit, orphaned by a cleared cookie, in ${name}`
+      await editor(page).locator('[contenteditable=true]').last().click()
+      await page.keyboard.press('End')
+      await page.keyboard.press('Enter')
+      await page.keyboard.type(line)
+      await page.reload()
+      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      await shows(page, [line], `${name}: right after the reload, from what was kept`)
+
+      const blocked = await su.query<{ text: string }>('SELECT cella.document_text(body) AS text FROM task.task WHERE id = $1', [task])
+      assert.ok(!(blocked.rows[0]?.text ?? '').includes(line), `${name}: the blocked save never reached the server`)
+
+      // Neither form: the cookie goes, as an expiry or a revoked device
+      // would leave it, with no `onsubmit` of its own to clear anything.
+      await context.clearCookies()
+      await page.unrouteAll()
+      await page.goto(`${base}/sign-in`)
+      await page.getByTitle(thomas).click()
+      await page.waitForURL(`${base}/inbox`)
+      // Firefox: see the sign-out scenario above for why.
+      await page.waitForLoadState('networkidle')
+      await page.goto(`${base}/tasks/${task}`)
+      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      const shown = (await page.locator('main [role=document]').first().textContent()) ?? ''
+      assert.ok(!shown.includes(line), `${name}: Thomas is shown none of Léa's orphaned edit`)
+
+      await page.waitForTimeout(3_500)
+      const after = await su.query<{ text: string }>('SELECT cella.document_text(body) AS text FROM task.task WHERE id = $1', [task])
+      assert.ok(!(after.rows[0]?.text ?? '').includes(line), `${name}: nothing of Léa's draft was ever posted, cookie cleared or not`)
+      assert.deepEqual(errors, [], `${name}: the pages threw nothing`)
+    } finally {
+      await browser.close()
+      await stop()
+      await su.end()
+    }
+  })
+}

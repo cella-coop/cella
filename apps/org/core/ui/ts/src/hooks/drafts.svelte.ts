@@ -137,3 +137,73 @@ export function retry(id: string, draft: Draft, send: (write: string, fields: [s
     },
   )
 }
+
+// Who this browser last reconciled its drafts against: who was signed
+// in and, on a demo, the copy, as `${actor}|${copy}`; absent until the
+// first reconcile.
+const identityKey = 'cella:identity'
+
+function storedIdentity(): string | null {
+  try {
+    return localStorage.getItem(identityKey)
+  } catch {
+    return null
+  }
+}
+
+function setIdentity(identity: string): void {
+  try {
+    localStorage.setItem(identityKey, identity)
+  } catch {
+    // Not kept: the next call compares against none and clears again,
+    // which costs nothing, since there was nothing of this identity's
+    // own to lose by it.
+  }
+}
+
+// Reconciles every draft this origin keeps against who is signed in now
+// and, on a demo, which copy: unchanged since the last call, nothing
+// happens; changed, including from something to nothing (signed out, a
+// session expired, a device revoked) or from nothing to something
+// (signed in fresh), every draft is dropped first, before anything that
+// might replay one even mounts, since an earlier session's name, or an
+// earlier copy's, answers to neither browser nor record again. Call
+// this reactively, from the one place that first learns who is signed
+// in, so it runs again whenever that changes, not only once.
+export function reconcile(actor: string, copy: string): void {
+  const identity = `${actor}|${copy}`
+  if (storedIdentity() === identity) {
+    return
+  }
+  clear()
+  setIdentity(identity)
+}
+
+// Calls `onChange` whenever another tab of this browser reconciles to a
+// different identity than the one stored when this call was made (the
+// `storage` event fires only for another document's writes, never this
+// one's own, so a tab need not guard against its own reconcile). A tab
+// left open under a session another tab has since signed out of, or
+// signed in as someone else from, drops what it held the moment that
+// happens, not only the next time it reconciles on its own. Returns how
+// to stop listening.
+export function watch(onChange: () => void): () => void {
+  const listener = (e: StorageEvent) => {
+    if (e.key === identityKey && e.newValue !== e.oldValue) {
+      onChange()
+    }
+  }
+  try {
+    window.addEventListener('storage', listener)
+  } catch {
+    // No window to watch from: nothing more to do.
+    return () => {}
+  }
+  return () => {
+    try {
+      window.removeEventListener('storage', listener)
+    } catch {
+      // Already gone.
+    }
+  }
+}

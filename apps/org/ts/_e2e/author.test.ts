@@ -123,7 +123,10 @@ unseeded('the New form puts a motion as a held role or as its circle, and the pa
             assert.equal(made.authorName, name)
             await page.goto(`${dev.base}/motions/${made.id}`)
             await page.waitForLoadState('networkidle')
-            assert.ok(await page.getByText(name, { exact: true }).count() > 0, 'the page names its author')
+            // Properties now draws a text row as its label and its value in
+            // one span ("Put by Camille Martin"), so no element's own text
+            // is the bare name any more; read the page's text instead.
+            assert.ok((await page.locator('body').innerText()).includes(name), 'the page names its author')
             await page.screenshot({ path: `${shots}/${engine}-${author || 'circle'}-${scheme}-page.png`, fullPage: true })
           } finally {
             await context.close()

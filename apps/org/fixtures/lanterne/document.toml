@@ -679,3 +679,274 @@ author = "yusuf@lanterne.example"
 at = 2026-10-25
 quote = "Domains: every one listed with its renewal date"
 text = "Redundant with the list I finished last month — shall we link out to it instead of keeping two?"
+
+[[document]]
+id = "pipeline-board"
+circle = "coordination"
+title = "Pipeline board practices"
+
+[[document.version]]
+id = "pipeline-board@1"
+saved = 2026-10-12
+
+[[document.version.block]]
+text = "How coordination keeps the pipeline board: one column per stage, reviewed every Monday."
+
+[[document.version.block]]
+type = "bullet"
+text = "Lead: a first conversation, no commitment either way"
+
+[[document.version.block]]
+type = "bullet"
+text = "Quoted: a proposal sent, waiting on the client"
+
+[[document.version.block]]
+type = "bullet"
+text = "Won: staffed and scheduled, ready to move onto a project"
+
+[[document.comment]]
+version = "pipeline-board@1"
+author = "malik@lanterne.example"
+at = 2026-10-19
+quote = "Quoted: a proposal sent, waiting on the client"
+text = "Worth a reminder date on these — Nuvola's retainer renewal sat here three weeks unchased."
+
+[[document]]
+id = "federation-day-brief"
+circle = "coordination"
+title = "Federation day brief"
+
+[[document.version]]
+id = "federation-day-brief@1"
+saved = 2026-10-20
+
+[[document.version.block]]
+text = "Hosting the federation's regional day in February: what we owe them and by when."
+
+[[document.version.block]]
+type = "numbered"
+text = "Confirm the date with the federation by 15 November"
+
+[[document.version.block]]
+type = "numbered"
+text = "Book the studio or a nearby room for forty people"
+
+[[document.version.block]]
+type = "numbered"
+text = "A short talk on the move into cella, Julien's to give"
+
+[[document]]
+id = "case-study-brief"
+circle = "marketing"
+title = "Case study brief template"
+
+[[document.version]]
+id = "case-study-brief@1"
+saved = 2026-10-08
+
+[[document.version.block]]
+text = "What every case study answers, before it is written."
+
+[[document.version.block]]
+type = "numbered"
+text = "What the client asked for, in their own words"
+
+[[document.version.block]]
+type = "numbered"
+text = "What we built, in two or three sentences"
+
+[[document.version.block]]
+type = "numbered"
+text = "A number that shows it worked, where the client will let us publish one"
+
+[[document.comment]]
+version = "case-study-brief@1"
+author = "chloe@lanterne.example"
+at = 2026-10-10
+quote = "A number that shows it worked, where the client will let us publish one"
+text = "Vélo Solidaire said yes to a number — their repair bookings, up since the identity shipped."
+
+[[document]]
+id = "social-calendar"
+circle = "marketing"
+title = "Social media calendar"
+
+[[document.version]]
+id = "social-calendar@1"
+saved = 2026-10-15
+
+[[document.version.block]]
+text = "What goes out and when, once the case studies publish under CC BY."
+
+[[document.version.block]]
+type = "bullet"
+text = "One case study a month, starting with Vélo Solidaire"
+
+[[document.version.block]]
+type = "bullet"
+text = "A short post for every launch, Web's and Brand's"
+
+[[document.version.block]]
+type = "bullet"
+text = "Nothing posted on a client's behalf without their sign-off"
+
+[[document]]
+id = "client-satisfaction-survey"
+circle = "clients"
+title = "Client satisfaction survey"
+
+[[document.version]]
+id = "client-satisfaction-survey@1"
+saved = 2026-10-21
+
+[[document.version.block]]
+text = "A short survey sent once a project closes, before the renewal conversation."
+
+[[document.version.block]]
+type = "numbered"
+text = "Would you recommend Lanterne to another co-op or association?"
+
+[[document.version.block]]
+type = "numbered"
+text = "What should we have asked about earlier?"
+
+[[document.version.block]]
+type = "numbered"
+text = "Is there anyone else who should see this work?"
+
+[[document]]
+id = "renewal-email-templates"
+circle = "clients"
+title = "Renewal email templates"
+
+[[document.version]]
+id = "renewal-email-templates@1"
+saved = 2026-10-17
+
+[[document.version.block]]
+text = "Three short drafts, one per kind of renewal, to start from and never send unedited."
+
+[[document.version.block]]
+type = "bullet"
+text = "A retainer renewing at the same rate"
+
+[[document.version.block]]
+type = "bullet"
+text = "A retainer renewing at the new rate card"
+
+[[document.version.block]]
+type = "bullet"
+text = "A care contract ending, with nothing booked after it"
+
+[[document.comment]]
+version = "renewal-email-templates@1"
+author = "camille@lanterne.example"
+at = 2026-10-18
+quote = "A retainer renewing at the new rate card"
+text = "This one needs Malik's line about Nuvola holding the old rate until December, once he's confirmed it."
+
+[[document]]
+id = "interview-scorecard"
+circle = "hiring"
+title = "Interview scorecard"
+
+[[document.version]]
+id = "interview-scorecard@1"
+saved = 2026-10-06
+
+[[document.version.block]]
+text = "What every interviewer scores, so two candidates are compared the same way."
+
+[[document.version.block]]
+type = "numbered"
+text = "Craft: the portfolio or the code, against the role's level"
+
+[[document.version.block]]
+type = "numbered"
+text = "Fit: how they'd work in a small circle, from their examples"
+
+[[document.version.block]]
+type = "numbered"
+text = "Questions: what they asked us, and what it showed"
+
+[[document.comment]]
+version = "interview-scorecard@1"
+author = "lea@lanterne.example"
+at = 2026-10-15
+quote = "Fit: how they'd work in a small circle, from their examples"
+text = "Let's add a note here on remote work, since both junior roles will sit mostly in Web and Brand's calls."
+
+[[document]]
+id = "candidate-pipeline-notes"
+circle = "hiring"
+title = "Candidate pipeline notes"
+
+[[document.version]]
+id = "candidate-pipeline-notes@1"
+saved = 2026-10-18
+
+[[document.version.block]]
+text = "Where each candidate for the two junior roles stands, kept here until an offer is made."
+
+[[document.version.block]]
+type = "bullet"
+text = "The junior developer role: three applications read, two first calls booked"
+
+[[document.version.block]]
+type = "bullet"
+text = "The junior designer role: posted on the co-op jobs board on 20 October"
+
+[[document]]
+id = "peer-support-guide"
+circle = "care"
+title = "Peer support guide"
+
+[[document.version]]
+id = "peer-support-guide@1"
+saved = 2026-10-11
+
+[[document.version.block]]
+text = "How to ask Care for a peer check-in, and what happens after you do."
+
+[[document.version.block]]
+type = "bullet"
+text = "Anyone in Care can be asked directly, or through the circle's inbox"
+
+[[document.version.block]]
+type = "bullet"
+text = "A check-in is a conversation, not a report: nothing goes further without you"
+
+[[document.version.block]]
+type = "bullet"
+text = "Follow-ups are offered, never scheduled without asking first"
+
+[[document.comment]]
+version = "peer-support-guide@1"
+author = "sofia@lanterne.example"
+at = 2026-10-13
+quote = "A check-in is a conversation, not a report: nothing goes further without you"
+text = "Worth saying this out loud at the next assembly too, not just here — a few people still assume otherwise."
+
+[[document]]
+id = "conflict-log-template"
+circle = "care"
+title = "Conflict log template"
+
+[[document.version]]
+id = "conflict-log-template@1"
+saved = 2026-10-24
+
+[[document.version.block]]
+text = "What Care writes down after a conflict comes to it, kept short and without blame."
+
+[[document.version.block]]
+type = "numbered"
+text = "What happened, in one or two sentences"
+
+[[document.version.block]]
+type = "numbered"
+text = "Who was involved, and whether they both agreed to the note"
+
+[[document.version.block]]
+type = "numbered"
+text = "What was tried, and whether it helped"

@@ -458,3 +458,142 @@ minutes = 20
 title = "Password manager: who is still out"
 presenter = "Inès"
 minutes = 10
+
+[[meeting]]
+id = "ag-2026-11-28"
+circle = "ag"
+title = "Assembly"
+at = 2026-11-28T10:00:00
+place = "Studio, 14 rue des Graviers, Montreuil"
+scheduled = 2026-10-24
+status = "scheduled"
+
+[[meeting.item]]
+title = "October close"
+presenter = "Julien"
+minutes = 15
+
+[[meeting.item]]
+title = "Q4 hiring update"
+presenter = "Camille"
+minutes = 15
+
+[[meeting]]
+id = "clients-2026-11-18"
+circle = "clients"
+title = "Clients"
+at = 2026-11-18T14:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/clients"
+scheduled = 2026-10-24
+status = "scheduled"
+
+[[meeting.item]]
+title = "Renewal proposals: where things stand"
+presenter = "Thomas"
+minutes = 20
+
+[[meeting.item]]
+title = "Referral programme: kickoff"
+presenter = "Malik"
+minutes = 15
+
+[[meeting]]
+id = "clients-2026-12-02"
+circle = "clients"
+title = "Clients"
+at = 2026-12-02T14:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/clients"
+scheduled = 2026-10-24
+status = "scheduled"
+
+[[meeting.item]]
+title = "December check-ins"
+presenter = "Chloé"
+minutes = 15
+
+[[meeting.item]]
+title = "2027 pipeline: handing over to coordination"
+presenter = "Yusuf"
+minutes = 15
+
+[[meeting]]
+id = "hiring-2026-11-18"
+circle = "hiring"
+title = "Hiring"
+at = 2026-11-18T11:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/hiring"
+scheduled = 2026-10-24
+status = "scheduled"
+
+[[meeting.item]]
+title = "Interview scorecard: a first trial"
+presenter = "Léa"
+minutes = 15
+
+[[meeting.item]]
+title = "Referral bonus: rolling it out"
+presenter = "Amina"
+minutes = 10
+
+[[meeting]]
+id = "hiring-2026-12-02"
+circle = "hiring"
+title = "Hiring"
+at = 2026-12-02T11:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/hiring"
+scheduled = 2026-10-24
+status = "scheduled"
+
+[[meeting.item]]
+title = "Candidate pipeline review"
+presenter = "Julien"
+minutes = 20
+
+[[meeting.item]]
+title = "Paid trial day: first results"
+presenter = "Camille"
+minutes = 10
+
+[[meeting]]
+id = "care-2026-11-12"
+circle = "care"
+title = "Care"
+at = 2026-11-12T16:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/care"
+scheduled = 2026-10-24
+status = "scheduled"
+
+[[meeting.item]]
+title = "Peer support guide: first feedback"
+presenter = "Hugo"
+minutes = 20
+
+[[meeting.item]]
+title = "Counselling budget: how it's used"
+presenter = "Amina"
+minutes = 10
+
+[[meeting]]
+id = "care-2026-11-26"
+circle = "care"
+title = "Care"
+at = 2026-11-26T16:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/care"
+scheduled = 2026-10-24
+status = "scheduled"
+
+[[meeting.item]]
+title = "Conflict log: first entries"
+presenter = "Sofia"
+minutes = 15
+
+[[meeting.item]]
+title = "Quiet hour: how it's going"
+presenter = "Léa"
+minutes = 15

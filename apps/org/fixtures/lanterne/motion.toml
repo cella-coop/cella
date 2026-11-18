@@ -1304,3 +1304,198 @@ author = "yusuf@lanterne.example"
 reply = 1
 at = 2026-10-02
 text = "Kill it once everyone's confirmed access — I'll note it in [[studio-stack]] once that's done."
+
+# Clients', passed: a two-working-day reply time for every enquiry.
+[[motion]]
+id = "m-2026-023"
+circle = "clients"
+proposer = "chloe@lanterne.example"
+title = "Reply to every enquiry within two working days"
+procedure = "consent"
+proposed = 2026-10-08
+deadline = 2026-10-22
+closed = 2026-10-22
+body = """
+Whoever picks up a new enquiry answers within two working days, even if
+only to say when a fuller answer is coming.
+"""
+
+[[motion.vote]]
+member = "chloe@lanterne.example"
+stance = "consent"
+at = 2026-10-08
+
+[[motion.vote]]
+member = "camille@lanterne.example"
+stance = "consent"
+at = 2026-10-10
+
+[[motion.vote]]
+member = "thomas@lanterne.example"
+stance = "consent"
+at = 2026-10-12
+
+# Clients', open: a quarterly check-in with every retainer client.
+[[motion]]
+id = "m-2026-024"
+circle = "clients"
+proposer = "malik@lanterne.example"
+title = "A quarterly check-in with every retainer client"
+procedure = "consent"
+proposed = 2026-10-21
+deadline = 2026-11-04
+body = """
+Beyond the monthly retainer work itself, a short call every quarter to
+ask how it's going and whether the scope still fits.
+"""
+
+[[motion.vote]]
+member = "malik@lanterne.example"
+stance = "consent"
+at = 2026-10-21
+
+[[motion.vote]]
+member = "yusuf@lanterne.example"
+stance = "consent"
+at = 2026-10-22
+
+[[motion.message]]
+author = "thomas@lanterne.example"
+at = 2026-10-22
+text = "Does this replace the renewal conversation, or sit alongside it?"
+
+[[motion.message]]
+author = "malik@lanterne.example"
+reply = 1
+at = 2026-10-23
+text = "Alongside — the renewal is about the contract, the check-in is just about how it's going."
+
+# Hiring's, passed: a referral bonus for internal recommendations.
+[[motion]]
+id = "m-2026-025"
+circle = "hiring"
+proposer = "amina@lanterne.example"
+title = "A referral bonus for internal recommendations"
+procedure = "consent"
+proposed = 2026-10-06
+deadline = 2026-10-20
+closed = 2026-10-20
+body = """
+Anyone who refers someone we go on to hire gets a bonus once the new
+hire's probation ends, the same amount for every role.
+"""
+
+[[motion.vote]]
+member = "amina@lanterne.example"
+stance = "consent"
+at = 2026-10-06
+
+[[motion.vote]]
+member = "lea@lanterne.example"
+stance = "consent"
+at = 2026-10-08
+
+[[motion.vote]]
+member = "julien@lanterne.example"
+stance = "consent"
+at = 2026-10-10
+
+# Hiring's, open: a paid trial day for finalists.
+[[motion]]
+id = "m-2026-026"
+circle = "hiring"
+proposer = "lea@lanterne.example"
+title = "A paid trial day for finalists"
+procedure = "consent"
+proposed = 2026-10-22
+deadline = 2026-11-05
+body = """
+Each role's last two candidates spend a paid day with the circle they
+would join, before an offer is made either way.
+"""
+
+[[motion.vote]]
+member = "lea@lanterne.example"
+stance = "consent"
+at = 2026-10-22
+
+[[motion.vote]]
+member = "camille@lanterne.example"
+stance = "consent"
+at = 2026-10-23
+
+[[motion.message]]
+author = "julien@lanterne.example"
+at = 2026-10-23
+text = "Who pays for the trial day, Hiring's budget or the circle they'd join?"
+
+[[motion.message]]
+author = "lea@lanterne.example"
+reply = 1
+at = 2026-10-24
+text = "Hiring's — it's part of the cost of hiring well, not the circle's to carry."
+
+# Care's, passed: a budget for outside counselling sessions.
+[[motion]]
+id = "m-2026-027"
+circle = "care"
+proposer = "amina@lanterne.example"
+title = "A budget for outside counselling sessions"
+procedure = "consent"
+proposed = 2026-10-09
+deadline = 2026-10-23
+closed = 2026-10-23
+body = """
+Up to four sessions a year with an outside counsellor, for anyone who
+asks, paid by the co-op and never discussed in a circle.
+"""
+
+[[motion.vote]]
+member = "amina@lanterne.example"
+stance = "consent"
+at = 2026-10-09
+
+[[motion.vote]]
+member = "hugo@lanterne.example"
+stance = "consent"
+at = 2026-10-11
+
+[[motion.vote]]
+member = "sofia@lanterne.example"
+stance = "consent"
+at = 2026-10-13
+
+# Care's, open: a rota for peer check-ins after a hard week.
+[[motion]]
+id = "m-2026-028"
+circle = "care"
+proposer = "chloe@lanterne.example"
+title = "A rota for peer check-ins after a hard week"
+procedure = "consent"
+proposed = 2026-10-23
+deadline = 2026-11-06
+body = """
+Whoever flags a hard week gets a peer check-in within a few days, from
+whoever is next on Care's rota, not whoever happens to be free.
+"""
+
+[[motion.vote]]
+member = "chloe@lanterne.example"
+stance = "consent"
+at = 2026-10-23
+
+[[motion.vote]]
+member = "lea@lanterne.example"
+stance = "consent"
+at = 2026-10-24
+
+[[motion.message]]
+author = "sofia@lanterne.example"
+at = 2026-10-24
+text = "Does the rota include Inès, or only members of Care?"
+
+[[motion.message]]
+author = "chloe@lanterne.example"
+reply = 1
+at = 2026-10-24
+text = "Only members for now, since the rota itself is a Care decision — but anyone in Care can ask for a check-in."

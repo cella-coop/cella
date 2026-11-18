@@ -28,6 +28,7 @@ export class BodyState {
       const live = new LiveState(doc, {
         live: () => `/meetings/${encodeURIComponent(id)}/body/live`,
         save: (write, fields) => writes.send(write, fields, id, 'meetings'),
+        who: () => `${writes.actor}|${writes.copy}`,
       })
       const stop = live.start()
       this.doc = doc

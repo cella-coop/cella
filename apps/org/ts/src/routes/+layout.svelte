@@ -21,6 +21,15 @@
   // What the shell reads, awaited before it draws, so the server renders
   // it whole; a write that took or reached a verdict refreshes it.
   const data = $derived(await shell())
+
+  // Named on the one state every page's writes already share, so a
+  // slice that keeps a draft (a body, a drawer property) namespaces it
+  // by who is signed in and which demo copy without asking the server
+  // of its own; read lazily, so it always answers with `data`'s latest.
+  writes.identify(
+    () => data.actor?.address ?? '',
+    () => data.join ?? '',
+  )
 </script>
 
 <svelte:head>

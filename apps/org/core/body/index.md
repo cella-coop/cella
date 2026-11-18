@@ -268,7 +268,14 @@ saves nothing itself, since the server signs with none
   What was kept is dropped once this browser's `unsaved` reads false
   again, its edit carried by a save of its own or another's it heard, so
   a draft outlives only as long as it is needed. A browser that never
-  opens the body again still loses what it held, as before.
+  opens the body again still loses what it held, as before. What is kept
+  is named by who is signed in and, on a demo, the copy's own join code,
+  fresh on every copy and on every reset of one, so a draft never
+  replays for another person who signs in on the same browser, or into
+  a copy a reset has moved past; signing out, or Reset now on a demo,
+  drops every draft this origin holds at once, body's and a drawer
+  property's alike. A draft older than a day is never replayed, only
+  dropped, so a tab left open for days never resurfaces a stale edit.
 
 A slice mounts the editor over the session's stream, handing `LiveState`
 the Loro document, the session's address and the feat's save write,

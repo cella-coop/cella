@@ -44,10 +44,33 @@ export interface Route {
 export class WriteState {
   done = $state<Outcome | null>(null)
   #route: (() => Route) | null = null
+  // Who this browser is signed in as, and the demo copy it is on, if any:
+  // its join code, fresh on every copy and on every reset of one, empty
+  // outside a demo. The root layout names both, by a getter over the one
+  // query every page awaits, so a kept draft can be namespaced by them
+  // without a slice's own hook asking the server again.
+  #actor: () => string = () => ''
+  #copy: () => string = () => ''
 
   // The route the page is on names how its writes are posted.
   serve(route: () => Route) {
     this.#route = route
+  }
+
+  // Named by the root layout, once per page: who is signed in, and which
+  // demo copy, so every kept draft is namespaced by both and never
+  // replays for the wrong person or into a copy a reset has moved past.
+  identify(actor: () => string, copy: () => string) {
+    this.#actor = actor
+    this.#copy = copy
+  }
+
+  get actor(): string {
+    return this.#actor()
+  }
+
+  get copy(): string {
+    return this.#copy()
   }
 
   get route(): Route {

@@ -19,6 +19,7 @@
   import type { Outcome as Done } from '../models/outcome.ts'
   import { useShell } from '../hooks/useShell.ts'
   import { usePinned } from '../hooks/usePinned.ts'
+  import { clear as clearDrafts } from '../hooks/drafts.svelte.ts'
   import Button from './Button.svelte'
   import { useRemember } from '../hooks/useRemember.ts'
   import { mark } from '../marks.ts'
@@ -327,7 +328,10 @@
           <p class="hint">{actor.address}, on this device</p>
           <div class="list">
             {#if personal}<a class="item" role="menuitem" href={personal}>Settings</a>{/if}
-            <form method="post" action="/sign-out" class="list">
+            <!-- Drops every draft this browser kept before it leaves as
+                 this person: an earlier one's name answers to no one once
+                 it has signed out. -->
+            <form method="post" action="/sign-out" class="list" onsubmit={clearDrafts}>
               <button class="item">Sign out</button>
             </form>
           </div>

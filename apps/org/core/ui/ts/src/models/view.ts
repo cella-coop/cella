@@ -67,6 +67,11 @@ export interface Edit {
   hint?: string
 }
 
+// What an edit holds now, as one string: the values chosen joined, or
+// what was typed, empty for none. Compared before and after a reload, it
+// says whether the field moved under a kept draft meanwhile.
+export const editValue = (e: Edit): string => (Array.isArray(e.current) ? e.current.join(', ') : (e.current ?? ''))
+
 // A property whose edit is a slice's own: a block drawn in its popover,
 // given its data, closing it through `close`.
 export interface Editor<D = any> {

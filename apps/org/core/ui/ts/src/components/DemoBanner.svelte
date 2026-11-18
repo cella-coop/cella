@@ -7,6 +7,7 @@
   import { useCountdown } from '../hooks/useCountdown.ts'
   import { useDismiss } from '../hooks/useDismiss.ts'
   import { useInvite } from '../hooks/useInvite.ts'
+  import { clear as clearDrafts } from '../hooks/drafts.svelte.ts'
   import { Plus, TestTube, X } from '../icons.ts'
   import Button from './Button.svelte'
   import Icon from './Icon.svelte'
@@ -111,7 +112,9 @@
     {/if}
     <span class="actions">
       {#if copy}
-        <form method="post" action="/_demo/reset">
+        <!-- A fresh copy answers to a fresh join code: every draft this
+             browser kept on this one, now gone, is dropped with it. -->
+        <form method="post" action="/_demo/reset" onsubmit={clearDrafts}>
           <Button tone="quiet" type="submit"><Icon icon={ArrowCounterClockwise} size="0.95em" />Reset</Button>
         </form>
       {/if}

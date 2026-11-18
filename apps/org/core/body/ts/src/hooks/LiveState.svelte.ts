@@ -10,11 +10,19 @@ const retry = 2000
 // of its live session, and the write that saves it, sent by the page's
 // `send` and signed as any write is, its snapshot in the `snapshot`
 // field, the hash of the saved body it merged in `base`, and one
-// `contributor` field an address.
+// `contributor` field an address. `who` names who keeps a draft of this
+// body in this browser: the signed-in person and, on a demo, the copy's
+// own join code, fresh on every copy and on every reset of one, so a
+// draft never replays for the wrong person or into a copy a reset has
+// moved past.
 export interface Seat {
   live: () => string
   save: (write: string, fields: [string, string][]) => Promise<Answer>
+  who: () => string
 }
+
+// A day: a draft older than this is never replayed, only dropped.
+const day = 24 * 60 * 60 * 1000
 
 // A write's answer, as `Live` reads it.
 const sent = (a: Answer): Sent => {
@@ -107,7 +115,10 @@ export class LiveState {
 
   constructor(doc: LoroDoc, at: Seat) {
     this.#at = at
-    this.#draft = `cella:body-draft:${at.live()}`
+    // Who keeps this draft and which demo copy, ahead of the live
+    // address, so a draft this browser kept signed in as one person, or
+    // on a copy a reset has since moved past, never replays for another.
+    this.#draft = `cella:body-draft:${at.who()}:${at.live()}`
     const link: Link = {
       post: (update) => told(at.live(), [['update', b64.encode(update)]], this.#abort.signal),
       save: async (write, snapshot, contributors, base) =>
@@ -121,18 +132,24 @@ export class LiveState {
       saved: () => kept(at.live(), this.#abort.signal),
     }
     // Before anything else, what this browser kept of its own last time
-    // it held it, if it still does: replayed synchronously, so a record
-    // never shows less than it last did, and the session below joins
-    // already holding it, which saves it again at its own next pause.
+    // it held it, if it still does and is not older than a day:
+    // replayed synchronously, so a record never shows less than it last
+    // did, and the session below joins already holding it, which saves
+    // it again at its own next pause.
     try {
-      const stashed = localStorage.getItem(this.#draft)
-      if (stashed) {
-        doc.import(b64.decode(stashed))
+      const raw = localStorage.getItem(this.#draft)
+      if (raw) {
+        const kept = JSON.parse(raw) as { snapshot?: string; ts?: number }
+        if (typeof kept.snapshot === 'string' && typeof kept.ts === 'number' && Date.now() - kept.ts <= day) {
+          doc.import(b64.decode(kept.snapshot))
+        } else {
+          localStorage.removeItem(this.#draft)
+        }
       }
     } catch {
       // Storage unavailable (private browsing, disabled, full), or what
-      // it held was not a draft this version of Loro reads: nothing to
-      // replay, and nothing kept past this that would only fail again.
+      // it held was not a draft this version reads: nothing to replay,
+      // and nothing kept past this that would only fail again.
       try {
         localStorage.removeItem(this.#draft)
       } catch {
@@ -150,7 +167,7 @@ export class LiveState {
   // it.
   #stash(): void {
     try {
-      localStorage.setItem(this.#draft, b64.encode(this.#live.doc.export({ mode: 'snapshot' })))
+      localStorage.setItem(this.#draft, JSON.stringify({ snapshot: b64.encode(this.#live.doc.export({ mode: 'snapshot' })), ts: Date.now() }))
     } catch {
       // A draft too big to keep, or kept nowhere, is simply not replayed:
       // this browser's own save is still tried as before.

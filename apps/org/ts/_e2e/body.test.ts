@@ -19,7 +19,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
 import pg from 'pg'
-import type { BrowserContext, Page } from 'playwright-core'
+import type { BrowserContext, Page, Route } from 'playwright-core'
 import { browsers, eachBrowser, serve, signIn } from './browser.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-body-shots'
@@ -390,6 +390,86 @@ if (chromium) {
       }
       assert.equal(budget, 9_000, "the project's budget reached the server after the reload")
       assert.deepEqual(errors, [], 'the pages threw nothing')
+    } finally {
+      await browser.close()
+      await stop()
+      await su.end()
+    }
+  })
+}
+
+// A draft is kept by this browser, not by the record: Léa types into a
+// task's body, its own save blocked so nothing of it ever reaches the
+// server, and reloads away without it saving. The draft still shows her
+// edit, from what was kept. She signs out and Thomas signs in on the
+// same browser; he opens the same task and sees none of her edit, and
+// nothing of it ever reaches the server either, signed out or not. In
+// every browser.
+const signOutTasks: Record<string, string> = { chromium: 't-1', firefox: 't-42', webkit: 't-43' }
+for (const [name, launch] of browsers().filter(([n]) => n in signOutTasks)) {
+  test(`${name}: signing out drops a draft, so the next person on this browser is never shown or sent it`, async () => {
+    const task = signOutTasks[name]
+    const su = new pg.Client()
+    await su.connect()
+    const { base, stop } = await serve()
+    const browser = await launch()
+    const errors: string[] = []
+    try {
+      const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
+      await signIn(context, base, lea)
+      const page = await context.newPage()
+      page.on('pageerror', (e) => errors.push(`${name}: ${e.message}`))
+      await page.goto(`${base}/tasks/${task}`)
+      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+
+      // From here on, both of this browser's two write paths are
+      // blocked: the signed save itself, a SvelteKit remote command
+      // posted to `_app/remote/<id>` (`send`, `prove`, as every write
+      // is, not only the body's), and the session's own posts to the
+      // body's live address. Nothing else is routed through this at
+      // all: `/sign-out` works, and the editor's own built assets,
+      // its wasm among them, are never raced by it.
+      const block = (route: Route) => (route.request().method() === 'POST' ? route.abort() : route.continue())
+      await page.route('**/_app/remote/**', block)
+      await page.route('**/body/live', block)
+
+      const line = `Léa's blocked edit, never saved, in ${name}`
+      await editor(page).locator('[contenteditable=true]').last().click()
+      await page.keyboard.press('End')
+      await page.keyboard.press('Enter')
+      await page.keyboard.type(line)
+      await page.reload()
+      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      await shows(page, [line], `${name}: right after the reload, from what was kept`)
+
+      const blocked = await su.query<{ text: string }>('SELECT cella.document_text(body) AS text FROM task.task WHERE id = $1', [task])
+      assert.ok(!(blocked.rows[0]?.text ?? '').includes(line), `${name}: the blocked save never reached the server`)
+
+      await page.getByRole('button', { name: /^Léa Bernard/ }).click()
+      await page.getByRole('button', { name: 'Sign out' }).click()
+      await page.waitForURL(`${base}/sign-in`)
+      // Léa's document is gone with the navigation that signed her out;
+      // Thomas's own sign-in, and his writes after it, are not blocked.
+      await page.unrouteAll()
+
+      await page.getByTitle(thomas).click()
+      await page.waitForURL(`${base}/inbox`)
+      // Firefox: a module import right after this many navigations in
+      // one page can race its own module cache; settling here first,
+      // unrelated to anything this scenario checks, avoids it.
+      await page.waitForLoadState('networkidle')
+      await page.goto(`${base}/tasks/${task}`)
+      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      const shown = (await page.locator('main [role=document]').first().textContent()) ?? ''
+      assert.ok(!shown.includes(line), `${name}: Thomas is shown none of Léa's blocked edit`)
+
+      // Past the pause a real edit would have saved at, were it this
+      // browser's own and not blocked, so a delayed post would have
+      // had every chance to land by now.
+      await page.waitForTimeout(3_500)
+      const after = await su.query<{ text: string }>('SELECT cella.document_text(body) AS text FROM task.task WHERE id = $1', [task])
+      assert.ok(!(after.rows[0]?.text ?? '').includes(line), `${name}: nothing of Léa's draft was ever posted, signed out or not`)
+      assert.deepEqual(errors, [], `${name}: the pages threw nothing`)
     } finally {
       await browser.close()
       await stop()

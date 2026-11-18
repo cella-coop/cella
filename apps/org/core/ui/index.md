@@ -537,11 +537,20 @@ draws.
   record from its `properties`, never a block in the Details. A
   record's people are one property of avatars (`people`). The moment a
   change is accepted, before the signed write it makes is known to have
-  reached the server, this browser keeps it in `localStorage`, by the
-  page and the write and field it changes; `Properties` posts it again
-  as the drawer mounts, so a change accepted and the page left at once,
-  by a reload before that write survives it, still reaches the server,
-  and is dropped once it does. Last, under
+  reached the server, this browser keeps it in `localStorage`, by who is
+  signed in and, on a demo, the copy's own join code, the page and the
+  field it changes, with the value it replaces; `Properties` posts it
+  again as the drawer mounts, so a change accepted and the page left at
+  once, by a reload before that write survives it, still reaches the
+  server, but only where the field still reads the value the draft
+  replaces, so it never overwrites one moved since by another write or
+  another editor, which it drops instead, a quiet notice saying so. It
+  is dropped too once the write it carries lands, or is refused outright
+  (never retried with the same stale value), or once a day has passed
+  unreplayed; and all of it, a body's draft and a property's alike, is
+  dropped at once on sign-out and on a demo's Reset now, since an
+  earlier session's name, or an earlier copy's, answers to neither
+  browser nor record again. Last, under
   Related, one quiet line of the record's Created and Updated and by
   whom as the log has them (`stamps`), the dates and actors of its
   first and latest entries, which the item's read gives beside its

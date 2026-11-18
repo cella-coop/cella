@@ -1,13 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import Plus from 'phosphor-svelte/lib/Plus'
-  import type { Prop } from '../models/view.ts'
+  import { editValue, type Prop } from '../models/view.ts'
   import { show } from '../models/format.ts'
   import { inked, inkOf } from '../models/ink.ts'
+  import { none } from '../models/outcome.ts'
   import { useProps } from '../hooks/useProps.ts'
   import { useShell } from '../hooks/useShell.ts'
   import { useWrites } from '../hooks/useWrites.ts'
-  import { replay } from '../hooks/drafts.svelte.ts'
+  import { peek, propertyDraftId, retry, unstash } from '../hooks/drafts.svelte.ts'
   import Avatar from './Avatar.svelte'
   import Value from './Value.svelte'
   import Icon from './Icon.svelte'
@@ -29,11 +30,30 @@
   const id = $props.id()
 
   // A property's popover may have been accepted and the page left at
-  // once, before its own signed write reached the server: what it kept
-  // for this page is posted again as the drawer mounts, whichever
-  // property's popover made it.
+  // once, before its own signed write reached the server: what was kept
+  // for this browser, this page and this field is posted again as the
+  // drawer mounts, whichever property's popover made it, but only where
+  // the field still reads what the draft started from; moved since, by
+  // another write or another editor, it is dropped instead of
+  // overwriting that newer value, which a quiet notice says.
   onMount(() => {
-    replay(location.pathname, (write, fields) => writes.shown(writes.send(write, fields)))
+    for (const p of items) {
+      if (!p.edit || 'block' in p.edit) {
+        continue
+      }
+      const edit = p.edit
+      const draftId = propertyDraftId(writes.actor, writes.copy, location.pathname, edit.field)
+      const draft = peek(draftId)
+      if (!draft) {
+        continue
+      }
+      if (draft.was !== editValue(edit)) {
+        unstash(draftId, draft.token)
+        writes.done = { op: none, state: 'failed', reason: `${p.label} changed since: the kept edit was dropped`, then: [] }
+        continue
+      }
+      retry(draftId, draft, (write, fields) => writes.shown(writes.send(write, fields)))
+    }
   })
 
   const stamp = ['Created', 'Updated', 'Created by', 'Updated by']

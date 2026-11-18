@@ -1,5 +1,5 @@
 import type { Outcome } from '@cella/org-actions'
-import { write, type Deps } from '@cella/org-db'
+import { write, type Db, type Deps } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
 import type { Amend, Amended, Arrange, Arranged, Create, Created, Hidden, Hide, Icon, Iconed, Show, Shown, Terms } from '../models/circle.ts'
 
@@ -66,7 +66,7 @@ export async function arrange(input: Arrange, deps: Deps): Out<'circle:circle:ar
     op: (input.motion ? 'circle:circle:arrange' : 'circle:feature:arrange') satisfies Action,
     request: input,
     state: async (tx) => {
-      const locked = await tx.query(`SELECT id FROM circle.circle WHERE id = $1 AND assembly FOR UPDATE`, [input.circle])
+      const locked = await tx.query(`SELECT id FROM circle.circle WHERE id = $1 AND assembly FOR NO KEY UPDATE`, [input.circle])
       if (!locked.rowCount) {
         return { circle: input.circle, groups: [], was: '' }
       }
@@ -90,7 +90,8 @@ export async function arrange(input: Arrange, deps: Deps): Out<'circle:circle:ar
 // Shows a group of the layout in a circle, or stops: citing the motion
 // that does, `circle:circle:show`, or, citing none, at once by the
 // actor's own power over the circle, `circle:group:show`. One row: it
-// takes the circle's lock, reads whether the circle showed the group,
+// takes the circle's lock, before its submit takes the log's head as every
+// write does (`hold`), reads whether the circle showed the group,
 // `was`, and sets it, so its entry carries the row and what it was, and
 // two writes of one row are ordered.
 export async function show(input: Show, deps: Deps): Out<'circle:circle:show' | 'circle:group:show', Shown> {
@@ -98,7 +99,7 @@ export async function show(input: Show, deps: Deps): Out<'circle:circle:show' | 
     op: (input.motion ? 'circle:circle:show' : 'circle:group:show') satisfies Action,
     request: input,
     state: async (tx) => {
-      await tx.query(`SELECT id FROM circle.circle WHERE id = $1 FOR UPDATE`, [input.circle])
+      await tx.query(`SELECT id FROM circle.circle WHERE id = $1 FOR NO KEY UPDATE`, [input.circle])
       const { rows } = await tx.query<{ was: boolean }>(
         `SELECT EXISTS (SELECT FROM circle.shown s WHERE s.circle = $1 AND s."group" = $2) AS was`,
         [input.circle, input.group],
@@ -119,7 +120,7 @@ export async function hide(input: Hide, deps: Deps): Out<'circle:circle:hide' | 
     op: (input.motion ? 'circle:circle:hide' : 'circle:feature:hide') satisfies Action,
     request: input,
     state: async (tx) => {
-      await tx.query(`SELECT id FROM circle.circle WHERE id = $1 FOR UPDATE`, [input.circle])
+      await tx.query(`SELECT id FROM circle.circle WHERE id = $1 FOR NO KEY UPDATE`, [input.circle])
       const { rows } = await tx.query<{ was: boolean }>(
         `SELECT EXISTS (SELECT FROM circle.hidden h WHERE h.circle = $1 AND h.feat = $2) AS was`,
         [input.circle, input.feature],
@@ -147,4 +148,14 @@ export async function icon(input: Icon, deps: Deps): Out<'circle:circle:icon', I
     },
     payload: (v) => ({ ...v }),
   })
+}
+
+// Holds the circles named, in their ids' order, as a write about to touch
+// them takes them: before its submit takes the log's head, so every write
+// takes the circles first and the head after. A close calls it for the
+// circles its motion's actions name, since its effects write them after
+// its own submit (`show`, `hide`, `arrange` take one circle the same way).
+// No key lock: a row referring to a circle is still written meanwhile.
+export async function hold(db: Db, circles: string[]): Promise<void> {
+  await db.query(`SELECT id FROM circle.circle WHERE id = ANY ($1) ORDER BY id FOR NO KEY UPDATE`, [circles])
 }

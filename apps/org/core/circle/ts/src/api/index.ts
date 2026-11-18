@@ -8,7 +8,7 @@ import { icon } from '../handlers/circle.ts'
 import { circle, circles, listing, mandate, mandating } from '../drivers/circle.ts'
 import * as forms from './forms.ts'
 
-export { amend, arrange, create, hide, icon, show } from '../handlers/circle.ts'
+export { amend, arrange, create, hide, hold, icon, show } from '../handlers/circle.ts'
 export { make, remake } from '../handlers/role.ts'
 export { add, remove, seatRole, seating, unseatRole } from '../handlers/seat.ts'
 export { circle, circles, lenses, mandate, sitting } from '../drivers/circle.ts'

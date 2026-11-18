@@ -612,7 +612,11 @@ overwrites an instant save made between its proposal and its close; its
 entry carries the layout it replaced, so the log keeps what it
 overwrote. A circle's write is one row: a group shown or not, a feature
 hidden or not, never the whole listing. Its handler takes the circle's
-lock and reads what the row was, `was`, which its entry carries; a write
+lock, no key lock, before its submit takes the log's head, as an
+arrangement takes the root's and a close every circle its motion's
+actions name (`hold`), so a close and a write at once take the circle
+and the head in one order and never deadlock; then it reads what the
+row was, `was`, which its entry carries; a write
 that changes nothing, as one whose `was` went stale, is refused, and the
 fold compares `was` as it compares an arrangement's. So writes of one
 row are ordered, since two opposite ones do not commute, and writes of

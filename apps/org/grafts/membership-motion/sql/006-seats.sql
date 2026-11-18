@@ -392,12 +392,23 @@ RETURN CASE lower(btrim(yes.said)) WHEN 'yes' THEN true WHEN 'no' THEN false END
 -- (`circle.listing_flaw`), judged against the layout as it stands; a
 -- circle's row shown or hidden, the motion of a circle holding it over
 -- that circle, a sound row (`circle.row_flaw`), `yes` or `no`, that
--- changes what the circle shows.
+-- changes what the circle shows. A motion carries each once: one
+-- arranging the co-op's features twice, or setting one row twice, is
+-- refused, since its second action could only be forgone.
 CREATE FUNCTION membership_motion.arrange_asks(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT r FROM (
-    SELECT CASE m.kind
+    SELECT coalesce(
+      CASE WHEN EXISTS (
+        SELECT FROM motion.action o
+        WHERE o.motion = m.motion AND o.n < m.n AND o.kind = m.kind AND o.args ->> 'circle' IS NOT DISTINCT FROM m.args ->> 'circle'
+          AND o.args ->> 'group' IS NOT DISTINCT FROM m.args ->> 'group' AND o.args ->> 'feature' IS NOT DISTINCT FROM m.args ->> 'feature'
+      ) THEN 'the motion ' || CASE m.kind WHEN 'arrange-features' THEN 'arranges the co-op''s features'
+          WHEN 'show-group' THEN 'sets whether ' || coalesce(m.args ->> 'circle', 'a circle') || ' shows ' || coalesce(m.args ->> 'group', 'a group')
+          ELSE 'sets whether ' || coalesce(m.args ->> 'circle', 'a circle') || ' hides ' || coalesce(m.args ->> 'feature', 'a feature') END
+        || ' twice: carry it once' END,
+      CASE m.kind
       WHEN 'arrange-features' THEN coalesce(
         CASE WHEN NOT (m.args ? 'features') THEN 'the arrangement of ' || coalesce(m.args ->> 'circle', 'the co-op') || ' gives no features: list them, or none' END,
         circle.listing_flaw(m.args ->> 'circle', m.args ->> 'features', circle.features(m.args ->> 'circle')),
@@ -418,7 +429,7 @@ BEGIN ATOMIC
           THEN (m.args ->> 'circle') || CASE WHEN membership_motion.yes(m.args ->> 'hidden') THEN ' hides ' ELSE ' does not hide ' END
             || (m.args ->> 'feature') || ' already: hide or show another feature' END,
         membership_motion.arrange_flaw(d.circle, m.args ->> 'circle'))
-    END AS r
+    END) AS r
     FROM motion.action m
     JOIN motion.motion d ON d.id = m.motion
     WHERE m.motion = payload ->> 'motion' AND m.kind IN ('arrange-features', 'show-group', 'hide-feature')

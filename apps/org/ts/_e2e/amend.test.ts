@@ -45,6 +45,7 @@ import type { Deps, Done } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
 import { eachBrowser, serve, signIn } from './browser.ts'
 import { chosen } from './controls.ts'
+import { reacting } from '../src/lib/server/slices.ts'
 
 const su = new pg.Client()
 let app: pg.Client | undefined
@@ -160,6 +161,15 @@ test('an arrangement is refused at its proposal where it is no root\'s, its circ
   assert.match(await refused('show-group', { circle: 'web', group: 'work', shown: 'yes' }), /web shows work already: show or hide another group/)
   assert.match(await refused('hide-feature', { circle: 'web', feature: 'tasks', hidden: 'yes' }), /tasks is no feature of the co-op's layout: hide one of motion, meeting/)
   assert.match(await refused('hide-feature', { circle: 'web', feature: 'project', hidden: 'no' }), /web does not hide project already: hide or show another feature/)
+  const twice = async (actions: { kind: string; args: Record<string, string> }[], circle = 'web', by = lea) =>
+    reason(await propose({ circle, title: 'Twice', deadline: fortnight(), body: '', actions }, as(by)))
+  const payments = { kind: 'show-group', args: { circle: 'web', group: 'payments', shown: 'yes' } }
+  assert.match(await twice([payments, payments]), /the motion sets whether web shows payments twice: carry it once/)
+  assert.match(await twice([payments, { ...payments, args: { ...payments.args, shown: 'no' } }]), /sets whether web shows payments twice/, 'even each way')
+  const project = { kind: 'hide-feature', args: { circle: 'web', feature: 'project', hidden: 'yes' } }
+  assert.match(await twice([project, project]), /the motion sets whether web hides project twice/)
+  const arranged = { kind: 'arrange-features', args: { circle: 'ag', features: moved } }
+  assert.match(await twice([arranged, arranged], 'ag', camille), /the motion arranges the co-op's features twice: carry it once/)
   assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM motion.action WHERE kind IN ('arrange-features', 'show-group', 'hide-feature')`)).n, 0, 'nothing was proposed')
 })
 
@@ -235,7 +245,53 @@ test('Yusuf, Web\'s lead, shows and hides Web\'s at once by his own write; Léa,
   assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, web)
 })
 
-test('the manager, granted arrange-features over the root, arranges the layout at once: a malformed listing is refused in the guard\'s words, and two arrangements at once each log the layout the other left', async () => {
+// A connection of its own as `cella_app`, and the deps of a write of
+// `actor` on it, the shell's reactions among them, so a close carries
+// its effects in its own transaction as the shell's does.
+async function connection() {
+  const c = new pg.Client({ user: 'cella_app' })
+  await c.connect()
+  return c
+}
+const on_ = (c: pg.Client, actor: string): Deps => reacting({ db: reader(c, actor), actor, sign: sign(actor) })
+
+// Waits, a few seconds at most, until `n` writes wait on a lock.
+async function waiting(n: number) {
+  for (let i = 0; i < 200; i++) {
+    const { w } = await one<{ w: number }>(
+      `SELECT count(*)::int AS w FROM pg_stat_activity WHERE datname = current_database() AND usename = 'cella_app' AND wait_event_type = 'Lock'`,
+    )
+    if (w >= n) {
+      return
+    }
+    await new Promise((r) => setTimeout(r, 50))
+  }
+  throw new Error(`fewer than ${n} writes wait on a lock`)
+}
+
+// A superuser's transaction holding a lock `sql` takes, until `release`.
+async function gate(sql: string) {
+  const g = new pg.Client()
+  await g.connect()
+  await g.query('BEGIN')
+  await g.query(sql)
+  return async () => {
+    await g.query('COMMIT')
+    await g.end()
+  }
+}
+
+// Every member on the motion's roll consents, and the clock moves to its
+// deadline, for it to be closed.
+async function due(motion: string) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [motion])) {
+    settled(await vote({ motion, member, stance: 'consent' }, as(member)))
+  }
+  const { deadline } = await one<{ deadline: string }>(`SELECT to_char(deadline, 'YYYY-MM-DD') AS deadline FROM motion.motion WHERE id = $1`, [motion])
+  await on(deadline)
+}
+
+test('the manager, granted arrange-features over the root, arranges the layout at once: a malformed listing is refused in the guard\'s words, and two arrangements gated on the root each log the layout the other left', async () => {
   const grant = settled(
     await propose({ circle: 'ag', title: 'The manager arranges the layout', deadline: fortnight(), body: '', actions: [
       { kind: 'policy', args: { kind: 'mandate', wording: 'The {role: manager} role holds {power: arrange-features}, to arrange the features of the {scope: ag} circle' } },
@@ -247,32 +303,96 @@ test('the manager, granted arrange-features over the root, arranges the layout a
   assert.match(reason(await arrange({ circle: 'ag', features: layout.replace('Work: ', '') }, as(camille))), /the features of ag put project under no group: list it under one/)
   assert.equal((await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f, layout, 'nothing was laid')
 
-  // Two arrangements at once, on two connections: the second waits on the
-  // root's lock, then reads the layout the first left as its `was`.
-  const other = new pg.Client({ user: 'cella_app' })
-  await other.connect()
+  // The root held, two arrangements start, each on its connection, and
+  // wait; released, the second reads the layout the first left as its `was`.
+  const [one_, two] = [await connection(), await connection()]
   try {
-    const people = layout.replace('Members:', 'People:')
-    const ledger = layout.replace('Books:', 'Ledger:')
-    const both = await Promise.all([
-      arrange({ circle: 'ag', features: people }, as(camille)),
-      arrange({ circle: 'ag', features: ledger }, { db: reader(other, camille), actor: camille, sign: sign(camille) }),
-    ])
-    for (const out of both) {
+    const release = await gate(`SELECT id FROM circle.circle WHERE id = 'ag' FOR NO KEY UPDATE`)
+    const first = arrange({ circle: 'ag', features: layout.replace('Members:', 'People:') }, on_(one_, camille))
+    await waiting(1)
+    const second = arrange({ circle: 'ag', features: layout.replace('Books:', 'Ledger:') }, on_(two, camille))
+    await waiting(2)
+    await release()
+    for (const out of await Promise.all([first, second])) {
       settled(out)
     }
-    const entries = await all<{ p: { features: string; was: string } }>(
-      `SELECT cella.opened(n) AS p FROM cella.log WHERE op = 'circle:feature:arrange' ORDER BY n DESC LIMIT 2`,
-    )
-    const [second, first] = entries.map((e) => e.p)
-    assert.equal(first!.was, layout, 'the first replaced the layout as it was')
-    assert.equal(second!.was, first!.features, 'the second replaced the layout the first left, not the one it read before the lock')
-    assert.equal((await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f, second!.features)
   } finally {
-    await other.end()
+    await one_.end()
+    await two.end()
   }
+  const [later, earlier] = (await all<{ p: { features: string; was: string } }>(
+    `SELECT cella.opened(n) AS p FROM cella.log WHERE op = 'circle:feature:arrange' ORDER BY n DESC LIMIT 2`,
+  )).map((e) => e.p)
+  assert.equal(earlier!.was, layout, 'the first replaced the layout as it was')
+  assert.equal(later!.was, earlier!.features, 'the second replaced the layout the first left, not the one it read before the lock')
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f, later!.features)
   settled(await arrange({ circle: 'ag', features: layout }, as(camille)))
   assert.deepEqual(await all(`SELECT id FROM circle.feature_group ORDER BY position`), ['governance', 'work', 'books', 'payments', 'members'].map((id) => ({ id })))
+})
+
+test('a close carrying a circle\'s row and a write of that circle at once, both waiting on the log\'s head, take the circle and the head in one order, and neither deadlocks', async () => {
+  const layout = (await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f
+  const shows = settled(
+    await propose({ circle: 'web', title: 'Show Payments in Web', deadline: fortnight(), body: '', actions: [{ kind: 'show-group', args: { circle: 'web', group: 'payments', shown: 'yes' } }] }, as(lea)),
+  ) as { motion: string }
+  await due(shows.motion)
+  let [one_, two] = [await connection(), await connection()]
+  try {
+    // The head held: the close waits on it first, then Yusuf's own hide.
+    let release = await gate('SELECT n FROM cella.head FOR UPDATE')
+    const closing = close({ motion: shows.motion }, on_(one_, lea))
+    await waiting(1)
+    const hiding = hide({ circle: 'web', feature: 'contact', hidden: true }, on_(two, yusuf))
+    await waiting(2)
+    await release()
+    const [closed, hid] = await Promise.all([closing, hiding])
+    settled(closed)
+    settled(hid)
+    assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, `${web.replace(', contact', '')}; Payments: invoice, bill, expense, payslip`)
+
+    // The same for the root: a close carrying an arrangement, then the
+    // manager's own.
+    const arranges = settled(
+      await propose({ circle: 'ag', title: 'Rename Books', deadline: fortnight(), body: '', actions: [{ kind: 'arrange-features', args: { circle: 'ag', features: layout.replace('Books:', 'Ledger:') } }] }, as(camille)),
+    ) as { motion: string }
+    await due(arranges.motion)
+    // Fresh connections, which read the clock moved to its deadline.
+    await one_.end()
+    await two.end()
+    ;[one_, two] = [await connection(), await connection()]
+    release = await gate('SELECT n FROM cella.head FOR UPDATE')
+    const closingRoot = close({ motion: arranges.motion }, on_(one_, camille))
+    await waiting(1)
+    const arranging_ = arrange({ circle: 'ag', features: layout.replace('Members:', 'People:') }, on_(two, camille))
+    await waiting(2)
+    await release()
+    const [rootClosed, own] = await Promise.all([closingRoot, arranging_])
+    settled(rootClosed)
+    assert.equal((settled(own) as { was: string }).was, layout.replace('Books:', 'Ledger:'), 'the manager\'s replaced the layout the close left')
+  } finally {
+    await one_.end()
+    await two.end()
+  }
+  settled(await arrange({ circle: 'ag', features: layout }, as(camille)))
+  settled(await hide({ circle: 'web', feature: 'contact', hidden: false }, as(yusuf)))
+  settled(await show({ circle: 'web', group: 'payments', shown: false }, as(yusuf)))
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, web)
+})
+
+test('a motion carrying a row that is so by its close still passes, its action forgone, and the log folds', async () => {
+  const { motion } = settled(
+    await propose({ circle: 'web', title: 'Show Payments in Web', deadline: fortnight(), body: '', actions: [{ kind: 'show-group', args: { circle: 'web', group: 'payments', shown: 'yes' } }] }, as(lea)),
+  ) as { motion: string }
+  await due(motion)
+  settled(await show({ circle: 'web', group: 'payments', shown: true }, as(yusuf)))
+  const before = Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
+  settled(await close({ motion }, reacting(as(lea))))
+  assert.deepEqual(
+    (await all<{ op: string; settled: boolean }>('SELECT op, settled FROM cella.log WHERE n > $1 ORDER BY n', [before])).map((e) => [e.op, e.settled]),
+    [['motion:motion:close', true], ['circle:circle:show', false]],
+    'the close stands, forgoing a show Web already has',
+  )
+  settled(await show({ circle: 'web', group: 'payments', shown: false }, as(yusuf)))
 })
 
 eachBrowser((name, launch) => {

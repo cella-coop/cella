@@ -83,6 +83,12 @@ async function told(url: string, fields: [string, string][], signal: AbortSignal
 export class LiveState {
   readonly #live: Live
   readonly #at: Seat
+  // Where this browser keeps a real edit of its own no save carries yet,
+  // the moment it is made, so a reload right after one survives even
+  // where the save itself, two round trips signed by this browser's
+  // device, does not: one per the body's live address, since that is
+  // this browser's own name for it.
+  readonly #draft: string
   online = $state(false)
   // Whether the session said what this browser may do, and whether it may
   // edit.
@@ -101,6 +107,7 @@ export class LiveState {
 
   constructor(doc: LoroDoc, at: Seat) {
     this.#at = at
+    this.#draft = `cella:body-draft:${at.live()}`
     const link: Link = {
       post: (update) => told(at.live(), [['update', b64.encode(update)]], this.#abort.signal),
       save: async (write, snapshot, contributors, base) =>
@@ -113,9 +120,49 @@ export class LiveState {
         ),
       saved: () => kept(at.live(), this.#abort.signal),
     }
+    // Before anything else, what this browser kept of its own last time
+    // it held it, if it still does: replayed synchronously, so a record
+    // never shows less than it last did, and the session below joins
+    // already holding it, which saves it again at its own next pause.
+    try {
+      const stashed = localStorage.getItem(this.#draft)
+      if (stashed) {
+        doc.import(b64.decode(stashed))
+      }
+    } catch {
+      // Storage unavailable (private browsing, disabled, full), or what
+      // it held was not a draft this version of Loro reads: nothing to
+      // replay, and nothing kept past this that would only fail again.
+      try {
+        localStorage.removeItem(this.#draft)
+      } catch {
+        // Nothing more to do about it.
+      }
+    }
     this.#live = new Live(doc, link)
     this.#live.changed = () => this.#show()
     this.hash = hash(doc)
+  }
+
+  // Keeps the merged document now, replacing what was kept before: called
+  // the moment a real edit is made, never debounced, so a reload with
+  // nothing dispatched between the keystroke and the unload still finds
+  // it.
+  #stash(): void {
+    try {
+      localStorage.setItem(this.#draft, b64.encode(this.#live.doc.export({ mode: 'snapshot' })))
+    } catch {
+      // A draft too big to keep, or kept nowhere, is simply not replayed:
+      // this browser's own save is still tried as before.
+    }
+  }
+
+  #unstash(): void {
+    try {
+      localStorage.removeItem(this.#draft)
+    } catch {
+      // Nothing was kept, or it cannot be reached: either way, done.
+    }
   }
 
   #show(): void {
@@ -123,6 +170,11 @@ export class LiveState {
     this.writable = this.#live.writable
     this.problem = this.#live.problem
     this.unsaved = this.#live.unsaved
+    // Carried by a save, this browser's own or one it heard: what was
+    // kept for it is no longer needed.
+    if (!this.unsaved) {
+      this.#unstash()
+    }
   }
 
   start(): () => void {
@@ -143,6 +195,7 @@ export class LiveState {
         } else {
           this.#live.edited()
           this.unsaved = true
+          this.#stash()
         }
       }),
     ]

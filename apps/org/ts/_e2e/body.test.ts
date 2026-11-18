@@ -9,8 +9,11 @@
 // every circle, by a mandate with no scope; a reader who may not discuss
 // the body is core body's session tests' to prove. Each browser edits a
 // task of its own, so they meet in nothing they write. Screenshots light
-// and dark go to `SHOTS`. Run by `cella test e2e body`.
-// covers: task
+// and dark go to `SHOTS`. Run by `cella test e2e body`. One drawer
+// property, which saves the same way core body's own save does, has the
+// same window an edit followed at once by a reload opens, so Yusuf
+// types a project's budget and reloads at once too.
+// covers: task project
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -272,6 +275,121 @@ for (const [name, launch] of browsers().filter(([n]) => n in viewTasks)) {
       const saves = await su.query(`SELECT 1 FROM cella.log WHERE op = 'task:body:save' AND cella.opened(n) ->> 'task' = $1`, [task])
       assert.equal(saves.rowCount, 0, `${name}: viewing it made no save entry`)
       assert.deepEqual(errors, [], `${name}: the pages threw nothing`)
+    } finally {
+      await browser.close()
+      await stop()
+      await su.end()
+    }
+  })
+}
+
+// An edit followed at once by a reload, with nothing dispatched between
+// the keystroke and it, still survives: this browser kept it the moment
+// it was made, before the signed save itself, two round trips, had any
+// chance to post it, let alone finish; the reload opens on it at once,
+// from what was kept, and a second reload, in a context of its own that
+// kept nothing, still shows it, so it reached the server and was not
+// merely kept in the first context's own storage. In every browser.
+const reloadNowTasks: Record<string, string> = { chromium: 't-33', firefox: 't-41', webkit: 't-57' }
+for (const [name, launch] of browsers().filter(([n]) => n in reloadNowTasks)) {
+  test(`${name}: an edit followed at once by a reload survives it, saved to the server`, async () => {
+    const task = reloadNowTasks[name]
+    const su = new pg.Client()
+    await su.connect()
+    const { base, stop } = await serve()
+    const browser = await launch()
+    const errors: string[] = []
+    const contexts: BrowserContext[] = []
+    const open = async () => {
+      const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
+      contexts.push(context)
+      await signIn(context, base, lea)
+      const page = await context.newPage()
+      page.on('pageerror', (e) => errors.push(`${name}: ${e.message}`))
+      return page
+    }
+    try {
+      const page = await open()
+      await page.goto(`${base}/tasks/${task}`)
+      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      const line = `Léa's edit, reloaded at once in ${name}`
+      await editor(page).locator('[contenteditable=true]').last().click()
+      await page.keyboard.press('End')
+      await page.keyboard.press('Enter')
+      await page.keyboard.type(line)
+      // No wait between the last keystroke and the reload: a real
+      // reload, not a simulated hide, racing the save's two round trips.
+      await page.reload()
+      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      await shows(page, [line], `${name}: right after the reload`)
+      await saved(page)
+
+      // A context of its own, holding nothing the first kept, opens on
+      // the same task: what it shows, it shows only because the server
+      // itself holds it now.
+      const fresh = await open()
+      await fresh.goto(`${base}/tasks/${task}`)
+      await fresh.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      await shows(fresh, [line], `${name}: a fresh context, which kept nothing of its own`)
+
+      const row = await su.query<{ text: string }>('SELECT cella.document_text(body) AS text FROM task.task WHERE id = $1', [task])
+      assert.match(row.rows[0]?.text ?? '', new RegExp(line.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `${name}: the task's column holds the edit`)
+      assert.deepEqual(errors, [], `${name}: the pages threw nothing`)
+    } finally {
+      for (const context of contexts) {
+        await context.close()
+      }
+      await browser.close()
+      await stop()
+      await su.end()
+    }
+  })
+}
+
+// A drawer property has the same window: its popover's text field
+// commits on Enter alone, which starts its own signed write; Yusuf
+// types a project's budget, presses Enter and reloads at once, before
+// that write is known to have landed. It survives all the same, kept
+// until the Details drawer mounts again, which posts it once more. In
+// Chromium: the window is the write's, not the body's, so one browser
+// proves it.
+const yusuf = 'yusuf@lanterne.example'
+if (chromium) {
+  test('chromium: a drawer property accepted and reloaded at once still reaches the server', async () => {
+    const project = 'clairval-site'
+    const su = new pg.Client()
+    await su.connect()
+    const { base, stop } = await serve()
+    const browser = await chromium[1]()
+    const errors: string[] = []
+    try {
+      const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
+      await signIn(context, base, yusuf)
+      const page = await context.newPage()
+      page.on('pageerror', (e) => errors.push(e.message))
+      await page.goto(`${base}/projects/${project}`)
+      await page.getByRole('tab', { name: 'Details' }).click()
+      const drawer = page.getByRole('complementary', { name: 'Details' })
+      await drawer.getByRole('button', { name: /^Budget/ }).click()
+      const dialog = page.getByRole('dialog', { name: 'Budget' })
+      await dialog.waitFor()
+      const input = dialog.getByRole('spinbutton', { name: 'Budget' })
+      await input.fill('9000')
+      // Enter alone accepts it, starting the signed write; the reload
+      // follows at once, with nothing awaited in between.
+      await input.press('Enter')
+      await page.reload()
+      let budget: number | null = null
+      for (let i = 0; i < 100; i++) {
+        const row = await su.query<{ budget: string | null }>('SELECT budget FROM project.project WHERE id = $1', [project])
+        budget = row.rows[0]?.budget === null || row.rows[0]?.budget === undefined ? null : Number(row.rows[0].budget)
+        if (budget === 9_000) {
+          break
+        }
+        await page.waitForTimeout(100)
+      }
+      assert.equal(budget, 9_000, "the project's budget reached the server after the reload")
+      assert.deepEqual(errors, [], 'the pages threw nothing')
     } finally {
       await browser.close()
       await stop()

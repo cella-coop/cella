@@ -2,6 +2,7 @@
   import { useEdit } from '../hooks/useEdit.ts'
   import { useWrites } from '../hooks/useWrites.ts'
   import { took } from '../post.ts'
+  import { stash, unstash } from '../hooks/drafts.svelte.ts'
   import type { Edit, Editor } from '../models/view.ts'
   import DateField from './DateField.svelte'
   import IconGrid from './IconGrid.svelte'
@@ -19,10 +20,20 @@
 
   const close = () => (root?.closest('[popover]') as HTMLElement | null)?.hidePopover()
 
+  // Kept the moment the choice is accepted, so a reload right after,
+  // before the signed write itself survives it, still reaches the
+  // server: `Properties`' own mount, on the page the change is made on,
+  // posts it again.
   async function commit(e: Edit, value: string) {
     s.problem = ''
-    const answer = await writes.shown(writes.send(e.writes?.[value] ?? e.write, [[e.field, value], ...(e.extra ?? [])]))
-    if (!took(answer)) {
+    const write = e.writes?.[value] ?? e.write
+    const fields: [string, string][] = [[e.field, value], ...(e.extra ?? [])]
+    const id = `${location.pathname}:${write}:${e.field}`
+    stash(id, write, fields)
+    const answer = await writes.shown(writes.send(write, fields))
+    if (took(answer)) {
+      unstash(id)
+    } else {
       s.problem = 'The change was not made.'
     }
   }

@@ -535,7 +535,13 @@ draws.
   that needs more (a project's lead and members), a block of its own
   (`Editor`) drawn in the popover. A slice sets a property of a kind of
   record from its `properties`, never a block in the Details. A
-  record's people are one property of avatars (`people`). Last, under
+  record's people are one property of avatars (`people`). The moment a
+  change is accepted, before the signed write it makes is known to have
+  reached the server, this browser keeps it in `localStorage`, by the
+  page and the write and field it changes; `Properties` posts it again
+  as the drawer mounts, so a change accepted and the page left at once,
+  by a reload before that write survives it, still reaches the server,
+  and is dropped once it does. Last, under
   Related, one quiet line of the record's Created and Updated and by
   whom as the log has them (`stamps`), the dates and actors of its
   first and latest entries, which the item's read gives beside its

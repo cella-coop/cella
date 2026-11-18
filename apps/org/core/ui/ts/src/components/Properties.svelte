@@ -1,10 +1,13 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   import Plus from 'phosphor-svelte/lib/Plus'
   import type { Prop } from '../models/view.ts'
   import { show } from '../models/format.ts'
   import { inked, inkOf } from '../models/ink.ts'
   import { useProps } from '../hooks/useProps.ts'
   import { useShell } from '../hooks/useShell.ts'
+  import { useWrites } from '../hooks/useWrites.ts'
+  import { replay } from '../hooks/drafts.svelte.ts'
   import Avatar from './Avatar.svelte'
   import Value from './Value.svelte'
   import Icon from './Icon.svelte'
@@ -22,7 +25,16 @@
   // be set; a section with nothing in it does not render.
   let { items }: { items: Prop[] } = $props()
   const shell = useShell()
+  const writes = useWrites()
   const id = $props.id()
+
+  // A property's popover may have been accepted and the page left at
+  // once, before its own signed write reached the server: what it kept
+  // for this page is posted again as the drawer mounts, whichever
+  // property's popover made it.
+  onMount(() => {
+    replay(location.pathname, (write, fields) => writes.shown(writes.send(write, fields)))
+  })
 
   const stamp = ['Created', 'Updated', 'Created by', 'Updated by']
   const empty = (p: Prop) => (p.people ? p.people.length === 0 : show(p.value, p.kind) === '—')

@@ -1,6 +1,6 @@
 +++
 title = "Body"
-updated = 2026-11-17
+updated = 2026-11-18
 +++
 
 Core's body: free-form content as a Loro tree of blocks, its
@@ -249,8 +249,26 @@ saves nothing itself, since the server signs with none
   a catch-up refused or failed is posted again at the next pause, and
   until it is accepted the browser saves nothing, though it made no
   edit of its own. So a crash of the server loses nothing an open
-  browser holds, and no browser saves past the session. A browser closed with edits no save carried
-  loses them, but where another editor's browser holds them.
+  browser holds, and no browser saves past the session. A browser closed
+  with edits no save carried loses them, but where another editor's
+  browser holds them, or this one opens the body again.
+- **Reopening.** The moment a real edit is made, before it is posted or
+  saved, this browser keeps the merged document in `localStorage`, keyed
+  by the body's live address, replacing what it kept before; it is not
+  debounced, so nothing sits between the keystroke and what is kept. The
+  save itself cannot be made to survive a hard reload: it is signed by
+  this browser's device through the page's own writes, itself two round
+  trips around a `crypto.subtle` signature and an IndexedDB read, so a
+  reload right after an edit, with nothing dispatched in between, cuts
+  the save off before it is ready to post. Opening the body again, this
+  browser imports what it kept, before its session even joins, Loro
+  merging it into the snapshot the page read; an edit this merge adds
+  past what the page showed is held unsaved again, and the session below
+  joins already holding it, saved at its own next pause as any edit is.
+  What was kept is dropped once this browser's `unsaved` reads false
+  again, its edit carried by a save of its own or another's it heard, so
+  a draft outlives only as long as it is needed. A browser that never
+  opens the body again still loses what it held, as before.
 
 A slice mounts the editor over the session's stream, handing `LiveState`
 the Loro document, the session's address and the feat's save write,

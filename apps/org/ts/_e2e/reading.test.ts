@@ -239,9 +239,14 @@ test('a function reading as its owner keeps its rows to whoever reads them: Inè
 test('a view the app reads reads as its reader: Inès, in Web and no member, and Paul, who left, read nothing through one of a record another circle owns', async () => {
   // An expense's claim: who claimed it and who decided it.
   const claims = async (member: string) => (await reading(member, 'SELECT expense FROM expense_membership.claim ORDER BY expense')).map((r) => r.expense)
-  assert.deepEqual(await claims(ines), ['ex-0002', 'ex-0004', 'ex-0010', 'ex-0011'], 'Inès reads the claims on the expenses of Web, Care, Tools and the assembly, and not Brand\'s or Marketing\'s')
+  // Tools' breadth: ex-0011, ex-0014 and ex-0015 are all its.
+  assert.deepEqual(await claims(ines), ['ex-0002', 'ex-0004', 'ex-0010', 'ex-0011', 'ex-0014', 'ex-0015'], 'Inès reads the claims on the expenses of Web, Care, Tools and the assembly, and not Brand\'s or Marketing\'s')
   assert.deepEqual(await claims(paul), [], 'Paul reads none')
-  assert.deepEqual(await claims(chloe), ['ex-0001', 'ex-0002', 'ex-0003', 'ex-0004', 'ex-0005', 'ex-0006', 'ex-0007', 'ex-0008', 'ex-0009', 'ex-0010', 'ex-0011'], 'Chloé, a member, reads every one by open books')
+  assert.deepEqual(
+    await claims(chloe),
+    ['ex-0001', 'ex-0002', 'ex-0003', 'ex-0004', 'ex-0005', 'ex-0006', 'ex-0007', 'ex-0008', 'ex-0009', 'ex-0010', 'ex-0011', 'ex-0012', 'ex-0013', 'ex-0014', 'ex-0015'],
+    'Chloé, a member, reads every one by open books',
+  )
 
   // A document's adoption: Coordination's rate card, adopted by its motion.
   const adoption = `SELECT motion, version, hash FROM document_motion.adoption WHERE motion = 'm-2026-011'`
@@ -373,7 +378,7 @@ test('through the reads the shell composes, a reader who sees a motion but not t
     `SELECT p.name FROM expense.expense e JOIN person.person p ON p.address = e.member WHERE e.id IN ('ex-0001', 'ex-0003')`,
   )).rows.map((r) => r.name)
   assert.equal(names.length, 2)
-  for (const [member, reads] of [[ines, ['ex-0002', 'ex-0004', 'ex-0010', 'ex-0011']], [paul, []]] as const) {
+  for (const [member, reads] of [[ines, ['ex-0002', 'ex-0004', 'ex-0010', 'ex-0011', 'ex-0014', 'ex-0015']], [paul, []]] as const) {
     const db = reader(app, member)
     for (const id of ['ex-0001', 'ex-0003']) {
       assert.equal(await claim(db, id), null, `${member} reads no claim on ${id} from the claim's driver`)

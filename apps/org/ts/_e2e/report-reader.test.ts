@@ -38,8 +38,24 @@ const assembly = ['camille', 'yusuf', 'hugo', 'malik', 'julien', 'amina', 'thoma
 // Lanterne's expenses: Brand's, Sofia's; Web's, Thomas's; Marketing's,
 // Chloé's; the assembly's, Léa's; Coordination's; Operations'; Marketing's
 // refused one, Chloé's; the drafts of Clients, Hiring, Care and Tools;
-// and the one Chloé spends for Brand.
-const theirs = ['ex-0001', 'ex-0002', 'ex-0003', 'ex-0004', 'ex-0005', 'ex-0006', 'ex-0007', 'ex-0008', 'ex-0009', 'ex-0010', 'ex-0011']
+// Operations' and Tools' breadth; and the one Chloé spends for Brand.
+const theirs = [
+  'ex-0001',
+  'ex-0002',
+  'ex-0003',
+  'ex-0004',
+  'ex-0005',
+  'ex-0006',
+  'ex-0007',
+  'ex-0008',
+  'ex-0009',
+  'ex-0010',
+  'ex-0011',
+  'ex-0012',
+  'ex-0013',
+  'ex-0014',
+  'ex-0015',
+]
 let hers = ''
 
 const definition = { from: { e: 'expense.expenses' }, fields: ['e.id', 'e.circle', 'e.member'], order: ['e.id'] }
@@ -140,10 +156,12 @@ test('a new report Chloé saves once it ends reads the same', async () => {
 })
 
 test('Inès, who never held the mandate, reads through both reports Web\'s and the assembly\'s alone', async () => {
+  // Tools' breadth: ex-0011, ex-0014 and ex-0015 are all its.
+  const sees = ['ex-0002', 'ex-0004', 'ex-0010', 'ex-0011', 'ex-0014', 'ex-0015']
   for (const [id, saved] of [['expenses-by-id', definition], ['expenses-net', later]] as const) {
     const read = await through(id, saved, ines)
-    assert.deepEqual(read.page, ['ex-0002', 'ex-0004', 'ex-0010', 'ex-0011'], `Inès reads Web's, Care's, Tools' and the assembly's through ${id}, and no other circle's nor Chloé's`)
-    assert.deepEqual(read.port, ['ex-0002', 'ex-0004', 'ex-0010', 'ex-0011'])
+    assert.deepEqual(read.page, sees, `Inès reads Web's, Care's, Tools' and the assembly's through ${id}, and no other circle's nor Chloé's`)
+    assert.deepEqual(read.port, sees)
   }
-  assert.deepEqual(await listed(ines), ['ex-0002', 'ex-0004', 'ex-0010', 'ex-0011'], 'as the expenses\' page shows her')
+  assert.deepEqual(await listed(ines), sees, 'as the expenses\' page shows her')
 })

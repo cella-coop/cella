@@ -1374,7 +1374,7 @@ text = "Alongside — the renewal is about the contract, the check-in is just ab
 [[motion]]
 id = "m-2026-025"
 circle = "hiring"
-proposer = "amina@lanterne.example"
+proposer = "camille@lanterne.example"
 title = "A referral bonus for internal recommendations"
 procedure = "consent"
 proposed = 2026-10-06
@@ -1386,7 +1386,7 @@ hire's probation ends, the same amount for every role.
 """
 
 [[motion.vote]]
-member = "amina@lanterne.example"
+member = "camille@lanterne.example"
 stance = "consent"
 at = 2026-10-06
 
@@ -1439,7 +1439,7 @@ text = "Hiring's — it's part of the cost of hiring well, not the circle's to c
 [[motion]]
 id = "m-2026-027"
 circle = "care"
-proposer = "amina@lanterne.example"
+proposer = "sofia@lanterne.example"
 title = "A budget for outside counselling sessions"
 procedure = "consent"
 proposed = 2026-10-09
@@ -1451,17 +1451,17 @@ asks, paid by the co-op and never discussed in a circle.
 """
 
 [[motion.vote]]
-member = "amina@lanterne.example"
+member = "sofia@lanterne.example"
 stance = "consent"
 at = 2026-10-09
 
 [[motion.vote]]
-member = "hugo@lanterne.example"
+member = "lea@lanterne.example"
 stance = "consent"
 at = 2026-10-11
 
 [[motion.vote]]
-member = "sofia@lanterne.example"
+member = "chloe@lanterne.example"
 stance = "consent"
 at = 2026-10-13
 

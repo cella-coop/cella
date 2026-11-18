@@ -674,6 +674,17 @@ member = "chloe@lanterne.example"
 stance = "consent"
 at = 2026-06-20
 
+[[motion.message]]
+author = "hugo@lanterne.example"
+at = 2026-06-03
+text = "@camille does this cover Brand's print bills too, or just general supplier ones?"
+
+[[motion.message]]
+author = "camille@lanterne.example"
+reply = 1
+at = 2026-06-04
+text = "Just the general ones for now — coordination can grant Brand's role its own once we see how this goes."
+
 # Coordination hands the bills to Operations, which keeps the suppliers:
 # approving them up to 2 000 € a write, under coordination's 3 000 €,
 # and adopting policies, under coordination's own, so it grants the
@@ -725,6 +736,17 @@ member = "malik@lanterne.example"
 stance = "consent"
 at = 2026-09-21
 
+[[motion.message]]
+author = "yusuf@lanterne.example"
+at = 2026-09-16
+text = "Is the 2 000 € cap per bill or per month? Web doesn't have many suppliers but they can run high."
+
+[[motion.message]]
+author = "camille@lanterne.example"
+reply = 1
+at = 2026-09-17
+text = "Per bill, same as Operations' own. A circle over that sends it to Julien as before."
+
 # Operations, by Julien, its one seat, lets Brand's print buyer approve
 # Brand's print and paper bills up to 1 200 €, under its own 2 000 €:
 # the third mandate down from the assembly.
@@ -749,6 +771,17 @@ args = { kind = "mandate", wording = "The {role: print-buyer} role holds {power:
 member = "julien@lanterne.example"
 stance = "consent"
 at = 2026-10-06
+
+[[motion.message]]
+author = "camille@lanterne.example"
+at = 2026-10-06
+text = "@julien remind Sofia the 1 200 € is per bill, not per printer's invoice if they split one order."
+
+[[motion.message]]
+author = "julien@lanterne.example"
+reply = 1
+at = 2026-10-06
+text = "Told her — she'll flag anything split before it goes through."
 
 [[motion]]
 id = "m-2026-011"
@@ -930,6 +963,17 @@ member = "chloe@lanterne.example"
 stance = "consent"
 at = 2026-09-30
 
+[[motion.message]]
+author = "chloe@lanterne.example"
+at = 2026-09-29
+text = "How do we get the client's agreement in writing — a line in the contract, or a separate note each time?"
+
+[[motion.message]]
+author = "camille@lanterne.example"
+reply = 1
+at = 2026-09-29
+text = "A line in the contract from now on; for existing clients like Nuvola, a short email confirming it is enough."
+
 [[motion]]
 id = "m-2026-016"
 circle = "brand"
@@ -959,6 +1003,17 @@ member = "sofia@lanterne.example"
 stance = "object"
 at = 2026-10-05
 
+[[motion.message]]
+author = "sofia@lanterne.example"
+at = 2026-10-05
+text = "Objecting: Imprimerie du Parc is good for packaging, but Mauve Horizon's posters need a large-format press they don't run. I'd rather keep two printers."
+
+[[motion.message]]
+author = "hugo@lanterne.example"
+reply = 1
+at = 2026-10-06
+text = "Fair point, hadn't weighed the posters. Happy to keep it at just the packaging work instead."
+
 [[motion]]
 id = "m-2026-017"
 circle = "web"
@@ -986,6 +1041,17 @@ at = 2026-10-21
 member = "amina@lanterne.example"
 stance = "consent"
 at = 2026-10-22
+
+[[motion.message]]
+author = "lea@lanterne.example"
+at = 2026-10-21
+text = "We already have [[accessibility-checklist]] — should this motion just adopt it as the check, or is it separate?"
+
+[[motion.message]]
+author = "yusuf@lanterne.example"
+reply = 1
+at = 2026-10-22
+text = "Separate for now: the checklist is how, this motion is that we always do. We can link them later."
 
 # The assembly lets each circle arrange its own features: every circle
 # but Hiring holds the power over itself, so its own motion changes what
@@ -1106,6 +1172,17 @@ member = "camille@lanterne.example"
 stance = "consent"
 at = 2026-10-21
 
+[[motion.message]]
+author = "chloe@lanterne.example"
+at = 2026-10-20
+text = "Does this replace whoever signed the original brief, or sit alongside them?"
+
+[[motion.message]]
+author = "thomas@lanterne.example"
+reply = 1
+at = 2026-10-21
+text = "Sits alongside — the named contact answers day to day, the brief's signer stays who approves scope changes."
+
 # Hiring's, passed: two junior roles open for 2027.
 [[motion]]
 id = "m-2026-020"
@@ -1141,6 +1218,17 @@ member = "amina@lanterne.example"
 stance = "consent"
 at = 2026-10-09
 
+[[motion.message]]
+author = "amina@lanterne.example"
+at = 2026-10-03
+text = "Who mentors the junior designer — Hugo, since he's Brand's lead, or whoever has capacity?"
+
+[[motion.message]]
+author = "lea@lanterne.example"
+reply = 1
+at = 2026-10-04
+text = "Hugo, for now — he asked for it himself once the Terres Vives work winds down."
+
 # Care's, open: a quiet first hour every morning.
 [[motion]]
 id = "m-2026-021"
@@ -1170,6 +1258,17 @@ member = "lea@lanterne.example"
 stance = "consent"
 at = 2026-10-21
 
+[[motion.message]]
+author = "lea@lanterne.example"
+at = 2026-10-21
+text = "Does this cover client calls too, or only internal meetings? Nuvola likes an early call sometimes."
+
+[[motion.message]]
+author = "sofia@lanterne.example"
+reply = 1
+at = 2026-10-22
+text = "Client calls too, if we can move them — the point is everyone gets the hour, not just internally."
+
 # Tools', passed: a password manager for everyone.
 [[motion]]
 id = "m-2026-022"
@@ -1194,3 +1293,14 @@ at = 2026-09-30
 member = "thomas@lanterne.example"
 stance = "consent"
 at = 2026-10-01
+
+[[motion.message]]
+author = "thomas@lanterne.example"
+at = 2026-10-01
+text = "Once the shared logins move, do we kill the old spreadsheet, or keep it as a backup?"
+
+[[motion.message]]
+author = "yusuf@lanterne.example"
+reply = 1
+at = 2026-10-02
+text = "Kill it once everyone's confirmed access — I'll note it in [[studio-stack]] once that's done."

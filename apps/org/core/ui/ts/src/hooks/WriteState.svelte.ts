@@ -53,6 +53,11 @@ export class WriteState {
   // without a slice's own hook asking the server again.
   #actor: () => string = () => ''
   #copy: () => string = () => ''
+  // Set the moment another tab answers to someone else, before this tab
+  // reloads: from then on this tab is no one, so a body's own leaving
+  // (pagehide, visibilitychange) finds its identity changed and posts
+  // nothing under the cookie the other tab now holds.
+  #lost = false
 
   // The route the page is on names how its writes are posted.
   serve(route: () => Route) {
@@ -81,6 +86,7 @@ export class WriteState {
     onMount(() =>
       watch((identity) => {
         if (identity !== `${actor()}|${copy()}`) {
+          this.#lost = true
           location.reload()
         }
       }),
@@ -88,11 +94,11 @@ export class WriteState {
   }
 
   get actor(): string {
-    return this.#actor()
+    return this.#lost ? '' : this.#actor()
   }
 
   get copy(): string {
-    return this.#copy()
+    return this.#lost ? '' : this.#copy()
   }
 
   get route(): Route {

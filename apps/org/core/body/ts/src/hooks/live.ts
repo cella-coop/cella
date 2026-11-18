@@ -189,6 +189,10 @@ export class Live {
       return
     }
     await this.#flush()
+    // Stopped while the flush ran: nothing more posts.
+    if (this.#left) {
+      return
+    }
     this.#later()
   }
 
@@ -314,6 +318,9 @@ export class Live {
       return
     }
     await this.#flush()
+    if (this.#left) {
+      return
+    }
     // No save carries an edit the session refused or never had, this
     // browser's or another's: it waits on them, and the edits are kept.
     if (ahead(this.doc, this.#accepted)) {
@@ -328,6 +335,9 @@ export class Live {
     }
     try {
       const k = await this.#link.saved()
+      if (this.#left) {
+        return
+      }
       if (k.base !== refused.base) {
         this.#keep(k)
         const again = await this.#attempt()
@@ -352,6 +362,9 @@ export class Live {
   // names, as between the session's `joined` and its catch-up, saves at
   // the next pause instead.
   async #attempt(): Promise<{ reason: string; base: string } | null> {
+    if (this.#left) {
+      return null
+    }
     if (!this.unsaved) {
       return null
     }

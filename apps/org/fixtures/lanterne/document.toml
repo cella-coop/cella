@@ -67,6 +67,13 @@ text = "Arms makers"
 type = "bullet"
 text = "Political parties"
 
+[[document.comment]]
+version = "internal-rules@3"
+author = "camille@lanterne.example"
+at = 2026-06-01
+quote = "1.6"
+text = "Worth restating at the next hiring round, since it caps what a senior hire can be offered."
+
 [[document]]
 id = "rate-card-2027"
 circle = "coordination"
@@ -426,6 +433,13 @@ text = "Text keeps a contrast of 4.5 to 1, large text 3 to 1"
 type = "bullet"
 text = "Every image says what it shows, or is marked as decoration"
 
+[[document.comment]]
+version = "accessibility-checklist@1"
+author = "lea@lanterne.example"
+at = 2026-10-20
+quote = "Every control works from the keyboard"
+text = "Worth adding tab order to the checklist, not just focus visibility."
+
 [[document]]
 id = "print-specifications"
 circle = "brand"
@@ -453,6 +467,14 @@ text = "Images at 300 dpi at their printed size"
 [[document.version.block]]
 type = "bullet"
 text = "A colour proof signed off before the press check"
+
+[[document.comment]]
+version = "print-specifications@1"
+author = "sofia@lanterne.example"
+at = 2026-10-15
+quote = "3 mm bleed and crop marks"
+text = "Imprimerie du Parc wants 5 mm bleed on die-cut jobs — added a note for the packaging range."
+resolved = true
 
 [[document]]
 id = "newsletter-style"
@@ -483,6 +505,13 @@ type = "embed"
 embed = "motion"
 ref = "m-2026-015"
 
+[[document.comment]]
+version = "newsletter-style@1"
+author = "chloe@lanterne.example"
+at = 2026-09-30
+quote = "Plain English, short sentences, no jargon"
+text = "Nuvola's technical reviewer keeps adding jargon back in — worth a line on pushing back politely."
+
 [[document]]
 id = "month-end-close"
 circle = "operations"
@@ -510,6 +539,13 @@ text = "Chase every invoice past its due date"
 [[document.version.block]]
 type = "numbered"
 text = "Close the period, once the books balance"
+
+[[document.comment]]
+version = "month-end-close@1"
+author = "julien@lanterne.example"
+at = 2026-10-21
+quote = "Chase every invoice past its due date"
+text = "F-2026-0044 is the one chasing itself this month — see Brand's task on it."
 
 [[document]]
 id = "client-handover"
@@ -539,6 +575,13 @@ text = "The care contract we offer, and what it covers"
 type = "numbered"
 text = "One name in Clients to call"
 
+[[document.comment]]
+version = "client-handover@1"
+author = "thomas@lanterne.example"
+at = 2026-10-17
+quote = "One name in Clients to call"
+text = "Worth naming them on the care-contract page too, not just here."
+
 [[document]]
 id = "onboarding-guide"
 circle = "hiring"
@@ -567,6 +610,14 @@ text = "The internal rules and the statutes, read in the first week"
 type = "bullet"
 text = "A review with their mentor at one month"
 
+[[document.comment]]
+version = "onboarding-guide@1"
+author = "lea@lanterne.example"
+at = 2026-10-16
+quote = "A review with their mentor at one month"
+text = "Add a second review at one year — Inès's is due now."
+resolved = true
+
 [[document]]
 id = "care-charter"
 circle = "care"
@@ -591,6 +642,13 @@ text = "No one works more than the 35-hour week for two weeks running"
 type = "bullet"
 text = "A conflict goes to Care before it goes to a meeting"
 
+[[document.comment]]
+version = "care-charter@1"
+author = "hugo@lanterne.example"
+at = 2026-10-26
+quote = "No one works more than the 35-hour week for two weeks running"
+text = "The workload survey backs this up — see the findings, just written up."
+
 [[document]]
 id = "studio-stack"
 circle = "tools"
@@ -614,3 +672,10 @@ text = "Passwords: one manager, a seat for everyone"
 [[document.version.block]]
 type = "bullet"
 text = "Domains: every one listed with its renewal date"
+
+[[document.comment]]
+version = "studio-stack@1"
+author = "yusuf@lanterne.example"
+at = 2026-10-25
+quote = "Domains: every one listed with its renewal date"
+text = "Redundant with the list I finished last month — shall we link out to it instead of keeping two?"

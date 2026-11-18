@@ -44,13 +44,17 @@ async function kept(url: string, signal: AbortSignal): Promise<Kept> {
 
 // A post to the live session, answered as a form's is. One with no
 // answer it can read throws, which reads as being offline. `keepalive`
-// lets it finish past a document it is leaving, as `kept`'s does.
+// lets it finish past a document it is leaving, as `kept`'s does, where
+// it fits the browser's keepalive budget (64 KiB for all in flight); a
+// larger one, a long paste or a catch-up, posts as any other fetch.
+const KEEPALIVE = 48 * 1024
 async function told(url: string, fields: [string, string][], signal: AbortSignal): Promise<Sent> {
+  const size = fields.reduce((n, [k, v]) => n + k.length + v.length, 0)
   const body = new FormData()
   for (const [k, v] of fields) {
     body.append(k, v)
   }
-  const res = await fetch(url, { method: 'POST', body, headers: { accept: 'application/json' }, signal, keepalive: true })
+  const res = await fetch(url, { method: 'POST', body, headers: { accept: 'application/json' }, signal, keepalive: size < KEEPALIVE })
   if (res.status === 401) {
     return { ok: false, reason: 'sign in first' }
   }
@@ -214,6 +218,7 @@ export class LiveState {
     source.addEventListener('joined', (e) => void this.#live.joined(data<Joined>(e)))
     source.addEventListener('update', (e) => {
       this.#live.heard(data<Merged>(e))
+      this.unsaved = this.#live.unsaved
       this.online = true
     })
     source.addEventListener('saved', (e) => {

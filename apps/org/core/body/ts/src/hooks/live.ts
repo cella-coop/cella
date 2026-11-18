@@ -89,6 +89,11 @@ export class Live {
   // counts nothing held; a real edit, this browser's or one it heard,
   // always does, seed or not.
   #floor: VersionVector | null = null
+  // Whether this browser holds a real edit, its own or heard, that no
+  // save carries yet: a seed made while one is held never names the
+  // floor, so a reseed after a deletion, or after a heard edit, never
+  // hides what is held.
+  #real = false
   // Called whenever what it shows changes.
   changed: () => void = () => {}
 
@@ -115,7 +120,7 @@ export class Live {
   // Whether this browser holds an edit the last save does not: its own
   // or one it heard, but never only the version its own seed moved.
   get unsaved(): boolean {
-    return ahead(this.doc, this.#saved) && (!this.#floor || ahead(this.doc, this.#floor))
+    return ahead(this.doc, this.#saved) && (this.#real || !this.#floor || ahead(this.doc, this.#floor))
   }
 
   // This browser made an edit: post it soon, and save at the pause.
@@ -123,6 +128,7 @@ export class Live {
     if (this.#left) {
       return
     }
+    this.#real = true
     const { clock, send, pause } = this.#t
     clock.clear(this.#post)
     this.#post = clock.set(() => this.#flush(), send)
@@ -136,7 +142,15 @@ export class Live {
   // reads false; a real edit, from here or heard from another peer,
   // moves the version past it, and `unsaved` reads true again.
   seeded(): void {
-    this.#floor = this.doc.oplogVersion()
+    if (!this.#real) {
+      this.#floor = this.doc.oplogVersion()
+    }
+  }
+
+  // A save now carries what it does: a real edit is held only while the
+  // body is still past the save and, where a floor is named, past it.
+  #settle(): void {
+    this.#real = this.#real && ahead(this.doc, this.#saved) && (!this.#floor || ahead(this.doc, this.#floor))
   }
 
   // The session's `joined`: what this browser may do and saves by, and,
@@ -154,6 +168,7 @@ export class Live {
     const saved = VersionVector.decode(b64.decode(j.saved))
     this.#contributors = saved.compare(this.#saved) === 0 ? new Set([...this.#contributors, ...j.contributors]) : new Set(j.contributors)
     this.#saved = saved
+    this.#settle()
     this.#accepted = VersionVector.decode(b64.decode(j.version))
     this.changed()
     if (!this.writable || !ahead(this.doc, this.#accepted)) {
@@ -166,6 +181,9 @@ export class Live {
   // An update the session relays.
   heard(m: Merged): void {
     const { success } = this.doc.import(b64.decode(m.update))
+    if (success.size > 0) {
+      this.#real = true
+    }
     this.#accept(new Map([...success].map(([peer, span]) => [peer, span.end])))
     for (const c of m.contributors) {
       this.#contributors.add(c)
@@ -189,6 +207,7 @@ export class Live {
     }
     this.#base = k.base
     this.#saved = VersionVector.decode(b64.decode(k.saved))
+    this.#settle()
     this.#accept(this.#saved.toJSON())
     this.#contributors = new Set(k.contributors)
   }
@@ -343,6 +362,7 @@ export class Live {
     }
     this.problem = null
     this.#saved = version
+    this.#settle()
     this.#base = baseOf(snapshot)
     this.#contributors = new Set()
     this.changed()

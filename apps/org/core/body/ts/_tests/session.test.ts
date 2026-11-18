@@ -593,6 +593,25 @@ describe('a restart', () => {
     assert.equal(ben.live.problem, null)
     assert.equal(ben.live.unsaved, false)
   })
+
+  it('never let a seed made while a real edit is held hide it, its own or heard', async () => {
+    const w = world()
+    const ana = await browser(w, 'ana')
+    const ben = await browser(w, 'ben')
+    // Ana deletes or types, and her editor reseeds an empty paragraph;
+    // ben, who only heard her, reseeds too.
+    await ana.type('alpha')
+    assert.equal(ben.live.unsaved, true)
+    ana.live.seeded()
+    ben.live.seeded()
+    assert.equal(ana.live.unsaved, true)
+    assert.equal(ben.live.unsaved, true)
+    // Her pause saves it, and once saved a seed names the floor again.
+    await w.clock.tick(3_000)
+    assert.equal(w.saves.length, 1)
+    assert.equal(ana.live.unsaved, false)
+    assert.equal(ben.live.unsaved, false)
+  })
 })
 
 describe('the live route', () => {

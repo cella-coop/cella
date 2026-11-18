@@ -147,11 +147,43 @@ test('Thomas drags it into Doing, then Done, each drop a write signed as him', a
   assert.deepEqual(await one(`SELECT priority, due FROM task.task WHERE id = $1`, [task]), { priority: 'urgent', due: null })
 })
 
+// A `<div id="id">`'s own content, its nested divs skipped over by their
+// depth, so a popover that holds another (a person's avatar, a colour
+// swatch) is read whole and never cut short by its own first `</div>`.
+function divContent(html: string, id: string): string {
+  const at = html.indexOf(`id="${id}"`)
+  if (at === -1) return ''
+  const tagEnd = html.indexOf('>', at) + 1
+  let depth = 1
+  let i = tagEnd
+  while (depth > 0) {
+    const close = html.indexOf('</div>', i)
+    if (close === -1) return html.slice(tagEnd)
+    const open = html.indexOf('<div', i)
+    if (open !== -1 && open < close) {
+      depth++
+      i = open + 4
+    } else {
+      depth--
+      i = close + 6
+    }
+  }
+  return html.slice(tagEnd, i - 6)
+}
+
 // The options a select of the page's offers, in order, by its name, as
 // its form binds it (`f.<name>[]/<form>`): the UI core's Select names its
-// combobox so, and its options follow it, up to the next select.
-const offered = (html: string, name: string) =>
-  [...(html.split(`data-name="f.${name}[]/`)[1]?.split('data-name=')[0] ?? '').matchAll(/role="option"[^>]*data-value="([^"]*)"/g)].map((m) => m[1])
+// trigger so and controls its own popover list (`aria-controls`), read
+// whole by its id, never by what happens to follow it on the page.
+const offered = (html: string, name: string) => {
+  const at = html.indexOf(`data-name="f.${name}[]/`)
+  if (at === -1) return []
+  const tagStart = html.lastIndexOf('<button', at)
+  const tag = html.slice(tagStart, html.indexOf('>', at))
+  const list = tag.match(/aria-controls="([^"]+)"/)?.[1]
+  if (!list) return []
+  return [...divContent(html, list).matchAll(/role="option"[^>]*data-value="([^"]*)"/g)].map((m) => m[1])
+}
 
 
 test('Thomas logs time against the shop for Web, its circle, which the page offers him first', async () => {

@@ -538,24 +538,12 @@ export class RichState {
     const inner = m[1]
     const from = caret - inner.length - (bold ? 4 : 2)
     select(from, caret)
-    run('insertText', inner)
-    const after = document.getSelection()
-    const at = after?.anchorNode
-    if (!(at instanceof Text) || !after) {
-      return
-    }
-    const end = after.anchorOffset
-    const range = document.createRange()
-    range.setStart(at, end - inner.length)
-    range.setEnd(at, end)
-    after.removeAllRanges()
-    after.addRange(range)
-    const kind = bold ? 'bold' : 'italic'
-    run(kind)
-    document.getSelection()?.collapseToEnd()
-    // What is typed next is not bold or italic.
-    if (document.queryCommandState(kind)) {
-      run(kind)
-    }
+    // Its own tag, as the code shortcut's, a zero-width space after it
+    // and outside it, so what is typed next lands past the mark, in a
+    // plain text node: never execCommand's own toggle on the collapsed
+    // caret, which Firefox reads as unmarking the text just marked
+    // instead of resetting what comes after it.
+    const tag = bold ? 'b' : 'i'
+    run('insertHTML', `<${tag}>${escape(inner)}</${tag}>​`)
   }
 }

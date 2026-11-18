@@ -202,3 +202,39 @@ milestone = 2
 task = "t-48"
 project = "hosting-move"
 milestone = 3
+
+[[filing]]
+task = "t-49"
+project = "newsletter-2027"
+
+[[filing]]
+task = "t-50"
+project = "case-studies-cc"
+
+[[filing]]
+task = "t-51"
+project = "federation-day-2027"
+
+[[filing]]
+task = "t-52"
+project = "onboarding-playbook"
+
+[[filing]]
+task = "t-53"
+project = "client-satisfaction"
+
+[[filing]]
+task = "t-54"
+project = "referral-programme"
+
+[[filing]]
+task = "t-55"
+project = "backup-audit"
+
+[[filing]]
+task = "t-56"
+project = "device-inventory"
+
+[[filing]]
+task = "t-57"
+project = "design-system"

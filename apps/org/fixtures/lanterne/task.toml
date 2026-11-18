@@ -806,3 +806,148 @@ text = "Good catch — Tuesday night for that one, weekends for everyone else."
 [[task.comment.reaction]]
 person = "thomas@lanterne.example"
 emoji = "👍"
+
+[[task]]
+id = "t-49"
+circle = "marketing"
+title = "Newsletter: pick the new template"
+status = "doing"
+priority = "normal"
+created = 2026-10-05
+due = 2026-11-02
+
+[[task.body]]
+text = "Three template options, each built around one case study and one studio note, to show Malik before we commit."
+
+[[task.comment]]
+author = "malik@lanterne.example"
+posted = 2026-10-09
+text = "The second one — it gives the case study more room, which is the point of relaunching."
+
+[[task]]
+id = "t-50"
+circle = "marketing"
+title = "Write up the Vélo Solidaire case study"
+status = "todo"
+priority = "normal"
+created = 2026-10-09
+due = 2026-11-13
+
+[[task.body]]
+text = "Repair bookings since the identity shipped, in Vélo Solidaire's own words where we can quote them, for case-study-brief's template."
+
+[[task]]
+id = "t-51"
+circle = "coordination"
+title = "Draft the federation day's run sheet"
+status = "backlog"
+priority = "low"
+created = 2026-10-12
+due = 2026-12-15
+
+[[task.body]]
+text = "Who speaks, in what order, and who greets people at the door, once the date is confirmed with the federation."
+
+[[task]]
+id = "t-52"
+circle = "coordination"
+title = "Collect every circle's onboarding doc"
+status = "done"
+priority = "normal"
+created = 2026-09-29
+due = 2026-10-23
+completed = 2026-10-22
+
+[[task.body]]
+text = "Every circle's own notes for a new hire, Hiring's onboarding guide among them, gathered in one place before the playbook is drafted."
+
+[[task]]
+id = "t-53"
+circle = "clients"
+title = "Draft the satisfaction survey questions"
+status = "done"
+priority = "normal"
+created = 2026-10-13
+due = 2026-10-24
+completed = 2026-10-21
+
+[[task.body]]
+text = "Three short questions, none asking for a number out of ten — client-satisfaction-survey's draft."
+
+[[task.comment]]
+author = "camille@lanterne.example"
+posted = 2026-10-22
+text = "Good — short enough that people will actually answer it. Send the first one to Les Halles once the shop's care month ends."
+
+[[task]]
+id = "t-54"
+circle = "clients"
+title = "List clients to approach for referrals first"
+status = "todo"
+priority = "normal"
+created = 2026-10-06
+due = 2026-11-13
+
+[[task.body]]
+text = "The happiest clients first: Vélo Solidaire, Les Halles once care ends, and Terres Vives once the report ships."
+
+[[task]]
+id = "t-55"
+circle = "tools"
+title = "List every backup and its last test"
+status = "doing"
+priority = "normal"
+created = 2026-09-22
+due = 2026-10-18
+
+[[task.body]]
+type = "todo"
+checked = true
+text = "The studio's own files and the password manager's export"
+
+[[task.body]]
+type = "todo"
+checked = false
+text = "Every client site, hosting by hosting"
+
+[[task]]
+id = "t-56"
+circle = "tools"
+title = "Tag every studio laptop by age"
+status = "backlog"
+priority = "low"
+created = 2026-10-07
+due = 2026-11-20
+
+[[task.body]]
+text = "A label on each machine with the year it was bought, before the rotation plan says which go first."
+
+[[task]]
+id = "t-57"
+circle = "web"
+title = "Audit buttons and form fields across every site"
+status = "todo"
+priority = "normal"
+created = 2026-09-03
+due = 2026-11-20
+
+[[task.body]]
+text = "Every button and form field on the Halles shop, Clairval's site and Ondine's shop, screenshotted side by side, before the shared library starts."
+
+[[task]]
+id = "t-58"
+circle = "hiring"
+title = "Post the two roles on the co-op jobs board"
+status = "done"
+priority = "normal"
+created = 2026-10-01
+due = 2026-10-06
+completed = 2026-10-05
+
+[[task.body]]
+text = "The junior developer and junior designer roles, both from February 2027, on the federation's jobs board and the co-op network's own."
+
+[[task.comment]]
+author = "julien@lanterne.example"
+posted = 2026-10-06
+text = "Up, and already two applications in for the developer role."

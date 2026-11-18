@@ -331,3 +331,171 @@ completed = 2026-10-21
 [[project.milestone]]
 title = "Production moved"
 due = 2026-12-04
+
+[[project]]
+id = "newsletter-2027"
+title = "Newsletter relaunch for 2027"
+circle = "marketing"
+started = 2026-10-01
+due = 2027-01-15
+summary = """
+A new template and a clearer sign-up, after the newsletter style guide:
+one issue a month, built around a case study and a studio note."""
+
+[[project.milestone]]
+title = "Template"
+due = 2026-11-06
+completed = 2026-11-02
+
+[[project.milestone]]
+title = "First issue"
+due = 2027-01-15
+
+[[project]]
+id = "case-studies-cc"
+title = "Publishing the case studies under CC BY"
+circle = "marketing"
+started = 2026-10-06
+due = 2026-12-01
+summary = """
+Writing up Vélo Solidaire's and Maison Ferrand's work as case studies,
+licensed CC BY as m-2026-015 decided, once each client signs off."""
+
+[[project.milestone]]
+title = "Drafts"
+due = 2026-10-24
+completed = 2026-10-22
+
+[[project.milestone]]
+title = "Published"
+due = 2026-12-01
+
+[[project]]
+id = "federation-day-2027"
+title = "Hosting the federation's regional day"
+circle = "coordination"
+started = 2026-10-01
+due = 2027-02-20
+summary = """
+Lanterne hosts the federation's regional day in February: the room, the
+programme and a short talk on the move into cella."""
+
+[[project.milestone]]
+title = "Date confirmed with the federation"
+due = 2026-11-15
+
+[[project.milestone]]
+title = "Programme set"
+due = 2027-01-30
+
+[[project]]
+id = "onboarding-playbook"
+title = "A shared onboarding playbook across circles"
+circle = "coordination"
+started = 2026-09-28
+due = 2026-12-18
+summary = """
+Every circle's own onboarding notes, Hiring's guide among them, folded
+into one playbook a new hire reads start to finish."""
+
+[[project.milestone]]
+title = "Every circle's notes collected"
+due = 2026-10-30
+completed = 2026-10-23
+
+[[project.milestone]]
+title = "Playbook drafted"
+due = 2026-12-18
+
+[[project]]
+id = "client-satisfaction"
+title = "A satisfaction survey for every client"
+circle = "clients"
+started = 2026-10-12
+due = 2026-12-05
+summary = """
+A short survey sent once a project closes, before the renewal
+conversation, and a place to keep what each client says."""
+
+[[project.milestone]]
+title = "Survey drafted"
+due = 2026-10-24
+completed = 2026-10-21
+
+[[project.milestone]]
+title = "First responses in"
+due = 2026-12-05
+
+[[project]]
+id = "referral-programme"
+title = "A referral programme for existing clients"
+circle = "clients"
+started = 2026-10-01
+due = 2027-01-30
+summary = """
+Asking every happy client, once their project closes, whether they know
+another co-op or association who could use us."""
+
+[[project.milestone]]
+title = "Who to ask, listed"
+due = 2026-11-13
+
+[[project.milestone]]
+title = "First round of asks"
+due = 2027-01-30
+
+[[project]]
+id = "backup-audit"
+title = "An audit of the studio's backups"
+circle = "tools"
+started = 2026-09-20
+due = 2026-11-20
+summary = """
+Every backup the studio relies on, listed with where it runs and when
+it was last restored and checked, not just taken."""
+
+[[project.milestone]]
+title = "Every backup listed"
+due = 2026-10-18
+completed = 2026-10-16
+
+[[project.milestone]]
+title = "Every one restored and checked"
+due = 2026-11-20
+
+[[project]]
+id = "device-inventory"
+title = "A device inventory and rotation plan"
+circle = "tools"
+started = 2026-10-05
+due = 2026-12-15
+summary = """
+Every studio laptop and phone, its age and who holds it, with a plan
+for which ones are due for replacement in 2027."""
+
+[[project.milestone]]
+title = "Inventory"
+due = 2026-10-30
+
+[[project.milestone]]
+title = "Rotation plan"
+due = 2026-12-15
+
+[[project]]
+id = "design-system"
+title = "A shared design system for Lanterne's sites"
+circle = "web"
+started = 2026-09-01
+due = 2027-02-01
+summary = """
+The components the Halles shop, Clairval's site and the next build keep
+redrawing, kept once in a shared library instead."""
+
+[[project.milestone]]
+title = "Audit of what repeats across sites"
+due = 2026-10-23
+completed = 2026-10-22
+
+[[project.milestone]]
+title = "First components shared"
+due = 2027-02-01

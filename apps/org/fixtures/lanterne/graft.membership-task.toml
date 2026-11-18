@@ -187,3 +187,43 @@ member = "yusuf@lanterne.example"
 [[assignment]]
 task = "t-48"
 member = "thomas@lanterne.example"
+
+[[assignment]]
+task = "t-49"
+member = "chloe@lanterne.example"
+
+[[assignment]]
+task = "t-50"
+member = "malik@lanterne.example"
+
+[[assignment]]
+task = "t-51"
+member = "camille@lanterne.example"
+
+[[assignment]]
+task = "t-52"
+member = "julien@lanterne.example"
+
+[[assignment]]
+task = "t-53"
+member = "thomas@lanterne.example"
+
+[[assignment]]
+task = "t-54"
+member = "malik@lanterne.example"
+
+[[assignment]]
+task = "t-55"
+member = "yusuf@lanterne.example"
+
+[[assignment]]
+task = "t-56"
+member = "thomas@lanterne.example"
+
+[[assignment]]
+task = "t-57"
+member = "amina@lanterne.example"
+
+[[assignment]]
+task = "t-58"
+member = "lea@lanterne.example"

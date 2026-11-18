@@ -22,18 +22,19 @@ export const actions = {
   // once do not commute
   'circle:feature:arrange': ordered({ power: 'arrange-features' }),
   // a group of the layout a circle shows or not, by the motion it cites;
-  // confluent: one row, a register, so two rows' writes commute and two of
-  // one leave the later, needing no order over the whole listing
-  'circle:circle:show': confluent({ power: 'arrange-features' }),
-  // a feature a circle hides or not, by the motion it cites; confluent, a
-  // register as a group's row is
-  'circle:circle:hide': confluent({ power: 'arrange-features' }),
+  // ordered on its one row: its entry says what the row was, since two
+  // opposite writes of one row do not commute, nor does a row set before
+  // an arrangement drops its group and after; never over the whole listing
+  'circle:circle:show': ordered({ power: 'arrange-features' }),
+  // a feature a circle hides or not, by the motion it cites; ordered on its
+  // one row, as a group's is
+  'circle:circle:hide': ordered({ power: 'arrange-features' }),
   // a group a circle shows or not, at once by whoever holds
-  // `arrange-features` over it by a seat; confluent, a register
-  'circle:group:show': confluent({ power: 'arrange-features' }),
+  // `arrange-features` over it by a seat; ordered on its one row
+  'circle:group:show': ordered({ power: 'arrange-features' }),
   // a feature a circle hides or not, at once by whoever holds
-  // `arrange-features` over it by a seat; confluent, a register
-  'circle:feature:hide': confluent({ power: 'arrange-features' }),
+  // `arrange-features` over it by a seat; ordered on its one row
+  'circle:feature:hide': ordered({ power: 'arrange-features' }),
   // a new role in a circle, or a `*` role every working circle has, by the
   // motion it cites; ordered, since the same motion's later actions seat
   // people in it

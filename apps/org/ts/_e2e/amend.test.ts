@@ -17,7 +17,9 @@
 // under none or what the co-op has already are refused at the proposal.
 // Yusuf, Web's lead, shows and hides Web's at once by his own write, and
 // neither Léa, a member of Web, nor Yusuf over Brand's or over the
-// layout may. Then in every browser, light and
+// layout may. The manager, granted the power over the root, has a
+// malformed layout refused in the guard's words, and two arrangements at
+// once each log the layout the other left. Then in every browser, light and
 // dark, through the dev server: Camille opens Web's Settings tab, its
 // name, purpose and procedure in force, each changed by a motion of the
 // Assembly; she types Brand's name and presses Enter, and the
@@ -199,7 +201,7 @@ test('Web shows a group and hides a feature by its own motion, one row an action
   assert.deepEqual(states(out), [['circle:circle:show', 'settled', ''], ['circle:circle:hide', 'settled', '']])
   assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, `Work: ${web.slice('Work: '.length)}; Payments: invoice, bill, expense`)
   const entry = await one<{ p: Record<string, unknown> }>(`SELECT cella.opened($1) AS p`, [out[0].entry])
-  assert.deepEqual({ ...entry.p, motion: undefined }, { circle: 'web', group: 'payments', shown: true, motion: undefined })
+  assert.deepEqual({ ...entry.p, motion: undefined }, { circle: 'web', group: 'payments', shown: true, was: false, motion: undefined }, 'its entry carries the row and what it was')
   const back = settled(
     await propose({ circle: 'web', title: 'Hide Payments in Web', deadline: fortnight(), body: '', actions: [
       { kind: 'show-group', args: { circle: 'web', group: 'payments', shown: 'no' } },
@@ -231,6 +233,46 @@ test('Yusuf, Web\'s lead, shows and hides Web\'s at once by his own write; Léa,
   settled(await hide({ circle: 'web', feature: 'import', hidden: false }, as(yusuf)))
   settled(await show({ circle: 'web', group: 'books', shown: false }, as(yusuf)))
   assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, web)
+})
+
+test('the manager, granted arrange-features over the root, arranges the layout at once: a malformed listing is refused in the guard\'s words, and two arrangements at once each log the layout the other left', async () => {
+  const grant = settled(
+    await propose({ circle: 'ag', title: 'The manager arranges the layout', deadline: fortnight(), body: '', actions: [
+      { kind: 'policy', args: { kind: 'mandate', wording: 'The {role: manager} role holds {power: arrange-features}, to arrange the features of the {scope: ag} circle' } },
+    ] }, as(camille)),
+  ) as { motion: string }
+  assert.deepEqual(states(await decided(grant.motion)).map((s) => s[1]), ['settled'])
+  const layout = (await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f
+  assert.match(reason(await arrange({ circle: 'ag', features: `${layout}, project` }, as(camille))), /the features of ag name project twice: list each once/)
+  assert.match(reason(await arrange({ circle: 'ag', features: layout.replace('Work: ', '') }, as(camille))), /the features of ag put project under no group: list it under one/)
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f, layout, 'nothing was laid')
+
+  // Two arrangements at once, on two connections: the second waits on the
+  // root's lock, then reads the layout the first left as its `was`.
+  const other = new pg.Client({ user: 'cella_app' })
+  await other.connect()
+  try {
+    const people = layout.replace('Members:', 'People:')
+    const ledger = layout.replace('Books:', 'Ledger:')
+    const both = await Promise.all([
+      arrange({ circle: 'ag', features: people }, as(camille)),
+      arrange({ circle: 'ag', features: ledger }, { db: reader(other, camille), actor: camille, sign: sign(camille) }),
+    ])
+    for (const out of both) {
+      settled(out)
+    }
+    const entries = await all<{ p: { features: string; was: string } }>(
+      `SELECT cella.opened(n) AS p FROM cella.log WHERE op = 'circle:feature:arrange' ORDER BY n DESC LIMIT 2`,
+    )
+    const [second, first] = entries.map((e) => e.p)
+    assert.equal(first!.was, layout, 'the first replaced the layout as it was')
+    assert.equal(second!.was, first!.features, 'the second replaced the layout the first left, not the one it read before the lock')
+    assert.equal((await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f, second!.features)
+  } finally {
+    await other.end()
+  }
+  settled(await arrange({ circle: 'ag', features: layout }, as(camille)))
+  assert.deepEqual(await all(`SELECT id FROM circle.feature_group ORDER BY position`), ['governance', 'work', 'books', 'payments', 'members'].map((id) => ({ id })))
 })
 
 eachBrowser((name, launch) => {

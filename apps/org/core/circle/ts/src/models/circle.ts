@@ -152,6 +152,16 @@ export interface Hide {
   motion?: string
 }
 
+// A group shown or not, and whether the circle showed it before.
+export interface Shown extends Show {
+  was: boolean
+}
+
+// A feature hidden or not, and whether the circle hid it before.
+export interface Hidden extends Hide {
+  was: boolean
+}
+
 // A circle's own icon, set or cleared at once by a holder of
 // `arrange-features` over it, the same power that arranges its features.
 export interface Icon {

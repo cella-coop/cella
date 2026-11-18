@@ -265,9 +265,16 @@ test('the co-op\'s layout is read from a listing in order, under its groups, spe
     // root shows the whole layout, and a circle never moves what it shows.
     const row = (fn: string, payload: object) => db.query(`SELECT circle.${fn}($1)`, [{ n: 8, date: '2026-11-14', payload: { circle: 'brand', ...payload } }])
     assert.equal(await features('brand'), '', 'a circle shows no group until it says so')
-    await row('fold_show', { group: 'work', shown: true })
-    await row('fold_show', { group: 'rules', shown: true })
-    await row('fold_hide', { feature: 'circle', hidden: true })
+    await row('fold_show', { group: 'work', shown: true, was: false })
+    await row('fold_show', { group: 'rules', shown: true, was: false })
+    await row('fold_hide', { feature: 'circle', hidden: true, was: false })
+    await db.query('SAVEPOINT row')
+    await assert.rejects(row('fold_show', { group: 'work', shown: false, was: false }), /entry 8 says that before it brand showing work was false, where the fold has the opposite/)
+    await db.query('ROLLBACK TO SAVEPOINT row')
+    const guard = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT circle.${fn}($1) AS r`, [{ circle: 'brand', ...payload }])).rows[0].r
+    assert.match((await guard('showed', { group: 'work', shown: true, was: true })) ?? '', /brand shows work already: show or hide another group/, 'a stale was, as one changing nothing, is refused')
+    assert.match((await guard('hid', { feature: 'circle', hidden: true })) ?? '', /says whether it was hidden before/)
+    assert.equal(await guard('hid', { feature: 'circle', hidden: true, was: false }), null)
     assert.equal(await features('brand'), 'Work: person; Rules: policy')
     const flawed = async (circle: string, group: string | null, feature: string | null) =>
       (await db.query<{ f: string | null }>(`SELECT circle.row_flaw($1, $2, $3) AS f`, [circle, group, feature])).rows[0].f
@@ -286,8 +293,8 @@ test('the co-op\'s layout is read from a listing in order, under its groups, spe
     await fold({ features: 'Rules: policy, circle, person', groups: ['rules'], was: 'Rules: policy; People: circle, person' })
     assert.equal(await features('brand'), 'Rules: policy, person', 'circle moved into Rules stays hidden in brand; People dropped')
     assert.deepEqual((await db.query(`SELECT "group" FROM circle.shown WHERE circle = 'brand'`)).rows, [{ group: 'rules' }])
-    await row('fold_hide', { feature: 'circle', hidden: false })
-    await row('fold_show', { group: 'rules', shown: false })
+    await row('fold_hide', { feature: 'circle', hidden: false, was: true })
+    await row('fold_show', { group: 'rules', shown: false, was: true })
     assert.equal(await features('brand'), '')
   } finally {
     await db.query('ROLLBACK')

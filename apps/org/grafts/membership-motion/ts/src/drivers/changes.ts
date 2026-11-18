@@ -4,7 +4,8 @@ import type { Shown } from '../models/changes.ts'
 // The changes a motion's actions make, each as its diff shows it, for the
 // kinds this graft carries out whose change reads as one: the co-op's
 // layout arranged, as the tree from the one it replaces; a circle's row
-// shown or hidden, `yes` or `no` from the one in force; a circle's
+// shown or hidden, `yes` or `no` from the one in force, or once closed
+// the one its effect's entry says, matched by its group or feature; a circle's
 // terms and a role's amended, each term from the one in force. What each
 // replaces is the value in force while the motion is open, and once it
 // closed the one its effect's entry says it replaced (`was`), as
@@ -24,11 +25,13 @@ export async function changes(db: Db, motion: string): Promise<Shown[]> {
   }>(
     `SELECT m.n::int AS n, m.kind, m.args, d.closed IS NULL AS open,
             CASE WHEN d.closed IS NOT NULL THEN (
-              SELECT o -> 'was' FROM cella.log l, LATERAL (SELECT cella.disclosed(l.n) AS o) x
+              SELECT CASE WHEN jsonb_typeof(o -> 'was') = 'boolean' THEN to_jsonb(CASE WHEN (o ->> 'was')::boolean THEN 'yes' ELSE 'no' END) ELSE o -> 'was' END
+              FROM cella.log l, LATERAL (SELECT cella.disclosed(l.n) AS o) x
               WHERE l.n > coalesce((SELECT c.n FROM cella.log c WHERE c.receipt = d.cutoff AND c.op = 'motion:motion:close'), 0)
                 AND l.op = CASE m.kind WHEN 'arrange-features' THEN 'circle:circle:arrange' WHEN 'show-group' THEN 'circle:circle:show' WHEN 'hide-feature' THEN 'circle:circle:hide' WHEN 'amend-circle' THEN 'circle:circle:amend' ELSE 'circle:role:amend' END
                 AND o ->> 'motion' = d.id
                 AND coalesce(o ->> 'role', o ->> 'circle') = coalesce(m.args ->> 'role', m.args ->> 'circle')
+                AND coalesce(o ->> 'group', o ->> 'feature', '') = coalesce(m.args ->> 'group', m.args ->> 'feature', '')
               ORDER BY l.n LIMIT 1) END AS was,
             CASE m.kind
               WHEN 'arrange-features' THEN (SELECT json_build_object('features', circle.features(c.id)) FROM circle.circle c WHERE c.id = m.args ->> 'circle')

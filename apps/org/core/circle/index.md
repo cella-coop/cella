@@ -610,9 +610,13 @@ chooses what it shows.
 An arrangement replaces the whole layout, so a motion adopted later
 overwrites an instant save made between its proposal and its close; its
 entry carries the layout it replaced, so the log keeps what it
-overwrote. A circle's row is one register a write: a group shown or not,
-a feature hidden or not, never the whole listing, so two rows' writes
-commute and two of one row leave the later
+overwrote. A circle's write is one row: a group shown or not, a feature
+hidden or not, never the whole listing. Its handler takes the circle's
+lock and reads what the row was, `was`, which its entry carries; a write
+that changes nothing, as one whose `was` went stale, is refused, and the
+fold compares `was` as it compares an arrangement's. So writes of one
+row are ordered, since two opposite ones do not commute, and writes of
+two rows need no order between them
 ([conflicts](../../../../_corpus/doc/conflicts.md)).
 
 `circle.listing_flaw(circle, listing, was)` judges a layout: arranged at
@@ -887,10 +891,10 @@ tenure changes who holds the role, never what it holds.
 | `POST /api/circle/amend` | ordered | a circle's name, purpose or procedure, by motion |
 | `POST /api/circle/arrange` | ordered | the co-op's layout, at the root, by motion |
 | `POST /api/circle/feature.arrange` | ordered | the co-op's layout, at once, by whoever holds `arrange-features` over the root |
-| `POST /api/circle/show` | confluent | a group a circle shows or not, by motion: one row, a register |
-| `POST /api/circle/hide` | confluent | a feature a circle hides or not, by motion: one row, a register |
-| `POST /api/circle/group.show` | confluent | a group a circle shows or not, at once, by whoever holds `arrange-features` over it |
-| `POST /api/circle/feature.hide` | confluent | a feature a circle hides or not, at once, by whoever holds `arrange-features` over it |
+| `POST /api/circle/show` | ordered | a group a circle shows or not, by motion: one row, from what it was |
+| `POST /api/circle/hide` | ordered | a feature a circle hides or not, by motion: one row, from what it was |
+| `POST /api/circle/group.show` | ordered | a group a circle shows or not, at once, by whoever holds `arrange-features` over it |
+| `POST /api/circle/feature.hide` | ordered | a feature a circle hides or not, at once, by whoever holds `arrange-features` over it |
 | `POST /api/circle/role.make` | ordered | a new role in a circle, by motion |
 | `POST /api/circle/role.amend` | ordered | a role's name, duty or cap, by motion |
 | `POST /api/circle/seat.add` | ordered | who holds which role |
@@ -928,9 +932,9 @@ and `revoking`. Creating a circle places it nowhere: circles never nest.
   layout it shows or not and a feature it hides or not, by the motion
   each cites; **group.show** and **feature.hide** the same at once, by
   the actor's own `arrange-features` over the circle. Each commits the
-  row whole; confluent, since a row is a register: two rows' writes
-  commute, and two of one leave the later, with no order over the
-  listing.
+  row and what it was, read under the circle's lock; ordered on that
+  row, since two opposite writes of one row do not commute, and never
+  over the whole listing.
 - **role.make** makes a role in a circle, or a `*` role every working
   circle has, by the motion it cites: its name, duty and cap, and its
   id, which the motion's proposal took from its name: in lower case,

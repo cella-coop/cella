@@ -355,15 +355,23 @@ END;
 -- circle:group:show and circle:circle:show — the circle shows the group
 -- its entry names, or does not, as its entry says (`shown`), at once by a
 -- holder of `arrange-features` over the circle or by the motion it cites;
--- a sound row (`circle.row_flaw`). A row alone, never the whole listing:
--- two writes of rows commute, and two of one row leave the later.
+-- a sound row (`circle.row_flaw`) that changes what its entry says it
+-- was (`was`), which its handler read under the circle's lock. One row
+-- alone, never the whole listing; ordered on that row: two opposite
+-- writes of one row do not commute, so a write whose `was` is stale, as
+-- one that changes nothing, is refused here and fails its fold.
 CREATE FUNCTION circle.showed(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT coalesce(
     CASE WHEN jsonb_typeof(payload -> 'shown') IS DISTINCT FROM 'boolean'
       THEN 'a group is shown or not: say which, shown true or false' END,
+    CASE WHEN jsonb_typeof(payload -> 'was') IS DISTINCT FROM 'boolean'
+      THEN 'a group''s write says whether it was shown before: was true or false' END,
     circle.row_flaw(payload ->> 'circle', payload ->> 'group', NULL),
+    CASE WHEN (payload ->> 'was')::boolean = (payload ->> 'shown')::boolean
+      THEN (payload ->> 'circle') || CASE WHEN (payload ->> 'shown')::boolean THEN ' shows ' ELSE ' does not show ' END
+        || (payload ->> 'group') || ' already: show or hide another group' END,
     CASE WHEN EXISTS (SELECT FROM circle.shown s WHERE s.circle = payload ->> 'circle' AND s."group" = payload ->> 'group')
         IS DISTINCT FROM (payload ->> 'shown')::boolean
       THEN (payload ->> 'circle') || ' does not show ' || (payload ->> 'group') || ' as its entry says' END
@@ -372,14 +380,19 @@ END;
 
 -- circle:feature:hide and circle:circle:hide — the circle hides the
 -- feature its entry names, or does not, as its entry says (`hidden`), as
--- `circle.showed` judges a group's row.
+-- `circle.showed` judges a group's row, ordered on that row too.
 CREATE FUNCTION circle.hid(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT coalesce(
     CASE WHEN jsonb_typeof(payload -> 'hidden') IS DISTINCT FROM 'boolean'
       THEN 'a feature is hidden or not: say which, hidden true or false' END,
+    CASE WHEN jsonb_typeof(payload -> 'was') IS DISTINCT FROM 'boolean'
+      THEN 'a feature''s write says whether it was hidden before: was true or false' END,
     circle.row_flaw(payload ->> 'circle', NULL, coalesce(payload ->> 'feature', '')),
+    CASE WHEN (payload ->> 'was')::boolean = (payload ->> 'hidden')::boolean
+      THEN (payload ->> 'circle') || CASE WHEN (payload ->> 'hidden')::boolean THEN ' hides ' ELSE ' does not hide ' END
+        || (payload ->> 'feature') || ' already: hide or show another feature' END,
     CASE WHEN EXISTS (SELECT FROM circle.hidden h WHERE h.circle = payload ->> 'circle' AND h.feat = payload ->> 'feature')
         IS DISTINCT FROM (payload ->> 'hidden')::boolean
       THEN (payload ->> 'circle') || ' does not hide ' || (payload ->> 'feature') || ' as its entry says' END
@@ -451,13 +464,16 @@ CREATE POLICY structure ON circle.hidden TO cella_app
 CREATE POLICY structure_guards ON circle.hidden FOR SELECT TO cella_guards USING (true);
 
 -- circle:group:show and circle:circle:show, circle:feature:hide and
--- circle:circle:hide: the row its entry names set as it says, a seat's
--- write and a motion's fold the same.
+-- circle:circle:hide: the row its entry names set as it says, from what
+-- it says the row was, a seat's write and a motion's fold the same.
 CREATE FUNCTION circle.fold_show(entry jsonb) RETURNS void
 LANGUAGE plpgsql AS $$
 DECLARE
   p jsonb := entry -> 'payload';
 BEGIN
+  IF EXISTS (SELECT FROM circle.shown s WHERE s.circle = p ->> 'circle' AND s."group" = p ->> 'group') IS DISTINCT FROM (p ->> 'was')::boolean THEN
+    RAISE EXCEPTION 'circle: entry % says that before it % showing % was %, where the fold has the opposite', entry ->> 'n', p ->> 'circle', p ->> 'group', p ->> 'was';
+  END IF;
   PERFORM circle.show(p ->> 'circle', p ->> 'group', (p ->> 'shown')::boolean);
 END
 $$;
@@ -467,6 +483,9 @@ LANGUAGE plpgsql AS $$
 DECLARE
   p jsonb := entry -> 'payload';
 BEGIN
+  IF EXISTS (SELECT FROM circle.hidden h WHERE h.circle = p ->> 'circle' AND h.feat = p ->> 'feature') IS DISTINCT FROM (p ->> 'was')::boolean THEN
+    RAISE EXCEPTION 'circle: entry % says that before it % hiding % was %, where the fold has the opposite', entry ->> 'n', p ->> 'circle', p ->> 'feature', p ->> 'was';
+  END IF;
   PERFORM circle.hide(p ->> 'circle', p ->> 'feature', (p ->> 'hidden')::boolean);
 END
 $$;

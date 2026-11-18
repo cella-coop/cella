@@ -125,10 +125,10 @@ test('a statement compares a span with the one before, opens a line on its accou
   const s = (await draw(port(), app, 'income', new URLSearchParams({ span: '2026-10' })))?.drawn as Statement
   assert.deepEqual(s.columns, ['2026-10', '2026-09'])
   const sold = s.rubrics.find((r) => r.id === 'production-sold')
-  assert.deepEqual(sold?.amounts, [25_800_00, 34_100_00])
-  assert.deepEqual(sold?.accounts, [{ code: '706', label: 'Service revenue', href: '/accounts/706', amounts: [25_800_00, 34_100_00] }])
+  assert.deepEqual(sold?.amounts, [27_780_00, 34_100_00])
+  assert.deepEqual(sold?.accounts, [{ code: '706', label: 'Service revenue', href: '/accounts/706', amounts: [27_780_00, 34_100_00] }])
   assert.equal(s.rubrics.find((r) => r.id === 'goods-sold'), undefined, 'a line nothing posted to is left out')
-  assert.deepEqual(s.rubrics.find((r) => r.id === 'result')?.amounts, [22_595_00, -5_320_00])
+  assert.deepEqual(s.rubrics.find((r) => r.id === 'result')?.amounts, [24_575_00, -5_320_00])
   const b = (await draw(port(), app, 'balance', new URLSearchParams({ span: '2026-10' })))?.drawn as Statement
   const codes = b.rubrics.flatMap((r) => r.accounts ?? []).map((a) => a.code)
   assert.ok(codes.includes('1013'))
@@ -144,17 +144,26 @@ test('each project\'s margin, burn and watch, on 25 October', async () => {
   assert.equal(m.day, '2026-10-25')
   assert.deepEqual(m.threshold, { burn: 90, margin: 20 })
   assert.deepEqual(Object.fromEntries(m.projects.map((x) => [x.project, x.watch])), {
+    'backup-audit': 'on track',
     'books-move': 'on track',
+    'case-studies-cc': 'on track',
     'clairval-site': 'on track',
     'client-renewals': 'on track',
+    'client-satisfaction': 'on track',
+    'design-system': 'on track',
+    'device-inventory': 'on track',
+    'federation-day-2027': 'on track',
     'ferrand-packaging': 'budget spent',
     'halles-shop': 'on track',
     'hiring-2027': 'on track',
     'hosting-move': 'on track',
     'mauve-posters': 'on track',
+    'newsletter-2027': 'on track',
     'nuvola-retainer': 'on track',
+    'onboarding-playbook': 'on track',
     'ondine-shop': 'archived',
     'pipeline-2027': 'on track',
+    'referral-programme': 'on track',
     'statutes-2027': 'on track',
     'terres-report': 'over budget',
     'velo-identity': 'on track',

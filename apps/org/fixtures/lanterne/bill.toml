@@ -38,3 +38,93 @@ description = "Studio and storage, rue des Caillots, October"
 quantity = "1"
 unit_price = 90000
 vat_rate = "20"
+
+[[bill]]
+id = "bi-0003"
+circle = "brand"
+supplier = "Atelier Sérigraphie Nord"
+reference = "ASN-2026-0847"
+issued = 2026-10-20
+due = 2026-11-19
+label = "Screen-printing for the autumn window displays"
+category = "606"
+recorded = 2026-10-21
+recorder = "julien@lanterne.example"
+
+[[bill.line]]
+description = "Window decals, A1, a set of six"
+quantity = "3"
+unit_price = 8500
+vat_rate = "20"
+
+[[bill]]
+id = "bi-0004"
+circle = "brand"
+supplier = "Logiciels Créatifs SARL"
+reference = "LC-2026-3312"
+issued = 2026-10-05
+due = 2026-11-04
+label = "Design software seats, Brand's annual renewal"
+category = "626"
+recorded = 2026-10-06
+recorder = "julien@lanterne.example"
+
+[[bill.line]]
+description = "Creative suite, three seats, annual"
+quantity = "3"
+unit_price = 42000
+vat_rate = "20"
+
+[[bill]]
+id = "bi-0005"
+circle = "operations"
+supplier = "Compta Coop SAS"
+reference = "CC-2026-1190"
+issued = 2026-10-08
+due = 2026-11-07
+label = "Accounting software, annual licence"
+category = "626"
+recorded = 2026-10-09
+recorder = "julien@lanterne.example"
+
+[[bill.line]]
+description = "Bookkeeping subscription, one seat, annual"
+quantity = "1"
+unit_price = 36000
+vat_rate = "20"
+
+[[bill]]
+id = "bi-0006"
+circle = "operations"
+supplier = "Fournitures du Marché"
+reference = "FM-2026-0456"
+issued = 2026-10-14
+due = 2026-11-13
+label = "Office supplies for the fourth quarter"
+category = "606"
+recorded = 2026-10-15
+recorder = "julien@lanterne.example"
+
+[[bill.line]]
+description = "Paper, pens and folders, quarterly order"
+quantity = "1"
+unit_price = 18000
+vat_rate = "20"
+
+[[bill]]
+id = "bi-0007"
+circle = "operations"
+supplier = "Traiteur Belleville"
+reference = "TB-2026-1022"
+issued = 2026-10-18
+due = 2026-11-17
+label = "Catering for the co-op jobs fair stand"
+category = "6257"
+recorded = 2026-10-19
+recorder = "julien@lanterne.example"
+
+[[bill.line]]
+description = "Lunch platters for the stand, half day"
+quantity = "1"
+unit_price = 24000
+vat_rate = "20"

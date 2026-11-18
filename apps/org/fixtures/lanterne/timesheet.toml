@@ -669,3 +669,23 @@ member = "sofia@lanterne.example"
 circle = "brand"
 month = "2026-10"
 submitted = 2026-10-23
+
+[[run]]
+id = "yusuf-tools-sept"
+member = "yusuf@lanterne.example"
+circle = "tools"
+from = 2026-09-01
+to = 2026-09-30
+hours = 1
+billable = false
+note = "Tools: hosting move planning"
+
+[[run]]
+id = "thomas-tools-oct"
+member = "thomas@lanterne.example"
+circle = "tools"
+from = 2026-10-01
+to = 2026-10-09
+hours = 1
+billable = false
+note = "Tools: device inventory, first pass"

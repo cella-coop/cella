@@ -141,3 +141,43 @@ label = "Two USB keys for the server backups"
 category = "606"
 net = 2400
 vat = 480
+
+[[expense]]
+id = "ex-0012"
+circle = "operations"
+member = "julien@lanterne.example"
+day = 2026-10-14
+label = "Printer toner for the office"
+category = "606"
+net = 5400
+vat = 1080
+
+[[expense]]
+id = "ex-0013"
+circle = "operations"
+member = "camille@lanterne.example"
+day = 2026-10-18
+label = "Taxi to the bank for the account signatures"
+category = "6251"
+net = 1800
+vat = 180
+
+[[expense]]
+id = "ex-0014"
+circle = "tools"
+member = "yusuf@lanterne.example"
+day = 2026-10-15
+label = "Replacement charger for a studio laptop"
+category = "606"
+net = 3900
+vat = 780
+
+[[expense]]
+id = "ex-0015"
+circle = "tools"
+member = "thomas@lanterne.example"
+day = 2026-10-20
+label = "Domain renewal for the staging environment"
+category = "626"
+net = 1600
+vat = 320

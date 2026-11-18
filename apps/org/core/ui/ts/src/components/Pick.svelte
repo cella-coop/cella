@@ -52,11 +52,15 @@
       onpick([...next])
       return
     }
+    // The popover closed, found before `onpick`, which may pick the
+    // list away at once, as an embed's does once it names its ref: by
+    // the time it returns, `list` may already be torn down with it.
+    const popover = list.closest('[popover]') as HTMLElement | null
     onpick(multi ? [] : o.value)
     if (stay) {
       return
     }
-    ;(list.closest('[popover]') as HTMLElement | null)?.hidePopover()
+    popover?.hidePopover()
   }
 
   function onkeydown(e: KeyboardEvent) {

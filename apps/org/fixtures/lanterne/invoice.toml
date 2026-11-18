@@ -4,7 +4,7 @@
 # project's, and its lines and payments are that circle's too.
 
 series = "F-2026"
-next = 56
+next = 59
 
 [[invoice]]
 id = "F-2026-0041"
@@ -223,3 +223,43 @@ label = "Annual report and microsite, milestone 1 of 2"
 net = 900000
 vat = 180000
 total = 1080000
+
+[[invoice]]
+id = "F-2026-0056"
+circle = "operations"
+issued = 2026-10-02
+due = 2026-11-01
+bill_to = "Coopérative La Ruche"
+bill_address = "19 rue des Vignerons\n69007 Lyon"
+label = "Cella migration consulting: chart of accounts and opening balances"
+net = 90000
+vat = 18000
+total = 108000
+
+[[invoice.payment]]
+at = 2026-10-20
+amount = 108000
+
+[[invoice]]
+id = "F-2026-0057"
+circle = "operations"
+issued = 2026-10-10
+due = 2026-11-09
+bill_to = "Coopérative La Ruche"
+bill_address = "19 rue des Vignerons\n69007 Lyon"
+label = "Cella migration consulting: pay runs and expenses"
+net = 72000
+vat = 14400
+total = 86400
+
+[[invoice]]
+id = "F-2026-0058"
+circle = "operations"
+issued = 2026-10-20
+due = 2026-11-19
+bill_to = "Coopérative La Ruche"
+bill_address = "19 rue des Vignerons\n69007 Lyon"
+label = "Cella migration consulting: the October check-in"
+net = 36000
+vat = 7200
+total = 43200

@@ -746,3 +746,67 @@ debit = 1780
 [[entry.line]]
 account = "421"
 credit = 10680
+
+[[entry]]
+id = "je-0044"
+date = 2026-10-02
+label = "Invoice F-2026-0056"
+
+[[entry.line]]
+account = "411"
+debit = 108000
+
+[[entry.line]]
+account = "706"
+credit = 90000
+
+[[entry.line]]
+account = "44571"
+credit = 18000
+
+[[entry]]
+id = "je-0045"
+date = 2026-10-20
+label = "Payment, F-2026-0056"
+
+[[entry.line]]
+account = "512"
+debit = 108000
+
+[[entry.line]]
+account = "411"
+credit = 108000
+
+[[entry]]
+id = "je-0046"
+date = 2026-10-10
+label = "Invoice F-2026-0057"
+
+[[entry.line]]
+account = "411"
+debit = 86400
+
+[[entry.line]]
+account = "706"
+credit = 72000
+
+[[entry.line]]
+account = "44571"
+credit = 14400
+
+[[entry]]
+id = "je-0047"
+date = 2026-10-20
+label = "Invoice F-2026-0058"
+
+[[entry.line]]
+account = "411"
+debit = 43200
+
+[[entry.line]]
+account = "706"
+credit = 36000
+
+[[entry.line]]
+account = "44571"
+credit = 7200

@@ -124,3 +124,23 @@ entry = "je-0036"
 invoice = "F-2026-0055"
 event = "issue"
 entry = "je-0038"
+
+[[posting]]
+invoice = "F-2026-0056"
+event = "issue"
+entry = "je-0044"
+
+[[posting]]
+invoice = "F-2026-0056"
+event = "payment"
+entry = "je-0045"
+
+[[posting]]
+invoice = "F-2026-0057"
+event = "issue"
+entry = "je-0046"
+
+[[posting]]
+invoice = "F-2026-0058"
+event = "issue"
+entry = "je-0047"

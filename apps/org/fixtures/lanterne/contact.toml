@@ -68,3 +68,10 @@ name = "Atelier Ondine"
 form = "simplified joint-stock company"
 client = "active"
 note = "a ceramics studio; online shop"
+
+[[contact]]
+id = "laruche"
+name = "Coopérative La Ruche"
+form = "worker co-operative"
+client = "active"
+note = "a sister co-op; paid consulting on their own move into cella"

@@ -1,6 +1,6 @@
 +++
 title = "Conflicts"
-updated = 2026-11-11
+updated = 2026-11-18
 +++
 
 # Conflicts
@@ -27,7 +27,8 @@ state is that of 24 October 2026.
 | `person.enrol` | ordered | **applied**: ordered against revoke ([keys](#a-revoked-key-signs-nothing-new)) |
 | `person.revoke`, `person.recover` | ordered | right |
 | `circle:seat.add`, `.remove` | ordered | right; **applied**: core's circles' seats; both decided |
-| `circle:circle.arrange`, `circle:feature.arrange` | ordered | right: each replaces a circle's whole listing of features from the one its entry says it was, so two arrangements do not commute; the first by the motion it cites, the second at once by a holder of `arrange-features` ([features](../../apps/org/core/circle/index.md#features)) |
+| `circle:circle.arrange`, `circle:feature.arrange` | ordered | right: each replaces the co-op's whole layout of features, at the root, from the one its entry says it was, so two arrangements do not commute; the first by the motion it cites, the second at once by a holder of `arrange-features` over the root ([features](../../apps/org/core/circle/index.md#features)) |
+| `circle:circle.show`, `.hide`, `circle:group.show`, `circle:feature.hide` | confluent | right: each sets one row of a circle's, a group of the layout it shows or a feature it hides, a register keyed by the circle and the group or the feature, its entry carrying the row whole; two rows' writes commute and two of one leave the later, so none needs an order over the whole listing, as an arrangement does; the first two by the motion they cite, the others at once by a holder of `arrange-features` over the circle. An arrangement dropping a group or a feature drops every circle's row of it in its own write, so a row written after it of what it dropped is refused, naming the layout's groups and features |
 | `motion.policy.adopt`, `.end` of a mandate | ordered | right; **applied**: decided, by a circle holding a mandate to issue it under, or the assembly, core's mandate copied or revoked in the same write ([mandates](../../apps/org/core/circle/index.md#mandates)) |
 | `circle.message` | confluent | right |
 | `document.create`, `.edit`, `.comment` | confluent | right |

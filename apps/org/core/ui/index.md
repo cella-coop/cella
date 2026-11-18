@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-17
+updated = 2026-11-18
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -833,7 +833,20 @@ one to drag choices into, which the listing holds once one is in it.
 Its value is one listing (`models/arrange.ts`): the choices on, in
 order, separated by commas, an accordion's run after its name and a
 colon, the runs separated by semicolons, as a circle's features are
-written ([features](../circle/index.md#features)).
+written ([features](../circle/index.md#features)). One declared
+`grouped`, as the co-op's layout is, puts every choice on show in an
+accordion, called a group: a choice lands in a group only, never at the
+top level, a group named blank keeps its name, New group makes one, and
+those not shown are not enabled. How to drag is the help icon's tooltip
+beside the label, `Who` with an i, as any setting's `help` is.
+
+A setting of `type` `toggle` is a switch, `Checkbox` as `role="switch"`,
+its value `yes` or `no`, each turn a commit; at `depth` 1 it is drawn
+under the setting before it on a guide line, and `disabled` it waits, as
+a feature's switch waits on its group's. One declaring `post` posts the
+fields it gives for its value in place of its own, and alone, one write
+in flight of its own, so a circle's switches each save one row
+([features](../circle/index.md#features)).
 
 A record's page draws a field it saves in the same way: its block draws
 `Settings` with that one setting, its write posted with the record's id

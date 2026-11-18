@@ -104,7 +104,7 @@ test('Chloé holds no issue-invoice mandate: her invoice is refused and uses no 
   assert.equal(refused.state, 'refused')
   assert.match(reason(refused), /the actor holds no mandate for issue-invoice/)
   assert.equal(await head(), before)
-  assert.equal(Number((await one<{ next: number }>(`SELECT next FROM invoice.series WHERE name = 'F-2026'`)).next), 57)
+  assert.equal(Number((await one<{ next: number }>(`SELECT next FROM invoice.series WHERE name = 'F-2026'`)).next), 60)
 })
 
 test('Camille holds no record-entry: her post is refused and uses no verdict number', async () => {

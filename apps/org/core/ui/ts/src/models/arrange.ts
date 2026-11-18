@@ -110,14 +110,15 @@ export type Row =
 // among those not shown, the last target; an accordion lands between the
 // runs at the top level, or among those not shown, which turns all its
 // choices off. A choice alone in its accordion keeps that accordion as a
-// place while it is lifted, so it may be dropped back.
-export function drawn(items: Placed[], lifted: Lifted | null, empty: string[] = []): { rows: Row[]; targets: Target[]; from: number } {
+// place while it is lifted, so it may be dropped back. Where it is
+// `grouped`, a choice lands in an accordion only, never at the top level.
+export function drawn(items: Placed[], lifted: Lifted | null, empty: string[] = [], grouped = false): { rows: Row[]; targets: Target[]; from: number } {
   const rows: Row[] = []
   const out: Target[] = []
   let from = -1
   let idx = 0
   const place = (t: Target & { kind: 'at' }) => {
-    if (!lifted) {
+    if (!lifted || (grouped && lifted.kind === 'choice' && t.group === null)) {
       return
     }
     const last = out.at(-1)
@@ -183,8 +184,8 @@ export function drawn(items: Placed[], lifted: Lifted | null, empty: string[] = 
 
 // The places a lifted thing may land on, as `drawn` draws them, and the
 // one it was lifted from.
-export function targets(items: Placed[], lifted: Lifted, empty: string[] = []): { targets: Target[]; from: number } {
-  const d = drawn(items, lifted, empty)
+export function targets(items: Placed[], lifted: Lifted, empty: string[] = [], grouped = false): { targets: Target[]; from: number } {
+  const d = drawn(items, lifted, empty, grouped)
   return { targets: d.targets, from: d.from }
 }
 

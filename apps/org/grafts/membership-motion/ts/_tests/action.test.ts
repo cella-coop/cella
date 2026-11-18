@@ -42,9 +42,9 @@ after(async () => {
   await db.end()
 })
 
-test('the graft registers admitting, suspending and excluding a member, seating one or a role, creating and amending a circle, arranging its features and making and amending a role', async () => {
+test('the graft registers admitting, suspending and excluding a member, seating one or a role, creating and amending a circle, arranging the co-op\'s features, showing a group and hiding a feature in a circle, and making and amending a role', async () => {
   const { rows } = await db.query(`SELECT kind FROM motion.carries WHERE owner = 'membership-motion' ORDER BY kind`)
-  assert.deepEqual(rows.map((r) => r.kind), ['admit', 'amend-circle', 'amend-role', 'arrange-features', 'circle', 'exclude', 'role', 'seat', 'seat-role', 'suspend', 'unseat', 'unseat-role'])
+  assert.deepEqual(rows.map((r) => r.kind), ['admit', 'amend-circle', 'amend-role', 'arrange-features', 'circle', 'exclude', 'hide-feature', 'role', 'seat', 'seat-role', 'show-group', 'suspend', 'unseat', 'unseat-role'])
 })
 
 test('a proposal asks of each member what can become of them', async () => {

@@ -4,12 +4,12 @@
 export class ArrangeState {
   empty = $state<string[]>([])
 
-  // A new accordion, empty, named apart from every other.
-  make(taken: string[]) {
+  // A new accordion, empty, named apart from every other, by `noun`.
+  make(taken: string[], noun = 'accordion') {
     const all = new Set([...taken, ...this.empty])
-    let name = 'New accordion'
+    let name = `New ${noun}`
     for (let n = 2; all.has(name); n++) {
-      name = `New accordion ${n}`
+      name = `New ${noun} ${n}`
     }
     this.empty.push(name)
   }

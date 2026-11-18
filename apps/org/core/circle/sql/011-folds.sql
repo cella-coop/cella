@@ -43,11 +43,11 @@ BEGIN
 END
 $$;
 
--- circle:circle:arrange and circle:feature:arrange: the circle its entry
--- names, its features replaced by the listing it carries, from what the
--- entry says they were, as `circle.features` spells them
--- (`012-features.sql`): a motion's arrangement and a holder's own fold
--- the same.
+-- circle:circle:arrange and circle:feature:arrange: the co-op's layout,
+-- arranged at the root its entry names, made the listing it carries, its
+-- groups by the ids it gives, from what the entry says it was, as
+-- `circle.features` spells it (`012-features.sql`): a motion's
+-- arrangement and a holder's own fold the same.
 CREATE FUNCTION circle.fold_arrange(entry jsonb) RETURNS void
 LANGUAGE plpgsql AS $$
 DECLARE
@@ -61,10 +61,7 @@ BEGIN
   IF was IS DISTINCT FROM p ->> 'was' THEN
     RAISE EXCEPTION 'circle: entry % says the features of % were %, where the fold has %', entry ->> 'n', p ->> 'circle', p ->> 'was', was;
   END IF;
-  DELETE FROM circle.feature WHERE circle = p ->> 'circle';
-  INSERT INTO circle.feature (circle, feat, position, "group")
-  SELECT p ->> 'circle', l.feat, l.position, l."group" FROM circle.listed(p ->> 'features') l
-  ON CONFLICT DO NOTHING;
+  PERFORM circle.lay(p ->> 'features', ARRAY(SELECT jsonb_array_elements_text(p -> 'groups')));
 END
 $$;
 

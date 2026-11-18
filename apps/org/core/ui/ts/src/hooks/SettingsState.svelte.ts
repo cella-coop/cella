@@ -1,4 +1,4 @@
-import { direct, posted, proposal, type Decider, type Proposal, type Setting } from '../models/settings.ts'
+import { direct, posted, proposal, saving, type Decider, type Proposal, type Setting } from '../models/settings.ts'
 import { took, type Answer } from '../post.ts'
 import type { WriteState } from './WriteState.svelte.ts'
 import type { BasketState } from './BasketState.svelte.ts'
@@ -138,16 +138,19 @@ export class SettingsState {
   // since keeps what was typed.
   async #save(s: Setting) {
     const write = s.write!
-    if (this.#flying.has(write)) {
-      this.#again.add(write)
+    // A setting posting alone flies alone.
+    const flight = s.post ? `${write}:${s.name}` : write
+    if (this.#flying.has(flight)) {
+      this.#again.add(flight)
       return
     }
+    const changed = saving(this.#settings(), s, (o) => this.value(o))
+    const values = Object.fromEntries(changed.map((o) => [o.name, this.value(o)]))
     const sent = posted(this.#settings(), s, (o) => this.value(o))
-    const changed = this.#settings().filter((o) => o.name in sent)
     if (!changed.length) {
       return
     }
-    this.#flying.add(write)
+    this.#flying.add(flight)
     for (const o of changed) {
       this.#mark(o.name, { state: 'saving' })
     }
@@ -155,18 +158,18 @@ export class SettingsState {
     try {
       answer = await this.#writes.shown(this.#writes.send(write, Object.entries(sent)))
     } finally {
-      this.#flying.delete(write)
+      this.#flying.delete(flight)
       const stood = !!answer && took(answer)
       const reason = answer && 'done' in answer ? answer.done?.reason : undefined
       for (const o of changed) {
-        const same = this.typed[o.name] === sent[o.name]
+        const same = this.typed[o.name] === values[o.name]
         if (stood && same) {
           delete this.typed[o.name]
         }
         this.#mark(o.name, !same ? null : stood ? { state: 'saved' } : { state: 'refused', reason: reason ?? 'it was not saved' })
       }
     }
-    if (this.#again.delete(write)) {
+    if (this.#again.delete(flight)) {
       await this.#save(s)
     }
   }

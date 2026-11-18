@@ -4,15 +4,22 @@
 // circle there is not, a term no amendment changes, a blank name, another
 // circle's name, a procedure in force nowhere, a change that changes
 // nothing, Web amending itself, and features, which no amendment changes.
-// A circle's features are arranged apart, under `arrange-features`: Web
-// arranges its own by its own motion, its close replacing them in order,
-// under their accordions, and its entry saying what they were; coordination
-// arranges Hiring's, which holds no power over its own; Brand's motion
-// arranging Web's, Hiring's arranging its own, and listings no installed
-// feature, a feature twice, an accordion blank or listed apart or what Web
-// has already are refused at the proposal. Yusuf, Web's lead, arranges
-// Web's at once by his own write, and neither Léa, a member of Web, nor
-// Yusuf over Brand's may. Then in every browser, light and
+// Features are arranged apart, under `arrange-features`: the assembly
+// arranges the co-op's layout at the root by motion, its close replacing
+// it in order, under its groups, a group renamed keeping its id and every
+// circle's choice of it, and its entry saying what it was; Web shows a
+// group and hides a feature by its own motion, one row an action, and
+// coordination shows one for Hiring, which holds no power over its own; an
+// arrangement of a circle that is no root, Web's motion arranging the
+// layout, Brand's showing Web's, a row of the root, of no group or
+// feature or that changes nothing, and layouts naming no installed
+// feature, a feature twice, a group blank or listed apart, a feature
+// under none or what the co-op has already are refused at the proposal.
+// Yusuf, Web's lead, shows and hides Web's at once by his own write, and
+// neither Léa, a member of Web, nor Yusuf over Brand's or over the
+// layout may. The manager, granted the power over the root, has a
+// malformed layout refused in the guard's words, and two arrangements at
+// once each log the layout the other left. Then in every browser, light and
 // dark, through the dev server: Camille opens Web's Settings tab, its
 // name, purpose and procedure in force, each changed by a motion of the
 // Assembly; she types Brand's name and presses Enter, and the
@@ -32,12 +39,13 @@ import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
 import pg from 'pg'
 import { vote } from '@cella/org-motion/api'
-import { arrange } from '@cella/org-circle/api'
+import { arrange, hide, show } from '@cella/org-circle/api'
 import { carried, close, propose } from '@cella/org-graft-membership-motion/api'
 import type { Deps, Done } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
 import { eachBrowser, serve, signIn } from './browser.ts'
 import { chosen } from './controls.ts'
+import { reacting } from '../src/lib/server/slices.ts'
 
 const su = new pg.Client()
 let app: pg.Client | undefined
@@ -46,7 +54,7 @@ const shots = process.env.SHOTS ?? '/tmp/cella-amend-shots'
 const camille = 'camille@lanterne.example'
 const lea = 'lea@lanterne.example'
 const yusuf = 'yusuf@lanterne.example'
-const web = 'project, task, timesheet, file, contact'
+const web = 'Work: project, task, timesheet, file, contact'
 let today = '2026-11-09'
 
 async function on(date: string) {
@@ -73,10 +81,11 @@ const fortnight = () => new Date(Date.parse(`${today}T00:00:00Z`) + 14 * 8640000
 const amending = (args: Record<string, string>, circle = 'ag') =>
   propose({ circle, title: 'Amend a circle', deadline: fortnight(), body: '', actions: [{ kind: 'amend-circle', args }] }, as(camille))
 
-// A motion of `circle` arranging a circle's features, proposed by
-// `by`, a member of it, or its refusal.
-const arranging = (args: Record<string, string>, circle: string, by: string) =>
-  propose({ circle, title: 'Arrange a circle\'s features', deadline: fortnight(), body: '', actions: [{ kind: 'arrange-features', args }] }, as(by))
+// A motion of `circle` carrying one action of `kind`, the co-op's
+// layout arranged unless named, proposed by `by`, a member of it, or
+// its refusal.
+const arranging = (args: Record<string, string>, circle: string, by: string, kind = 'arrange-features') =>
+  propose({ circle, title: 'Arrange features', deadline: fortnight(), body: '', actions: [{ kind, args }] }, as(by))
 
 // Every member on the motion's roll consents, and on its deadline
 // `closer`, Camille unless named, closes it; what its close carried.
@@ -133,62 +142,321 @@ test('the assembly changes Web\'s procedure and purpose by motion, its close ame
   assert.deepEqual(states(await decided(back.motion)), [['circle:circle:amend', 'settled', '']])
 })
 
-test('an arrangement is refused at its proposal where its circle holds arrange-features over no circle it arranges, or the listing is unsound', async () => {
-  const refused = async (args: Record<string, string>, circle = 'web', by = lea) => reason(await arranging(args, circle, by))
-  assert.match(await refused({ circle: 'web', features: 'project' }, 'brand', camille), /brand holds arrange-features by no mandate covering web: put the arrangement to web, which holds it over web/)
-  assert.match(await refused({ circle: 'hiring', features: 'task' }, 'hiring', lea), /hiring holds (no collective mandate for arrange-features|arrange-features by no mandate covering hiring: put the arrangement to coordination)/)
-  assert.match(await refused({ circle: 'web', features: 'project, tasks' }), /tasks is no feature the co-op has installed: give web features of account, bill, circle, .*, task, timesheet, transaction/)
-  assert.match(await refused({ circle: 'web', features: 'project_task' }), /project_task is no feature the co-op has installed/)
-  assert.match(await refused({ circle: 'web', features: 'project, task, project' }), /the features of web name project twice: list each once/)
-  assert.match(await refused({ circle: 'web', features: ' : project; task' }), /an accordion of web's features has a blank name: name it, or list its features under none/)
-  assert.match(await refused({ circle: 'web', features: 'Work: project; file; Work: task' }), /the features of web list the Work accordion's apart: list them together/)
-  assert.match(await refused({ circle: 'web', features: 'project,task ,timesheet, file,contact' }), /the arrangement of web changes nothing: its features are project, task, timesheet, file, contact already/)
-  assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM motion.action WHERE kind = 'arrange-features'`)).n, 0, 'nothing was proposed')
+test('an arrangement is refused at its proposal where it is no root\'s, its circle holds arrange-features over no circle it arranges, or the listing or row is unsound', async () => {
+  const refused = async (kind: string, args: Record<string, string>, circle = 'ag', by = camille) => reason(await arranging(args, circle, by, kind))
+  const layout = (await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f
+  const moved = layout.replace('Work: project, ', 'Work: ').replace('Governance: ', 'Governance: project, ')
+  assert.match(await refused('arrange-features', { circle: 'web', features: 'Work: project' }, 'web', lea), /web is no root: the co-op's features are arranged at ag, and web shows groups of them and hides features in them/)
+  assert.match(await refused('arrange-features', { circle: 'ag', features: moved }, 'web', lea), /web holds arrange-features by no mandate covering ag: put the arrangement to ag, which holds it over ag/)
+  assert.match(await refused('arrange-features', { circle: 'ag', features: layout.replace('project', 'tasks') }), /tasks is no feature the co-op has installed: give ag features of account, bill, circle, .*, task, timesheet, transaction/)
+  assert.match(await refused('arrange-features', { circle: 'ag', features: `${layout}, project` }), /the features of ag name project twice: list each once/)
+  assert.match(await refused('arrange-features', { circle: 'ag', features: layout.replace('Work:', ' :') }), /a group of ag's features has a blank name: name it/)
+  assert.match(await refused('arrange-features', { circle: 'ag', features: layout.replace('Work: ', '') }), /the features of ag put project under no group: list it under one/)
+  assert.match(await refused('arrange-features', { circle: 'ag', features: `${layout.replace('Work: project, ', 'Work: ')}; Work: project` }), /the features of ag list the Work group's apart: list them together/)
+  assert.match(await refused('arrange-features', { circle: 'ag', features: layout.replaceAll(', ', ',') }), /the arrangement of ag changes nothing/)
+  assert.match(await refused('show-group', { circle: 'web', group: 'payments', shown: 'yes' }, 'brand'), /brand holds arrange-features by no mandate covering web: put the arrangement to web/)
+  assert.match(await refused('show-group', { circle: 'ag', group: 'work', shown: 'no' }), /ag is the root, which shows every feature of the co-op's layout: arrange the layout instead/)
+  assert.match(await refused('show-group', { circle: 'web', group: 'money', shown: 'yes' }), /no group money in the co-op's layout: show one of governance, work, books, payments, members/)
+  assert.match(await refused('show-group', { circle: 'web', group: 'payments', shown: 'maybe' }), /say whether web shows payments: shown yes or no/)
+  assert.match(await refused('show-group', { circle: 'web', group: 'work', shown: 'yes' }), /web shows work already: show or hide another group/)
+  assert.match(await refused('hide-feature', { circle: 'web', feature: 'tasks', hidden: 'yes' }), /tasks is no feature of the co-op's layout: hide one of motion, meeting/)
+  assert.match(await refused('hide-feature', { circle: 'web', feature: 'project', hidden: 'no' }), /web does not hide project already: hide or show another feature/)
+  const twice = async (actions: { kind: string; args: Record<string, string> }[], circle = 'web', by = lea) =>
+    reason(await propose({ circle, title: 'Twice', deadline: fortnight(), body: '', actions }, as(by)))
+  const payments = { kind: 'show-group', args: { circle: 'web', group: 'payments', shown: 'yes' } }
+  assert.match(await twice([payments, payments]), /the motion sets whether web shows payments twice: carry it once/)
+  assert.match(await twice([payments, { ...payments, args: { ...payments.args, shown: 'no' } }]), /sets whether web shows payments twice/, 'even each way')
+  const project = { kind: 'hide-feature', args: { circle: 'web', feature: 'project', hidden: 'yes' } }
+  assert.match(await twice([project, project]), /the motion sets whether web hides project twice/)
+  const arranged = { kind: 'arrange-features', args: { circle: 'ag', features: moved } }
+  assert.match(await twice([arranged, arranged], 'ag', camille), /the motion arranges the co-op's features twice: carry it once/)
+  assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM motion.action WHERE kind IN ('arrange-features', 'show-group', 'hide-feature')`)).n, 0, 'nothing was proposed')
 })
 
-test('Web arranges its own features by its own motion, its close replacing them in order and its entry carrying the set they replace', async () => {
-  const features = 'Work: project, task, timesheet; Files: file'
-  const { motion } = settled(await arranging({ circle: 'web', features }, 'web', lea)) as { motion: string }
-  const out = await decided(motion, lea)
+test('the assembly arranges the co-op\'s layout by motion, a group renamed keeping its id and every circle\'s choice of it, and its entry carrying the ids and the layout it replaced', async () => {
+  const was = (await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f
+  const features = was.replace('Work:', 'Studio:').replace(', contact;', ';').replace('Members: ', 'Members: contact, ')
+  const { motion } = settled(await arranging({ circle: 'ag', features }, 'ag', camille)) as { motion: string }
+  const out = await decided(motion)
   assert.deepEqual(states(out), [['circle:circle:arrange', 'settled', '']])
-  assert.deepEqual(await all(`SELECT feat, position, "group" FROM circle.feature WHERE circle = 'web' ORDER BY position`), [
-    { feat: 'project', position: 0, group: 'Work' },
-    { feat: 'task', position: 1, group: 'Work' },
-    { feat: 'timesheet', position: 2, group: 'Work' },
-    { feat: 'file', position: 3, group: 'Files' },
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f, features)
+  assert.deepEqual(await all(`SELECT id, name FROM circle.feature_group ORDER BY position`), [
+    { id: 'governance', name: 'Governance' },
+    { id: 'work', name: 'Studio' },
+    { id: 'books', name: 'Books' },
+    { id: 'payments', name: 'Payments' },
+    { id: 'members', name: 'Members' },
   ])
   const entry = await one<{ p: Record<string, unknown> }>(`SELECT cella.opened($1) AS p`, [out[0].entry])
   assert.equal(entry.p.features, features)
-  assert.equal(entry.p.was, web, 'its entry says what the features were')
-  assert.equal((await one<{ f: string }>(`SELECT circle.features('brand') AS f`)).f, 'project, task, timesheet, file, bill', 'no other circle\'s change')
-  const back = settled(await arranging({ circle: 'web', features: web }, 'web', lea)) as { motion: string }
-  assert.deepEqual(states(await decided(back.motion, lea)), [['circle:circle:arrange', 'settled', '']])
+  assert.deepEqual(entry.p.groups, ['governance', 'work', 'books', 'payments', 'members'])
+  assert.equal(entry.p.was, was, 'its entry says what the layout was')
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, 'Studio: project, task, timesheet, file', 'Web still shows the renamed group, and Contact moved to Members, which it does not show')
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('operations') AS f`)).f.startsWith('Books:'), true, 'Operations shows Contact in Members now, where it shows Members')
+  assert.match((await one<{ f: string }>(`SELECT circle.features('operations') AS f`)).f, /Members: contact, employment$/)
+  const back = settled(await arranging({ circle: 'ag', features: was }, 'ag', camille)) as { motion: string }
+  assert.deepEqual(states(await decided(back.motion)), [['circle:circle:arrange', 'settled', '']])
   assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, web)
 })
 
-test('coordination arranges Hiring\'s features, which Hiring holds no power over', async () => {
-  const was = (await one<{ f: string }>(`SELECT circle.features('hiring') AS f`)).f
+test('Web shows a group and hides a feature by its own motion, one row an action; coordination does so for Hiring, which holds no power over its own', async () => {
   assert.equal((await one<{ d: string }>(`SELECT circle.arranger('hiring', cella.verdict_date()) AS d`)).d, 'coordination')
   assert.equal((await one<{ d: string }>(`SELECT circle.arranger('web', cella.verdict_date()) AS d`)).d, 'web', 'a circle holding it over itself arranges its own')
-  const { motion } = settled(await arranging({ circle: 'hiring', features: `${was}, file` }, 'coordination', camille)) as { motion: string }
-  assert.deepEqual(states(await decided(motion)), [['circle:circle:arrange', 'settled', '']])
-  assert.equal((await one<{ f: string }>(`SELECT circle.features('hiring') AS f`)).f, `${was}, file`)
-  const back = settled(await arranging({ circle: 'hiring', features: was }, 'coordination', camille)) as { motion: string }
-  assert.deepEqual(states(await decided(back.motion)), [['circle:circle:arrange', 'settled', '']])
+  const rows: { kind: string; args: Record<string, string> }[] = [
+    { kind: 'show-group', args: { circle: 'web', group: 'payments', shown: 'yes' } },
+    { kind: 'hide-feature', args: { circle: 'web', feature: 'payslip', hidden: 'yes' } },
+  ]
+  const { motion } = settled(await propose({ circle: 'web', title: 'Show Payments in Web', deadline: fortnight(), body: '', actions: rows }, as(lea))) as { motion: string }
+  const out = await decided(motion, lea)
+  assert.deepEqual(states(out), [['circle:circle:show', 'settled', ''], ['circle:circle:hide', 'settled', '']])
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, `Work: ${web.slice('Work: '.length)}; Payments: invoice, bill, expense`)
+  const entry = await one<{ p: Record<string, unknown> }>(`SELECT cella.opened($1) AS p`, [out[0].entry])
+  assert.deepEqual({ ...entry.p, motion: undefined }, { circle: 'web', group: 'payments', shown: true, was: false, motion: undefined }, 'its entry carries the row and what it was')
+  const back = settled(
+    await propose({ circle: 'web', title: 'Hide Payments in Web', deadline: fortnight(), body: '', actions: [
+      { kind: 'show-group', args: { circle: 'web', group: 'payments', shown: 'no' } },
+      { kind: 'hide-feature', args: { circle: 'web', feature: 'payslip', hidden: 'no' } },
+    ] }, as(lea)),
+  ) as { motion: string }
+  assert.deepEqual(states(await decided(back.motion, lea)), [['circle:circle:show', 'settled', ''], ['circle:circle:hide', 'settled', '']])
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, web)
+
+  const was = (await one<{ f: string }>(`SELECT circle.features('hiring') AS f`)).f
+  const hiring = settled(await arranging({ circle: 'hiring', group: 'books', shown: 'yes' }, 'coordination', camille, 'show-group')) as { motion: string }
+  assert.deepEqual(states(await decided(hiring.motion)), [['circle:circle:show', 'settled', '']])
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('hiring') AS f`)).f.replace('Books: account, transaction, report, import; ', ''), was)
+  const unshown = settled(await arranging({ circle: 'hiring', group: 'books', shown: 'no' }, 'coordination', camille, 'show-group')) as { motion: string }
+  assert.deepEqual(states(await decided(unshown.motion)), [['circle:circle:show', 'settled', '']])
 })
 
-test('Yusuf, Web\'s lead, arranges Web\'s features at once by his own write; Léa, a member, and Yusuf over Brand\'s may not', async () => {
-  const moved = 'contact, project, task, timesheet, file'
-  const own = settled(await arrange({ circle: 'web', features: moved }, as(yusuf))) as { was: string }
-  assert.equal(own.was, web)
-  assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, moved)
+test('Yusuf, Web\'s lead, shows and hides Web\'s at once by his own write; Léa, a member, Yusuf over Brand\'s and over the co-op\'s layout may not', async () => {
+  settled(await show({ circle: 'web', group: 'books', shown: true }, as(yusuf)))
+  settled(await hide({ circle: 'web', feature: 'import', hidden: true }, as(yusuf)))
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, `${web}; Books: account, transaction, report`)
   const { op } = await one<{ op: string }>(`SELECT op FROM cella.log ORDER BY n DESC LIMIT 1`)
-  assert.equal(op, 'circle:feature:arrange', 'no motion: his own write')
-  assert.match(reason(await arrange({ circle: 'web', features: web }, as(lea))), /the actor holds no mandate for arrange-features/)
-  assert.match(reason(await arrange({ circle: 'brand', features: 'project, task' }, as(yusuf))), /arrange-features/)
-  assert.match(reason(await arrange({ circle: 'web', features: moved }, as(yusuf))), /the arrangement of web changes nothing/)
-  settled(await arrange({ circle: 'web', features: web }, as(yusuf)))
+  assert.equal(op, 'circle:feature:hide', 'no motion: his own write')
+  assert.match(reason(await show({ circle: 'web', group: 'books', shown: false }, as(lea))), /the actor holds no mandate for arrange-features/)
+  assert.match(reason(await show({ circle: 'brand', group: 'books', shown: true }, as(yusuf))), /arrange-features/)
+  const layout = (await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f
+  assert.match(reason(await arrange({ circle: 'ag', features: layout.replace('Work:', 'Studio:') }, as(yusuf))), /arrange-features/)
+  assert.match(reason(await arrange({ circle: 'web', features: web }, as(yusuf))), /web is no root/)
+  settled(await hide({ circle: 'web', feature: 'import', hidden: false }, as(yusuf)))
+  settled(await show({ circle: 'web', group: 'books', shown: false }, as(yusuf)))
   assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, web)
+})
+
+// A worker: a connection of its own as `cella_app` and its backend's pid,
+// and the deps of a write of `actor` on it, the shell's reactions among
+// them, so a close carries its effects in its own transaction as the
+// shell's does.
+interface Worker {
+  c: pg.Client
+  pid: number
+}
+async function worker(): Promise<Worker> {
+  const c = new pg.Client({ user: 'cella_app' })
+  await c.connect()
+  const { rows } = await c.query<{ pid: number }>('SELECT pg_backend_pid() AS pid')
+  return { c, pid: rows[0]!.pid }
+}
+const on_ = (w: Worker, actor: string): Deps => reacting({ db: reader(w.c, actor), actor, sign: sign(actor) })
+
+// Waits, a few seconds at most, until the worker's write waits on a lock.
+async function waiting(w: Worker) {
+  for (let i = 0; i < 200; i++) {
+    const { waits } = await one<{ waits: boolean }>(`SELECT coalesce((SELECT wait_event_type = 'Lock' FROM pg_stat_activity WHERE pid = $1), false) AS waits`, [w.pid])
+    if (waits) {
+      return
+    }
+    await new Promise((r) => setTimeout(r, 50))
+  }
+  throw new Error(`the write on backend ${w.pid} never waited on a lock`)
+}
+
+// A superuser's transaction holding a lock `sql` takes, until it is
+// released, once.
+async function gate(sql: string) {
+  const g = new pg.Client()
+  await g.connect()
+  await g.query('BEGIN')
+  await g.query(sql)
+  let open = true
+  return async () => {
+    if (open) {
+      open = false
+      await g.query('COMMIT')
+      await g.end()
+    }
+  }
+}
+
+// Two workers for `run`, every gate it opens released, then the workers
+// ended, whatever it threw.
+async function racing(run: (a: Worker, b: Worker, gated: (sql: string) => Promise<() => Promise<void>>) => Promise<void>) {
+  const [a, b] = [await worker(), await worker()]
+  const gates: (() => Promise<void>)[] = []
+  try {
+    await run(a, b, async (sql) => {
+      const release = await gate(sql)
+      gates.push(release)
+      return release
+    })
+  } finally {
+    for (const release of gates) {
+      await release()
+    }
+    await a.c.end()
+    await b.c.end()
+  }
+}
+
+// Every member on the motion's roll consents, and the clock moves to its
+// deadline, for it to be closed.
+async function due(motion: string) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [motion])) {
+    settled(await vote({ motion, member, stance: 'consent' }, as(member)))
+  }
+  const { deadline } = await one<{ deadline: string }>(`SELECT to_char(deadline, 'YYYY-MM-DD') AS deadline FROM motion.motion WHERE id = $1`, [motion])
+  await on(deadline)
+}
+
+test('the manager, granted arrange-features over the root, arranges the layout at once: a malformed listing is refused in the guard\'s words, and two arrangements gated on the root each log the layout the other left', async () => {
+  const grant = settled(
+    await propose({ circle: 'ag', title: 'The manager arranges the layout', deadline: fortnight(), body: '', actions: [
+      { kind: 'policy', args: { kind: 'mandate', wording: 'The {role: manager} role holds {power: arrange-features}, to arrange the features of the {scope: ag} circle' } },
+    ] }, as(camille)),
+  ) as { motion: string }
+  assert.deepEqual(states(await decided(grant.motion)).map((s) => s[1]), ['settled'])
+  const layout = (await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f
+  assert.match(reason(await arrange({ circle: 'ag', features: `${layout}, project` }, as(camille))), /the features of ag name project twice: list each once/)
+  assert.match(reason(await arrange({ circle: 'ag', features: layout.replace('Work: ', '') }, as(camille))), /the features of ag put project under no group: list it under one/)
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f, layout, 'nothing was laid')
+
+  // The root held, two arrangements start, each on its worker, and wait;
+  // released, the second reads the layout the first left as its `was`.
+  await racing(async (a, b, gated) => {
+    const release = await gated(`SELECT id FROM circle.circle WHERE id = 'ag' FOR NO KEY UPDATE`)
+    const first = arrange({ circle: 'ag', features: layout.replace('Members:', 'People:') }, on_(a, camille))
+    await waiting(a)
+    const second = arrange({ circle: 'ag', features: layout.replace('Books:', 'Ledger:') }, on_(b, camille))
+    await waiting(b)
+    await release()
+    for (const out of await Promise.all([first, second])) {
+      settled(out)
+    }
+  })
+  const [later, earlier] = (await all<{ p: { features: string; was: string } }>(
+    `SELECT cella.opened(n) AS p FROM cella.log WHERE op = 'circle:feature:arrange' ORDER BY n DESC LIMIT 2`,
+  )).map((e) => e.p)
+  assert.equal(earlier!.was, layout, 'the first replaced the layout as it was')
+  assert.equal(later!.was, earlier!.features, 'the second replaced the layout the first left, not the one it read before the lock')
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f, later!.features)
+  settled(await arrange({ circle: 'ag', features: layout }, as(camille)))
+  assert.deepEqual(await all(`SELECT id FROM circle.feature_group ORDER BY position`), ['governance', 'work', 'books', 'payments', 'members'].map((id) => ({ id })))
+})
+
+test('a close carrying a circle\'s row and a write of that circle at once, both waiting on the log\'s head, take the circle and the head in one order, and neither deadlocks', async () => {
+  const layout = (await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f
+  const shows = settled(
+    await propose({ circle: 'web', title: 'Show Payments in Web', deadline: fortnight(), body: '', actions: [{ kind: 'show-group', args: { circle: 'web', group: 'payments', shown: 'yes' } }] }, as(lea)),
+  ) as { motion: string }
+  await due(shows.motion)
+  // The head held: the close waits on it first, then Yusuf's own hide.
+  await racing(async (a, b, gated) => {
+    const release = await gated('SELECT n FROM cella.head FOR UPDATE')
+    const closing = close({ motion: shows.motion }, on_(a, lea))
+    await waiting(a)
+    const hiding = hide({ circle: 'web', feature: 'contact', hidden: true }, on_(b, yusuf))
+    await waiting(b)
+    await release()
+    const [closed, hid] = await Promise.all([closing, hiding])
+    settled(closed)
+    settled(hid)
+  })
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, `${web.replace(', contact', '')}; Payments: invoice, bill, expense, payslip`)
+
+  // The same for the root: a close carrying an arrangement, then the
+  // manager's own, on workers reading the clock moved to its deadline.
+  const arranges = settled(
+    await propose({ circle: 'ag', title: 'Rename Books', deadline: fortnight(), body: '', actions: [{ kind: 'arrange-features', args: { circle: 'ag', features: layout.replace('Books:', 'Ledger:') } }] }, as(camille)),
+  ) as { motion: string }
+  await due(arranges.motion)
+  await racing(async (a, b, gated) => {
+    const release = await gated('SELECT n FROM cella.head FOR UPDATE')
+    const closing = close({ motion: arranges.motion }, on_(a, camille))
+    await waiting(a)
+    const own = arrange({ circle: 'ag', features: layout.replace('Members:', 'People:') }, on_(b, camille))
+    await waiting(b)
+    await release()
+    const [closed, mine] = await Promise.all([closing, own])
+    settled(closed)
+    assert.equal((settled(mine) as { was: string }).was, layout.replace('Books:', 'Ledger:'), 'the manager\'s replaced the layout the close left')
+  })
+  settled(await arrange({ circle: 'ag', features: layout }, as(camille)))
+  settled(await hide({ circle: 'web', feature: 'contact', hidden: false }, as(yusuf)))
+  settled(await show({ circle: 'web', group: 'payments', shown: false }, as(yusuf)))
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, web)
+})
+
+test('a close dropping a group of the layout while a write shows that group in a circle deadlocks, and settles by retry: the show refused for its group gone, or both landing, and the log folds', async () => {
+  const layout = (await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f
+  const dropped = layout.replace('; Payments: ', ', ')
+  const drops = settled(
+    await propose({ circle: 'ag', title: 'Payments into Books', deadline: fortnight(), body: '', actions: [{ kind: 'arrange-features', args: { circle: 'ag', features: dropped } }] }, as(camille)),
+  ) as { motion: string }
+  await due(drops.motion)
+  const deadlocks = async () => {
+    await su.query('SELECT pg_stat_clear_snapshot()')
+    return Number((await one<{ d: string }>('SELECT deadlocks AS d FROM pg_stat_database WHERE datname = current_database()')).d)
+  }
+  const before = await deadlocks()
+  // The head held: the close waits on it first, holding the root; then
+  // Yusuf's show of Payments in Web takes the group's key and waits on the
+  // head too. Released, the close's arrangement deletes the group, waiting
+  // on that key, while the show waits on the head: a deadlock, which
+  // Postgres breaks by rolling one back, and the write layer runs it again.
+  await racing(async (a, b, gated) => {
+    const release = await gated('SELECT n FROM cella.head FOR UPDATE')
+    const closing = close({ motion: drops.motion }, on_(a, camille))
+    await waiting(a)
+    const showing = show({ circle: 'web', group: 'payments', shown: true }, on_(b, yusuf))
+    await waiting(b)
+    await release()
+    const [closed, shown] = await Promise.all([closing, showing])
+    settled(closed)
+    if (shown.state === 'refused') {
+      assert.match(shown.reason ?? '', /no group payments in the co-op's layout/, 'the show is refused for its group gone')
+    } else {
+      assert.equal(shown.state, 'settled')
+    }
+  })
+  let after = await deadlocks()
+  for (let i = 0; i < 40 && after === before; i++) {
+    await new Promise((r) => setTimeout(r, 50))
+    after = await deadlocks()
+  }
+  assert.ok(after > before, 'Postgres found the deadlock, and the retry settled it')
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f, dropped, 'the close dropped Payments')
+  assert.deepEqual(await all(`SELECT "group" FROM circle.shown WHERE "group" = 'payments'`), [], 'and every circle\'s showing of it')
+  assert.equal((await one<{ f: string }>(`SELECT circle.features('web') AS f`)).f, web)
+  settled(await arrange({ circle: 'ag', features: layout }, as(camille)))
+  assert.deepEqual(await all(`SELECT id FROM circle.feature_group ORDER BY position`), ['governance', 'work', 'books', 'payments', 'members'].map((id) => ({ id })))
+})
+
+test('a motion carrying a row that is so by its close still passes, its action forgone, and the log folds', async () => {
+  const { motion } = settled(
+    await propose({ circle: 'web', title: 'Show Payments in Web', deadline: fortnight(), body: '', actions: [{ kind: 'show-group', args: { circle: 'web', group: 'payments', shown: 'yes' } }] }, as(lea)),
+  ) as { motion: string }
+  await due(motion)
+  settled(await show({ circle: 'web', group: 'payments', shown: true }, as(yusuf)))
+  const before = Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
+  settled(await close({ motion }, reacting(as(lea))))
+  assert.deepEqual(
+    (await all<{ op: string; settled: boolean }>('SELECT op, settled FROM cella.log WHERE n > $1 ORDER BY n', [before])).map((e) => [e.op, e.settled]),
+    [['motion:motion:close', true], ['circle:circle:show', false]],
+    'the close stands, forgoing a show Web already has',
+  )
+  settled(await show({ circle: 'web', group: 'payments', shown: false }, as(yusuf)))
 })
 
 eachBrowser((name, launch) => {

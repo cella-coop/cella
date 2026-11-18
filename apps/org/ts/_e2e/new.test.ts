@@ -104,8 +104,8 @@ eachBrowser((name, launch) => {
         const page = await ctx.newPage()
         for (const path of paths) {
           await visit(page, dev.base, path)
-          // A collection's New, not the arranger's New accordion on Features.
-          const create = page.getByRole('button', { name: /^New(?! accordion)/ })
+          // A collection's New, not the arranger's New group or accordion on Features.
+          const create = page.getByRole('button', { name: /^New(?! (accordion|group))/ })
           if (!(await create.count())) {
             continue
           }

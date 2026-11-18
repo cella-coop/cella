@@ -19,14 +19,23 @@ export interface Moved {
 // would be refused, why, in its guard's own words, as the guard says it
 // before anything is written; and the motion that changes it otherwise.
 // One that declares `choices` is an arrangement (`Arrange`), its value a
-// listing of them (`models/arrange.ts`).
+// listing of them (`models/arrange.ts`), `grouped` where every choice on
+// show sits in an accordion. A `toggle` is a switch, its value `yes` or
+// `no`, drawn `depth` 1 under the setting before it; one that declares
+// `post` posts the fields it gives for its value in place of its own, and
+// alone. `help` says how to use it, as an icon whose tooltip says it.
 export interface Setting {
   name: string
   label: string
   value: string
-  type?: 'text' | 'number' | 'date' | 'email' | 'url'
+  type?: 'text' | 'number' | 'date' | 'email' | 'url' | 'toggle'
   options?: { value: string; label: string }[]
   choices?: { value: string; label: string }[]
+  grouped?: boolean
+  depth?: 0 | 1
+  disabled?: boolean
+  post?: (value: string) => Record<string, string>
+  help?: string
   rows?: number
   write?: string
   refused?: string
@@ -67,7 +76,7 @@ export const direct = (s: Setting) => !!s.write && !s.refused
 // and in its tooltip why. None where the reader's own write saves it,
 // which the field says by saving.
 export interface Who {
-  kind: 'motion' | 'proposed' | 'host' | 'locked'
+  kind: 'motion' | 'proposed' | 'host' | 'locked' | 'help'
   label: string
   text?: string
 }
@@ -85,12 +94,22 @@ export function who(s: Setting, decider: Decider | null, proposed = false): Who 
   return { kind: 'motion', label: `${decider.name} changes this by motion`, ...(s.refused ? { text: s.refused } : {}) }
 }
 
-// What a setting's write posts: each setting of the form that the same
-// write saves directly and that differs from its value in force, with
-// its value as typed. One left as it is never posts, so a write logs
-// only what it changes, and a contact detail never set stays unset.
+// The settings a setting's write saves: each of the form that the same
+// write saves directly and that differs from its value in force; one
+// that declares `post`, alone.
+export function saving(settings: Setting[], s: Setting, value: (s: Setting) => string): Setting[] {
+  if (s.post) {
+    return direct(s) && value(s) !== s.value ? [s] : []
+  }
+  return settings.filter((o) => !o.post && direct(o) && o.write === s.write && value(o) !== o.value)
+}
+
+// What a setting's write posts: each setting it saves (`saving`) with its
+// value as typed, or the fields its `post` gives for it. One left as it
+// is never posts, so a write logs only what it changes, and a contact
+// detail never set stays unset.
 export function posted(settings: Setting[], s: Setting, value: (s: Setting) => string): Record<string, string> {
-  return Object.fromEntries(settings.filter((o) => direct(o) && o.write === s.write && value(o) !== o.value).map((o) => [o.name, value(o)]))
+  return Object.fromEntries(saving(settings, s, value).flatMap((o) => Object.entries(o.post ? o.post(value(o)) : { [o.name]: value(o) })))
 }
 
 // The motion proposing a setting's change to `value`, or none where no

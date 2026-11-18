@@ -1,7 +1,7 @@
 // The graft's writes and reactions, its reads, and its slice, which the
 // shell mounts.
 import { action, type Slice } from '@cella/org-db'
-import { arrange } from '@cella/org-circle/api'
+import { arrange, hide, show } from '@cella/org-circle/api'
 import { circles, forms as motionForms } from '@cella/org-motion/api'
 import { apply } from '../handlers/apply.ts'
 import { carried } from '../handlers/carried.ts'
@@ -84,9 +84,11 @@ export const slice: Slice = {
   },
   // Settings' Organization page: the co-op's particulars, which only the
   // assembly's motion replaces, and the scope's address and timezone; and
-  // each circle's features page, a page of the circle, whose features a
-  // holder of `arrange-features` over it arranges at once, and anyone
-  // else proposes to the circle whose motion arranges them; and on each,
+  // each circle's features page, a page of the circle, the root's laying
+  // out the co-op's features and another's choosing the groups it shows
+  // and the features it hides, which a holder of `arrange-features` over
+  // it changes at once, and anyone else proposes to the circle whose
+  // motion changes them; and on each,
   // the changes to propose gathered across them, proposed as one motion
   // (`basket`).
   settings: {
@@ -101,6 +103,8 @@ export const slice: Slice = {
       read: async (db, _, circle) => (circle ? featuring(db, circle) : null),
       actions: {
         arrange: action('circle:feature:arrange', (form, circle) => ({ circle: circle ?? '', features: form.get('features') }), arrange),
+        show: action('circle:group:show', (form, circle) => ({ circle: circle ?? '', group: form.get('group'), shown: form.get('shown') === 'yes' }), show),
+        hide: action('circle:feature:hide', (form, circle) => ({ circle: circle ?? '', feature: form.get('feature'), hidden: form.get('hidden') === 'yes' }), hide),
         propose: action('motion:motion:propose', (form, _, deps) => motionForms.propose(form, deps.db), propose),
         basket: action('motion:motion:propose', (form, _, deps) => forms.basket(form, deps.db), propose),
       },

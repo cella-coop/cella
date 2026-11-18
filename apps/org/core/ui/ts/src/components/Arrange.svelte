@@ -7,6 +7,7 @@
   import { useDrag } from '../hooks/useDrag.ts'
   import DragHandle from './DragHandle.svelte'
   import Icon from './Icon.svelte'
+  import Who from './Who.svelte'
 
   // An arrangement, a setting's field where it declares its choices: the
   // tree of those on show, in their order, each at the top level or in an
@@ -17,12 +18,16 @@
   // An accordion's name is its heading, which renames it; New accordion
   // makes an empty one to drag choices into. Its value is one listing
   // (`models/arrange.ts`), handed back by `onchange` once a drop lands.
+  // `grouped`, every choice on show sits in an accordion, called a group:
+  // none lands at the top level, a group is never named blank, and those
+  // not shown are not enabled. How to drag is an icon's tooltip.
   let {
     label,
     value,
     choices,
     onchange,
     hint,
+    grouped = false,
   }: {
     label: string
     value: string
@@ -30,6 +35,7 @@
     onchange: (value: string) => void
     // What the setting says beside its label, as who changes it.
     hint?: Snippet
+    grouped?: boolean
   } = $props()
 
   const id = $props.id()
@@ -38,15 +44,36 @@
   const state = useArrange()
   const items = $derived(listed(value))
   const lifted = $derived(drag.placing(list) ? unkeyed(drag.key) : null)
-  const layout = $derived(drawn(items, lifted, state.empty))
+  const layout = $derived(drawn(items, lifted, state.empty, grouped))
   const off = $derived(choices.filter((c) => !items.some((p) => p.value === c.value)))
   const groups = $derived([...new Set(items.flatMap((p) => (p.group === null ? [] : [p.group])))])
   const named = (v: string) => choices.find((c) => c.value === v)?.label ?? v
-  const called = (l: Lifted) => (l.kind === 'choice' ? named(l.value) : `the ${l.group} accordion`)
+  const noun = $derived(grouped ? 'group' : 'accordion')
+  const called = (l: Lifted) => (l.kind === 'choice' ? named(l.value) : `the ${l.group} ${noun}`)
+  const how = $derived(
+    grouped
+      ? 'Drag a feature by its grip, or press Space on it and move it with the arrow keys: into another group, along its group, or down to those not enabled. Drag a group by its grip to move it with its features; its name renames it.'
+      : 'Drag a feature by its grip, or press Space on it and move it with the arrow keys: into an accordion or out of one, along the list, or down to those not shown.',
+  )
+
+  // A group renamed, or an accordion, as its name changes or on Enter,
+  // which the setting holding it takes for its commit; a group named blank
+  // keeps its name.
+  function rename(group: string, empty: boolean, input: HTMLInputElement) {
+    if (grouped && !input.value.trim()) {
+      input.value = group
+      return
+    }
+    if (empty) {
+      state.rename(group, input.value)
+    } else {
+      onchange(spell(renamed(items, group, input.value)))
+    }
+  }
 
   function lift(key: string) {
     const l = unkeyed(key)!
-    const d = drawn(items, l, state.empty)
+    const d = drawn(items, l, state.empty, grouped)
     return { from: d.from, length: d.targets.length, label: called(l) }
   }
 
@@ -58,7 +85,7 @@
 
   function onplace(key: string, to: number) {
     const l = unkeyed(key)!
-    const t = drawn(items, l, state.empty).targets[to]
+    const t = drawn(items, l, state.empty, grouped).targets[to]
     if (!t) {
       return
     }
@@ -76,8 +103,8 @@
   aria-describedby="{id}-how"
   {@attach placing(drag, { list, lift, describe, onplace })}
 >
-  <legend class="label"><span>{label}</span>{@render hint?.()}</legend>
-  <p class="how" id="{id}-how">Drag a feature by its grip, or press Space on it and move it with the arrow keys: into an accordion or out of one, along the list, or down to those not shown.</p>
+  <legend class="label"><span>{label}</span>{@render hint?.()}<Who who={{ kind: 'help', label: `How to arrange ${label.toLowerCase()}`, text: how }} /></legend>
+  <p class="visually-hidden" id="{id}-how">{how}</p>
   <ul class="tree" aria-label="{label} on show">
     {#each layout.rows as row, i (row.kind === 'place' ? `p${row.at}` : row.kind === 'head' ? `h:${row.group}` : `c:${row.placed.value}`)}
       {#if row.kind === 'place'}
@@ -90,12 +117,13 @@
           data-drag-key={row.empty ? undefined : keyOf({ kind: 'accordion', group })}
           class:lifted={drag.holding(list, keyOf({ kind: 'accordion', group }))}
         >
-          {#if !row.empty}<DragHandle label="the {group} accordion" />{:else}<span class="grip"></span>{/if}
+          {#if !row.empty}<DragHandle label="the {group} {noun}" />{:else}<span class="grip"></span>{/if}
           <input
             class="name"
-            aria-label="Name of the {group} accordion"
+            aria-label="Name of the {group} {noun}"
             value={group}
-            onchange={(e) => (row.empty ? state.rename(group, e.currentTarget.value) : onchange(spell(renamed(items, group, e.currentTarget.value))))}
+            onchange={(e) => rename(group, row.empty, e.currentTarget)}
+            onkeydown={(e) => e.key === 'Enter' && !e.isComposing && rename(group, row.empty, e.currentTarget)}
           />
           {#if row.empty}<span class="hollow">Empty: drag a feature here</span>{/if}
         </li>
@@ -118,9 +146,9 @@
       <li class="none">None on show: drag a feature up here.</li>
     {/each}
   </ul>
-  <button type="button" class="make" onclick={() => state.make(groups)}><Icon icon={Plus} /> New accordion</button>
+  <button type="button" class="make" onclick={() => state.make(groups, noun)}><Icon icon={Plus} /> New {noun}</button>
   <div class="off" class:on={drag.aiming(list, offAt)} data-drop-zone={lifted ? offAt : undefined}>
-    <p class="caption" id="{id}-off">Not shown</p>
+    <p class="caption" id="{id}-off">{grouped ? 'Not enabled' : 'Not shown'}</p>
     {#if off.length}
       <ul aria-labelledby="{id}-off">
         {#each off as c (c.value)}
@@ -131,7 +159,7 @@
         {/each}
       </ul>
     {:else}
-      <p class="none">Every feature is on show.</p>
+      <p class="none">{grouped ? 'Every feature is enabled.' : 'Every feature is on show.'}</p>
     {/if}
   </div>
 </fieldset>
@@ -153,7 +181,6 @@
     font-size: var(--text-xs);
     color: var(--text-muted);
   }
-  .how,
   .none,
   .hollow {
     margin: 0;

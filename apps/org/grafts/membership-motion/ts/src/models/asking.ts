@@ -109,16 +109,23 @@ export interface Organization {
   timezone: string | null
 }
 
-// A circle's features page in Settings: its features in force, spelt as
-// one listing (`circle.features`), every feature the co-op installed, by
-// its schema, whether the reader arranges them at once, the circle whose
-// motion arranges them otherwise, and why no write of the reader's
-// changes them.
+// A circle's features page in Settings: whether it is the root, whose
+// page arranges the co-op's layout; its features in force, spelt as one
+// listing (`circle.features`), the root's the whole layout; every feature
+// the co-op installed, by its schema; the layout's groups, each by its id
+// and name with its features in order, and the ids of those the circle
+// shows and the features it hides; whether the reader changes them at
+// once, the circle whose motion changes them otherwise, and why no write
+// of the reader's changes them.
 export interface Featuring {
   circle: string
   name: string
+  root: boolean
   features: string
   installed: string[]
+  groups: { id: string; name: string; features: string[] }[]
+  shown: string[]
+  hidden: string[]
   may: boolean
   decider: { circle: string; name: string; deadline: string }
   refused: string

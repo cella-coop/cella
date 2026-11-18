@@ -119,17 +119,24 @@ export async function organization(db: Db): Promise<Organization> {
   return rows[0]
 }
 
-// A circle's features page: its features in force, every feature the
-// co-op installed, whether the reader arranges them at once, holding
-// `arrange-features` over the circle by a seat, and otherwise the circle
-// whose motion arranges them, the circle itself where it holds the power
-// over itself (`circle.arranger`), and why no write of the reader's
-// changes them; none for a circle there is not. Where no circle holds
-// it, the assembly is named, whose motion is refused until one does.
+// A circle's features page: whether it is the root, its features in
+// force, every feature the co-op installed, the layout's groups, those
+// the circle shows and the features it hides; whether the reader changes
+// them at once, holding `arrange-features` over the circle by a seat, and
+// otherwise the circle whose motion does, the circle itself where it
+// holds the power over itself (`circle.arranger`), and why no write of
+// the reader's changes them; none for a circle there is not. Where no
+// circle holds it, the assembly is named, whose motion is refused until
+// one does.
 export async function featuring(db: Db, circle: string): Promise<Featuring | null> {
   const { rows } = await db.query<Featuring>(
-    `SELECT c.id AS circle, c.name, circle.features(c.id) AS features,
+    `SELECT c.id AS circle, c.name, c.assembly AS root, circle.features(c.id) AS features,
             (SELECT coalesce(json_agg(i.f ORDER BY i.f), '[]') FROM circle.installed() i(f)) AS installed,
+            (SELECT coalesce(json_agg(json_build_object('id', g.id, 'name', g.name,
+                      'features', (SELECT coalesce(json_agg(f.feat ORDER BY f.position), '[]') FROM circle.feature f WHERE f."group" = g.id)) ORDER BY g.position), '[]')
+             FROM circle.feature_group g) AS groups,
+            (SELECT coalesce(json_agg(s."group" ORDER BY s."group"), '[]') FROM circle.shown s WHERE s.circle = c.id) AS shown,
+            (SELECT coalesce(json_agg(h.feat ORDER BY h.feat), '[]') FROM circle.hidden h WHERE h.circle = c.id) AS hidden,
             circle_person.may(cella.reader(), 'arrange-features', NULL, c.id, cella.verdict_date()) AS may,
             json_build_object('circle', d.id, 'name', d.name, 'deadline', to_char(cella.verdict_date() + 14, 'YYYY-MM-DD')) AS decider,
             c.name || '''s features change only by a motion of ' || d.name || ', which holds arrange-features over '

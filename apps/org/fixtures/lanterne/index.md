@@ -96,26 +96,30 @@ and its passed motion opening them; Care's workload review and its open
 motion on a quiet first hour; Tools' hosting move and its passed motion
 on a password manager.
 
-Each circle enables the features its work uses
+The co-op lays its features out once
 ([features](../../core/circle/index.md#features)), the founding's
-`[[feature]]` rows in `circle.toml`, one listing a circle: the assembly
-its governance, motions, policies, documents and meetings, and its
-members, membership, patronage and core's people, circles and mandates;
-coordination its governance and projects; Operations, where finance
-sits, the books, accounts, transactions, reports and imports, and the
-payments, invoices, bills, expenses and payslips, with contacts and
-employment; Web its projects, tasks, timesheets, files and contacts;
-Brand its projects, tasks, timesheets, files and the print and paper
-bills Sofia approves; Marketing its projects, tasks, timesheets,
-contacts and documents; Clients its contacts, projects, tasks and
-documents, and its governance; Hiring its tasks, documents and
-employment, and its governance; Care its tasks, meetings, documents and
-motions; Tools its projects, tasks, timesheets, expenses and files.
-Which features a circle shows is `arrange-features`'s: the assembly
-grants it to every circle but Hiring over itself by m-2026-018, on 20
-June 2026, and to coordination over Hiring, so a circle's own motion
-arranges them, and each lead's at once; the assembly holds it over
-every circle from the founding.
+`[layout]` in `circle.toml`, the root's listing, every installed feature
+under one of five groups: Governance, motions, meetings, documents and
+policies; Work, projects, tasks, timesheets, files and contacts; Books,
+accounts, transactions, reports and imports; Payments, invoices, bills,
+expenses and payslips; and Members, membership, patronage, core's people,
+circles and mandates, and employment. The assembly, the root, shows it
+all. Each other circle shows the groups its work uses and hides what it
+does not, the founding's `[[show]]` rows: coordination its governance
+and projects; Operations, where finance sits, the books and the payments,
+with contacts and employment; Web its projects, tasks, timesheets, files
+and contacts; Brand its projects, tasks, timesheets, files and the print
+and paper bills Sofia approves; Marketing its projects, tasks,
+timesheets, contacts and documents; Clients its governance, and its
+contacts, projects and tasks; Hiring its governance, tasks and
+employment; Care its governance and tasks; Tools its projects, tasks,
+timesheets, files and expenses. Every circle's sidebar draws the layout
+in its order, so Project sits in Work, first, wherever it shows. How
+the co-op lays them out and what a circle shows is `arrange-features`'s:
+the assembly holds it over every circle from the founding, the root
+among them, and grants it to every circle but Hiring over itself by
+m-2026-018, on 20 June 2026, and to coordination over Hiring, so a
+circle's own motion chooses what it shows, and each lead's at once.
 
 Camille is the manager, by a tenure from 20 June 2024 until 20 June 2028, with a mandate to
 sign contracts and commit up to 20 000 €. Julien holds the finance role: he

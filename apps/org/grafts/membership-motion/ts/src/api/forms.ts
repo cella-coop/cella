@@ -163,6 +163,9 @@ export interface Waiting {
   value: string
 }
 
+// A switch's value as a motion carries it, `yes` or `no`.
+const yes = (v: string) => (v === 'yes' ? 'yes' : 'no')
+
 function waiting(raw: string): Waiting[] {
   let parsed: unknown
   try {
@@ -179,9 +182,10 @@ function waiting(raw: string): Waiting[] {
 // A proposal from the changes to propose: one motion of the circle that
 // decides them carrying every change, each turned into the action its
 // page proposes, never the action a client names: the co-op's
-// particulars, all of them changed, as one rule of the assembly; a
-// circle's features as an `arrange-features` of that circle; a circle's
-// settings, those of one circle, as a rule each. The guards judge each
+// particulars, all of them changed, as one rule of the assembly; the
+// co-op's features as an `arrange-features` of its root, a circle's group
+// shown as a `show-group` and its feature shown as a `hide-feature`; a
+// circle's settings, those of one circle, as a rule each. The guards judge each
 // action as the page's own proposal is judged.
 export async function basket(form: Form, db: Db): Promise<Propose> {
   const changes = waiting(form.get('changes'))
@@ -201,6 +205,11 @@ export async function basket(form: Form, db: Db): Promise<Propose> {
       actions.push(await reparticular((name) => given(name.replace(/^particulars_/, '')), db))
     } else if (page === 'features' && group[0]!.field === 'features') {
       actions.push({ kind: 'arrange-features', args: { circle: id, features: group.at(-1)!.value } })
+    } else if (page === 'features' && group[0]!.field.startsWith('group:')) {
+      actions.push({ kind: 'show-group', args: { circle: id, group: group[0]!.field.slice('group:'.length), shown: yes(group.at(-1)!.value) } })
+    } else if (page === 'features' && group[0]!.field.startsWith('feature:')) {
+      // A feature's switch is on where the circle shows it.
+      actions.push({ kind: 'hide-feature', args: { circle: id, feature: group[0]!.field.slice('feature:'.length), hidden: yes(group.at(-1)!.value) === 'yes' ? 'no' : 'yes' } })
     } else if (page === 'rules') {
       // A circle's settings are ruled by the circle that decides them, so
       // a motion of any other circle would word the rule as its own and

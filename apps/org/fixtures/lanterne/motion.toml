@@ -387,9 +387,10 @@ args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: crea
 kind = "policy"
 args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: amend-circle}, to change a circle's name, purpose or procedure, by motion", takes = "scop-sarl-fr:amend-circle" }
 
-# Which features a circle shows is decided apart from its name, purpose
-# and procedure: the assembly arranges any circle's by motion, and may
-# grant a circle the power over its own (m-2026-018).
+# The co-op's layout of features and what each circle shows of it are
+# decided apart from a circle's name, purpose and procedure: the assembly
+# arranges the layout, at the root, and what any circle shows, by motion,
+# and may grant a circle the power over its own (m-2026-018).
 [[motion.action]]
 kind = "policy"
 args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: arrange-features}, to arrange any circle's features, by motion", takes = "scop-sarl-fr:arrange-features" }
@@ -1053,10 +1054,11 @@ reply = 1
 at = 2026-10-22
 text = "Separate for now: the checklist is how, this motion is that we always do. We can link them later."
 
-# The assembly lets each circle arrange its own features: every circle
-# but Hiring holds the power over itself, so its own motion changes what
-# its sidebar shows, and coordination holds it over Hiring. Each
-# circle's lead arranges their own circle's at once. It closed with the
+# The assembly lets each circle choose what it shows of the co-op's
+# layout: every circle but Hiring holds the power over itself, so its own
+# motion changes which groups its sidebar shows and which features it
+# hides, and coordination holds it over Hiring. Each circle's lead
+# changes their own circle's at once. It closed with the
 # annual assembly, so statutes@2 reads it.
 [[motion]]
 id = "m-2026-018"

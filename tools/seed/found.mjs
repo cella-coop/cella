@@ -133,12 +133,28 @@ export async function seed(db, read, { from, dir }) {
         r.holders ?? null,
       ])
     }
-    // The features each circle enabled, one listing a circle, in its order.
-    for (const f of structure.feature ?? []) {
-      await db.query('INSERT INTO circle.feature (circle, feat, position, "group") SELECT $1, l.feat, l.position, l."group" FROM circle.listed($2) l', [
-        f.circle,
-        f.features,
-      ])
+    // The co-op's layout, the root's listing, each group's id minted from
+    // its name; then what each other circle shows of it, the groups it
+    // shows and the features it hides inside them.
+    if (structure.layout?.features) {
+      await db.query('SELECT circle.lay($1, circle.grouped($1))', [structure.layout.features])
+    }
+    const each = (list) => (list ?? '').split(',').map((v) => v.trim()).filter(Boolean)
+    const sound = async (circle, group, feature) => {
+      const { rows } = await db.query('SELECT circle.row_flaw($1, $2, $3) AS flaw', [circle, group, feature])
+      if (rows[0].flaw) {
+        throw new Error(`${from}: ${rows[0].flaw}`)
+      }
+    }
+    for (const s of structure.show ?? []) {
+      for (const g of each(s.groups)) {
+        await sound(s.circle, g, null)
+        await db.query('SELECT circle.show($1, $2, true)', [s.circle, g])
+      }
+      for (const f of each(s.hides)) {
+        await sound(s.circle, null, f)
+        await db.query('SELECT circle.hide($1, $2, true)', [s.circle, f])
+      }
     }
 
     // Everyone the co-op knows, then the memberships they hold.

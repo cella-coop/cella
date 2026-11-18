@@ -1,5 +1,6 @@
 <script lang="ts">
   import HardDrives from 'phosphor-svelte/lib/HardDrives'
+  import Info from 'phosphor-svelte/lib/Info'
   import LockSimple from 'phosphor-svelte/lib/LockSimple'
   import Scales from 'phosphor-svelte/lib/Scales'
   import { tip } from '../attachments/tip.ts'
@@ -10,14 +11,14 @@
   // scales where a circle changes it by motion, the same in the accent
   // where the reader's change waits among the changes to propose, a host's
   // drives where a host sets it, a lock where nothing the reader may write
-  // changes it. Its name says it in a few words and its tooltip explains
-  // (`../attachments/tip.ts`), shown as the pointer rests on it or the
-  // keyboard focuses it, and read as its description by assistive
-  // technology; Escape hides it.
+  // changes it, an i where it says how to use the setting. Its name says
+  // it in a few words and its tooltip explains (`../attachments/tip.ts`),
+  // shown as the pointer rests on it or the keyboard focuses it, and read
+  // as its description by assistive technology; Escape hides it.
   let { who }: { who: Who } = $props()
 
   const id = $props.id()
-  const icons = { motion: Scales, proposed: Scales, host: HardDrives, locked: LockSimple }
+  const icons = { motion: Scales, proposed: Scales, host: HardDrives, locked: LockSimple, help: Info }
 </script>
 
 <span class="who">

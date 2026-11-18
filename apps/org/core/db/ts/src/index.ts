@@ -136,11 +136,39 @@ export function lent(using: Borrow): Pick<Deps, 'db' | 'borrow'> {
   }
 }
 
+// SQLSTATEs deadlock_detected and serialization_failure: Postgres rolled
+// the transaction back whole, so it may run again.
+const AGAIN = new Set(['40P01', '40001'])
+const TRIES = 3
+
+// Runs a write's transaction, and again, up to three times in all, after a
+// short jittered pause, where Postgres rolled it back for a deadlock or a
+// serialization failure. Safe: the request is signed once, before, and
+// the same proof is submitted again; a rolled-back attempt appended
+// nothing to the log, its verdict, receipt and effects undone with it, so
+// nothing posts twice and nothing is signed twice. A handler's state
+// writes the database alone, so running it again redoes nothing outside
+// it. An effect is never retried alone: its error rolls back its
+// decision, which is retried whole.
+async function retrying<T>(attempt: () => Promise<T>): Promise<T> {
+  for (let n = 1; ; n++) {
+    try {
+      return await attempt()
+    } catch (e) {
+      if (!AGAIN.has(code(e) ?? '') || n >= TRIES) {
+        throw e
+      }
+      await new Promise((r) => setTimeout(r, 10 * n + Math.random() * 40))
+    }
+  }
+}
+
 // One write, one transaction: signed first, as the member's device does
 // before sending, with no connection held, then the transaction of a
 // connection borrowed for it alone, begun with `cella.begin`, then the
 // state change, then `cella.submit`, then its effects, then the borrow
-// commits. A state table takes rows only in a begun transaction, and one
+// commits, retried whole where Postgres rolled it back for a deadlock
+// (`retrying`). A state table takes rows only in a begun transaction, and one
 // commits only with its verdict. A refusal raises inside submit, so the
 // borrow rolls the state and the verdict back together and the refusal
 // uses no verdict number. Inside a write's transaction (`deps.effect`), a
@@ -153,7 +181,7 @@ export async function write<T>(deps: Deps, w: Write<T>): Promise<Settled<T> | Re
   const proof = await deps.sign(w.op, request)
   const borrow = deps.borrow ?? holding(deps.db)
   try {
-    return await borrow((db) => transact(db, deps, w, request, proof))
+    return await retrying(() => borrow((db) => transact(db, deps, w, request, proof)))
   } catch (e) {
     if (code(e) !== REFUSED) {
       throw e

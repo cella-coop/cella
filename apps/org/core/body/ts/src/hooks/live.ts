@@ -241,11 +241,16 @@ export class Live {
 
   // Every edit this browser holds that the session is not known to, as
   // one update: its own, and after a restart others' it heard before.
+  // Left already, as a timer `edited` or a failed post's own retry
+  // scheduled before `leave` or `stop`, posts nothing: both already
+  // cancel the timers that would call this directly, but a `#sending`
+  // this was already waiting on, started just before, still resolves
+  // into this check once it does.
   async #flush(): Promise<void> {
     while (this.#sending) {
       await this.#sending
     }
-    if (!this.writable || !ahead(this.doc, this.#accepted)) {
+    if (this.#left || !this.writable || !ahead(this.doc, this.#accepted)) {
       return
     }
     const upto = this.doc.oplogVersion()
@@ -396,5 +401,18 @@ export class Live {
     this.#left = true
     clock.clear(this.#post)
     clock.clear(this.#pause)
+  }
+
+  // Stops this instance at once, unlike `leave`: nothing it holds is
+  // saved first, and nothing of it is posted after, ever again, under
+  // an identity this browser no longer is. Every path that would post,
+  // a debounced flush, a failed post's own retry, a save a pause or a
+  // caller made, already reads `#left` before it does, the same flag
+  // `leave` itself sets; this only sets it without saving first.
+  stop(): void {
+    const { clock } = this.#t
+    clock.clear(this.#post)
+    clock.clear(this.#pause)
+    this.#left = true
   }
 }

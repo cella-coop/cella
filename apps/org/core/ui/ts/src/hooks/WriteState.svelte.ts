@@ -1,7 +1,7 @@
 import { onMount } from 'svelte'
 import type { Outcome } from '../models/outcome.ts'
 import { lost, post, took, type Answer } from '../post.ts'
-import { clear as clearDrafts, reconcile, watch } from './drafts.svelte.ts'
+import { reconcile, watch } from './drafts.svelte.ts'
 
 // A remote command's call, whose answer may carry the queries it asks
 // refreshed (`updates`), as SvelteKit's are.
@@ -66,18 +66,25 @@ export class WriteState {
   // again whenever it changes without a page reload (a session that
   // expired, a device revoked, a direct `/sign-out`, not only the two
   // forms that also clear on the spot): nothing that answered to an
-  // earlier identity survives to be replayed under this one. Also
-  // drops every draft the moment another tab of this browser reconciles
-  // to a different identity than this one has, so a tab left open under
-  // a session signed out of elsewhere does not wait for its own next
-  // reconcile to notice.
+  // earlier identity survives to be replayed under this one. Where
+  // another tab of this browser reconciles to a different identity
+  // than this one's own, this tab reloads itself rather than try to
+  // make every open body and property notice in place: simpler, and
+  // the one way that is sure nothing of theirs keeps running under a
+  // name this browser no longer answers to here.
   identify(actor: () => string, copy: () => string) {
     this.#actor = actor
     this.#copy = copy
     $effect(() => {
       reconcile(actor(), copy())
     })
-    onMount(() => watch(() => clearDrafts()))
+    onMount(() =>
+      watch((identity) => {
+        if (identity !== `${actor()}|${copy()}`) {
+          location.reload()
+        }
+      }),
+    )
   }
 
   get actor(): string {

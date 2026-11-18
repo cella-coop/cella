@@ -184,7 +184,9 @@ export class LiveState {
   }
 
   // Stops this body's session at once, under an identity it no longer
-  // is: no further post is made, the stream closes, and the browser's
+  // is: `Live` itself is stopped, terminally, so nothing it still holds
+  // scheduled, a debounced flush, a failed post's retry, a save at the
+  // next pause, posts after this, the stream closes, and the browser's
   // own draft, kept under this identity's own key, is dropped with it
   // (the reconcile a changed identity also triggers would drop it too,
   // but not necessarily before this instance would otherwise act on
@@ -194,6 +196,7 @@ export class LiveState {
       return
     }
     this.#stopped = true
+    this.#live.stop()
     this.#source?.close()
     this.#source = null
     this.#abort.abort()

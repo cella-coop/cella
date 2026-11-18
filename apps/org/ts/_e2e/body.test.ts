@@ -478,17 +478,27 @@ for (const [name, launch] of browsers().filter(([n]) => n in signOutTasks)) {
   })
 }
 
-// Who is signed in can change without either form: a session cookie
-// cleared directly (an expiry or a revoked device reads the same way
-// to this browser), never `/sign-out`'s own `onsubmit`. The root
-// layout reconciles against it all the same, the next time it reads
-// who is signed in, so Léa's draft is dropped before Thomas, signed in
-// right after on the same browser, ever mounts a page that could
-// replay it. In every browser.
-const cookieTasks: Record<string, string> = { chromium: 't-44', firefox: 't-45', webkit: 't-58' }
-for (const [name, launch] of browsers().filter(([n]) => n in cookieTasks)) {
-  test(`${name}: the session cookie cleared directly, without signing out, still drops a draft before another person sees it`, async () => {
-    const task = cookieTasks[name]
+// Who is signed in can change out from under an already-open page,
+// never told to leave: Léa edits a task, its own saves blocked, on one
+// page of a browser context; on a second page of the same context the
+// session cookie is cleared directly (as an expiry or a revoked device
+// would leave it, never `/sign-out`'s own `onsubmit`) and Thomas signs
+// in. The first page is never navigated by this scenario, by it or by
+// anything it posts: it reloads on its own, the moment it hears an
+// identity change over `storage` (clearing the cookie is itself one,
+// to no one signed in, before Thomas's own; either reloads it), so
+// Léa's blocked edit never reaches the server, however many times. The
+// test itself then opens the same task, now signed in as Thomas since
+// his cookie already holds the whole context; the page shows nothing
+// of Léa's edit, and a fresh edit of Thomas's own, on this new page,
+// survives its own reload: the identity marker a wholesale clear could
+// otherwise have taken with it stays, `clear` leaving it be, so a
+// fresh identity's own draft is undisturbed by the clear that just
+// dropped the last one's. In every browser.
+const sharedTasks: Record<string, string> = { chromium: 't-30', firefox: 't-34', webkit: 't-37' }
+for (const [name, launch] of browsers().filter(([n]) => n in sharedTasks)) {
+  test(`${name}: a second page signing in as someone else reloads the first on its own, and the next person's own draft still survives a reload`, async () => {
+    const task = sharedTasks[name]
     const su = new pg.Client()
     await su.connect()
     const { base, stop } = await serve()
@@ -497,44 +507,66 @@ for (const [name, launch] of browsers().filter(([n]) => n in cookieTasks)) {
     try {
       const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
       await signIn(context, base, lea)
-      const page = await context.newPage()
-      page.on('pageerror', (e) => errors.push(`${name}: ${e.message}`))
-      await page.goto(`${base}/tasks/${task}`)
-      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      const page1 = await context.newPage()
+      page1.on('pageerror', (e) => errors.push(`${name}: page 1: ${e.message}`))
+      await page1.goto(`${base}/tasks/${task}`)
+      await page1.waitForSelector('[data-body=edit]', { timeout: 20_000 })
 
       const block = (route: Route) => (route.request().method() === 'POST' ? route.abort() : route.continue())
-      await page.route('**/_app/remote/**', block)
-      await page.route('**/body/live', block)
+      await page1.route('**/_app/remote/**', block)
+      await page1.route('**/body/live', block)
 
-      const line = `Léa's edit, orphaned by a cleared cookie, in ${name}`
-      await editor(page).locator('[contenteditable=true]').last().click()
-      await page.keyboard.press('End')
-      await page.keyboard.press('Enter')
-      await page.keyboard.type(line)
-      await page.reload()
-      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
-      await shows(page, [line], `${name}: right after the reload, from what was kept`)
+      const lineA = `Léa's blocked edit, orphaned when Thomas signs in, in ${name}`
+      await editor(page1).locator('[contenteditable=true]').last().click()
+      await page1.keyboard.press('End')
+      await page1.keyboard.press('Enter')
+      await page1.keyboard.type(lineA)
+
+      // Set up before the identity actually changes, so a reload fast
+      // enough to land before this line would still be caught by it.
+      const reloaded = page1.waitForEvent('load', { timeout: 20_000 })
+
+      const page2 = await context.newPage()
+      page2.on('pageerror', (e) => errors.push(`${name}: page 2: ${e.message}`))
+      await context.clearCookies()
+      await page2.goto(`${base}/sign-in`)
+      await page2.getByTitle(thomas).click()
+      await page2.waitForURL(`${base}/inbox`)
+
+      // Page 1 was never told to navigate anywhere: it reloads itself
+      // the moment it hears of the identity changing, here as soon as
+      // page 2 reaches `/sign-in`, named to no one yet, already a
+      // change from Léa's own; signed out, its own reload lands where
+      // this browser now sends anyone without a session, never the
+      // task page it does not post to.
+      await reloaded
 
       const blocked = await su.query<{ text: string }>('SELECT cella.document_text(body) AS text FROM task.task WHERE id = $1', [task])
-      assert.ok(!(blocked.rows[0]?.text ?? '').includes(line), `${name}: the blocked save never reached the server`)
+      assert.ok(!(blocked.rows[0]?.text ?? '').includes(lineA), `${name}: Léa's blocked edit never reached the server`)
 
-      // Neither form: the cookie goes, as an expiry or a revoked device
-      // would leave it, with no `onsubmit` of its own to clear anything.
-      await context.clearCookies()
-      await page.unrouteAll()
-      await page.goto(`${base}/sign-in`)
-      await page.getByTitle(thomas).click()
-      await page.waitForURL(`${base}/inbox`)
-      // Firefox: see the sign-out scenario above for why.
-      await page.waitForLoadState('networkidle')
-      await page.goto(`${base}/tasks/${task}`)
-      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
-      const shown = (await page.locator('main [role=document]').first().textContent()) ?? ''
-      assert.ok(!shown.includes(line), `${name}: Thomas is shown none of Léa's orphaned edit`)
+      // Thomas is signed in on this browser now, the context's cookie
+      // jar one for every page in it; a fresh page on the task shows
+      // nothing of Léa's edit, which was never posted and is this
+      // page's to begin with, never replayed into it.
+      const page3 = await context.newPage()
+      page3.on('pageerror', (e) => errors.push(`${name}: page 3: ${e.message}`))
+      await page3.goto(`${base}/tasks/${task}`)
+      await page3.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      const shown = (await page3.locator('main [role=document]').first().textContent()) ?? ''
+      assert.ok(!shown.includes(lineA), `${name}: Thomas is shown none of Léa's blocked edit`)
 
-      await page.waitForTimeout(3_500)
-      const after = await su.query<{ text: string }>('SELECT cella.document_text(body) AS text FROM task.task WHERE id = $1', [task])
-      assert.ok(!(after.rows[0]?.text ?? '').includes(line), `${name}: nothing of Léa's draft was ever posted, cookie cleared or not`)
+      // Thomas's own edit survives its own reload: the clear that just
+      // dropped Léa's draft left the identity marker alone, so his own
+      // draft is not disturbed by it.
+      const lineB = `Thomas's own edit, kept across his own reload, in ${name}`
+      await editor(page3).locator('[contenteditable=true]').last().click()
+      await page3.keyboard.press('End')
+      await page3.keyboard.press('Enter')
+      await page3.keyboard.type(lineB)
+      await page3.reload()
+      await page3.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      await shows(page3, [lineB], `${name}: Thomas's own edit, right after his own reload`)
+
       assert.deepEqual(errors, [], `${name}: the pages threw nothing`)
     } finally {
       await browser.close()

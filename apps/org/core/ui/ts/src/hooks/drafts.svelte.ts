@@ -29,6 +29,11 @@ export interface Draft {
 const prefix = 'cella:draft:'
 const day = 24 * 60 * 60 * 1000
 
+// Who this browser last reconciled its drafts against: who was signed
+// in and, on a demo, the copy, as `${actor}|${copy}`; absent until the
+// first reconcile. Never a draft, so `clear` leaves it be.
+const identityKey = 'cella:identity'
+
 // A property's own name for its draft: who kept it, on which demo copy,
 // on which page and which field, so `PropEdit`'s stash and `Properties`'
 // replay, built apart, always agree on it.
@@ -98,13 +103,17 @@ export function peek(id: string): Draft | null {
 // once: on sign-out, since an earlier session's name no longer answers
 // to this browser, and on a demo reset, since the copy they were kept
 // for is gone and a fresh one, sharing the same paths, must never
-// replay what an earlier copy held.
+// replay what an earlier copy held. Never removes `identityKey` itself:
+// that is `reconcile`'s own record of who this was last cleared for,
+// not a draft, and clearing it here would have `setIdentity` write it
+// again right after, a storage event for it in every other tab for
+// nothing.
 export function clear(): void {
   try {
     const keys: string[] = []
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i)
-      if (k?.startsWith('cella:')) {
+      if (k?.startsWith('cella:') && k !== identityKey) {
         keys.push(k)
       }
     }
@@ -137,11 +146,6 @@ export function retry(id: string, draft: Draft, send: (write: string, fields: [s
     },
   )
 }
-
-// Who this browser last reconciled its drafts against: who was signed
-// in and, on a demo, the copy, as `${actor}|${copy}`; absent until the
-// first reconcile.
-const identityKey = 'cella:identity'
 
 function storedIdentity(): string | null {
   try {
@@ -179,18 +183,17 @@ export function reconcile(actor: string, copy: string): void {
   setIdentity(identity)
 }
 
-// Calls `onChange` whenever another tab of this browser reconciles to a
-// different identity than the one stored when this call was made (the
-// `storage` event fires only for another document's writes, never this
-// one's own, so a tab need not guard against its own reconcile). A tab
-// left open under a session another tab has since signed out of, or
-// signed in as someone else from, drops what it held the moment that
-// happens, not only the next time it reconciles on its own. Returns how
-// to stop listening.
-export function watch(onChange: () => void): () => void {
+// Calls `onChange` with the identity another tab of this browser just
+// reconciled to, whenever that happens (the `storage` event fires only
+// for another document's writes, never this one's own, so a tab need
+// not guard against its own reconcile, and never fires for the same
+// value written twice). `onChange` compares it to this tab's own
+// before acting, so a sibling tab signing in as the same person makes
+// it a no-op. Returns how to stop listening.
+export function watch(onChange: (identity: string) => void): () => void {
   const listener = (e: StorageEvent) => {
-    if (e.key === identityKey && e.newValue !== e.oldValue) {
-      onChange()
+    if (e.key === identityKey && e.newValue !== null && e.newValue !== e.oldValue) {
+      onChange(e.newValue)
     }
   }
   try {

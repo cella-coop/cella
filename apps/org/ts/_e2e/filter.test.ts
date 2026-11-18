@@ -136,7 +136,10 @@ eachBrowser((browserName, launch) => {
         await addFilter(page, field.label)
         const item = page.locator(`[role="menuitemcheckbox"][data-value="${value}"]`)
         await item.waitFor()
-        assert.equal((await item.innerText()).trim(), said, `${browserName}: ${name}'s ${field.label} offers ${value} as ${said}`)
+        // A person's or a circle's option leads with an avatar or an
+        // icon, its own text (initials, none) run against the name with
+        // no space; read Value's own .text span, past it.
+        assert.equal((await item.locator('.text').innerText()).trim(), said, `${browserName}: ${name}'s ${field.label} offers ${value} as ${said}`)
         await item.click()
         await page.waitForURL((u) => u.searchParams.has('where'))
         assert.deepEqual(condition(), [{ field: field.key, is: [value] }])
@@ -149,7 +152,7 @@ eachBrowser((browserName, launch) => {
         await keeps(page, name, layout, want, `${browserName} ${name} ${layout} by ${field.key}`)
         const chip = page.locator('.bar .chip', { hasText: `${field.label} is ${said}` })
         await chip.waitFor()
-        assert.equal(await chip.locator('.dot').count(), 1, `${browserName}: ${name}'s unsaved ${field.label} chip carries a dot`)
+        assert.equal(await chip.locator('.changed-dot').count(), 1, `${browserName}: ${name}'s unsaved ${field.label} chip carries a dot`)
       }
 
       // The day most expenses were spent on, which the calendar opens on,
@@ -411,7 +414,7 @@ eachBrowser((browserName, launch) => {
       assert.equal(await page.getByRole('button', { name: 'Save', exact: true }).count(), 0, `${browserName}: Save is gone once the view is saved`)
       const savedChip = page.locator('.bar .chip', { hasText: `Status is ${a}` })
       await savedChip.waitFor()
-      assert.equal(await savedChip.locator('.dot').count(), 0, `${browserName}: the saved view's own chip draws plain, no dot`)
+      assert.equal(await savedChip.locator('.changed-dot').count(), 0, `${browserName}: the saved view's own chip draws plain, no dot`)
 
       assert.deepEqual(errors, [], `${browserName}: no page error`)
       await context.close()

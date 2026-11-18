@@ -186,7 +186,7 @@
     {#if scoped}
       <li>
         <span class="chip" class:added={scopeChanged}>
-          <span class="said-trigger"><span class="said">Circle</span> <span class="op">is</span> <span class="said">{lens}</span>{#if scopeChanged}<span class="dot" aria-hidden="true"></span><span class="visually-hidden">, changed</span>{/if}</span>
+          <span class="said-trigger"><span class="said">Circle</span> <span class="op">is</span> <span class="said">{lens}</span>{#if scopeChanged}<span class="changed-dot" aria-hidden="true"></span><span class="visually-hidden">, changed</span>{/if}</span>
           <button type="button" class="remove" aria-label="Read every circle's rows" title="Every circle" onclick={() => onchange({ ...spec, across: true })}><Icon icon={X} /></button>
         </span>
       </li>
@@ -203,7 +203,7 @@
               }
             }}
           >
-            {#snippet trigger()}<span class="said">{f.label}</span> <span class="op">{op(f.key)}</span> <span class="said">{said(f.key)}</span>{#if changed(f.key)}<span class="dot" aria-hidden="true"></span><span class="visually-hidden">, changed</span>{/if}{/snippet}
+            {#snippet trigger()}<span class="said">{f.label}</span> <span class="op">{op(f.key)}</span> <span class="said">{said(f.key)}</span>{#if changed(f.key)}<span class="changed-dot" aria-hidden="true"></span><span class="visually-hidden">, changed</span>{/if}{/snippet}
             {#if f.type === 'date'}
               {#each ['month', 'year'] as const as w (w)}
                 <button role="menuitemradio" class="item" aria-checked={within(f.key) === w} onclick={() => where(f.key, { field: f.key, within: w })}>
@@ -226,7 +226,7 @@
       <li>
         <span class="chip" class:added={qChanged}>
           <button type="button" class="said-trigger" data-search-trigger onclick={openSearch}>
-            <span class="said">Search <span class="op">contains</span> "{spec.q}"</span>{#if qChanged}<span class="dot" aria-hidden="true"></span><span class="visually-hidden">, changed</span>{/if}
+            <span class="said">Search <span class="op">contains</span> "{spec.q}"</span>{#if qChanged}<span class="changed-dot" aria-hidden="true"></span><span class="visually-hidden">, changed</span>{/if}
           </button>
           <button type="button" class="remove" aria-label="Remove the search" onclick={clearSearch}><Icon icon={X} /></button>
         </span>
@@ -330,7 +330,7 @@
     white-space: nowrap;
     min-width: 0;
   }
-  .dot {
+  .changed-dot {
     flex: none;
     width: 0.4rem;
     height: 0.4rem;

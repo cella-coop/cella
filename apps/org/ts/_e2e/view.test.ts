@@ -1,9 +1,10 @@
 // The View panel has one shape on every collection, in every browser,
 // display only: signed in as Camille on the dev server, each collection
 // the sidebar mounts draws, under its layout, the same rows in the same
-// order, Group by, Order by, Display and Circles, whatever its fields,
-// and no Filter and no search box, which are the filter bar's (`filter`
-// covers those); on a board, Columns above Grouping instead, as Linear's.
+// order, Group by, Order by and Display, whatever its fields, and no
+// Filter and no search box, which are the filter bar's (`filter` covers
+// those, including the lens's circle as a chip, "Circle is <name>", no
+// longer a row here); on a board, Columns above Grouping instead, as Linear's.
 // On tasks, a board, Columns is its enumeration, migrated from the
 // grouping an older view named, and Grouping opens on None, one lane,
 // until it names a field of its own, each lane the whole set of columns;
@@ -21,10 +22,25 @@ import { eachBrowser, serve, signIn } from './browser.ts'
 import { chosen } from './controls.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-view-shots'
-const rows = ['Group by', 'Order by', 'Display', 'Circles']
-const boardRows = ['Columns', 'Grouping', 'Order by', 'Display', 'Circles']
+const rows = ['Group by', 'Order by', 'Display']
+const boardRows = ['Columns', 'Grouping', 'Order by', 'Display']
+const calendarRows = ['Date', 'Show', 'Colour by', 'Order by', 'Display']
 
 const panel = (page: Page) => page.locator('section.card', { has: page.getByRole('heading', { name: 'View', exact: true }) })
+
+// A combobox's `aria-expanded`, a tick behind the popover's own open or
+// closed state (its `toggle` event, which moves it, is a task queued
+// after the popover shows or hides): wait for it rather than race it.
+async function expanded(page: Page, by: { getAttribute: (n: string) => Promise<string | null> }, want: 'true' | 'false') {
+  let got: string | null = null
+  for (let tries = 0; tries < 40 && got !== want; tries++) {
+    got = await by.getAttribute('aria-expanded')
+    if (got !== want) {
+      await page.waitForTimeout(25)
+    }
+  }
+  return got
+}
 
 eachBrowser((name, launch) => {
   test(`${name}: every collection's View panel has one shape, its specifics in its dropdowns and popovers, light and dark`, async () => {
@@ -68,7 +84,10 @@ eachBrowser((name, launch) => {
             seen++
             const boardBtn = view.getByRole('button', { name: 'Board', exact: true })
             const board = (await boardBtn.count()) > 0 && (await boardBtn.getAttribute('aria-pressed')) === 'true'
-            assert.deepEqual(await view.locator('.rows > .label').allTextContents(), board ? boardRows : rows, `${at}: ${path}'s View panel has the one shape`)
+            const calendarBtn = view.getByRole('button', { name: 'Calendar', exact: true })
+            const calendar = (await calendarBtn.count()) > 0 && (await calendarBtn.getAttribute('aria-pressed')) === 'true'
+            const want = board ? boardRows : calendar ? calendarRows : rows
+            assert.deepEqual(await view.locator('.rows > .label').allTextContents(), want, `${at}: ${path}'s View panel has the one shape`)
             assert.equal(await view.getByRole('group', { name: 'Layout' }).count(), 1, `${at}: ${path}'s layout is on top`)
           }
           assert.ok(seen > 10, `${at}: the panel is checked on most collections, ${seen}`)
@@ -94,7 +113,7 @@ eachBrowser((name, launch) => {
         const ordering = await view.getByRole('combobox', { name: 'Order by' }).boundingBox()
         assert.ok(direction && ordering && direction.x + direction.width <= ordering.x + 1, `${at}: the direction sits before Order by`)
         assert.ok(direction && ordering && Math.abs(direction.y - ordering.y) < 8, `${at}: the direction and Order by share a row`)
-        for (const control of ['Grouping', 'Order by', 'Circles']) {
+        for (const control of ['Grouping', 'Order by']) {
           assert.ok(Math.abs((await edge(control)) - (await edge('Columns'))) < 1.5, `${at}: ${control} ends on Columns's right edge`)
         }
         const pin = view.getByRole('button', { name: 'Pin this view', exact: true })
@@ -102,21 +121,29 @@ eachBrowser((name, launch) => {
         assert.equal(await pin.locator('svg').count(), 1, `${at}: Pin is an icon alone`)
         assert.equal(await view.getByRole('button', { name: 'Filter', exact: true }).count(), 0, `${at}: the View panel offers no Filter`)
         assert.equal(await view.getByPlaceholder('Search').count(), 0, `${at}: the View panel has no search box`)
-        // Columns answers the keyboard: an arrow opens its list on the
-        // option chosen, which wears the check and takes the focus;
+        // Columns answers the keyboard: an arrow opens its list, past six
+        // lanes a search box over it, which takes the focus, else the
+        // option chosen does; either way that option wears its check.
         // Escape closes it, choosing nothing, the focus staying on it.
         const by = view.getByRole('combobox', { name: 'Columns' })
+        const list = page.locator(`[id="${await by.getAttribute('aria-controls')}"]`)
         await by.focus()
         await page.keyboard.press('ArrowDown')
-        assert.equal(await by.getAttribute('aria-expanded'), 'true', `${at}: an arrow opens Columns`)
-        const active = () => page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset.value ?? null)
-        assert.equal(await active(), 'status', `${at}: on the option chosen`)
-        const list = page.locator(`[id="${await by.getAttribute('aria-controls')}"]`)
+        await list.waitFor()
+        assert.equal(await expanded(page, by, 'true'), 'true', `${at}: an arrow opens Columns`)
+        const search = list.locator('input.search')
+        if (await search.count()) {
+          assert.ok(await search.evaluate((el) => el === document.activeElement), `${at}: with a search box, it takes the focus`)
+        } else {
+          const active = () => page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset.value ?? null)
+          assert.equal(await active(), 'status', `${at}: on the option chosen`)
+        }
         assert.equal(await list.locator('[role=option][aria-selected=true]').filter({ has: page.locator('svg') }).count(), 1, `${at}: the chosen option wears its check`)
 
         await page.screenshot({ path: `${shots}/tasks-group-by-${name}-${scheme}.png` })
         await page.keyboard.press('Escape')
-        assert.equal(await by.getAttribute('aria-expanded'), 'false', `${at}: Escape closes it`)
+        await list.waitFor({ state: 'hidden' })
+        assert.equal(await expanded(page, by, 'false'), 'false', `${at}: Escape closes it`)
         assert.ok(await by.evaluate((el) => el === document.activeElement), `${at}: the focus stays on Group by`)
         assert.equal(await chosen(by), 'status', `${at}: Escape chooses nothing`)
 

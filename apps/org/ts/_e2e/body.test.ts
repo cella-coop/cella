@@ -191,3 +191,79 @@ test('chromium: two tabs saving from one base keep both members’ edits', { ski
     await su.end()
   }
 })
+
+// An edit held unsaved is not dropped by a reload that follows it at
+// once, before its own pause would have saved it: leaving the page
+// saves a real edit instead of abandoning it, as merely opening the
+// task, which seeds its empty paragraph and edits nothing, never would.
+// In Chromium and WebKit.
+const reloadTasks: Record<string, string> = { chromium: 't-8', webkit: 't-9' }
+for (const [name, launch] of browsers().filter(([n]) => n in reloadTasks)) {
+  test(`${name}: an edit survives a reload made before its pause would have saved it`, async () => {
+    const task = reloadTasks[name]
+    const su = new pg.Client()
+    await su.connect()
+    const { base, stop } = await serve()
+    const browser = await launch()
+    const errors: string[] = []
+    try {
+      const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
+      await signIn(context, base, lea)
+      const page = await context.newPage()
+      page.on('pageerror', (e) => errors.push(e.message))
+      await page.goto(`${base}/tasks/${task}`)
+      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      const line = `Léa's edit, reloaded at once in ${name}`
+      await editor(page).locator('[contenteditable=true]').first().click()
+      await page.keyboard.type(line)
+      await page.reload()
+      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      await shows(page, [line], `${name}: the reopened tab`)
+      const row = await su.query<{ text: string }>('SELECT cella.document_text(body) AS text FROM task.task WHERE id = $1', [task])
+      assert.match(row.rows[0]?.text ?? '', new RegExp(line), `${name}: the task's column holds the edit`)
+      assert.deepEqual(errors, [], `${name}: the pages threw nothing`)
+    } finally {
+      await browser.close()
+      await stop()
+      await su.end()
+    }
+  })
+}
+
+// Opening a task whose body was never saved, then leaving it, past its
+// pause and for another document, saves nothing there: the editor's
+// empty-paragraph seed is not an edit, so merely viewing it dirties
+// nothing. In Chromium and WebKit.
+const viewTasks: Record<string, string> = { chromium: 't-1', webkit: 't-2' }
+for (const [name, launch] of browsers().filter(([n]) => n in viewTasks)) {
+  test(`${name}: viewing a task's body, never edited, saves nothing at its pause or on leaving`, async () => {
+    const task = viewTasks[name]
+    const su = new pg.Client()
+    await su.connect()
+    const { base, stop } = await serve()
+    const browser = await launch()
+    const errors: string[] = []
+    try {
+      const before = await su.query<{ body: Buffer | null }>('SELECT body FROM task.task WHERE id = $1', [task])
+      assert.equal(before.rows[0]?.body ?? null, null, `${name}: the task holds no saved body yet`)
+      const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
+      await signIn(context, base, lea)
+      const page = await context.newPage()
+      page.on('pageerror', (e) => errors.push(e.message))
+      await page.goto(`${base}/tasks/${task}`)
+      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      // Past the 3 s pause a real edit would have saved at.
+      await page.waitForTimeout(3_500)
+      await page.goto(`${base}/inbox`)
+      const after = await su.query<{ body: Buffer | null }>('SELECT body FROM task.task WHERE id = $1', [task])
+      assert.equal(after.rows[0]?.body ?? null, null, `${name}: viewing it saved no body, at its pause or on leaving`)
+      const saves = await su.query(`SELECT 1 FROM cella.log WHERE op = 'task:body:save' AND cella.opened(n) ->> 'task' = $1`, [task])
+      assert.equal(saves.rowCount, 0, `${name}: viewing it made no save entry`)
+      assert.deepEqual(errors, [], `${name}: the pages threw nothing`)
+    } finally {
+      await browser.close()
+      await stop()
+      await su.end()
+    }
+  })
+}

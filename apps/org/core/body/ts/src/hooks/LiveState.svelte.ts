@@ -57,16 +57,19 @@ async function told(url: string, fields: [string, string][], signal: AbortSignal
 
 // A record's body kept live in the browser over its session: its updates
 // posted to the session's address, and its saves sent as the feat's save
-// write, each signed by this browser's device as every write is. It saves
-// at a pause and when it leaves the body, the page's unmounting or the
-// tab's hiding; the stream reopens with this browser's version vector, so
-// it misses nothing. A page the browser leaves for another document
-// (`pagehide`) makes no request after: its posts to the session in
-// flight are aborted, and the save its hiding asks for is made a task
-// later, after `pagehide` would have said so, and only where it did not,
-// since a request the browser cuts off as the document goes saves
-// nothing, and WebKit reports it as the page’s error. An abort sets no
-// problem the body shows.
+// write, each signed by this browser's device as every write is. It
+// saves at a pause in a real edit of its own and when it leaves the
+// body, the page's unmounting, the tab's hiding or a page left for
+// another document; the stream reopens with this browser's version
+// vector, so it misses nothing. The editor's empty-paragraph seed, and
+// any normalisation that changes nothing a reader would see, is never a
+// real edit, so a record merely viewed, never edited, is never saved.
+// Leaving the page for another document aborts the session's posts in
+// flight where this browser holds no real edit, since a request the
+// browser would otherwise cut off as the document goes saves nothing,
+// and WebKit reports it as the page's error; an abort sets no problem
+// the body shows. Where it does hold one, it is saved instead of
+// abandoned, accepting that the browser may still cut the request off.
 export class LiveState {
   readonly #live: Live
   readonly #at: Seat
@@ -81,9 +84,9 @@ export class LiveState {
   hash = $state('')
   #source: EventSource | null = null
   #stopped = true
-  // Whether the browser is leaving the page for another document, and
-  // what aborts the session's posts as it does.
-  #leaving = false
+  // What aborts the session's posts where the browser leaves holding no
+  // edit of its own, so WebKit reports no error for one cut off as the
+  // document goes.
   #abort = new AbortController()
 
   constructor(doc: LoroDoc, at: Seat) {
@@ -116,37 +119,52 @@ export class LiveState {
     const doc = this.#live.doc
     this.#stopped = false
     const offs = [
-      doc.subscribeLocalUpdates(() => {
-        this.#live.edited()
-        this.unsaved = true
-      }),
-      doc.subscribe(() => {
+      doc.subscribe((batch) => {
         this.hash = hash(doc)
+        if (batch.by !== 'local') {
+          return
+        }
+        // The editor's empty-paragraph seed, and any other commit whose
+        // origin starts `seed`, changes nothing a reader would see: it
+        // never dirties the body, so merely viewing an editable record
+        // saves nothing, at the pause or on leaving.
+        if (batch.origin?.startsWith('seed')) {
+          this.#live.seeded()
+        } else {
+          this.#live.edited()
+          this.unsaved = true
+        }
       }),
     ]
     const back = () => this.#open()
     const gone = () => {
       this.online = false
     }
-    // A tab hidden saves, a task later: a page being left fires
-    // `pagehide` after `visibilitychange` in the same task.
+    // A tab hidden saves at once where it holds an edit no save carries
+    // yet, this browser's own or one it heard.
     const hidden = () => {
-      if (document.visibilityState === 'hidden') {
-        setTimeout(() => {
-          if (!this.#leaving) {
-            void this.#live.save()
-          }
-        }, 0)
+      if (document.visibilityState === 'hidden' && this.unsaved) {
+        void this.#live.save()
       }
     }
+    // A page left for another document (`pagehide`, which fires after
+    // `visibilitychange` in the same task where both fire) saves too,
+    // so one fired without the other still saves; `Live.save` takes one
+    // at a time, so a save `hidden` already started is the same one.
+    // Where nothing is held, its session posts are aborted instead,
+    // which WebKit would otherwise report as the page's error; aborting
+    // one a held save waits on would hold it forever, so a held save is
+    // never cut off by this browser's own hand.
     const leaving = () => {
-      this.#leaving = true
-      this.#abort.abort()
+      if (this.unsaved) {
+        void this.#live.save()
+      } else {
+        this.#abort.abort()
+      }
     }
     // Back from the browser's cache, the page posts again.
     const shown = (e: PageTransitionEvent) => {
       if (e.persisted) {
-        this.#leaving = false
         this.#abort = new AbortController()
       }
     }

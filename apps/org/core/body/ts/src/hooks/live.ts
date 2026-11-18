@@ -43,7 +43,11 @@ export interface Timing {
 // edits and when it leaves, with who contributed since the last save as
 // the session tells it; a save with nothing new since the last is not
 // made, nor one while it holds an edit the session refused or never had,
-// its own or another's. Each save names as its `base` the hash of the saved body
+// its own or another's, nor one holding only this browser's own version
+// of the editor's empty-paragraph seed, which `seeded` names: a record
+// merely viewed, never really edited, this browser's seed its only
+// commit, is never saved by it.
+// Each save names as its `base` the hash of the saved body
 // this browser last imported, so the feat refuses one whose snapshot
 // does not hold the body it would replace; refused so, the browser reads
 // the record's body, merges it and saves at once. A save refused
@@ -78,6 +82,13 @@ export class Live {
   #post: unknown = null
   #pause: unknown = null
   #left = false
+  // This browser's own version right after its editor's empty-paragraph
+  // seed, or any other local commit whose origin starts `seed`: null
+  // until `seeded` names one. A record merely viewed, never edited by
+  // anyone, moves no peer's version past its own seed's, so `unsaved`
+  // counts nothing held; a real edit, this browser's or one it heard,
+  // always does, seed or not.
+  #floor: VersionVector | null = null
   // Called whenever what it shows changes.
   changed: () => void = () => {}
 
@@ -101,9 +112,10 @@ export class Live {
     this.#accepted = VersionVector.parseJSON(vv)
   }
 
-  // Whether this browser holds an edit the last save does not.
+  // Whether this browser holds an edit the last save does not: its own
+  // or one it heard, but never only the version its own seed moved.
   get unsaved(): boolean {
-    return ahead(this.doc, this.#saved)
+    return ahead(this.doc, this.#saved) && (!this.#floor || ahead(this.doc, this.#floor))
   }
 
   // This browser made an edit: post it soon, and save at the pause.
@@ -116,6 +128,15 @@ export class Live {
     this.#post = clock.set(() => this.#flush(), send)
     clock.clear(this.#pause)
     this.#pause = clock.set(() => this.save(), pause)
+  }
+
+  // This browser made a commit that changes nothing a reader would see,
+  // as the editor's empty-paragraph seed does: names its version the
+  // floor `unsaved` reads past. Holding only what this named, `unsaved`
+  // reads false; a real edit, from here or heard from another peer,
+  // moves the version past it, and `unsaved` reads true again.
+  seeded(): void {
+    this.#floor = this.doc.oplogVersion()
   }
 
   // The session's `joined`: what this browser may do and saves by, and,
@@ -249,7 +270,9 @@ export class Live {
 
   async #save(): Promise<void> {
     this.#t.clock.clear(this.#pause)
-    if (!this.writable) {
+    // Left already, as a stray timer or event calls it late: its own
+    // leaving saved what it held then, and this instance edits no more.
+    if (this.#left || !this.writable) {
       return
     }
     await this.#flush()

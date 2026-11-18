@@ -53,7 +53,7 @@ test('the server renders a page\'s content with its queries awaited, and what is
 test('the server renders the sign-in, an invitation\'s link and a settings page through their queries, and what is not there as a 404', async () => {
   const signing = await shell.page('/sign-in?back=/motions')
   assert.equal(signing.status, 200)
-  assert.ok(signing.text.includes('Sign in') && !signing.text.includes('data-pending'), 'the sign-in is in the page the server sends, and no skeleton')
+  assert.ok(/<h1 id="in" class="title[^"]*">/.test(signing.text) && !signing.text.includes('data-pending'), 'the sign-in is in the page the server sends, and no skeleton')
   const link = await shell.page('/join/no-such-secret')
   assert.equal(link.status, 404)
   assert.ok(link.text.includes('data-failed') && link.text.includes('taken up already'), 'a link that is no one\'s draws the failed snippet')

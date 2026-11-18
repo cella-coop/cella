@@ -2,7 +2,8 @@
   import { useEdit } from '../hooks/useEdit.ts'
   import { useWrites } from '../hooks/useWrites.ts'
   import { took } from '../post.ts'
-  import type { Edit, Editor } from '../models/view.ts'
+  import { stash, unstash, propertyDraftId } from '../hooks/drafts.svelte.ts'
+  import { editValue, type Edit, type Editor } from '../models/view.ts'
   import DateField from './DateField.svelte'
   import IconGrid from './IconGrid.svelte'
   import Pick from './Pick.svelte'
@@ -19,15 +20,30 @@
 
   const close = () => (root?.closest('[popover]') as HTMLElement | null)?.hidePopover()
 
+  // Kept the moment the choice is accepted, by who made it and which
+  // demo copy, with the value it replaces (`was`), so a reload right
+  // after, before the signed write itself survives it, still reaches
+  // the server: `Properties`' own mount, on the page the change is made
+  // on, posts it again, but only where the field still reads `was`, so
+  // it never overwrites a value this draft never saw. Refused outright,
+  // it is dropped, never retried with the same stale value; offline, it
+  // stands for the next opening to try again.
   async function commit(e: Edit, value: string) {
     s.problem = ''
-    const answer = await writes.shown(writes.send(e.writes?.[value] ?? e.write, [[e.field, value], ...(e.extra ?? [])]))
+    const write = e.writes?.[value] ?? e.write
+    const fields: [string, string][] = [[e.field, value], ...(e.extra ?? [])]
+    const id = propertyDraftId(writes.actor, writes.copy, location.pathname, e.field)
+    const tok = stash(id, write, fields, editValue(e))
+    const answer = await writes.shown(writes.send(write, fields))
+    if (took(answer) || ('done' in answer && answer.done && answer.done.state !== 'unknown')) {
+      unstash(id, tok)
+    }
     if (!took(answer)) {
       s.problem = 'The change was not made.'
     }
   }
 
-  const text = (e: Edit) => (Array.isArray(e.current) ? e.current.join(', ') : (e.current ?? ''))
+  const text = editValue
   const isDate = (e: Edit) => e.kind === 'date'
 </script>
 

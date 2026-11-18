@@ -1,5 +1,7 @@
+import { onMount } from 'svelte'
 import type { Outcome } from '../models/outcome.ts'
 import { lost, post, took, type Answer } from '../post.ts'
+import { reconcile, watch } from './drafts.svelte.ts'
 
 // A remote command's call, whose answer may carry the queries it asks
 // refreshed (`updates`), as SvelteKit's are.
@@ -44,10 +46,59 @@ export interface Route {
 export class WriteState {
   done = $state<Outcome | null>(null)
   #route: (() => Route) | null = null
+  // Who this browser is signed in as, and the demo copy it is on, if any:
+  // its join code, fresh on every copy and on every reset of one, empty
+  // outside a demo. The root layout names both, by a getter over the one
+  // query every page awaits, so a kept draft can be namespaced by them
+  // without a slice's own hook asking the server again.
+  #actor: () => string = () => ''
+  #copy: () => string = () => ''
+  // Set the moment another tab answers to someone else, before this tab
+  // reloads: from then on this tab is no one, so a body's own leaving
+  // (pagehide, visibilitychange) finds its identity changed and posts
+  // nothing under the cookie the other tab now holds.
+  #lost = false
 
   // The route the page is on names how its writes are posted.
   serve(route: () => Route) {
     this.#route = route
+  }
+
+  // Named by the root layout, once per page: who is signed in, and which
+  // demo copy, so every kept draft is namespaced by both and never
+  // replays for the wrong person or into a copy a reset has moved past.
+  // Reconciles every draft this origin keeps against it at once, and
+  // again whenever it changes without a page reload (a session that
+  // expired, a device revoked, a direct `/sign-out`, not only the two
+  // forms that also clear on the spot): nothing that answered to an
+  // earlier identity survives to be replayed under this one. Where
+  // another tab of this browser reconciles to a different identity
+  // than this one's own, this tab reloads itself rather than try to
+  // make every open body and property notice in place: simpler, and
+  // the one way that is sure nothing of theirs keeps running under a
+  // name this browser no longer answers to here.
+  identify(actor: () => string, copy: () => string) {
+    this.#actor = actor
+    this.#copy = copy
+    $effect(() => {
+      reconcile(actor(), copy())
+    })
+    onMount(() =>
+      watch((identity) => {
+        if (identity !== `${actor()}|${copy()}`) {
+          this.#lost = true
+          location.reload()
+        }
+      }),
+    )
+  }
+
+  get actor(): string {
+    return this.#lost ? '' : this.#actor()
+  }
+
+  get copy(): string {
+    return this.#lost ? '' : this.#copy()
   }
 
   get route(): Route {

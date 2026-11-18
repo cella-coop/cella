@@ -10,11 +10,19 @@ const retry = 2000
 // of its live session, and the write that saves it, sent by the page's
 // `send` and signed as any write is, its snapshot in the `snapshot`
 // field, the hash of the saved body it merged in `base`, and one
-// `contributor` field an address.
+// `contributor` field an address. `who` names who keeps a draft of this
+// body in this browser: the signed-in person and, on a demo, the copy's
+// own join code, fresh on every copy and on every reset of one, so a
+// draft never replays for the wrong person or into a copy a reset has
+// moved past.
 export interface Seat {
   live: () => string
   save: (write: string, fields: [string, string][]) => Promise<Answer>
+  who: () => string
 }
+
+// A day: a draft older than this is never replayed, only dropped.
+const day = 24 * 60 * 60 * 1000
 
 // A write's answer, as `Live` reads it.
 const sent = (a: Answer): Sent => {
@@ -80,9 +88,27 @@ async function told(url: string, fields: [string, string][], signal: AbortSignal
 // document (`keepalive`), but the save write itself, signed by an async
 // device key through the page's own writes, is not; a browser that
 // cuts it off still loses it, which this browser cannot help.
+const token = () => Math.random().toString(36).slice(2) + Date.now().toString(36)
+
 export class LiveState {
   readonly #live: Live
   readonly #at: Seat
+  // Who this body was opened as: checked again before every reconnect
+  // and before posting any edit, so a session that changes underneath
+  // an open body, signed out, signed in as someone else, or a demo
+  // reset, neither keeps driving it nor posts under the identity it no
+  // longer is.
+  readonly #who: string
+  // Where this browser keeps a real edit of its own no save carries yet,
+  // the moment it is made, so a reload right after one survives even
+  // where the save itself, two round trips signed by this browser's
+  // device, does not: one per the body's live address, since that is
+  // this browser's own name for it.
+  readonly #draft: string
+  // The draft this instance last stashed or replayed, by its token: a
+  // save's acknowledgement clears it only where it still names this
+  // one, never a newer draft another tab kept under the same id since.
+  #token: string | null = null
   online = $state(false)
   // Whether the session said what this browser may do, and whether it may
   // edit.
@@ -101,6 +127,11 @@ export class LiveState {
 
   constructor(doc: LoroDoc, at: Seat) {
     this.#at = at
+    this.#who = at.who()
+    // Who keeps this draft and which demo copy, ahead of the live
+    // address, so a draft this browser kept signed in as one person, or
+    // on a copy a reset has since moved past, never replays for another.
+    this.#draft = `cella:body-draft:${this.#who}:${at.live()}`
     const link: Link = {
       post: (update) => told(at.live(), [['update', b64.encode(update)]], this.#abort.signal),
       save: async (write, snapshot, contributors, base) =>
@@ -113,9 +144,104 @@ export class LiveState {
         ),
       saved: () => kept(at.live(), this.#abort.signal),
     }
-    this.#live = new Live(doc, link)
+    // Before anything else, what this browser kept of its own last time
+    // it held it, if it still does and is not older than a day:
+    // replayed synchronously, so a record never shows less than it last
+    // did, and the session below joins already holding it, which saves
+    // it again at its own next pause. Its token is adopted as this
+    // instance's own, so a save that carries it, made without a further
+    // edit of this instance's own first, still clears it correctly.
+    try {
+      const raw = localStorage.getItem(this.#draft)
+      if (raw) {
+        const stashed = JSON.parse(raw) as { snapshot?: string; ts?: number; token?: string }
+        if (typeof stashed.snapshot === 'string' && typeof stashed.ts === 'number' && Date.now() - stashed.ts <= day) {
+          doc.import(b64.decode(stashed.snapshot))
+          this.#token = typeof stashed.token === 'string' ? stashed.token : null
+        } else {
+          localStorage.removeItem(this.#draft)
+        }
+      }
+    } catch {
+      // Storage unavailable (private browsing, disabled, full), or what
+      // it held was not a draft this version reads: nothing to replay,
+      // and nothing kept past this that would only fail again.
+      try {
+        localStorage.removeItem(this.#draft)
+      } catch {
+        // Nothing more to do about it.
+      }
+    }
+    this.#live = new Live(doc, link, () => this.#who.split('|')[0])
     this.#live.changed = () => this.#show()
     this.hash = hash(doc)
+  }
+
+  // Whether this browser is still signed in as who it was when this
+  // body was opened.
+  #current(): boolean {
+    return this.#at.who() === this.#who
+  }
+
+  // Stops this body's session at once, under an identity it no longer
+  // is: `Live` itself is stopped, terminally, so nothing it still holds
+  // scheduled, a debounced flush, a failed post's retry, a save at the
+  // next pause, posts after this, the stream closes, and the browser's
+  // own draft, kept under this identity's own key, is dropped with it
+  // (the reconcile a changed identity also triggers would drop it too,
+  // but not necessarily before this instance would otherwise act on
+  // it). Idempotent.
+  #disown(): void {
+    if (this.#stopped) {
+      return
+    }
+    this.#stopped = true
+    this.#live.stop()
+    this.#source?.close()
+    this.#source = null
+    this.#abort.abort()
+    this.writable = false
+    this.online = false
+    this.problem = 'signed in as someone else now: this edit was not saved here'
+    this.#unstash()
+  }
+
+  // Keeps the merged document now, replacing what was kept before: called
+  // the moment a real edit is made, never debounced, so a reload with
+  // nothing dispatched between the keystroke and the unload still finds
+  // it.
+  #stash(): void {
+    const t = token()
+    try {
+      localStorage.setItem(this.#draft, JSON.stringify({ snapshot: b64.encode(this.#live.doc.export({ mode: 'snapshot' })), ts: Date.now(), token: t }))
+      this.#token = t
+    } catch {
+      // A draft too big to keep, or kept nowhere, is simply not replayed:
+      // this browser's own save is still tried as before.
+    }
+  }
+
+  // Removes the draft kept for this body, but only where it is still
+  // the one this instance itself last stashed or replayed (its token):
+  // another tab's newer, unsent snapshot, kept under the same id since,
+  // is never cleared by this one becoming saved.
+  #unstash(): void {
+    if (this.#token === null) {
+      return
+    }
+    try {
+      const raw = localStorage.getItem(this.#draft)
+      if (raw) {
+        const stashed = JSON.parse(raw) as { token?: string }
+        if (stashed.token !== this.#token) {
+          return
+        }
+      }
+      localStorage.removeItem(this.#draft)
+      this.#token = null
+    } catch {
+      // Nothing was kept, or it cannot be reached: either way, done.
+    }
   }
 
   #show(): void {
@@ -123,6 +249,11 @@ export class LiveState {
     this.writable = this.#live.writable
     this.problem = this.#live.problem
     this.unsaved = this.#live.unsaved
+    // Carried by a save, this browser's own or one it heard: what was
+    // kept for it is no longer needed.
+    if (!this.unsaved) {
+      this.#unstash()
+    }
   }
 
   start(): () => void {
@@ -134,6 +265,12 @@ export class LiveState {
         if (batch.by !== 'local') {
           return
         }
+        // Signed in as someone else now: this edit is dropped, not
+        // posted under an identity this browser no longer is.
+        if (!this.#current()) {
+          this.#disown()
+          return
+        }
         // The editor's empty-paragraph seed, and any other commit whose
         // origin starts `seed`, changes nothing a reader would see: it
         // never dirties the body, so merely viewing an editable record
@@ -143,6 +280,7 @@ export class LiveState {
         } else {
           this.#live.edited()
           this.unsaved = true
+          this.#stash()
         }
       }),
     ]
@@ -151,9 +289,12 @@ export class LiveState {
       this.online = false
     }
     // A tab hidden saves at once where it holds an edit no save carries
-    // yet, this browser's own or one it heard.
+    // yet, this browser's own or one it heard; signed in as someone
+    // else now, nothing is saved, and the session stops instead.
     const hidden = () => {
-      if (document.visibilityState === 'hidden' && this.unsaved) {
+      if (!this.#current()) {
+        this.#disown()
+      } else if (document.visibilityState === 'hidden' && this.unsaved) {
         void this.#live.save()
       }
     }
@@ -164,9 +305,12 @@ export class LiveState {
     // Where nothing is held, its session posts are aborted instead,
     // which WebKit would otherwise report as the page's error; aborting
     // one a held save waits on would hold it forever, so a held save is
-    // never cut off by this browser's own hand.
+    // never cut off by this browser's own hand. Signed in as someone
+    // else now, the session stops instead of either.
     const leaving = () => {
-      if (this.unsaved) {
+      if (!this.#current()) {
+        this.#disown()
+      } else if (this.unsaved) {
         void this.#live.save()
       } else {
         this.#abort.abort()
@@ -205,6 +349,11 @@ export class LiveState {
   #open(): void {
     this.#source?.close()
     if (this.#stopped) {
+      return
+    }
+    // Signed in as someone else now: never reconnects as them.
+    if (!this.#current()) {
+      this.#disown()
       return
     }
     const doc = this.#live.doc

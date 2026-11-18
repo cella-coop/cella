@@ -58,6 +58,7 @@ export interface Timing {
 export class Live {
   readonly doc: LoroDoc
   readonly #link: Link
+  readonly #expect: () => string
   readonly #t: Required<Timing>
   writable = false
   actor = ''
@@ -97,9 +98,14 @@ export class Live {
   // Called whenever what it shows changes.
   changed: () => void = () => {}
 
-  constructor(doc: LoroDoc, link: Link, t: Timing = {}) {
+  // `expect` names who this browser believes it joins as, empty where
+  // it does not yet know or does not care; `joined` refuses a session
+  // that answers with another actor, rather than trust the stream over
+  // what this browser itself holds.
+  constructor(doc: LoroDoc, link: Link, expect: () => string = () => '', t: Timing = {}) {
     this.doc = doc
     this.#link = link
+    this.#expect = expect
     this.#t = { clock: real, send: 250, pause: 3_000, retry: 2_000, ...t }
   }
 
@@ -157,7 +163,15 @@ export class Live {
   // where the session lacks edits this browser holds, as after a restart
   // of the server, one post of all of them, its own and others', and a
   // save at the pause, made only once the session took that post.
+  // Refused, naming who it was named instead, where this browser
+  // expects a particular actor and the session answers with another:
+  // never trusted over what this browser itself knows it is.
   async joined(j: Joined): Promise<void> {
+    const expected = this.#expect()
+    if (expected && j.actor !== expected) {
+      this.dropped(`joined the session as ${j.actor}, not ${expected}: refused`)
+      return
+    }
     this.writable = j.writable
     this.actor = j.actor
     this.#action = j.save
@@ -175,6 +189,10 @@ export class Live {
       return
     }
     await this.#flush()
+    // Stopped while the flush ran: nothing more posts.
+    if (this.#left) {
+      return
+    }
     this.#later()
   }
 
@@ -227,11 +245,16 @@ export class Live {
 
   // Every edit this browser holds that the session is not known to, as
   // one update: its own, and after a restart others' it heard before.
+  // Left already, as a timer `edited` or a failed post's own retry
+  // scheduled before `leave` or `stop`, posts nothing: both already
+  // cancel the timers that would call this directly, but a `#sending`
+  // this was already waiting on, started just before, still resolves
+  // into this check once it does.
   async #flush(): Promise<void> {
     while (this.#sending) {
       await this.#sending
     }
-    if (!this.writable || !ahead(this.doc, this.#accepted)) {
+    if (this.#left || !this.writable || !ahead(this.doc, this.#accepted)) {
       return
     }
     const upto = this.doc.oplogVersion()
@@ -295,6 +318,9 @@ export class Live {
       return
     }
     await this.#flush()
+    if (this.#left) {
+      return
+    }
     // No save carries an edit the session refused or never had, this
     // browser's or another's: it waits on them, and the edits are kept.
     if (ahead(this.doc, this.#accepted)) {
@@ -309,6 +335,9 @@ export class Live {
     }
     try {
       const k = await this.#link.saved()
+      if (this.#left) {
+        return
+      }
       if (k.base !== refused.base) {
         this.#keep(k)
         const again = await this.#attempt()
@@ -333,6 +362,9 @@ export class Live {
   // names, as between the session's `joined` and its catch-up, saves at
   // the next pause instead.
   async #attempt(): Promise<{ reason: string; base: string } | null> {
+    if (this.#left) {
+      return null
+    }
     if (!this.unsaved) {
       return null
     }
@@ -382,5 +414,18 @@ export class Live {
     this.#left = true
     clock.clear(this.#post)
     clock.clear(this.#pause)
+  }
+
+  // Stops this instance at once, unlike `leave`: nothing it holds is
+  // saved first, and nothing of it is posted after, ever again, under
+  // an identity this browser no longer is. Every path that would post,
+  // a debounced flush, a failed post's own retry, a save a pause or a
+  // caller made, already reads `#left` before it does, the same flag
+  // `leave` itself sets; this only sets it without saving first.
+  stop(): void {
+    const { clock } = this.#t
+    clock.clear(this.#post)
+    clock.clear(this.#pause)
+    this.#left = true
   }
 }

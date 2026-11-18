@@ -9,14 +9,17 @@
 // every circle, by a mandate with no scope; a reader who may not discuss
 // the body is core body's session tests' to prove. Each browser edits a
 // task of its own, so they meet in nothing they write. Screenshots light
-// and dark go to `SHOTS`. Run by `cella test e2e body`.
-// covers: task
+// and dark go to `SHOTS`. Run by `cella test e2e body`. One drawer
+// property, which saves the same way core body's own save does, has the
+// same window an edit followed at once by a reload opens, so Yusuf
+// types a project's budget and reloads at once too.
+// covers: task project
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
 import pg from 'pg'
-import type { BrowserContext, Page } from 'playwright-core'
+import type { BrowserContext, Page, Route } from 'playwright-core'
 import { browsers, eachBrowser, serve, signIn } from './browser.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-body-shots'
@@ -271,6 +274,299 @@ for (const [name, launch] of browsers().filter(([n]) => n in viewTasks)) {
       assert.equal(after.rows[0]?.body ?? null, null, `${name}: viewing it saved no body, at its pause or on leaving`)
       const saves = await su.query(`SELECT 1 FROM cella.log WHERE op = 'task:body:save' AND cella.opened(n) ->> 'task' = $1`, [task])
       assert.equal(saves.rowCount, 0, `${name}: viewing it made no save entry`)
+      assert.deepEqual(errors, [], `${name}: the pages threw nothing`)
+    } finally {
+      await browser.close()
+      await stop()
+      await su.end()
+    }
+  })
+}
+
+// An edit followed at once by a reload, with nothing dispatched between
+// the keystroke and it, still survives: this browser kept it the moment
+// it was made, before the signed save itself, two round trips, had any
+// chance to post it, let alone finish; the reload opens on it at once,
+// from what was kept, and a second reload, in a context of its own that
+// kept nothing, still shows it, so it reached the server and was not
+// merely kept in the first context's own storage. In every browser.
+const reloadNowTasks: Record<string, string> = { chromium: 't-33', firefox: 't-41', webkit: 't-57' }
+for (const [name, launch] of browsers().filter(([n]) => n in reloadNowTasks)) {
+  test(`${name}: an edit followed at once by a reload survives it, saved to the server`, async () => {
+    const task = reloadNowTasks[name]
+    const su = new pg.Client()
+    await su.connect()
+    const { base, stop } = await serve()
+    const browser = await launch()
+    const errors: string[] = []
+    const contexts: BrowserContext[] = []
+    const open = async () => {
+      const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
+      contexts.push(context)
+      await signIn(context, base, lea)
+      const page = await context.newPage()
+      page.on('pageerror', (e) => errors.push(`${name}: ${e.message}`))
+      return page
+    }
+    try {
+      const page = await open()
+      await page.goto(`${base}/tasks/${task}`)
+      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      const line = `Léa's edit, reloaded at once in ${name}`
+      await editor(page).locator('[contenteditable=true]').last().click()
+      await page.keyboard.press('End')
+      await page.keyboard.press('Enter')
+      await page.keyboard.type(line)
+      // No wait between the last keystroke and the reload: a real
+      // reload, not a simulated hide, racing the save's two round trips.
+      await page.reload()
+      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      await shows(page, [line], `${name}: right after the reload`)
+      await saved(page)
+
+      // A context of its own, holding nothing the first kept, opens on
+      // the same task: what it shows, it shows only because the server
+      // itself holds it now.
+      const fresh = await open()
+      await fresh.goto(`${base}/tasks/${task}`)
+      await fresh.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      await shows(fresh, [line], `${name}: a fresh context, which kept nothing of its own`)
+
+      const row = await su.query<{ text: string }>('SELECT cella.document_text(body) AS text FROM task.task WHERE id = $1', [task])
+      assert.match(row.rows[0]?.text ?? '', new RegExp(line.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `${name}: the task's column holds the edit`)
+      assert.deepEqual(errors, [], `${name}: the pages threw nothing`)
+    } finally {
+      for (const context of contexts) {
+        await context.close()
+      }
+      await browser.close()
+      await stop()
+      await su.end()
+    }
+  })
+}
+
+// A drawer property has the same window: its popover's text field
+// commits on Enter alone, which starts its own signed write; Yusuf
+// types a project's budget, presses Enter and reloads at once, before
+// that write is known to have landed. It survives all the same, kept
+// until the Details drawer mounts again, which posts it once more. In
+// Chromium: the window is the write's, not the body's, so one browser
+// proves it.
+const yusuf = 'yusuf@lanterne.example'
+if (chromium) {
+  test('chromium: a drawer property accepted and reloaded at once still reaches the server', async () => {
+    const project = 'clairval-site'
+    const su = new pg.Client()
+    await su.connect()
+    const { base, stop } = await serve()
+    const browser = await chromium[1]()
+    const errors: string[] = []
+    try {
+      const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
+      await signIn(context, base, yusuf)
+      const page = await context.newPage()
+      page.on('pageerror', (e) => errors.push(e.message))
+      await page.goto(`${base}/projects/${project}`)
+      await page.getByRole('tab', { name: 'Details' }).click()
+      const drawer = page.getByRole('complementary', { name: 'Details' })
+      await drawer.getByRole('button', { name: /^Budget/ }).click()
+      const dialog = page.getByRole('dialog', { name: 'Budget' })
+      await dialog.waitFor()
+      const input = dialog.getByRole('spinbutton', { name: 'Budget' })
+      await input.fill('9000')
+      // Enter alone accepts it, starting the signed write; the reload
+      // follows at once, with nothing awaited in between.
+      await input.press('Enter')
+      await page.reload()
+      let budget: number | null = null
+      for (let i = 0; i < 100; i++) {
+        const row = await su.query<{ budget: string | null }>('SELECT budget FROM project.project WHERE id = $1', [project])
+        budget = row.rows[0]?.budget === null || row.rows[0]?.budget === undefined ? null : Number(row.rows[0].budget)
+        if (budget === 9_000) {
+          break
+        }
+        await page.waitForTimeout(100)
+      }
+      assert.equal(budget, 9_000, "the project's budget reached the server after the reload")
+      assert.deepEqual(errors, [], 'the pages threw nothing')
+    } finally {
+      await browser.close()
+      await stop()
+      await su.end()
+    }
+  })
+}
+
+// A draft is kept by this browser, not by the record: Léa types into a
+// task's body, its own save blocked so nothing of it ever reaches the
+// server, and reloads away without it saving. The draft still shows her
+// edit, from what was kept. She signs out and Thomas signs in on the
+// same browser; he opens the same task and sees none of her edit, and
+// nothing of it ever reaches the server either, signed out or not. In
+// every browser.
+const signOutTasks: Record<string, string> = { chromium: 't-1', firefox: 't-42', webkit: 't-43' }
+for (const [name, launch] of browsers().filter(([n]) => n in signOutTasks)) {
+  test(`${name}: signing out drops a draft, so the next person on this browser is never shown or sent it`, async () => {
+    const task = signOutTasks[name]
+    const su = new pg.Client()
+    await su.connect()
+    const { base, stop } = await serve()
+    const browser = await launch()
+    const errors: string[] = []
+    try {
+      const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
+      await signIn(context, base, lea)
+      const page = await context.newPage()
+      page.on('pageerror', (e) => errors.push(`${name}: ${e.message}`))
+      await page.goto(`${base}/tasks/${task}`)
+      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+
+      // From here on, both of this browser's two write paths are
+      // blocked: the signed save itself, a SvelteKit remote command
+      // posted to `_app/remote/<id>` (`send`, `prove`, as every write
+      // is, not only the body's), and the session's own posts to the
+      // body's live address. Nothing else is routed through this at
+      // all: `/sign-out` works, and the editor's own built assets,
+      // its wasm among them, are never raced by it.
+      const block = (route: Route) => (route.request().method() === 'POST' ? route.abort() : route.continue())
+      await page.route('**/_app/remote/**', block)
+      await page.route('**/body/live', block)
+
+      const line = `Léa's blocked edit, never saved, in ${name}`
+      await editor(page).locator('[contenteditable=true]').last().click()
+      await page.keyboard.press('End')
+      await page.keyboard.press('Enter')
+      await page.keyboard.type(line)
+      await page.reload()
+      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      await shows(page, [line], `${name}: right after the reload, from what was kept`)
+
+      const blocked = await su.query<{ text: string }>('SELECT cella.document_text(body) AS text FROM task.task WHERE id = $1', [task])
+      assert.ok(!(blocked.rows[0]?.text ?? '').includes(line), `${name}: the blocked save never reached the server`)
+
+      await page.getByRole('button', { name: /^Léa Bernard/ }).click()
+      await page.getByRole('button', { name: 'Sign out' }).click()
+      await page.waitForURL(`${base}/sign-in`)
+      // Léa's document is gone with the navigation that signed her out;
+      // Thomas's own sign-in, and his writes after it, are not blocked.
+      await page.unrouteAll()
+
+      await page.getByTitle(thomas).click()
+      await page.waitForURL(`${base}/inbox`)
+      // Firefox: a module import right after this many navigations in
+      // one page can race its own module cache; settling here first,
+      // unrelated to anything this scenario checks, avoids it.
+      await page.waitForLoadState('networkidle')
+      await page.goto(`${base}/tasks/${task}`)
+      await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      const shown = (await page.locator('main [role=document]').first().textContent()) ?? ''
+      assert.ok(!shown.includes(line), `${name}: Thomas is shown none of Léa's blocked edit`)
+
+      // Past the pause a real edit would have saved at, were it this
+      // browser's own and not blocked, so a delayed post would have
+      // had every chance to land by now.
+      await page.waitForTimeout(3_500)
+      const after = await su.query<{ text: string }>('SELECT cella.document_text(body) AS text FROM task.task WHERE id = $1', [task])
+      assert.ok(!(after.rows[0]?.text ?? '').includes(line), `${name}: nothing of Léa's draft was ever posted, signed out or not`)
+      assert.deepEqual(errors, [], `${name}: the pages threw nothing`)
+    } finally {
+      await browser.close()
+      await stop()
+      await su.end()
+    }
+  })
+}
+
+// Who is signed in can change out from under an already-open page,
+// never told to leave: Léa edits a task, its own saves blocked, on one
+// page of a browser context; on a second page of the same context the
+// session cookie is cleared directly (as an expiry or a revoked device
+// would leave it, never `/sign-out`'s own `onsubmit`) and Thomas signs
+// in. The first page is never navigated by this scenario, by it or by
+// anything it posts: it reloads on its own, the moment it hears an
+// identity change over `storage` (clearing the cookie is itself one,
+// to no one signed in, before Thomas's own; either reloads it), so
+// Léa's blocked edit never reaches the server, however many times. The
+// test itself then opens the same task, now signed in as Thomas since
+// his cookie already holds the whole context; the page shows nothing
+// of Léa's edit, and a fresh edit of Thomas's own, on this new page,
+// survives its own reload: the identity marker a wholesale clear could
+// otherwise have taken with it stays, `clear` leaving it be, so a
+// fresh identity's own draft is undisturbed by the clear that just
+// dropped the last one's. In every browser.
+const sharedTasks: Record<string, string> = { chromium: 't-30', firefox: 't-34', webkit: 't-37' }
+for (const [name, launch] of browsers().filter(([n]) => n in sharedTasks)) {
+  test(`${name}: a second page signing in as someone else reloads the first on its own, and the next person's own draft still survives a reload`, async () => {
+    const task = sharedTasks[name]
+    const su = new pg.Client()
+    await su.connect()
+    const { base, stop } = await serve()
+    const browser = await launch()
+    const errors: string[] = []
+    try {
+      const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
+      await signIn(context, base, lea)
+      const page1 = await context.newPage()
+      page1.on('pageerror', (e) => errors.push(`${name}: page 1: ${e.message}`))
+      await page1.goto(`${base}/tasks/${task}`)
+      await page1.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+
+      const block = (route: Route) => (route.request().method() === 'POST' ? route.abort() : route.continue())
+      await page1.route('**/_app/remote/**', block)
+      await page1.route('**/body/live', block)
+
+      const lineA = `Léa's blocked edit, orphaned when Thomas signs in, in ${name}`
+      await editor(page1).locator('[contenteditable=true]').last().click()
+      await page1.keyboard.press('End')
+      await page1.keyboard.press('Enter')
+      await page1.keyboard.type(lineA)
+
+      // Set up before the identity actually changes, so a reload fast
+      // enough to land before this line would still be caught by it.
+      const reloaded = page1.waitForEvent('load', { timeout: 20_000 })
+
+      const page2 = await context.newPage()
+      page2.on('pageerror', (e) => errors.push(`${name}: page 2: ${e.message}`))
+      await context.clearCookies()
+      await page2.goto(`${base}/sign-in`)
+      await page2.getByTitle(thomas).click()
+      await page2.waitForURL(`${base}/inbox`)
+
+      // Page 1 was never told to navigate anywhere: it reloads itself
+      // the moment it hears of the identity changing, here as soon as
+      // page 2 reaches `/sign-in`, named to no one yet, already a
+      // change from Léa's own; signed out, its own reload lands where
+      // this browser now sends anyone without a session, never the
+      // task page it does not post to.
+      await reloaded
+
+      const blocked = await su.query<{ text: string }>('SELECT cella.document_text(body) AS text FROM task.task WHERE id = $1', [task])
+      assert.ok(!(blocked.rows[0]?.text ?? '').includes(lineA), `${name}: Léa's blocked edit never reached the server`)
+
+      // Thomas is signed in on this browser now, the context's cookie
+      // jar one for every page in it; a fresh page on the task shows
+      // nothing of Léa's edit, which was never posted and is this
+      // page's to begin with, never replayed into it.
+      const page3 = await context.newPage()
+      page3.on('pageerror', (e) => errors.push(`${name}: page 3: ${e.message}`))
+      await page3.goto(`${base}/tasks/${task}`)
+      await page3.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      const shown = (await page3.locator('main [role=document]').first().textContent()) ?? ''
+      assert.ok(!shown.includes(lineA), `${name}: Thomas is shown none of Léa's blocked edit`)
+
+      // Thomas's own edit survives its own reload: the clear that just
+      // dropped Léa's draft left the identity marker alone, so his own
+      // draft is not disturbed by it.
+      const lineB = `Thomas's own edit, kept across his own reload, in ${name}`
+      await editor(page3).locator('[contenteditable=true]').last().click()
+      await page3.keyboard.press('End')
+      await page3.keyboard.press('Enter')
+      await page3.keyboard.type(lineB)
+      await page3.reload()
+      await page3.waitForSelector('[data-body=edit]', { timeout: 20_000 })
+      await shows(page3, [lineB], `${name}: Thomas's own edit, right after his own reload`)
+
       assert.deepEqual(errors, [], `${name}: the pages threw nothing`)
     } finally {
       await browser.close()

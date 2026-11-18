@@ -88,7 +88,15 @@ async function drawn(page: Page, name: string, layout: string): Promise<Drawn[]>
       const id = (a: Element) => decodeURIComponent(new URL((a as HTMLAnchorElement).href).pathname.slice(prefix.length))
       const head = (h: Element | null) => {
         const count = h?.querySelector('.count')
-        const label = [...(h?.children ?? [])].filter((c) => c !== count).map((c) => c.textContent?.trim() ?? '').join(' ')
+        // Value's own text, not the header's whole: a person's or a
+        // record's group leads with an avatar or an icon, its own text
+        // (initials, none) run straight against the name with no space;
+        // a board's lane, a card-sized Value, drops a person's name for
+        // its avatar alone and keeps it only in the value's own title.
+        const label = [...(h?.children ?? [])]
+          .filter((c) => c !== count)
+          .map((c) => (c.querySelector('.text')?.textContent ?? (c as HTMLElement).getAttribute?.('title') ?? c.textContent ?? '').trim())
+          .join(' ')
         return { label, count: Number(count?.textContent ?? -1) }
       }
       const out: { label: string; count: number; ids: string[] }[] = []
@@ -251,7 +259,15 @@ eachBrowser((browserName, launch) => {
               els.map((el) => {
                 const bar = el.querySelector('span.group')
                 const count = bar?.querySelector('.count')
-                const label = [...(bar?.children ?? [])].filter((c) => c !== count).map((c) => c.textContent?.trim() ?? '').join(' ')
+                // Value's own span, not the bar's: a person's or a
+                // record's group header leads with an avatar or an icon,
+                // whose own text (initials, none) sits right against it
+                // with no space between, so reading the whole bar's text
+                // runs them together.
+                const label = [...(bar?.children ?? [])]
+                  .filter((c) => c !== count)
+                  .map((c) => (c.querySelector('.text')?.textContent ?? c.textContent ?? '').trim())
+                  .join(' ')
                 const columns = el.querySelectorAll('section.lane').length
                 const ids = [...el.querySelectorAll(`a[href^="${prefix}"]`)].map((a) => decodeURIComponent(new URL((a as HTMLAnchorElement).href).pathname.slice(prefix.length)))
                 return { label, count: Number(count?.textContent ?? -1), columns, ids }

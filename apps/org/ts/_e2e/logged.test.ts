@@ -134,8 +134,8 @@ eachBrowser((browserName, launch) => {
         await panel(page).getByRole('button', { name: new RegExp(`^${own + 2} fields$`) }).waitFor()
         await page.keyboard.press('Escape')
         const line = (name: string) => page.locator('ul.list > li', { hasText: name })
-        await until(() => line('Atelier Estampe').locator('.meta .person').getAttribute('title'), (t) => t === camille, `${at}: the list names who created the first`)
-        await until(() => line('Bureau Tampon').locator('.meta .person').getAttribute('title'), (t) => t === julien, `${at}: and the second`)
+        await until(() => line('Atelier Estampe').locator('.meta .person .text').innerText(), (t) => t === 'Camille Martin', `${at}: the list names who created the first`)
+        await until(() => line('Bureau Tampon').locator('.meta .person .text').innerText(), (t) => t === 'Julien Petit', `${at}: and the second`)
         assert.notEqual((await line('Atelier Estampe').locator('.meta .dated').innerText()).trim(), '—', `${at}: and when`)
         await page.screenshot({ path: `${shots}/contacts-list-${browserName}-${scheme}.png`, fullPage: true })
 
@@ -161,12 +161,17 @@ eachBrowser((browserName, launch) => {
         await page.locator('h1').first().hover()
         await until(() => listed(page), (ids) => ids.length === 1 && ids[0] === 'logged-tampon', `${at}: Created by Julien keeps his contact alone`)
 
-        // The first's page: the drawer ends with its four in one quiet line.
+        // The first's page: its Dates section ends with Created and
+        // Updated, each its day and who, as Properties now draws them.
         await visit('/contacts/logged-estampe')
-        const foot = (await page.locator('p.foot').first().textContent())?.trim() ?? ''
-        const [made, touched] = foot.split(' · ')
-        assert.ok(/^Created .+ by Camille/.test(made ?? '') && /^Updated .+ by Julien/.test(touched ?? ''), `${at}: the drawer's footer names who created and who updated it: ${foot}`)
-        assert.notEqual(made?.replace(/^Created (.+) by .*/, '$1'), touched?.replace(/^Updated (.+) by .*/, '$1'), `${at}: created and updated on two days`)
+        const dates = page.locator('section.sect', { has: page.getByRole('heading', { name: 'Dates', exact: true }) })
+        const stamp = (label: string) => dates.locator(`[title="${label}"]`)
+        const createdWhen = (await stamp('Created').locator('.text').innerText()).trim()
+        const updatedWhen = (await stamp('Updated').locator('.text').innerText()).trim()
+        const createdWho = (await stamp('Created').locator('.who').innerText()).trim()
+        const updatedWho = (await stamp('Updated').locator('.who').innerText()).trim()
+        assert.ok(createdWho.includes('Camille Martin') && updatedWho.includes('Julien Petit'), `${at}: the drawer names who created and who updated it: ${createdWho} / ${updatedWho}`)
+        assert.notEqual(createdWhen, updatedWhen, `${at}: created and updated on two days`)
         await page.screenshot({ path: `${shots}/contact-${browserName}-${scheme}.png`, fullPage: true })
 
         // A meeting's calendar by its start, an invoice's by its due day,

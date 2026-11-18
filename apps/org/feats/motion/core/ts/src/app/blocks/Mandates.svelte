@@ -36,12 +36,20 @@
     return `Action ${i.n} ${[grant, end].filter(Boolean).join(', and ')}.`
   }
 
-  const shown = (i: Issuing): Prop[] => [
-    ...(i.granted ? [row('Granted', i.granted)] : []),
-    ...(i.parent ? [row(i.closed ? 'Issued under' : 'Would be issued under', i.parent)] : []),
-    ...(i.ends ? [row(i.kind === 'end' ? 'Ends' : 'Replaces', i.ends)] : []),
-    ...i.revokes.filter((m) => m.id !== i.ends?.id).map((m) => row('Revoked with it', m)),
-  ]
+  // Every other mandate a close revokes with the one it ends or
+  // replaces: each its own row, since a Properties list keys a row by
+  // its label, which stays "Revoked with it" alone where there is only
+  // one, and is numbered where a cascade revokes several, so no two
+  // rows of the same action ever share a label.
+  const shown = (i: Issuing): Prop[] => {
+    const revoked = i.revokes.filter((m) => m.id !== i.ends?.id)
+    return [
+      ...(i.granted ? [row('Granted', i.granted)] : []),
+      ...(i.parent ? [row(i.closed ? 'Issued under' : 'Would be issued under', i.parent)] : []),
+      ...(i.ends ? [row(i.kind === 'end' ? 'Ends' : 'Replaces', i.ends)] : []),
+      ...revoked.map((m, n) => row(revoked.length > 1 ? `Revoked with it (${n + 1} of ${revoked.length})` : 'Revoked with it', m)),
+    ]
+  }
 </script>
 
 {#if data?.mandates.length}

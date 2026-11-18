@@ -119,8 +119,8 @@ eachBrowser((name, launch) => {
             .first()
             .getAttribute('href', { timeout: 1000 })
             .catch(() => null)
-          // A collection's New, not the arranger's New accordion on Features.
-          const create = page.getByRole('button', { name: /^New(?! accordion)/ })
+          // A collection's New, not the arranger's New group or accordion on Features.
+          const create = page.getByRole('button', { name: /^New(?! (accordion|group))/ })
           if (await create.count()) {
             const forms = await page.locator('main form').count()
             await create.first().click()

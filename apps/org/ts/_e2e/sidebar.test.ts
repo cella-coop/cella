@@ -1,12 +1,13 @@
 // The sidebar scenario, in every browser, light and dark, on a seeded
 // Lanterne through the dev server: Camille signs in and lands in the
 // assembly, the co-op's own row first in the co-op selector and checked,
-// the circles she sits in below it, its features in the sidebar under
-// its accordions and nothing else of the co-op's collections but the
-// Inbox and Activity. Each of Lanterne's circles, chosen, shows its own
-// enabled features in its order and under its accordions. She chooses
-// Brand from the selector and stays on the page she chose on; through
-// Web, its features, flat, and its rows; More… opens Web's features page. `SHOTS` names where its screenshots go. It
+// the circles she sits in below it, the co-op's whole layout in the
+// sidebar under its groups, above it only the Inbox and Activity. Each
+// of Lanterne's circles, chosen, shows what it shows of the layout, in
+// the layout's order and under its groups. She chooses Brand from the
+// selector and stays on the page she chose on; through Web, its one
+// group, Work, and its rows; More… opens Web's features page. `SHOTS`
+// names where its screenshots go. It
 // writes nothing to the log. Run by `cella test e2e sidebar`.
 // covers: all
 
@@ -130,7 +131,7 @@ eachBrowser((name, launch) => {
           const { middle, more } = await drawn(page)
           assert.deepEqual(middle, expected(assembly.features), `${at}: the assembly's features, in its order, under its accordions`)
           assert.deepEqual(middle.slice(0, 1), ['[Governance]'], `${at}: its first accordion is Governance`)
-          assert.ok(!middle.includes('/tasks') && !middle.includes('/accounts'), `${at}: nothing the assembly has not enabled`)
+          assert.ok(middle.includes('/tasks') && middle.includes('/accounts'), `${at}: the assembly, the root, shows the co-op's whole layout`)
           assert.equal(more, `/settings/features/${assembly.id}`, `${at}: More… opens the assembly's features page`)
           await page.screenshot({ path: `${shots}/sidebar-assembly-${name}-${scheme}.png` })
           await trigger.click()
@@ -172,8 +173,8 @@ eachBrowser((name, launch) => {
           await page.waitForLoadState('networkidle')
           assert.equal(await named(), 'Lanterne / Web', `${at}: choosing Web puts her in Web`)
           const web = circles.find((c) => c.id === 'web')!
-          assert.deepEqual((await drawn(page)).middle, expected(web.features), `${at}: Web's features, flat, in its order`)
-          assert.equal(await nav.locator('button.head').count(), 0, `${at}: Web names no accordion`)
+          assert.deepEqual((await drawn(page)).middle, expected(web.features), `${at}: Web's features, in its order, under Work`)
+          assert.equal(await nav.locator('button.head').count(), 1, `${at}: Web shows one group of the layout`)
           assert.equal(await nav.locator('a[aria-current="page"]').getAttribute('href'), '/tasks', `${at}: the sidebar marks Tasks`)
           const owned = new Set((await su.query<{ id: string }>(`SELECT id::text FROM task.task WHERE circle = 'web'`)).rows.map((r) => r.id))
           const listed = await page.locator('main a[href^="/tasks/"]').evaluateAll((as) => as.map((a) => decodeURIComponent(a.getAttribute('href')!.split('/')[2]!.split(/[?#]/)[0]!)))

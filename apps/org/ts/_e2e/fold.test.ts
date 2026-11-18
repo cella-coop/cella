@@ -20,7 +20,7 @@ import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { enrol, forget, profile, revoke } from '@cella/org-person/api'
-import { arrange, icon as circleIcon } from '@cella/org-circle/api'
+import { arrange, hide, icon as circleIcon, show } from '@cella/org-circle/api'
 import { accept, erase, invite, link, withdraw } from '@cella/org-membership/api'
 import { apply, close, propose } from '@cella/org-graft-membership-motion/api'
 import { post as message, vote } from '@cella/org-motion/api'
@@ -287,14 +287,19 @@ test('24 October: the assembly and coordination put their motions, which are dis
   const adopts = (await one<{ policy: string }>(`SELECT policy FROM circle.mandate WHERE grantee = 'coordination' AND power = 'adopt-document'`)).policy
   const founding = (await one<{ policy: string }>(`SELECT policy FROM account.terms WHERE id = 'm-2021-001-43'`)).policy
   const patronage = (await one<{ policy: string }>(`SELECT policy FROM patronage.terms ORDER BY id LIMIT 1`)).policy
-  settled(await arrange({ circle: 'web', features: 'contact, project, task, timesheet, file' }, as(yusuf)))
+  const layout = (await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f
+  settled(await show({ circle: 'web', group: 'payments', shown: true }, as(yusuf)))
+  settled(await hide({ circle: 'web', feature: 'expense', hidden: true }, as(yusuf)))
   settled(await circleIcon({ circle: 'web', icon: 'rocket' }, as(yusuf)))
   await proposed('assembly', 'ag', 'Admit Nadia, create Design, amend Web and its roles, adopt the handbook and the new terms', [
     { kind: 'admit', args: { member: nadia, shares: 20 } },
     { kind: 'circle', args: { id: 'design', name: 'Design', purpose: 'product and service design' } },
     { kind: 'seat', args: { circle: 'design', member: sofia } },
     { kind: 'amend-circle', args: { circle: 'web', purpose: 'the studio\'s websites' } },
-    { kind: 'arrange-features', args: { circle: 'web', features: 'Work: project, task, timesheet; file, contact' } },
+    { kind: 'arrange-features', args: { circle: 'ag', features: layout.replace('Members:', 'People:') } },
+    { kind: 'show-group', args: { circle: 'web', group: 'books', shown: 'yes' } },
+    { kind: 'hide-feature', args: { circle: 'web', feature: 'import', hidden: 'yes' } },
+    { kind: 'policy', args: { kind: 'mandate', wording: 'The {role: manager} role holds {power: arrange-features}, to arrange the features of the {scope: ag} circle' } },
     { kind: 'role', args: { circle: 'web', name: 'Editor', duty: 'edits the studio\'s copy', holders: 1 } },
     { kind: 'seat', args: { circle: 'web', member: sofia, role: 'editor' } },
     { kind: 'amend-role', args: { role: 'print-buyer', duty: 'orders Brand\'s print and paper' } },
@@ -326,6 +331,11 @@ test('31 October: the closes carry Inès\'s and Nadia\'s admissions, their subsc
   await on('2026-10-31')
   settled(await close({ motion: 'm-2026-012' }, as(camille)))
   await closed('assembly')
+  // Members renamed People keeps its id; the manager, granted the power
+  // over the root, moves Contact into it at once.
+  const layout = (await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f
+  assert.match(layout, /People: membership/)
+  settled(await arrange({ circle: 'ag', features: layout.replace(', contact;', ';').replace('People: ', 'People: contact, ') }, as(camille)))
   settled(await adoptVersion({ document: (motions.get('handbook') ?? '').split('@')[0], version: motions.get('handbook') ?? '', base: null, motion: motions.get('assembly') ?? '' }, as(camille)))
   await closed('finance')
   settled(await spread({ member: ines, instalments: 10 }, as(ines)))

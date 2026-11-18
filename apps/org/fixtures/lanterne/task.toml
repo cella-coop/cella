@@ -154,6 +154,8 @@ created = 2026-09-28
 due = 2026-10-09
 completed = 2026-10-09
 
+[[task.body]]
+text = "October's newsletter to Nuvola's list: the heat pump grants opening again, and a reminder of the community solar open day."
 [[task]]
 id = "t-11"
 circle = "marketing"
@@ -163,6 +165,8 @@ priority = "normal"
 created = 2026-10-12
 due = 2026-10-28
 
+[[task.body]]
+text = "Draft the week-by-week posts for November, split between the grants reminder, two client case studies and the open day countdown."
 [[task]]
 id = "t-12"
 circle = "marketing"
@@ -173,6 +177,18 @@ created = 2026-09-21
 due = 2026-10-02
 completed = 2026-10-02
 
+[[task.body]]
+text = "Reach, clicks and the three best-performing posts of the quarter, with what to carry into Q4: the open day teaser outperformed everything else by a wide margin."
+[[task.comment]]
+author = "malik@lanterne.example"
+posted = 2026-10-07
+text = "Good report — the open day post alone earned back a third of the retainer. Worth leading Q4 with more of the same."
+resolved = true
+[[task.comment]]
+author = "chloe@lanterne.example"
+reply = 1
+posted = 2026-10-08
+text = "Agreed, I've built it into the November calendar already."
 [[task]]
 id = "t-13"
 circle = "marketing"
@@ -182,6 +198,21 @@ priority = "high"
 created = 2026-10-12
 due = 2026-11-06
 
+[[task.body]]
+text = "Nuvola hosts the public on-site at their solar farm in December: a landing page, three weeks of posts and a press note for the local paper."
+[[task.comment]]
+author = "chloe@lanterne.example"
+posted = 2026-10-22
+text = "Does the retainer's budget cover the press note, or is that billed separately?"
+[[task.comment]]
+author = "malik@lanterne.example"
+reply = 1
+posted = 2026-10-23
+text = "Separately — it's outside the monthly scope. I'll raise it with Nuvola this week."
+
+[[task.comment.reaction]]
+person = "chloe@lanterne.example"
+emoji = "👍"
 [[task]]
 id = "t-14"
 circle = "marketing"
@@ -191,6 +222,22 @@ priority = "normal"
 created = 2026-10-05
 due = 2026-12-11
 
+[[task.body]]
+type = "heading"
+level = 2
+text = "What went well"
+[[task.body]]
+type = "bullet"
+text = "The open day campaign, by a wide margin"
+[[task.body]]
+type = "heading"
+level = 2
+text = "For the renewal"
+[[task.body]]
+type = "bullet"
+text = "Raise the retainer to the 2027 rate card once it is adopted"
+[[task.body]]
+text = "Draft due before the current contract runs out at the end of the year."
 [[task]]
 id = "t-15"
 circle = "brand"
@@ -200,6 +247,12 @@ priority = "high"
 created = 2026-10-20
 due = 2026-10-31
 
+[[task.body]]
+text = "F-2026-0044, Compagnie Mauve Horizon's 744 €, was due 20 August and nothing has come in since the posters shipped."
+[[task.comment]]
+author = "sofia@lanterne.example"
+posted = 2026-10-22
+text = "Called Mauve Horizon's theatre office — they say their season's accountant only returns in November. Chasing again then."
 [[task]]
 id = "t-16"
 circle = "brand"
@@ -210,6 +263,8 @@ created = 2026-08-17
 due = 2026-08-28
 completed = 2026-08-27
 
+[[task.body]]
+text = "Three directions for Vélo Solidaire's mark: a wrench-and-wheel monogram, a patched inner tube motif, and a plain wordmark in their workshop's orange."
 [[task]]
 id = "t-17"
 circle = "brand"
@@ -220,6 +275,8 @@ created = 2026-08-31
 due = 2026-09-11
 completed = 2026-09-11
 
+[[task.body]]
+text = "The chosen mark, its clear space and minimum size, the orange and its tints, and how the wordmark sits on a repaired bike's hang tag."
 [[task]]
 id = "t-18"
 circle = "brand"
@@ -230,6 +287,18 @@ created = 2026-09-01
 due = 2026-09-11
 completed = 2026-09-10
 
+[[task.body]]
+text = "Two directions for the range of six: a hand-drawn orchard motif and a plain kraft-and-stamp look, both keeping the farmers' own crest."
+[[task.comment]]
+author = "camille@lanterne.example"
+posted = 2026-09-10
+text = "The kraft-and-stamp direction, please — it keeps printing costs down across the whole range."
+resolved = true
+[[task.comment]]
+author = "hugo@lanterne.example"
+reply = 1
+posted = 2026-09-11
+text = "That's the one Maison Ferrand picked too. Moving to print-ready."
 [[task]]
 id = "t-19"
 circle = "brand"
@@ -240,6 +309,8 @@ created = 2026-09-11
 due = 2026-09-23
 completed = 2026-09-22
 
+[[task.body]]
+text = "Cut lines for the six-pack carrier and the bottle sleeve, checked against Imprimerie du Parc's press specs."
 [[task]]
 id = "t-20"
 circle = "brand"
@@ -250,6 +321,8 @@ created = 2026-09-14
 due = 2026-09-25
 completed = 2026-09-25
 
+[[task.body]]
+text = "Print-ready PDF/X-4 files for all six labels and the carrier, each against print-specifications' own checklist before they go out."
 [[task]]
 id = "t-21"
 circle = "brand"
@@ -259,6 +332,21 @@ priority = "high"
 created = 2026-09-28
 due = 2026-11-04
 
+[[task.body]]
+text = "Sign off the colour on press before the full run: Maison Ferrand's orchard green is the one that drifts most on kraft stock."
+[[task.comment]]
+author = "sofia@lanterne.example"
+posted = 2026-10-28
+text = "Imprimerie du Parc can slot us in Thursday morning — I'll go, since it's over the print buyer's own cap otherwise."
+[[task.comment]]
+author = "hugo@lanterne.example"
+reply = 1
+posted = 2026-10-28
+text = "Thursday works. Take the kraft swatch from t-18 with you."
+
+[[task.comment.reaction]]
+person = "camille@lanterne.example"
+emoji = "👍"
 [[task]]
 id = "t-22"
 circle = "brand"
@@ -268,6 +356,8 @@ priority = "normal"
 created = 2026-10-12
 due = 2026-10-29
 
+[[task.body]]
+text = "Order colour proofs for the six labels ahead of Thursday's press check, two rounds if the green needs a second pass."
 [[task]]
 id = "t-23"
 circle = "brand"
@@ -278,6 +368,18 @@ created = 2026-09-28
 due = 2026-10-14
 completed = 2026-10-14
 
+[[task.body]]
+text = "Fondation Terres Vives' annual report, forty-eight pages: the land acquired this year, the farms it leases and the accounts, laid out for print."
+[[task.comment]]
+author = "camille@lanterne.example"
+posted = 2026-10-15
+text = "Reads well. One thing: move the accounts to the back, after the farms, not before them."
+resolved = true
+[[task.comment]]
+author = "hugo@lanterne.example"
+reply = 1
+posted = 2026-10-16
+text = "Done — the farms now carry straight into the accounts."
 [[task]]
 id = "t-24"
 circle = "brand"
@@ -288,6 +390,8 @@ created = 2026-09-28
 due = 2026-10-15
 completed = 2026-10-15
 
+[[task.body]]
+text = "A map of every farm the land trust holds, by region, with the year each joined and the hectares it keeps in organic transition."
 [[task]]
 id = "t-25"
 circle = "brand"
@@ -297,6 +401,8 @@ priority = "high"
 created = 2026-10-12
 due = 2026-10-30
 
+[[task.body]]
+text = "Three screens for the microsite: the map of the farms, one farm's own page, and how to support the trust."
 [[task]]
 id = "t-26"
 circle = "brand"
@@ -306,6 +412,12 @@ priority = "normal"
 created = 2026-10-12
 due = 2026-11-20
 
+[[task.body]]
+text = "Build the microsite from the signed-off wireframes, the map as an interactive layer over the static one the report prints."
+[[task.comment]]
+author = "hugo@lanterne.example"
+posted = 2026-11-10
+text = "The farm pages pull from the same data as the printed map in t-24 — one source, so the two never drift apart."
 [[task]]
 id = "t-27"
 circle = "brand"
@@ -315,6 +427,17 @@ priority = "normal"
 created = 2026-10-14
 due = 2026-10-28
 
+[[task.body]]
+text = "Compare Imprimerie du Parc's quote for the annual report against a second printer, since the run is longer than Maison Ferrand's."
+[[task.comment]]
+author = "hugo@lanterne.example"
+posted = 2026-10-20
+text = "Can you get Atelier Signé's quote by Friday? Imprimerie du Parc's is already in."
+[[task.comment]]
+author = "sofia@lanterne.example"
+reply = 1
+posted = 2026-10-23
+text = "In hand — within 4 % of Imprimerie du Parc's, but two days slower. I'd still go with Imprimerie du Parc."
 [[task]]
 id = "t-28"
 circle = "operations"
@@ -324,6 +447,18 @@ priority = "high"
 created = 2026-10-19
 due = 2026-11-05
 
+[[task.body]]
+type = "numbered"
+text = "Reconcile the bank account line by line"
+[[task.body]]
+type = "numbered"
+text = "Post the pay run and the approved expenses"
+[[task.body]]
+type = "numbered"
+text = "Chase every invoice past its due date"
+[[task.body]]
+type = "numbered"
+text = "Close the period, once the books balance"
 [[task]]
 id = "t-29"
 circle = "coordination"
@@ -333,6 +468,17 @@ priority = "normal"
 created = 2026-10-21
 due = 2026-11-07
 
+[[task.body]]
+text = "Malik asked, on the rate card's draft, whether Nuvola's retainer holds at the current rate through its renewal — see the document's comment."
+[[task.comment]]
+author = "camille@lanterne.example"
+posted = 2026-10-22
+text = "Malik, can you confirm with Nuvola before the 2027 card goes to the assembly? [[rate-card-2027]]"
+[[task.comment]]
+author = "malik@lanterne.example"
+reply = 1
+posted = 2026-10-24
+text = "Asked them — they're fine with the new standard rate once their current retainer runs out in December."
 [[task]]
 id = "t-30"
 circle = "ag"
@@ -342,6 +488,15 @@ priority = "normal"
 created = 2026-10-20
 due = 2026-11-02
 
+[[task.body]]
+type = "numbered"
+text = "A mentor named in Web, before her first day as a member"
+[[task.body]]
+type = "numbered"
+text = "The internal rules and the statutes, which she read at her hire already"
+[[task.body]]
+type = "numbered"
+text = "A seat offered in Care, as any member's is"
 [[task]]
 id = "t-31"
 circle = "operations"
@@ -351,6 +506,8 @@ priority = "low"
 created = 2026-10-05
 due = 2026-12-01
 
+[[task.body]]
+text = "The studio's liability and premises cover renews in December; get two quotes before renewing at the current broker's rate."
 [[task]]
 id = "t-32"
 circle = "marketing"
@@ -359,6 +516,8 @@ status = "backlog"
 priority = "low"
 created = 2026-10-05
 
+[[task.body]]
+text = "Portfolio pages for the studio's own site: before and after shots of Vélo Solidaire's identity and Maison Ferrand's packaging, once each client signs off the photos."
 [[task]]
 id = "t-33"
 circle = "web"
@@ -369,6 +528,18 @@ created = 2026-09-21
 due = 2026-09-30
 completed = 2026-09-30
 
+[[task.body]]
+text = "Quarterly plugin and theme updates on Atelier Ondine's shop, archived since September but still live and under care."
+[[task.comment]]
+author = "thomas@lanterne.example"
+posted = 2026-09-21
+text = "One plugin update broke the gallery's lightbox on mobile — rolled it back, the rest went through clean."
+resolved = true
+[[task.comment]]
+author = "yusuf@lanterne.example"
+reply = 1
+posted = 2026-09-22
+text = "Good catch. Leave that one plugin a version behind until its next release notes clear it."
 [[task]]
 id = "t-34"
 circle = "ag"
@@ -378,6 +549,17 @@ priority = "normal"
 created = 2026-10-14
 due = 2026-11-13
 
+[[task.body]]
+text = "A member who moves abroad keeps their shares and their vote but may not hold a seat that requires being at the studio; draft the article and its exceptions."
+[[task.comment]]
+author = "camille@lanterne.example"
+posted = 2026-10-20
+text = "Julien, does this need its own procedure, or does the extraordinary one that amends the statutes already cover it?"
+[[task.comment]]
+author = "julien@lanterne.example"
+reply = 1
+posted = 2026-10-21
+text = "The extraordinary procedure covers it — any amendment to the statutes does, by article 2."
 [[task]]
 id = "t-35"
 circle = "coordination"
@@ -387,6 +569,17 @@ priority = "normal"
 created = 2026-10-12
 due = 2026-12-07
 
+[[task.body]]
+text = "Who is free for Q1 2027 once Vélo Solidaire and Mauve Horizon's work is done, against what Clients expects to sign."
+[[task.comment]]
+author = "camille@lanterne.example"
+posted = 2026-10-15
+text = "Hugo, how much of Brand's January is still open once Terres Vives' microsite ships?"
+[[task.comment]]
+author = "hugo@lanterne.example"
+reply = 1
+posted = 2026-10-16
+text = "About half, once the microsite and the hiring's junior designer settle in."
 [[task]]
 id = "t-36"
 circle = "operations"
@@ -397,6 +590,18 @@ created = 2026-10-14
 due = 2026-10-23
 completed = 2026-10-21
 
+[[task.body]]
+text = "October's bank lines against the previous tool's export: every line matched but one, a card payment booked twice there and once here."
+[[task.comment]]
+author = "julien@lanterne.example"
+posted = 2026-10-20
+text = "Found the duplicate — it was a refund the old tool booked as a second charge by mistake. October reconciles to the centime now."
+resolved = true
+[[task.comment]]
+author = "camille@lanterne.example"
+reply = 1
+posted = 2026-10-21
+text = "Good catch. Go ahead and close the period once the pay run's in."
 [[task]]
 id = "t-37"
 circle = "ag"
@@ -409,6 +614,8 @@ due = 2026-12-18
 # The tasks of Clients, Hiring, Care and Tools, the circles that look
 # after the co-op itself.
 
+[[task.body]]
+text = "Circulate the draft amendments to every member and gather what they would change before the extraordinary assembly is called."
 [[task]]
 id = "t-38"
 circle = "clients"
@@ -418,6 +625,8 @@ priority = "high"
 created = 2026-10-19
 due = 2026-10-30
 
+[[task.body]]
+text = "Les Halles Paysannes asked about care after the shop's launch; walk them through what client-handover offers and its price."
 [[task]]
 id = "t-39"
 circle = "clients"
@@ -427,6 +636,21 @@ priority = "normal"
 created = 2026-10-12
 due = 2026-11-13
 
+[[task.body]]
+text = "Nuvola's current retainer ends in December; draft the 2027 proposal at the new rate card, keeping the solidarity rate they're no longer owed."
+[[task.comment]]
+author = "thomas@lanterne.example"
+posted = 2026-10-25
+text = "Malik, is the scope staying at one newsletter and a weekly social post, or is the open day campaign going into the base retainer now?"
+[[task.comment]]
+author = "malik@lanterne.example"
+reply = 1
+posted = 2026-10-26
+text = "Keep campaigns billed separately — the base retainer stays as it is."
+
+[[task.comment.reaction]]
+person = "thomas@lanterne.example"
+emoji = "👍"
 [[task]]
 id = "t-40"
 circle = "clients"
@@ -436,6 +660,8 @@ priority = "low"
 created = 2026-10-19
 due = 2026-12-04
 
+[[task.body]]
+text = "Ville de Clairval's site has been live three weeks; ask their communications office what is working and what still trips visitors up."
 [[task]]
 id = "t-41"
 circle = "hiring"
@@ -446,6 +672,18 @@ created = 2026-10-01
 due = 2026-10-14
 completed = 2026-10-13
 
+[[task.body]]
+text = "A junior developer, from February 2027, mentored in Web: comfortable with the stack's basics, learning the rest on real client work."
+[[task.comment]]
+author = "lea@lanterne.example"
+posted = 2026-10-12
+text = "Ready for Camille to post. I've kept the solidarity-rate clients out of the examples, since a junior won't carry those alone yet."
+resolved = true
+[[task.comment]]
+author = "camille@lanterne.example"
+reply = 1
+posted = 2026-10-13
+text = "Good, posting it this week."
 [[task]]
 id = "t-42"
 circle = "hiring"
@@ -455,6 +693,8 @@ priority = "normal"
 created = 2026-10-16
 due = 2026-11-20
 
+[[task.body]]
+text = "Inès joined Web in September 2025 and was admitted as a member in October 2026; her first year as a worker falls due before the end of the year."
 [[task]]
 id = "t-43"
 circle = "care"
@@ -465,6 +705,18 @@ created = 2026-09-21
 due = 2026-10-09
 completed = 2026-10-09
 
+[[task.body]]
+text = "An anonymous survey of everyone's workload over the autumn, open two weeks, asking about hours, deadlines and whether the quiet-hour proposal would help."
+[[task.comment]]
+author = "amina@lanterne.example"
+posted = 2026-10-09
+text = "Closed at nineteen of twenty responses — good turnout for an anonymous one."
+resolved = true
+[[task.comment]]
+author = "hugo@lanterne.example"
+reply = 1
+posted = 2026-10-10
+text = "Thanks for running it, Amina. Over to the write-up."
 [[task]]
 id = "t-44"
 circle = "care"
@@ -474,6 +726,17 @@ priority = "normal"
 created = 2026-10-12
 due = 2026-11-06
 
+[[task.body]]
+text = "What the survey found: Brand's print deadlines are the sharpest source of overtime, named by more than half the responses."
+[[task.comment]]
+author = "hugo@lanterne.example"
+posted = 2026-10-25
+text = "One answer names a specific client by accident — can you fold it into 'a packaging client' before this goes to the assembly?"
+[[task.comment]]
+author = "sofia@lanterne.example"
+reply = 1
+posted = 2026-10-26
+text = "Caught it, thanks — anonymised now."
 [[task]]
 id = "t-45"
 circle = "care"
@@ -483,6 +746,8 @@ priority = "low"
 created = 2026-10-19
 due = 2026-11-27
 
+[[task.body]]
+text = "Book the first-aid refresher for whoever's certificate lapses this winter, at the studio on a Tuesday so no one travels for it."
 [[task]]
 id = "t-46"
 circle = "tools"
@@ -493,6 +758,8 @@ created = 2026-09-14
 due = 2026-09-30
 completed = 2026-09-29
 
+[[task.body]]
+text = "Every domain Lanterne or a client keeps through the studio, its registrar and the month it renews, so none lapses unnoticed again."
 [[task]]
 id = "t-47"
 circle = "tools"
@@ -503,6 +770,18 @@ created = 2026-09-28
 due = 2026-10-21
 completed = 2026-10-21
 
+[[task.body]]
+text = "Move the staging copies of every site to the new host, checked against the production originals before DNS changes anywhere."
+[[task.comment]]
+author = "yusuf@lanterne.example"
+posted = 2026-10-21
+text = "All staging sites moved and checked — nothing broke, and the new host's previews are faster than the old one's."
+resolved = true
+[[task.comment]]
+author = "thomas@lanterne.example"
+reply = 1
+posted = 2026-10-21
+text = "Confirmed on my end too. Clear to move production once the clients are told."
 [[task]]
 id = "t-48"
 circle = "tools"
@@ -511,3 +790,19 @@ status = "todo"
 priority = "high"
 created = 2026-10-19
 due = 2026-12-04
+
+[[task.body]]
+text = "Move each client's production site over, one at a time, in a maintenance window their account in Clients names for them."
+[[task.comment]]
+author = "ines@lanterne.example"
+posted = 2026-10-29
+text = "Can we move Les Halles Paysannes's shop outside a weekend? They take most of their online orders Saturday."
+[[task.comment]]
+author = "yusuf@lanterne.example"
+reply = 1
+posted = 2026-10-30
+text = "Good catch — Tuesday night for that one, weekends for everyone else."
+
+[[task.comment.reaction]]
+person = "thomas@lanterne.example"
+emoji = "👍"

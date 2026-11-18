@@ -94,11 +94,9 @@ export function who(s: Setting, decider: Decider | null, proposed = false): Who 
   return { kind: 'motion', label: `${decider.name} changes this by motion`, ...(s.refused ? { text: s.refused } : {}) }
 }
 
-// What a setting's write posts: each setting of the form that the same
-// write saves directly and that differs from its value in force, with
-// its value as typed. One left as it is never posts, so a write logs
-// only what it changes, and a contact detail never set stays unset.
-// A setting that declares `post` posts alone, the fields it gives.
+// The settings a setting's write saves: each of the form that the same
+// write saves directly and that differs from its value in force; one
+// that declares `post`, alone.
 export function saving(settings: Setting[], s: Setting, value: (s: Setting) => string): Setting[] {
   if (s.post) {
     return direct(s) && value(s) !== s.value ? [s] : []
@@ -106,6 +104,10 @@ export function saving(settings: Setting[], s: Setting, value: (s: Setting) => s
   return settings.filter((o) => !o.post && direct(o) && o.write === s.write && value(o) !== o.value)
 }
 
+// What a setting's write posts: each setting it saves (`saving`) with its
+// value as typed, or the fields its `post` gives for it. One left as it
+// is never posts, so a write logs only what it changes, and a contact
+// detail never set stays unset.
 export function posted(settings: Setting[], s: Setting, value: (s: Setting) => string): Record<string, string> {
   return Object.fromEntries(saving(settings, s, value).flatMap((o) => Object.entries(o.post ? o.post(value(o)) : { [o.name]: value(o) })))
 }

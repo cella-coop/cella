@@ -2,8 +2,9 @@ import type { Db } from '@cella/org-db'
 import type { Shown } from '../models/changes.ts'
 
 // The changes a motion's actions make, each as its diff shows it, for the
-// kinds this graft carries out whose change reads as one: a circle's
-// features arranged, as the tree from the one it replaces; a circle's
+// kinds this graft carries out whose change reads as one: the co-op's
+// layout arranged, as the tree from the one it replaces; a circle's row
+// shown or hidden, `yes` or `no` from the one in force; a circle's
 // terms and a role's amended, each term from the one in force. What each
 // replaces is the value in force while the motion is open, and once it
 // closed the one its effect's entry says it replaced (`was`), as

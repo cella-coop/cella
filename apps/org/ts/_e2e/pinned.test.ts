@@ -16,7 +16,6 @@ import { mkdirSync } from 'node:fs'
 import pg from 'pg'
 import type { Page } from 'playwright-core'
 import { eachBrowser, serve, signIn } from './browser.ts'
-import { choose, chosen } from './controls.ts'
 
 const su = new pg.Client()
 
@@ -73,14 +72,18 @@ eachBrowser((engine, launch) => {
       assert.deepEqual(await pins(page), [], `${engine}: nothing is pinned yet`)
       assert.equal(await nav.locator('.pinned .hint').count(), 1, `${engine}: Pinned says where a view is pinned from`)
 
-      // Every circle, saved as her own view.
-      const circles = page.getByRole('combobox', { name: 'Circles' })
-      assert.equal(await chosen(circles), 'this', `${engine}: the view reads this circle`)
-      await choose(circles, 'every')
+      // Every circle, saved as her own view: the lens's circle is a
+      // filter chip now, not a View panel row; its × reads every
+      // circle instead.
+      const chip = page.locator('.bar .chip', { hasText: 'Circle is' })
+      await chip.waitFor()
+      await chip.getByRole('button', { name: "Read every circle's rows" }).click()
 
       await page.waitForURL(/[?&]across=1/)
       await page.waitForLoadState('networkidle')
-      await page.getByText("Across circles: every circle's tasks you read.").waitFor()
+      // The chip itself is gone once it reads across: nothing left to
+      // narrow it back to the lens's circle but the Filter menu.
+      await chip.waitFor({ state: 'detached' })
       assert.deepEqual(await listed(page, owner), reads, `${engine}: across circles, the tasks of both circles she reads and none of another's`)
       await page.getByRole('button', { name: 'Save', exact: true }).click()
       await page.getByRole('textbox', { name: 'View name' }).fill(name)
@@ -94,17 +97,17 @@ eachBrowser((engine, launch) => {
       assert.deepEqual(await listed(page, owner), reads, `${engine}: the saved view reads across circles`)
 
       // Pinned, then the tasks' All.
-      await page.getByRole('button', { name: 'Pin', exact: true }).click()
+      await page.getByRole('button', { name: 'Pin this view', exact: true }).click()
       await page.getByRole('navigation', { name: 'Views' }).getByRole('link', { name: 'All' }).click()
       await page.waitForURL((u) => !u.searchParams.has('v'))
       await page.waitForLoadState('networkidle')
       assert.deepEqual(await listed(page, owner), ['web'], `${engine}: All reads Web's tasks`)
-      await page.getByRole('button', { name: 'Pin', exact: true }).click()
+      await page.getByRole('button', { name: 'Pin this view', exact: true }).click()
       await page.waitForFunction(() => document.querySelectorAll('.pinned a').length === 2)
       const pinned = await pins(page)
       assert.deepEqual(pinned.map((f) => f.name), [name, 'Tasks'], `${engine}: both pinned, in the order she pinned them`)
       assert.match(pinned[0]!.href, /^\/tasks\?v=c-[\w-]+&.*across=1/, `${engine}: the view across circles opens at its own address`)
-      assert.equal(await page.getByRole('button', { name: 'Unpin', exact: true }).count(), 1, `${engine}: All reads as pinned`)
+      assert.equal(await page.getByRole('button', { name: 'Unpin this view', exact: true }).count(), 1, `${engine}: All reads as pinned`)
       await page.screenshot({ path: `${shots}/pinned-web-${engine}.png` })
 
       // The same in every circle she reads, and after a reload.

@@ -452,12 +452,17 @@ GRANT INSERT, DELETE ON circle.shown, circle.hidden TO cella_app;
 
 -- The layout is the co-op's, read by everyone in it, as every sidebar
 -- draws it; a circle's rows are the structure's, read as the circles are.
+-- Named `registry`, as `circle.scoped()` would have named it itself for a
+-- table with no owning circle: the denial scenario reads every reader's
+-- policy by that name to know a table open to everyone from one scoped
+-- to what they read, and the layout is the former, not an oversight of
+-- the latter.
 ALTER TABLE circle.feature_group ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
-CREATE POLICY layout ON circle.feature_group TO cella_app USING (true) WITH CHECK (true);
-CREATE POLICY layout_guards ON circle.feature_group FOR SELECT TO cella_guards USING (true);
+CREATE POLICY registry ON circle.feature_group TO cella_app USING (true) WITH CHECK (true);
+CREATE POLICY registry_guards ON circle.feature_group FOR SELECT TO cella_guards USING (true);
 ALTER TABLE circle.feature ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
-CREATE POLICY layout ON circle.feature TO cella_app USING (true) WITH CHECK (true);
-CREATE POLICY layout_guards ON circle.feature FOR SELECT TO cella_guards USING (true);
+CREATE POLICY registry ON circle.feature TO cella_app USING (true) WITH CHECK (true);
+CREATE POLICY registry_guards ON circle.feature FOR SELECT TO cella_guards USING (true);
 ALTER TABLE circle.shown ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
 CREATE POLICY structure ON circle.shown TO cella_app
   USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR circle = ANY ((SELECT circle.own())::text[])

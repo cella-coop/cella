@@ -215,6 +215,7 @@ export async function seed(db, read, { from, dir }) {
     let votes = 0
     let moved = 0
     let policies = 0
+    let messages = 0
     for (const d of motions) {
       const taken = await db.query(
         `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, proposed, deadline, body)
@@ -232,6 +233,19 @@ export async function seed(db, read, { from, dir }) {
           [d.id, v.member, v.stance, day(v.at)],
         )
         votes++
+      }
+      // Its deliberation, carried in with the motion, before it closes:
+      // each message under a receipt in file order, a reply naming its
+      // place among the motion's own messages.
+      const posted = []
+      for (const m of d.message ?? []) {
+        const { rows } = await db.query(
+          `INSERT INTO motion.message (receipt, motion, member, reply, body, at)
+           VALUES (${receipt}, $1, $2, $3, $4, $5) RETURNING receipt`,
+          [d.id, m.author, m.reply ? posted[m.reply - 1] : null, m.text, day(m.at)],
+        )
+        posted.push(rows[0].receipt)
+        messages++
       }
       if (d.closed) {
         await db.query(`UPDATE motion.motion SET closed = $2, cutoff = ${receipt} WHERE id = $1`, [d.id, day(d.closed)])
@@ -320,8 +334,8 @@ export async function seed(db, read, { from, dir }) {
       const doc = createDoc()
       doc.import(new Uint8Array(rows[0].snapshot))
       await db.query(
-        'INSERT INTO document.comment (version, author, at, quote, anchor, text) VALUES ($1, $2, $3, $4, $5, $6)',
-        [c.version, c.author, day(c.at), c.quote, JSON.stringify(anchor(doc, c.quote)), c.text],
+        'INSERT INTO document.comment (version, author, at, quote, anchor, text, resolved) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+        [c.version, c.author, day(c.at), c.quote, JSON.stringify(anchor(doc, c.quote)), c.text, c.resolved ?? false],
       )
     }
 
@@ -432,7 +446,7 @@ export async function seed(db, read, { from, dir }) {
     const filed = await files(db, read, day, dir)
     said =
       `${people.length} people, ${members.length} members, ${workers.length} workers, ${candidacies.length} candidacies, ${devices.length} devices, ${seats.length} seats, ` +
-      `${motions.length} motions, ${votes} stances, ` +
+      `${motions.length} motions, ${votes} stances, ${messages} messages, ` +
       `${moved} actions, ${policies} policies, ${invited} invitations, ${versions} versions, ${adoptions.length} adoptions, ${readings.length} readings, ${contacts.length} contacts, ${entries.length} entries, ${invoices.length} invoices, ` +
       `${postings.length} postings, ${worked}, ${financed}, ${met}, ${filed}`
     return {

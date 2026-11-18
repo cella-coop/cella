@@ -79,8 +79,10 @@ export async function work(db, read, day) {
   }
   // Each task's thread, its comments under receipts in file order, a
   // reply naming its root by its place among the task's comments, and
-  // each `@[address]` in a comment's text a mention, in the order given.
+  // each `@[address]` in a comment's text a mention, in the order given;
+  // a comment's reactions, each a person's own emoji, there while it is on.
   let comments = 0
+  let reactions = 0
   for (const t of tasks) {
     const posted = []
     for (const c of t.comment ?? []) {
@@ -92,6 +94,10 @@ export async function work(db, read, day) {
       posted.push(rows[0].id)
       for (const [i, person] of thread.mentioned(c.text).entries()) {
         await db.query('INSERT INTO task.mention (comment, n, person) VALUES ($1, $2, $3)', [rows[0].id, i + 1, person])
+      }
+      for (const r of c.reaction ?? []) {
+        await db.query('INSERT INTO task.reaction (comment, person, emoji) VALUES ($1, $2, $3)', [rows[0].id, r.person, r.emoji])
+        reactions++
       }
       comments++
     }
@@ -147,7 +153,7 @@ export async function work(db, read, day) {
     await db.query('UPDATE project.project SET archived = $2 WHERE id = $1', [p.id, day(p.archived)])
   }
 
-  return `${projects.length} projects, ${shares.length} shares, ${tasks.length} tasks, ${comments} comments, ${entries} time entries`
+  return `${projects.length} projects, ${shares.length} shares, ${tasks.length} tasks, ${comments} comments, ${reactions} reactions, ${entries} time entries`
 }
 
 // A task's body, as the snapshot of one Loro document holding its blocks.

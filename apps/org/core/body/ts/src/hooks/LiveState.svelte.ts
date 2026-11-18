@@ -29,10 +29,12 @@ const sent = (a: Answer): Sent => {
 
 // The post telling the session this browser saved, answered with the body
 // the record holds; one refused or with no answer it can read throws.
+// `keepalive` lets the browser finish it past a document it is leaving,
+// where an abort does not cut it off first.
 async function kept(url: string, signal: AbortSignal): Promise<Kept> {
   const body = new FormData()
   body.append('saved', '1')
-  const res = await fetch(url, { method: 'POST', body, headers: { accept: 'application/json' }, signal })
+  const res = await fetch(url, { method: 'POST', body, headers: { accept: 'application/json' }, signal, keepalive: true })
   const r = (await res.json()) as { type: string; data?: Kept & { done?: { reason?: string } } }
   if (r.type !== 'success' || !r.data) {
     throw new Error(r.data?.done?.reason ?? `refused (${res.status})`)
@@ -41,13 +43,14 @@ async function kept(url: string, signal: AbortSignal): Promise<Kept> {
 }
 
 // A post to the live session, answered as a form's is. One with no
-// answer it can read throws, which reads as being offline.
+// answer it can read throws, which reads as being offline. `keepalive`
+// lets it finish past a document it is leaving, as `kept`'s does.
 async function told(url: string, fields: [string, string][], signal: AbortSignal): Promise<Sent> {
   const body = new FormData()
   for (const [k, v] of fields) {
     body.append(k, v)
   }
-  const res = await fetch(url, { method: 'POST', body, headers: { accept: 'application/json' }, signal })
+  const res = await fetch(url, { method: 'POST', body, headers: { accept: 'application/json' }, signal, keepalive: true })
   if (res.status === 401) {
     return { ok: false, reason: 'sign in first' }
   }
@@ -69,7 +72,10 @@ async function told(url: string, fields: [string, string][], signal: AbortSignal
 // browser would otherwise cut off as the document goes saves nothing,
 // and WebKit reports it as the page's error; an abort sets no problem
 // the body shows. Where it does hold one, it is saved instead of
-// abandoned, accepting that the browser may still cut the request off.
+// abandoned: the session's own posts are asked to finish past the
+// document (`keepalive`), but the save write itself, signed by an async
+// device key through the page's own writes, is not; a browser that
+// cuts it off still loses it, which this browser cannot help.
 export class LiveState {
   readonly #live: Live
   readonly #at: Seat

@@ -192,14 +192,14 @@ test('chromium: two tabs saving from one base keep both members’ edits', { ski
   }
 })
 
-// An edit held unsaved is not dropped by a reload that follows it at
-// once, before its own pause would have saved it: leaving the page
-// saves a real edit instead of abandoning it, as merely opening the
-// task, which seeds its empty paragraph and edits nothing, never would.
-// In Chromium and WebKit.
+// An edit held unsaved is not dropped on leaving, before its own pause
+// would have saved it: a tab hidden saves it at once instead of waiting,
+// as the dead task the hiding's save used to wait on, past `pagehide`,
+// would have abandoned it on a real leave. A reload once it is saved
+// opens on it, as any save's does. In Chromium and WebKit.
 const reloadTasks: Record<string, string> = { chromium: 't-8', webkit: 't-9' }
 for (const [name, launch] of browsers().filter(([n]) => n in reloadTasks)) {
-  test(`${name}: an edit survives a reload made before its pause would have saved it`, async () => {
+  test(`${name}: an edit held unsaved is saved as soon as the tab hides, not at its pause`, async () => {
     const task = reloadTasks[name]
     const su = new pg.Client()
     await su.connect()
@@ -213,9 +213,21 @@ for (const [name, launch] of browsers().filter(([n]) => n in reloadTasks)) {
       page.on('pageerror', (e) => errors.push(e.message))
       await page.goto(`${base}/tasks/${task}`)
       await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
-      const line = `Léa's edit, reloaded at once in ${name}`
+      const line = `Léa's edit, saved on hiding in ${name}`
       await editor(page).locator('[contenteditable=true]').first().click()
       await page.keyboard.type(line)
+      assert.equal(
+        await page.evaluate(() => document.querySelector('[data-body]')?.getAttribute('data-state')),
+        'saving',
+        `${name}: the edit is held unsaved before the tab hides`,
+      )
+      // The tab hides well before the 3 s pause that would otherwise
+      // save it; a real edit held unsaved is saved at once instead.
+      await page.evaluate(() => {
+        Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true })
+        document.dispatchEvent(new Event('visibilitychange'))
+      })
+      await saved(page)
       await page.reload()
       await page.waitForSelector('[data-body=edit]', { timeout: 20_000 })
       await shows(page, [line], `${name}: the reopened tab`)
@@ -234,7 +246,7 @@ for (const [name, launch] of browsers().filter(([n]) => n in reloadTasks)) {
 // pause and for another document, saves nothing there: the editor's
 // empty-paragraph seed is not an edit, so merely viewing it dirties
 // nothing. In Chromium and WebKit.
-const viewTasks: Record<string, string> = { chromium: 't-1', webkit: 't-2' }
+const viewTasks: Record<string, string> = { chromium: 't-3', webkit: 't-2' }
 for (const [name, launch] of browsers().filter(([n]) => n in viewTasks)) {
   test(`${name}: viewing a task's body, never edited, saves nothing at its pause or on leaving`, async () => {
     const task = viewTasks[name]

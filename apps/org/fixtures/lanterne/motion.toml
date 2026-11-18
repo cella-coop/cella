@@ -1365,7 +1365,7 @@ at = 2026-10-22
 text = "Does this replace the renewal conversation, or sit alongside it?"
 
 [[motion.message]]
-author = "malik@lanterne.example"
+author = "yusuf@lanterne.example"
 reply = 1
 at = 2026-10-23
 text = "Alongside — the renewal is about the contract, the check-in is just about how it's going."

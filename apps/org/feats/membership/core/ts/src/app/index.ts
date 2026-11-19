@@ -1,5 +1,6 @@
-import { icons, short, type App, type Tone } from '@cella/org-ui'
-import { chips, type Membership, type Status } from '../models/member.ts'
+import { icons, short, toneOf, type App } from '@cella/org-ui'
+import type { Membership, Status } from '../models/member.ts'
+import { status } from '../models/status.ts'
 import Device from './blocks/Device.svelte'
 import Invite from './blocks/Invite.svelte'
 import Joining from './blocks/Joining.svelte'
@@ -7,8 +8,6 @@ import Rights from './blocks/Rights.svelte'
 import Standing from './blocks/Standing.svelte'
 import Withdraw from './blocks/Withdraw.svelte'
 import Erase from './blocks/Erase.svelte'
-
-const tones: Record<Status, Tone> = { active: 'positive', invited: 'accent', suspended: 'warning', exited: 'neutral' }
 
 // A person's row as the membership adds to it, where they hold one.
 type Row = { status?: Status; member?: string; since?: string | null; shares?: number }
@@ -25,7 +24,7 @@ export const app: App = {
   extends: {
     people: {
       columns: [
-        { key: 'member', label: 'Member', kind: 'badge', role: 'hidden', value: (r: Row) => r.member ?? '', tone: (r: Row) => (r.status ? tones[r.status] : 'neutral') },
+        { key: 'member', label: 'Member', kind: 'badge', role: 'hidden', value: (r: Row) => r.member ?? '', tone: (r: Row) => (r.status ? toneOf(status, r.status) : 'neutral') },
         { key: 'shares', label: 'Shares', kind: 'number', role: 'hidden', value: (r: Row) => r.shares },
         { key: 'since', label: 'Member since', kind: 'date', role: 'hidden', value: (r: Row) => r.since },
       ],
@@ -35,7 +34,7 @@ export const app: App = {
         properties: ({ member: m, first: f }: Membership) => [
           ...(m
             ? [
-                { label: 'Member', value: chips[m.status], kind: 'badge' as const, tone: tones[m.status] },
+                { label: 'Member', value: m.status, kind: 'status' as const, states: status },
                 { label: 'Invited', value: m.invited, kind: 'date' as const },
                 { label: 'Member since', value: m.since, kind: 'date' as const },
                 ...(m.suspended ? [{ label: 'Suspended', value: m.suspended, kind: 'date' as const }] : []),

@@ -1,10 +1,11 @@
 import type { Device } from '@cella/org-person/models'
+import { status } from './status.ts'
 
-export type Status = 'invited' | 'active' | 'suspended' | 'exited'
+export type Status = (typeof status.states)[number]['value']
 
 // A person's membership as a chip: a member, invited, suspended or a
-// former member.
-export const chips: Record<Status, string> = { active: 'member', invited: 'invited', suspended: 'suspended', exited: 'former member' }
+// former member, each its state's word.
+export const chips = Object.fromEntries(status.states.map((s) => [s.value, s.label])) as Record<Status, string>
 
 // A membership as the feat reads it, with the name of the person who holds
 // it; `id` is their address.

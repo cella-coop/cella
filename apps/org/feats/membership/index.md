@@ -58,6 +58,12 @@ are listed in `motion.cites`, with their powers, by the `membership-motion` graf
   move only along that lifecycle, raising SQLSTATE `09000` otherwise. The
   app role may select, insert and update; the guards role, `cella_guards`,
   may select.
+  Its statuses are its lifecycle in the models too (`models/status.ts`),
+  each with its chip's word, which `cella check feats` holds equal to
+  the CHECK and the UI kit draws as the `status` kind
+  ([statuses](../../core/ui/index.md#statuses)): invited unstarted,
+  active and suspended started, exited completed, keeping the house's
+  tones, a member positive, suspended warning, a former member neutral.
 - `membership.link`, an invitation's links, each by its digest: the
   SHA-256 of a 32-byte secret the inviter's browser drew, which only the
   link (`/join/<secret in hex>`) holds, the member it invites and the day

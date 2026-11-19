@@ -883,7 +883,8 @@ SELECT pg_catalog.pg_extension_config_dump('vault.swept', '');
 
 /// Whether the notary is redacting personal data right now, the one
 /// change a record that never changes takes: a feat's trigger that keeps a
-/// row fixed lets it through. No role can set it.
+/// row fixed lets it through, and a fold replaying a redaction under
+/// `cella.fold_redacting`, which only a superuser sets.
 #[pg_extern(stable)]
 fn redacting() -> bool {
     vault::redacting()

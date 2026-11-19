@@ -1448,4 +1448,83 @@ END $$"#
             "{error}"
         );
     }
+
+    fn redacting() -> bool {
+        Spi::get_one::<bool>("SELECT cella.redacting()")
+            .expect("redacting")
+            .expect("a flag")
+    }
+
+    /// `t.person`, as [`personal`] makes it, holding Ana's email, and a
+    /// trigger that notes `cella.redacting()` on each change to it, or
+    /// refuses the change once `t.refuse` holds a row.
+    fn watched() {
+        personal();
+        Spi::run(
+            "INSERT INTO t.person VALUES ('ana', 'ana@test.example');
+             CREATE TABLE t.seen (redacting boolean NOT NULL);
+             CREATE TABLE t.refuse ();
+             CREATE FUNCTION t.watch() RETURNS trigger LANGUAGE plpgsql AS $f$
+             BEGIN
+               IF EXISTS (SELECT FROM t.refuse) THEN RAISE EXCEPTION 'refused'; END IF;
+               INSERT INTO t.seen VALUES (cella.redacting());
+               RETURN NEW;
+             END
+             $f$;
+             CREATE TRIGGER watch BEFORE UPDATE ON t.person FOR EACH ROW EXECUTE FUNCTION t.watch();",
+        )
+        .expect("the watched person");
+    }
+
+    fn erase_ana() -> i64 {
+        reerase(&json!({ "head": 1, "erasures": [
+            { "subject": "ana", "class": "contact", "date": "2026-10-25", "receipt": 2, "restricted": false },
+        ] }))
+    }
+
+    /// The notary's redaction is the one change a trigger sees as one, and
+    /// once it ends, by success or by an error a caller caught, nothing is.
+    #[pg_test]
+    fn redacting_holds_only_while_the_notary_redacts() {
+        beside();
+        scope();
+        watched();
+        assert!(!redacting());
+        Spi::run("UPDATE t.person SET email = 'other@test.example'").expect("a plain change");
+        Spi::run("INSERT INTO t.refuse DEFAULT VALUES").expect("the refusal");
+        let error = tries(
+            "SELECT cella.vault_reerase('{\"head\": 1, \"erasures\": [{\"subject\": \"ana\", \"class\": \"contact\", \"date\": \"2026-10-25\", \"receipt\": 2, \"restricted\": false}]}')",
+        )
+        .expect("a refused redaction");
+        assert!(error.contains("refused"), "{error}");
+        assert!(!redacting(), "an error caught ends the redaction");
+        Spi::run("DELETE FROM t.refuse").expect("no refusal");
+        assert_eq!(erase_ana(), 1);
+        assert!(!redacting(), "a redaction done ends");
+        let seen = Spi::get_one::<Vec<bool>>("SELECT array_agg(redacting) FROM t.seen")
+            .expect("what the trigger saw");
+        assert_eq!(seen, Some(vec![false, true]));
+    }
+
+    /// A fold replays a redaction under `cella.fold_redacting`, a
+    /// superuser's: no other role turns `cella.redacting()` on.
+    #[pg_test]
+    fn only_a_superuser_sets_fold_redacting() {
+        beside();
+        scope();
+        Spi::run("SET LOCAL ROLE cella_guards").expect("the guards role");
+        for statement in [
+            "SET LOCAL cella.fold_redacting = on",
+            "SELECT set_config('cella.fold_redacting', 'on', true)",
+        ] {
+            let error = tries(statement).expect("a refusal");
+            assert!(error.starts_with("42501"), "{statement}: {error}");
+        }
+        assert!(!redacting());
+        Spi::run("RESET ROLE").expect("the superuser");
+        Spi::run("SET LOCAL cella.fold_redacting = on").expect("the superuser's");
+        assert!(redacting());
+        Spi::run("SET LOCAL cella.fold_redacting = off").expect("off");
+        assert!(!redacting());
+    }
 }

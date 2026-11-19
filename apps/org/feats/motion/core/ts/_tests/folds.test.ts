@@ -4,7 +4,8 @@
 // message as its entry carries it, its text as its commitment; a stance
 // and a close as their entries carry them; and an adoption by
 // `policy.adopt` on the action's terms, which refuses a policy or a hash
-// other than its entry's. Run by `cella test slice motion`.
+// other than its entry's; and a closed motion, which takes only the
+// redaction of its title and text. Run by `cella test slice motion`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -85,5 +86,33 @@ test('a proposal folds as its entry names it, by its actor on its day, its words
     )
   } finally {
     await db.query('ROLLBACK TO SAVEPOINT s')
+  }
+})
+
+test('a closed motion takes only a redaction of its title and text, and only while one runs', async () => {
+  await db.query('SAVEPOINT closed')
+  try {
+    await db.query(
+      `INSERT INTO motion.motion (id, circle, proposer, title, body, method, procedure, ballot, proposed, deadline, closed, cutoff) VALUES ('m-2026-192', 'ag', $1, 'x', 'y', 'majority', 'majority', 'open', '2026-11-07', '2026-11-21', '2026-11-21', 41)`,
+      [camille],
+    )
+    const refused = async (sql: string) => {
+      await db.query('SAVEPOINT s')
+      try {
+        await assert.rejects(db.query(sql), /m-2026-192 closed on/, sql)
+      } finally {
+        await db.query('ROLLBACK TO SAVEPOINT s')
+      }
+    }
+    const redact = `UPDATE motion.motion SET title = 'redacted', body = 'redacted' WHERE id = 'm-2026-192'`
+    await refused(redact)
+    await db.query(`SET LOCAL cella.fold_redacting = on`)
+    await refused(`UPDATE motion.motion SET deadline = '2026-12-01' WHERE id = 'm-2026-192'`)
+    await refused(`UPDATE motion.motion SET title = 'redacted', method = 'consent' WHERE id = 'm-2026-192'`)
+    await db.query(redact)
+    await db.query(`SET LOCAL cella.fold_redacting = off`)
+    assert.deepEqual(await one(`SELECT title, body FROM motion.motion WHERE id = 'm-2026-192'`), { title: 'redacted', body: 'redacted' })
+  } finally {
+    await db.query('ROLLBACK TO SAVEPOINT closed')
   }
 })

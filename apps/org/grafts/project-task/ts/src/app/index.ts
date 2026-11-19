@@ -1,4 +1,5 @@
-import { icons, type App } from '@cella/org-ui'
+import { icons, open, type App } from '@cella/org-ui'
+import { status } from '@cella/org-task/models'
 import type { Filed, Tasks as Listed } from '../models/filing.ts'
 import Tasks from './blocks/Tasks.svelte'
 
@@ -37,10 +38,10 @@ export const app: App = {
     projects: {
       columns: [{ key: 'tasks', label: 'Tasks done', role: 'hidden', value: (r: { tasks: string }) => r.tasks }],
       page: {
-        // The work left, where any is.
+        // The work left, where any is: its tasks in an open state.
         figures: (t: Listed) => {
-          const open = t.tasks.filter((x) => x.status !== 'done').length
-          return open ? [{ label: 'Tasks open', value: open, kind: 'number' }] : []
+          const left = t.tasks.filter((x) => (open(status) as string[]).includes(x.status)).length
+          return left ? [{ label: 'Tasks open', value: left, kind: 'number' }] : []
         },
         scoped: [{ tab: 'tasks', collection: 'tasks' }],
         blocks: [{ tab: 'tasks', block: Tasks }],

@@ -104,6 +104,8 @@ export const app: App = {
       caption: 'Your name, how to reach you, your theme and the devices that sign your writes.',
       icon: icons.UserCircle,
       block: Account,
+      // The address a person signs with, which nothing changes.
+      properties: (d: Person) => [{ label: 'Address', lead: 'signs as', value: d.address }],
     },
   },
 }

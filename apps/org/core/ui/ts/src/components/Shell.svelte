@@ -150,7 +150,8 @@
   // Settings' collections by subgroup, in its areas' order; Organization
   // gains the circle's own features page, a page of one normally kept off
   // the sidebar (`listed: false`), since here it is always the circle the
-  // member is in, the same one More… opens from the features list.
+  // member is in, the same one More… opens from the features list: right
+  // after the settings pages, before the feats' collections, as Imports.
   const parts = (group: string) => {
     const by = new Map<string, Nav[number]['items']>()
     for (const item of (nav.find((g) => g.group === group)?.items ?? []).filter((i) => i.listed !== false)) {
@@ -158,7 +159,9 @@
       by.set(key, [...(by.get(key) ?? []), item])
     }
     if (group === 'platform' && inside) {
-      by.set('Organization', [...(by.get('Organization') ?? []), { href: `/settings/features/${inside.id}`, title: 'Features', icon: SquaresFour }])
+      const items = by.get('Organization') ?? []
+      const at = items.reduce((n, i, k) => (i.href.startsWith('/settings/') ? k + 1 : n), 0)
+      by.set('Organization', [...items.slice(0, at), { href: `/settings/features/${inside.id}`, title: 'Features', icon: SquaresFour }, ...items.slice(at)])
     }
     const parted = [...by].map(([sub, items]) => ({ sub, items }))
     return parted.sort((a, b) => areas.indexOf(a.sub) - areas.indexOf(b.sub))

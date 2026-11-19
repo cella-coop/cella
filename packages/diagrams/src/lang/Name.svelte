@@ -1,4 +1,4 @@
-<!-- A line's name at its foot, where it starts: its kind's glyph, bare,
+<!-- A line's name at its head, where it starts: its kind's glyph, bare,
      then its name in the display face and its kind in small mono capitals. -->
 <script lang="ts">
   import { GLYPHS, type GlyphName } from './glyphs'

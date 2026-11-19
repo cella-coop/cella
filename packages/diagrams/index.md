@@ -1,6 +1,6 @@
 +++
 title = "Diagrams"
-updated = 2026-11-14
+updated = 2026-11-19
 +++
 
 `@cella/diagrams` is the landing site's diagrams: Svelte components,
@@ -47,16 +47,17 @@ specified once, in `src/lang/`: `Frame.svelte` holds its one
 stylesheet, the other parts each draw one element, and `draw.ts` holds
 the geometry of the particles' paths.
 
-- **Time runs up.** A diagram's left edge is a hairline axis, an open
-  chevron at its head and `TIME` under it, so nothing else needs an
-  arrow (`Axis`).
+- **Time runs down.** The earliest is at the top and what follows
+  stacks below it. A diagram's left edge is a hairline axis running
+  down, an open chevron at its head and `TIME` under it, so nothing else
+  needs an arrow (`Axis`).
 - **Worldlines are who.** A circle is a double line, its two rails 4.4
   apart; a role, a person or a store a single line; a role dashed while
   it stands vacant, or a coop before it joins (`Line`). Where someone
   takes a role, a short tick crosses its line and their name, in the
   particles' italic, stands beside it; the line is solid from there.
   Each line's
-  name stands at its foot, where it starts: its kind's glyph, bare, its
+  name stands at its head, above where it starts: its kind's glyph, bare, its
   name in the display face and its kind in small mono capitals
   (`Name`).
 - **Authority is width.** A wash behind a line as wide as the scope of

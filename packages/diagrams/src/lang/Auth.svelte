@@ -1,4 +1,4 @@
-<!-- Authority held along a worldline from y1 up to y2, its width the
+<!-- Authority held along a worldline from y1 down to y2, its width the
      scope of what it holds: a grant is never wider than its sender's. -->
 <script lang="ts">
   let { x, y1, y2, w }: { x: number; y1: number; y2: number; w: number } = $props()

@@ -32,7 +32,7 @@
     stroke-linejoin: round;
   }
 
-  /* worldlines: who, with time running up */
+  /* worldlines: who, with time running down */
   .dg :global(.line) {
     stroke: currentColor;
     stroke-width: 1.5;

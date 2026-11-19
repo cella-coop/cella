@@ -1,4 +1,4 @@
-<!-- A worldline from y1 up to y2: a circle's two rails, or one line for a
+<!-- A worldline from y1 down to y2: a circle's two rails, or one line for a
      role, a person or a scope's part; dashed while a role stands vacant. -->
 <script lang="ts">
   import { rails } from './draw'

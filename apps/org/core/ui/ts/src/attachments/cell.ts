@@ -8,7 +8,9 @@ import { actionCell, actionPath, type ActionEnd } from '@cella/brand'
 // its two ends pointed and each pair sharing a slanted edge across the
 // middle of the gap between them, and a run of quiet buttons alone stays
 // plain. Each button draws its own cell in its own svg, so the shapes
-// need no container.
+// need no container; one no longer drawn has its path cleared, since the
+// cell it drew before, at another tone's padding, would show from under
+// its box.
 //
 // The buttons beside one another are drawn together, so their layout is
 // read once and their cells written after: a document keeps one
@@ -141,6 +143,7 @@ function draw(page: Page) {
       path.setAttribute('transform', `translate(${f(-at[0])} ${f(-at[1])})`)
       el.dataset.drawn = ''
     } else {
+      path?.removeAttribute('d')
       delete el.dataset.drawn
     }
   }

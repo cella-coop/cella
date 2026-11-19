@@ -10,7 +10,8 @@
   // in the one centred column, and in the drawer's Details what the page
   // holds that cannot be changed there, read-only as a record's
   // properties are; a page holding none has no Details. While changes
-  // wait to be proposed, the drawer holds them too (`gathered`).
+  // wait to be proposed, the drawer holds them too (`gathered`), first,
+  // so it opens on them on every settings page until they are proposed.
   let {
     title,
     icon,
@@ -28,8 +29,8 @@
   } = $props()
 
   const panels = $derived<DrawerPanel[]>([
-    ...(properties.length ? [{ id: 'details', label: 'Details', icon: Info, body: details }] : []),
     ...(gathered ? [{ id: 'basket', label: 'Changes to propose', icon: Scales, body: gathered }] : []),
+    ...(properties.length ? [{ id: 'details', label: 'Details', icon: Info, body: details }] : []),
   ])
 </script>
 

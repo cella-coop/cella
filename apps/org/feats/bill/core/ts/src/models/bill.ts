@@ -1,8 +1,9 @@
 import type { Line, Taxed } from '@cella/org-vat'
+import { status } from './status.ts'
 
 // In the lifecycle's order.
-export const statuses = ['recorded', 'approved', 'paid'] as const
-export type Status = (typeof statuses)[number]
+export type Status = (typeof status.states)[number]['value']
+export const statuses: Status[] = status.states.map((s) => s.value)
 
 // What a bill may be charged to: accounts of class 6 of the French chart,
 // by code.

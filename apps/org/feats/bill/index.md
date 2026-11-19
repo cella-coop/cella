@@ -34,6 +34,13 @@ lines never change once recorded: a bill recorded wrong is the
 supplier's to correct with a credit note, which is not built. `overdue`
 is not a state: it is read from `due` on a bill not yet paid.
 
+Its statuses are its lifecycle in its models (`models/status.ts`),
+which `cella check feats` holds equal to `bill.bill`'s CHECK and the UI
+kit draws as the `status` kind
+([statuses](../../core/ui/index.md#statuses)): recorded unstarted,
+approved started, paid completed; a bill's standing is drawn so, but
+overdue, a warning beside them.
+
 ## Actions
 
 | Action | Label | Why |

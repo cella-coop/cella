@@ -1,11 +1,14 @@
-import { icons, type App, type Tone } from '@cella/org-ui'
+import { icons, type App } from '@cella/org-ui'
 import { categories, type Detail, type Listed } from '../models/bill.ts'
+import { status } from '../models/status.ts'
 import Lines from './blocks/Lines.svelte'
 import Record from './blocks/Record.svelte'
 import Status from './blocks/Status.svelte'
 import Body from './blocks/Body.svelte'
 
-const tones: { [s in Listed['standing']]: Tone } = { recorded: 'accent', approved: 'accent', paid: 'positive', overdue: 'warning' }
+// A bill's standing is its status, drawn by its lifecycle, but overdue,
+// which wants attention.
+const overdue = (s: Listed['standing']) => (s === 'overdue' ? ('warning' as const) : undefined)
 const category = (b: Listed) => categories.find((c) => c.code === b.category)?.label ?? b.category
 
 // The feat's client side: the bills, a new one recorded with its lines,
@@ -28,7 +31,7 @@ export const app: App = {
           { key: 'category', label: 'Category', kind: 'badge', role: 'hidden', value: (b: Listed) => b.category },
           { key: 'due', label: 'Due', kind: 'date', role: 'meta', value: (b: Listed) => b.due },
           { key: 'total', label: 'Total', kind: 'money', role: 'meta', value: (b: Listed) => b.total },
-          { key: 'standing', label: 'Status', kind: 'badge', role: 'meta', value: (b: Listed) => b.standing, tone: (b: Listed) => tones[b.standing] },
+          { key: 'standing', label: 'Status', kind: 'status', states: status, role: 'meta', value: (b: Listed) => b.standing, tone: (b: Listed) => overdue(b.standing) ?? 'neutral' },
           { key: 'net', label: 'Before VAT', kind: 'money', role: 'hidden', value: (b: Listed) => b.net },
           { key: 'vat', label: 'VAT', kind: 'money', role: 'hidden', value: (b: Listed) => b.vat },
           { key: 'issued', label: 'Dated', kind: 'date', role: 'hidden', value: (b: Listed) => b.issued },
@@ -51,7 +54,7 @@ export const app: App = {
         title: (b: Detail) => b.supplier,
         subtitle: (b: Detail) => b.id,
         properties: (b: Detail) => [
-          { label: 'Status', value: b.standing, kind: 'badge', tone: tones[b.standing] },
+          { label: 'Status', value: b.standing, kind: 'status', states: status, tone: overdue(b.standing) },
           { label: 'For', value: b.label, glyph: icons.Receipt, lead: 'for' },
           { label: 'Their reference', value: b.reference, kind: 'mono', lead: 'their ref' },
           { label: 'Category', value: `${category(b)}, ${b.category}`, kind: 'badge' },

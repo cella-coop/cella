@@ -1,6 +1,6 @@
 +++
 title = "Notary"
-updated = 2026-11-16
+updated = 2026-11-19
 +++
 
 The `cella` Postgres extension (pgrx, Postgres 18): the notary and the guard primitives as SQL, in schema `cella`. Every item is a thin wrapper over `cella-guards` (`core/guards/rs`) with no logic of its own, and the whole SQL surface is declared in one file, `rs/src/surface.rs`, whose header lists it; `rs/src/notary.rs` is the SPI plumbing `submit` and `verify_log` need.
@@ -39,7 +39,7 @@ The notary is the scope's office for every action, and a layer under every feat 
 | `cella.vault_sweep()` | erases the restricted data whose clock has run out on the verdict date; a superuser's, run by `cella vault sweep` |
 | `cella.vault_rewrap()` | seals every vault key under the wrap key of `cella.vault_key_file`, moving each that opens only under `cella.vault_key_previous` and naming its new wrap key, and returns how many moved; a superuser's, run by `cella vault rewrap` |
 | `cella.vault_reerase(erasures jsonb)` | carries out again each erasure of a list, as `cella backup` writes it, that the vault holds no tombstone for: deletes the subject's keys and sealed values of each erasable class, restricts each restricted one, redacts their columns and writes the tombstone, with the erasure's date and no log number, since the entry that made it is past the restored head; returns how many it carried out, and run again carries out none. A superuser's, run by `cella restore` before the database opens to the app ([operations](../../../../_corpus/doc/operations.md#backups)) |
-| `cella.redacting()` | whether the notary is redacting right now: the one change a record that never changes takes, which a feat's trigger keeping a row fixed lets through; no role can set it |
+| `cella.redacting()` | whether the notary is redacting right now: the one change a record that never changes takes, which a feat's trigger keeping a row fixed lets through, and a fold replaying a write's redaction (`cella.fold_redacting`); no role can set it but by that superuser's setting |
 | `cella.redact(subject, class)` | the owner's: sets a subject's registered columns of a class to `redacted` (text), `"redacted"` (JSON) or NULL |
 
 The org core's SQL beside the extension (`sql/`) adds the app's role, the
@@ -204,6 +204,7 @@ Guards never run with the owner's rights. `submit` runs each guard as `cella_gua
 - `cella.clock` (superuser only): a fixed verdict date, `YYYY-MM-DD`, for fixtures and tests. Unset, the date is the clock's day in the scope's timezone, read once per transaction.
 - `cella.timezone` (superuser only): the scope's timezone, an IANA zone such as `Europe/Paris`, whose day is the verdict date, so a cutoff or a period's close falls on the co-op's day and not on UTC's, an hour or two apart around midnight. Unset, UTC. `cella seed` sets it on the database from the fixture's `scope.toml`; the shell reads its today from `cella.verdict_date()` too.
 - `cella.unbound` (superuser only): a session may write the registered state tables outside a write; set by the migrations and on a slice test's database ([above](#bound)). Off by default.
+- `cella.fold_redacting` (superuser only): the fold is redacting, so `cella.redacting()` is true; `cella.fold_erasures` sets it around the redaction it replays, as the write it folds redacted, and sets it off after. Off by default.
 - `cella.scope` (superuser only): the scope's address, such as `lanterne.example`, which every write signature names. Set in `postgresql.conf` or on the database; `cella seed` sets it on the database from the fixture's `scope.toml`. The co-op's name and the mentions its invoices print are no setting: they are its particulars, a policy its assembly adopts ([the co-op's particulars](../circle/index.md#the-co-ops-particulars)).
 
 The library is loaded through `shared_preload_libraries` so its settings exist before any session sets them.

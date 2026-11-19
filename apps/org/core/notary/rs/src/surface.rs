@@ -35,7 +35,7 @@
 //! | `cella.redact(subject, class)` | function, the owner's | redacts a subject's columns of a class in the read models |
 //! | `vault.key`, `vault.secret`, `vault.erased`, `vault.swept` | tables, the owner's but `erased` | sealed keys, each naming its wrap key by id, the salts and sealed values that open commitments, erasures, sweeps |
 //! | `cella.opened(n)` | function | an entry's logged payload, its commitments opened from the vault |
-//! | `cella.redacting()` | function | whether the notary is redacting, for a feat's trigger that keeps a row fixed |
+//! | `cella.redacting()` | function | whether the notary is redacting, or a fold replaying its redaction (`cella.fold_redacting`), for a feat's trigger that keeps a row fixed |
 //! | `cella.vault_sweep()` | function, a superuser's | restricted data erased once its clock runs out |
 //! | `cella.vault_rewrap()` | function, a superuser's | every vault key sealed under the current wrap key, those naming the previous one moved and naming the current one |
 //! | `cella.vault_reerase(erasures)` | function, a superuser's | each erasure of a backup's list the restored vault lacks, carried out again |

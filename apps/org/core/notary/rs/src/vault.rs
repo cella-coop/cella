@@ -422,9 +422,11 @@ thread_local! {
 
 /// Whether the notary is redacting a subject's columns right now: the one
 /// change a record that never changes takes, which a feat's trigger lets
-/// through by `cella.redacting()`. No role can set it.
+/// through by `cella.redacting()`. No role can set it, but a fold replaying
+/// the redaction a write made, which sets `cella.fold_redacting`, a
+/// superuser's, around it.
 pub fn redacting() -> bool {
-    REDACTING.with(Cell::get)
+    REDACTING.with(Cell::get) || crate::FOLD_REDACTING.get()
 }
 
 struct Redacting;

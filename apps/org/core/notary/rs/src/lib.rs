@@ -122,6 +122,11 @@ pub(crate) static TIMEZONE: GucSetting<Option<CString>> = GucSetting::<Option<CS
 /// state table refuses a row no submitting transaction writes.
 pub(crate) static UNBOUND: GucSetting<bool> = GucSetting::<bool>::new(false);
 
+/// Whether a fold is redacting: a superuser's, set by `cella.fold_erasures`
+/// around the redaction it replays, so the fold's redaction is the
+/// notary's (`cella.redacting()`), as the write it folds redacted.
+pub(crate) static FOLD_REDACTING: GucSetting<bool> = GucSetting::<bool>::new(false);
+
 #[pg_guard]
 pub extern "C-unwind" fn _PG_init() {
     GucRegistry::define_string_guc(
@@ -185,6 +190,14 @@ pub extern "C-unwind" fn _PG_init() {
         c"Whether state may be written outside a write",
         c"a superuser's, for migrations and slice tests; off, a registered state table refuses a row no submitting transaction writes",
         &UNBOUND,
+        GucContext::Suset,
+        GucFlags::default(),
+    );
+    GucRegistry::define_bool_guc(
+        c"cella.fold_redacting",
+        c"Whether a fold is redacting",
+        c"a superuser's, set by cella.fold_erasures around the redaction it replays; on, cella.redacting() is true",
+        &FOLD_REDACTING,
         GucContext::Suset,
         GucFlags::default(),
     );

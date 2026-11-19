@@ -210,8 +210,10 @@ REVOKE EXECUTE ON FUNCTION cella.committed(text, text, text) FROM PUBLIC;
 -- as the notary did once the write's state was in: each class it erased
 -- of its subject loses the commitments the fold applied, as the vault
 -- loses its keys and their values, and its columns are redacted by
--- `cella.redact`, as the notary redacts them; a class only restricted
--- keeps both. A superuser's, run by `cella.fold_log`.
+-- `cella.redact`, as the notary redacts them, `cella.fold_redacting` on
+-- around it so a feat's trigger that lets the notary's redaction through
+-- (`cella.redacting()`) lets the fold's through too; a class only
+-- restricted keeps both. A superuser's, run by `cella.fold_log`.
 CREATE FUNCTION cella.fold_erasures(n bigint, form jsonb) RETURNS void
 LANGUAGE plpgsql SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
@@ -223,7 +225,9 @@ BEGIN
       DELETE FROM cella.commitment c
       WHERE c.subject = e ->> 'subject'
         AND c.field IN (SELECT p.schema || '.' || p.tab || '.' || p.col FROM cella.personal p WHERE p.class = k);
+      PERFORM pg_catalog.set_config('cella.fold_redacting', 'on', true);
       PERFORM cella.redact(e ->> 'subject', k);
+      PERFORM pg_catalog.set_config('cella.fold_redacting', 'off', true);
     END LOOP;
   END LOOP;
 END

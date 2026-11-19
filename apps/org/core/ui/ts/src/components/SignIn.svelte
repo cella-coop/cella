@@ -127,8 +127,8 @@
     {:else}
       <!-- Which keys this browser holds only its script can read: until
            it has, the page the server sends says nothing of them. -->
-      <h1 id="in" class="sr">Sign in to {name}</h1>
-      <div class="pending" aria-busy="true" data-pending>
+      <h1 id="in" class="title sr">Sign in to {name}</h1>
+      <div class="pending" aria-busy="true">
         <span class="line"></span>
         <span class="line"></span>
       </div>

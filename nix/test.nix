@@ -9,7 +9,7 @@
 #   whose log verifies at the same head.
 # - `demo`: a demo scope. Its template is built at the unit's first start,
 #   and the scope serves a copy of it: its sign-in offers Lanterne's
-#   members, under one demo tag on its heading, under the demo's banner,
+#   members, under a heading naming them the demo's, under its banner,
 #   and one signs in and signs a write. The template built again from
 #   nothing holds the same log, and both verify.
 # - `visitors`: a demo serving each visitor a copy of their own through
@@ -102,13 +102,13 @@ pkgs.testers.runNixOSTest {
           host.succeed("""${psql "postgres" "SELECT datistemplate AND NOT datallowconn FROM pg_database WHERE datname = 'demo_template'"} | grep -qx t""")
           host.succeed("""${psql "postgres" "SELECT shobj_description(oid, 'pg_database') FROM pg_database WHERE datname = 'demo'"} | grep -q '^a copy of demo_template: cella demo template: '""")
 
-      with subtest("the demo's sign-in offers Lanterne's members, under one demo tag on the heading, under its banner"):
+      with subtest("the demo's sign-in offers Lanterne's members, under a heading naming them the demo's, under its banner"):
           page = host.succeed("curl -sf http://127.0.0.1:${toString port}/sign-in")
           members = int(host.succeed("""${psql "demo" "SELECT count(DISTINCT address) FROM person.device WHERE revoked IS NULL"} """).strip())
           assert "Demo members" in page, "the sign-in offers no demo members"
           assert "Camille Martin" in page, "Camille is not offered"
           assert members > 1, "the fixture seeds more than one member to mark"
-          assert page.count('>demo</span>') == 1, "only the heading wears the demo tag, not each row"
+          assert '>demo</span>' not in page, "nothing wears a demo tag: the heading says it"
           assert "demo member" not in page, "no row wears its own demo badge"
           assert notice in page, "the sign-in wears no demo banner"
 

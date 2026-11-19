@@ -387,7 +387,8 @@
       height: 100%;
       padding-left: var(--space-4);
       border-left: 1px solid var(--line);
-      background: var(--float);
+      --surface: var(--float);
+      background: var(--surface);
       box-shadow: var(--shadow-float);
     }
   }

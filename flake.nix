@@ -310,7 +310,7 @@
         # `cella-pg` and keys `cella key init` makes, a scope's database
         # migrated by `cella migrate --url`, then the built server started
         # by `cella-server` as `cella_app`, whose sign-in page it reads,
-        # offering no one.
+        # offering no one: its one way in is Link device.
         cella-org = pkgs.runCommand "cella-org-check" {
           nativeBuildInputs = [ (pkgs.postgresql_18.withPackages (_: [ (cellaPg pkgs) ])) (cellaOrg pkgs) pkgs.curl ];
         } ''
@@ -337,7 +337,11 @@
           done
           kill %1
           pg_ctl -w stop > /dev/null
-          grep -q 'Sign in' $TMPDIR/sign-in.html || { cat $TMPDIR/server.log; exit 1; }
+          grep -q 'Link device' $TMPDIR/sign-in.html || {
+            cat $TMPDIR/server.log
+            sed 's/<[^>]*>/ /g' $TMPDIR/sign-in.html | tr -s ' \n' | head -c 2000
+            exit 1
+          }
           if grep -q 'Fixture members\|Demo members' $TMPDIR/sign-in.html; then
             echo "a production build's sign-in offers someone"; exit 1
           fi

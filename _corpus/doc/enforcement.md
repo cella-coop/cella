@@ -17,7 +17,8 @@ negative tests.
 
 `cella check` runs the checks: `cella check feats` runs
 `tools/feat-check.mjs`, which calls `tools/sql-check.mjs`,
-`tools/powers.mjs`, `tools/writes.mjs`, `tools/ui-check.mjs` and `tools/tabs.mjs`;
+`tools/powers.mjs`, `tools/writes.mjs`, `tools/ui-check.mjs`, `tools/tabs.mjs` and
+`tools/states.mjs`;
 `cella check fixtures` runs `tools/fixture-check.mjs`, and `cella check
 pruned` builds core alone by `tools/prune.mjs`. `cella migrate` refuses
 by `tools/migrations.mjs` as it runs. `cella test tools`
@@ -56,6 +57,7 @@ Short names: fc `tools/feat-check.mjs`, sc `tools/sql-check.mjs`, pw
 | A check is never a stance, a seat, a passed motion or the actor's own | [actions](architecture.md#actions) | pw | `T/powers.test.mjs`: a stance is no check; a seat is no check; a passed motion is no check; what is the actor's own is no check |
 | A mandate, collective mandate or right Lanterne adopts grants every power | [actions](architecture.md#actions) | pw | `T/powers.test.mjs`: a power no mandate grants |
 | Every action folds | [folds](architecture.md#folds) | pw; every e2e scenario's log folds into a fresh database, but one marked `// unfolded:` | `T/powers.test.mjs`: an action with no fold |
+| A slice's declared statuses list the values its column's CHECK does, each once and in a category the UI kit knows | [statuses](../../apps/org/core/ui/index.md#statuses) | fc, by `tools/states.mjs` on each `models/status.ts` and the CHECKs sc collects | `T/states.test.mjs`: a state the CHECK refuses, or one it allows left out; a lifecycle whose column no CHECK lists; a state declared twice, an unknown category, a column declared twice |
 | A slice registers its folds and follows under its own name, in its own schema | [folds](architecture.md#folds) | sc | `T/writes.test.mjs`: a fold registered not as itself |
 | An `on:` cause is registered in `cella.follows` | [writes stay home](architecture.md#writes-stay-home) | fc, "reacts to" | `T/powers.test.mjs`: an `on:` cause no `cella.lets_follow` registers |
 | Only the notary's functions write the log | [SQL](architecture.md#sql) | sc, a slice or a core library writes `cella.*` only to register; wr, only the notary's TypeScript writes `cella.*` | `T/powers.test.mjs`: a feat registers powers only on its own ops, as literal rows, under its own name; only a feat registers the keyring, and nothing else in cella is written; `T/writes.test.mjs`: a core library's SQL writes cella.* only to register; a core library's or a slice's TypeScript that writes the log |

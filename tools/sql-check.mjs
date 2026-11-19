@@ -356,14 +356,33 @@ const registries = new Set(['guard', 'power', 'keyring', 'personal', 'reading', 
 const suspect = /^(name|full_name|first_name|last_name|email|phone|mobile|iban|bic|address|street|city|postal_code|birth\w*|salary|gross|net|note|notes|receipt)$/
 const typed = new Set(['text', 'varchar', 'jsonb', 'json', 'amount', 'numeric'])
 
-// Each column a statement creates, by its schema, table, name and type.
+// Each column a statement creates, by its schema, table, name and type;
+// and each CHECK that lists a column's values, `<column> IN ('a', …)`, on
+// the column or the table, with its line, which states.mjs holds equal to
+// the lifecycle its slice declares.
 function columns(rel, defs, path, found) {
   for (const d of defs ?? []) {
     const c = d.ColumnDef
     if (c) {
       found.columns.push({ key: `${rel.schemaname}.${rel.relname}.${c.colname}`, type: strings(c.typeName?.names).at(-1), path })
     }
+    for (const k of [...(c?.constraints ?? []), ...(d.Constraint ? [d] : [])].map((x) => x.Constraint)) {
+      const listed = k?.contype === 'CONSTR_CHECK' ? listing(k.raw_expr) : undefined
+      if (listed && (!c || listed.column === c.colname)) {
+        const line = found.text ? Buffer.from(found.text).subarray(0, k.location ?? 0).toString().split('\n').length : 0
+        ;(found.listed ??= []).push({ key: `${rel.schemaname}.${rel.relname}.${listed.column}`, values: listed.values, path, line })
+      }
+    }
   }
+}
+
+// A CHECK's `<column> IN ('a', …)`: the column and the values it lists.
+function listing(e) {
+  const x = e?.A_Expr
+  const column = strings(x?.lexpr?.ColumnRef?.fields).at(-1)
+  const items = x?.kind === 'AEXPR_IN' ? (x.rexpr?.List?.items ?? []) : []
+  const values = items.map((i) => i.A_Const?.sval?.sval)
+  return column && values.length && values.every((v) => v !== undefined) ? { column, values } : undefined
 }
 
 // The suspect columns declared neither personal nor not.
@@ -1740,6 +1759,7 @@ export async function checkSql(repo, apps, known, found = { powers: [], guards: 
       return
     }
     found.at = path
+    found.text = sql
     inspect(tree, o, s, known, fail, found)
     if (file === CONTRACT) {
       contract(tree, o, fail, found, published(repo, o))

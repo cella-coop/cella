@@ -48,6 +48,8 @@
 // action with no power declares a check its SQL backs, that every
 // action folds, and that a feat keeping a body or threads keeps them
 // whole.
+// Through states.mjs, that each status a slice's models/status.ts
+// declares lists the values its column's CHECK does.
 // `--no-sql` skips the SQL, which needs the npm install; the flake's check
 // runs without one.
 
@@ -59,6 +61,7 @@ import { agree, covered, declared, embodied, granted, mandates, unfolded, unfoll
 import { checkUi } from './ui-check.mjs'
 import { checkTabs } from './tabs.mjs'
 import { refuse, scanTs } from './writes.mjs'
+import { agreeStates, lifecycles } from './states.mjs'
 
 const args = process.argv.slice(2)
 const sql = !args.includes('--no-sql')
@@ -526,6 +529,7 @@ for (const dir of byName.values()) {
 
 // How many actions there are, every one of which folds.
 let actionCount = 0
+let statusCount = 0
 
 if (sql) {
   const known = new Set(['cella'])
@@ -624,11 +628,24 @@ if (sql) {
     }
   }
   errors.push(...unfollowed(reacting, found.follows))
+  // Each slice's lifecycles, held equal to the CHECK on the column each
+  // names, in the slice's own schema.
+  const slices = []
+  for (const dir of byName.values()) {
+    const p = place(dir)
+    const schema = p?.kind === 'graft' ? schemaName(p.name) : p?.kind === 'core' && parentOf(p.node) ? basename(p.node) : null
+    if (schema) {
+      slices.push({ dir, schema })
+    }
+  }
+  const declaredStates = await lifecycles(repo, slices)
+  statusCount = declaredStates.length
+  errors.push(...agreeStates(declaredStates, found.listed ?? []))
 }
 
 if (errors.length) {
   console.error(errors.map((e) => `feat check: ${e}`).join('\n'))
   process.exit(1)
 }
-const folded = sql ? `, all ${actionCount} actions fold` : ''
+const folded = sql ? `, all ${actionCount} actions fold, all ${statusCount} statuses match their CHECK` : ''
 console.log(`feat check: ${dirs.length} packages, ${edges.length} edges, ${nodes.length} nodes, all on the tree, ${shared.length + sites.length} outside it${folded}`)

@@ -107,7 +107,7 @@ export const logged = ['created', 'updated', 'created_by', 'updated_by'] as cons
 // page draws.
 const asking = (keys: string[]) => keys.some((k) => (logged as readonly string[]).includes(k))
 const scoping = (s: Source) => (s.scope ?? []).map((c) => c.field)
-const named =(k: Keep) => [...k.where.map((c) => c.field), ...(k.q?.text.trim() ? k.q.keys : []), ...(k.sort ? [k.sort.field] : []), ...(k.then ? [k.then.field] : []), ...(k.group ? [k.group.field] : [])]
+const named = (k: Keep) => [...k.where.map((c) => c.field), ...(k.q?.text.trim() ? k.q.keys : []), ...(k.sort ? [k.sort.field] : []), ...(k.then ? [k.then.field] : []), ...(k.group ? [k.group.field] : [])]
 
 // A row's logged fields, from `cella.made` over the ids of `rows`, a
 // relation of `row`s: what the log holds of the rows read, so only of

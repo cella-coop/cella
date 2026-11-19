@@ -157,6 +157,7 @@ test('a logo is one SVG that runs nothing and reaches nothing outside itself, co
       ['<svg xmlns:s="http://www.w3.org/2000/svg"><s:script>alert(1)</s:script></svg>', /^a coop's logo runs no script: drop its <s:script>$/],
       ['<svg xmlns:h="urn:x"><h:foreignObject/></svg>', /^a coop's logo embeds no HTML: drop its <h:foreignObject>$/],
       ['<svg xmlns:e="urn:x"><rect e:onload="alert(1)"/></svg>', /^a coop's logo handles no event: drop its e:onload=…$/],
+      ['<svg xmlns="http://www.w3.org/2000/svg" xml:base="https://evil.example/external.svg"><use href="#payload"/></svg>', /^a coop's logo resolves its references against itself: drop its xml:base=…$/],
       [`<svg ${xlink}><a xlink:href="https://evil.example/"><rect/></a></svg>`, /^a coop's logo references only its own parts, as href="#flame", not href="https:\/\/evil\.example\/"$/],
       ['<svg xmlns:x="http://www.w3.org/1999/xlink"><image x:href="//evil.example/p.png"/></svg>', /references only its own parts, as href="#flame", not href="\/\/evil/],
       [`<svg ${xlink}><set attributeName="xlink:href" to="#x"/></svg>`, /animates no reference/],

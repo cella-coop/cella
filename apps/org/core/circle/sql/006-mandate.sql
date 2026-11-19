@@ -150,7 +150,8 @@ $$;
 -- each prefix declared, declaring nothing (`<!…>`, `<?…>`), escaping no
 -- character (`&#…;`, `\`), and, read as XML whatever the prefix, with
 -- no element named `script` or `foreignObject`, no attribute named
--- `on…`, no `javascript:`, and no reference outside itself: every
+-- `on…`, no `javascript:`, and no reference outside itself: no base
+-- (`xml:base`) to resolve a reference against, every
 -- attribute named `href`, `xlink:href` among them, and every `url()`
 -- names only `#…`, no style imports (`@import`) or picks an image
 -- (`image-set`), and no animation sets an `href`.
@@ -176,6 +177,8 @@ BEGIN ATOMIC
       THEN 'a coop''s logo handles no event: drop its ' || x.handler || '=…'
     WHEN svg ~* 'javascript\s*:'
       THEN 'a coop''s logo links nowhere: drop its javascript:'
+    WHEN x.base IS NOT NULL
+      THEN 'a coop''s logo resolves its references against itself: drop its ' || x.base || '=…'
     WHEN x.href IS NOT NULL
       THEN 'a coop''s logo references only its own parts, as href="#flame", not href="' || left(x.href, 40) || '"'
     WHEN svg ~* 'url\(\s*(?!["'']?#)'
@@ -190,6 +193,7 @@ BEGIN ATOMIC
            nullif((xpath('name((//*[translate(local-name(), ''SCRIPT'', ''script'') = ''script''])[1])', d.doc))[1]::text, '') AS script,
            nullif((xpath('name((//*[translate(local-name(), ''FOREIGNOBJECT'', ''foreignobject'') = ''foreignobject''])[1])', d.doc))[1]::text, '') AS html,
            nullif((xpath('name((//@*[starts-with(translate(local-name(), ''ON'', ''on''), ''on'')])[1])', d.doc))[1]::text, '') AS handler,
+           nullif((xpath('name((//@*[local-name() = ''base''])[1])', d.doc))[1]::text, '') AS base,
            (xpath('(//@*[local-name() = ''href'' and not(starts-with(., ''#''))])[1]', d.doc))[1]::text AS href,
            xpath_exists('//@*[local-name() = ''attributeName''
                               and (normalize-space(.) = ''href'' or substring-after(normalize-space(.), '':'') = ''href'')]', d.doc) AS animated

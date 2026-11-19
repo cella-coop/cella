@@ -265,6 +265,13 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  /* A link in the value sits in an overflow:hidden row, so its own focus
+     outline would be clipped; ring the row itself as well, which is not
+     clipped, so the keyboard still shows where it is. */
+  .line:focus-within {
+    border-radius: var(--radius-control);
+    box-shadow: var(--focus);
+  }
   /* Live: the whole row is its button, filled on hover. */
   .live:hover {
     background: var(--hover);

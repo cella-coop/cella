@@ -344,10 +344,11 @@
 
   <main class="main">
     {@render children()}
-    {#if dev}
+    {#if dev && !demo}
       <!-- Dev mode, where anyone signs in as a fixture member: a watermark
            at the content's foot, by the drawer. Its word is drawn by CSS,
-           a mark and no text to read. -->
+           a mark and no text to read. A demo's banner, or the panel it is
+           dismissed to, is that corner's one mark instead. -->
       <p class="prototype" title="Development server: anyone may sign in as a fixture member" aria-hidden="true">
         <Icon icon={TestTube} size="1.1rem" />
       </p>

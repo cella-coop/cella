@@ -263,10 +263,9 @@
   .hide :global(.button:hover) {
     --fill: oklch(var(--shade-4) var(--tone-warning) / 35%);
   }
-  /* A subtle watermark where the strip is dismissed: the bottom of the
-     drawer (the frame's own right column, `PageFrame.svelte`), since it
-     sits flush with the viewport's corner; where a page has none, or it
-     is shut, the same corner is the content's own. */
+  /* Where the strip is dismissed, a small panel in its amber, in the
+     viewport's bottom right corner: Prototype, the time left where the
+     strip counts it down, and the button that brings the strip back. */
   .watermark {
     position: fixed;
     right: var(--space-4);
@@ -274,14 +273,26 @@
     z-index: 20;
     display: inline-flex;
     align-items: center;
-    gap: var(--space-1);
+    gap: var(--space-2);
     margin: 0;
-    color: var(--text-subtle);
+    padding: 0.2rem 0.2rem 0.2rem var(--space-3);
+    border-radius: var(--radius-control);
+    background: var(--warning-soft);
+    color: var(--warning-text);
+    box-shadow: var(--shadow-float);
     font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
   .show :global(.button) {
     padding: 0;
     width: 1.6rem;
     justify-content: center;
+    --fill: none;
+    color: var(--warning-text);
+  }
+  .show :global(.button:hover) {
+    --fill: oklch(var(--shade-4) var(--tone-warning) / 35%);
   }
 </style>

@@ -1,6 +1,6 @@
 import { icons, type App, type Tone } from '@cella/org-ui'
 import { outcome, states, taking, type Roll, type State } from '../models/roll.ts'
-import type { Standing } from '../models/asking.ts'
+import type { Featuring, Organization as Organized, Ruling, Standing } from '../models/asking.ts'
 import Appoint from './blocks/Appoint.svelte'
 import Terms from './blocks/Terms.svelte'
 import Roles from './blocks/Roles.svelte'
@@ -68,8 +68,8 @@ export const app: App = {
     },
   },
   // The coop's own settings, first under Organization: its particulars,
-  // which the assembly's motion replaces, and the scope's address and
-  // timezone, which a host sets.
+  // which the assembly's motion replaces, and in its Details the scope's
+  // address and timezone, which a host sets, never a motion.
   settings: {
     organization: {
       subgroup: 'Organization',
@@ -77,6 +77,10 @@ export const app: App = {
       caption: 'What the coop is called and what its papers print, which a motion of the assembly changes.',
       icon: icons.Buildings,
       block: Organization,
+      properties: (d: Organized) => [
+        { label: 'Address', lead: 'address', value: d.scope ?? 'Unset', group: 'Set by a host' },
+        { label: 'Timezone', lead: 'timezone', value: d.timezone ?? 'UTC', group: 'Set by a host' },
+      ],
     },
     // A circle's features, a page of the circle, `/settings/features/<id>`,
     // which its Settings tab links to, so the sidebar lists it nowhere.
@@ -87,6 +91,7 @@ export const app: App = {
       icon: icons.SquaresFour,
       listed: false,
       block: Features,
+      properties: (d: Featuring) => [{ label: 'Circle', lead: 'of', value: d.name, href: `/circles/${d.circle}` }],
     },
     // A circle's rules, a page of the circle, `/settings/rules/<id>`,
     // which its Settings tab links to beside its features.
@@ -97,6 +102,7 @@ export const app: App = {
       icon: icons.Scales,
       listed: false,
       block: Rules,
+      properties: (d: Ruling) => [{ label: 'Circle', lead: 'of', value: d.name, href: `/circles/${d.circle}` }],
     },
   },
 }

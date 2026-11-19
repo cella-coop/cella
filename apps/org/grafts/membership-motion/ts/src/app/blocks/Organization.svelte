@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { Explained, Note, Section, Settings, type Declared } from '@cella/org-ui'
+  import { Note, Section, Settings, type Declared } from '@cella/org-ui'
   import type { Organization, Particular } from '../../models/asking.ts'
 
   // Settings' Organization page: the coop's particulars in force, none
   // saved by anyone's write, since only a motion of the assembly adopts
   // them: a value's edit, as it commits, joins the changes to propose to
-  // the assembly; and the scope's address and timezone, which a host
-  // sets, each with the host icon beside its label.
+  // the assembly. The scope's address and timezone, which a host sets,
+  // are the page's Details (`app/circles.ts`).
   let { data }: { data: Organization } = $props()
 
   const labels: Record<Particular, string> = {
@@ -39,11 +39,6 @@
         }))
       : [],
   )
-
-  const hosted = $derived([
-    { key: 'scope', label: 'Address', value: data.scope, text: 'A host sets it, never a motion: every write the notary signs names it.' },
-    { key: 'timezone', label: 'Timezone', value: data.timezone ?? 'UTC', text: 'A host sets it, never a motion: the notary dates every verdict by its day.' },
-  ])
 </script>
 
 <Section title="Particulars">
@@ -52,9 +47,4 @@
   {:else}
     <Note text="No particulars stand yet: the founding motion adopts them." />
   {/if}
-</Section>
-<Section title="Scope">
-  <Explained
-    items={hosted.map((h) => ({ key: h.key, label: h.label, values: [{ label: 'Set to', value: h.value ?? 'Unset' }], who: { kind: 'host' as const, label: 'Set by a host', text: h.text } }))}
-  />
 </Section>

@@ -67,14 +67,14 @@ eachBrowser((name, launch) => {
           assert.equal(await form.getByLabel('Seat').inputValue(), montreuil, `${at}: its seat in force`)
           assert.equal(await form.getByLabel('SIREN').inputValue(), '000000000', `${at}: its SIREN in force`)
           assert.equal(await form.getByRole('button', { name: 'Assembly changes this by motion' }).count(), 8, `${at}: each particular wears the assembly's motion icon`)
-          const scope = page.locator('section', { has: page.getByRole('heading', { name: 'Scope' }) })
+          // the scope's address and timezone, which a host sets, are the
+          // page's Details, read-only in the drawer as a record's are
+          const scope = page.getByRole('complementary', { name: 'Details' })
           const hosted = (await scope.textContent()) ?? ''
+          assert.match(hosted, /Set by a host/, `${at}: under who sets them`)
           assert.match(hosted, /lanterne\.example/, `${at}: the scope's address`)
           assert.match(hosted, /Europe\/Paris/, `${at}: its timezone`)
-          assert.equal(await scope.getByRole('button', { name: 'Set by a host' }).count(), 2, `${at}: each wears the host icon`)
-          assert.equal(await scope.getByText('A host sets it, never a motion', { exact: false }).count(), 2, `${at}: whose tooltips say why`)
-          await scope.getByRole('button', { name: 'Set by a host' }).first().focus()
-          await page.getByRole('tooltip').filter({ hasText: 'every write the notary signs names it' }).waitFor()
+          assert.equal(await form.getByLabel('Timezone').count(), 0, `${at}: neither is a field of the form`)
           await page.screenshot({ path: `${shots}/organization-${name}-${scheme}.png`, fullPage: true })
           await scope.screenshot({ path: `${shots}/organization-scope-${name}-${scheme}.png` })
 

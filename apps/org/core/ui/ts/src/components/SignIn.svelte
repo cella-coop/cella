@@ -119,11 +119,19 @@
           </div>
         </div>
       {/if}
-    {:else}
+    {:else if state.loaded}
       <div class="empty">
         <h1 id="in" class="title">This browser isn't signed in to {name} yet</h1>
       </div>
       <p class="hint">Open the invitation link you were sent, or link this browser from a device you already use.</p>
+    {:else}
+      <!-- Which keys this browser holds only its script can read: until
+           it has, the page the server sends says nothing of them. -->
+      <h1 id="in" class="sr">Sign in to {name}</h1>
+      <div class="pending" aria-busy="true" data-pending>
+        <span class="line"></span>
+        <span class="line"></span>
+      </div>
     {/if}
 
       <div class="bar">
@@ -131,7 +139,7 @@
              though both are quiet (`data-run`, `attachments/cell.ts`). -->
         <span class="others" data-run>
           <span data-link data-through>
-            <Button tone={pick ? 'quiet' : 'primary'} onclick={() => (state.opened = true)}>
+            <Button tone={pick || !state.loaded ? 'quiet' : 'primary'} onclick={() => (state.opened = true)}>
               <Icon icon={Link} size="1rem" />Link device
             </Button>
           </span>
@@ -365,6 +373,31 @@
   .empty {
     display: grid;
     gap: var(--space-3);
+  }
+  .pending {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-4);
+  }
+  .line {
+    display: block;
+    inline-size: 60%;
+    block-size: var(--space-3);
+    border-radius: var(--radius-pill);
+    background: var(--sunk);
+  }
+  .line + .line {
+    inline-size: 100%;
+    block-size: 2rem;
+    border-radius: var(--radius-control);
+  }
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .ways {
     display: grid;

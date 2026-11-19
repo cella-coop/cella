@@ -65,7 +65,8 @@ eachBrowser((name, launch) => {
       const signedOut = await visit('/people')
       assert.match(page.url(), /\/sign-in\?back=%2Fpeople$/, 'with no session, a page goes to the sign-in')
       assert.equal(signedOut?.status(), 200)
-      assert.ok(await page.getByText("This browser isn't signed in to Lanterne yet").isVisible())
+      // the card says so once the page has read the keys this browser holds
+      await page.getByText("This browser isn't signed in to Lanterne yet").waitFor()
 
       await visit(`/join/${secret}`)
       assert.ok(await page.getByRole('heading', { name: 'Join Lanterne' }).isVisible())

@@ -15,6 +15,9 @@ import { forget, keep, kept, type Kept } from './kept.svelte.ts'
 // busy and a click waits for them.
 export class SignInState {
   devices = $state<Kept[]>([])
+  // Whether the devices have been read once: the server cannot know them,
+  // so until then the card says nothing of them.
+  loaded = $state(false)
   problem = $state<string | null>(null)
   busy = $state(!browser)
   // The person and the device a key is made for, and the key once made,
@@ -101,6 +104,7 @@ export class SignInState {
 
   async load() {
     this.devices = await kept(this.scope())
+    this.loaded = true
   }
 
   // Signs in on a device this browser keeps.

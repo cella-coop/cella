@@ -137,9 +137,24 @@
   }
   /* Forced colours repaint the words but not an svg's fill, so the cell
      gives way to the plain box the system draws, its border shown. */
+  /* Not yet drawn, as in the page the server sends before its script
+     runs, a cell is clipped to a lone cell's pointed ends, as far as its
+     height reads (`ACTION_BULGE`, `@cella/brand`'s `actions.ts`), so the
+     cell drawn after it never follows a rectangle: a filled button, and
+     one its parent groups (`data-run`). */
+  .button[data-cell='fill']:global(:not([data-drawn])),
+  :global([data-run]) .button[data-cell]:global(:not([data-drawn])) {
+    --bulge: 0.6rem;
+    clip-path: polygon(var(--bulge) 0, calc(100% - var(--bulge)) 0, 100% 50%, calc(100% - var(--bulge)) 100%, var(--bulge) 100%, 0 50%);
+  }
   @media (forced-colors: active) {
     .button:global([data-drawn]) {
       background: var(--fill);
+    }
+    /* the system's box, unclipped: the rule above, matched as it is */
+    .button[data-cell='fill']:global(:not([data-drawn])),
+    :global([data-run]) .button[data-cell]:global(:not([data-drawn])) {
+      clip-path: none;
     }
     svg {
       display: none;

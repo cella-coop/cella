@@ -1,6 +1,6 @@
 +++
 title = "Operations"
-updated = 2026-11-16
+updated = 2026-11-19
 +++
 
 # Operations
@@ -383,10 +383,10 @@ up. `cella demo serve` is its front, the one address the host serves
 its single server; `demo.shared = true` serves one copy to everyone, as
 above, made afresh each night at `demo.resetAt` (04:00), the fallback
 for a demo a presenter leads. A visitor arriving without a copy is
-shown a page saying their co-op is being prepared, and the page's
-script asks the front for one by a POST from the same origin, so a
-crawler, which runs no script, makes none; refused, the page asks again
-a few seconds later. The front then copies the template into a database
+shown a loading page, the brand's mark lit cell by cell over
+"Loading demo environment", whose script asks the front for one by a
+POST from the same origin, so a crawler, which runs no script, makes
+none; refused, the page asks again a few seconds later. The front then copies the template into a database
 of its own (`CREATE DATABASE … TEMPLATE`, about 0.2 s), marks it `a copy
 of <template>: <label>` as `cella demo copy` does, gives it a login role
 of the same name, `<database>_v_<16 hex digits>`, and starts its server,
@@ -430,7 +430,7 @@ Reset now is refused unless its browser is alone in the room; a reset or
 a room recycled at the cap makes a fresh one, its join code with it, so
 the old link names nothing from then on. Past the cap, a newcomer with
 no room of their own sees a plain page saying so, asking again every few
-seconds, in place of the one saying its copy is being prepared; neither
+seconds, in place of the loading page's own line; neither
 counts against the rate limits a copy made does.
 
 The front is a single process, not a unit per visitor: one unit's

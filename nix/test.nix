@@ -176,12 +176,12 @@ pkgs.testers.runNixOSTest {
       def status(who, ip, args):
           return host.execute(curl(who, ip, f"-o /dev/null -w '%{{http_code}}' {args}"))[1].strip()
 
-      # A first visit: the page saying the copy is being prepared, its
+      # A first visit: the page saying the copy is loading, its
       # script's POST, then the sign-in of the visitor's own copy.
       def visit(who, ip):
           before = set(copies())
           begun = time.monotonic()
-          assert "is being prepared" in page(who, ip, "/"), "no page saying the copy is being prepared"
+          assert "Loading demo environment" in page(who, ip, "/"), "no page saying the copy is loading"
           assert start(who, ip) == "200", "no copy was made"
           signin = page(who, ip, "/sign-in")
           ms = round((time.monotonic() - begun) * 1000)
@@ -235,8 +235,8 @@ pkgs.testers.runNixOSTest {
       def fill(db, mib):
           host.succeed(f"""${as "psql -X -q -d {db}"} -c "CREATE TABLE IF NOT EXISTS public.filler (b text STORAGE EXTERNAL); INSERT INTO public.filler SELECT string_agg(md5(random()::text), ''') FROM generate_series(1, 32), generate_series(1, {mib} * 1024) g GROUP BY g" """)
 
-      with subtest("a request with no cookie is shown its copy being prepared, and makes none; the template is closed"):
-          assert "is being prepared" in page("x", "10.0.0.9", "/inbox")
+      with subtest("a request with no cookie is shown its copy loading, and makes none; the template is closed"):
+          assert "Loading demo environment" in page("x", "10.0.0.9", "/inbox")
           assert copies() == [], f"a GET made a copy: {copies()}"
           host.succeed(f"curl -sf {front}/robots.txt | grep -qx 'Disallow: /'")
           host.succeed("""${psql "postgres" "SELECT datistemplate AND NOT datallowconn FROM pg_database WHERE datname = 'demo_template'"} | grep -qx t""")

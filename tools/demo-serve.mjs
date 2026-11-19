@@ -29,8 +29,8 @@
 // Nothing about a visitor is written down: no address, no name, no log
 // line naming their cookie or a join code.
 //
-// A visitor arriving without a room is shown a page saying their co-op is
-// being prepared, whose script asks the front to make one (POST
+// A visitor arriving without a room is shown a loading page, the brand's
+// mark lit cell by cell, whose script asks the front to make one (POST
 // /_demo/start), so a crawler that runs no script makes none; once made,
 // the page goes on to it. Past `--cap` rooms at once, with none to evict,
 // that POST answers plainly that every copy is in use, which the same
@@ -749,9 +749,16 @@ function sameOrigin(req) {
 // --- the front's own pages ---------------------------------------------
 
 const NOTICE = "This is a prototype environment for demo purposes and can't be used for real work."
-const hours = () => (config.idle % 3600 === 0 ? `${config.idle / 3600} hour${config.idle === 3600 ? '' : 's'}` : `${Math.round(config.idle / 60)} minutes`)
 
-function page(res, status, { title, lines, script = '', headers = {} }) {
+// The brand's mark, its five cells, read once from `@cella/brand` (the
+// package ships the whole tree), shown while a copy is made, each cell
+// lit in turn around the ring: the front cannot say how far a copy has
+// come, only when it is ready, so a turn and not a bar.
+const MARK = readFileSync(new URL('../packages/brand/mark.svg', import.meta.url), 'utf8')
+  .replace(/ class="" | width="[^"]*" height="[^"]*"/g, ' ')
+  .replace(/role="img" aria-label="Cella"/, 'class="mark" aria-hidden="true"')
+
+function page(res, status, { title, lines, script = '', headers = {}, notice = true }) {
   const body = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex"><title>${title}</title>
@@ -760,8 +767,13 @@ function page(res, status, { title, lines, script = '', headers = {} }) {
 @media (prefers-color-scheme:dark){:root{--bg:#1b1a18;--fg:#ece8e1;--soft:#3d321c;--soft-fg:#f0d9a6}}
 body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif;padding:16px;box-sizing:border-box}
 main{max-width:32rem}p.notice{background:var(--soft);color:var(--soft-fg);padding:.6rem .8rem;border-radius:.4rem;font-size:.9rem}
-</style></head><body><main>
-<p class="notice" role="note"><b>Prototype.</b> ${NOTICE}</p>
+main.loading{text-align:center}.mark{width:4.5rem;height:4.5rem;display:block;margin:0 auto 1rem}
+.mark path{animation:lit 1.5s ease-in-out infinite;opacity:.25}
+.mark path:nth-child(3){animation-delay:.3s}.mark path:nth-child(4){animation-delay:.6s}.mark path:nth-child(5){animation-delay:.9s}.mark path:nth-child(6){animation-delay:1.2s}
+@keyframes lit{0%,100%{opacity:.25}30%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.mark path{animation:none;opacity:1}}
+</style></head><body><main${notice ? '' : ' class="loading"'}>
+${notice ? `<p class="notice" role="note"><b>Prototype.</b> ${NOTICE}</p>` : MARK}
 ${lines.map((l) => `<p>${l}</p>`).join('\n')}
 </main>${script}</body></html>`
   // `frame-ancestors 'none'`: never framed, by this host's own pages or
@@ -780,12 +792,12 @@ ${lines.map((l) => `<p>${l}</p>`).join('\n')}
 // holds (an idle or oldest room may still be evicted for it).
 function prepare(res, { again = false } = {}) {
   page(res, 200, {
-    title: 'Preparing your co-op',
+    title: 'Loading demo environment',
+    notice: false,
     lines: [
       ...(again ? ['Your earlier copy was reset.'] : []),
-      'Your copy of Lanterne, a mock co-op, is being prepared: it is yours to share, nobody outside it sees what you do, and nobody signs up.',
-      `It resets after ${hours()} with no visit.`,
-      '<noscript>Preparing it needs JavaScript.</noscript><span id="state"></span>',
+      '<span role="status">Loading demo environment…</span>',
+      '<noscript>Loading it needs JavaScript.</noscript><span id="state"></span>',
     ],
     script: `<script>
 (async () => {

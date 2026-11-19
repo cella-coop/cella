@@ -1,4 +1,6 @@
-export type Status = 'scheduled' | 'held' | 'cancelled'
+import type { status } from './status.ts'
+
+export type Status = (typeof status.states)[number]['value']
 
 // A meeting as the collection lists it: `at` is the scope's wall-clock
 // time, `YYYY-MM-DDTHH:MM`; `length` the agenda's minutes, summed. In the

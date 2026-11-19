@@ -24,6 +24,13 @@ document, `document-meeting`'s.
 | meeting | scheduled → held, or cancelled; its minutes begun on `minuted` |
 | item | on the agenda while the meeting is scheduled; fixed once it is held |
 
+A meeting's statuses are its lifecycle in its models
+(`models/status.ts`), which `cella check feats` holds equal to
+`meeting.meeting`'s CHECK and the UI kit draws as the `status` kind
+([statuses](../../core/ui/index.md#statuses)): scheduled unstarted, held
+completed, cancelled cancelled, wherever a meeting's status is shown, a
+document's card of it too.
+
 ## Actions
 
 | Action | Label | Why |

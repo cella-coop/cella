@@ -1,11 +1,10 @@
-import { date, icons, type App, type Tone } from '@cella/org-ui'
-import type { Detail, Meeting, Status } from '../models/meeting.ts'
+import { date, icons, type App } from '@cella/org-ui'
+import type { Detail, Meeting } from '../models/meeting.ts'
+import { status } from '../models/status.ts'
 import Agenda from './blocks/Agenda.svelte'
 import Create from './blocks/Create.svelte'
 import Settle from './blocks/Settle.svelte'
 import Body from './blocks/Body.svelte'
-
-const tones: Record<Status, Tone> = { scheduled: 'accent', held: 'positive', cancelled: 'neutral' }
 
 // A meeting's day and time, as people say it.
 export const when = (m: Meeting) => `${date(m.at)}, ${m.at.slice(11, 16)}`
@@ -30,18 +29,18 @@ export const app: App = {
           { key: 'place', label: 'Place', role: 'hidden', value: (m: Meeting) => m.place },
           { key: 'items', label: 'Items', kind: 'number', role: 'hidden', value: (m: Meeting) => m.items },
           { key: 'length', label: 'Minutes', kind: 'number', role: 'hidden', value: (m: Meeting) => m.length },
-          { key: 'status', label: 'Status', kind: 'badge', role: 'meta', value: (m: Meeting) => m.status, tone: (m: Meeting) => tones[m.status] },
+          { key: 'status', label: 'Status', kind: 'status', states: status, role: 'meta', value: (m: Meeting) => m.status },
         ],
         // A month of meetings, each tinted by its circle, which the legend
         // names, so its card shows where and how it stands.
-        look: { layout: 'calendar', on: 'at', span: 'month', by: 'circle', sort: { field: 'at', dir: 'asc' }, cards: ['place', 'status'], lanes: { status: ['scheduled', 'held', 'cancelled'] } },
+        look: { layout: 'calendar', on: 'at', span: 'month', by: 'circle', sort: { field: 'at', dir: 'asc' }, cards: ['place', 'status'] },
       },
       page: {
         eyebrow: 'Meeting',
         title: (m: Detail) => m.title,
         subtitle: (m: Detail) => m.id,
         properties: (m: Detail) => [
-          { label: 'Status', value: m.status, kind: 'badge', tone: tones[m.status] },
+          { label: 'Status', value: m.status, kind: 'status', states: status },
           { label: 'Circle', value: m.circle, kind: 'circle' },
           { label: 'When', value: when(m), glyph: icons.Clock },
           { label: 'Place', value: m.place || null, glyph: icons.MapPinSimple },

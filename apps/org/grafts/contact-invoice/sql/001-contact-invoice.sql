@@ -32,7 +32,7 @@ CREATE TRIGGER resolves BEFORE INSERT OR UPDATE ON contact_invoice.billing
   FOR EACH ROW EXECUTE FUNCTION contact_invoice.resolves();
 
 -- What each contact owes and is owed, in cents, from its invoices' standing:
--- `credit` is what the co-op owes back, from overpayments and payments on
+-- `credit` is what the coop owes back, from overpayments and payments on
 -- voided invoices.
 CREATE VIEW contact_invoice.standing WITH (security_invoker = true) AS
 SELECT c.id AS contact, c.name,

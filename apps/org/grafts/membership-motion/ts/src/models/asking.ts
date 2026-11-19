@@ -89,11 +89,13 @@ export interface OnCircle extends Appointing {
   amending: Amending
 }
 
-// The co-op's particulars, as core's row keeps them, in the order the
+// The coop's particulars, as core's row keeps them, in the order the
 // Organization page shows them and the founding words them.
 export const particulars = ['name', 'legal_name', 'form', 'capital', 'seat', 'siren', 'rcs', 'vat'] as const
 export type Particular = (typeof particulars)[number]
-export type Particulars = Record<Particular, string | null> & { policy: string }
+// The logo rides beside them, an SVG no field of the page types: a
+// motion changing another particular adopts it again as it stands.
+export type Particulars = Record<Particular, string | null> & { policy: string; logo: string | null }
 
 // Settings' Organization page: the particulars in force, if a rule
 // stands, and the procedure protecting it; the assembly, which alone
@@ -110,9 +112,9 @@ export interface Organization {
 }
 
 // A circle's features page in Settings: whether it is the root, whose
-// page arranges the co-op's layout; its features in force, spelt as one
+// page arranges the coop's layout; its features in force, spelt as one
 // listing (`circle.features`), the root's the whole layout; every feature
-// the co-op installed, by its schema; the layout's groups, each by its id
+// the coop installed, by its schema; the layout's groups, each by its id
 // and name with its features in order, and the ids of those the circle
 // shows and the features it hides; whether the reader changes them at
 // once, the circle whose motion changes them otherwise, and why no write

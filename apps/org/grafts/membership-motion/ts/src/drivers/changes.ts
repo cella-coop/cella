@@ -2,7 +2,7 @@ import type { Db } from '@cella/org-db'
 import type { Shown } from '../models/changes.ts'
 
 // The changes a motion's actions make, each as its diff shows it, for the
-// kinds this graft carries out whose change reads as one: the co-op's
+// kinds this graft carries out whose change reads as one: the coop's
 // layout arranged, as the tree from the one it replaces; a circle's row
 // shown or hidden, `yes` or `no` from the one in force, or once closed
 // the one its effect's entry says, matched by its group or feature; a circle's

@@ -1,6 +1,6 @@
 +++
 title = "employment-payslip"
-updated = 2026-11-16
+updated = 2026-11-19
 +++
 
 Whose pay is: a worker's, member or not. The payslip feat holds the
@@ -37,7 +37,8 @@ run and no trigger on the payslip feat's tables.
 ## Shell
 
 Adds each payslip's worker by name, and to the people collection each
-one's salary in force; to a person's page, their gross salary and, in their
+one's salary in force; to a person's page, their gross salary among its
+figures, a `Stat` of the overview, and, in their
 Work tab, their payslips.
 
 ## Lanterne

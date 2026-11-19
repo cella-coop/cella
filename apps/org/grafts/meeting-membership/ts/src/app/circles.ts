@@ -18,6 +18,7 @@ export const app: App = {
                   label: 'Present',
                   value: `${m.quorum.present} of ${m.quorum.seats}, ${m.quorum.needed} needed`,
                   kind: 'badge' as const,
+                  lead: 'present',
                   tone: m.quorum.present >= m.quorum.needed ? ('positive' as const) : ('warning' as const),
                 },
               ]

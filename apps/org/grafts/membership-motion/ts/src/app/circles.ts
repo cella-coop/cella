@@ -1,5 +1,5 @@
 import { icons, type App, type Tone } from '@cella/org-ui'
-import { outcome, states, taking, type Roll, type State } from '../models/roll.ts'
+import { outcome, states, type Roll, type State } from '../models/roll.ts'
 import type { Standing } from '../models/asking.ts'
 import Appoint from './blocks/Appoint.svelte'
 import Terms from './blocks/Terms.svelte'
@@ -19,7 +19,7 @@ const tones: Record<State, Tone> = { open: 'accent', passed: 'positive', rejecte
 // stance and its outcome, and the form a member on the roll casts their
 // stance with; a circle's Settings tab, its terms and its roles, which a
 // motion amends and makes, and its features page in Settings; and
-// Settings' Organization page, the co-op's
+// Settings' Organization page, the coop's
 // particulars, which a motion of the assembly replaces.
 export const app: App = {
   name: 'membership-motion/circles',
@@ -44,8 +44,6 @@ export const app: App = {
         properties: (r: Roll) => [
           { label: 'State', value: r.state, kind: 'badge', tone: tones[r.state] },
           { label: 'Outcome', value: outcome(r, true).text, kind: 'badge', tone: outcome(r).tone },
-          { label: 'Turnout', value: taking(r) },
-          { label: 'On the roll', value: r.voters.length, kind: 'number' },
         ],
         // What its actions change, as their diffs, on its Overview and its
         // Effects.
@@ -68,14 +66,14 @@ export const app: App = {
       },
     },
   },
-  // The co-op's own settings, first under Organization: its particulars,
+  // The coop's own settings, first under Organization: its particulars,
   // which the assembly's motion replaces, and the scope's address and
   // timezone, which a host sets.
   settings: {
     organization: {
       subgroup: 'Organization',
       title: 'Organization',
-      caption: 'What the co-op is called and what its papers print, which a motion of the assembly changes.',
+      caption: 'What the coop is called and what its papers print, which a motion of the assembly changes.',
       icon: icons.Buildings,
       block: Organization,
     },

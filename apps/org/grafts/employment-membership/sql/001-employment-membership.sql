@@ -19,7 +19,7 @@ CREATE TABLE employment_membership.candidacy (
 -- membership, and each member on the way back: hired, a candidate on
 -- probation, invited, a member, gone. A worker with no membership is an
 -- employee or a candidate; a member with no employment was never employed
--- by the co-op. One who applied is invited, from the day they applied.
+-- by the coop. One who applied is invited, from the day they applied.
 CREATE VIEW employment_membership.path WITH (security_invoker = true) AS
 SELECT x.address, x.name,
        w.start AS hired, w.until AS left, c."from" AS probation, c."to" AS probation_end, c.shares AS pledged,

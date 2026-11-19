@@ -1,7 +1,7 @@
 // A worker's employment records, on a database holding the app's core,
 // the file and worker feats and this graft: a record filed about a
 // worker, of class payroll, opening to them and to who filed it; never
-// about someone the co-op does not employ. Who may file one is the
+// about someone the coop does not employ. Who may file one is the
 // membership feat's, by the hire-worker power, outside this slice.
 // Run by `cella test slice employment-file`.
 
@@ -51,6 +51,6 @@ test('a record filed about a worker opens to them and to who filed it', async ()
   assert.deepEqual(rows[0], { class: 'payroll', subject: ines, her: true, other: false })
 })
 
-test('never about someone the co-op does not employ', async () => {
+test('never about someone the coop does not employ', async () => {
   assert.match(reason(await attach({ worker: 'nobody@lanterne.example', file: contract('nobody@lanterne.example') }, as(camille))), /no worker nobody@lanterne.example/)
 })

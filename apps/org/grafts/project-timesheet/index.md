@@ -1,11 +1,11 @@
 +++
 title = "project-timesheet"
-updated = 2026-11-16
+updated = 2026-11-19
 +++
 
 Time against a project, what it spent of the budget, what it cost the
-co-op, and where the budget lands at the pace so far. An entry booked
-to no project is the co-op's own time, not invalid. Declared by
+coop, and where the budget lands at the pace so far. An entry booked
+to no project is the coop's own time, not invalid. Declared by
 `timesheet`.
 
 ## Schema
@@ -16,10 +16,10 @@ to no project is the co-op's own time, not invalid. Declared by
   key into either feat. A trigger refuses an entry or a project that does
   not exist, or a project that is archived (SQLSTATE `09000`).
 - `project_timesheet.rate`: the hourly rate billable time spends a budget
-  at, from a day on, in cents. It is a parameter, seeded with the co-op's
+  at, from a day on, in cents. It is a parameter, seeded with the coop's
   rate card; a write to it, and a rate per project or per client, are not
   built.
-- `project_timesheet.cost`: what an hour of the co-op's time costs it,
+- `project_timesheet.cost`: what an hour of the coop's time costs it,
   from a day on, in cents: pay and the employer's contributions over the
   hours worked. A parameter as the rate is; a cost per member, or one
   read from the pay runs, is not built.
@@ -66,13 +66,13 @@ A booking folds by `project_timesheet.fold_log` (`sql/004-folds.sql`,
 [folds](../../../../_corpus/doc/architecture.md#folds)), on `timesheet:entry:log`, once
 the timesheet feat's fold has logged the entry: the entry booked to the
 project its entry names, where it names one, the graft's trigger judging
-the project again, as it did. An entry that names none is the co-op's
+the project again, as it did. An entry that names none is the coop's
 own time. The rate and the cost are parameters no action writes, which
 the founding carries.
 
 ## Reads
 
-`costed` reads as its reader, each booked entry as its time does; `burn`, a project's time at the co-op's rates, sums the whole for every member, declared `audience: shared by project`, and so reads the tables and never `costed`, whose rows a view over it reads as their reader too (`sql/002-cost.sql`, `sql/003-reads.sql`).
+`costed` reads as its reader, each booked entry as its time does; `burn`, a project's time at the coop's rates, sums the whole for every member, declared `audience: shared by project`, and so reads the tables and never `costed`, whose rows a view over it reads as their reader too (`sql/002-cost.sql`, `sql/003-reads.sql`).
 
 ## Shell
 
@@ -89,7 +89,7 @@ their month of that circle.
 ## Lanterne
 
 The rate is 80 € an hour, the 560 € day rate over a seven-hour day. An
-hour costs the co-op 23,64 €: September's pay run, 36 400 € with the
+hour costs the coop 23,64 €: September's pay run, 36 400 € with the
 employer's contributions, over the 1 540 hours logged in it. Since
 September the Halles shop's time has spent about 16 000 € of its 48 000 €,
 Ferrand's 13 760 € of its 14 000 €.

@@ -1,10 +1,10 @@
 +++
 title = "expense-project"
-updated = 2026-11-16
+updated = 2026-11-19
 +++
 
 The project an expense was spent for, to bill on to its client; an
-expense under no project is the co-op's own. Declared by `expense`.
+expense under no project is the coop's own. Declared by `expense`.
 
 ## Schema
 
@@ -42,8 +42,8 @@ expense folds filed under its entry's project, the last filing winning.
 
 ## Shell
 
-Adds an expense's project to the list, the co-op where it is under none,
-and to its page, with the form to file it; and to a project's Budget
+Adds an expense's project to the list, the coop where it is under none,
+and to its page, a panel of its overview with the form to file it; and to a project's Budget
 tab, what was spent for it.
 
 ## Lanterne

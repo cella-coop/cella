@@ -1,6 +1,6 @@
 +++
 title = "employment-file"
-updated = 2026-11-16
+updated = 2026-11-19
 +++
 
 A worker's employment records, such as their signed contract and its
@@ -24,7 +24,7 @@ files a worker's record; the log commits to its name and BLAKE3.
 
 ## Guards
 
-- `employment_file.files`, on the write: the worker is employed by the co-op,
+- `employment_file.files`, on the write: the worker is employed by the coop,
   and the file was uploaded by this write about them, of class `payroll`.
 - `001-employment-file.sql` registers the power, which the membership
   feat checks.
@@ -41,7 +41,7 @@ entry keeps, then kept on the worker's file.
 
 `ts/_tests/record.test.ts` (`cella test slice employment-file`): a record
 filed about a worker opens to them and to who filed it; never about
-someone the co-op does not employ.
+someone the coop does not employ.
 
 ## Shell
 

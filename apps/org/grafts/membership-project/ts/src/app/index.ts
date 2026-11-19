@@ -14,8 +14,9 @@ export const app: App = {
     projects: {
       columns: [{ key: 'shared', label: 'Shared', kind: 'money', role: 'hidden', value: (r: { shared: number }) => r.shared }],
       page: {
+        // What it shared of its budget, once it shared any.
+        figures: (p: Pot) => (p.shared ? [{ label: 'Shared', value: p.shared, kind: 'money' }] : []),
         properties: (p: Pot) => [
-          { label: 'Shared', value: p.shared, kind: 'money', group: 'Money' },
           {
             label: 'People',
             value: null,

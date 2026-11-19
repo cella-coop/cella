@@ -5,7 +5,7 @@ import type { Founded, Founding } from '../models/founding.ts'
 
 const op = 'membership-motion:scope:found' satisfies keyof typeof actions
 
-// Founds a co-op, as the log's first entry, signed by a founder seated in
+// Founds a coop, as the log's first entry, signed by a founder seated in
 // its root: `membership_motion.founds` lets it settle only on an
 // empty log, as a form cella offers whose defaults its policies take,
 // once its root can decide, by a founding motion of the root its

@@ -30,7 +30,7 @@ export async function apply(input: Applying, deps: Deps): Promise<Settled<Applie
   )
   const found = rows[0]
   if (!found) {
-    throw new Error('no circle decides this: the co-op has no assembly')
+    throw new Error('no circle decides this: the coop has no assembly')
   }
   const a = applying({ member: input.member })
   const proposal: Propose = {

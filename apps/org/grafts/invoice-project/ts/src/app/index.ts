@@ -10,9 +10,9 @@ export const app: App = {
   name: 'invoice-project',
   extends: {
     invoices: {
-      columns: [{ key: 'project', label: 'Project', role: 'hidden', value: (r: { project?: string }) => r.project }],
+      columns: [{ key: 'project', label: 'Project', role: 'hidden', record: 'projects', value: (r: { project?: string }) => r.project }],
       page: {
-        properties: (c: Charged) => [{ label: 'Project', value: c.project?.title ?? 'none', href: c.project ? `/projects/${c.project.id}` : undefined }],
+        properties: (c: Charged) => [{ label: 'Project', value: c.project?.title ?? null, href: c.project ? `/projects/${c.project.id}` : undefined }],
         related: (c: Charged) => (c.project ? [{ label: c.project.title, sub: 'project', href: `/projects/${c.project.id}` }] : []),
         blocks: [Project],
       },
@@ -20,7 +20,7 @@ export const app: App = {
     projects: {
       columns: [{ key: 'invoiced', label: 'Invoiced', kind: 'money', role: 'hidden', value: (r: { invoiced: number }) => r.invoiced }],
       page: {
-        properties: (i: Invoiced) => [{ label: 'Invoiced', value: i.net, kind: 'money' }],
+        figures: (i: Invoiced) => [{ label: 'Invoiced', value: i.net, kind: 'money' }],
         blocks: [{ tab: 'budget', block: Invoices }],
       },
     },

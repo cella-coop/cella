@@ -1,6 +1,6 @@
 +++
 title = "account-transaction"
-updated = 2026-11-13
+updated = 2026-11-19
 +++
 
 A transaction's lines post to accounts. The graft resolves each line's
@@ -48,7 +48,7 @@ post is re-dated into the first open period and flagged, instead of
 refused.
 
 An account the chart marks `cash` (the account feat's flag) holds the
-co-op's money, and money leaves one only through the writes with their own
+coop's money, and money leaves one only through the writes with their own
 power or right and a guard that checks the entry is exactly what they say:
 `transaction.pay`, a supplier payment; `account.draw`, a member's draw;
 `expense.reimburse`, an expense paid back; `payslip:run.pay`, a pay run.
@@ -65,7 +65,7 @@ Money received posts through the writes that receive it, such as
 
 ## Carrying the books over
 
-A co-op switching to cella brings its books from its last tool as a FEC,
+A coop switching to cella brings its books from its last tool as a FEC,
 the file every French accounting tool exports (Livre des procédures
 fiscales, art. L47 A and A47 A-1). Each of its entries is carried over by
 `account-transaction:entry:carry` (confluent, `carry-books`): the accounts
@@ -118,10 +118,12 @@ Adds each account's debits, credits and balance to the chart, from
 `account_transaction.balance`, with whether the whole trial balance agrees
 (`agrees`, the collection's `about`) as the collection's status, and the chart's dashboard: the debits, the
 credits, the cash the cash accounts hold and the balance by kind; an
-account's ledger, every line posted to it, to its page in a Ledger tab;
-and a period's entries, every entry dated in its month as its reader
-reads the journal, each with what it moved, to its page in an Entries
-tab. The financial
+account's balance, its debits, credits and balance with the latest
+lines posted to it, the panel its overview opens on, and its ledger,
+every line posted to it, in a Ledger tab; and a period's entries summed,
+how many and what they moved, the panel its overview opens on, and
+every entry dated in its month as its reader reads the journal, each
+with what it moved, in an Entries tab. The financial
 statements are the `report` feat's.
 
 ## Lanterne

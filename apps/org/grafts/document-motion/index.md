@@ -1,6 +1,6 @@
 +++
 title = "document-motion"
-updated = 2026-11-13
+updated = 2026-11-19
 +++
 
 Adoption by motion: what content of which document a motion asks to
@@ -84,7 +84,7 @@ generated from makes no write. The request names the motion's action,
 
 ## Shell
 
-- On a motion's Overview, the version it asks to adopt, in full: read
+- On a motion's Overview, a panel after its proposal, the version it asks to adopt, in full: read
   with the document feat's `Reader` from the version's canonical form as
   the database computed it, with its version id, its hash and the version
   it would replace, or the day it was adopted.

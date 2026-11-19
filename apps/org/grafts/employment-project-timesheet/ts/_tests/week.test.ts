@@ -88,7 +88,7 @@ test('the week: days open once come while employed, the projects booked to latel
     ['ferrand-packaging', 'clairval-site', ''],
   )
   // Each row offers the circles she sits in that week, the project's
-  // first, and for the co-op's own time the root's, in which she has no
+  // first, and for the coop's own time the root's, in which she has no
   // seat, so the others by name; Marketing's seat ended before it.
   assert.deepEqual(
     w.rows.map((r) => r.circles.map((c) => c.id)),
@@ -101,7 +101,7 @@ test('the week: days open once come while employed, the projects booked to latel
   assert.deepEqual(w.logged, { 'ferrand-packaging': { '2026-10-22': 180 }, '': { '2026-10-23': 420 } })
 })
 
-test('someone the co-op does not employ has no week', async () => {
+test('someone the coop does not employ has no week', async () => {
   assert.equal(await week(db, 'nadia@lanterne.example', '2026-10-19', '2026-10-24'), null)
   assert.equal(await week(db, null, '2026-10-19', '2026-10-24'), null)
 })

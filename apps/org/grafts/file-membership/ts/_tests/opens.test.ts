@@ -1,7 +1,7 @@
 // Who a power opens a personal file to, on a database holding the app's
 // core, the circle, file and member feats and the grafts below this one:
 // a seat whose mandate approves or reimburses expenses opens receipts,
-// one that hires opens employment records, and nothing opens the co-op's
+// one that hires opens employment records, and nothing opens the coop's
 // own beyond what the file feat does, nor a file to someone with no such
 // seat. Run by `cella test slice file-membership`.
 

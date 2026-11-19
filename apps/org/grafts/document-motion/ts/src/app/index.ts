@@ -22,7 +22,7 @@ export const app: App = {
     motions: {
       page: {
         properties: (d: OnMotion) =>
-          d.adopting.map((x) => ({ label: x.adopted ? 'Adopted' : 'Adopts', value: x.version, kind: 'mono' as const, href: `/documents/${x.document}` })),
+          d.adopting.map((x) => ({ label: x.adopted ? 'Adopted' : 'Adopts', value: x.version, kind: 'mono' as const, href: `/documents/${x.document}`, lead: x.adopted ? 'adopted' : 'adopts' })),
         related: (d: OnMotion) => d.adopting.map((x) => ({ label: x.name, sub: x.version, href: `/documents/${x.document}` })),
         blocks: [{ tab: 'overview', block: Adoption }],
         // The documents a message of its discussion links.

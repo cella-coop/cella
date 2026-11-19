@@ -38,7 +38,7 @@ export const tasks: Importer = {
         return { line, label: title, op, refused: 'it was done before the switch' }
       }
       if (named && !project) {
-        return { line, label: title, op, refused: `the co-op has no project ${named}` }
+        return { line, label: title, op, refused: `the coop has no project ${named}` }
       }
       const task = {
         title,

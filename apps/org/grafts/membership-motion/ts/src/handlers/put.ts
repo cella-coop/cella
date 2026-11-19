@@ -10,7 +10,7 @@ import type { Asking } from '../models/asking.ts'
 // assembly (`motion.decider`). The title says what is decided; the guards on the proposal check
 // the action and that circle's say over it. Admitting, suspending or
 // ending a membership, and giving or ending a seat, elect or remove a
-// person, so they go to a secret ballot, as co-ops commonly do.
+// person, so they go to a secret ballot, as coops commonly do.
 export async function put(input: Asking, deps: Deps): Promise<Settled<Proposed> | Refused> {
   const circle = input.kind === 'seat' || input.kind === 'unseat' ? String(input.args.circle) : null
   const { rows } = await deps.db.query<{ decider: string; member: string | null; circle: string | null; role: string | null }>(
@@ -24,7 +24,7 @@ export async function put(input: Asking, deps: Deps): Promise<Settled<Proposed> 
   )
   const found = rows[0]
   if (!found) {
-    throw new Error('no circle decides this: the co-op has no assembly')
+    throw new Error('no circle decides this: the coop has no assembly')
   }
   const who = found.member ?? String(input.args.member)
   const as = found.role ? ` as ${found.role}` : ''

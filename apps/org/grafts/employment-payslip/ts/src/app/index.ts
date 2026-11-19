@@ -14,7 +14,7 @@ export const app: App = {
     people: {
       columns: [{ key: 'salary', label: 'Gross salary', kind: 'money', role: 'hidden', value: (r: { salary?: number }) => r.salary ?? null }],
       page: {
-        properties: (p: Pay) => (p.salary ? [{ label: 'Gross salary', value: p.salary, kind: 'money' }] : []),
+        figures: (p: Pay) => (p.salary ? [{ label: 'Gross salary', value: p.salary, kind: 'money' }] : []),
         blocks: [{ tab: 'work', block: Payslips }],
       },
     },

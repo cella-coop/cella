@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Section, Table, type Column } from '@cella/org-ui'
+  import { icons, Panel, Table, type Column } from '@cella/org-ui'
   import { verbs, type Asked, type OnMotion } from '../../models/admission.ts'
 
   // What the motion asks of members: whom it admits, with the shares
@@ -14,7 +14,7 @@
 </script>
 
 {#if data.asked.length}
-  <Section title="Members" count={data.asked.length}>
-    <Table {columns} rows={data.asked} href={(a: Asked) => `/people/${a.member}`} />
-  </Section>
+  <Panel title="Members" icon={icons.Users} count={data.asked.length}>
+    <Table dense {columns} rows={data.asked} href={(a: Asked) => `/people/${a.member}`} />
+  </Panel>
 {/if}

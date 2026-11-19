@@ -19,11 +19,11 @@ const plus = (day: string, n: number) => {
 }
 
 // A worker's week from its Monday, as the grid enters it, or null for
-// someone the co-op does not employ: its days, open once they have come
+// someone the coop does not employ: its days, open once they have come
 // while the worker is employed; the projects not archived, those they
-// booked to in the four weeks before first; the co-op's own time; the
+// booked to in the four weeks before first; the coop's own time; the
 // circles each row offers, those the worker sits in that week, the
-// project's first where they sit in it and the root's for the co-op's
+// project's first where they sit in it and the root's for the coop's
 // own time; and what is logged in each.
 export async function week(db: Db, worker: string | null, from: string, today: string): Promise<Week | null> {
   if (!worker || !(await db.query('SELECT FROM employment.worker WHERE address = $1', [worker])).rowCount) {
@@ -54,7 +54,7 @@ export async function week(db: Db, worker: string | null, from: string, today: s
     [worker, from, sunday],
   )
   // The circles the worker sits in that week, the root first, as the
-  // co-op's own time offers them.
+  // coop's own time offers them.
   const sat: Sat[] = await sitting(db, worker, from, sunday)
   const cells: Week['logged'] = {}
   for (const l of logged.rows) {
@@ -66,7 +66,7 @@ export async function week(db: Db, worker: string | null, from: string, today: s
     days: days.rows,
     rows: [
       ...projects.rows.map((p) => ({ project: p.project, title: p.title, circles: offering(sat, p.circle) })),
-      { project: '', title: 'The co-op’s own time', circles: sat },
+      { project: '', title: 'The coop’s own time', circles: sat },
     ],
     logged: cells,
   }

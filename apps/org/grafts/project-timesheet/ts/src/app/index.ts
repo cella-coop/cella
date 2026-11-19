@@ -22,7 +22,7 @@ export const app: App = {
         { key: 'used', label: 'Spent', kind: 'money', role: 'hidden', value: (r: Burn) => r.used },
       ],
       page: {
-        properties: (t: Spent) => [
+        figures: (t: Spent) => [
           { label: 'Hours', value: t.hours, kind: 'number' },
           { label: 'Spent', value: t.spent, kind: 'money' },
         ],

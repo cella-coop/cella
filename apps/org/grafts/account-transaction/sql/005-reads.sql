@@ -18,10 +18,10 @@ INSERT INTO cella.reach (what, fn, owner) VALUES
   ('transaction', 'account_transaction.holds(text, text)', 'account-transaction');
 
 -- The trial balance reads each account and its lines as its reader may:
--- the co-op's own accounts whole, a capital account for whoever reads it.
+-- the coop's own accounts whole, a capital account for whoever reads it.
 ALTER VIEW account_transaction.balance SET (security_invoker = true);
 
--- The statements, rubric by rubric, are the co-op's, which every member
+-- The statements, rubric by rubric, are the coop's, which every member
 -- reads: they sum the whole journal whoever reads them. The figures of a
 -- rubric's accounts read as their lines do.
 ALTER FUNCTION account_transaction.statement(text, date, date) SECURITY DEFINER SET search_path = pg_catalog, pg_temp;
@@ -29,7 +29,7 @@ COMMENT ON FUNCTION account_transaction.statement(text, date, date) IS 'audience
 
 -- Whether the trial balance agrees, over the whole journal whoever reads
 -- it: a member who reads only some accounts' lines still learns whether
--- the co-op's books balance, not whether the part they read does.
+-- the coop's books balance, not whether the part they read does.
 CREATE FUNCTION account_transaction.agrees() RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp

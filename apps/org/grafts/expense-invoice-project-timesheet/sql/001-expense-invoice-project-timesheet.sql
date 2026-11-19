@@ -3,7 +3,7 @@ CREATE SCHEMA expense_invoice_project_timesheet;
 -- When a project is watched, from a day on: once its billable time has
 -- spent `burn` percent of its budget, or once what it invoiced keeps less
 -- than `margin` percent after its costs. A parameter, seeded with the
--- co-op's figures; a threshold per project is not built.
+-- coop's figures; a threshold per project is not built.
 CREATE TABLE expense_invoice_project_timesheet.threshold (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   since date PRIMARY KEY,
@@ -12,7 +12,7 @@ CREATE TABLE expense_invoice_project_timesheet.threshold (
 );
 
 -- Each project's margin on a day, in cents: what it invoiced, net of VAT
--- and of its voided invoices, less what its time cost the co-op and its
+-- and of its voided invoices, less what its time cost the coop and its
 -- approved expenses; that margin as a percent of what it invoiced; its
 -- budget burn and the spend forecast at completion (project-timesheet's);
 -- the margin forecast at completion, its budget, or what it invoiced when

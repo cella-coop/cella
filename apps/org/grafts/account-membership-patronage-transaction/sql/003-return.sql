@@ -1,5 +1,5 @@
 -- The figures of a distributed year a SCOP reports to its federation: the
--- co-op's, which every member reads whole. It runs as its owner, so its
+-- coop's, which every member reads whole. It runs as its owner, so its
 -- counts and sums take every worker's part, credit and capital, whoever
 -- reads it; it names no one. No row before the year is distributed.
 CREATE FUNCTION account_membership_patronage_transaction.federation(ref text)
@@ -30,4 +30,4 @@ BEGIN ATOMIC
   WHERE a.id = federation.ref AND a.distributed IS NOT NULL;
 END;
 
-COMMENT ON FUNCTION account_membership_patronage_transaction.federation(text) IS 'audience: shared by year: the co-op''s figures of a distributed year, counts and sums that name no one';
+COMMENT ON FUNCTION account_membership_patronage_transaction.federation(text) IS 'audience: shared by year: the coop''s figures of a distributed year, counts and sums that name no one';

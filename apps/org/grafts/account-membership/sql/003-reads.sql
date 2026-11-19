@@ -18,4 +18,4 @@ JOIN LATERAL (SELECT account_membership.value(cella.verdict_date()) AS value) v 
 LEFT JOIN account.account a ON a.holder = m.address AND a.parent = '1013'
 LEFT JOIN account_membership.allowance w ON w.member = m.address
 WHERE (SELECT cella.sees('account')) OR m.circle = ANY ((SELECT cella.circles('account'))::text[]) OR m.address = cella.reader() OR cella.reaches('account', m.address);
-COMMENT ON VIEW account_membership.capital IS 'audience: shared: a member''s capital, valued by the terms the whole co-op''s capital sets, it keeps each member''s for the readers their capital account opens it to';
+COMMENT ON VIEW account_membership.capital IS 'audience: shared: a member''s capital, valued by the terms the whole coop''s capital sets, it keeps each member''s for the readers their capital account opens it to';

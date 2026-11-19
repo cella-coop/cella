@@ -102,7 +102,7 @@ export async function amending(db: Db, circle: string): Promise<Amending | null>
   return { ...rows[0], roles: roles.rows }
 }
 
-// The co-op's particulars in force and the procedure protecting them, the
+// The coop's particulars in force and the procedure protecting them, the
 // assembly that alone replaces them, and the scope's address and
 // timezone, as Settings' Organization page shows them to every member.
 export async function organization(db: Db): Promise<Organization> {
@@ -110,7 +110,7 @@ export async function organization(db: Db): Promise<Organization> {
     `SELECT (SELECT to_jsonb(p) FROM circle.particulars() p) AS particulars,
             (SELECT r.protected FROM circle.particulars() p JOIN policy.policy r ON r.id = p.policy) AS protected,
             CASE WHEN a.id IS NOT NULL THEN json_build_object('circle', a.id, 'name', a.name, 'deadline', to_char(cella.verdict_date() + 14, 'YYYY-MM-DD')) END AS decider,
-            'The co-op''s particulars change only by a motion of ' || coalesce(a.name, 'the assembly')
+            'The coop''s particulars change only by a motion of ' || coalesce(a.name, 'the assembly')
               || ', which adopts them as a policy: no one''s own write changes them' AS refused,
             nullif(current_setting('cella.scope', true), '') AS scope,
             nullif(current_setting('cella.timezone', true), '') AS timezone
@@ -120,7 +120,7 @@ export async function organization(db: Db): Promise<Organization> {
 }
 
 // A circle's features page: whether it is the root, its features in
-// force, every feature the co-op installed, the layout's groups, those
+// force, every feature the coop installed, the layout's groups, those
 // the circle shows and the features it hides; whether the reader changes
 // them at once, holding `arrange-features` over the circle by a seat, and
 // otherwise the circle whose motion does, the circle itself where it

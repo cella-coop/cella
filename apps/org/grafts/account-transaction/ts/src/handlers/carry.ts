@@ -8,7 +8,7 @@ import type { actions } from '../models/actions.ts'
 
 const op = 'account-transaction:entry:carry' satisfies keyof typeof actions
 
-// Carries an entry over from the co-op's last tool in one write: the
+// Carries an entry over from the coop's last tool in one write: the
 // accounts it names that the chart lacks, opened of the kind their class
 // makes them, then the entry, recorded in the journal. The log commits
 // to the entry as the journal keeps it, as a post does, and names the

@@ -2,7 +2,7 @@ CREATE SCHEMA expense_project;
 
 -- The project an expense was spent for, to be billed on to its client.
 -- Both sides are referenced by id, with no foreign key into either feat;
--- an expense under no project is the co-op's own.
+-- an expense under no project is the coop's own.
 CREATE TABLE expense_project.rebill (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   expense text PRIMARY KEY,

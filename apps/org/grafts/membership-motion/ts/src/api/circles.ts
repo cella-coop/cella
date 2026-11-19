@@ -37,7 +37,7 @@ export { stances } from '../drivers/asks.ts'
 // to join; on a circle's, a seat in it, what the motion feat proposes
 // about its powers, or, from its Settings tab, its amendment; on a
 // mandate's, its change or its revocation; and from Settings'
-// Organization page, the co-op's particulars replaced, and from a
+// Organization page, the coop's particulars replaced, and from a
 // circle's features page, its features.
 export const slice: Slice = {
   name: 'membership-motion/circles',
@@ -82,10 +82,10 @@ export const slice: Slice = {
       },
     },
   },
-  // Settings' Organization page: the co-op's particulars, which only the
+  // Settings' Organization page: the coop's particulars, which only the
   // assembly's motion replaces, and the scope's address and timezone; and
   // each circle's features page, a page of the circle, the root's laying
-  // out the co-op's features and another's choosing the groups it shows
+  // out the coop's features and another's choosing the groups it shows
   // and the features it hides, which a holder of `arrange-features` over
   // it changes at once, and anyone else proposes to the circle whose
   // motion changes them; and on each,

@@ -1,6 +1,6 @@
 +++
 title = "contact-invoice"
-updated = 2026-11-13
+updated = 2026-11-19
 +++
 
 Who an invoice bills: a client, a contact holding the client role
@@ -20,7 +20,7 @@ and the link changes nothing printed on it.
   saying to set its client role (SQLSTATE `09000`), so a refused link
   leaves no row.
 - `contact_invoice.standing`: what each contact owes and is owed, in cents,
-  summed from `invoice.standing`. `credit` is what the co-op owes back:
+  summed from `invoice.standing`. `credit` is what the coop owes back:
   Vélo Solidaire's overpayment on F-2026-0051 shows here. It reads as its reader, so it shows only the records its reader reads.
 
 The app role may select, insert and update; the guards role, `cella_guards`,
@@ -61,11 +61,15 @@ feat checks it.
 
 ## Shell
 
-Adds to an invoice's page the client it bills, or that it is unbilled,
+Adds to the invoices the client each bills, a column a table shows
+once a view does, drawn as the contact's chip; to an invoice's page the
+client it bills, or that it is unbilled,
 with the form that links it (`link`), whose picker offers the clients
 not archived and no other contact; and to the contacts what each owes,
 from `contact_invoice.standing`, and to a contact's page, in an Invoices tab, the invoices
-that bill it.
+that bill it: the invoices collection scoped to the contact, by a
+hidden client id column, which names the contact it is `of` ([record page
+layout](../../../../_corpus/doc/architecture.md#record-page-layout)).
 
 ## Analytics
 

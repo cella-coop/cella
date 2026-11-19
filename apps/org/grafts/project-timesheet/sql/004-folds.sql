@@ -3,7 +3,7 @@
 -- has logged the entry.
 
 -- timesheet:entry:log: the entry booked to the project its entry names,
--- where it names one; an entry logged without one is the co-op's own
+-- where it names one; an entry logged without one is the coop's own
 -- time. The graft's trigger judges the project again, as it did when the
 -- entry was booked.
 CREATE FUNCTION project_timesheet.fold_log(entry jsonb) RETURNS void

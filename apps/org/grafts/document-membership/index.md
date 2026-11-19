@@ -1,9 +1,9 @@
 +++
 title = "document-membership"
-updated = 2026-11-07
+updated = 2026-11-19
 +++
 
-Who has read the co-op's texts: a member marks a document's binding
+Who has read the coop's texts: a member marks a document's binding
 version read, which is what joining asks of a new member. Declared by
 the `membership` feat.
 
@@ -52,7 +52,7 @@ the guard outside a write.
 
 ## Shell
 
-On a person's page, under Joining, the texts the co-op adopted, whether
+On a person's page, under Joining, the texts the coop adopted, whether
 they read each, and marking one read, their own.
 
 ## Lanterne

@@ -1,5 +1,5 @@
 -- account-transaction:entry:carry — an entry carried over from the books
--- of the co-op's last tool, such as the à-nouveaux entry of its opening
+-- of the coop's last tool, such as the à-nouveaux entry of its opening
 -- balances: the entry the payload names, on its date and with its lines,
 -- and each account it opened, as the payload names them, in the chart and
 -- of the kind its code's class makes it. Unlike a post it may touch a

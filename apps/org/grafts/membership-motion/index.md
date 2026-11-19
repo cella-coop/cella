@@ -1,6 +1,6 @@
 +++
 title = "membership-motion"
-updated = 2026-11-18
+updated = 2026-11-19
 +++
 
 What a motion decides of a membership: admitting someone invited,
@@ -64,7 +64,7 @@ graft's ([membership](../../feats/membership/index.md)).
 
 The founding (`membership_motion.fold_found`, `sql/018-folds.sql`,
 [folds](../../../../_corpus/doc/architecture.md#folds)) carries every row of the state
-the co-op held before its log, which the fold applies before it runs; a
+the coop held before its log, which the fold applies before it runs; a
 founding that carries none refuses to fold. An
 application (`membership_motion.fold_apply`) proposes the motion its
 entry carries by the motion feat's `motion.fold_proposal`, after the
@@ -108,11 +108,11 @@ the shell `membership-motion/circles`, `api/circles.ts` and
 
 ### Founding
 
-A co-op is founded once, by the log's first entry, the founding
+A coop is founded once, by the log's first entry, the founding
 (`found`, `membership-motion:scope:found`), which a founder signs
 from a device it enrols. It lives here because it is what this graft
 joins: the founders' memberships, the assembly they sit in, and the
-founding motion by which they decide. It names the legal form the co-op
+founding motion by which they decide. It names the legal form the coop
 chose ([legal forms](../../../../_corpus/doc/forms.md)) and writes,
 inside its transaction as any write's state, the founders as persons
 with their devices and their memberships, the assembly with each
@@ -137,9 +137,9 @@ motion and its stances, and what `founds` holds it to, is the building
 lane's reading of that ruling, not a ruling, as the legal sources of
 [legal forms](../../../../_corpus/doc/forms.md) are.
 
-`cella seed` founds a mock co-op from its fixture so, signed by the
+`cella seed` founds a mock coop from its fixture so, signed by the
 first device in force it enrols, and the founding carries the state the
-mock co-op held before its log too: Lanterne's founding motion, the
+mock coop held before its log too: Lanterne's founding motion, the
 assembly of 1 March 2021, and everything since. A fresh scope is founded
 from its form alone (`tools/seed/founding.mjs`): its founders, the
 assembly `ag`, and a founding motion they consent to, taking every
@@ -157,7 +157,7 @@ as entry 1.
 
 | Action | Label | Why |
 |---|---|---|
-| `found`, from `cella seed` | ordered, `first` | a co-op is founded once, as the log's first entry, before any policy grants a power |
+| `found`, from `cella seed` | ordered, `first` | a coop is founded once, as the log's first entry, before any policy grants a power |
 
 ### Schema of the roll
 
@@ -166,7 +166,7 @@ as entry 1.
 - `membership_motion.seating`: the seats motions give and end: an
   admission's, in the motion's circle as `member`, and those the
   `seat` and `unseat` actions name, kinds this graft registers by
-  `motion.register_carries` (`circle`, `member`, `role`, none for a plain seat), carried out by `circle:seat:add` and `:remove`, which it registers by `motion.register_cite` with their power, `seat-member`. The `seat-role` and `unseat-role` actions, which it registers too (`circle`, `role`), seat a role in another circle, so whoever holds it sits there, and end that seat, carried out by core's `circle:role:seat` and `:unseat` with the same power; they are no row of `seating`, which is people's seats. The `circle` action, which this graft registers too (`id`, `name`, `purpose`), creates a circle, carried out by core's `circle:circle:create` with its power, `create-circle`; a later `seat` of the same motion may name it. The `amend-circle` action, which it registers too (`circle`, and any of `name`, `purpose` and `procedure`), changes a circle, carried out by core's `circle:circle:amend` with its power, `amend-circle`, its guard judging it at the proposal and again as it is written ([circle](../../core/circle/index.md#powers)); one giving `features` is refused, naming `arrange-features`. The `arrange-features` action, which it registers too (`circle`, the root, and `features`, a listing of the co-op's layout, every feature under a group), arranges the co-op's layout, carried out by core's `circle:circle:arrange` with its power, `arrange-features`; the `show-group` action (`circle`, `group`, by its id, and `shown`, `yes` or `no`) shows a group of the layout in a circle or stops, carried out by core's `circle:circle:show`, and the `hide-feature` action (`circle`, `feature`, and `hidden`, `yes` or `no`) hides a feature in a circle or stops, carried out by core's `circle:circle:hide`, each with the same power, one row an action. `membership_motion.arrange_asks` judges all three at the proposal: that the motion's circle holds the power over the circle (`circle.arranges`), itself among them, naming the circle that does (`circle.arranger`) where it does not; that the layout is sound (`circle.listing_flaw`) or the row is (`circle.row_flaw`), `yes` or `no`, and changes what the circle shows. A motion carries each once: one arranging the co-op's features twice, or setting one row twice, is refused, since its second action could only be forgone. Its close holds every circle its actions name (core's `hold`) before its submit takes the log's head, as a write of one of them at once holds it, so the two never deadlock; a row that is so by the close is forgone, the motion passing. `membership_motion.arranges`, `.shows` and `.hides` judge each again as it is written, that the cited motion carries it so and its circle holds the power still, and core's `circle.arranged`, `circle.showed` and `circle.hid` that it is sound and stands as its entry says ([features](../../core/circle/index.md#features)). The `role` and `amend-role` actions, which it registers too (`circle`, `id`, `name`, `duty`, `holders`; and `role` with any of `name`, `duty` and `holders`), make and change a role, carried out by core's `circle:role:make` and `:amend` with the same power, an `amend-role` giving `holders` as none lifting the role's cap and one leaving it out keeping it; a later `seat` of the same motion may name a role an earlier `role` action makes.
+  `motion.register_carries` (`circle`, `member`, `role`, none for a plain seat), carried out by `circle:seat:add` and `:remove`, which it registers by `motion.register_cite` with their power, `seat-member`. The `seat-role` and `unseat-role` actions, which it registers too (`circle`, `role`), seat a role in another circle, so whoever holds it sits there, and end that seat, carried out by core's `circle:role:seat` and `:unseat` with the same power; they are no row of `seating`, which is people's seats. The `circle` action, which this graft registers too (`id`, `name`, `purpose`), creates a circle, carried out by core's `circle:circle:create` with its power, `create-circle`; a later `seat` of the same motion may name it. The `amend-circle` action, which it registers too (`circle`, and any of `name`, `purpose` and `procedure`), changes a circle, carried out by core's `circle:circle:amend` with its power, `amend-circle`, its guard judging it at the proposal and again as it is written ([circle](../../core/circle/index.md#powers)); one giving `features` is refused, naming `arrange-features`. The `arrange-features` action, which it registers too (`circle`, the root, and `features`, a listing of the coop's layout, every feature under a group), arranges the coop's layout, carried out by core's `circle:circle:arrange` with its power, `arrange-features`; the `show-group` action (`circle`, `group`, by its id, and `shown`, `yes` or `no`) shows a group of the layout in a circle or stops, carried out by core's `circle:circle:show`, and the `hide-feature` action (`circle`, `feature`, and `hidden`, `yes` or `no`) hides a feature in a circle or stops, carried out by core's `circle:circle:hide`, each with the same power, one row an action. `membership_motion.arrange_asks` judges all three at the proposal: that the motion's circle holds the power over the circle (`circle.arranges`), itself among them, naming the circle that does (`circle.arranger`) where it does not; that the layout is sound (`circle.listing_flaw`) or the row is (`circle.row_flaw`), `yes` or `no`, and changes what the circle shows. A motion carries each once: one arranging the coop's features twice, or setting one row twice, is refused, since its second action could only be forgone. Its close holds every circle its actions name (core's `hold`) before its submit takes the log's head, as a write of one of them at once holds it, so the two never deadlock; a row that is so by the close is forgone, the motion passing. `membership_motion.arranges`, `.shows` and `.hides` judge each again as it is written, that the cited motion carries it so and its circle holds the power still, and core's `circle.arranged`, `circle.showed` and `circle.hid` that it is sound and stands as its entry says ([features](../../core/circle/index.md#features)). The `role` and `amend-role` actions, which it registers too (`circle`, `id`, `name`, `duty`, `holders`; and `role` with any of `name`, `duty` and `holders`), make and change a role, carried out by core's `circle:role:make` and `:amend` with the same power, an `amend-role` giving `holders` as none lifting the role's cap and one leaving it out keeping it; a later `seat` of the same motion may name a role an earlier `role` action makes.
 
 A roll fixed at the proposal is closer to a ballot list than one read at
 the close, and a member seated or admitted later does not vote on it.
@@ -227,10 +227,10 @@ she is on no roll of the assembly's.
   `motion.puts` by `motion.register_put`, so every guard judging what a
   motion asks covers it too, as `account-motion`'s capital terms do.
 - `membership_motion.founds`, on `membership-motion:scope:found`, the log's
-  first entry, its check `first`: the log is empty, so a co-op is founded
+  first entry, its check `first`: the log is empty, so a coop is founded
   once; the form the founding names is one cella offers (`policy.form`),
   and its policies take that form's defaults and no other form's, at
-  least one of them. Once the founding's state is written, the co-op can
+  least one of them. Once the founding's state is written, the coop can
   decide: there is one assembly; it decides by a procedure a policy
   in force there makes, which its founding motion adopted, never only a
   procedure every scope starts with. The founding names its founding
@@ -334,10 +334,10 @@ subscription it requires among them: a subscription refused at the
 close shows forgone with its reason, under the admission it forgoes,
 itself forgone with its own, which names the refusal it follows.
 
-Under the outcome on its Overview, and again on its Effects, it fills
+Under the outcome on its Overview, a panel, and again on its Effects, it fills
 the motion's diff slot for the kinds it carries out whose change reads
 as one (`changes`, read with the roll): an `arrange-features` as the
-co-op's layout drawn as its tree, marked added, moved or reordered and
+coop's layout drawn as its tree, marked added, moved or reordered and
 those dropped struck through; a `show-group` or a `hide-feature` as the
 row it sets, from `yes` or `no` to the other; an `amend-circle` or an `amend-role`
 as each term it changes, from the value it replaces to the new. While
@@ -377,7 +377,7 @@ mandate's page, the motion feat's Change… and Revoke…, whose write,
 `put`, it serves too.
 
 It serves Settings' Organization page, `/settings/organization`
-([settings](../../core/ui/index.md#settings)): the co-op's particulars
+([settings](../../core/ui/index.md#settings)): the coop's particulars
 in force, read from core's row (`circle.particulars()`) with the
 procedure protecting the policy they are; the assembly, which alone
 adopts them; and the scope's address and timezone, which a host sets.
@@ -385,7 +385,8 @@ No write of anyone's saves a particular, so a value's edit, as it
 commits, joins the changes to propose to the assembly (below). It
 words the particulars again as the founding words them,
 every value changed in place of the one in force and the rest as
-they stand, as one `policy` action: a `rule` replacing the
+they stand, the logo among them, which no field of the page types,
+as one `policy` action: a `rule` replacing the
 particulars in force, with the protection they had. The guard judges
 it as it judges any proposal, so a SIREN that is not nine digits is
 refused in the dialog before anything is proposed. The e2e scenario
@@ -395,14 +396,14 @@ It serves each circle's features page, `/settings/features/<id>`
 ([the circle's shell](../../core/circle/index.md#shell)), a page of one
 circle, which the circle's Settings tab links to (`featuring`): whether
 the circle is the root; its features spelt as a listing
-(`circle.features`); every feature the co-op installed
+(`circle.features`); every feature the coop installed
 (`circle.installed`); the layout's groups, each by id and name with its
 features in order, the groups the circle shows and the features it
 hides; whether the reader holds `arrange-features` over the circle by a
 seat (`circle_person.may`), and otherwise the circle whose motion
 changes them (`circle.arranger`), the circle itself where it holds the
 power over itself, with why the reader's own write changes nothing. The
-root's page arranges the co-op's layout by dragging, every feature under
+root's page arranges the coop's layout by dragging, every feature under
 a group, none at the top level, a group renamed by its name, and those
 left out not enabled; a holder's drop saves at once, posted to the
 page's `arrange`, core's `circle:feature:arrange`. Any other circle's
@@ -444,8 +445,8 @@ the dialog gives them, carrying every change gathered across the
 settings pages, each named by its page, the circle the page is of and
 its setting, with its value (`forms.basket`). It turns each into the
 action its page proposes and never takes an action the client names:
-the co-op's particulars, all those changed, as one `rule` replacing
-them; the co-op's layout as one `arrange-features` of the root, a
+the coop's particulars, all those changed, as one `rule` replacing
+them; the coop's layout as one `arrange-features` of the root, a
 circle's group switched as a `show-group` and its feature as a
 `hide-feature`; a circle's settings as a `rule` each. Its command is
 `motion:motion:propose`, judged by the same guards as any proposal, a

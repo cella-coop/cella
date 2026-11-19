@@ -1,7 +1,7 @@
 // project-timesheet's fold (`sql/004-folds.sql`), on a database holding
 // the app's core, the project and timesheet feats and this graft, in a
 // transaction rolled back after: an entry the timesheet feat's fold logged
-// booked to the project its entry names, one naming none left the co-op's
+// booked to the project its entry names, one naming none left the coop's
 // own, and one booked to an archived project refused as its handler's
 // was. Run by `cella test slice project-timesheet`.
 
@@ -36,7 +36,7 @@ after(async () => {
   await db.end()
 })
 
-test('an entry folds booked to the project its entry names, one naming none the co-op\'s own, one to an archived project refused', async () => {
+test('an entry folds booked to the project its entry names, one naming none the coop\'s own, one to an archived project refused', async () => {
   await fold(1, logged('9001', 'folded-site'))
   await fold(2, logged('9002'))
   assert.deepEqual((await db.query(`SELECT entry, project FROM project_timesheet.booking WHERE entry IN (9001, 9002)`)).rows, [

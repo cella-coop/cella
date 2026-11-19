@@ -34,7 +34,7 @@ function sided(f: Record<string, string>): { side: Line['side']; cents: number }
 // power to carry the books over, opening in the same write the accounts
 // it names that the chart lacks. An entry in no period of the books, or a
 // closed one, is refused as one posted by hand is, and so is one that
-// does not balance: the opening balances of a co-op switching to cella
+// does not balance: the opening balances of a coop switching to cella
 // are the entries of its à-nouveaux journal, dated in its first open
 // month. A line is labelled by its entry's journal and number.
 export const fec: Importer = {

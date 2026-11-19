@@ -1,6 +1,6 @@
 +++
 title = "membership-project"
-updated = 2026-11-16
+updated = 2026-11-19
 +++
 
 Shares of a project's budget: a right granted to a member to spend up to
@@ -105,7 +105,7 @@ mandate on `own`, and no slice checks a project's circle again.
 In Lanterne, Hugo, Brand's lead, budgets Ferrand's packaging, Brand's;
 Yusuf, Web's, the Halles shop, and is refused Brand's, since the lead's
 mandates are on their own circle; Camille, whose manager mandates are on
-the whole co-op, any project. Its tests are the membership feat's of
+the whole coop, any project. Its tests are the membership feat's of
 `may`, and the `work` and `governance` scenarios.
 
 ## Analytics

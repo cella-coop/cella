@@ -20,7 +20,7 @@ interface Stretch {
 const yes = (typed: string | undefined) => /^(yes|true|oui|1)$/i.test((typed ?? '').trim())
 
 // Each stretch booked as its worker's own time, as the importing member:
-// to the project the co-op holds under its title, or the co-op's own time
+// to the project the coop holds under its title, or the coop's own time
 // when it names none. A stretch of anyone but the importing member is
 // refused, as their own grid would refuse it: each worker imports their
 // own export. A line is labelled by its day, its project and its hours.
@@ -30,18 +30,18 @@ async function booked(stretches: Stretch[], db: Db): Promise<Imported[]> {
   const titled = new Map(projects.map((p) => [p.title.trim().toLowerCase(), p]))
   return stretches.map((s) => {
     const p = titled.get(s.project.trim().toLowerCase())
-    const label = `${s.day}, ${s.project ? (p?.title ?? s.project) : 'the co-op'}, ${hours(s.minutes)} h`
+    const label = `${s.day}, ${s.project ? (p?.title ?? s.project) : 'the coop'}, ${hours(s.minutes)} h`
     const op = 'timesheet:entry:log'
     const worker =
       workers.find((w) => w.address === s.email.toLowerCase()) ?? workers.find((w) => s.name && w.name?.trim().toLowerCase() === s.name.trim().toLowerCase())
     if (!worker) {
-      return { line: s.line, label, op, refused: 'whose time it is names no worker of the co-op' }
+      return { line: s.line, label, op, refused: 'whose time it is names no worker of the coop' }
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(s.day) || !(s.minutes > 0)) {
       return { line: s.line, label, op, refused: 'its day or its duration cannot be read' }
     }
     if (s.project && !p) {
-      return { line: s.line, label, op, refused: `the co-op has no project titled ${s.project}` }
+      return { line: s.line, label, op, refused: `the coop has no project titled ${s.project}` }
     }
     const entry = { member: worker.address, day: s.day, minutes: s.minutes, billable: s.billable, note: s.note || undefined }
     return { line: s.line, label, op, run: (deps) => (p ? book({ ...entry, project: p.id }, deps) : log(entry, deps)) }

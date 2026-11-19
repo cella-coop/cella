@@ -4,7 +4,7 @@
   import { useWeek } from '../../hooks/useWeek.ts'
 
   // The acting worker's week of time, a project to a row and a day to a
-  // column, the co-op's own time last, each row naming the circle its time
+  // column, the coop's own time last, each row naming the circle its time
   // is worked for: what is logged shows in each cell, and what is typed
   // into one is added to it, each its own write when the week is logged,
   // in its row's circle's month; a refusal stops the rest, and the cells written
@@ -39,5 +39,5 @@
   </Form>
   <Note text="Type the hours to add to a day and press Enter; the arrows move between days. Time on a project is billable." />
 {:else}
-  <Note text="Time is logged by employment, and the co-op does not employ you." />
+  <Note text="Time is logged by employment, and the coop does not employ you." />
 {/if}

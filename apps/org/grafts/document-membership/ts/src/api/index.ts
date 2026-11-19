@@ -7,7 +7,7 @@ import { texts } from '../drivers/texts.ts'
 export { read } from '../handlers/read.ts'
 export { texts } from '../drivers/texts.ts'
 
-// On a member's page, the texts the co-op adopted and whether they read
+// On a member's page, the texts the coop adopted and whether they read
 // each, and marking one read, their own.
 export const slice: Slice = {
   name: 'document-membership',

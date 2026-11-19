@@ -2,7 +2,7 @@
   import { date, Field, Form, Section, Table, type Column } from '@cella/org-ui'
   import type { Text, Texts } from '../../models/reading.ts'
 
-  // Joining's reading: each text the co-op adopted, in its binding
+  // Joining's reading: each text the coop adopted, in its binding
   // version, and whether the member has read it; a member marks their own.
   let { data }: { data: Texts; id: string } = $props()
 
@@ -15,7 +15,7 @@
 </script>
 
 <Section title="Texts">
-  <Table {columns} rows={data.texts} href={(t: Text) => `/documents/${t.document}`} empty="The co-op has adopted no text yet." />
+  <Table {columns} rows={data.texts} href={(t: Text) => `/documents/${t.document}`} empty="The coop has adopted no text yet." />
   {#if data.own && unread.length}
     <Form action="read" submit="Mark read" tone="quiet" inline>
       <Field label="Text" name="version" options={unread} value={unread[0].value} />

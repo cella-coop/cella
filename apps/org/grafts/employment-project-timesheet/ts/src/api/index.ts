@@ -24,7 +24,7 @@ const typed = (get: (name: string) => string, all: (name: string) => string[]): 
 // A week entered in the grid: each cell typed into, one write each, in
 // the grid's order, the acting worker's own time, worked for the circle
 // its row names and logged in that circle's month: to a project,
-// project-timesheet's booking; the co-op's own time, the timesheet feat's
+// project-timesheet's booking; the coop's own time, the timesheet feat's
 // log. Both are `timesheet:entry:log`, by every employee's right.
 // Billable is project time. The first refusal stops the rest, the writes
 // before it standing, and names their cells as spent, so the grid empties
@@ -35,7 +35,7 @@ const entered: Action = {
   run: async (form, deps) => {
     const cells = typed(form.get, form.all)
     if (!cells.length) {
-      throw new Error('type the hours into a day of a project, or of the co-op’s own time')
+      throw new Error('type the hours into a day of a project, or of the coop’s own time')
     }
     const outcomes: Done[] = []
     const spent: string[] = []

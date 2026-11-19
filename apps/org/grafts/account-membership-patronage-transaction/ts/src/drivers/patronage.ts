@@ -46,7 +46,7 @@ export async function employed(db: Db, statement: string): Promise<Employed | nu
 // to the Code du travail; which figures the CG SCOP's annual return and its
 // cooperative review ask for was not verified against their forms, and
 // the employees' hold on the capital not against the article that sets it.
-// They are the co-op's, which `federation` sums whole for every reader.
+// They are the coop's, which `federation` sums whole for every reader.
 export async function figures(db: Db, distribution: string): Promise<Figure[]> {
   const { rows } = await db.query<Record<string, string | null>>(
     'SELECT * FROM account_membership_patronage_transaction.federation($1)',

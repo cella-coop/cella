@@ -1,11 +1,14 @@
 import type { App } from '@cella/org-ui'
-import type { Balance, Ledger } from '../models/balance.ts'
+import type { Balance as Balanced } from '../models/balance.ts'
+import Balance from './blocks/Balance.svelte'
 import Entries from './blocks/Entries.svelte'
+import Month from './blocks/Month.svelte'
 import Movements from './blocks/Movements.svelte'
 
 // The graft's client side: each account's debits, credits and balance in
-// the chart, whether the trial balance agrees, an account's
-// ledger in its Ledger tab, and a period's entries in its Entries tab.
+// the chart, whether the trial balance agrees, an account's balance on
+// its overview and its ledger in its Ledger tab, and a period's entries
+// summed on its overview and listed in its Entries tab.
 export const app: App = {
   name: 'account-transaction',
   extends: {
@@ -24,22 +27,17 @@ export const app: App = {
         { kind: 'chart', title: 'Balance by kind', measure: { op: 'sum', field: 'balance' }, by: 'kind' },
       ],
       columns: [
-        { key: 'debit', label: 'Debit', kind: 'money', role: 'hidden', value: (r: Partial<Balance>) => r.debit ?? 0 },
-        { key: 'credit', label: 'Credit', kind: 'money', role: 'hidden', value: (r: Partial<Balance>) => r.credit ?? 0 },
-        { key: 'balance', label: 'Balance', kind: 'money', role: 'meta', value: (r: Partial<Balance>) => r.balance ?? 0 },
+        { key: 'debit', label: 'Debit', kind: 'money', role: 'hidden', value: (r: Partial<Balanced>) => r.debit ?? 0 },
+        { key: 'credit', label: 'Credit', kind: 'money', role: 'hidden', value: (r: Partial<Balanced>) => r.credit ?? 0 },
+        { key: 'balance', label: 'Balance', kind: 'money', role: 'meta', value: (r: Partial<Balanced>) => r.balance ?? 0 },
       ],
       page: {
-        properties: (l: Ledger) => [
-          { label: 'Debit', value: l.debit, kind: 'money' },
-          { label: 'Credit', value: l.credit, kind: 'money' },
-          { label: 'Balance', value: l.balance, kind: 'money', tone: l.balance < 0 ? 'negative' : undefined },
-        ],
-        blocks: [{ tab: 'ledger', block: Movements }],
+        blocks: [Balance, { tab: 'ledger', block: Movements }],
       },
     },
     periods: {
       page: {
-        blocks: [{ tab: 'entries', block: Entries }],
+        blocks: [Month, { tab: 'entries', block: Entries }],
       },
     },
   },

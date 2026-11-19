@@ -27,7 +27,7 @@ const percent = (typed: string) => {
 // rows sharing it making one invoice, `label` and `due`. An invoice
 // without its address is refused at issue (`invoice.identified`).
 // Each invoice is issued now, as the importing member, numbered in the
-// co-op's series and posted, as one issued by hand is. Invoices issued
+// coop's series and posted, as one issued by hand is. Invoices issued
 // before cella are in the old books, and come in through the FEC as their
 // entries, so nothing is posted twice. A line is labelled by its row's
 // invoice reference.
@@ -51,7 +51,7 @@ export const invoices: Importer = {
     }
     return [...groups].map(([key, g]): Imported => {
       if (!series[0]) {
-        return { line: g.line, label: key, op: 'invoice:invoice:issue', refused: 'the co-op has no invoice series to number it in' }
+        return { line: g.line, label: key, op: 'invoice:invoice:issue', refused: 'the coop has no invoice series to number it in' }
       }
       if (g.unread || !g.bill_to) {
         return { line: g.line, label: key, op: 'invoice:invoice:issue', refused: g.unread ?? 'an invoice bills a client' }

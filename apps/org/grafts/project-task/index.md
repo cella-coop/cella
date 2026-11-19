@@ -1,6 +1,6 @@
 +++
 title = "project-task"
-updated = 2026-11-16
+updated = 2026-11-19
 +++
 
 Which project a task is in, and which of its milestones. A task in no
@@ -58,17 +58,18 @@ Adds to each task its project's title, a field the tasks' board shows on
 its cards and may group by; to a task's Details, its project and milestone
 and the form that files it; and its project's id, a hidden field by
 which a project's page jumps in Related to its tasks. On a project's
-page it fills the Tasks tab its owner gives it:
-the project's tasks, open ones first, read through the query `tasks` as
-the shell serves it, and a new task already in the project, under one of
-its open milestones if chosen.
+page it fills the Tasks tab its owner gives it: the tasks collection
+scoped to the project by that id (`scoped`, [record page
+layout](../../../../_corpus/doc/architecture.md#record-page-layout)),
+its board, filters and grouping as on its page, and under it a new task
+already in the project, under one of its open milestones if chosen.
 
 ## Import
 
 Tasks from a spreadsheet or Asana's task export (`Name`, `Projects`,
 `Due Date`, `Completed At`): the importer `tasks`, each created in the
 project it names by title or id, or in none. A task done before the
-switch, or in a project the co-op does not hold, is refused
+switch, or in a project the coop does not hold, is refused
 ([import](../../feats/import/index.md)).
 
 ## Lanterne
@@ -76,7 +77,7 @@ switch, or in a project the co-op does not hold, is refused
 Thirty-three of the thirty-seven tasks are in a project, most under a
 milestone: the Halles shop's launch checklist under Launch, its training
 and handover under Care and handover, and closing October's books under
-the books' move into cella. A few of the co-op's own, such as Inès's
+the books' move into cella. A few of the coop's own, such as Inès's
 onboarding as a member, are in none.
 
 ## Analytics

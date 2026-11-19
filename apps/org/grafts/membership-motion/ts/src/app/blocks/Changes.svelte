@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Diff, Section } from '@cella/org-ui'
+  import { Diff, icons, Panel } from '@cella/org-ui'
   import type { Roll } from '../../models/roll.ts'
 
   // What a motion's actions change, on its Overview and its Effects: each
@@ -15,9 +15,9 @@
 </script>
 
 {#if shown.length}
-  <Section title={data?.closed ? 'What it changed' : 'What it changes'}>
+  <Panel title={data?.closed ? 'What it changed' : 'What it changes'} icon={icons.TreeStructure} count={shown.length}>
     {#each shown as c (c.key)}
       <Diff shape={c.shape} label={c.label} was={c.was} value={c.value} />
     {/each}
-  </Section>
+  </Panel>
 {/if}

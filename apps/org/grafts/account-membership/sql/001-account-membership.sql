@@ -1,6 +1,6 @@
 CREATE SCHEMA account_membership;
 
--- The value of one share of the co-op's capital, as its statutes set it.
+-- The value of one share of the coop's capital, as its statutes set it.
 CREATE TABLE account_membership.terms (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   one boolean PRIMARY KEY DEFAULT true CHECK (one),

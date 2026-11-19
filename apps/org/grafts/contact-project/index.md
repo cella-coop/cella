@@ -1,11 +1,11 @@
 +++
 title = "contact-project"
-updated = 2026-11-13
+updated = 2026-11-19
 +++
 
 Whom a project is for: a client, a contact holding the client role
 ([contact](../../feats/contact/index.md#the-client-role)). A project
-without a link is the co-op's own, not invalid. Declared by `project`.
+without a link is the coop's own, not invalid. Declared by `project`.
 
 ## Schema
 
@@ -44,10 +44,15 @@ judges both sides again, as it did.
 
 ## Shell
 
-Adds to each project the contact's name, a card field of the projects'
-gallery, and to a project's page the client with the form that links
+Adds to each project the contact's name, a record of the contacts, so
+it is drawn as their chip in the list's line under the title and as a
+card field of the projects' gallery, and to a project's page the client with the form that links
 it, whose picker offers the clients not archived and no other contact;
-to a contact's page, in a Projects tab, the projects it commissioned.
+to a contact's page, in a Projects tab, the projects it commissioned:
+the projects collection scoped to the contact, by a hidden client id
+column, which names the contact it is `of`, as its jump in Related counts them
+([record page
+layout](../../../../_corpus/doc/architecture.md#record-page-layout)).
 
 ## Lanterne
 

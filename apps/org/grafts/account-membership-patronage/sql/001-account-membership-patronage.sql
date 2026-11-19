@@ -2,7 +2,7 @@ CREATE SCHEMA account_membership_patronage;
 
 -- Each worker's part of a year's work share, split as the year's terms
 -- say between what is employed in shares of the capital and what is paid
--- in cash. Only an associate employed in the co-op takes shares (Code du
+-- in cash. Only an associate employed in the coop takes shares (Code du
 -- travail, art. R3323-11): an active member holding a capital account that
 -- is not frozen. They take whole shares at the share's value on the
 -- verdict date, as many as the terms' percent of their part buys, and the

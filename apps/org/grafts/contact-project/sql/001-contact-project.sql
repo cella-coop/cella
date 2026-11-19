@@ -1,7 +1,7 @@
 CREATE SCHEMA contact_project;
 
 -- Which contact a project is for. A project without a row here is the
--- co-op's own, not invalid.
+-- coop's own, not invalid.
 CREATE TABLE contact_project.commission (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   project text PRIMARY KEY,

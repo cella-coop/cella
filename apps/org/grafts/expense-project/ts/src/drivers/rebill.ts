@@ -1,9 +1,9 @@
 import type { Db } from '@cella/org-db'
 import type { Filed, Spent } from '../models/rebill.ts'
 
-// Each expense's project, by the expense's id: the co-op where it is billed
+// Each expense's project, by the expense's id: the coop where it is billed
 // on to none.
-export const projects = `SELECT e.id, coalesce(p.title, 'the co-op') AS project
+export const projects = `SELECT e.id, coalesce(p.title, 'the coop') AS project
   FROM expense.expense e LEFT JOIN (expense_project.rebill r JOIN project.project p ON p.id = r.project) ON r.expense = e.id`
 
 export async function filed(db: Db, expense: string): Promise<Filed> {

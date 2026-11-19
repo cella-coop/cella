@@ -2,7 +2,7 @@
 -- (architecture.md, "Folds").
 
 -- membership-motion:scope:found: the founding carries the state the
--- co-op held before its log, every state table's rows, which
+-- coop held before its log, every state table's rows, which
 -- `cella.fold_log` applies before this fold runs; a founding that
 -- carries none folds by refusing, never by founding an empty scope.
 CREATE FUNCTION membership_motion.fold_found(entry jsonb) RETURNS void

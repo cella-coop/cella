@@ -1,6 +1,6 @@
 +++
 title = "document-meeting"
-updated = 2026-11-13
+updated = 2026-11-19
 +++
 
 A meeting's minutes, written as a document in the block editor.
@@ -51,8 +51,8 @@ after that the entry carries no creation, and the fold writes nothing.
 
 ## Shell
 
-- A meeting's page opens on its minutes, its content, its agenda in the
-  tab after them: the minutes' draft read with the
+- A meeting's overview holds its minutes in a panel after its body,
+  its agenda in the tab after it: the minutes' draft read with the
   document feat's `Reader`, with the embeds the meeting's slices draw,
   this graft's meeting card and `meeting-motion`'s motion; how many
   versions they have and which is adopted; and a link to write them in

@@ -1,7 +1,7 @@
 CREATE SCHEMA project_timesheet;
 
 -- Which project an entry's time is for. An entry with no row here is the
--- co-op's own time, not invalid.
+-- coop's own time, not invalid.
 CREATE TABLE project_timesheet.booking (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   entry bigint PRIMARY KEY,

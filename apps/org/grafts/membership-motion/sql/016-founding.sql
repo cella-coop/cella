@@ -1,4 +1,4 @@
--- The founders of a co-op founded by a motion: the members whose
+-- The founders of a coop founded by a motion: the members whose
 -- membership began by the day it closed; whether each sat in its circle
 -- with a vote that day, a seat counting then and, where its procedure
 -- has roles that vote, holding one (`motion.votes`); and whether each gave it a
@@ -25,10 +25,10 @@ BEGIN ATOMIC
 END;
 
 -- membership-motion:scope:found — the founding, the log's first
--- entry, its check `first`: refused once the log holds any, so a co-op is
--- founded once. It names the legal form the co-op chose, one cella
+-- entry, its check `first`: refused once the log holds any, so a coop is
+-- founded once. It names the legal form the coop chose, one cella
 -- offers, and its policies take that form's defaults and no other form's,
--- at least one of them. Once its state is written, the co-op can decide:
+-- at least one of them. Once its state is written, the coop can decide:
 -- one assembly, deciding by a procedure a policy in force there makes,
 -- never only one every scope starts with. It names its founding motion,
 -- the root's, closed, carried by its procedure as its roll counts it, and
@@ -43,28 +43,28 @@ CREATE FUNCTION membership_motion.founds(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
-    WHEN x.n > 0 THEN 'a co-op is founded once, as its log''s first entry; the log holds ' || x.n || ' already'
+    WHEN x.n > 0 THEN 'a coop is founded once, as its log''s first entry; the log holds ' || x.n || ' already'
     WHEN f.id IS NULL THEN 'founded as ' || coalesce(x.form, 'no form') || ', which is no legal form cella offers'
     WHEN EXISTS (SELECT FROM policy.policy p JOIN policy.default d ON d.id = p.takes WHERE d.form <> f.id)
       THEN 'founded as ' || f.id || ', but a policy takes the default of another form'
     WHEN NOT EXISTS (SELECT FROM policy.policy p JOIN policy.default d ON d.id = p.takes WHERE d.form = f.id)
       THEN 'founded as ' || f.id || ', but no policy takes one of its defaults'
-    WHEN x.roots <> 1 THEN 'a co-op is founded with one assembly; this founding makes ' || x.roots
+    WHEN x.roots <> 1 THEN 'a coop is founded with one assembly; this founding makes ' || x.roots
     WHEN NOT EXISTS (
       SELECT FROM motion.procedure p
       JOIN policy.in_force(r.id, cella.verdict_date()) i ON i.id = p.policy AND i.kind = 'procedure'
       WHERE p.id = r.procedure
-    ) THEN r.id || ' decides by ' || r.procedure || ', which no policy in force there makes: a co-op is founded with the procedure its root decides by'
+    ) THEN r.id || ' decides by ' || r.procedure || ', which no policy in force there makes: a coop is founded with the procedure its root decides by'
     WHEN x.motion IS NULL
       THEN 'the founding names no founding motion: it names the motion of ' || r.id || ' that adopted the form''s defaults'
     WHEN m.id IS NULL
       THEN 'the founding names ' || x.motion || ', which is no motion: it names the motion of ' || r.id || ' that adopted the form''s defaults'
     WHEN m.circle <> r.id
-      THEN x.motion || ' is a motion of ' || m.circle || ', not of ' || r.id || ': a co-op is founded by a motion of its root'
+      THEN x.motion || ' is a motion of ' || m.circle || ', not of ' || r.id || ': a coop is founded by a motion of its root'
     WHEN m.closed IS NULL
-      THEN m.id || ' is not closed: a co-op is founded by a motion its founders closed'
+      THEN m.id || ' is not closed: a coop is founded by a motion its founders closed'
     WHEN NOT coalesce(motion.passes(m.id), false)
-      THEN m.id || ' is not carried by ' || m.procedure || ' as its roll counts it: a co-op is founded by a motion its founders carried'
+      THEN m.id || ' is not carried by ' || m.procedure || ' as its roll counts it: a coop is founded by a motion its founders carried'
     WHEN EXISTS (SELECT FROM policy.policy p WHERE p.takes IS NOT NULL AND p.motion <> m.id)
       THEN (SELECT p.id || ' takes ' || p.takes || ' but was adopted by ' || p.motion || ', not ' || m.id
                    || ': the founding motion adopts every policy taking a default of the form'

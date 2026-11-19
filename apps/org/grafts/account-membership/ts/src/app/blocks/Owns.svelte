@@ -14,7 +14,7 @@
       ? ''
       : [
           data.shares > 0
-            ? `${first} holds ${data.shares} shares of ${money(data.value)}, ${money(data.subscribed)} of the co-op's capital${data.account ? `, in account ${data.account}` : ''}.`
+            ? `${first} holds ${data.shares} shares of ${money(data.value)}, ${money(data.subscribed)} of the coop's capital${data.account ? `, in account ${data.account}` : ''}.`
             : `${first} holds no shares yet. An associate subscribes at least ${s.minimum} shares of ${money(s.share)}, and may pay them in up to ${s.instalments} monthly instalments from their pay.`,
           `An associate who leaves is repaid their capital at the share's value, the first repayment ${s.delay} months after they leave, in ${s.repayments} yearly repayments.`,
           `These are the statutes' capital terms ${s.terms}, which only the assembly changes.`,

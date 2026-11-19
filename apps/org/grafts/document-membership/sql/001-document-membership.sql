@@ -1,7 +1,7 @@
 CREATE SCHEMA document_membership;
 
 -- A member's reading of a document's version, on a day: what joining asks
--- of a new member, to read the texts the co-op adopted. The version is
+-- of a new member, to read the texts the coop adopted. The version is
 -- named by id and the member by address, with no foreign key into either
 -- feat. A member reads a version once; a later version is read anew.
 CREATE TABLE document_membership.reading (

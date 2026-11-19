@@ -352,7 +352,7 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
   ('motion:motion:propose', 'membership_motion.amend_asks(jsonb)', 'membership-motion'),
   ('circle:circle:amend', 'membership_motion.amends(jsonb)', 'membership-motion');
 
--- The co-op's features a motion arranges, carried out by core's
+-- The coop's features a motion arranges, carried out by core's
 -- circle:circle:arrange under the collective mandate `arrange-features`
 -- over the root: the root's id and its layout, one listing in its order,
 -- every feature under a group. And what a circle shows of it, one row an
@@ -364,7 +364,7 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
 SELECT motion.register_cite('circle:circle:arrange', 'arrange-features', 'membership-motion');
 SELECT motion.register_cite('circle:circle:show', 'arrange-features', 'membership-motion');
 SELECT motion.register_cite('circle:circle:hide', 'arrange-features', 'membership-motion');
-SELECT motion.register_carries('arrange-features', 'Arrange the co-op''s features', '[{"name": "circle", "label": "Root circle", "type": "text"}, {"name": "features", "label": "Features, in order, each under its group (Group: a, b; Other: c)", "type": "text"}]', 'circle:circle:arrange', 'membership-motion');
+SELECT motion.register_carries('arrange-features', 'Arrange the coop''s features', '[{"name": "circle", "label": "Root circle", "type": "text"}, {"name": "features", "label": "Features, in order, each under its group (Group: a, b; Other: c)", "type": "text"}]', 'circle:circle:arrange', 'membership-motion');
 SELECT motion.register_carries('show-group', 'Show a group of features in a circle', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "group", "label": "Group", "type": "text"}, {"name": "shown", "label": "Shown (yes or no)", "type": "text"}]', 'circle:circle:show', 'membership-motion');
 SELECT motion.register_carries('hide-feature', 'Hide a feature in a circle', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "feature", "label": "Feature", "type": "text"}, {"name": "hidden", "label": "Hidden (yes or no)", "type": "text"}]', 'circle:circle:hide', 'membership-motion');
 
@@ -386,14 +386,14 @@ CREATE FUNCTION membership_motion.yes(said text) RETURNS boolean
 LANGUAGE sql IMMUTABLE
 RETURN CASE lower(btrim(yes.said)) WHEN 'yes' THEN true WHEN 'no' THEN false END;
 
--- motion:motion:propose — the co-op's features arranged are the motion of
+-- motion:motion:propose — the coop's features arranged are the motion of
 -- a circle holding `arrange-features` over the root (`arrange_flaw`), and
 -- a sound listing of them that changes something
 -- (`circle.listing_flaw`), judged against the layout as it stands; a
 -- circle's row shown or hidden, the motion of a circle holding it over
 -- that circle, a sound row (`circle.row_flaw`), `yes` or `no`, that
 -- changes what the circle shows. A motion carries each once: one
--- arranging the co-op's features twice, or setting one row twice, is
+-- arranging the coop's features twice, or setting one row twice, is
 -- refused, since its second action could only be forgone: a row by its
 -- key, a group's by its circle and group, a feature's by its circle and
 -- feature, the layout once a motion.
@@ -410,13 +410,13 @@ BEGIN ATOMIC
             WHEN 'hide-feature' THEN (o.args ->> 'circle', o.args ->> 'feature') IS NOT DISTINCT FROM (m.args ->> 'circle', m.args ->> 'feature')
             ELSE true
           END
-      ) THEN 'the motion ' || CASE m.kind WHEN 'arrange-features' THEN 'arranges the co-op''s features'
+      ) THEN 'the motion ' || CASE m.kind WHEN 'arrange-features' THEN 'arranges the coop''s features'
           WHEN 'show-group' THEN 'sets whether ' || coalesce(m.args ->> 'circle', 'a circle') || ' shows ' || coalesce(m.args ->> 'group', 'a group')
           ELSE 'sets whether ' || coalesce(m.args ->> 'circle', 'a circle') || ' hides ' || coalesce(m.args ->> 'feature', 'a feature') END
         || ' twice: carry it once' END,
       CASE m.kind
       WHEN 'arrange-features' THEN coalesce(
-        CASE WHEN NOT (m.args ? 'features') THEN 'the arrangement of ' || coalesce(m.args ->> 'circle', 'the co-op') || ' gives no features: list them, or none' END,
+        CASE WHEN NOT (m.args ? 'features') THEN 'the arrangement of ' || coalesce(m.args ->> 'circle', 'the coop') || ' gives no features: list them, or none' END,
         circle.listing_flaw(m.args ->> 'circle', m.args ->> 'features', circle.features(m.args ->> 'circle')),
         membership_motion.arrange_flaw(d.circle, m.args ->> 'circle'))
       WHEN 'show-group' THEN coalesce(
@@ -448,7 +448,7 @@ END;
 -- circle:circle:arrange — the layout the write arranged is one the cited
 -- motion arranges, to the listing its entry carries, compared as spelt;
 -- the motion's circle holds `arrange-features` over the root still
--- (`arrange_flaw`). That the listing is sound and the co-op has it is
+-- (`arrange_flaw`). That the listing is sound and the coop has it is
 -- core's guard (`circle.arranged`).
 CREATE FUNCTION membership_motion.arranges(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
@@ -460,7 +460,7 @@ BEGIN ATOMIC
       WHERE m.motion = d.id AND m.kind = 'arrange-features' AND m.args ->> 'circle' = payload ->> 'circle'
         AND circle.spelt(m.args ->> 'features') = circle.spelt(payload ->> 'features')
     )
-      THEN d.id || ' does not arrange ' || coalesce(payload ->> 'circle', 'the co-op') || '''s features as ' || coalesce(payload ->> 'features', 'none')
+      THEN d.id || ' does not arrange ' || coalesce(payload ->> 'circle', 'the coop') || '''s features as ' || coalesce(payload ->> 'features', 'none')
     ELSE membership_motion.arrange_flaw(d.circle, payload ->> 'circle')
   END
   FROM (SELECT) one

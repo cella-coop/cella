@@ -26,7 +26,7 @@ export const app: App = {
         },
       ],
       // People grouped by where they stand on the path: members,
-      // candidates and former members are the co-op's real split.
+      // candidates and former members are the coop's real split.
       look: { by: 'stage', lanes: { stage: ['employee', 'candidate', 'invited', 'member', 'gone'] } },
       page: {
         blocks: [{ tab: 'membership', block: PathBlock }],

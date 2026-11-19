@@ -1,6 +1,6 @@
--- What an hour of the co-op's time costs it, from a day on, in cents: pay
+-- What an hour of the coop's time costs it, from a day on, in cents: pay
 -- and the employer's contributions over the hours worked. A parameter, as
--- the billable rate is, seeded with the co-op's figure; a cost per member,
+-- the billable rate is, seeded with the coop's figure; a cost per member,
 -- or one read from the pay runs, is not built.
 CREATE TABLE project_timesheet.cost (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
@@ -17,7 +17,7 @@ SELECT b.project, e.id AS entry, e.member, e.day, e.minutes / 60.0 AS hours, e.b
 FROM project_timesheet.booking b
 JOIN timesheet.entry e ON e.id = b.entry;
 
--- Each project's time, and now what it cost the co-op: every hour, billable
+-- Each project's time, and now what it cost the coop: every hour, billable
 -- or not, at the cost rate, in cents. It sums every entry booked on the
 -- project, so it reads the tables as `costed` does and never `costed`,
 -- which reads as its reader wherever it is read from.

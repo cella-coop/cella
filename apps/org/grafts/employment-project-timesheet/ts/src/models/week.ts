@@ -1,7 +1,7 @@
 // A worker's week of time, as the grid enters it: its days from Monday,
 // each open to time once it has come and while they are employed; a row
 // for each project not archived, the ones they booked to lately first,
-// and one for the co-op's own time, booked to no project; the circles
+// and one for the coop's own time, booked to no project; the circles
 // each row's time may be worked for; and the minutes already logged in
 // each cell.
 export interface Day {
@@ -11,12 +11,12 @@ export interface Day {
 }
 
 export interface Row {
-  // A project's id, or '' for the co-op's own time.
+  // A project's id, or '' for the coop's own time.
   project: string
   title: string
   // The circles the worker sits in that week, as the row offers them:
   // the project's first where they sit in it, the root's for the
-  // co-op's own time.
+  // coop's own time.
   circles: { id: string; name: string }[]
 }
 

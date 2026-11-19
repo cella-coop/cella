@@ -1,6 +1,6 @@
 +++
 title = "account-membership-patronage-transaction"
-updated = 2026-11-16
+updated = 2026-11-19
 +++
 
 The work share employed in the associates' capital: once a year's
@@ -102,7 +102,7 @@ capital account, or a second one for the same part, is refused.
 
 ## Reads
 
-A credit reads as the member's capital account does, for the member and capital's readers (`sql/002-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)). The year's return to the federation, `federation(distribution)` (`sql/003-return.sql`), runs as its owner: its counts and sums are the co-op's, whole for every reader, and name no one, so it is declared `audience: shared by year` ([reading](../../../../_corpus/doc/architecture.md#reading)).
+A credit reads as the member's capital account does, for the member and capital's readers (`sql/002-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)). The year's return to the federation, `federation(distribution)` (`sql/003-return.sql`), runs as its owner: its counts and sums are the coop's, whole for every reader, and name no one, so it is declared `audience: shared by year` ([reading](../../../../_corpus/doc/architecture.md#reading)).
 
 ## Shell
 

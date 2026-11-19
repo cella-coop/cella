@@ -11,14 +11,10 @@ const meeting: Embed<OnDocument | OnMeeting> = {
   choices: (d) => d.meetings.map((m) => ({ ref: m.id, label: `${m.title}, ${date(m.at)}` })),
 }
 
-// Where a meeting's minutes stand: not begun, a draft, or their latest
+// Where a meeting's begun minutes stand: a draft, or their latest
 // version, adopted or not.
 const n = (version: string | null) => version?.split('@')[1]
-function stands(d: OnMeeting): string {
-  const m = d.minutes
-  if (!m) {
-    return 'not begun'
-  }
+function stands(m: NonNullable<OnMeeting['minutes']>): string {
   if (m.adopted) {
     return `version ${n(m.adopted)}, adopted`
   }
@@ -34,7 +30,9 @@ export const app: App = {
   extends: {
     meetings: {
       page: {
-        properties: (d: OnMeeting) => [{ label: 'Minutes', value: stands(d), href: d.minutes ? `/documents/${d.minutes.document}` : undefined }],
+        // The minutes as their document's chip, once begun; before, the
+        // Minutes panel says there are none.
+        properties: (d: OnMeeting) => (d.minutes ? [{ label: 'Minutes', value: stands(d.minutes), href: `/documents/${d.minutes.document}`, lead: 'minutes' }] : []),
         blocks: [Minutes],
         embeds: { meeting },
       },

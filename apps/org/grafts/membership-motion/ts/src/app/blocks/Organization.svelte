@@ -2,7 +2,7 @@
   import { Explained, Note, Section, Settings, type Declared } from '@cella/org-ui'
   import type { Organization, Particular } from '../../models/asking.ts'
 
-  // Settings' Organization page: the co-op's particulars in force, none
+  // Settings' Organization page: the coop's particulars in force, none
   // saved by anyone's write, since only a motion of the assembly adopts
   // them: a value's edit, as it commits, joins the changes to propose to
   // the assembly; and the scope's address and timezone, which a host
@@ -34,7 +34,7 @@
             args: (value: string) => ({ [`particulars_${name}`]: value }),
             labels: { [`particulars_${name}`]: `New ${named(labels[name])}` },
             says: (value: string, was: string) =>
-              value ? (was ? `Change the co-op's ${named(labels[name])} to ${value}` : `Give the co-op the ${named(labels[name])} ${value}`) : `Clear the co-op's ${named(labels[name])}`,
+              value ? (was ? `Change the coop's ${named(labels[name])} to ${value}` : `Give the coop the ${named(labels[name])} ${value}`) : `Clear the coop's ${named(labels[name])}`,
           },
         }))
       : [],
@@ -48,7 +48,7 @@
 
 <Section title="Particulars">
   {#if data.particulars}
-    <Settings {settings} decider={data.decider} where="The co-op" />
+    <Settings {settings} decider={data.decider} where="The coop" />
   {:else}
     <Note text="No particulars stand yet: the founding motion adopts them." />
   {/if}

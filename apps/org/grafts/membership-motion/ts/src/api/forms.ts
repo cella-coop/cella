@@ -58,13 +58,13 @@ export function applying(form: Form, member: string): Applying {
   return { member, shares, ...when(form) }
 }
 
-// The co-op's particulars as a rule of its assembly, each value marked
+// The coop's particulars as a rule of its assembly, each value marked
 // once, worded as the founding words them from scope.toml
 // (tools/seed/found.mjs): a value left empty is left out, its name never.
-export function worded(p: Record<Particular, string | null>): string {
+export function worded(p: Record<Particular, string | null> & { logo?: string | null }): string {
   const mark = (name: Particular) => `{particulars_${name}: ${p[name]}}`
   return [
-    `The co-op is called ${mark('name')}`,
+    `The coop is called ${mark('name')}`,
     p.legal_name ? `, its legal name ${mark('legal_name')}` : '',
     p.form ? `, a ${mark('form')}` : '',
     p.capital ? ` with a capital of ${mark('capital')}` : '',
@@ -72,6 +72,7 @@ export function worded(p: Record<Particular, string | null>): string {
     p.siren ? `, registered under SIREN ${mark('siren')}` : '',
     p.rcs ? `${p.siren ? '' : ', registered'} at the trade register of ${mark('rcs')}` : '',
     p.vat ? `, with the VAT number ${mark('vat')}` : '',
+    p.logo ? `, and bears the mark {particulars_logo: ${p.logo}}` : '',
   ].join('')
 }
 
@@ -85,16 +86,16 @@ const fromForm =
   (name) =>
     form.all(`arg.${name}`).length > 0 ? form.get(`arg.${name}`) : undefined
 
-// The co-op's particulars adopted again as a rule of its assembly, each
+// The coop's particulars adopted again as a rule of its assembly, each
 // value given (`particulars_<name>`) in place of the one in force and the
 // rest as they stand, replacing those in force with the protection they
 // had.
 async function reparticular(given: Given, db: Db): Promise<Action> {
   const now = await organization(db)
   if (!now.particulars) {
-    throw new Error('the co-op has no particulars in force to change: its founding motion adopts them')
+    throw new Error('the coop has no particulars in force to change: its founding motion adopts them')
   }
-  const values: Record<Particular, string | null> = { ...now.particulars }
+  const values: Record<Particular, string | null> & { logo: string | null } = { ...now.particulars }
   for (const name of names) {
     const v = given(`particulars_${name}`)
     if (v !== undefined) {
@@ -102,7 +103,7 @@ async function reparticular(given: Given, db: Db): Promise<Action> {
     }
   }
   if (!values.name) {
-    throw new Error('the co-op is called by a name: type the name it goes by')
+    throw new Error('the coop is called by a name: type the name it goes by')
   }
   const args = { kind: 'rule', wording: worded(values), replaces: now.particulars.policy, ...(now.protected ? { protected: now.protected } : {}) }
   return { kind: 'policy', args }
@@ -181,9 +182,9 @@ function waiting(raw: string): Waiting[] {
 
 // A proposal from the changes to propose: one motion of the circle that
 // decides them carrying every change, each turned into the action its
-// page proposes, never the action a client names: the co-op's
+// page proposes, never the action a client names: the coop's
 // particulars, all of them changed, as one rule of the assembly; the
-// co-op's features as an `arrange-features` of its root, a circle's group
+// coop's features as an `arrange-features` of its root, a circle's group
 // shown as a `show-group` and its feature shown as a `hide-feature`; a
 // circle's settings, those of one circle, as a rule each. The guards judge each
 // action as the page's own proposal is judged.

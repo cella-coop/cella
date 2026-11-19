@@ -46,7 +46,7 @@ before(async () => {
   await db.query(`DELETE FROM cella.guard WHERE fn = 'circle_person.empowered(jsonb)'::regprocedure`)
   await db.query(`SET cella.clock = '2026-10-24'`)
   await db.query(`SET cella.scope = ${db.escapeLiteral(scope)}`)
-  // The co-op's particulars, as its assembly's rule sets them, which the
+  // The coop's particulars, as its assembly's rule sets them, which the
   // invoices it issues name as their seller.
   await db.query(
     `INSERT INTO circle.particulars (policy, name, legal_name, form, siren, rcs, vat, seat, "from")

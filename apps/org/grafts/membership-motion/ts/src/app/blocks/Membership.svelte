@@ -43,7 +43,7 @@
 {/if}
 
 {#if data && applies}
-  <Popover label="Apply to join the co-op" menu={false} wide button>
+  <Popover label="Apply to join the coop" menu={false} wide button>
     {#snippet trigger()}Apply to join…{/snippet}
     <Form action="apply" submit="Apply">
       <Note text="Once employed a year, you may apply by right. Your admission is put to {data.decider.name}, by {data.decider.procedure}, which must rule on it." />

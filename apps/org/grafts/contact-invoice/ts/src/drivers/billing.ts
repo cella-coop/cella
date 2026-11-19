@@ -10,8 +10,9 @@ export async function billed(db: Db, invoice: string): Promise<Billed> {
   return { contact: linked.rows[0] ?? null, contacts: all.rows }
 }
 
-// The contact each invoice bills, by invoice.
-export const contactOf = 'SELECT b.invoice AS id, c.name AS contact FROM contact_invoice.billing b JOIN contact.named c ON c.id = b.contact'
+// The contact each invoice bills, by invoice: its name, and its id, by
+// which a contact's Invoices tab lists its invoices.
+export const contactOf = 'SELECT b.invoice AS id, c.name AS contact, b.contact AS contact_id FROM contact_invoice.billing b JOIN contact.named c ON c.id = b.contact'
 
 // What each contact owes and is owed back, by contact.
 export const standing = 'SELECT contact AS id, owed::bigint AS owed, credit::bigint AS credit FROM contact_invoice.standing'

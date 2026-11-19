@@ -109,7 +109,8 @@ eachBrowser((browserName, launch) => {
           const link = related.locator('a.jump', { hasText: want })
           await link.first().waitFor()
           const where = [{ field: key, is: [id] }]
-          const count = (await rows(want.toLowerCase(), where)).length
+          const matched = await rows(want.toLowerCase(), where)
+          const count = matched.length
           assert.ok(count > 0, `${at}: ${path} has ${want}`)
           assert.equal((await link.locator('.count').textContent())?.trim(), String(count), `${at}: ${path}'s Related counts its ${want}`)
           await link.click()
@@ -119,6 +120,9 @@ eachBrowser((browserName, launch) => {
             const tabs = page.locator('nav.tabs')
             await tabs.locator('[aria-current="page"]', { hasText: want }).waitFor()
             assert.equal((await tabs.locator('[aria-current="page"]').textContent())?.trim(), want, `${at}: ${want} opens the record's ${want} tab`)
+            const noun = want.toLowerCase()
+            const listed = await page.locator(`a[href^="/${noun}/"]`).evaluateAll((as, n) => as.map((a) => decodeURIComponent((a.getAttribute('href') ?? '').slice(n.length + 2))), noun)
+            assert.deepEqual([...listed].sort(), matched.map((r) => r.id).sort(), `${at}: ${want}'s tab lists the ${id}'s ${want}, and none other`)
             return
           }
           await page.waitForURL((u) => u.pathname === `/${want.toLowerCase()}`)

@@ -6,7 +6,7 @@ import { safe } from '#lib/server/back.ts'
 import { shell as call } from '#lib/server/calls.ts'
 import { using } from '#lib/server/db.ts'
 import { copy, demo, dev, fixtures, join } from '#lib/server/device.ts'
-import { ends, taken } from '#lib/server/leases.ts'
+import { ends, lost, taken } from '#lib/server/leases.ts'
 import { answered, proof, relay } from '#lib/server/relay.ts'
 import { keep } from '#lib/server/session.ts'
 import { joining } from '#lib/server/slices.ts'
@@ -42,13 +42,16 @@ export const shell = query(() =>
 // The sign-in page: where to go once signed in, the Inbox unless asked,
 // and, on the dev server or a demo build alone, the fixture members it
 // offers, a demo's each marked as a demo member and, in a room, those
-// another browser leased marked taken, by `x-cella-browser`. Sent here
-// because the member this browser held was taken by another while it
-// was away (`away`, `hooks.server.ts`), it says so, by the member's
-// name: only a member it offers, so no other text is ever echoed.
-export const signing = query(texts(['back', 'away']), async ({ back, away }) => {
+// another browser leased marked taken, by `x-cella-browser`. Where the
+// member this browser held was taken by another while it was away, it
+// says so, by the member's name, from the room's own record of this
+// browser (`lost`, `#lib/server/leases.ts`), never from the link, so no
+// crafted link makes it say so of anyone; only a member it offers, so no
+// other text is ever echoed.
+export const signing = query(texts(['back']), async ({ back }) => {
   const browser = getRequestEvent().request.headers.get('x-cella-browser')
   const offered = await fixtures()
+  const away = lost(browser)
   const freed = away ? offered.find((f) => f.address === away) : undefined
   const notice = freed ? `You were away a while, so ${freed.name} was freed for others. Pick someone to continue.` : ''
   return { back: safe(back || '/inbox'), fixtures: offered.map((f) => ({ ...f, taken: taken(f.address, browser) })), demo, notice }

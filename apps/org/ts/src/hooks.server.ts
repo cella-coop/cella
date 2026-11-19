@@ -1,19 +1,20 @@
 import type { Handle } from '@sveltejs/kit/hooks'
 import { reading } from '#lib/server/db.ts'
+import { copy } from '#lib/server/device.ts'
 import { ends, renew, touch } from '#lib/server/leases.ts'
 import { end, ended, read } from '#lib/server/session.ts'
 
 const themes = ['light', 'dark', 'system'] as const
 
 // What a person reaches before signing in: the sign-in page, the way to
-// it once a session ended under a page (`/sign-in/ended/…`) and its
+// it once a session ended under a page (`/sign-in/ended/now`) and its
 // session, an invitation's link, the theme, and the remote functions those
 // pages call (`#lib/remote/session.remote.ts`): what the shell reads,
 // the scope alone for them, what the sign-in page offers, whom a link
 // invites, and its acceptance, which the link's holder signs.
 const open = (path: string) =>
   path === '/sign-in' ||
-  path.startsWith('/sign-in/ended/') ||
+  path === '/sign-in/ended/now' ||
   path === '/session' ||
   path === '/theme' ||
   path.startsWith('/join/') ||
@@ -37,12 +38,11 @@ export const handle: Handle = async ({ event, resolve }) => {
   // renewed, so a visitor back from a pause carries on where they were
   // (`renew`). Refused the same as signing out, on every request, not
   // only at sign-in, so a session cookie alone is never enough; where
-  // another browser took the member, the sign-in says so (`away`).
+  // another browser took the member, the sign-in says so, by the room's
+  // own record of it (`lost`), never the link's.
   const secure = event.url.protocol === 'https:'
-  let away = ''
   let ending: string[] = []
   if (event.locals.session && !renew(event.locals.session.actor, browser)) {
-    away = browser ? event.locals.session.actor : ''
     end(event.cookies, secure)
     ending = ended(event.cookies, secure)
     event.locals.session = null
@@ -58,20 +58,19 @@ export const handle: Handle = async ({ event, resolve }) => {
     const get = event.request.method === 'GET'
     const page = get && (event.request.headers.get('accept') ?? '').includes('text/html')
     if (page) {
-      const back = `back=${encodeURIComponent(event.url.pathname + event.url.search)}`
-      headers.set('location', `/sign-in?${back}${away ? `&away=${encodeURIComponent(away)}` : ''}`)
+      headers.set('location', `/sign-in?back=${encodeURIComponent(event.url.pathname + event.url.search)}`)
       return new Response(null, { status: 303, headers })
     }
-    // A query a page's script asks, as its next click does once the
-    // session ended under it: answered with the redirect SvelteKit's
-    // client follows from a query, `{ redirect }` in devalue's form, to
-    // a page it loads in full (`/sign-in/ended/…`), never a bare 401 its
-    // page would draw as broken. A command cannot redirect, so one is
-    // refused as before.
-    if (get && event.url.pathname.startsWith('/_app/remote/')) {
-      const location = `/sign-in/ended/${away ? encodeURIComponent(away) : '-'}`
+    // In a demo's room, a query a page's script asks, as its next click
+    // does once the session ended under it: answered with the redirect
+    // SvelteKit's client follows from a query, `{ redirect }` in
+    // devalue's form, to a page it loads in full (`/sign-in/ended/now`),
+    // never a bare 401 its page would draw as broken. A command cannot
+    // redirect, so one is refused as before, and so is every query
+    // outside a room, a real scope's 401 unchanged.
+    if (copy && get && event.url.pathname.startsWith('/_app/remote/')) {
       headers.set('cache-control', 'private, no-store')
-      return Response.json({ type: 'result', data: JSON.stringify([{ redirect: 1 }, location]) }, { headers })
+      return Response.json({ type: 'result', data: JSON.stringify([{ redirect: 1 }, '/sign-in/ended/now']) }, { headers })
     }
     return new Response('Sign in first', { status: 401, headers })
   }

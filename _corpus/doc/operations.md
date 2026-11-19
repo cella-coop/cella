@@ -447,13 +447,21 @@ demo's single copy, which has none to hand: a fixture member is one
 browser's at a time there (`apps/org/ts/src/lib/server/leases.ts`), a
 sign-in naming no browser id refused outright rather than let through
 unleased, a second browser's refused it until the first signs out or
-goes 15 minutes unseen, when the lease is freed and the front itself
-forgets that browser's cookie, though the room goes on for the rest.
-A session whose lease lapsed is renewed on its browser's next request
-if no other browser took the member since; if one did, the session ends
-and its browser lands on the sign-in, which names the member freed,
-never on an error page, a page's own queries answered by a redirect
-its script follows rather than a 401.
+goes 15 minutes unseen, when the lease is freed and that browser counts
+as gone from the room, for its cap and for Reset now. The front keeps
+the browser's place in its room as long as the room lives, so a
+visitor back from a pause lands in the same room, never on a fresh
+copy, and the room's server alone decides about the member: a session
+whose lease lapsed is renewed on its browser's next request if no other
+browser was granted the member since; if one was, the session ends for
+good, even once that browser lets the member go, and its browser lands
+on the sign-in, which names the member freed by the room's own record
+of that browser, never a link's say-so, and never on an error page, a
+page's own queries answered by a redirect its script follows rather
+than a 401, in a room alone: a scope's server answers them 401. A
+session cookie kept past a sign-out, or carried under another browser's
+id, is never renewed. A page whose room ended under it is sent the same
+way to the loading page, which says the copy was reset.
 Reset now is refused unless its browser is alone in the room; a reset or
 a room recycled at the cap makes a fresh one, its join code with it, so
 the old link names nothing from then on. Past the cap, a newcomer with

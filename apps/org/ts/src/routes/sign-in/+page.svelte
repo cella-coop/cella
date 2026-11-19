@@ -6,7 +6,7 @@
 
   // Where to go once signed in and what the dev server or a demo offers, and the
   // scope the shell reads, both started at once.
-  const offered = $derived(signing({ back: page.url.searchParams.get('back') ?? '', away: page.url.searchParams.get('away') ?? '' }))
+  const offered = $derived(signing({ back: page.url.searchParams.get('back') ?? '' }))
   const around = shell()
 </script>
 

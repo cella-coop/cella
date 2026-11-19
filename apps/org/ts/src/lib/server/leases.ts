@@ -21,6 +21,22 @@ import { browserIdle, copy, lifetime } from './device.ts'
 
 const held = new Map<string, string>() // member address -> browser id
 const seen = new Map<string, number>() // browser id -> last seen
+// The browser each member was last granted to, kept through an idle
+// sweep and a release alike: only that browser's session is renewed
+// (`renew`), so once another browser took the member, the session that
+// held it before stays ended, even after the taker lets it go, and a
+// kept session cookie never renews under another browser's id.
+const last = new Map<string, string>() // member address -> browser id
+// The browsers that signed out since they last signed in, whose sessions
+// are never renewed, so a cookie kept past a sign-out opens nothing.
+const left = new Set<string>()
+// The member another browser took from a browser while it was away, and
+// when its session was found ended for it: what its sign-in says, the
+// server's own record, never a link's say-so (`lost`).
+const away = new Map<string, { member: string; at: number }>() // browser id -> member
+// How long a sign-in goes on saying so: ten minutes, long past the
+// redirect that lands the browser on it.
+const telling = 10 * 60 * 1000
 // When the room's lifetime ends, in seconds since 1970; 0 before the
 // first sign-in, outside a room, or where `lifetime` names none.
 let endsAt = 0
@@ -30,6 +46,11 @@ let endsAt = 0
 const born = Date.now()
 
 function sweep(now: number) {
+  for (const [id, record] of away) {
+    if (now - record.at > telling) {
+      away.delete(id)
+    }
+  }
   for (const [id, at] of seen) {
     if (now - at > browserIdle * 1000) {
       seen.delete(id)
@@ -72,7 +93,10 @@ export function grant(member: string, id: string | null | undefined): boolean {
     return false
   }
   held.set(member, id)
+  last.set(member, id)
   seen.set(id, now)
+  away.delete(id)
+  left.delete(id)
   // The room's lifetime starts at its first sign-in ever, never again:
   // it runs on even once everyone signs out.
   if (!endsAt && lifetime) {
@@ -118,22 +142,50 @@ export function holds(member: string, id: string | null | undefined): boolean {
 
 // Keeps `id`'s lease on `member` for a session that opened it: whether
 // `id` still holds it, or holds it again because it lapsed by idleness
-// alone and no other browser took it since, so a visitor back from a
-// pause carries on where they were. False where another browser holds
-// it now, or, inside a room, where no id names this browser: never two
-// browsers acting as one member, and never one the room cannot tell
-// apart. A sign-out ends the session's cookie and a switch of rooms
-// changes the browser's id, so neither is renewed here.
+// alone and no other browser was granted it since (`last`), so a
+// visitor back from a pause carries on where they were. False where
+// another browser took it since, whether or not it holds it still, or,
+// inside a room, where no id names this browser: never two browsers
+// acting as one member, never one the room cannot tell apart, and never
+// a kept session cookie under a browser id that did not open it. Where
+// another browser took it, this one's sign-in says so (`lost`). A
+// browser that signed out is renewed nothing until it signs in again
+// (`left`), and a switch of rooms changes the browser's id.
 export function renew(member: string, id: string | null | undefined): boolean {
-  return holds(member, id) || grant(member, id)
+  if (holds(member, id)) {
+    return true
+  }
+  if (id && last.get(member) === id && !left.has(id)) {
+    return grant(member, id)
+  }
+  if (copy && id && last.has(member) && last.get(member) !== id) {
+    away.set(id, { member, at: Date.now() })
+  }
+  return false
 }
 
-// Releases every member `id` holds, as signing out does.
+// The member another browser took from `id` while it was away, as
+// `renew` found it, or `''`: what its sign-in names, until it signs in
+// again or ten minutes pass (`telling`). Only this browser's own record,
+// so no link can make the sign-in say it of anyone.
+export function lost(id: string | null | undefined): string {
+  if (!copy || !id) {
+    return ''
+  }
+  sweep(Date.now())
+  return away.get(id)?.member ?? ''
+}
+
+// Releases every member `id` holds, as signing out does, and marks it
+// signed out (`left`), so the session it signed out of is never renewed
+// by a cookie kept past it.
 export function release(id: string | null | undefined) {
   if (!id) {
     return
   }
   seen.delete(id)
+  away.delete(id)
+  left.add(id)
   for (const [member, holder] of held) {
     if (holder === id) {
       held.delete(member)

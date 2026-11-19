@@ -7,6 +7,13 @@
 // fuller and its hues nudged, which the explorer's house leaves at their
 // defaults. And `cella brand --check` names each generated file that
 // differs, is missing or is left over.
+//
+// Shade 6 is the one rung tones.ts no longer ports: text-subtle and
+// accent-border read under WCAG AA's 4.5:1 at the explorer's -0.1, so
+// tones.ts tightened it to -0.12 (see its K and the fix's reason). Light
+// and dark shade-6 here, and the three `house`-style prints that colour
+// through it (error-deep, info-deep, help-deep), are recomputed at that
+// rung, not captured from the explorer; every other value still is.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'

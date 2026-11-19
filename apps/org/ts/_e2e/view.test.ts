@@ -1,14 +1,15 @@
 // The View panel has one shape on every collection, in every browser,
 // display only: signed in as Camille on the dev server, each collection
 // the sidebar mounts draws, under its layout, the same rows in the same
-// order, Group by, Order by and Display, whatever its fields, and no
+// order, Group by and Order by, then Fields, a block of its own under
+// them, whatever its fields, and no
 // Filter and no search box, which are the filter bar's (`filter` covers
 // those, including the lens's circle as a chip, "Circle is <name>", no
 // longer a row here); on a board, Columns above Grouping instead, as Linear's.
 // On tasks, a board, Columns is its enumeration, migrated from the
 // grouping an older view named, and Grouping opens on None, one lane,
 // until it names a field of its own, each lane the whole set of columns;
-// Display opens a popover of the cards' fields. On meetings, a calendar,
+// Fields lists the cards' fields. On meetings, a calendar,
 // rows name its Date, Show (a month or a week) and Colour by, never Group by. Light and dark, `SHOTS` names where its
 // screenshots go. Nothing is written. Run by `cella test e2e view`;
 // Columns is driven by its keyboard too.
@@ -87,7 +88,7 @@ eachBrowser((name, launch) => {
             const calendarBtn = view.getByRole('button', { name: 'Calendar', exact: true })
             const calendar = (await calendarBtn.count()) > 0 && (await calendarBtn.getAttribute('aria-pressed')) === 'true'
             const want = board ? boardRows : calendar ? calendarRows : rows
-            assert.deepEqual(await view.locator('.rows > .label').allTextContents(), want, `${at}: ${path}'s View panel has the one shape`)
+            assert.deepEqual(await view.locator('.rows > .label, .fields > .label').allTextContents(), want, `${at}: ${path}'s View panel has the one shape`)
             assert.equal(await view.getByRole('group', { name: 'Layout' }).count(), 1, `${at}: ${path}'s layout is on top`)
           }
           assert.ok(seen > 10, `${at}: the panel is checked on most collections, ${seen}`)

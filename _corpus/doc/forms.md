@@ -94,7 +94,7 @@ and by which motion ([generated documents](../../apps/org/feats/document/index.m
 | `seat-member` | mandate, protected | the assembly gives and ends seats | cella |
 | `create-circle` | mandate | the assembly creates a circle, by motion, which holds the default bundle from that day | cella |
 | `amend-circle` | mandate | the assembly changes a circle's name, purpose or procedure, by motion, its id kept, and makes and changes its roles | cella |
-| `arrange-features` | mandate | the assembly arranges any circle's features, by motion; a circle may be given it over itself | cella |
+| `arrange-features` | mandate | the assembly arranges the co-op's layout of features at the root, and which of its groups and features any circle shows, by motion; a circle may be given it over itself, to choose what it shows | cella |
 | `withdraw-membership` | right, protected | every member withdraws from the co-op by their own action | Code de commerce art. L231-6 |
 | `keep-profile` | right, protected | every person keeps their own profile | GDPR art. 16 |
 | `keep-devices` | right, protected | every person enrols and revokes their own devices | cella |

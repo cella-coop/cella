@@ -328,6 +328,10 @@ export interface SettingsPage<T = any> {
   listed?: boolean
   icon: Component<any>
   block: Component<{ data: T; viewer: Viewer | null; theme: Theme }>
+  // What the page holds that cannot be changed there, read-only in the
+  // drawer's Details as a record's properties are, as the scope's address;
+  // a page holding none has no Details.
+  properties?: (data: T) => Prop[]
 }
 
 // A collection a feat owns: its view, and its items' page if it has one.

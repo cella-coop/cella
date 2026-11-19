@@ -8,6 +8,7 @@
   import { abandon } from '../models/navigation.ts'
   import { inked, inkOf } from '../models/ink.ts'
   import Activity from './Activity.svelte'
+  import Centred from './Centred.svelte'
   import Frame from './PageFrame.svelte'
   import Icon from './Icon.svelte'
   import ChartBar from 'phosphor-svelte/lib/ChartBar'
@@ -157,7 +158,7 @@
   <!-- One column of a readable width, centred in the content: the
        record's title, its body and its panels flush with its left edge;
        a tab listing a collection takes the content's width. -->
-  <div class="column" class:wide>
+  <Centred {wide}>
     <hgroup>
       <h1 class="record">
         {#if icon}<span class="mark" style={inked(inkOf(title))}><Icon {icon} /></span>{/if}
@@ -185,29 +186,10 @@
         {@render comment?.()}
       </section>
     {/if}
-  </div>
+  </Centred>
 </Frame>
 
 <style>
-  /* The page's column, as wide as a body's text and its panels, centred
-     in the content, the space either side split evenly; it spaces what
-     it holds as the content spaces its blocks. */
-  .column {
-    --inset: var(--space-4);
-    display: grid;
-    align-content: start;
-    gap: var(--space-4);
-    width: 100%;
-    max-width: 48rem;
-    margin-inline: auto;
-    min-width: 0;
-  }
-  .column > :global(*) {
-    min-width: 0;
-  }
-  .wide {
-    max-width: none;
-  }
   .tabs {
     display: flex;
     gap: var(--space-1);

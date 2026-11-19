@@ -25,7 +25,10 @@ import { pathToFileURL } from 'node:url'
 
 // Spelled in two parts, so this file holds no word it refuses.
 const WORD = new RegExp('\\bco' + '-ops?\\b', 'gi')
-const URL = /\bhttps?:\/\/\S+/g
+// Bounded to the address itself: whitespace, a quote, an angle bracket
+// or a closing paren ends it, so markup and prose around it, as `</a>`
+// or a closing `)`, is read on.
+const URL = /\bhttps?:\/\/[^\s"'<>)]+/g
 
 // Proper names that keep their own hyphen, written as their bodies write
 // them.

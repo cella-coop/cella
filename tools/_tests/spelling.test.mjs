@@ -62,6 +62,14 @@ test('coop, co-operative, a web address and a listed proper name pass', () => {
   assert.match(out.stdout, /every tracked text file of the org writes coop/)
 })
 
+test('a web address inside markup keeps its bound, so the word right after it is still refused', () => {
+  const out = repo({
+    'README.md': `See <a href="https://example.com">${hyphen}</a> for more.\n`,
+  })
+  assert.equal(out.status, 1, out.stderr)
+  assert.match(out.stderr, /README\.md:1/)
+})
+
 test("the site's text, the dated Records, lockfiles, binaries and untracked files are not read", () => {
   const word = `a ${hyphen}\n`
   const out = repo(

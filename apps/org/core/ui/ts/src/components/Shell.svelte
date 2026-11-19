@@ -18,6 +18,7 @@
   import { listed, runs } from '../models/arrange.ts'
   import type { Outcome as Done } from '../models/outcome.ts'
   import { useShell } from '../hooks/useShell.ts'
+  import type { Lens } from '../hooks/ShellState.svelte.ts'
   import { usePinned } from '../hooks/usePinned.ts'
   import { clear as clearDrafts } from '../hooks/drafts.svelte.ts'
   import Button from './Button.svelte'
@@ -88,7 +89,7 @@
     // sit in, each with its features spelt as one listing, and the one
     // they lensed the coop on, if any, the circle they are in.
     circles?: { id: string; name: string; sits: boolean; assembly?: boolean; features?: string; icon?: string | null }[]
-    lens?: { id: string; name: string; features?: string } | null
+    lens?: Lens | null
     children: Snippet
   } = $props()
 

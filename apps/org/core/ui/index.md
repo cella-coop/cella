@@ -1410,6 +1410,16 @@ arrangement (`Arrange`) places its choices so;
 `Popover`, `DragHandle`, `Ordered`, `sortable` and `useDrag` are
 exported for slices to compose.
 
+`Repeat` is a list of rows a form builds up and tears down before it
+ever writes, as an invoice's lines or a motion's choices: each row the
+caller's own fields, dragged to reorder as `Ordered`'s rows are, with a
+quiet grip and removal and, at its foot, Add. Where `Ordered` reorders a
+list a slice's own writes already keep, `Repeat` holds its rows wholly
+in memory, in a `RepeatState` (`useRepeat`), until the form posts them
+all at once; its moves, add, remove and move, are `models/repeat.ts`'s
+plain functions, which tests run without a browser, `RepeatState`
+wrapping them in reactive state.
+
 ## Dashboards
 
 Every collection has a dashboard, the third layout, configured and never
@@ -1469,4 +1479,8 @@ graft declares on the page it extends and the detail view hands every
 block as `embeds`; `Viewer` who looks, the signed-in person and the
 device their session signs with, which the detail view hands every block
 as `viewer`, for what only the viewer may do on the page; `Done` a write's outcome as
-the page receives it. A slice's server side is `Slice` in `@cella/org-db`.
+the page receives it. `Lens` is a circle the coop selector offers, its id,
+name, own icon and features spelt as one listing, the shape `ShellState`'s
+`lens` and `circles` take and a slice's own circle choices may
+([the lens](../../../../_corpus/doc/architecture.md#the-lens)).
+A slice's server side is `Slice` in `@cella/org-db`.

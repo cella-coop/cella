@@ -3,13 +3,17 @@ import type { Outcome } from '../models/outcome.ts'
 import type { Nav } from '../models/view.ts'
 import { recordIcon } from '../record-icons.ts'
 
-// The circle a member lenses the coop on, from the coop selector.
+// The circle a member lenses the coop on, from the coop selector, or one
+// of the circles it offers.
 export interface Lens {
   id: string
   name: string
   // Its own icon, a slug of the curated set, which a cell, a chip or a
   // group's bar wears in place of the collection's.
   icon?: string | null
+  // Its features spelt as one listing (`circle.features`), read where
+  // the circle the member is in is the lens itself.
+  features?: string
 }
 
 // An accordion's key as its cookie spells it, a circle's accordion name

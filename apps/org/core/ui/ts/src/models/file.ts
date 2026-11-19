@@ -31,17 +31,8 @@ export const offered = (accept: string | undefined) =>
     .filter(Boolean)
     .join(', ')
 
-// A size in bytes as a reader reads it: 812 bytes, 24 KB, 1.2 MB.
-export function sized(bytes: number): string {
-  if (bytes < 1000) {
-    return `${bytes} ${bytes === 1 ? 'byte' : 'bytes'}`
-  }
-  const units = ['KB', 'MB', 'GB']
-  let n = bytes / 1000
-  let u = 0
-  while (n >= 1000 && u < units.length - 1) {
-    n /= 1000
-    u++
-  }
-  return `${n < 10 ? n.toFixed(1).replace(/\.0$/, '') : Math.round(n)} ${units[u]}`
-}
+// A size in bytes as a reader reads it: 812 bytes, 24 KB, 1.2 MB. The
+// format itself lives in `models/format.ts`, the kit's one place a
+// figure is formatted; kept under its own name here, what a file picker
+// reads.
+export { bytes as sized } from './format.ts'

@@ -10,7 +10,7 @@ export * as arrangement from './models/arrange.ts'
 export type { Composed } from './models/compose.ts'
 export type { Outcome as Done } from './models/outcome.ts'
 export { said } from './models/outcome.ts'
-export { money, date, short, show, power } from './models/format.ts'
+export { money, date, short, show, power, count, when, weekday, hours, percent, bytes } from './models/format.ts'
 export * as icons from './icons.ts'
 export { verb } from './verbs.ts'
 

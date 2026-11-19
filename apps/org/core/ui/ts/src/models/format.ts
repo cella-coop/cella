@@ -20,6 +20,66 @@ export const date = (iso: unknown) => {
   return Number.isNaN(d.getTime()) ? String(iso) : days.format(d)
 }
 
+const figure = new Intl.NumberFormat(locale)
+
+// A whole figure, grouped by thousands in the locale: a collection's
+// count, a tally's whole.
+export const count = (n: unknown) => (n === null || n === undefined || n === '' ? '—' : figure.format(Number(n)))
+
+const pct = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 })
+
+// A fraction of a whole, already in hundreds (12.5 reads 12.5%): a
+// margin, a share, a burn.
+export const percent = (n: unknown) => (n === null || n === undefined || n === '' ? '—' : `${pct.format(Number(n))}%`)
+
+const hoursFmt = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 })
+
+// A duration in hours: a timesheet's entry, a project's time cost.
+export const hours = (n: unknown) => (n === null || n === undefined || n === '' ? '—' : `${hoursFmt.format(Number(n))} h`)
+
+const weekdayFmt = new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' })
+
+// A day's name alone, short, as a week's header names it.
+export const weekday = (iso: unknown) => {
+  if (!iso) {
+    return '—'
+  }
+  const d = new Date(`${String(iso).slice(0, 10)}T00:00:00Z`)
+  return Number.isNaN(d.getTime()) ? String(iso) : weekdayFmt.format(d)
+}
+
+// A day and its wall-clock time together, as a meeting's moment reads: the
+// day as `date` shows it, then its `HH:MM`, never shifted by a time zone,
+// since the time is the scope's own clock, not an instant.
+export const when = (at: unknown) => {
+  if (!at) {
+    return '—'
+  }
+  const s = String(at)
+  const day = date(s.slice(0, 10))
+  const time = s.length > 10 ? s.slice(11, 16) : undefined
+  return time ? `${day}, ${time}` : day
+}
+
+// A size in bytes as a reader reads it: 812 bytes, 24 KB, 1.2 MB.
+export const bytes = (n: unknown) => {
+  if (n === null || n === undefined || n === '') {
+    return '—'
+  }
+  const b = Number(n)
+  if (b < 1000) {
+    return `${b} ${b === 1 ? 'byte' : 'bytes'}`
+  }
+  const units = ['KB', 'MB', 'GB']
+  let v = b / 1000
+  let u = 0
+  while (v >= 1000 && u < units.length - 1) {
+    v /= 1000
+    u++
+  }
+  return `${v < 10 ? v.toFixed(1).replace(/\.0$/, '') : Math.round(v)} ${units[u]}`
+}
+
 const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
 const aMinute = 60_000
 const anHour = 60 * aMinute
@@ -93,6 +153,10 @@ export function show(value: unknown, kind?: string): string {
       return money(value)
     case 'date':
       return date(value)
+    case 'percent':
+      return percent(value)
+    case 'hours':
+      return hours(value)
     case 'boolean':
       return value === true || value === 'true' ? 'Yes' : 'No'
     default:

@@ -18,7 +18,7 @@ export type Group = 'home' | 'platform'
 // A `person` is an address, shown as the person's chip: their name, the
 // address on hover, after the icon of the collection of people; a `circle`
 // is a circle's id, shown as its name.
-export type Kind = 'text' | 'title' | 'mono' | 'money' | 'date' | 'number' | 'badge' | 'priority' | 'boolean' | 'person' | 'circle'
+export type Kind = 'text' | 'title' | 'mono' | 'money' | 'date' | 'number' | 'badge' | 'priority' | 'boolean' | 'person' | 'circle' | 'percent' | 'hours'
 
 // Whether a field's values are a closed set the code declares, a state's,
 // a priority's or a boolean's, rather than an open one the data holds (a

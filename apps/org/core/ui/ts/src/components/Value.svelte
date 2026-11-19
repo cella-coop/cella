@@ -25,7 +25,8 @@
   // name is the drawer's to draw. A record given its
   // `href` is a link, its chip the link itself. `chip` draws any value as
   // a chip, a person's with their avatar inside, as a group's header names
-  // an open set's value.
+  // an open set's value. `href` links any kind, not a record alone: a
+  // figure that names what it is a figure of.
   let {
     value,
     kind = 'text',
@@ -51,30 +52,40 @@
   <span class="prop {size} record">
     <Chip label={v.shown} icon={v.icon} ink={v.ink} avatar={kind === 'person' ? v.shown : undefined} {href} weight={size === 'card' ? 'regular' : 'duotone'} />
   </span>
-{:else if kind === 'badge'}
-  <!-- A state is its pill wherever it is drawn: its tone's soft fill, a
-       dot in its tone or its ink, and its word. -->
-  <span class="prop {size} badge"><Badge {tone} ink={v.ink}>{v.shown}</Badge></span>
+{:else if href}
+  <!-- A kind with no chip of its own, linked: the figure or the pill
+       itself is the link, never a record's, which is its `Chip`'s. -->
+  <a class="link" {href}>{@render drawn()}</a>
 {:else}
-  <span
-    class="prop {size} {kind}"
-    class:chip={size === 'card'}
-    title={bare ? v.shown : undefined}
-    style={v.ink !== undefined ? inked(v.ink) : undefined}
-  >
-    {#if size === 'drawer'}
-      {#if v.lead !== 'none'}<span class="lead">{@render lead()}</span>{/if}
-    {:else}
-      {@render lead()}
-    {/if}
-    {#if calendar}<span class="mark"><Icon icon={Calendar} size="1em" weight="regular" /></span>{/if}
-    {#if !bare}
-      <span class="text" class:toned={!!tone} data-tone={tone}>
-        {v.empty ? 'None' : v.shown}
-      </span>
-    {/if}
-  </span>
+  {@render drawn()}
 {/if}
+
+{#snippet drawn()}
+  {#if kind === 'badge'}
+    <!-- A state is its pill wherever it is drawn: its tone's soft fill, a
+         dot in its tone or its ink, and its word. -->
+    <span class="prop {size} badge"><Badge {tone} ink={v.ink}>{v.shown}</Badge></span>
+  {:else}
+    <span
+      class="prop {size} {kind}"
+      class:chip={size === 'card'}
+      title={bare ? v.shown : undefined}
+      style={v.ink !== undefined ? inked(v.ink) : undefined}
+    >
+      {#if size === 'drawer'}
+        {#if v.lead !== 'none'}<span class="lead">{@render lead()}</span>{/if}
+      {:else}
+        {@render lead()}
+      {/if}
+      {#if calendar}<span class="mark"><Icon icon={Calendar} size="1em" weight="regular" /></span>{/if}
+      {#if !bare}
+        <span class="text" class:toned={!!tone} data-tone={tone}>
+          {v.empty ? 'None' : v.shown}
+        </span>
+      {/if}
+    </span>
+  {/if}
+{/snippet}
 
 {#snippet lead()}
   {#if v.lead === 'avatar'}
@@ -196,8 +207,20 @@
     font-weight: 500;
   }
   .money,
-  .number {
+  .number,
+  .percent,
+  .hours {
     font-variant-numeric: tabular-nums;
+  }
+  /* A kind with no chip of its own, linked: the figure itself is the
+     link, never boxed. */
+  .link {
+    display: contents;
+    color: inherit;
+  }
+  .link:hover .text {
+    text-decoration: underline;
+    text-decoration-color: var(--accent-border);
   }
   .date .text {
     color: var(--text-muted);

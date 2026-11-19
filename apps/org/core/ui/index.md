@@ -85,7 +85,16 @@ ink. Components read roles, never shades:
 - locale: the app's, `locale` in `models/format.ts` (en-GB), writes
   every day (16 Oct 2026) and is how a date field reads and types one
   (16/10/2026), whatever the browser's language; amounts read as euros
-  the French way;
+  the French way. `models/format.ts` is the one place a figure or a date
+  is formatted, each a plain helper over a value of unknown shape,
+  `—` for one that is none: `count` groups a whole figure by thousands
+  (1,234), `percent` reads a figure already in hundreds, suffixed `%`
+  (12.5%), `hours` a duration, suffixed ` h` (2.5 h), `weekday` a day's
+  name alone, short (Mon), `when` a day and its wall-clock time together,
+  never shifted by a time zone since the time is the scope's own clock
+  (19 Nov 2026, 14:30), and `bytes` a size as a reader reads it (812
+  bytes, 24 KB, 1.2 MB), which `FilePicker`'s own `sized` now reads
+  under its name;
 - shape: the brand's 12px radius on floating things and panels
   (`--radius`), 6px on controls; soft shadows on floating things only
   (`--shadow-float`);
@@ -906,6 +915,12 @@ than its text, and is hidden from assistive technology, since the text
 names the record. A collection that declares no icon, or that the shell
 does not mount, leaves its chip with none; an enumeration, as a task's
 priority, names no record and wears none.
+
+`Value` draws two kinds besides money and the rest, `percent` and
+`hours`, each `models/format.ts`'s own helper, tabular like every other
+figure; and takes an `href` on any kind, not a record alone, so a figure
+that names what it links to, as a timesheet entry's hours its day, is
+the link itself rather than a block wrapped around it.
 
 ### Comments
 

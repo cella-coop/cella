@@ -15,6 +15,8 @@ import CellSignalHigh from 'phosphor-svelte/lib/CellSignalHigh'
 import CheckSquare from 'phosphor-svelte/lib/CheckSquare'
 import User from 'phosphor-svelte/lib/User'
 import CirclesThree from 'phosphor-svelte/lib/CirclesThree'
+import Percent from 'phosphor-svelte/lib/Percent'
+import Clock from 'phosphor-svelte/lib/Clock'
 import type { Kind } from './models/view.ts'
 
 // The icon a field is marked by where it is named, as in the Filter menu:
@@ -31,6 +33,8 @@ export const glyphs: Record<Kind, Component<any>> = {
   boolean: CheckSquare,
   person: User,
   circle: CirclesThree,
+  percent: Percent,
+  hours: Clock,
 }
 
 // A day says which day it is by its glyph as its lead word does, read

@@ -19,8 +19,10 @@
   import { useShell } from '../hooks/useShell.ts'
   import { usePinned } from '../hooks/usePinned.ts'
   import { useViews } from '../hooks/useViews.ts'
+  import { Plus } from '../icons.ts'
   import Button from './Button.svelte'
   import Checkbox from './Checkbox.svelte'
+  import Chip from './Chip.svelte'
   import Card from './Card.svelte'
   import DragHandle from './DragHandle.svelte'
   import DropIndicator from './DropIndicator.svelte'
@@ -157,14 +159,35 @@
     change({ sort: !key || (!initial && key === fallback?.field && dir === fallback.dir) ? null : { field: key, dir } })
   }
 
-  // What a row of the panel shows in its Display popover, by layout.
-  const display = $derived(
-    spec.layout === 'table' ? `${columns.filter((c) => c === titled || !hidden.has(c.key)).length} columns`
-    : spec.layout === 'list' ? `${shown.length} fields`
-    : spec.layout === 'gallery' || spec.layout === 'board' || spec.layout === 'calendar' ? `${shown.length} card fields`
-    : spec.layout === 'dashboard' && dashboard ? `${dashboard.widgets.length} widgets`
-    : null,
+  // What Display shows: the fields drawn, a table's columns or the
+  // fields of a list's line or a card, as chips in their order, each
+  // removable but a table's title; and those not drawn, which its + adds.
+  // A dashboard's widgets keep their own popover.
+  const picks = $derived(
+    spec.layout === 'table'
+      ? { shown: ordered.filter((c) => c === titled || !hidden.has(c.key)), rest: ordered.filter((c) => c !== titled && hidden.has(c.key)), noun: 'Columns' }
+      : spec.layout === 'list' || spec.layout === 'gallery' || spec.layout === 'board' || spec.layout === 'calendar'
+        ? { shown: choices.filter((c) => showing.has(c.key)), rest: choices.filter((c) => !showing.has(c.key)), noun: spec.layout === 'list' ? 'Fields' : 'Card fields' }
+        : null,
   )
+  const widgets = $derived(spec.layout === 'dashboard' && dashboard ? `${dashboard.widgets.length} widgets` : null)
+
+  // A field shown or hidden: a table's by its hidden columns, any other
+  // layout's by the fields it shows.
+  function shows(key: string, on: boolean) {
+    if (spec.layout === 'table') {
+      hide(key, !on)
+    } else {
+      card(key, on)
+    }
+  }
+
+  // A table's column dragged among the chips: the order of those shown,
+  // then the hidden ones as they stood.
+  function moved(from: number, to: number) {
+    const now = reorder(picks?.shown ?? [], from, to)
+    change({ order: [...now, ...ordered.filter((c) => !now.includes(c))].map((c) => c.key) })
+  }
 
   const change = (s: Partial<Spec>) => onchange({ ...spec, q: state.filter, ...s })
 
@@ -206,21 +229,6 @@
     onsave(views.save({ ...spec, q: state.filter }))
   }
 </script>
-
-<!-- The fields a list shows after each row's title, or a
-     gallery's, a board's or a calendar's cards. -->
-{#snippet cards()}
-  <fieldset class="columns">
-    <legend class="label">{spec.layout === 'list' ? 'Fields' : 'Card fields'}</legend>
-    <ul>
-      {#each choices as c (c.key)}
-        <li>
-          <Checkbox checked={showing.has(c.key)} onchange={(on) => card(c.key, on)}>{c.label}</Checkbox>
-        </li>
-      {/each}
-    </ul>
-  </fieldset>
-{/snippet}
 
 <Card title="View">
   {#snippet actions()}
@@ -309,36 +317,58 @@
       <Select fit labelledby="{id}-order" options={orders} disabled={spec.layout === 'dashboard'} bind:value={() => sorted?.field ?? '', (key) => order(key)} />
     </div>
 
-    <span class="label" id="{id}-display">Display</span>
+    <!-- Fields: its label stands by the chips' first line, as every
+         other row's by its control. -->
+    <span class="label" class:top={!!picks} id="{id}-display">{picks ? 'Fields' : 'Display'}</span>
     <div class="control">
-      {#if display}
-        <Popover label="Display" menu={false} wide={spec.layout === 'dashboard'} button>
-          {#snippet trigger()}{display}{/snippet}
+      {#if picks}
+        <!-- The fields drawn, as chips; a table's reorder by dragging
+             them, as its columns stand. -->
+        <ul
+          class="chips"
+          aria-labelledby="{id}-display"
+          {@attach spec.layout === 'table' &&
+            sortable(drag, {
+              list: 'shown',
+              label: (i) => picks?.shown[i]?.label ?? 'column',
+              onmove: moved,
+            })}
+        >
+          {#each picks.shown as c, i (c.key)}
+            {#if spec.layout === 'table'}
+              <DropIndicator show={drag.before('shown', i)} />
+            {/if}
+            <li data-drag-item="shown" data-drag-index={i}>
+              {#if spec.layout === 'table'}<DragHandle label={c.label} />{/if}
+              <Chip label={c.label} remove={c === titled ? undefined : { label: `Hide ${c.label}`, onclick: () => shows(c.key, false) }} />
+            </li>
+          {/each}
           {#if spec.layout === 'table'}
-            <fieldset class="columns">
-              <legend class="label">Columns</legend>
-              <ul
-                {@attach sortable(drag, {
-                  list: 'columns',
-                  label: (i) => ordered[i]?.label ?? 'column',
-                  onmove: (from, to) => change({ order: reorder(ordered, from, to).map((c) => c.key) }),
-                })}
-              >
-                {#each ordered as c, i (c.key)}
-                  <DropIndicator show={drag.before('columns', i)} />
-                  <li data-drag-item="columns" data-drag-index={i}>
-                    <DragHandle label={c.label} />
-                    <Checkbox checked={c === titled || !hidden.has(c.key)} disabled={c === titled} onchange={(on) => hide(c.key, !on)}>{c.label}</Checkbox>
-                  </li>
-                {/each}
-                <DropIndicator show={drag.before('columns', ordered.length)} />
-              </ul>
-            </fieldset>
-          {:else if spec.layout === 'dashboard' && dashboard}
-            <Widgets widgets={dashboard.widgets} {fields} {values} custom={dashboard.custom} onchange={(ws) => change({ widgets: ws })} />
-          {:else}
-            {@render cards()}
+            <DropIndicator show={drag.before('shown', picks.shown.length)} />
           {/if}
+          <!-- Add, after the last chip, wrapping as a chip would. -->
+          {#if picks.rest.length}
+            <li class="add">
+              <Popover label="Add a field" menu={false} align="end">
+                {#snippet trigger()}<Icon icon={Plus} size="1em" />Add{/snippet}
+                <fieldset class="columns">
+                  <legend class="label">{picks.noun}</legend>
+                  <ul>
+                    {#each picks.rest as c (c.key)}
+                      <li>
+                        <Checkbox checked={false} onchange={(on) => shows(c.key, on)}>{c.label}</Checkbox>
+                      </li>
+                    {/each}
+                  </ul>
+                </fieldset>
+              </Popover>
+            </li>
+          {/if}
+        </ul>
+      {:else if widgets && dashboard}
+        <Popover label="Display" menu={false} wide button>
+          {#snippet trigger()}{widgets}{/snippet}
+          <Widgets widgets={dashboard.widgets} {fields} {values} custom={dashboard.custom} onchange={(ws) => change({ widgets: ws })} />
         </Popover>
       {:else}
         <Select fit labelledby="{id}-display" options={[{ value: '', label: 'As listed' }]} disabled />
@@ -479,6 +509,47 @@
   .views button.on {
     background: var(--selected);
     color: var(--text);
+  }
+  /* The fields drawn, as chips wrapping in the panel's width, ending at
+     its right edge as every control does. */
+  .chips {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+  /* Each line of chips as tall as a control, so the row's label, set
+     at its top (`.top`), stands by the first line as the other rows'
+     labels stand by theirs. */
+  .chips > li {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    min-height: 1.9rem;
+    border-radius: var(--radius-control);
+  }
+  .label.top {
+    align-self: start;
+    line-height: 1.9rem;
+  }
+  /* Add, a peer of the chips: a chip's height, type, radius and fill
+     (`Chip.svelte`), its + before its word, hovered as a quiet button. */
+  .add :global(.trigger) {
+    width: auto;
+    gap: 0.3em;
+    padding: 0 0.5em 0 0.3em;
+    line-height: 1.65;
+    font-size: inherit;
+    background: color-mix(in oklab, var(--text) var(--lift), var(--surface));
+    color: var(--text);
+  }
+  .add :global(.trigger:hover) {
+    background: var(--hover);
   }
   .columns ul {
     list-style: none;

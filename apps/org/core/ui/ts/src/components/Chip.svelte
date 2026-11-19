@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Component } from 'svelte'
   import { inked } from '../models/ink.ts'
+  import { X } from '../icons.ts'
   import Avatar from './Avatar.svelte'
   import Icon from './Icon.svelte'
 
@@ -13,7 +14,8 @@
   // toward the text, whatever that surface is (`--surface`, which each
   // surface declares), so it reads on the panel, a raised card, a grey
   // bar, a hovered row or a floating list alike, in either theme, and
-  // never shouts.
+  // never shouts. One a list lets go of, as a view's displayed field,
+  // ends in a small × that removes it (`remove`), named for what it does.
   let {
     label,
     icon,
@@ -22,7 +24,17 @@
     href,
     title,
     weight = 'duotone',
-  }: { label: string; icon?: Component<any>; ink?: number; avatar?: string; href?: string; title?: string; weight?: 'regular' | 'duotone' } = $props()
+    remove,
+  }: {
+    label: string
+    icon?: Component<any>
+    ink?: number
+    avatar?: string
+    href?: string
+    title?: string
+    weight?: 'regular' | 'duotone'
+    remove?: { label: string; onclick: () => void }
+  } = $props()
 </script>
 
 {#snippet inner()}
@@ -33,6 +45,9 @@
     <span class="mark" class:inked={ink !== undefined} aria-hidden="true"><Icon {icon} size="1em" {weight} /></span>
   {/if}
   <span class="text">{label}</span>
+  {#if remove}
+    <button type="button" class="remove" aria-label={remove.label} title={remove.label} onclick={remove.onclick}><Icon icon={X} size="0.85em" weight="regular" /></button>
+  {/if}
 {/snippet}
 
 {#if href}
@@ -76,5 +91,22 @@
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  /* The ×, flush with the chip's end, its name read by its label. */
+  .remove {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    margin-inline: 0 -0.3em;
+    padding: 0.1em;
+    border: 0;
+    border-radius: var(--radius-control);
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .remove:hover {
+    background: color-mix(in oklab, var(--text) calc(var(--lift) * 2), var(--surface));
+    color: var(--text);
   }
 </style>

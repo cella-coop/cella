@@ -74,14 +74,26 @@ eachBrowser((browserName, launch) => {
         await page.waitForLoadState('networkidle')
       }
       const cards = (u: URL) => u.searchParams.get('cards')
-      const display = () => page.getByRole('dialog', { name: 'Display' })
-      // A field shown or hidden in Display's popover, the address it leads
-      // to, and the panel's count once the page has followed it, so the
-      // next field chosen is chosen among what it shows.
+      // Fields: the fields drawn, as chips each with its × (`Hide …`),
+      // and the + (`Add`), whose popover lists the rest.
+      const chips = () => panel(page).getByRole('button', { name: /^Hide / })
+      const display = () => page.getByRole('dialog', { name: 'Add a field' })
+      // A field shown by the +'s popover or hidden by its chip's ×, the
+      // address it leads to, and the chips once the page has followed it,
+      // so the next field chosen is chosen among what it shows.
       const field = async (label: string, on: boolean, want: string) => {
-        await display().getByRole('checkbox', { name: label, exact: true }).setChecked(on)
+        if (on) {
+          if (!(await display().isVisible())) {
+            await panel(page).getByRole('button', { name: 'Add', exact: true }).click()
+          }
+          await display().getByRole('checkbox', { name: label, exact: true }).check()
+        } else {
+          await panel(page).getByRole('button', { name: `Hide ${label}`, exact: true }).click()
+        }
         await page.waitForURL((u) => cards(u) === want)
-        await panel(page).getByRole('button', { name: new RegExp(`(^|\\s)${want.split(',').length} fields$`) }).waitFor()
+        for (let tries = 0; tries < 60 && (await chips().count()) !== want.split(',').length; tries++) {
+          await page.waitForTimeout(250)
+        }
       }
       const save = async (name: string) => {
         await panel(page).getByRole('button', { name: 'Save', exact: true }).click()
@@ -94,13 +106,15 @@ eachBrowser((browserName, launch) => {
       // chooses.
       await visit('/files?view=list&by=')
       await draws(page, { sub: 1, meta: 3, mono: 0 }, `${browserName}: a list shows its columns by their roles`)
-      await panel(page).getByRole('button', { name: '4 fields' }).click()
+      assert.equal(await chips().count(), 4, `${browserName}: a list's Fields shows as chips the fields its roles draw`)
+      await panel(page).getByRole('button', { name: 'Add', exact: true }).click()
       await display().waitFor()
       assert.deepEqual(
         await display().getByRole('checkbox').evaluateAll((bs) => bs.map((b) => b.getAttribute('aria-checked') === 'true')),
-        [false, true, true, true, true, false, false, false, false, false, false],
-        `${browserName}: a list's Display offers every field but the title, the logged ones last, those its roles show checked`,
+        [false, false, false, false, false, false, false],
+        `${browserName}: and its + offers every other field but the title, none of them drawn`,
       )
+      await page.keyboard.press('Escape')
       await field('Size', false, 'uploader,class,uploaded')
       await field('Type', true, 'uploader,class,uploaded,type')
       await field('By', false, 'class,uploaded,type')
@@ -118,8 +132,8 @@ eachBrowser((browserName, launch) => {
       await visit('/files?view=list&by=&cards=class,uploaded,type')
       await draws(page, listed, `${browserName}: the address alone draws the list's fields`)
 
-      // Every other layout but the dashboard: a field taken away in
-      // Display is one fewer shown, as its row in the panel counts it.
+      // Every other layout but the dashboard: a field taken away by its
+      // chip's × is one chip fewer.
       for (const [path, noun] of [
         ['/files?view=table', 'columns'],
         ['/files?view=gallery', 'card fields'],
@@ -127,19 +141,16 @@ eachBrowser((browserName, launch) => {
         ['/meetings?view=calendar', 'card fields'],
       ]) {
         await visit(path)
-        const button = panel(page).getByRole('button', { name: new RegExp(`^\\d+ ${noun}$`) })
-        const count = async () => Number((await button.textContent())?.trim().split(' ')[0])
+        const count = () => chips().count()
         const before = await count()
-        await button.click()
-        await display().waitFor()
-        await display().locator('[role=checkbox][aria-checked=true]:not(:disabled)').first().uncheck()
+        await chips().first().click()
 
         await page.waitForURL((u) => u.searchParams.has(noun === 'columns' ? 'hide' : 'cards'))
         await page.keyboard.press('Escape')
         for (let tries = 0; tries < 60 && (await count()) !== before - 1; tries++) {
           await page.waitForTimeout(250)
         }
-        assert.equal(await count(), before - 1, `${browserName}: ${path}'s Display shows one fewer`)
+        assert.equal(await count(), before - 1, `${browserName}: ${path}'s Fields shows one fewer`)
       }
 
       assert.deepEqual(errors, [], `${browserName}: no page error`)

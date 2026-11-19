@@ -22,9 +22,9 @@ import { eachBrowser, serve, signIn } from './browser.ts'
 import { chosen } from './controls.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-view-shots'
-const rows = ['Group by', 'Order by', 'Display']
-const boardRows = ['Columns', 'Grouping', 'Order by', 'Display']
-const calendarRows = ['Date', 'Show', 'Colour by', 'Order by', 'Display']
+const rows = ['Group by', 'Order by', 'Fields']
+const boardRows = ['Columns', 'Grouping', 'Order by', 'Fields']
+const calendarRows = ['Date', 'Show', 'Colour by', 'Order by', 'Fields']
 
 const panel = (page: Page) => page.locator('section.card', { has: page.getByRole('heading', { name: 'View', exact: true }) })
 
@@ -147,10 +147,11 @@ eachBrowser((name, launch) => {
         assert.ok(await by.evaluate((el) => el === document.activeElement), `${at}: the focus stays on Group by`)
         assert.equal(await chosen(by), 'status', `${at}: Escape chooses nothing`)
 
-        await view.getByRole('button', { name: /card fields$/ }).click()
-        const display = page.getByRole('dialog', { name: 'Display' })
+        assert.ok((await view.getByRole('button', { name: /^Hide / }).count()) > 0, `${at}: Fields shows the cards' fields as chips`)
+        await view.getByRole('button', { name: 'Add', exact: true }).click()
+        const display = page.getByRole('dialog', { name: 'Add a field' })
         await display.waitFor()
-        assert.ok((await display.getByRole('checkbox').count()) > 0, `${at}: Display lists the cards' fields`)
+        assert.ok((await display.getByRole('checkbox').count()) > 0, `${at}: its + lists the fields the cards leave out`)
         await page.screenshot({ path: `${shots}/tasks-display-${name}-${scheme}.png` })
         await page.keyboard.press('Escape')
 
@@ -160,8 +161,8 @@ eachBrowser((name, launch) => {
         await page.screenshot({ path: `${shots}/meetings-${name}-${scheme}.png` })
 
         await visit('/timesheets')
-        await panel(page).getByRole('button', { name: /columns$/ }).click()
-        await page.getByRole('dialog', { name: 'Display' }).waitFor()
+        await panel(page).getByRole('button', { name: 'Add', exact: true }).click()
+        await page.getByRole('dialog', { name: 'Add a field' }).waitFor()
         await page.screenshot({ path: `${shots}/timesheets-display-${name}-${scheme}.png` })
 
         assert.deepEqual(errors, [], `${at}: no page error`)

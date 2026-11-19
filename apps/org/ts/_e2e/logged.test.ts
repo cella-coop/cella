@@ -116,22 +116,29 @@ eachBrowser((browserName, launch) => {
         await panel(page).getByRole('button', { name: 'List', exact: true }).click()
         await page.waitForLoadState('networkidle')
         await until(() => panel(page).getByRole('button', { name: 'List', exact: true }).getAttribute('aria-pressed'), (p) => p === 'true', `${at}: List is drawn`)
-        const fields = () => panel(page).getByRole('button', { name: /^\d+ fields$/ })
-        const drawn = async () => Number((await fields().textContent())?.trim().split(' ')[0])
+        // the fields drawn are Fields' chips, each with its ×; the + lists
+        // the rest
+        const drawn = () => panel(page).getByRole('button', { name: /^Hide / }).count()
         const own = await drawn()
-        await fields().click()
-        const display = page.getByRole('dialog', { name: 'Display' })
-        await display.waitFor()
+        const add = async () => {
+          await panel(page).getByRole('button', { name: 'Add', exact: true }).click()
+          const display = page.getByRole('dialog', { name: 'Add a field' })
+          await display.waitFor()
+          return display
+        }
+        const display = await add()
         const cards = (u: URL) => (u.searchParams.get('cards') ?? '').split(',')
         await display.getByRole('checkbox', { name: 'Created', exact: true }).check()
         // Each field drawn, not just in the address, before the next is
         // chosen: `showing`, which the checkbox reads, is the collection's
         // own, a tick behind the address it comes from.
         await page.waitForURL((u) => cards(u).includes('created'))
-        await panel(page).getByRole('button', { name: new RegExp(`^${own + 1} fields$`) }).waitFor()
+        await panel(page).getByRole('button', { name: 'Hide Created', exact: true }).waitFor()
+        assert.equal(await drawn(), own + 1, `${at}: one more chip`)
         await display.getByRole('checkbox', { name: 'Created by', exact: true }).check()
         await page.waitForURL((u) => cards(u).includes('created_by'))
-        await panel(page).getByRole('button', { name: new RegExp(`^${own + 2} fields$`) }).waitFor()
+        await panel(page).getByRole('button', { name: 'Hide Created by', exact: true }).waitFor()
+        assert.equal(await drawn(), own + 2, `${at}: and another`)
         await page.keyboard.press('Escape')
         const line = (name: string) => page.locator('ul.list > li', { hasText: name })
         await until(() => line('Atelier Estampe').locator('.meta .person .text').innerText(), (t) => t === 'Camille Martin', `${at}: the list names who created the first`)

@@ -1,6 +1,6 @@
 -- A document generated from a circle's policies, as the statutes are from
 -- the root circle's: the circle, by id as the policy register names it,
--- and the template, the fixed text of the co-op's legal form as a JSON
+-- and the template, the fixed text of the coop's legal form as a JSON
 -- array of fragments, an `embed` block of kind `policies` standing where
 -- the policies read. It changes only as its circle's policies do, by
 -- `document:document:generate`, and never by hand.

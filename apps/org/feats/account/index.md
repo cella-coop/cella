@@ -1,15 +1,15 @@
 +++
 title = "Account"
-updated = 2026-11-17
+updated = 2026-11-19
 +++
 
-The co-op's accounts and what its members own: the chart of accounts,
+The coop's accounts and what its members own: the chart of accounts,
 members' capital accounts, reserves and funds, the periods the books are
 kept in, the statutes' terms for its capital, and the presentation of the
 financial statements, their rubrics and the spans they are drawn for. A
 year's surplus and how it is shared out is the `patronage` feat's.
 This is the
-co-op-specific layer that generic accounting software lacks. An account
+coop-specific layer that generic accounting software lacks. An account
 holds no balance of its own: its balance is the sum of the journal lines
 posted to it, which the `account-transaction` graft reads from the
 `transaction` feat.
@@ -31,12 +31,12 @@ capital, one account under it per member (`101301`, …, two digits or
 more, so `1013100` follows `101399`), `1012` what they
 subscribed and have not paid, owed by them in `4562`, `1061` the legal
 reserve, `1068` the development fund, an indivisible reserve; `4567` is
-what the co-op owes associates who left (the PCG's accounts, Règlement
+what the coop owes associates who left (the PCG's accounts, Règlement
 ANC n° 2014-03, not verified on Légifrance). A capital
 account names its member by address, as text (`holder`); it has no key
 into `member`, and the `account-membership` graft checks it.
 
-An account marked `cash` holds the co-op's money: the bank, a till. The
+An account marked `cash` holds the coop's money: the bank, a till. The
 chart says which accounts are cash, and the `account-transaction` graft
 reads the flag to keep money from leaving one except through the writes
 with their own power and limit.
@@ -349,8 +349,13 @@ statements are the `report` feat's, drawn in the rubrics and over the
 spans this feat publishes.
 Printed, a page drops the shell and reads as a document. Balances, the trial
 balance, each account's ledger and each period's entries are
-`account-transaction`'s, in the Ledger and Entries tabs this feat gives
-an account's and a period's page; the
+`account-transaction`'s, an account's balance and a period's entries
+summed as the panels their overviews open on, and in full in the Ledger
+and Entries tabs this feat gives an account's and a period's page; each
+of its pages is laid out as `panels` ([record page
+layout](../../../../_corpus/doc/architecture.md#record-page-layout)), its
+Notes, its body, after its panels, a terms' page opening on its clauses
+said as the statutes say them; the
 motion that adopted a terms' rule, `account-motion`'s.
 
 ## Lanterne

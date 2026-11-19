@@ -1,6 +1,6 @@
 +++
 title = "Payslip"
-updated = 2026-11-17
+updated = 2026-11-19
 +++
 
 Pay: each worker's salary, member or not, and a pay run each month, one
@@ -124,17 +124,20 @@ approved and paid once, its payslips fixed from its approval; the ratio.
 
 ## Reads
 
-Who reads pay is a row-level policy (`sql/004-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): a member reads their own salaries and payslips and the runs they are paid in; whoever holds `prepare-payroll`, `approve-payroll` or `pay-payroll` reads those of the circles their mandate covers, the whole co-op's at Lanterne; `read` opens none of it, since the feat's own policy replaces core's; no one signed in reads any. A write's transaction reads every row, as the guards do.
+Who reads pay is a row-level policy (`sql/004-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): a member reads their own salaries and payslips and the runs they are paid in; whoever holds `prepare-payroll`, `approve-payroll` or `pay-payroll` reads those of the circles their mandate covers, the whole coop's at Lanterne; `read` opens none of it, since the feat's own policy replaces core's; no one signed in reads any. A write's transaction reads every row, as the guards do.
 
 ## Shell
 
 The `payslips` collection in Payments, a list grouped by the pay run's
 month, the latest first, each payslip titled by the person it pays, with
 its gross, its net and its run; with a dashboard of the
-payroll by month (gross, net, the cost to the co-op, what awaits
+payroll by month (gross, net, the cost to the coop, what awaits
 payment); preparing a month's run; and a payslip's page with its
-run's approval and payment, and its Lines tab, the payslip line by line,
-the data central to it.
+run's approval and payment, laid out as `panels` ([record page
+layout](../../../../_corpus/doc/architecture.md#record-page-layout)),
+with no tab: it opens on its Pay, the payslip line by line, its net pay
+and its cost ruled off, then what its extenders add and its Notes, its
+body.
 
 ## Lanterne
 

@@ -5,7 +5,7 @@ updated = 2026-11-19
 
 How a circle acts as a whole: motions, proposed, voted on and closed, each carrying the actions it decides beyond its text, or none. A passed motion is a decision in plain speech; the code keeps no row and no name called decision. An outcome is computed from the signed votes, never claimed; each member's latest vote counts once. Each action a passed motion carries is an effect in the close's transaction, citing it, its actor whoever closed it, judged by its own guards, and what follows it, such as the capital a departure moves, is the reaction of the graft that knows it ([trust](../../../../_corpus/doc/trust.md#three-kinds-of-action)). A motion may adopt a policy, a sentence its circle binds itself by, which the register in org's core keeps ([policies](../../../../_corpus/doc/architecture.md#policies)).
 
-A motion's page reads as its proposal, in its proposer's words, then one Vote widget (`Inlay`, [the UI core](../../core/ui/index.md#widgets)): its state and deadline, the tally, where it stands by its procedure, a button for each stance with the reader's own marked, and what it decides, each action with its arguments as chips, a policy linking to the motion that made it. The title is not repeated.
+A motion's page is laid out as `body` ([record page layout](../../../../_corpus/doc/architecture.md#record-page-layout)), its proposal its body: it reads as its proposal, in its proposer's words, then one Vote panel (`Panel`, [the UI core](../../core/ui/index.md#panels)): its state's pill and deadline at its head, the tally of the roll, where it stands by its procedure, and what it decides, each action with its arguments as chips, a policy linking to the motion that made it; its footer holds the stances its method takes as one run at its right end, Consent or For `positive` with a check, Object or Against `danger` with a raised hand, Abstain `quiet`, those but the reader's own stepping back to quiet once they have given one, and on its left the reader's stance or why they may not vote. The title is not repeated. Its turnout is the Vote's, never a property of the drawer.
 
 ## Actions
 
@@ -182,7 +182,7 @@ capital and work share terms are its own.
 
 ### Ballots
 
-A motion is decided by open or secret ballot, fixed as it is proposed: its procedure's, unless the proposal names the other. The built-in procedures a motion is put by are open, and `membership-motion`'s Propose… and Appoint… name a secret ballot for electing or removing a person, as co-ops commonly do; a co-op's own procedure says which its motions take. `motion.secret(motion)` says whether one is secret.
+A motion is decided by open or secret ballot, fixed as it is proposed: its procedure's, unless the proposal names the other. The built-in procedures a motion is put by are open, and `membership-motion`'s Propose… and Appoint… name a secret ballot for electing or removing a person, as coops commonly do; a coop's own procedure says which its motions take. `motion.secret(motion)` says whether one is secret.
 
 - **Open**: a stance is logged as given, and every member reads every stance.
 - **Secret**: the vote logs the stance as a salted commitment (`cella.personal` registers `motion.vote.stance`), and the vault keeps the stance under its member's key. The entry names its actor, as every entry does, so the log says that a member gave a stance and when, never which. In the read model, a row-level policy lets the app read a secret stance only as its own member's, or in a write's transaction; the guards role reads them all. How the roll and the tally show is `membership-motion`'s: the tally sealed until the close, each member's stance never.
@@ -368,7 +368,7 @@ so is a right. It reads as its reader, so it shows the actions of the motions it
   chain as an issuer (`circle.chain`), the one that issued it or one
   that issued a mandate it is issued under, the assembly on every chain.
   A rule marking open books' disclosure values, the parts of the
-  structure it publishes or the co-op's particulars is the assembly's and
+  structure it publishes or the coop's particulars is the assembly's and
   marks them soundly (`circle_policy.disclosure_flaw`,
   `circle.publication_flaw`, `circle.particulars_flaw`), and, since one
   of each stands at a time, replaces the one in force on days its own
@@ -500,8 +500,8 @@ why, posted to the `put` membership-motion serves (below, under
 Shell); and, in its Policies tab, the
 policies it adopted that are in force, each as its legal wording
 reads (`policy.sentence`), its kind, whether it takes a default of the
-co-op's legal form (Default, or Default, since updated, where cella has
-changed that default since) or is the co-op's own, the motion that
+coop's legal form (Default, or Default, since updated, where cella has
+changed that default since) or is the coop's own, the motion that
 adopted it, linked, and the days it applies from and until, read from
 the register in org's core (`inForce` in `@cella/org-policy`); and,
 where the circle left any, its Defaults left: each default of its form
@@ -509,7 +509,7 @@ it left or never took, its sentence, its form, the motion's action that
 left it, linked, and the day (`departures`,
 [legal forms](../../../../_corpus/doc/forms.md)).
 
-On the assembly's page, in the same tab, Open books is where the co-op configures what
+On the assembly's page, in the same tab, Open books is where the coop configures what
 it shares with every member of the totals of members' own figures,
 their pay, time, capital, work share and expenses (`disclosure`, read
 from `circle.disclosed` on the verdict date). It says whether a

@@ -27,7 +27,7 @@
   // spend over its period yet.
   const capped = (p: Power) => (p.budget !== null ? `${cap(p).replace(/^within /, '')}, unchecked` : cap(p).replace(/^up to /, ''))
   const reach = (p: Power) =>
-    p.right ? 'their own' : p.scope === null ? 'the whole co-op' : p.scope === 'own' ? `${p.circleName}, its own` : (p.scopeName ?? p.scope)
+    p.right ? 'their own' : p.scope === null ? 'the whole coop' : p.scope === 'own' ? `${p.circleName}, its own` : (p.scopeName ?? p.scope)
 
   const columns: Column<Power>[] = [
     { key: 'power', label: 'Power', kind: 'title', value: (p) => power(p.power) },

@@ -13,7 +13,7 @@ import Body from './blocks/Body.svelte'
 // quarters, and the months of the year its span is in; the federation
 // figures' distributed years.
 function moves(d: Drawn): { label: string; sub?: string; href: string }[] {
-  const at = (q: string) => `/reports/${d.report.id}?tab=figures&${q}`
+  const at = (q: string) => `/reports/${d.report.id}?${q}`
   if ((d.report.kind === 'income' || d.report.kind === 'balance') && d.drawn) {
     const s = d.drawn as Sheet
     const year = s.span.id.slice(0, 4)
@@ -33,8 +33,8 @@ function moves(d: Drawn): { label: string; sub?: string; href: string }[] {
 const read = (d: Drawn) => (d.failed ? d.failed : d.head ? `read at the log's entry ${d.head.n}` : '')
 
 // The feat's client side: the saved reports, each page saying what its
-// report reads and drawing it through the port in its Figures tab, and
-// saving a member's own.
+// report reads and opening on what it draws through the port, its
+// figures' panels, and saving a member's own.
 export const app: App = {
   name: 'report',
   collections: {
@@ -61,17 +61,20 @@ export const app: App = {
         summary: (d: Drawn) => [d.report.caption, read(d)].filter(Boolean).join('; '),
         properties: (d: Drawn) => [
           { label: 'Kind', value: d.report.kind, kind: 'badge' },
-          { label: 'Read at entry', value: d.head?.n ?? null, kind: 'number' },
-          ...(d.report.owner ? [{ label: 'Saved by', value: d.report.owner }, { label: 'Saved on', value: d.report.saved, kind: 'date' as const }] : []),
+          { label: 'Read at entry', value: d.head?.n ?? null, kind: 'mono', lead: 'read at entry' },
+          ...(d.report.owner
+            ? [
+                { label: 'Saved by', value: d.report.owner, kind: 'person' as const, lead: 'saved by' },
+                { label: 'Saved on', value: d.report.saved, kind: 'date' as const, lead: 'saved' },
+              ]
+            : []),
         ],
         related: moves,
-        // What it reads and when, then what it drew, the data central to it,
-        // in a tab of its own.
-        tabs: [
-          { id: 'overview', label: 'Overview' },
-          { id: 'figures', label: 'Figures' },
-        ],
-        blocks: [Body, ...[Statement, Margins, Federation, Custom].map((block) => ({ tab: 'figures', block }))],
+        // What it reads and when, then what it drew, the data central to
+        // it, in panels; each kind's panels draw only for a report of it.
+        layout: 'panels',
+        body: Body,
+        blocks: [Statement, Margins, Federation, Custom],
       },
     },
   },

@@ -4,7 +4,8 @@ import Lines from './blocks/Lines.svelte'
 import Body from './blocks/Body.svelte'
 
 // The feat's client side: the journal as the shell's transactions, and an
-// entry's page, named by its label, its lines in a tab of their own.
+// entry's page, named by its label, which opens on its lines, then its
+// notes.
 export const app: App = {
   name: 'transaction',
   collections: {
@@ -28,17 +29,14 @@ export const app: App = {
         title: (e: Detail) => e.label,
         subtitle: (e: Detail) => e.id,
         properties: (e: Detail) => [
-          { label: 'Date', value: e.date, kind: 'date' },
-          { label: 'Amount', value: e.amount, kind: 'money' },
-          { label: 'Receipt', value: e.receipt, kind: 'number' },
-          { label: 'Corrects', value: e.corrects, kind: 'mono', href: e.corrects ? `/transactions/${e.corrects}` : undefined },
+          { label: 'Date', value: e.date, kind: 'date', lead: 'dated' },
+          { label: 'Receipt', value: e.receipt, kind: 'mono', lead: 'receipt' },
+          { label: 'Corrects', value: e.corrects, kind: 'mono', href: e.corrects ? `/transactions/${e.corrects}` : undefined, lead: 'corrects' },
         ],
         related: (e: Detail) => e.corrected.map((c) => ({ label: c, sub: 'corrects it', href: `/transactions/${c}` })),
-        tabs: [
-          { id: 'overview', label: 'Overview' },
-          { id: 'lines', label: 'Lines' },
-        ],
-        blocks: [Body, { tab: 'lines', block: Lines }],
+        layout: 'panels',
+        body: Body,
+        blocks: [Lines],
       },
     },
   },

@@ -14,7 +14,7 @@ import pg from 'pg'
 
 const db = new pg.Client()
 
-const solidarity = 'Associations and small co-ops pay the solidarity rate, {rate: 20 % | less is stricter} below the rate card'
+const solidarity = 'Associations and small coops pay the solidarity rate, {rate: 20 % | less is stricter} below the rate card'
 
 const refused = async (sql: string, values: unknown[], says: RegExp) => {
   await db.query('SAVEPOINT refused')
@@ -74,7 +74,7 @@ test('a legal wording\'s values are those it marks, each typed by how it is writ
     { n: 6, name: 'power', literal: 'pay-supplier', type: 'power', value: 'pay-supplier' },
   ])
   const read = (await db.query<{ s: string }>('SELECT policy.sentence($1) AS s', [solidarity])).rows[0].s
-  assert.equal(read, 'Associations and small co-ops pay the solidarity rate, 20 % below the rate card')
+  assert.equal(read, 'Associations and small coops pay the solidarity rate, 20 % below the rate card')
 })
 
 test('a wording that marks a value twice, marks one without a value, or holds a stray brace is flawed; a friendly one marks none', async () => {
@@ -197,7 +197,7 @@ test('a proposal adopts only a sound policy of a kind, applying no earlier than 
 })
 
 test('a publication or a disclosure rule proposed replaces the one standing on days its own meet, and a motion proposes one of a kind', async () => {
-  const publishes = (parts: string) => `The co-op publishes its {publish: ${parts}} to every person signed in to the scope, member or not`
+  const publishes = (parts: string) => `The coop publishes its {publish: ${parts}} to every person signed in to the scope, member or not`
   const asks = async (...actions: object[]) => {
     await db.query('SAVEPOINT asking')
     try {

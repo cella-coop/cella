@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Section, Table, type Column } from '@cella/org-ui'
+  import { icons, Panel, Table, type Column } from '@cella/org-ui'
   import type { Line, Run } from '../../models/run.ts'
 
   // What each line of the file came to: the write it made and how, with
@@ -18,6 +18,11 @@
   ]
 </script>
 
-<Section title={data.dry ? 'What it would make' : 'What it made'} count={data.lines.length}>
-  <Table {columns} {rows} />
-</Section>
+<Panel
+  title={data.dry ? 'What it would make' : 'What it made'}
+  icon={icons.FileArrowUp}
+  count={data.lines.length}
+  meta={[`${data.settled} settled`, data.refused ? `${data.refused} refused` : null]}
+>
+  <Table dense {columns} {rows} />
+</Panel>

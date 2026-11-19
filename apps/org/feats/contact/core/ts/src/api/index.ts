@@ -37,7 +37,6 @@ export const slice: Slice = {
       actions: {
         ...bodyActions,
         client: action('contact:contact:update', (form, id) => ({ id: id ?? '', fields: { client: stage(form.get('client')) } }), update),
-        note: action('contact:contact:update', (form, id) => ({ id: id ?? '', fields: { note: form.get('note') } }), update),
       },
     },
   },

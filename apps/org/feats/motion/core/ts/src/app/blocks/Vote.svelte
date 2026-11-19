@@ -1,16 +1,18 @@
 <script lang="ts">
-  import { date, Value, Cell, Form, Hidden, icons, Note, power, Row, Inlay, Tally, type Viewer } from '@cella/org-ui'
+  import type { Component } from 'svelte'
+  import { Cell, date, Form, Hidden, icons, Note, Panel, power, Row, Tally, type Tone, type Viewer } from '@cella/org-ui'
   import { stances, type Detail, type Labelled, type Stance } from '../../models/motion.ts'
 
-  // The motion's vote, one widget after the proposal: its state and
-  // deadline, the tally so far, where it stands by its procedure, each
-  // stance its method takes as a button in a row with the reader's own
-  // marked, and what it decides, each action as its kind names it with
+  // The motion's vote, one panel after the proposal: its state and
+  // deadline at its head, the tally so far, where it stands by its
+  // procedure, and what it decides, each action as its kind names it with
   // its arguments as chips, a policy linking to the motion that made it,
-  // and each default a legal form's policy its actions leave. Closed, or
-  // off its roll, the buttons give way to why. The vote itself is
-  // `motion:motion:vote`, cast as the Stances tab's form casts it; this
-  // never computes it.
+  // and each default a legal form's policy its actions leave. Its footer
+  // holds the stances its method takes, one run at its right end, each
+  // in its own tone with its icon, and on its left the reader's own
+  // stance; closed, or off its roll, the buttons give way to why. The
+  // vote itself is `motion:motion:vote`, cast as the Stances tab's form
+  // casts it; this never computes it.
   let { data, viewer }: { data: Detail; id: string; viewer?: Viewer | null } = $props()
 
   const closed = $derived(!!data.closed)
@@ -39,8 +41,21 @@
   const tones = { consent: 'positive', for: 'positive', object: 'negative', against: 'negative' } as const
   const bars = $derived(options.map((s) => ({ label: s, value: counts.get(s) ?? 0, tone: tones[s as keyof typeof tones] ?? 'neutral' })))
 
+  // Each stance's button: an affirmative one positive with a check, an
+  // objection a refusal's tone with a raised hand, an abstention quiet;
+  // once the reader has given one, the others step back to quiet.
+  const looks: Record<string, { tone: 'positive' | 'danger' | 'quiet'; lead: Component<any> }> = {
+    consent: { tone: 'positive', lead: icons.Check },
+    for: { tone: 'positive', lead: icons.Check },
+    object: { tone: 'danger', lead: icons.Hand },
+    against: { tone: 'danger', lead: icons.Hand },
+    abstain: { tone: 'quiet', lead: icons.Minus },
+  }
+  const tone = (s: Stance) => (mine && mine.stance !== s ? 'quiet' : (looks[s]?.tone ?? 'quiet'))
+  const word = (s: string) => `${s.charAt(0).toUpperCase()}${s.slice(1)}`
+
   const state = $derived(closed ? (data.tally.passes ? 'passed' : 'rejected') : 'open')
-  const stateTone = $derived(state === 'passed' ? 'positive' : state === 'rejected' ? 'negative' : 'accent')
+  const stateTone: Tone = $derived(state === 'passed' ? 'positive' : state === 'rejected' ? 'negative' : 'accent')
   const by = $derived(data.terms.label.toLowerCase())
   // Where it stands, as the database computes it: passing or not while
   // open, passed or rejected once closed, short of its quorum if it is.
@@ -55,6 +70,7 @@
     return `${verb} by ${by}${data.tally.quorate === false ? ', short of its quorum' : ''}`
   })
   const turnout = $derived(data.tally.counted === null ? null : `${data.tally.given ?? 0} of ${data.tally.counted} stances`)
+  const votes = $derived(!closed && !!viewer && !!data.seated)
 
   // An action's arguments as chips: a member as their name, a policy as a
   // link to the motion that adopted it, any other by its label.
@@ -73,33 +89,42 @@
       })
 </script>
 
-<Inlay name="Vote" icon={icons.Scales}>
-  {#snippet aside()}
-    <Value value={state} kind="badge" tone={stateTone} />
-    <span>{closed ? 'Closed' : 'Closes'} {date(closed ? data.closed : data.deadline)}</span>
-  {/snippet}
+{#snippet why()}
+  {#if closed}
+    The vote is closed.
+  {:else if !viewer}
+    Sign in as a member to vote.
+  {:else if !data.seated}
+    You are not on this motion's roll, so you may not vote.
+  {:else if mine}
+    Your stance: {mine.stance}, given {date(mine.at)}.
+  {:else}
+    You have given no stance yet.
+  {/if}
+{/snippet}
 
+{#snippet cast()}
+  {#each options as s (s)}
+    <Form action="vote" button submit={word(s)} tone={tone(s)} lead={looks[s]?.lead}>
+      <Hidden name="stance" value={s} />
+    </Form>
+  {/each}
+{/snippet}
+
+<Panel
+  title="Vote"
+  icon={icons.Scales}
+  status={{ label: state, tone: stateTone }}
+  meta="{closed ? 'Closed' : 'Closes'} {date(closed ? data.closed : data.deadline)}"
+  help={why}
+  actions={votes ? cast : undefined}
+>
   {#if secret && !closed}
     <Note text="Secret ballot: {turnout ?? 'sealed until the close'} given; the tally opens at the close." />
   {:else if !closed}
-    <Tally items={bars} />
+    <Tally items={bars} of={data.tally.counted ?? undefined} />
   {/if}
   <Note text={[outcome, turnout].filter(Boolean).join(' · ')} />
-
-  {#if !closed && !viewer}
-    <Note text="Sign in as a member to vote." subtle />
-  {:else if !closed && !data.seated}
-    <Note text="You are not on this motion's roll, so you may not vote." subtle />
-  {:else if !closed}
-    <Row>
-      {#each options as s (s)}
-        <Form action="vote" submit={s} tone={mine?.stance === s ? 'primary' : 'quiet'} inline>
-          <Hidden name="stance" value={s} />
-        </Form>
-      {/each}
-    </Row>
-    {#if mine}<Note text="Your stance: {mine.stance}, given {date(mine.at)}." subtle />{/if}
-  {/if}
 
   {#each data.actions as m (m.id)}
     <Row>
@@ -116,4 +141,4 @@
   {#each data.leaves as l (l.id)}
     <Note text="Leaves the {l.form} default, by {l.action}: {l.sentence}." subtle />
   {/each}
-</Inlay>
+</Panel>

@@ -37,7 +37,7 @@ export interface Admitted {
 // Someone invited to join, by the address they will hold, and the link
 // their invitation is taken up by, if it comes with one: the SHA-256 in
 // hex of a secret the inviter's browser drew, which only the link holds.
-// Someone the co-op knows already, as a worker, keeps their name.
+// Someone the coop knows already, as a worker, keeps their name.
 export interface Invite {
   address: string
   name: string

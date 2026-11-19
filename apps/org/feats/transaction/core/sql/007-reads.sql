@@ -1,6 +1,6 @@
 -- Who reads the books: whoever keeps, carries or closes them reads every
 -- line; a graft that knows whose an account is opens its lines to more
--- readers, `key` naming the line's account, as the co-op's own accounts'
+-- readers, `key` naming the line's account, as the coop's own accounts'
 -- to every member. An entry reads wherever one of its lines does. A
 -- write's transaction sees the whole journal, as its guards do.
 INSERT INTO cella.reading (what, key, power, owner) VALUES

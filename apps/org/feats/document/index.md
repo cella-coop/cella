@@ -1,9 +1,9 @@
 +++
 title = "Document"
-updated = 2026-11-17
+updated = 2026-11-19
 +++
 
-The co-op's texts: statutes, internal rules, rate cards, policies and
+The coop's texts: statutes, internal rules, rate cards, policies and
 minutes, written together and adopted by motion. A document is a Loro
 tree of blocks that members edit at once; a version is a named, immutable
 point in its history, named by the hash of its canonical form; adoption
@@ -42,7 +42,7 @@ meetings.
 A document may be generated from a circle's policies, as the statutes
 are from the assembly's: `document.generated` names the circle, by id
 as the policy register names it, and the template, the fixed text of the
-co-op's legal form, as blocks (the fragments `create` takes). In the
+coop's legal form, as blocks (the fragments `create` takes). In the
 template, an `embed` block of kind `policies` stands where the policies
 read, its `ref` a kind (`procedure`, `mandate` or `rule`), or empty for
 every kind. Generating replaces each with one `numbered` block per
@@ -244,7 +244,7 @@ circle whose policies it reads, which it names always.
 - `edit` (confluent): checks the update imports onto the draft and leaves
   it with a canonical form (bytes that are not are thrown, not logged),
   appends it with a receipt and submits its BLAKE3 digest, its number
-  and its bytes in hex: a document's text is the co-op's, so the log
+  and its bytes in hex: a document's text is the coop's, so the log
   keeps it as it is.
 - `version` (confluent): merges the updates, snapshots the document at the
   given frontier or the latest, and saves it with its frontier and version
@@ -336,7 +336,9 @@ puts the focus in the comment's text; another selection attached
 replaces it. A document with no version takes no comment. The box posts
 `comment`, by its arrow or Ctrl or Cmd with Enter, and a posted
 comment's quote is highlighted in the draft as the page refreshes. Its
-saved versions, the data central to it, are the Versions tab after the
+page is laid out as `body` ([record page
+layout](../../../../_corpus/doc/architecture.md#record-page-layout)), the
+draft its body; its saved versions are the Versions tab after the
 draft. The server renders the draft read-only; the editor takes it
 over once the browser holds the Loro document. A generated document's
 page reads its draft without the editor or the header's New version,

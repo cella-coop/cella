@@ -1,6 +1,6 @@
 +++
 title = "Meeting"
-updated = 2026-11-17
+updated = 2026-11-19
 +++
 
 Circles meeting: when and where, what is on the agenda, and whether the
@@ -172,9 +172,11 @@ month by the day each meeting meets (the UI core's calendar layout,
 names, its card its place and status; the list, table,
 gallery, board by status and dashboard are a click away in the View
 card. A new meeting is scheduled from the New form. A meeting's page,
-its header's crumb its id, has two tabs: **Overview**, its content, the
-minutes `document-meeting` draws there, a document read as a document
-is, and under them its Activity: scheduled, minutes begun, held or
+its header's crumb its id, has two tabs: **Overview**, laid out as
+`body` ([record page
+layout](../../../../_corpus/doc/architecture.md#record-page-layout)), its
+body, then the minutes `document-meeting` draws there in a panel, a
+document read as a document is, and under them its Activity: scheduled, minutes begun, held or
 cancelled; and **Agenda**, the data central to it, the agenda as the UI
 core's `Ordered` list, its items dragged into order (each drop the
 `move` write, shown at once by `AgendaState` and put back if refused),

@@ -5,7 +5,8 @@ import Lines from './blocks/Lines.svelte'
 import Body from './blocks/Body.svelte'
 
 // The feat's client side: the imports made, a file imported or tried in a
-// dry run from the list, and each import's lines on its page.
+// dry run from the list, and each import's page, which opens on its lines,
+// then its notes.
 export const app: App = {
   name: 'import',
   collections: {
@@ -35,16 +36,16 @@ export const app: App = {
         eyebrow: 'Import',
         title: (r: Run) => r.name,
         subtitle: (r: Run) => `${r.id}, ${r.kind}, ${r.dry ? 'a dry run' : 'imported'}`,
+        // What it imported is its reference's.
         properties: (r: Run) => [
           { label: 'Run', value: r.dry ? 'dry run, undone' : 'imported', kind: 'badge', tone: r.dry ? 'neutral' : 'positive' },
-          { label: 'Kind', value: r.kind },
-          { label: 'Settled', value: r.settled, kind: 'number' },
-          { label: 'Refused', value: r.refused, kind: 'number', tone: r.refused ? 'negative' : undefined },
-          { label: 'On', value: r.day, kind: 'date' },
-          { label: 'By', value: r.actor, kind: 'person' },
+          { label: 'On', value: r.day, kind: 'date', lead: r.dry ? 'tried' : 'imported' },
+          { label: 'By', value: r.actor, kind: 'person', lead: 'by' },
         ],
         activity: (r: Run) => [{ at: r.day, text: r.dry ? 'tried in a dry run' : 'imported', who: r.actor }],
-        blocks: [Body, Lines],
+        layout: 'panels',
+        body: Body,
+        blocks: [Lines],
       },
     },
   },

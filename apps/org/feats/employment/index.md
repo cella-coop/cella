@@ -1,10 +1,10 @@
 +++
 title = "Employment"
-updated = 2026-11-16
+updated = 2026-11-19
 +++
 
 A person's employment, member or not: the job, the contract, the days it
-runs and the time it asks a week. In a worker co-op most workers are
+runs and the time it asks a week. In a worker coop most workers are
 members, 70 to 85 % of them, but not all: a new hire works a year before
 they may apply to join by right, and some never ask to.
 Employment is a feat of the app whose rows name a core person, as a
@@ -105,7 +105,7 @@ of the staff keeps it five years after they leave (Code du travail, art.
 R1221-26, not verified on Légifrance, which refuses the box). The person's
 own name is the person's, of class `profile`. The address is the
 pseudonym every entry names them by; the job and the contract are the
-co-op's. A hire's payload commits to the name, the key and the device's
+coop's. A hire's payload commits to the name, the key and the device's
 label, and to the person's name where the hire enters them new.
 
 ## Folds
@@ -142,8 +142,11 @@ The people are core's person's, so the employment adds to the `people`
 collection rather than owning one. Each row gains the Worker chip,
 employed or left, to filter and group by, with the job, the contract and
 the day employed beside it; the New form gains a hire with the worker's
-first device, under "Hire". A person's page gains their contract, the
-days it runs and the time it asks, and its days in the activity, and an
+first device, under "Hire". A person's page gains their contract and
+the days it runs among its properties, and all of it, the time it asks
+too, said in a sentence in a Work panel of its overview, whose footer
+opens their Work tab,
+and its days in the activity, and an
 Work tab, which the grafts joining employment fill: their months
 (`employment-timesheet`), their payslips (`employment-payslip`) and
 their employment records (`employment-file`).

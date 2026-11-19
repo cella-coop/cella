@@ -1,9 +1,9 @@
 +++
 title = "Expense"
-updated = 2026-11-17
+updated = 2026-11-19
 +++
 
-What the co-op's workers spend for it from their own pocket, to be paid back:
+What the coop's workers spend for it from their own pocket, to be paid back:
 claimed, submitted, approved or refused by someone with the power to,
 within their mandate's limit and their budget for the month, and
 reimbursed from the bank.
@@ -132,7 +132,7 @@ over its circle, and whoever holds `approve-expense` or
 acts on its holder reads. At Lanterne Inès, in Web and no member, reads
 Web's and the assembly's expenses and not Marketing's; every member,
 by open books, and the manager and finance, whose mandates cover the
-whole co-op, read every one.
+whole coop, read every one.
 
 ## Handlers
 
@@ -156,8 +156,12 @@ refuse, reimburse), with a dashboard of what awaits approval and
 reimbursement and the spend by category and month; a new claim as the
 acting member, which `expense-file` replaces with one carrying its
 receipt; and an expense's page, its header's crumb its id, with its next
-write; after its first, its Receipts and Postings tabs, which this feat
-chooses and `expense-file` and `expense-transaction` fill.
+write, laid out as `panels` ([record page
+layout](../../../../_corpus/doc/architecture.md#record-page-layout)): it
+opens on its Claim, its amounts with what is claimed ruled off and how
+far the claim has come, then the panels its extenders add and its Notes,
+its body; after its first, its Receipts and Postings tabs, which this
+feat chooses and `expense-file` and `expense-transaction` fill.
 
 ## Lanterne
 

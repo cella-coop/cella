@@ -21,7 +21,7 @@
 <Field label="Limit per write, €" name="arg.limit" type="number" bind:value={state.limit} />
 <Field label="Budget, €" name="arg.budget" type="number" bind:value={state.budget} />
 <Field label="Budget per" name="arg.per" options={pers} placeholder="—" bind:value={state.per} />
-<Field label="Covers" name="arg.scope" options={scopes} placeholder="the whole co-op" bind:value={state.scope} />
+<Field label="Covers" name="arg.scope" options={scopes} placeholder="the whole coop" bind:value={state.scope} />
 <Field label="From" name="arg.from" type="date" bind:value={state.from} />
 <Field label="Until" name="arg.until" type="date" bind:value={state.until} />
 {#if state.sentence}<Note text="It will read: {state.sentence}." />{/if}

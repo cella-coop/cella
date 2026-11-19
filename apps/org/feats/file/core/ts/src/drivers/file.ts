@@ -4,7 +4,7 @@ import { kinds, type File } from '../models/file.ts'
 const columns = `f.id, f.class, f.subject, f.name, f.type, f.size, encode(f.hash, 'hex') AS hash, f.uploader,
   to_char(f.uploaded, 'YYYY-MM-DD') AS uploaded`
 
-// Every file the co-op keeps as the collection lists them, the latest
+// Every file the coop keeps as the collection lists them, the latest
 // first, without its bytes: its class in words, as its chip shows it, and
 // as it is under `retention`.
 export const listing: Read = {
@@ -15,7 +15,7 @@ export const listing: Read = {
   order: `uploaded DESC, ${numbered('id', 'DESC')}`,
 }
 
-// Every file the co-op keeps, the latest first, without its bytes.
+// Every file the coop keeps, the latest first, without its bytes.
 export async function files(db: Db): Promise<File[]> {
   const { rows } = await db.query<File>(`SELECT ${columns} FROM file.file f ORDER BY f.uploaded DESC, ${numbered('f.id', 'DESC')}`)
   return rows

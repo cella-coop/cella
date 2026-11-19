@@ -5,7 +5,7 @@
 -- 2006/112/EC, art. 226; code de commerce L441-9 and R123-237). An issued
 -- invoice is corrected only by a void, so a missing mention is kept out
 -- here or not at all; the refusal names each, and for the seller's the
--- value of the co-op's particulars that marks it.
+-- value of the coop's particulars that marks it.
 CREATE FUNCTION invoice.identified(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC

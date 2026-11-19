@@ -11,7 +11,7 @@ type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 // the project's circle, which the payload names for the power's guard: a
 // root, or a reply to a root, which reopens it. Each `@[address]` its
 // text gives is a mention, a row each in the order given, of a person the
-// co-op knows; `project.posts` refuses a reply to a reply, naming the root, a
+// coop knows; `project.posts` refuses a reply to a reply, naming the root, a
 // mention of no one, and a post naming otherwise than its rows. The text
 // is its author's free text, and the log keeps it as written.
 export async function postComment(input: CommentPost, deps: Deps): Out<'project:comment:post', CommentPosted> {

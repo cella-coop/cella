@@ -43,29 +43,25 @@ export const app: App = {
         title: (p: Detail) => p.title,
         subtitle: (p: Detail) => p.id,
         summary: (p: Detail) => p.summary,
-        // On top, grouped: its state and progress, its circle, its lead
-        // and crew (the membership-project graft's), then its dates and
-        // its money; Created, Updated and by whom sit in their own
-        // History at the drawer's foot instead, kept off this page's
-        // crowded top (`history: false`, below).
+        // Its state, its circle, its client and crew (the grafts'), then
+        // its dates, each placed by its kind; Created, Updated and by whom
+        // sit in their own History at the drawer's foot instead, kept off
+        // this page's crowded top (`history: false`, below).
         properties: (p: Detail) => [
           // Its own icon, a cosmetic setting, picked in its popover.
           { label: 'Icon', value: recordIcons.find((i) => i.slug === p.icon)?.name ?? null, icon: recordIcon(p.icon), ink: p.title, edit: { kind: 'icon' as const, write: 'icon', field: 'icon', current: p.icon } },
-          { label: 'State', value: p.archived ? 'archived' : p.state, kind: 'badge', tone: p.archived ? 'neutral' : tones[p.state], group: 'State' },
-          { label: 'Milestones', value: progress(p), group: 'State' },
-          { label: 'Next', value: p.next, group: 'State' },
-          { label: 'Circle', value: p.circle, kind: 'circle' as const, group: 'Circle' },
-          { label: 'Started', value: p.started, kind: 'date', group: 'Dates' },
-          { label: 'Due', value: p.due, kind: 'date', group: 'Dates' },
-          ...(p.archived ? [{ label: 'Archived', value: p.archived, kind: 'date' as const, group: 'Dates' }] : []),
-          {
-            label: 'Budget',
-            value: p.budget,
-            kind: 'money',
-            group: 'Money',
-            // Typed in euros; ordered, and refused below what was shared from it.
-            edit: p.archived ? undefined : { kind: 'text' as const, number: true, write: 'budget', field: 'amount', current: p.budget === null ? '' : String(p.budget / 100), hint: 'Budget in euros, 48000' },
-          },
+          { label: 'State', value: p.archived ? 'archived' : p.state, kind: 'badge', tone: p.archived ? 'neutral' : tones[p.state] },
+          { label: 'Next', value: p.next, glyph: icons.ArrowRight, lead: 'next' },
+          { label: 'Circle', value: p.circle, kind: 'circle' as const },
+          { label: 'Started', value: p.started, kind: 'date' },
+          { label: 'Due', value: p.due, kind: 'date' },
+          ...(p.archived ? [{ label: 'Archived', value: p.archived, kind: 'date' as const }] : []),
+        ],
+        // Its budget, set on its Budget tab, and its progress where it has
+        // milestones, before what the grafts spend of it.
+        figures: (p: Detail) => [
+          { label: 'Budget', value: p.budget, kind: 'money' },
+          ...(p.total ? [{ label: 'Milestones', value: progress(p) }] : []),
         ],
         history: false,
         activity: (p: Detail) => [
@@ -78,8 +74,9 @@ export const app: App = {
           { id: 'milestones', label: 'Milestones' },
           { id: 'budget', label: 'Budget' },
         ],
+        layout: 'body',
+        body: Body,
         blocks: [
-          Body,
           { tab: 'milestones', block: Milestones },
           { tab: 'budget', block: Budget },
         ],

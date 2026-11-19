@@ -1,6 +1,6 @@
 CREATE SCHEMA employment;
 
--- Someone the co-op employs, member or not, by the address they sign
+-- Someone the coop employs, member or not, by the address they sign
 -- with: their job, the contract they hold, the days it runs from and to,
 -- both included, and the time it asks of them a week, in minutes. A
 -- permanent contract runs until the worker leaves; a fixed-term one, or

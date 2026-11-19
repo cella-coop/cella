@@ -43,7 +43,7 @@ export function proposing(input: Propose): Write<Proposed> {
         [input.circle, input.title, procedure, input.deadline, input.body, input.ballot ?? null, input.author ?? null],
       )
       if (!rows[0]) {
-        throw new Error(`a motion is taken by a procedure of the co-op’s, not “${procedure}”`)
+        throw new Error(`a motion is taken by a procedure of the coop’s, not “${procedure}”`)
       }
       const { proposer: by, ...proposed } = rows[0]
       proposer = by

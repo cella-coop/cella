@@ -1,6 +1,6 @@
 CREATE SCHEMA payslip;
 
--- What the co-op pays: the rates of the contributions on gross pay, the
+-- What the coop pays: the rates of the contributions on gross pay, the
 -- employee's taken from it and the employer's on top of it, until an
 -- integration computes them line by line; and the widest ratio its guards
 -- allow between the highest and the lowest salary.
@@ -152,7 +152,7 @@ BEGIN ATOMIC
   LEFT JOIN payslip.run r ON r.month = x.month;
 END;
 
--- Why a run's pay spreads wider than the co-op's ratio between the highest
+-- Why a run's pay spreads wider than the coop's ratio between the highest
 -- and the lowest gross salary, or NULL.
 CREATE FUNCTION payslip.spread(month text) RETURNS text
 LANGUAGE sql STABLE
@@ -168,7 +168,7 @@ BEGIN ATOMIC
 END;
 
 -- payslip:run:approve — the write approved a prepared run on the verdict
--- date, and its pay keeps within the co-op's ratio.
+-- date, and its pay keeps within the coop's ratio.
 CREATE FUNCTION payslip.approves(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC

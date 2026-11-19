@@ -35,7 +35,7 @@ CREATE FUNCTION membership.ends(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
-    WHEN m.address IS NULL THEN CASE WHEN p.address IS NULL THEN 'no member is named' ELSE 'the member named is not one of the co-op''s' END
+    WHEN m.address IS NULL THEN CASE WHEN p.address IS NULL THEN 'no member is named' ELSE 'the member named is not one of the coop''s' END
     WHEN split_part(cella.action(), ':', 3) = 'suspend'
       AND (m.status <> 'suspended' OR m.suspended IS DISTINCT FROM cella.verdict_date())
       THEN 'this write suspended no one: the member is ' || m.status

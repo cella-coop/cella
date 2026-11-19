@@ -8,7 +8,7 @@ type Action = keyof typeof actions
 
 // The hire: the worker and their contract, recorded on the verdict date,
 // with their first device, enrolled by no device, so they sign their own
-// time from their first day. Someone the co-op knows already, as a member,
+// time from their first day. Someone the coop knows already, as a member,
 // is the same person and keeps their name; someone new becomes a person.
 // The register of the staff copies the name, which is personal data: the
 // log commits to it and the vault keeps it. The payload commits to the

@@ -3,7 +3,7 @@
   import type { Proposing } from '../../models/circles.ts'
   import { useDisclosure } from '../../hooks/useDisclosure.ts'
 
-  // On the assembly's page, what the co-op shares with every member of
+  // On the assembly's page, what the coop shares with every member of
   // the totals of members' own figures: open books' disclosure rule in
   // force, each setting said in full with whether the value proposed
   // exposes personal data and why, as it is typed; proposing new values

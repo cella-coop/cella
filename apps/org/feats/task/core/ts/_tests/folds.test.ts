@@ -36,19 +36,19 @@ after(async () => {
 })
 
 test('a task folds created, moved, completed and reopened', async () => {
-  await fold('fold_create', 1, 'task:task:create', '2041-01-15', { task: 't-9001', created: '2041-01-15', title: commitment, priority: 'high', due: '2041-02-01', status: 'todo' })
-  assert.deepEqual(await task(), { title: 'redacted', status: 'todo', priority: 'high', due: '2041-02-01', created: '2041-01-15', completed: null })
+  await fold('fold_create', 1, 'task:task:create', '2041-01-15', { task: 't-9001', created: '2041-01-15', title: commitment, priority: 'high', due: '2041-02-01', status: 'next' })
+  assert.deepEqual(await task(), { title: 'redacted', status: 'next', priority: 'high', due: '2041-02-01', created: '2041-01-15', completed: null })
   assert.equal((await one<{ n: string }>(`SELECT count(*) AS n FROM cella.commitment WHERE field = 'task.task.title' AND subject = 't-9001'`)).n, '1')
-  await fold('fold_move', 2, 'task:task:move', '2041-01-16', { task: 't-9001', status: 'doing', completed: null })
+  await fold('fold_move', 2, 'task:task:move', '2041-01-16', { task: 't-9001', status: 'active', completed: null })
   await fold('fold_complete', 3, 'task:task:complete', '2041-01-17', { task: 't-9001', status: 'done', completed: '2041-01-17' })
   await fold('fold_complete', 4, 'task:task:complete', '2041-01-18', { task: 't-9001', status: 'done', completed: '2041-01-17' })
   assert.deepEqual(await task(), { title: 'redacted', status: 'done', priority: 'high', due: '2041-02-01', created: '2041-01-15', completed: '2041-01-17' })
-  await fold('fold_move', 5, 'task:task:move', '2041-01-19', { task: 't-9001', status: 'todo', completed: null })
-  assert.deepEqual(await task(), { title: 'redacted', status: 'todo', priority: 'high', due: '2041-02-01', created: '2041-01-15', completed: null })
+  await fold('fold_move', 5, 'task:task:move', '2041-01-19', { task: 't-9001', status: 'next', completed: null })
+  assert.deepEqual(await task(), { title: 'redacted', status: 'next', priority: 'high', due: '2041-02-01', created: '2041-01-15', completed: null })
 })
 
 test('a task folds its priority and its due day changed, and a due day cleared', async () => {
-  await fold('fold_create', 20, 'task:task:create', '2041-02-01', { task: 't-9010', created: '2041-02-01', title: commitment, priority: 'normal', due: '2041-03-01', status: 'todo' })
+  await fold('fold_create', 20, 'task:task:create', '2041-02-01', { task: 't-9010', created: '2041-02-01', title: commitment, priority: 'normal', due: '2041-03-01', status: 'next' })
   const row = () => one(`SELECT priority, to_char(due, 'YYYY-MM-DD') AS due FROM task.task WHERE id = 't-9010'`)
   await fold('fold_set', 21, 'task:task:set', '2041-02-02', { task: 't-9010', priority: 'urgent' })
   assert.deepEqual(await row(), { priority: 'urgent', due: '2041-03-01' })
@@ -66,7 +66,7 @@ test('a body folds saved as the snapshot its entry carries, and a later save rep
     return doc.export({ mode: 'snapshot' })
   }
   const hex = (b: Uint8Array) => Buffer.from(b).toString('hex')
-  await fold('fold_create', 6, 'task:task:create', '2041-01-20', { task: 't-9002', created: '2041-01-20', title: commitment, priority: 'normal', due: null, status: 'todo' })
+  await fold('fold_create', 6, 'task:task:create', '2041-01-20', { task: 't-9002', created: '2041-01-20', title: commitment, priority: 'normal', due: null, status: 'next' })
   const first = body('Check the payment provider’s sandbox')
   await fold('fold_body_save', 7, 'task:body:save', '2041-01-20', { task: 't-9002', circle: 'ag', snapshot: hex(first), contributors: [sacha] })
   const saved = async () => (await one<{ body: Buffer; text: string }>(`SELECT body, cella.document_text(body) AS text FROM task.task WHERE id = 't-9002'`))
@@ -105,7 +105,7 @@ test('a save naming a contributor who holds no discuss in the task’s circle is
 
 test('a comment folds posted under its receipt with its mentions; a reply reopens its root, and a resolve resolves or reopens it', async () => {
   await db.query(`INSERT INTO person.person (circle, address, name) VALUES (circle.assembly(), $1, 'Sacha Folded'), (circle.assembly(), 'noor@folded.example', 'Noor Folded')`, [sacha])
-  await fold('fold_create', 9, 'task:task:create', '2041-01-22', { task: 't-9003', created: '2041-01-22', title: commitment, priority: 'normal', due: null, status: 'todo' })
+  await fold('fold_create', 9, 'task:task:create', '2041-01-22', { task: 't-9003', created: '2041-01-22', title: commitment, priority: 'normal', due: null, status: 'next' })
   const root = { task: 't-9003', circle: 'ag', comment: 9010, parent: null, text: 'Ready for @[noor@folded.example]?', mentions: ['noor@folded.example'] }
   await fold('fold_comment_post', 10, 'task:comment:post', '2041-01-22', root)
   const comment = (id: number) =>
@@ -136,7 +136,7 @@ test('a reply to a reply, resolving a reply and a mention of no one are refused,
   await db.query(`INSERT INTO task.comment (id, task, author, parent, text, posted) VALUES (9031, 't-9003', $1, NULL, 'For @[nobody@folded.example]', '2041-01-27')`, [sacha])
   assert.match(
     (await posts({ task: 't-9003', comment: 9031, parent: null, text: 'For @[nobody@folded.example]', mentions: ['nobody@folded.example'] })) ?? '',
-    /^@\[nobody@folded\.example\] names no one the co-op knows/,
+    /^@\[nobody@folded\.example\] names no one the coop knows/,
   )
 })
 

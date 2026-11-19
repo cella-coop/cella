@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { Section, Table, type Column } from '@cella/org-ui'
+  import { icons, money, Panel, Table, type Column } from '@cella/org-ui'
   import type { Booked, Detail } from '../../models/transaction.ts'
 
   // An entry's lines; its debits and credits balance, or it never posted.
+  // The overview's panel.
   let { data }: { data: Detail; id: string } = $props()
 
   const columns: Column<Booked>[] = [
@@ -12,6 +13,6 @@
   ]
 </script>
 
-<Section title="Lines" count={data.lines.length}>
-  <Table {columns} rows={data.lines} href={(l: Booked) => `/accounts/${l.account}`} />
-</Section>
+<Panel title="Lines" icon={icons.ArrowsLeftRight} count={data.lines.length} meta={money(data.amount)}>
+  <Table dense {columns} rows={data.lines} href={(l: Booked) => `/accounts/${l.account}`} />
+</Panel>

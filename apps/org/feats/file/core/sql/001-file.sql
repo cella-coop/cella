@@ -8,10 +8,10 @@ CREATE FUNCTION file.largest() RETURNS integer
 LANGUAGE sql IMMUTABLE
 RETURN 10485760;
 
--- A file the co-op keeps: its name and media type as they were uploaded,
+-- A file the coop keeps: its name and media type as they were uploaded,
 -- its size and its bytes, named by their BLAKE3, which anyone holding the
 -- file can compute again; who uploaded it and on what day. `class` is the
--- retention class of the personal data it holds, `none` for the co-op's
+-- retention class of the personal data it holds, `none` for the coop's
 -- own, and `subject` whose data it is. A file never changes: only the
 -- notary's redaction empties its name and bytes, and its hash with them.
 -- What it is attached to is the graft's that attaches it.
@@ -33,7 +33,7 @@ CREATE TABLE file.file (
 ) PARTITION BY LIST (class);
 
 -- One part for each class, so that each registers its personal columns
--- under its own class and erasure redacts them by it: the co-op's own
+-- under its own class and erasure redacts them by it: the coop's own
 -- files, receipts, employment records and member records.
 CREATE TABLE file.shared PARTITION OF file.file FOR VALUES IN ('none');
 CREATE TABLE file.receipt PARTITION OF file.file FOR VALUES IN ('expense-receipt');
@@ -64,7 +64,7 @@ $$;
 CREATE TRIGGER fixed BEFORE UPDATE ON file.file
   FOR EACH ROW EXECUTE FUNCTION file.fixed();
 
--- Whether a member may open a file's bytes by its own guard: the co-op's
+-- Whether a member may open a file's bytes by its own guard: the coop's
 -- own files anyone may; a personal file, the person it concerns and who
 -- uploaded it. A graft that sees a power over what the file is attached
 -- to may open it to more.
@@ -94,7 +94,7 @@ BEGIN ATOMIC
   LEFT JOIN file.file f ON f.id = x.id;
 END;
 
--- file:file:upload — a file of the co-op's own, uploaded by the actor on
+-- file:file:upload — a file of the coop's own, uploaded by the actor on
 -- the verdict date; a personal file comes in through the graft that
 -- attaches it, under that graft's guard.
 CREATE FUNCTION file.uploads(payload jsonb) RETURNS text

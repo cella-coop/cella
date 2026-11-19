@@ -24,7 +24,7 @@ export const slug = (title: string) =>
 // keeps a document for something of its own, as a meeting's minutes,
 // runs this in its own write, and folds it by `document.fold_creating`.
 // Its entry carries the document's title and circle, and the opening
-// update's number and bytes, in hex: the co-op's text, which the fold
+// update's number and bytes, in hex: the coop's text, which the fold
 // rebuilds row for row.
 export const creating = (input: Create, author: string): Write<Created> => {
   let made: { title: string; circle: string; appended: number | null; update: string | null } | undefined

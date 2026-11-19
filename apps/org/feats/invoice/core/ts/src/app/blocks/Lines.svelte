@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { Section, Table, type Column } from '@cella/org-ui'
-  import type { Detail, Lined, Received } from '../../models/invoice.ts'
+  import { icons, money, Panel, Table, type Column, type Total } from '@cella/org-ui'
+  import type { Detail, Lined } from '../../models/invoice.ts'
 
-  // What the invoice bills, line by line, and what was received for it.
+  // What the invoice bills, line by line, and its totals ruled off under
+  // them: the overview's first panel.
   let { data }: { data: Detail; id: string } = $props()
 
   const lines: Column<Lined>[] = [
@@ -12,17 +13,13 @@
     { key: 'vat_rate', label: 'VAT', kind: 'number', value: (l) => `${Number(l.vat_rate)} %` },
     { key: 'amount', label: 'Amount', kind: 'money', value: (l) => l.amount },
   ]
-  const payments: Column<Received>[] = [
-    { key: 'at', label: 'Received', kind: 'date', value: (p) => p.at },
-    { key: 'reference', label: 'Reference', kind: 'mono', value: (p) => p.reference },
-    { key: 'method', label: 'Method', value: (p) => p.method },
-    { key: 'amount', label: 'Amount', kind: 'money', value: (p) => p.amount },
-  ]
+  const totals: Total[] = $derived([
+    { label: 'Net', value: data.net },
+    ...(data.vat === null ? [] : [{ label: 'VAT', value: data.vat }]),
+    { label: 'Total', value: data.total, total: true },
+  ])
 </script>
 
-<Section title="Lines" count={data.lines.length}>
-  <Table columns={lines} rows={data.lines} />
-</Section>
-<Section title="Payments" count={data.payments.length}>
-  <Table columns={payments} rows={data.payments} />
-</Section>
+<Panel title="Lines" icon={icons.Receipt} count={data.lines.length} meta={money(data.total)}>
+  <Table dense columns={lines} rows={data.lines} {totals} />
+</Panel>

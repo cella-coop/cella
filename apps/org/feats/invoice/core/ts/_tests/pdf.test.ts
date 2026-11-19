@@ -1,5 +1,5 @@
 // An issued invoice's PDF, on a database holding only the app's core and
-// this feat: it prints the seller's mentions as the co-op's particulars
+// this feat: it prints the seller's mentions as the coop's particulars
 // named them when it issued, a decimal VAT rate,
 // the address billed as issued, each line, the VAT by rate adding up to
 // the invoice's, and the terms of payment; it is a well-formed PDF, the
@@ -21,7 +21,7 @@ const scope = 'test.example'
 const julien = 'julien@test.example'
 const as: Deps = { db, actor: julien, sign: signer(scope, julien, fixture(julien, 'laptop')) }
 
-// The co-op's particulars, as its assembly's rule sets them: core's
+// The coop's particulars, as its assembly's rule sets them: core's
 // `circle.particulars`, in force from the clock's day, which the test
 // writes itself, since it holds no motion feat to adopt a rule.
 const particulars = {
@@ -278,7 +278,7 @@ async function refused(input: Issue): Promise<string> {
   return out.state === 'refused' ? out.reason : ''
 }
 
-// Leaves one of the particulars unmarked around `run`, as a co-op whose
+// Leaves one of the particulars unmarked around `run`, as a coop whose
 // rule marks none.
 async function without(value: keyof typeof particulars, run: () => Promise<void>) {
   await particularise({ ...particulars, [value]: null })

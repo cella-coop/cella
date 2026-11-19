@@ -1,9 +1,9 @@
 +++
 title = "Invoice"
-updated = 2026-11-17
+updated = 2026-11-19
 +++
 
-What the co-op bills: issue an invoice, send it, record what is paid
+What the coop bills: issue an invoice, send it, record what is paid
 against it, and void it when it is wrong. An invoice carries everything
 that must appear on it as issued, including the name and address it bills,
 as text; the link to a contact record is the `contact-invoice` graft's, the
@@ -40,7 +40,7 @@ keeps its number, and the void posts a credit note.
 | Action | Label | Why |
 |---|---|---|
 | `POST /api/invoice/issue` | bounded | numbered in a series; the server's own until rung 2 gives devices theirs |
-| `POST /api/invoice/send` | confluent | to a client, or to a peer co-op |
+| `POST /api/invoice/send` | confluent | to a client, or to a peer coop |
 | `POST /api/invoice/payment` | confluent | payments add up |
 | `POST /api/invoice/void` | ordered | ordered against the payments |
 
@@ -49,7 +49,7 @@ keeps its number, and the void posts a credit note.
   chronological as French law requires; at rung 2 each device receives a
   series of its own and issues offline.
 - **send** delivers the issued invoice, by email or as a signed event to a
-  peer co-op at rung 5. Sending twice does no harm.
+  peer coop at rung 5. Sending twice does no harm.
 - **payment** records money received. Payments are facts from the bank;
   they add up in any order, and the same bank reference recorded twice
   merges into one payment. An invoice paid beyond its total is not
@@ -121,13 +121,13 @@ arrives at rung 3.
 - `invoice.line`: description, quantity (exact decimal), unit price,
   amount (quantity × unit price, rounded to the cent) and VAT rate, a
   percent with two decimals (5,50).
-- `invoice.seller()`: the seller as the co-op's particulars in force on
+- `invoice.seller()`: the seller as the coop's particulars in force on
   the verdict date name it (`circle.particulars()`: its legal name, form,
   capital, SIREN, registry, VAT number and seat), each null where they
   mark none; `seller`'s default, so an invoice keeps what the
   particulars said the moment it issued, and a motion replacing them
   changes the invoices issued once it applies and no invoice issued
-  before ([the co-op's particulars](../../core/circle/index.md#the-co-ops-particulars)).
+  before ([the coop's particulars](../../core/circle/index.md#the-coops-particulars)).
 - `invoice.payment`: received `at`, amount, method and the bank's
   reference, with a receipt; unique by invoice and reference.
 - `invoice.spend(series)`: the bounded write's spend. It takes the next
@@ -165,7 +165,7 @@ An invoice keeps a body, its free-form discussion, a Loro snapshot of core body'
 - `invoice.identified`, on `invoice:invoice:issue`: the invoice issued
   names whom it bills and their address, and its seller's legal name,
   form, seat, SIREN and registry, and its VAT number where a line
-  carries VAT, none of them blank. A co-op whose particulars lack one
+  carries VAT, none of them blank. A coop whose particulars lack one
   issues no invoice until a motion of its assembly adopts particulars
   marking it, and the refusal names what is missing and the value that
   marks it; an issued invoice is corrected only by a void, so a missing
@@ -227,8 +227,12 @@ server's clock, a read no guard depends on. New issues one (`issue`) in a
 series the feat offers, to a name and the address billed. An invoice's
 page, its header's crumb its number, is titled by what it bills for,
 with whom it bills among its properties; it marks it sent (`send`) and
-links its PDF, and its Lines tab holds its lines and payments, the data
-central to it. `api/forms.ts` reads the shell's forms into the handlers' inputs,
+links its PDF. It is laid out as `panels`
+([record page layout](../../../../_corpus/doc/architecture.md#record-page-layout)):
+it opens on its Lines, its lines with their net, VAT and total ruled off
+under them, then its Payments, what was paid and is owed, its standing
+and due day at the panel's head, then the panels its extenders add and
+its Notes, its body; its postings are its Postings tab. `api/forms.ts` reads the shell's forms into the handlers' inputs,
 amounts typed in euros and VAT rates in percent (`5,5`), so a graft's writes read the same forms:
 `invoice-transaction` replaces issue, payment and void with the writes
 that post them. Whom an invoice bills is `contact-invoice`'s.

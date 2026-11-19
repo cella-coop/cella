@@ -12,11 +12,11 @@
 
 {#if offered}
   <Section title="Withdraw">
-    <Form action="withdraw" submit="Withdraw from the co-op" tone="danger">
+    <Form action="withdraw" submit="Withdraw from the coop" tone="danger">
       <Field
         label="Leaving ends your membership today; your capital is frozen and repaid as the capital's terms say"
         name="sure"
-        options={[{ value: 'yes', label: 'I withdraw from the co-op' }]}
+        options={[{ value: 'yes', label: 'I withdraw from the coop' }]}
         placeholder="Choose to confirm"
         required
       />

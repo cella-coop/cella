@@ -11,7 +11,7 @@ const op = 'document:document:version' satisfies keyof typeof actions
 // vector. The database computes its canonical JSON and hash from the
 // snapshot. Confluent: two saves are two versions, numbered next in their
 // document under a lock. The log keeps its number, its snapshot, in hex,
-// its frontier and its version vector, the co-op's text, so the fold
+// its frontier and its version vector, the coop's text, so the fold
 // rebuilds it row for row, and its hash.
 export async function version(input: Save, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Saved>> {
   let kept: { snapshot: string; vv: Record<string, number> } | undefined

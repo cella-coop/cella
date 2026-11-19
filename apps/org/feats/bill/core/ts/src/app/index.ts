@@ -9,15 +9,15 @@ const tones: { [s in Listed['standing']]: Tone } = { recorded: 'accent', approve
 const category = (b: Listed) => categories.find((c) => c.code === b.category)?.label ?? b.category
 
 // The feat's client side: the bills, a new one recorded with its lines,
-// and a bill's page with its next write, its lines and its VAT by rate in
-// a tab of their own.
+// and a bill's page with its next write, which opens on its lines, its
+// VAT by rate and its totals, then its notes; its postings in a tab.
 export const app: App = {
   name: 'bill',
   collections: {
     bills: {
       view: {
         title: 'Bills',
-        caption: 'What suppliers bill the co-op, approved within a mandate and paid from the bank',
+        caption: 'What suppliers bill the coop, approved within a mandate and paid from the bank',
         icon: icons.Receipt,
         create: Record,
         columns: [
@@ -52,12 +52,9 @@ export const app: App = {
         subtitle: (b: Detail) => b.id,
         properties: (b: Detail) => [
           { label: 'Status', value: b.standing, kind: 'badge', tone: tones[b.standing] },
-          { label: 'For', value: b.label },
-          { label: 'Their reference', value: b.reference, kind: 'mono' },
-          { label: 'Total', value: b.total, kind: 'money' },
-          { label: 'Before VAT', value: b.net, kind: 'money' },
-          { label: 'VAT', value: b.vat, kind: 'money' },
-          { label: 'Category', value: `${category(b)}, ${b.category}` },
+          { label: 'For', value: b.label, glyph: icons.Receipt, lead: 'for' },
+          { label: 'Their reference', value: b.reference, kind: 'mono', lead: 'their ref' },
+          { label: 'Category', value: `${category(b)}, ${b.category}`, kind: 'badge' },
           { label: 'Dated', value: b.issued, kind: 'date' },
           { label: 'Due', value: b.due, kind: 'date', tone: b.standing === 'overdue' ? 'warning' : undefined },
         ],
@@ -68,10 +65,11 @@ export const app: App = {
         ],
         tabs: [
           { id: 'overview', label: 'Overview' },
-          { id: 'lines', label: 'Lines' },
           { id: 'postings', label: 'Postings' },
         ],
-        blocks: [Body, { tab: 'lines', block: Lines }],
+        layout: 'panels',
+        body: Body,
+        blocks: [Lines],
         actions: Status,
       },
     },

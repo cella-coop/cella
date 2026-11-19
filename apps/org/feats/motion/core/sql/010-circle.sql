@@ -254,7 +254,7 @@ BEGIN ATOMIC
 END;
 
 -- The rules a motion would adopt that set open books' disclosure values,
--- publish parts of the structure or set the co-op's particulars, each with the days it would apply
+-- publish parts of the structure or set the coop's particulars, each with the days it would apply
 -- were the motion closed at its deadline and the policy it replaces, as
 -- `circle.overlap_flaw` judges them; none whose days are not written
 -- YYYY-MM-DD, which `motion.asks` refuses.
@@ -309,7 +309,7 @@ END;
 -- another adopted earlier in the motion with no `from` and no `until`,
 -- or one in force it holds that the motion does not end.
 -- A rule marking open books' disclosure values, the parts of the
--- structure it publishes or the co-op's particulars is the assembly's and
+-- structure it publishes or the coop's particulars is the assembly's and
 -- marks them soundly (`circle_policy.disclosure_flaw`,
 -- `circle.publication_flaw`, `circle.particulars_flaw`); one of each
 -- stands at a time, so such a rule replaces the one its days meet
@@ -336,7 +336,7 @@ BEGIN ATOMIC
           WHERE o.motion = m.motion AND o.kind = 'policy' AND o.args ->> 'kind' = 'procedure'
             AND btrim(motion.marked(o.args ->> 'wording') ->> 'procedure') = v.procedure
         )
-        THEN 'no procedure ' || v.procedure || ' for a mandate to ask: a mandate asks a procedure the co-op has, or one its motion adopts'
+        THEN 'no procedure ' || v.procedure || ' for a mandate to ask: a mandate asks a procedure the coop has, or one its motion adopts'
       WHEN m.kind = 'end' AND x.id IS NOT NULL
         AND NOT EXISTS (SELECT FROM circle.chain(x.id) k WHERE k.issuer = d.circle)
         THEN d.circle || ' may not decide to revoke mandate ' || x.id || ' in ' || coalesce(m.circle, 'every working circle')
@@ -403,7 +403,7 @@ BEGIN ATOMIC
     SELECT coalesce(
       circle.overlap_flaw(s.what, s.day, s.until, s.replaces, NULL),
       (SELECT 'actions ' || o.n || ' and ' || s.n || ' of ' || (payload ->> 'motion') || ' are both '
-         || CASE s.what WHEN 'disclosure' THEN 'a disclosure rule' WHEN 'particulars' THEN 'the co-op''s particulars' ELSE 'a publication' END
+         || CASE s.what WHEN 'disclosure' THEN 'a disclosure rule' WHEN 'particulars' THEN 'the coop''s particulars' ELSE 'a publication' END
          || ' on days that meet: one stands at a time, so a motion adopts one'
        FROM motion.standing_rules(payload ->> 'motion') o
        WHERE o.what = s.what AND o.n < s.n

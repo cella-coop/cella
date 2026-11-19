@@ -1,9 +1,9 @@
 +++
 title = "Report"
-updated = 2026-11-17
+updated = 2026-11-19
 +++
 
-The co-op's reports: what the books and the work add up to, read through
+The coop's reports: what the books and the work add up to, read through
 the [analytics port](../../core/analytics/index.md) and drawn with core/ui's
 sheets, tables and charts. A report only describes: it reads the views the
 slices publish in their analytical contracts, joined in the analytics
@@ -200,13 +200,16 @@ contracts share, which name no one but where a column declares it.
 The `reports` collection, titled Reports, in Office: each saved report
 with its kind, the built-in ones first. A report's page, its header's
 crumb its id, opens on what it is about and the log's entry it read, or
-why it drew nothing, and draws it in its Figures tab, the data central
-to it: the statements as two `Sheet`s, the span's figure and the span
-before's, its spans listed in the drawer's Related to move between
-(`span`), each opening the Figures tab; the margins as a table
-over a summary of the margin, the time cost and how many are watched; the
-federation figures as sections; a custom report as its chart over a
-table. The New form saves a custom report from its title and its definition.
+why it drew nothing, and then what it draws, in panels, laid out as
+`panels` with no tab ([record page
+layout](../../../../_corpus/doc/architecture.md#record-page-layout)): the
+statements as a panel of two `Sheet` columns, the span's figure and the
+span before's, its spans listed in the drawer's Related to move between
+(`span`); the margins as one panel, a table over a summary of the
+margin, the time cost and how many are watched; the federation figures
+as a panel each, the split, what it posted, the capital credited and the
+work share by basis; a custom report as its chart and its rows; then its
+Notes, its body. The New form saves a custom report from its title and its definition.
 
 ## Lanterne
 

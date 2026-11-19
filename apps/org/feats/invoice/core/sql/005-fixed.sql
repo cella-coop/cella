@@ -1,5 +1,5 @@
 -- The seller as an invoice names it (code de commerce, art. R123-237; CGI,
--- annexe II, art. 242 nonies A, I, 2°): the co-op's particulars in force
+-- annexe II, art. 242 nonies A, I, 2°): the coop's particulars in force
 -- when the invoice issues (`circle.particulars()`), its legal name and
 -- beside it, a value they mark none of being null; `invoice.identified`
 -- refuses an issue without any but the capital, and the VAT number where

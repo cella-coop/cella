@@ -44,7 +44,7 @@ export interface Recorded {
   refused: number
 }
 
-// A kind of file the co-op imports, as the slices that read it name it.
+// A kind of file the coop imports, as the slices that read it name it.
 export interface Kind {
   kind: string
   title: string

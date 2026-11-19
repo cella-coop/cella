@@ -1,6 +1,7 @@
 import { icons, type App, type Tone } from '@cella/org-ui'
 import { categories, statuses, type Expense, type Status as Stage } from '../models/expense.ts'
 import Capture from './blocks/Capture.svelte'
+import Claim from './blocks/Claim.svelte'
 import Status from './blocks/Status.svelte'
 import Body from './blocks/Body.svelte'
 
@@ -9,15 +10,16 @@ const category = (e: Expense) => categories.find((c) => c.code === e.category)?.
 
 // The feat's client side: the expenses as a board by status, on which a
 // card dragged into the next column is that column's write; a new claim
-// as the acting member; and an expense's page with its next write, its
-// receipts and postings the tabs its extenders fill.
+// as the acting member; and an expense's page with its next write, which
+// opens on its claim, its amounts and how far it has come, then its
+// notes; its receipts and postings the tabs its extenders fill.
 export const app: App = {
   name: 'expense',
   collections: {
     expenses: {
       view: {
         title: 'Expenses',
-        caption: 'What members spent for the co-op, approved within a mandate and paid back',
+        caption: 'What members spent for the coop, approved within a mandate and paid back',
         icon: icons.Wallet,
         create: Capture,
         columns: [
@@ -51,19 +53,19 @@ export const app: App = {
         ],
       },
       page: {
-        blocks: [Body],
+        layout: 'panels',
+        body: Body,
+        blocks: [Claim],
         eyebrow: 'Expense',
         title: (e: Expense) => e.label,
         subtitle: (e: Expense) => e.id,
+        // The day it was spent is the Claim panel's header's.
         properties: (e: Expense) => [
           { label: 'Status', value: e.status, kind: 'badge', tone: tones[e.status] },
-          { label: 'Amount', value: e.total, kind: 'money' },
-          { label: 'Before VAT', value: e.net, kind: 'money' },
-          { label: 'VAT', value: e.vat, kind: 'money' },
-          { label: 'Category', value: `${category(e)}, ${e.category}` },
-          { label: 'Spent on', value: e.day, kind: 'date' },
-          { label: 'Receipt', value: e.receipt, kind: 'mono' },
+          { label: 'Category', value: `${category(e)}, ${e.category}`, kind: 'badge' },
+          { label: 'Receipt', value: e.receipt, kind: 'mono', glyph: icons.Paperclip, lead: 'receipt' },
           { label: 'Member', value: e.member, kind: 'person', href: `/people/${e.member}` },
+          { label: 'Decided by', value: e.decider, kind: 'person', href: e.decider ? `/people/${e.decider}` : undefined, lead: e.status === 'refused' ? 'refused by' : 'approved by' },
         ],
         activity: (e: Expense) => [
           ...(e.reimbursed ? [{ at: e.reimbursed, text: 'reimbursed' }] : []),

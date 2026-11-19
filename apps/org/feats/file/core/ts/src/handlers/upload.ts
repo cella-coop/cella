@@ -31,7 +31,7 @@ export async function storing(tx: Db, input: Store, actor: string): Promise<Stor
   return { file: rows[0].id, class: input.class, subject: input.subject, type: input.type, size: input.bytes.length, hash: rows[0].hash }
 }
 
-// What the log commits to of a stored file: of the co-op's own, its name
+// What the log commits to of a stored file: of the coop's own, its name
 // and its BLAKE3; of a personal file, commitments to both, which the vault
 // opens until the file is erased.
 export function committed(stored: Stored, name: string): Record<string, unknown> {
@@ -46,7 +46,7 @@ export function committed(stored: Stored, name: string): Record<string, unknown>
   }
 }
 
-// Uploads a file of the co-op's own, which concerns no one. A personal
+// Uploads a file of the coop's own, which concerns no one. A personal
 // file comes in through the graft that attaches it. Its bytes are no
 // one's, so the log keeps them, in base64 as the member signed them, and
 // its entry folds to the file.

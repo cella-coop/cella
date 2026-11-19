@@ -1,9 +1,9 @@
 +++
 title = "Project"
-updated = 2026-11-16
+updated = 2026-11-19
 +++
 
-The co-op's initiatives: a piece of work a client commissioned, or one of
+The coop's initiatives: a piece of work a client commissioned, or one of
 its own, with its milestones and its budget. A project is the container
 the work is planned and counted in; its tasks, its time, its client and
 the shares of its budget are the grafts'. Its body is its free-form
@@ -67,7 +67,7 @@ register the body's and the threads'.
   (`project.contributed`), and replaces only the body its `base` names,
   the hash the handler read of it under the row's lock
   (`project.based`); a reply answers a root, a mention names a
-  person the co-op knows, and only a root is resolved (`project.posts`,
+  person the coop knows, and only a root is resolved (`project.posts`,
   `project.resolves`); a reaction is one of the six, refused where the
   circle turned reactions off (`project.reacts`). An archived project's
   body is frozen with the rest.
@@ -125,15 +125,20 @@ its milestones, its budget and what its time spent of it (the root picks
 these fields, which come from three slices). A project's page,
 its header's crumb its id, holds its summary under its title, then
 whom it is for (`contact-project`) and its Activity; its circle, its
-milestones done of all and the next, its budget and its days are its
-properties. The data central to it is in three tabs after the first,
-which this feat chooses: Tasks, which `project-task` fills; Milestones,
+next milestone and its days are its properties, and its budget and,
+where it has milestones, those done of all its figures, `Stat`s of the overview's Figures
+panel beside what the grafts spend of it, set on its Budget tab. The
+data central to it is in three tabs after the first,
+which this feat chooses: Tasks, the tasks collection scoped to it,
+which `project-task` lists; Milestones,
 completing one and adding the next; and Budget, its budget, what is
 spent and left of it, and beside it its shares (`membership-project`),
 its time (`project-timesheet`), its expenses (`expense-project`) and
 its invoices (`invoice-project`). Its tasks and its time are jumps in
 Related too, each collection filtered to it. Archive is the
-header's write. Its Overview opens on its body, edited live over core
+header's write. Its page is laid out as `body` ([record page
+layout](../../../../_corpus/doc/architecture.md#record-page-layout)): its
+Overview opens on its body, edited live over core
 body's session and saved by each editor's browser, and its threads sit
 under its Activity, a mention of a person waiting in their Inbox until
 they answer it.

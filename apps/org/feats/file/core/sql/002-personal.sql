@@ -4,7 +4,7 @@
 -- commerce, art. L123-22); an employment record, such as a contract, is
 -- payroll, kept five (Code du travail, art. L3243-4); a member's record
 -- is their profile's, erased when asked. Redacting the bytes empties the
--- hash generated from them. The co-op's own files hold none.
+-- hash generated from them. The coop's own files hold none.
 INSERT INTO cella.personal (schema, tab, col, class, subject, owner) VALUES
   ('file', 'receipt', 'name', 'expense-receipt', 'subject', 'file'),
   ('file', 'receipt', 'bytes', 'expense-receipt', 'subject', 'file'),
@@ -13,4 +13,4 @@ INSERT INTO cella.personal (schema, tab, col, class, subject, owner) VALUES
   ('file', 'record', 'name', 'profile', 'subject', 'file'),
   ('file', 'record', 'bytes', 'profile', 'subject', 'file');
 
-COMMENT ON COLUMN file.file.name IS 'not personal: the co-op''s own files'' names; each personal class''s part, file.receipt, file.contract and file.record, registers its own';
+COMMENT ON COLUMN file.file.name IS 'not personal: the coop''s own files'' names; each personal class''s part, file.receipt, file.contract and file.record, registers its own';

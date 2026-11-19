@@ -13,7 +13,7 @@ COMMENT ON TABLE report.drawn IS 'registry: the reports the feat draws itself, t
 
 INSERT INTO report.drawn (id, title, caption, kind) VALUES
   ('income', 'Income statement', 'Income less expenses over a span, against the span before it, in the PCG''s rubrics', 'income'),
-  ('balance', 'Balance sheet', 'What the co-op owns and owes at the end of a span, against the span before it', 'balance'),
+  ('balance', 'Balance sheet', 'What the coop owns and owes at the end of a span, against the span before it', 'balance'),
   ('margins', 'Project margins', 'Each project''s margin, budget burn and forecasts, and the projects to watch', 'margins'),
   ('federation', 'Federation figures', 'A distributed year''s split, what it posted and the capital it credited', 'federation');
 
@@ -41,7 +41,7 @@ CREATE VIEW report.listed WITH (security_invoker = true) AS
 -- When a project is watched, from a day on: once its billable time has
 -- spent `burn` percent of its budget, or once what it invoiced keeps less
 -- than `margin` percent after its costs. A parameter, seeded with the
--- co-op's figures; a threshold per project is not built.
+-- coop's figures; a threshold per project is not built.
 CREATE TABLE report.threshold (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   since date PRIMARY KEY,

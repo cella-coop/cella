@@ -1,6 +1,6 @@
 import type { Canon, Comment } from '@cella/org-body/models'
 
-export const statuses = ['backlog', 'todo', 'doing', 'done'] as const
+export const statuses = ['backlog', 'next', 'active', 'review', 'done'] as const
 export type Status = (typeof statuses)[number]
 
 export const priorities = ['urgent', 'high', 'normal', 'low'] as const

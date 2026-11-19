@@ -11,7 +11,7 @@ type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 // the task's circle, which the payload names for the power's guard: a
 // root, or a reply to a root, which reopens it. Each `@[address]` its
 // text gives is a mention, a row each in the order given, of a person
-// the co-op knows; `task.posts` refuses a reply to a reply, naming the
+// the coop knows; `task.posts` refuses a reply to a reply, naming the
 // root, a mention of no one, and a post naming otherwise than its rows.
 // The text is its author's free text, and the log keeps it as written.
 export async function post(input: Post, deps: Deps): Out<'task:comment:post', Posted> {

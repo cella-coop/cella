@@ -131,7 +131,7 @@ const given = (v: string | number | undefined) => v !== undefined && v !== ''
 // each value marked once: its grantee, a role or the circle itself, by
 // motion, the power, what it grants in words, its cap, a limit per write
 // or a budget over a month or a year, and its scope, the circle it covers
-// or the holder's own, none for the whole co-op. The form shows it as it
+// or the holder's own, none for the whole coop. The form shows it as it
 // will read before anything is proposed.
 export function worded(args: Put['args']): string {
   const cap = given(args.limit)

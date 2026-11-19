@@ -1,9 +1,9 @@
 +++
 title = "Patronage"
-updated = 2026-11-17
+updated = 2026-11-19
 +++
 
-The year-end cycle of a worker co-op's surplus: the statutes' terms for
+The year-end cycle of a worker coop's surplus: the statutes' terms for
 the work share, each financial year's distribution of its surplus, the
 split the law and the statutes make of it, each worker's part of the
 work share, and the lifecycle that takes a distribution from a draft to
@@ -28,7 +28,7 @@ art. 33, 3°; BOI-BIC-PTP-10-30, § 90), divided in proportion to pay, to
 time worked, in equal parts, or by a mix of these (Code du travail, art.
 L3324-5; BOI-BIC-PTP-10-30, § 170 and 280). The work share never divides
 by revenue, which the law does not offer. Employing a part in shares is
-reserved to the associates employed in the co-op (art. R3323-11), and
+reserved to the associates employed in the coop (art. R3323-11), and
 what is employed so is blocked five years from the first day of the
 sixth month after the year (art. L3324-10). The interest on capital is
 at most the rate the statutes set, which the law caps at the average of
@@ -295,12 +295,17 @@ A worker's parts of a work share, and so their statement, read for the worker an
 
 The `distributions` collection, each year's surplus in a table, the
 latest first, a distribution's page, its header's crumb its id, showing its
-state, draft, approved or distributed, and its split in a Split tab, and its New form drafting
+state, draft, approved or distributed, opening on its split, a panel,
+how the work share would divide by each basis in its By basis tab, and
+its New form drafting
 a year's split; `bases`, the patronage terms by year, governing,
-to govern or replaced, each copied from its rule, which its page names; and `statements`, each
-worker's part of each year's work share, a statement's page its part
-basis by basis against each basis's portion and weight in a By basis
-tab. Approving is
+to govern or replaced, each copied from its rule, which its page names,
+opening on its clauses said as the statutes say them; and `statements`, each
+worker's part of each year's work share, a statement's page opening on
+its part basis by basis against each basis's portion and weight. Each
+page is laid out as `panels` ([record page
+layout](../../../../_corpus/doc/architecture.md#record-page-layout)),
+its Notes, its body, after its panels; a statement keeps no body. Approving is
 `motion-patronage`'s form over this feat's write; distributing and
 employing follow the approval, and adopting terms a rule's adoption, with
 no form. Printed, a page drops the shell and reads as a

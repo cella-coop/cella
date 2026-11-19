@@ -7,11 +7,11 @@ import type { Add, Archive, Changed, Erase, Erased, Fields, Update } from '../mo
 type Action = keyof typeof actions
 
 // The columns a write may set, in a fixed order; nothing else reaches SQL.
-const columns = ['kind', 'name', 'form', 'email', 'phone', 'address', 'parent', 'tags', 'note', 'client', 'archived'] as const
+const columns = ['kind', 'name', 'form', 'email', 'phone', 'address', 'parent', 'tags', 'client', 'archived'] as const
 
 // Those registered as personal data in `cella.personal`: the log commits
 // to their values under fresh salts, and the vault keeps them.
-const personals = new Set<string>(['name', 'email', 'phone', 'address', 'note'])
+const personals = new Set<string>(['name', 'email', 'phone', 'address'])
 
 // What of a person contact is core person's, and none of the contact's.
 const core = ['name', 'email', 'phone'] as const
@@ -46,7 +46,7 @@ const changed = (fields: Fields) => (v: Changed) => ({
 })
 
 // Adds a company with its own name, or a person, who is a core person by
-// the address `person` names: one the co-op knows already keeps their
+// the address `person` names: one the coop knows already keeps their
 // name, email and phone, and one new to it is brought in with those the
 // write gives, in its transaction, its payload committing to them as
 // core's. `contact.person_is_core` refuses a person naming no address.

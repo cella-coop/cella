@@ -1,6 +1,6 @@
 +++
 title = "Timesheet"
-updated = 2026-11-17
+updated = 2026-11-19
 +++
 
 Time worked, by worker and day, member or not, and each worker's
@@ -25,7 +25,7 @@ entries to new time and Brand's month stays open.
 A period is **open** until its member submits it, **submitted** until
 someone approves it, and **approved** for good. Time is written in
 minutes, since a signed request holds integers only, and shown in hours.
-The note says what the time was spent on, the co-op's work record, not
+The note says what the time was spent on, the coop's work record, not
 personal data (`003-personal.sql`): a log carries it as written and
 its fold writes it again. An entry's minutes are personal data of class
 `payroll`, registered by the member's address (`006-salted.sql`): a log
@@ -144,16 +144,19 @@ grafts; its dashboard sums
 the hours, the billable hours and those awaiting approval, by month and
 by kind, and by worker and by project from the grafts. Its New form is the
 acting worker's week (`employment-project-timesheet`): a project to a row,
-the co-op's own time last, and a day to a column, each cell adding the
+the coop's own time last, and a day to a column, each cell adding the
 hours typed into it, the feat's log, booked to the row's project by
 `project-timesheet`; the feat's own one-entry form, with a note, is what
 that replaces. Each row names the circle its time is worked for, chosen
 by the worker among the circles they sit in, and its hours log in that
 circle's month: a project's row offers the project's circle first where
-the worker sits in it, and the co-op's own time the root's, so time
+the worker sits in it, and the coop's own time the root's, so time
 logged from the shell lands in the month of the circle it was worked
 for and is approved by whoever holds `approve-time` over that circle. An entry's page is titled by its note, or without one its hours and day,
-its header's crumb its id, and its Month tab shows its worker's month; in its
+its header's crumb its id, and opens on its worker's month, a panel, then
+its Notes, its body (`panels`, [record page
+layout](../../../../_corpus/doc/architecture.md#record-page-layout)), with
+no tab; in its
 header, it lets its worker correct the entry's hours down while the month is not approved,
 and submits the entry's month, its circle's, while open or approves it
 once submitted; a person's page lists their months, a row for each

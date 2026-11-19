@@ -17,8 +17,9 @@ export const app: App = {
     circles: {
       columns: [{ key: 'seated', label: 'Seated', kind: 'number', role: 'meta', value: (r: { seated?: number }) => r.seated ?? 0 }],
       look: { cards: ['purpose', 'seated'] },
+      // Its seats are its Roles tab's, counted on its card; its overview
+      // counts none, which its Roles panel summarises.
       page: {
-        properties: (s: Seat[]) => [{ label: 'Seated', value: new Set(s.filter((x) => !x.until).map((x) => x.member)).size, kind: 'number' }],
         blocks: [{ tab: 'roles', block: Members }],
       },
     },

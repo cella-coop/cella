@@ -1,6 +1,7 @@
 import { icons, type App } from '@cella/org-ui'
 import type { Account, Period } from '../models/account.ts'
 import type { Terms } from '../models/terms.ts'
+import Clauses from './blocks/Clauses.svelte'
 import Close from './blocks/Close.svelte'
 import Open from './blocks/Open.svelte'
 import BodyAccount from './blocks/BodyAccount.svelte'
@@ -16,8 +17,10 @@ const open = (p: Period) => (p.closed ? 'closed' : 'open')
 const adopted = (t: Terms) => (t.adopted ? 'adopted' : 'drafted')
 
 // The feat's client side: the chart of accounts, the periods of the books
-// and a period's close, and the statutes' capital clauses. An account's
-// ledger and a period's entries are the tabs its extenders fill.
+// and a period's close, and the statutes' capital clauses, each page
+// opening on its panels, then its notes. An account's balance and
+// ledger, and a period's entries, are the panels and tabs its extenders
+// fill.
 export const app: App = {
   name: 'account',
   collections: {
@@ -37,18 +40,21 @@ export const app: App = {
       page: {
         eyebrow: 'Account',
         title: (a: Account) => `${a.code} ${a.label}`,
+        // Its code leads its title; cash and frozen are each a pill where
+        // they hold, and nothing where they do not.
         properties: (a: Account) => [
-          { label: 'Code', value: a.code, kind: 'mono' },
           { label: 'Kind', value: a.kind, kind: 'badge' },
-          { label: 'Cash', value: a.cash ? 'yes' : 'no' },
-          { label: 'Holder', value: a.holder },
-          { label: 'Frozen', value: a.frozen ? 'yes' : 'no' },
+          ...(a.cash ? [{ label: 'Cash', value: 'cash', kind: 'badge' as const, tone: 'positive' as const }] : []),
+          ...(a.frozen ? [{ label: 'Frozen', value: 'frozen', kind: 'badge' as const, tone: 'warning' as const }] : []),
+          { label: 'Holder', value: a.holder, kind: 'person' as const },
         ],
         tabs: [
           { id: 'overview', label: 'Overview' },
           { id: 'ledger', label: 'Ledger' },
         ],
-        blocks: [BodyAccount],
+        // Its balance is the panel the graft joining the journal adds.
+        layout: 'panels',
+        body: BodyAccount,
       },
     },
     periods: {
@@ -75,7 +81,10 @@ export const app: App = {
           { id: 'overview', label: 'Overview' },
           { id: 'entries', label: 'Entries' },
         ],
-        blocks: [BodyPeriod],
+        // Its entries summed are the panel the graft joining the journal
+        // adds.
+        layout: 'panels',
+        body: BodyPeriod,
         actions: Close,
       },
     },
@@ -96,17 +105,12 @@ export const app: App = {
         eyebrow: 'Capital terms',
         title: (t: Terms) => `Capital terms from ${t.from}`,
         subtitle: (t: Terms) => t.id,
-        properties: (t: Terms) => [
-          { label: 'State', value: adopted(t), kind: 'badge', tone: t.adopted ? 'positive' : 'accent' },
-          { label: 'From', value: String(t.from) },
-          { label: 'Share value', value: t.share, kind: 'money' },
-          { label: 'Fewest shares', value: t.minimum, kind: 'number' },
-          { label: 'Instalments, at most', value: t.instalments, kind: 'number' },
-          { label: 'Repaid after, months', value: t.delay, kind: 'number' },
-          { label: 'Yearly repayments', value: t.repayments, kind: 'number' },
-          { label: 'Adopted on', value: t.adopted, kind: 'date' },
-        ],
-        blocks: [BodyTerms],
+        // Its year is its title's, its day of adoption and its figures the
+        // Clauses panel's, said as the statutes say them.
+        properties: (t: Terms) => [{ label: 'State', value: adopted(t), kind: 'badge', tone: t.adopted ? 'positive' : 'accent' }],
+        layout: 'panels',
+        body: BodyTerms,
+        blocks: [Clauses],
       },
     },
   },

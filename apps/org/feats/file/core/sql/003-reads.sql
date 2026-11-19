@@ -1,4 +1,4 @@
--- Who reads a file, its name and its bytes: the co-op's own files, whoever
+-- Who reads a file, its name and its bytes: the coop's own files, whoever
 -- reads their circle (`circle.reads`), in place of core's row-level policy;
 -- a personal file, the person it concerns, who uploaded it and whoever
 -- holds a power that reads its class, which a graft registers. A write's

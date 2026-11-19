@@ -51,7 +51,7 @@ export interface Detail extends Listed {
   taxed: Taxed[]
 }
 
-// What recording a bill offers: the suppliers already billing the co-op,
+// What recording a bill offers: the suppliers already billing the coop,
 // and the day.
 export interface Recording {
   suppliers: string[]

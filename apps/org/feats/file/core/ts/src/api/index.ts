@@ -12,8 +12,8 @@ export { content, file, files } from '../drivers/file.ts'
 export * as forms from './forms.ts'
 export { saveBody } from '../handlers/body.ts'
 
-// The files the co-op keeps, each one's bytes for whoever may open them,
-// and a file of the co-op's own uploaded from the collection's page.
+// The files the coop keeps, each one's bytes for whoever may open them,
+// and a file of the coop's own uploaded from the collection's page.
 export const slice: Slice = {
   name: 'file',
   queries: contract,

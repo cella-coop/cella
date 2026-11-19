@@ -4,7 +4,7 @@ CREATE SCHEMA contact;
 -- person whose parent is that company, and a client is a contact holding
 -- the client role. A person contact is a core person, by their address:
 -- their name, email and phone are core's, and the contact keeps what the
--- co-op knows of them. A company keeps its own. Personal data is
+-- coop knows of them. A company keeps its own. Personal data is
 -- committed to in the log, never written into it. The core person is
 -- checked at the end of the transaction, since a fold applies the
 -- contact's own state before core's.
@@ -20,7 +20,6 @@ CREATE TABLE contact.contact (
   address jsonb,
   parent text REFERENCES contact.contact,
   tags text[] NOT NULL DEFAULT '{}',
-  note text NOT NULL DEFAULT '',
   -- The client role, by its stage: NULL for a contact that is no client.
   client text CHECK (client IN ('lead', 'active', 'inactive')),
   -- Hidden from lists, kept for the books; every contact's, client or not.
@@ -82,7 +81,7 @@ SELECT c.circle, c.id, c.kind, c.person,
        coalesce(p.name, c.name) AS name,
        coalesce(p.email, c.email) AS email,
        coalesce(p.phone, c.phone) AS phone,
-       c.form, c.address, c.parent, c.tags, c.note, c.client, c.archived
+       c.form, c.address, c.parent, c.tags, c.client, c.archived
 FROM contact.contact c
 LEFT JOIN person.person p ON p.address = c.person;
 

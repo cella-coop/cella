@@ -39,12 +39,11 @@ export const app: App = {
         eyebrow: 'Document',
         title: (d: Page) => d.title,
         subtitle: (d: Page) => d.id,
+        // Its versions, updates and comments are counted by its Versions
+        // tab and its Activity, so it keeps no figures.
         properties: (d: Page) => [
-          { label: 'Adopted', value: d.adopted ?? 'not adopted', kind: 'badge', tone: d.adopted ? 'positive' : 'neutral' },
-          { label: 'Versions', value: d.versions.length, kind: 'number' },
-          { label: 'Updates', value: d.updates.length, kind: 'number' },
-          { label: 'Comments', value: d.comments.length, kind: 'number' },
-          { label: 'Draft hash', value: short(d.hash, 16), kind: 'mono' },
+          { label: 'Adopted', value: d.adopted ?? 'not adopted', kind: 'badge', tone: d.adopted ? 'positive' : 'neutral', lead: d.adopted ? 'adopted' : undefined },
+          { label: 'Draft hash', value: short(d.hash, 16), kind: 'mono', glyph: icons.Fingerprint, lead: 'draft' },
         ],
         activity: (d: Page) => [
           ...d.updates.slice(0, 12).map((u) => ({ at: u.at, who: u.author ?? undefined, text: `${u.author ? 'edited' : 'carried over'}, receipt ${u.receipt}` })),
@@ -55,7 +54,9 @@ export const app: App = {
           { id: 'draft', label: 'Draft' },
           { id: 'versions', label: 'Versions' },
         ],
-        blocks: [Draft, { tab: 'versions', block: History }],
+        layout: 'body',
+        body: Draft,
+        blocks: [{ tab: 'versions', block: History }],
         comment: Comment,
         actions: Save,
       },

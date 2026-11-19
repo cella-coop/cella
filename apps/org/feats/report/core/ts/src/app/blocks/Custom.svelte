@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Dashboard, Note, Section, Table, type Column } from '@cella/org-ui'
+  import { Dashboard, Empty, icons, Panel, Table, type Column } from '@cella/org-ui'
   import type { Value } from '@cella/org-analytics'
   import type { Custom, Drawn } from '../../models/report.ts'
 
@@ -15,16 +15,21 @@
   const chart = $derived(data.report.definition?.chart)
 </script>
 
+{#snippet more()}The report has more rows than it shows.{/snippet}
+
 {#if data.report.kind === 'custom'}
   {#if data.drawn}
     {#if chart && data.drawn.bars.length}
-      <Dashboard results={[{ kind: 'chart', title: `${chart.value} by ${chart.by}`, format: 'number', line: false, points: data.drawn.bars }]} />
+      <Panel title={`${chart.value} by ${chart.by}`} icon={icons.ChartLine}>
+        <Dashboard results={[{ kind: 'chart', title: `${chart.value} by ${chart.by}`, format: 'number', line: false, points: data.drawn.bars }]} />
+      </Panel>
     {/if}
-    <Section title="Rows" count={data.drawn.result.rows.length}>
-      <Table {columns} rows={data.drawn.result.rows.map((r, i) => ({ ...r, id: String(i) }))} />
-      {#if data.drawn.result.more}<Note text="The report has more rows than it shows." />{/if}
-    </Section>
+    <Panel title="Rows" icon={icons.SquaresFour} count={data.drawn.result.rows.length} help={data.drawn.result.more ? more : undefined}>
+      <Table dense {columns} rows={data.drawn.result.rows.map((r, i) => ({ ...r, id: String(i) }))} />
+    </Panel>
   {:else}
-    <Note text={data.failed ?? 'Nothing to draw.'} />
+    <Panel title="Rows" icon={icons.SquaresFour}>
+      <Empty text={data.failed ?? 'Nothing to draw.'} />
+    </Panel>
   {/if}
 {/if}

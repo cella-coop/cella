@@ -17,7 +17,7 @@ export interface Entry {
 }
 
 // A payment to a supplier: the amount leaves the bank, 512, and settles
-// what the co-op owes its suppliers, 401.
+// what the coop owes its suppliers, 401.
 export interface Pay {
   date: string
   label: string

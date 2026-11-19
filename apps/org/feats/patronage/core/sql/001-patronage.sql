@@ -8,7 +8,7 @@ CREATE SCHEMA patronage;
 -- proportion to pay, to time worked, in equal parts, or by a mix of these
 -- (Code du travail, art. L3324-5; BOI-BIC-PTP-10-30, § 170 and 280); never
 -- by revenue, which the law does not offer. Employing a part in shares is
--- reserved to the associates employed in the co-op (art. R3323-11), and
+-- reserved to the associates employed in the coop (art. R3323-11), and
 -- what is employed so is blocked five years from the first day of the
 -- sixth month after the year (art. L3324-10). Terms are a rule the
 -- members adopt by motion, its values named for this feat and copied here

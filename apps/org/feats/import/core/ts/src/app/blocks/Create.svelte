@@ -2,7 +2,7 @@
   import { Field, Form } from '@cella/org-ui'
   import type { Kind, Run } from '../../models/run.ts'
 
-  // A file from another tool, of a kind the co-op imports, tried first in
+  // A file from another tool, of a kind the coop imports, tried first in
   // a dry run, which makes every write and undoes them, or imported, as
   // the acting member.
   let { about }: { rows: Run[]; about: { kinds: Kind[] } } = $props()

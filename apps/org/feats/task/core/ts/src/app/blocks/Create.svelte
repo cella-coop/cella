@@ -2,7 +2,7 @@
   import { Field, Form } from '@cella/org-ui'
   import { priorities, type Task } from '../../models/task.ts'
 
-  // A new task, to do, numbered by the server. Who does it and its project
+  // A new task, next, numbered by the server. Who does it and its project
   // are set on its page.
   let props: { rows: Task[]; about: unknown } = $props()
 

@@ -4,6 +4,7 @@ import { divides, type Terms } from '../models/terms.ts'
 import type { Sheet, Statement } from '../models/statement.ts'
 import Shares from './blocks/Shares.svelte'
 import Basis from './blocks/Basis.svelte'
+import Divides from './blocks/Divides.svelte'
 import Draft from './blocks/Draft.svelte'
 import BodyDistribution from './blocks/BodyDistribution.svelte'
 import BodyTerms from './blocks/BodyTerms.svelte'
@@ -14,9 +15,10 @@ const tones: Record<ReturnType<typeof stage>, Tone> = { draft: 'neutral', approv
 type Staged = Distribution & { state: ReturnType<typeof stage> }
 type Divided = Omit<Terms, 'basis'> & { basis: string; state: string }
 
-// The feat's client side: each year's distribution, its split in a tab of
-// its own, the statutes' terms for the work share, and each worker's
-// statement of their part, basis by basis in a tab of its own.
+// The feat's client side: each year's distribution, opening on its split,
+// the statutes' terms for the work share, opening on their clauses, and
+// each worker's statement of their part, opening on it basis by basis;
+// each page's notes at the foot of its panels.
 export const app: App = {
   name: 'patronage',
   collections: {
@@ -45,20 +47,21 @@ export const app: App = {
         subtitle: (d: Detail) => d.id,
         properties: (d: Detail) => [
           { label: 'State', value: stage(d), kind: 'badge', tone: tones[stage(d)] },
-          { label: 'Surplus', value: d.surplus, kind: 'money' },
-          { label: 'Work share by', value: d.basis, kind: 'badge' },
-          { label: 'Approved on', value: d.approved, kind: 'date' },
-          { label: 'Distributed on', value: d.distributed, kind: 'date' },
+          { label: 'Work share by', value: d.basis, kind: 'badge', lead: 'work share by' },
+          { label: 'Approved on', value: d.approved, kind: 'date', lead: 'approved' },
+          { label: 'Distributed on', value: d.distributed, kind: 'date', lead: 'distributed' },
         ],
-        // Its split in a tab of its own, where its extenders add how the
-        // work share would divide by each basis.
+        // Its split on its overview; how the work share would divide by
+        // each basis, worker by worker, in a tab its extenders fill.
         tabs: [
           { id: 'overview', label: 'Overview' },
-          { id: 'split', label: 'Split' },
+          { id: 'split', label: 'By basis' },
           { id: 'return', label: 'Return' },
         ],
         related: (d: Detail) => (d.approved ? [{ label: `${d.year} statements`, sub: 'each worker’s part', href: '/statements' }] : []),
-        blocks: [BodyDistribution, { tab: 'split', block: Shares }],
+        layout: 'panels',
+        body: BodyDistribution,
+        blocks: [Shares],
       },
     },
     bases: {
@@ -79,17 +82,12 @@ export const app: App = {
         eyebrow: 'Patronage terms',
         title: (t: Terms) => `Patronage terms from ${t.from}`,
         subtitle: (t: Terms) => t.id,
-        properties: (t: Terms) => [
-          { label: 'From', value: String(t.from) },
-          { label: 'As the rule', value: t.policy, kind: 'mono' },
-          { label: 'By pay %', value: t.salary, kind: 'number' },
-          { label: 'By time worked %', value: t.hours, kind: 'number' },
-          { label: 'In equal parts %', value: t.equal, kind: 'number' },
-          { label: 'Employed in shares %', value: t.capital, kind: 'number' },
-          { label: 'Interest on capital at most %', value: t.interest, kind: 'number' },
-          { label: 'Adopted on', value: t.adopted, kind: 'date' },
-        ],
-        blocks: [BodyTerms],
+        // Its year is its title's, its day of adoption and its shares the
+        // Clauses panel's, said as the statutes say them.
+        properties: (t: Terms) => [{ label: 'As the rule', value: t.policy, kind: 'mono', glyph: icons.Scales, lead: 'rule' }],
+        layout: 'panels',
+        body: BodyTerms,
+        blocks: [Divides],
       },
     },
     statements: {
@@ -114,20 +112,19 @@ export const app: App = {
         eyebrow: 'Statement',
         title: (s: Sheet) => `${s.year} work share statement`,
         subtitle: (s: Sheet) => s.id,
+        // Its year is its title's.
         properties: (s: Sheet) => [
-          { label: 'Year', value: String(s.year) },
-          { label: 'Part', value: s.amount, kind: 'money' },
-          { label: 'Terms', value: s.terms ? `${s.terms.id}, ${divides[s.terms.basis]}` : null, href: s.terms ? `/bases/${s.terms.id}` : undefined },
-          { label: 'Approved on', value: s.approved, kind: 'date' },
-          { label: 'Distributed on', value: s.distributed, kind: 'date' },
+          { label: 'Terms', value: s.terms ? `${s.terms.id}, ${divides[s.terms.basis]}` : null, href: s.terms ? `/bases/${s.terms.id}` : undefined, lead: 'under' },
+          { label: 'Approved on', value: s.approved, kind: 'date', lead: 'approved' },
+          { label: 'Distributed on', value: s.distributed, kind: 'date', lead: 'distributed' },
         ],
         related: (s: Sheet) => [{ label: `${s.year} distribution`, sub: 'the split', href: `/distributions/${s.distribution}` }],
         tabs: [
           { id: 'overview', label: 'Overview' },
-          { id: 'basis', label: 'By basis' },
           { id: 'employed', label: 'Employed' },
         ],
-        blocks: [{ tab: 'basis', block: Basis }],
+        layout: 'panels',
+        blocks: [Basis],
       },
     },
   },

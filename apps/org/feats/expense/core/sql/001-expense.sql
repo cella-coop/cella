@@ -2,7 +2,7 @@ CREATE SCHEMA expense;
 
 CREATE SEQUENCE expense.number;
 
--- What a member spent for the co-op from their own pocket, to be paid back:
+-- What a member spent for the coop from their own pocket, to be paid back:
 -- the day, what it was for, the account of class 6 it is charged to, the
 -- amount before VAT and the deductible VAT, and the receipt, a reference
 -- until files are stored. Its member is an address, as text; that it is a

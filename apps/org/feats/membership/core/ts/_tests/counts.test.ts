@@ -1,7 +1,7 @@
 // Whose seat counts, on a database holding the app's core, its circles,
 // and the person and membership feats: any person may hold a seat, and only the
 // assembly's asks an active membership; a member suspended or gone holds
-// none that counts, and someone the co-op does not know holds none at
+// none that counts, and someone the coop does not know holds none at
 // all. Run by `cella test slice membership`.
 
 import { after, before, test } from 'node:test'
@@ -56,6 +56,6 @@ test('a member suspended or gone holds no seat that counts from that day, and di
   assert.equal(await counts(paul, root, '2025-11-29'), true)
 })
 
-test('someone the co-op does not know holds no seat that counts', async () => {
+test('someone the coop does not know holds no seat that counts', async () => {
   assert.equal(await counts('nobody@counts', 'counts-web'), false)
 })

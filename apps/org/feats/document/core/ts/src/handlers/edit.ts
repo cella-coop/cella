@@ -40,7 +40,7 @@ export async function edit(input: Edit, deps: Deps): Promise<Outcome<(typeof act
       update = rows[0].update
       return { document: input.document, receipt: Number(rows[0].receipt), digest: rows[0].digest }
     },
-    // The log keeps the update's bytes, in hex, the co-op's text, and its
+    // The log keeps the update's bytes, in hex, the coop's text, and its
     // number, so the fold rebuilds it row for row.
     payload: (v) => ({ ...v, appended, update }),
   })

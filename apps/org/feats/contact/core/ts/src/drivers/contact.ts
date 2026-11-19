@@ -3,14 +3,14 @@ import type { Contact } from '../models/contact.ts'
 
 // A person contact's name, email and phone are core person's, which
 // `contact.named` reads beside a company's own.
-const columns = 'id, kind, person, name, form, email, phone, parent, tags, note, client, archived'
+const columns = 'id, kind, person, name, form, email, phone, parent, tags, client, archived'
 
 // The contacts not archived as the collection lists them, by name, each
 // form as its column shows it: the contact's kind where it has none. Its
 // client stage is null for a contact that is no client, which the Clients
 // view leaves out.
 export const listing: Read = {
-  sql: `SELECT id, kind, person, name, coalesce(form, kind) AS form, email, phone, parent, tags, note, client, circle
+  sql: `SELECT id, kind, person, name, coalesce(form, kind) AS form, email, phone, parent, tags, client, circle
         FROM contact.named WHERE NOT archived`,
   order: 'name',
 }

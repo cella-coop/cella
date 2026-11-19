@@ -4,7 +4,7 @@
 
 -- What `storing` stored, in the write of entry `n`, by its actor on its
 -- day: the file under the id `stored` names, of its class and about its
--- subject, with its type and size. A file of the co-op's own folds with
+-- subject, with its type and size. A file of the coop's own folds with
 -- its name and its bytes, which its entry keeps in base64, as the member
 -- signed them, and which must hash to the BLAKE3 the entry names; a
 -- personal file's name and bytes, which its entry keeps as commitments,
@@ -38,7 +38,7 @@ BEGIN
 END
 $$;
 
--- file:file:upload: the co-op's own file, uploaded by the entry's actor
+-- file:file:upload: the coop's own file, uploaded by the entry's actor
 -- on its day.
 CREATE FUNCTION file.fold_upload(entry jsonb) RETURNS void
 LANGUAGE sql

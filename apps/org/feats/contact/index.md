@@ -1,15 +1,15 @@
 +++
 title = "Contact"
-updated = 2026-11-17
+updated = 2026-11-19
 +++
 
-The organisations and people the co-op deals with: its CRM. Companies
+The organisations and people the coop deals with: its CRM. Companies
 and people share one collection, so a person at a company is a contact
-whose `parent` is that company. A contact is a record the co-op keeps
+whose `parent` is that company. A contact is a record the coop keeps
 for itself; an invoice copies the name and address it bills when it is
 issued, so editing a contact never changes an issued invoice.
 
-A client is a contact the co-op bills: a role the contact holds, its
+A client is a contact the coop bills: a role the contact holds, its
 `client` field, and not a collection or a kind of its own. A company or
 a person is a client while it holds the role, at one stage of the
 role's lifecycle, and no client once the role is cleared.
@@ -18,15 +18,15 @@ role's lifecycle, and no client once the role is cleared.
 
 | Entity | Fields | Notes |
 |---|---|---|
-| contact | `id`, `kind`, `person?`, `name?`, `form?`, `email?`, `phone?`, `address?`, `parent?`, `tags[]`, `note`, `client?`, `archived` | `kind` is `company` or `person`; a person contact names its core person by address, `person`, and a company its own `name`, `email` and `phone`; `client` is the client role's stage, none for a contact that is no client |
+| contact | `id`, `kind`, `person?`, `name?`, `form?`, `email?`, `phone?`, `address?`, `parent?`, `tags[]`, `client?`, `archived`, `body?` | `kind` is `company` or `person`; a person contact names its core person by address, `person`, and a company its own `name`, `email` and `phone`; `client` is the client role's stage, none for a contact that is no client |
 | address | `street`, `city`, `region?`, `postal_code`, `country` | `country` is ISO 3166-1 alpha-2 |
 
 A contact of kind `person` is a core person
 ([person](../../core/person/index.md)), as a member or a worker is:
 `contact.contact.person` is a foreign key into `person.person`, the
 person's name, email and phone are core's, and the contact keeps what
-the co-op knows of them as a CRM, their company, tags, note, address
-and client role. Adding a person contact names a person the co-op
+the coop knows of them as a CRM, their company, tags, address, client
+role and notes, its body. Adding a person contact names a person the coop
 already knows, or makes one by address in the contact's own
 transaction, as an invitation or a hire does; a client who is also a
 member is one person, seen three ways. A company is no person and keeps
@@ -38,10 +38,12 @@ people in People, unlinked (corollary 3.3).
 `parent` names another contact in this collection. `form` is the contact's
 legal form (`SCIC SA`, `association`, `commune`), which decides its rate
 at Lanterne and, at rung 3, its e-invoicing route. A company's name,
-email and phone, and every contact's address and note, are registered as personal data, of class
-`contact`, by its id (`003-personal.sql`): every write commits to them
-in the log and keeps them in the vault, and erasing a person redacts
-them.
+email and phone, and every contact's address, are registered as
+personal data, of class `contact`, by its id (`003-personal.sql`):
+every write commits to them in the log and keeps them in the vault, and
+erasing a person redacts them. A contact's notes are its body, free
+text that is its author's to keep fit to be logged, and enter the log
+as written ([trust](../../../../_corpus/doc/trust.md#personal-data)).
 
 ## The client role
 
@@ -75,6 +77,7 @@ company and the invoices intact.
 | `POST /api/contact/update` | confluent | the last writer wins |
 | `POST /api/contact/archive` | confluent | the last writer wins |
 | `POST /api/contact/erase` | ordered | erasure wins over every update, whichever arrives first |
+| `contact:body:save`, its notes | confluent | each save carries the whole merged snapshot, so the later receipt holds every edit before it |
 
 Each field is its own register, so two members updating different fields
 of one contact both keep their change, and two updating the same field
@@ -88,6 +91,7 @@ ordered write's guard, so none of them waits.
 | add, update | `edit-contact` | every member, through the `member` role's mandate |
 | archive | `edit-contact` | every member, through the `member` role's mandate |
 | erase | `erase-personal-data` | the manager |
+| `contact:body:save`, its notes | `discuss` | every seat, in every circle |
 
 `002-powers.sql` registers the power in `cella.power`, and the
 membership feat checks it as any other: a power every member holds is
@@ -178,24 +182,25 @@ stage, blank for a contact that is no client. Its `Clients` view, beside
 `All`, keeps the contacts holding the role, a condition on `client` the
 address keeps (`/contacts?v=clients`). A contact's page, its
 header's crumb its id, its kind and form among its properties, shows its
-role and sets it (`update`, the `client` field alone, a stage or none),
-and edits its note, with no Save button: leaving the field posts
-`update` with the note field alone, only when it changed, and its
-outcome, saving, saved or the reason it was refused, shows under it as
-on a settings field (`Settings`); the last writer wins it. A person
+role and sets it (`update`, the `client` field alone, a stage or none).
+Its notes are its body, one place for them: there is no note field
+beside it, and no Save button, since core body's editor saves at a
+pause and on leaving, by `contact:body:save`. A person
 contact's page
 reads their name, email and phone from core and links their entry in
-People among its related. The data central to
-it is in the two tabs after the first, which this feat chooses: the
-projects it commissioned, in Projects (`contact-project`), and what it
-owes and the invoices that bill it, in Invoices (`contact-invoice`).
+People among its related. Its page is laid out as `panels` ([record page
+layout](../../../../_corpus/doc/architecture.md#record-page-layout)): it
+opens on its Client role, a panel, then its Notes, its body. The two tabs after the first, which this feat chooses, list
+collections scoped to it: the projects it commissioned, in Projects
+(`contact-project`), and the invoices that bill it, in Invoices
+(`contact-invoice`).
 
 ## Import
 
 Contacts from another tool's list, a CSV with the columns `name` and, if
-it has them, `kind`, `form`, `email`, `phone`, `tags` and `note`: the
+it has them, `kind`, `form`, `email`, `phone` and `tags`: the
 importer `contacts`, each line a `contact:contact:add` as the importing
-member, which makes a contact that is no client. A contact the co-op
+member, which makes a contact that is no client. A contact the coop
 holds already, by its name, is refused. A person among them is a core
 person known by their email as their address, so a person's line with
 no email is refused; it is labelled by their line, never their name
@@ -203,12 +208,13 @@ no email is refused; it is labelled by their line, never their name
 
 ## Lanterne
 
-Nine contacts: the eight organisations Lanterne works for, mostly co-ops,
+Nine contacts: the eight organisations Lanterne works for, mostly coops,
 associations and small local firms, each an active client, and Margaux
 Roux, a person whose `parent` is Les Halles, who runs its online shop
 and is no client, since Lanterne bills Les Halles and not her. She is a
 core person (`person.toml`), in People with no chip; what Lanterne knows
-of her, her note, is the contact's:
+of her, its notes on her, is her contact's body. Each contact's notes
+are its body, which the seed writes from `contact.toml`:
 
 | Contact | Form | Work |
 |---|---|---|
@@ -230,4 +236,4 @@ Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-con
 
 ## Body
 
-A contact keeps a body, its free-form discussion, a Loro snapshot of core body's blocks, saved by `contact:body:save` (`sql/006-body.sql`). A save needs `discuss` in the record's circle and that the saver reads the record, by the terms of its row-level policy rather than the whole state a write's transaction sees (`contact.legible`), and `based` refuses one that did not merge the body it replaces.
+A contact keeps a body, its notes, the one place for its free-form text, a Loro snapshot of core body's blocks, saved by `contact:body:save` (`sql/006-body.sql`). A save needs `discuss` in the record's circle and that the saver reads the record, by the terms of its row-level policy rather than the whole state a write's transaction sees (`contact.legible`), and `based` refuses one that did not merge the body it replaces.

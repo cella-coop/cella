@@ -1,5 +1,5 @@
 // The retention class of the personal data a file holds, `none` for the
-// co-op's own: receipts, employment records such as contracts, and
+// coop's own: receipts, employment records such as contracts, and
 // members' records.
 export const classes = ['none', 'expense-receipt', 'payroll', 'profile'] as const
 export type Class = (typeof classes)[number]
@@ -9,12 +9,12 @@ export type Class = (typeof classes)[number]
 export const parts: Record<Class, string> = { none: 'shared', 'expense-receipt': 'receipt', payroll: 'contract', profile: 'record' }
 
 // What each class is, in words.
-export const kinds: Record<Class, string> = { none: 'the co-op’s', 'expense-receipt': 'receipt', payroll: 'employment record', profile: 'personal record' }
+export const kinds: Record<Class, string> = { none: 'the coop’s', 'expense-receipt': 'receipt', payroll: 'employment record', profile: 'personal record' }
 
 // The most a file may hold, as `file.largest()` says: 10 MiB.
 export const largest = 10 * 1024 * 1024
 
-// A file the co-op keeps, without its bytes: `hash` is their BLAKE3 in
+// A file the coop keeps, without its bytes: `hash` is their BLAKE3 in
 // hex, null once erased.
 export interface File {
   id: string
@@ -36,7 +36,7 @@ export interface Listed extends Omit<File, 'class'> {
 }
 
 // A file to store, as a form uploads it, of a class and about a subject;
-// the co-op's own name no subject.
+// the coop's own name no subject.
 export interface Store {
   class: Class
   subject: string | null

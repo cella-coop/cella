@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { Note, Section, Stats, Table, type Column, type Tone } from '@cella/org-ui'
+  import { Empty, icons, Panel, Stats, Table, type Column, type Tone } from '@cella/org-ui'
   import type { Drawn } from '../../models/report.ts'
   import type { Margin, Margins } from '../../models/margin.ts'
 
   // Each project's margin on the scope's day, its burn and its forecasts,
-  // under the margin, the time cost and how many projects are watched.
+  // under the margin, the time cost and how many projects are watched,
+  // and when a project is watched in its footer, in one panel.
   let { data }: { data: Drawn<Margins>; id: string } = $props()
 
   const tones: Record<Margin['watch'], Tone> = { 'on track': 'positive', 'budget spent': 'warning', 'over budget': 'negative', 'thin margin': 'warning', archived: 'neutral' }
@@ -23,22 +24,30 @@
   const watched = $derived(live.filter((m) => m.watch !== 'on track' && m.watch !== 'archived').length)
 </script>
 
-{#if data.report.kind === 'margins'}
-  {#if data.drawn}
-    <Stats
-      items={[
-        { label: 'Margin', value: live.reduce((s, m) => s + m.margin, 0), kind: 'money' },
-        { label: 'Time cost', value: live.reduce((s, m) => s + m.cost, 0), kind: 'money' },
-        { label: 'To watch', value: watched, kind: 'number', tone: watched ? 'warning' : 'positive' },
-      ]}
-    />
-    <Section title={`Projects on ${data.drawn.day}`} count={live.length}>
-      <Table {columns} rows={live} href={(m: Margin) => `/projects/${m.project}`} />
-      {#if data.drawn.threshold}
-        <Note text={`A project is watched once its billable time has spent ${data.drawn.threshold.burn} % of its budget while under way, once its spend at completion passes its budget, or once its margin keeps less than ${data.drawn.threshold.margin} % of what it invoiced.`} />
-      {/if}
-    </Section>
-  {:else}
-    <Note text={data.failed ?? 'Nothing to draw.'} />
+{#snippet watching()}
+  {#if data.drawn?.threshold}
+    A project is watched once its billable time has spent {data.drawn.threshold.burn} % of its budget while under way, once its spend at completion passes its budget, or once its margin keeps less than {data.drawn.threshold.margin} % of what it invoiced.
   {/if}
+{/snippet}
+
+{#if data.report.kind === 'margins'}
+  <Panel
+    title={data.drawn ? `Projects on ${data.drawn.day}` : 'Project margins'}
+    icon={icons.ChartLine}
+    count={data.drawn ? live.length : undefined}
+    help={data.drawn?.threshold ? watching : undefined}
+  >
+    {#if data.drawn}
+      <Stats
+        items={[
+          { label: 'Margin', value: live.reduce((s, m) => s + m.margin, 0), kind: 'money' },
+          { label: 'Time cost', value: live.reduce((s, m) => s + m.cost, 0), kind: 'money' },
+          { label: 'To watch', value: watched, kind: 'number', tone: watched ? 'warning' : 'positive' },
+        ]}
+      />
+      <Table dense {columns} rows={live} href={(m: Margin) => `/projects/${m.project}`} />
+    {:else}
+      <Empty text={data.failed ?? 'Nothing to draw.'} />
+    {/if}
+  </Panel>
 {/if}

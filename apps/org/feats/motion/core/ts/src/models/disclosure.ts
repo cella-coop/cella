@@ -12,7 +12,7 @@ export interface Values {
 
 // The rule in force on the verdict date, if any: its policy, the motion
 // that adopted it, the day it applies from and its values. None where
-// the co-op shares no such total beyond each reader's own rights.
+// the coop shares no such total beyond each reader's own rights.
 export interface Disclosure {
   policy: string | null
   motion: string | null
@@ -101,5 +101,5 @@ export const residual = {
   sub: 'no setting turns this on',
   values: [] as { label: string; value: string }[],
   badge: { label: 'Not checked', tone: 'warning' as Tone },
-  text: 'Hiding a total inside one report is not enough if another report, or the same report another month, lets someone subtract it back. The co-op’s books do not check reports against each other, and no setting stops someone using what they know outside the books.',
+  text: 'Hiding a total inside one report is not enough if another report, or the same report another month, lets someone subtract it back. The coop’s books do not check reports against each other, and no setting stops someone using what they know outside the books.',
 }

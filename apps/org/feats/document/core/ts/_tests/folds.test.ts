@@ -30,7 +30,7 @@ const refused = async (run: () => Promise<unknown>, reason: RegExp) => {
 // A draft of one paragraph, then a second, as two Loro updates, and a
 // snapshot of the whole, with the hash the database gives it.
 const doc = createDoc()
-edits.paste(doc, undefined, 0, [{ type: 'paragraph', runs: [{ text: 'The co-op keeps its books open.' }], children: [] }])
+edits.paste(doc, undefined, 0, [{ type: 'paragraph', runs: [{ text: 'The coop keeps its books open.' }], children: [] }])
 doc.commit()
 const opening = doc.export({ mode: 'update' })
 const from = doc.version()
@@ -72,7 +72,7 @@ test('a document folds started, edited, saved, commented on and adopted as its e
   await refused(() => fold('fold_version', 3, 'document:document:version', '2041-01-12', saved('0'.repeat(64))), /entry 3 saves folded-rules@1 hashed 0+, where the fold hashes it/)
   await fold('fold_version', 3, 'document:document:version', '2041-01-12', saved(hash))
   const version = await one<{ id: string; saved: string; plain: string }>(`SELECT id, to_char(saved, 'YYYY-MM-DD') AS saved, plain FROM document.version WHERE document = 'folded-rules'`)
-  assert.deepEqual(version, { id: 'folded-rules@1', saved: '2041-01-12', plain: 'The co-op keeps its books open.\nEvery member reads them.' })
+  assert.deepEqual(version, { id: 'folded-rules@1', saved: '2041-01-12', plain: 'The coop keeps its books open.\nEvery member reads them.' })
 
   await fold('fold_comment', 4, 'document:document:comment', '2041-01-13', { comment: 9003, version: 'folded-rules@1', quote: 'books open', anchor: null, text: { $commit: 'ab'.repeat(32) } })
   assert.deepEqual(await one(`SELECT author, text, anchor, resolved FROM document.comment WHERE id = 9003`), { author: camille, text: 'redacted', anchor: null, resolved: false })

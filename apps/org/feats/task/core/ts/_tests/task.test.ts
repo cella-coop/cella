@@ -21,15 +21,15 @@ test('only the app\'s core and this feat are migrated', async () => {
   assert.deepEqual(rows, [])
 })
 
-test('tasks number in order, to do and of normal priority unless said', async () => {
+test('tasks number in order, next and of normal priority unless said', async () => {
   const made = []
   for (const title of ['Order colour proofs', 'Press check at the printer']) {
     const { rows } = await db.query(`INSERT INTO task.task (title, created) VALUES ($1, '2026-10-12') RETURNING id, status, priority`, [title])
     made.push(rows[0])
   }
   assert.deepEqual(made, [
-    { id: 't-1', status: 'todo', priority: 'normal' },
-    { id: 't-2', status: 'todo', priority: 'normal' },
+    { id: 't-1', status: 'next', priority: 'normal' },
+    { id: 't-2', status: 'next', priority: 'normal' },
   ])
 })
 
@@ -54,10 +54,10 @@ test('a status and a priority are known ones', async () => {
 })
 
 test('each field is its own register: a move and a reprioritising both stand', async () => {
-  await db.query(`UPDATE task.task SET status = 'doing' WHERE id = 't-2'`)
+  await db.query(`UPDATE task.task SET status = 'active' WHERE id = 't-2'`)
   await db.query(`UPDATE task.task SET priority = 'high' WHERE id = 't-2'`)
   const { rows } = await db.query(`SELECT status, priority FROM task.task WHERE id = 't-2'`)
-  assert.deepEqual(rows[0], { status: 'doing', priority: 'high' })
+  assert.deepEqual(rows[0], { status: 'active', priority: 'high' })
 })
 
 test('a change of priority or due is a write of its own, needing the power a move needs', async () => {

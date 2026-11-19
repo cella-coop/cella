@@ -1,9 +1,9 @@
 +++
 title = "Transaction"
-updated = 2026-11-17
+updated = 2026-11-19
 +++
 
-The journal: every movement of money in the co-op, as balanced
+The journal: every movement of money in the coop, as balanced
 double-entry entries. An entry is a set of lines, each debiting or
 crediting one account by its code; its debits equal its credits. Nothing in
 the journal is ever edited or deleted: a correction is a new entry that
@@ -215,7 +215,7 @@ with none outside a fold.
 
 ## Reads
 
-Every entry and line reads for whoever holds `record-entry`, `carry-books` or `close-period` (`sql/007-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)). A graft that knows whose an account is opens its lines further: `account-transaction` opens the co-op's own accounts' lines to every member and a capital account's to its holder. An entry reads wherever one of its lines does, and its amount, `transaction.amount`, counts every line, read or not. Alone, without that graft, only the books' keepers read the journal. A write's transaction reads it whole, as the guards do.
+Every entry and line reads for whoever holds `record-entry`, `carry-books` or `close-period` (`sql/007-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)). A graft that knows whose an account is opens its lines further: `account-transaction` opens the coop's own accounts' lines to every member and a capital account's to its holder. An entry reads wherever one of its lines does, and its amount, `transaction.amount`, counts every line, read or not. Alone, without that graft, only the books' keepers read the journal. A write's transaction reads it whole, as the guards do.
 
 ## Shell
 
@@ -223,7 +223,9 @@ The journal, as the `transactions` collection, the latest entry first,
 by its number, so `je-10000` lists before `je-9999`, each with the sum of
 its debits; an entry's page, its header's crumb its id, is titled by its
 label, links the entries that correct it, in their numbers' order, and
-holds its lines in its Lines tab. `/journal` and its entries' old addresses
+opens on its lines, a panel, then its Notes, its body (`panels`, [record
+page layout](../../../../_corpus/doc/architecture.md#record-page-layout)),
+with no tab. `/journal` and its entries' old addresses
 redirect there. Posting
 from the shell is not offered: the pilot's entries come from invoices,
 bills and expenses, through their grafts.

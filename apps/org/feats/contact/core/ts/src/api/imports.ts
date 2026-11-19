@@ -13,8 +13,8 @@ const slug = (name: string) =>
 
 // Contacts from another tool's list, a CSV with a header naming `name`
 // and, if it has them, `kind` (company or person), `form`, `email`,
-// `phone`, `tags` (separated by | or ;) and `note`: each added as the
-// importing member, under their power to edit contacts. One the co-op
+// `phone` and `tags` (separated by | or ;): each added as the importing
+// member, under their power to edit contacts. One the coop
 // holds already, by its name, is refused. A person among them is a core
 // person, known by their email as their address, so a line naming a
 // person with no email is refused; their details are personal data, as
@@ -22,7 +22,7 @@ const slug = (name: string) =>
 // a person's never.
 export const contacts: Importer = {
   title: 'Contacts',
-  formats: 'CSV with the columns name, and kind, form, email, phone, tags and note if it has them',
+  formats: 'CSV with the columns name, and kind, form, email, phone and tags if it has them',
   read: async (text, db) => {
     const { rows: held } = await db.query<{ id: string; name: string }>('SELECT id, name FROM contact.named')
     return csv(text).map(({ line, fields }) => {
@@ -35,7 +35,7 @@ export const contacts: Importer = {
       }
       const same = held.find((c) => c.id === id || slug(c.name ?? '') === id)
       if (same) {
-        return { line, label, op: 'contact:contact:add', refused: `the co-op holds this contact already, as ${same.id}` }
+        return { line, label, op: 'contact:contact:add', refused: `the coop holds this contact already, as ${same.id}` }
       }
       const email = (fields.email ?? '').trim() || null
       if (kind === 'person' && !email) {
@@ -51,7 +51,6 @@ export const contacts: Importer = {
         email,
         phone: fields.phone || null,
         tags,
-        note: fields.note ?? '',
       }
       return { line, label, op: 'contact:contact:add', run: (deps) => add(input, deps) }
     })

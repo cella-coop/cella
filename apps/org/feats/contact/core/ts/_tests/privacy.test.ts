@@ -65,7 +65,7 @@ test('a person contact is a core person, brought in by address, their details co
   assert.deepEqual((await db.query(`SELECT name, email FROM contact.named WHERE id = 'ana'`)).rows[0], { name: 'Ana Martin', email: ana })
 })
 
-test('a person the co-op knows keeps their name, and the contact naming them commits to nothing of core\'s', async () => {
+test('a person the coop knows keeps their name, and the contact naming them commits to nothing of core\'s', async () => {
   const n = settled(await add({ id: 'ana-shop', kind: 'person', person: ana, name: 'Someone Else', email: 'else@example.org' }, as))
   assert.equal((await form(n)).entered, undefined)
   assert.deepEqual(await person(), { name: 'Ana Martin', email: ana, phone: null })
@@ -78,21 +78,22 @@ test('a person contact\'s name, email and phone are core\'s: the contact changes
 })
 
 test('a contact\'s own personal value is salted per write, and the vault opens it with its own salt alone', async () => {
-  const first = settled(await update({ id: 'ana', fields: { note: 'prefers mornings' } }, as))
-  const again = settled(await update({ id: 'ana', fields: { note: 'prefers mornings' } }, as))
-  assert.notEqual((await form(again)).values.note.$commit, (await form(first)).values.note.$commit)
-  assert.equal((await db.query(`SELECT count(DISTINCT salt) AS n FROM vault.secret WHERE subject = 'ana' AND field = 'contact.contact.note'`)).rows[0].n, '2')
-  assert.equal((await opened(first)).values.note, 'prefers mornings')
+  const address = { street: '12 rue des Lilas', city: 'Lyon', postal_code: '69003', country: 'FR' }
+  const first = settled(await update({ id: 'ana', fields: { address } }, as))
+  const again = settled(await update({ id: 'ana', fields: { address } }, as))
+  assert.notEqual((await form(again)).values.address.$commit, (await form(first)).values.address.$commit)
+  assert.equal((await db.query(`SELECT count(DISTINCT salt) AS n FROM vault.secret WHERE subject = 'ana' AND field = 'contact.contact.address'`)).rows[0].n, '2')
+  assert.deepEqual((await opened(first)).values.address, address)
   const added = Number((await db.query(`SELECT min(n) AS n FROM cella.log WHERE op = 'contact:contact:add'`)).rows[0].n)
   assert.equal((await opened(added)).entered.email, ana)
   // Sealed bytes hold no plaintext.
   const { rows } = await db.query<{ sealed: Buffer }>(`SELECT sealed FROM vault.secret WHERE subject IN ('ana', $1)`, [ana])
-  assert.ok(rows.every((r) => !r.sealed.toString('latin1').includes('prefers mornings') && !r.sealed.toString('latin1').includes(ana)))
+  assert.ok(rows.every((r) => !r.sealed.toString('latin1').includes('rue des Lilas') && !r.sealed.toString('latin1').includes(ana)))
 })
 
 test('a receipt\'s request digest is salted, so it confirms no guess of the request', async () => {
-  const request = plain({ id: 'ana', fields: { note: 'call after ten' } })
-  const n = settled(await update({ id: 'ana', fields: { note: 'call after ten' } }, as))
+  const request = plain({ id: 'ana', fields: { tags: ['call after ten'] } })
+  const n = settled(await update({ id: 'ana', fields: { tags: ['call after ten'] } }, as))
   const { rows } = await db.query<{ request: Buffer }>('SELECT r.request FROM cella.receipt r JOIN cella.log l ON l.receipt = r.n WHERE l.n = $1', [n])
   const guessed = createHash('sha256').update(canonical(request)).digest()
   assert.notDeepEqual(rows[0].request, guessed)
@@ -108,8 +109,8 @@ test('erasing a person contact erases their contact data and their core person\'
   // Their name is of class profile, which a contact's erasure leaves.
   assert.equal(await secrets(ana), 1)
   assert.deepEqual(await person(), { name: 'Ana Martin', email: 'redacted', phone: null })
-  const row = (await db.query('SELECT note, archived FROM contact.contact WHERE id = $1', ['ana'])).rows[0]
-  assert.deepEqual(row, { note: 'redacted', archived: true })
+  const row = (await db.query('SELECT address, archived FROM contact.contact WHERE id = $1', ['ana'])).rows[0]
+  assert.deepEqual(row, { address: 'redacted', archived: true })
   // The commitment no longer opens: the fold reads the gap as redacted.
   const read = await opened(added)
   assert.equal(read.entered.email, 'redacted')
@@ -119,7 +120,7 @@ test('erasing a person contact erases their contact data and their core person\'
 
 test('erasure wins: a later value for the person is refused; a company is never erased', async () => {
   const head = Number((await db.query('SELECT n FROM cella.head')).rows[0].n)
-  const late = await update({ id: 'ana', fields: { note: 'back again' } }, as)
+  const late = await update({ id: 'ana', fields: { address: { street: '1 rue Neuve', city: 'Lyon', postal_code: '69001', country: 'FR' } } }, as)
   assert.match(refusal(late), /ana's contact data was erased at receipt \d+: erasure wins/)
   assert.equal(Number((await db.query('SELECT n FROM cella.head')).rows[0].n), head)
   settled(await add({ id: 'lumen', kind: 'company', name: 'Lumen SARL' }, as))

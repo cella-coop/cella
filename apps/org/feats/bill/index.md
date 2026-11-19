@@ -1,9 +1,9 @@
 +++
 title = "Bill"
-updated = 2026-11-17
+updated = 2026-11-19
 +++
 
-What the co-op is billed: a supplier's bill recorded as it came, with its
+What the coop is billed: a supplier's bill recorded as it came, with its
 lines, its VAT by rate and its due date; approved by someone with the
 power to, within their mandate's limit; and paid from the bank. A bill
 names its supplier as text; what it charges and pays in the books is the
@@ -83,7 +83,7 @@ waits on a contact feat.
 `bill` (`core/sql/`):
 
 - `bill.bill`, numbered from `bill.number`, which a refused write may
-  leave a gap in, since a bill's number is the co-op's handle on it and
+  leave a gap in, since a bill's number is the coop's handle on it and
   not a legal series as an invoice's is: as recorded, the supplier,
   its reference, the date it bears (`issued`), `due` (thirty days after
   it when the supplier names none), the label, the category, `net`, `vat`
@@ -172,8 +172,12 @@ and payment, what is overdue, and the amounts by month and by category.
 New records one (`record`) with its lines, typed as an invoice's are. A
 bill's page, its header's crumb its id, is titled by its supplier, with
 what it is for and their reference among its properties, and shows its
-next write: approve when recorded, pay when approved. Its Lines tab
-holds its lines and its VAT by rate, the data central to it.
+next write: approve when recorded, pay when approved. It is laid out as
+`panels` ([record page
+layout](../../../../_corpus/doc/architecture.md#record-page-layout)): it
+opens on its Lines, its lines, its VAT by rate where it has several, and
+its totals ruled off, then its Notes, its body; its postings are its
+Postings tab.
 
 ## Lanterne
 

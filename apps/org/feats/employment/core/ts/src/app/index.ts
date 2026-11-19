@@ -1,5 +1,6 @@
-import type { App, Tone } from '@cella/org-ui'
+import { icons, type App, type Tone } from '@cella/org-ui'
 import { terms, type Employment, type Worker } from '../models/worker.ts'
+import Contract from './blocks/Contract.svelte'
 import Hire from './blocks/Hire.svelte'
 
 const tone = (w: Worker): Tone => (w.employed ? 'positive' : 'neutral')
@@ -12,8 +13,8 @@ type Row = Partial<Pick<Worker, 'job' | 'start' | 'until' | 'hours' | 'employed'
 // The feat's client side, on core's people: each person's
 // employment, member or not, a chip to filter and group by, with their
 // job and contract; the people collection's New form, a hire with the
-// worker's first device; and on a person's page their contract, and the
-// Work tab the grafts joining employment fill.
+// worker's first device; and on a person's page their contract, a panel
+// of their overview, and the Work tab the grafts joining employment fill.
 export const app: App = {
   name: 'employment',
   extends: {
@@ -38,11 +39,10 @@ export const app: App = {
           w
             ? [
                 { label: 'Worker', value: standing(w), kind: 'badge', tone: tone(w) },
-                { label: 'Job', value: w.job },
-                { label: 'Contract', value: terms[w.contract] },
-                { label: 'Employed since', value: w.start, kind: 'date' },
-                ...(w.until ? [{ label: 'Until', value: w.until, kind: 'date' as const }] : []),
-                { label: 'Hours a week', value: w.hours, kind: 'number' },
+                { label: 'Job', value: w.job, glyph: icons.Briefcase },
+                { label: 'Contract', value: `${terms[w.contract].toLowerCase()}, ${w.hours} h a week`, glyph: icons.Signature },
+                { label: 'Employed since', value: w.start, kind: 'date', lead: 'employed since' },
+                ...(w.until ? [{ label: 'Until', value: w.until, kind: 'date' as const, lead: w.employed ? 'contract ends' : 'left' }] : []),
               ]
             : [],
         activity: ({ worker: w }: Employment) =>
@@ -53,6 +53,7 @@ export const app: App = {
                 ...(w.hired !== w.start ? [{ at: w.hired, text: 'hire recorded' }] : []),
               ]
             : [],
+        blocks: [Contract],
       },
     },
   },

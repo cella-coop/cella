@@ -1,5 +1,5 @@
 // The files alone, on a database holding only the app's core and this
-// feat: a file of the co-op's own uploaded through its write, named by the
+// feat: a file of the coop's own uploaded through its write, named by the
 // BLAKE3 of its bytes, which the log commits to; a file never changes and
 // holds at most 10 MiB; who may open it by its own guard; what `file.stored`
 // refuses; and a personal file's name and hash committed to, never logged.
@@ -63,7 +63,7 @@ test('only the app\'s core and this feat are migrated', async () => {
   assert.deepEqual(rows, [])
 })
 
-test('a file of the co-op\'s own is named by the BLAKE3 of its bytes, which the log commits to', async () => {
+test('a file of the coop\'s own is named by the BLAKE3 of its bytes, which the log commits to', async () => {
   const out = await upload({ class: 'none', subject: null, name: 'statutes.txt', type: 'text/plain', bytes: abc }, as)
   assert.equal(out.state, 'settled', out.state === 'refused' ? out.reason : '')
   const f = await file(db, 'fi-0001')
@@ -86,7 +86,7 @@ test('a file never changes, holds what its size says, and at most 10 MiB', async
   await refused(() => db.query(`INSERT INTO file.file (class, name, type, size, uploader, uploaded) VALUES ('payroll', 'x', 'text/plain', 1, $1, '2026-10-24')`, [camille]), /file_check/)
 })
 
-test('the co-op\'s own files open to anyone, a personal file to whom it concerns and who uploaded it', async () => {
+test('the coop\'s own files open to anyone, a personal file to whom it concerns and who uploaded it', async () => {
   const { rows: added } = await db.query<{ id: string }>(
     `INSERT INTO file.file (class, subject, name, type, size, bytes, uploader, uploaded)
      VALUES ('expense-receipt', $1, 'ticket.png', 'image/png', 3, $2, $1, '2026-10-24'),
@@ -122,7 +122,7 @@ test('file.stored says why a file is not the one a write stored', async () => {
   }
 })
 
-test('a personal file\'s name and hash are committed to, and the co-op\'s own are logged', () => {
+test('a personal file\'s name and hash are committed to, and the coop\'s own are logged', () => {
   const stored = { file: 'fi-0002', class: 'expense-receipt' as const, subject: sofia, type: 'image/png', size: 3, hash: 'ab' }
   const logged = committed(stored, 'ticket.png')
   assert.deepEqual(logged.name, { $personal: { field: 'file.receipt.name', subject: sofia, value: 'ticket.png' } })
@@ -130,7 +130,7 @@ test('a personal file\'s name and hash are committed to, and the co-op\'s own ar
   assert.equal(committed({ ...stored, class: 'none', subject: null }, 'statutes.txt').name, 'statutes.txt')
 })
 
-test('as the app role, the co-op\'s own files are their circle\'s readers\', a personal one its person\'s, its uploader\'s and a reading power\'s; the parts only through file.file', async () => {
+test('as the app role, the coop\'s own files are their circle\'s readers\', a personal one its person\'s, its uploader\'s and a reading power\'s; the parts only through file.file', async () => {
   await app.connect()
   await db.query(`CREATE SCHEMA mandate`)
   await db.query(
@@ -154,7 +154,7 @@ test('as the app role, the co-op\'s own files are their circle\'s readers\', a p
   await add('fi-9003', 'payroll', sofia, camille)
   const ids = async (actor: string | null) => (await reading(actor, `SELECT id FROM file.file WHERE id LIKE 'fi-9%' ORDER BY id`)).map((r) => r.id)
   assert.deepEqual(await ids(null), [], 'no one signed in reads none')
-  assert.deepEqual(await ids('anyone@test.example'), [], 'nor one who holds no read over the co-op\'s circle')
+  assert.deepEqual(await ids('anyone@test.example'), [], 'nor one who holds no read over the coop\'s circle')
   assert.deepEqual(await ids(sofia), ['fi-9001', 'fi-9002', 'fi-9003'])
   assert.deepEqual(await ids(camille), ['fi-9001', 'fi-9003'])
   assert.deepEqual(await ids('lea@test.example'), ['fi-9001', 'fi-9002'], 'a power registered for a class reads that class alone')

@@ -2,6 +2,7 @@ import { icons, money, type App, type Tone } from '@cella/org-ui'
 import type { Detail, Listed } from '../models/invoice.ts'
 import Issue from './blocks/Issue.svelte'
 import Lines from './blocks/Lines.svelte'
+import Payments from './blocks/Payments.svelte'
 import Send from './blocks/Send.svelte'
 import Body from './blocks/Body.svelte'
 
@@ -9,8 +10,8 @@ const standing = (i: Listed) => (i.overdue ? 'overdue' : i.state)
 const tones: Record<string, Tone> = { overdue: 'warning', unpaid: 'accent', partial: 'accent', paid: 'positive', overpaid: 'warning', voided: 'neutral' }
 
 // The feat's client side: the invoices, a new invoice, and an invoice's
-// page, what it bills for and whom, its lines and payments in a tab of
-// their own.
+// page, which opens on its panels: its lines and totals, then its
+// payments and standing, then its notes; its postings in a tab.
 export const app: App = {
   name: 'invoice',
   collections: {
@@ -45,20 +46,16 @@ export const app: App = {
         eyebrow: 'Invoice',
         title: (i: Detail) => i.label,
         subtitle: (i: Detail) => i.id,
+        // Who it bills, where a client's chip does not already name them;
+        // its due day is the Payments panel's header's but once voided.
         properties: (i: Detail) => [
-          { label: 'Bills', value: i.bill_to },
+          { label: 'Bills', value: i.bill_to, glyph: icons.Receipt, lead: 'bills' },
           { label: 'Standing', value: standing(i), kind: 'badge', tone: tones[standing(i)] },
-          { label: 'Total', value: i.total, kind: 'money' },
-          { label: 'Net', value: i.net, kind: 'money' },
-          { label: 'VAT', value: i.vat, kind: 'money' },
-          { label: 'Paid', value: i.paid, kind: 'money' },
-          { label: 'Owed', value: i.owed, kind: 'money' },
-          ...(i.credit ? [{ label: 'Credit owed back', value: i.credit, kind: 'money' as const }] : []),
           { label: 'Issued', value: i.issued, kind: 'date' },
-          { label: 'Due', value: i.due, kind: 'date', tone: i.overdue ? 'warning' : undefined },
+          ...(i.voided ? [{ label: 'Due', value: i.due, kind: 'date' as const }] : []),
           { label: 'Sent', value: i.sent, kind: 'date' },
-          ...(i.bill_address ? [{ label: 'Billed at', value: i.bill_address.replaceAll('\n', ', ') }] : []),
-          ...(i.voided ? [{ label: 'Voided', value: i.voided, kind: 'date' as const }, { label: 'Why', value: i.reason }] : []),
+          ...(i.bill_address ? [{ label: 'Billed at', value: i.bill_address.replaceAll('\n', ', '), glyph: icons.MapPinSimple }] : []),
+          ...(i.voided ? [{ label: 'Voided', value: i.voided, kind: 'date' as const }, { label: 'Why', value: i.reason, glyph: icons.ChatCircle, lead: 'reason' }] : []),
         ],
         related: (i: Detail) => [{ label: 'Download PDF', sub: `${i.id}.pdf`, href: `/invoices/${i.id}/content` }],
         activity: (i: Detail) => [
@@ -69,10 +66,11 @@ export const app: App = {
         ],
         tabs: [
           { id: 'overview', label: 'Overview' },
-          { id: 'lines', label: 'Lines' },
           { id: 'postings', label: 'Postings' },
         ],
-        blocks: [Body, { tab: 'lines', block: Lines }],
+        layout: 'panels',
+        body: Body,
+        blocks: [Lines, Payments],
         actions: Send,
       },
     },

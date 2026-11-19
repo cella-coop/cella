@@ -8,7 +8,7 @@ type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
 // The invitation: a person invited on the verdict date, holding nothing,
-// and the link it is taken up by, if it comes with one. Someone the co-op
+// and the link it is taken up by, if it comes with one. Someone the coop
 // knows already, as a worker, is the same person and keeps their name;
 // someone new becomes a person, and their name is personal data, which
 // the log commits to and the vault keeps. `membership.invites` checks the
@@ -91,7 +91,7 @@ async function linked(tx: Db, member: string, link: string) {
 
 // A new link for someone invited, under the power to invite, as a lost
 // link is replaced or an imported member is first given one; someone the
-// co-op never invited is refused before the notary, and `membership.links`
+// coop never invited is refused before the notary, and `membership.links`
 // checks the rest.
 export function linking(input: Link): Write<Link> {
   const link = digest(input.link)

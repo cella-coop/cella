@@ -1,6 +1,6 @@
 // The file feat's folds (`sql/004-folds.sql`), on a database holding the
 // app's core and this feat, in a transaction rolled back after: a file of
-// the co-op's own folded with its name and the bytes its entry keeps in
+// the coop's own folded with its name and the bytes its entry keeps in
 // base64, which must hash to the BLAKE3 it names, uploaded by the entry's
 // actor on its day; and a personal file, as the write a graft's fold
 // calls folds it, its name and bytes as their commitments. Run by `cella
@@ -30,7 +30,7 @@ after(async () => {
   await db.end()
 })
 
-test('a file of the co-op\'s own folds with its name and bytes, uploaded by the entry\'s actor on its day, and refuses bytes that hash to another', async () => {
+test('a file of the coop\'s own folds with its name and bytes, uploaded by the entry\'s actor on its day, and refuses bytes that hash to another', async () => {
   const stored = { file: 'fi-9001', class: 'none', subject: null, type: 'text/plain', size: 3, hash: abc, name: 'statutes.txt', bytes: 'YWJj' }
   await fold(1, stored)
   assert.deepEqual(

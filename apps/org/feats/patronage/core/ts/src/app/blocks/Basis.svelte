@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { Section, Table, money, type Column } from '@cella/org-ui'
+  import { icons, Panel, Table, money, type Column } from '@cella/org-ui'
   import type { Line, Sheet } from '../../models/statement.ts'
 
   // A worker's part of the year's work share, basis by basis: what it
   // divides by for them, the weight the terms give the basis, the whole
-  // portion it divides and their part of it; the parts add up to theirs.
+  // portion it divides and their part of it; the parts add up to theirs,
+  // ruled off under them. The statement's overview panel.
   let { data }: { data: Sheet; id: string } = $props()
 
   const names: Record<Line['basis'], string> = { salary: 'By pay', hours: 'By time worked', equal: 'In equal parts' }
@@ -19,6 +20,6 @@
   ]
 </script>
 
-<Section title="Work share, by basis" count={data.lines.length}>
-  <Table {columns} rows={data.lines} />
-</Section>
+<Panel title="Work share, by basis" icon={icons.ChartPie} count={data.lines.length}>
+  <Table dense {columns} rows={data.lines} totals={[{ label: 'Their part', value: data.amount, total: true }]} />
+</Panel>

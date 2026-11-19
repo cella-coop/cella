@@ -76,7 +76,7 @@ test('a withholding ends the disclosure rule in force and nothing else: one nami
       return id
     }
     const rule = await adopt(disclosed({ ...defaults }), 1)
-    const publication = await adopt('The co-op publishes its {publish: circles and roles} to every person signed in to the scope, member or not', 2)
+    const publication = await adopt('The coop publishes its {publish: circles and roles} to every person signed in to the scope, member or not', 2)
     assert.equal((await db.query('SELECT count(*)::int AS n FROM circle.publication WHERE policy = $1', [publication])).rows[0].n, 1)
     const withholdings = async () => (await db.query<{ n: number }>("SELECT count(*)::int AS n FROM motion.motion WHERE title LIKE 'Share no total%'")).rows[0].n
     const proposed = await withholdings()

@@ -7,7 +7,8 @@ import Body from './blocks/Body.svelte'
 
 // The feat's client side: every payslip in a table, with a dashboard of
 // the payroll by month; preparing a month's run; and a payslip's page,
-// with its run's approval and payment, its lines in a tab of their own.
+// with its run's approval and payment, which opens on its pay, line by
+// line, then its notes.
 export const app: App = {
   name: 'payslip',
   collections: {
@@ -35,7 +36,7 @@ export const app: App = {
         dashboard: [
           { kind: 'kpi', title: 'Gross pay', measure: { op: 'sum', field: 'gross' } },
           { kind: 'kpi', title: 'Net pay', measure: { op: 'sum', field: 'net' } },
-          { kind: 'kpi', title: 'Cost to the co-op', measure: { op: 'sum', field: 'cost' } },
+          { kind: 'kpi', title: 'Cost to the coop', measure: { op: 'sum', field: 'cost' } },
           { kind: 'kpi', title: 'Awaiting payment', measure: { op: 'sum', field: 'net' }, where: [{ field: 'state', is: ['prepared', 'approved'] }] },
           { kind: 'chart', title: 'Payroll by month', measure: { op: 'sum', field: 'cost' }, by: 'month' },
           { kind: 'chart', title: 'Gross pay by month', measure: { op: 'sum', field: 'gross' }, by: 'month' },
@@ -46,9 +47,6 @@ export const app: App = {
         title: (p: Payslip) => `Payslip ${p.month}`,
         properties: (p: Payslip) => [
           { label: 'Run', value: p.state, kind: 'badge', tone: tones[p.state] },
-          { label: 'Gross', value: p.gross, kind: 'money' },
-          { label: 'Net', value: p.net, kind: 'money' },
-          { label: 'Hours', value: p.hours, kind: 'number' },
           { label: 'Member', value: p.member, kind: 'person', href: `/people/${p.member}` },
         ],
         activity: (p: Payslip) => [
@@ -56,11 +54,9 @@ export const app: App = {
           ...(p.approved ? [{ at: p.approved, text: 'approved', who: p.approver ?? undefined }] : []),
           { at: p.generated, text: 'prepared' },
         ],
-        tabs: [
-          { id: 'overview', label: 'Overview' },
-          { id: 'lines', label: 'Lines' },
-        ],
-        blocks: [Body, { tab: 'lines', block: Slip }],
+        layout: 'panels',
+        body: Body,
+        blocks: [Slip],
         actions: Run,
       },
     },

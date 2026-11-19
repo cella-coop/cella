@@ -3,7 +3,7 @@
 // reads a mandate's scope against the owning circle of the record a write
 // concerns (`circle.covers`), never where a circle sits, since circles
 // never nest: one on `own` covers the circle its seat is in, one on a
-// circle that circle, one with none the whole co-op. A seat in the
+// circle that circle, one with none the whole coop. A seat in the
 // circle grants nothing without a mandate. Run by `cella test slice
 // membership`.
 
@@ -58,7 +58,7 @@ test('a lead\'s mandate, on their own circle, covers its records and no other\'s
   assert.equal(await may(hugo, 'approve-time', 'brand'), true)
   assert.equal(await may(hugo, 'approve-time', 'web'), false, 'his seat there ended')
   assert.equal(await may(hugo, 'approve-time', 'coordination'), false)
-  assert.equal(await may(hugo, 'approve-time', 'ag'), false, 'the root\'s records are the whole co-op\'s')
+  assert.equal(await may(hugo, 'approve-time', 'ag'), false, 'the root\'s records are the whole coop\'s')
   assert.equal(await may(hugo, 'commit', 'brand'), false)
 })
 
@@ -67,7 +67,7 @@ test('a mandate on a circle covers that circle alone, wherever its holder sits',
   assert.equal(await may(julien, 'approve-time', 'operations'), false)
 })
 
-test('the manager\'s, on the whole co-op, covers every circle\'s records, the root\'s among them', async () => {
+test('the manager\'s, on the whole coop, covers every circle\'s records, the root\'s among them', async () => {
   for (const c of ['ag', 'coordination', 'brand', 'web']) {
     assert.equal(await may(camille, 'approve-time', c), true, c)
   }

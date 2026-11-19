@@ -1,9 +1,9 @@
 +++
 title = "Task"
-updated = 2026-11-17
+updated = 2026-11-19
 +++
 
-Assignable work items: the atomic unit of the co-op's work. A task stands
+Assignable work items: the atomic unit of the coop's work. A task stands
 alone or sits in a project; who does it and which project it is in are
 the grafts'.
 
@@ -15,12 +15,19 @@ the grafts'.
 | comment | `id`, `task`, `author`, `parent?`, `text`, `mentions[]`, `posted`, `resolved?` | `task` a foreign key into `task.task`, `author` into `person.person`; `parent` a root comment, never a reply, so replies are flat, one level; `resolved` only on a root |
 | reaction | `comment`, `person`, `emoji` | one row per comment, person and emoji of core body's fixed set; toggled |
 
-| Status | Meaning |
-|---|---|
-| backlog | someday, not planned |
-| todo | planned, not started |
-| doing | under way |
-| done | completed, on its day |
+| Status | Meaning | Tone |
+|---|---|---|
+| backlog | someday, not planned | neutral |
+| next | planned, not started; a new task's, unless it names another | accent |
+| active | under way | warning |
+| review | made, waiting on someone's check: a draft, a proof, a sign-off | neutral |
+| done | completed, on its day | positive |
+
+The statuses run in that order, which the board's columns follow, and
+read as a progression by their tones: a status's tone colours its dot
+and its group's header, a neutral one in an ink seeded by its value, so
+backlog and review read apart. Every status but done is open: a
+project's tasks open count backlog, next, active and review alike.
 
 Priorities are `urgent`, `high`, `normal` and `low`. Seedling's
 `cancelled` and subtasks are left out: a task no one will do goes back to
@@ -136,8 +143,8 @@ resolve, setting the root resolved on the entry's day or reopening it.
 ## Shell
 
 The `tasks` collection opens as a board grouped by status, its columns
-backlog, todo, doing and done, each card naming its priority, due day,
-assignee, a person, and project. Dragging a card into backlog, todo or doing is the
+backlog, next, active, review and done, each card naming its priority, due day,
+assignee, a person, and project. Dragging a card into backlog, next, active or review is the
 `move`, into done the `complete`, posted with the column entered and
 signed as the acting member; a refused move leaves the card where it
 was. The board also groups by priority, assignee or project. A task's
@@ -152,18 +159,24 @@ first, in core body's `Thread`, with the box that posts a comment and
 its mention picker; one who may not discuss the task reads the threads
 and has no box. A mention of a person is a row of their Inbox until
 they reply in its thread or it is resolved ([the
-inbox](../../core/person/index.md#shell)). It has no tab of its own.
+inbox](../../core/person/index.md#shell)). Its page is laid out as
+`body` ([record page
+layout](../../../../_corpus/doc/architecture.md#record-page-layout)), and
+it has no tab of its own.
 
 ## Lanterne
 
-Thirty-seven tasks across the projects and the co-op's own work, each
+Thirty-seven tasks across the projects and the coop's own work, each
 its circle's, its project's where it is filed in one, so each circle's
 lens shows its own, and most given to a member of that circle: the Halles shop's
 launch checklist and its care (Yusuf, Thomas, Amina, Léa), Ferrand's
 proofs and press check (Hugo), Terres Vives's microsite (Léa, Amina),
 Nuvola's newsletter and social calendar (Chloé, Malik), Julien's
 October close, the amendments the assembly drafts (Camille, Chloé) and
-coordination's staffing plan (Yusuf). The payment provider's go-live
+coordination's staffing plan (Yusuf). Every status holds some: three
+wait in review on someone's check, the microsite's wireframes, the
+amendment on members who live abroad and Nuvola's 2027 retainer
+proposal. The payment provider's go-live
 checklist, `t-1`, has a body, the steps before go-live and on the day,
 which the founding carries in with the task, as it carries a
 document's versions, so a seeded Lanterne's log is its founding alone.

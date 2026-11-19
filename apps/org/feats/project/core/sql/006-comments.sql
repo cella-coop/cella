@@ -84,7 +84,7 @@ INSERT INTO cella.power (op, power, amount, owner) VALUES
 -- payload names: its project, its parent, its text and its mentions, each in
 -- the order its text gives them. A reply answers a root: a reply to a
 -- reply is refused, naming the root to reply to, as is a mention of no
--- one the co-op knows. That the actor may discuss in the project's circle is
+-- one the coop knows. That the actor may discuss in the project's circle is
 -- the power's guard's, over the circle the payload names.
 CREATE FUNCTION project.posts(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
@@ -92,7 +92,7 @@ BEGIN ATOMIC
   SELECT CASE
     WHEN c.id IS NULL THEN 'no comment ' || coalesce(p.comment, 'is named')
     WHEN r.parent IS NOT NULL THEN 'comment ' || r.id || ' is a reply: reply to its root, comment ' || r.parent
-    WHEN u.person IS NOT NULL THEN '@[' || u.person || '] names no one the co-op knows: mention someone the picker offers'
+    WHEN u.person IS NOT NULL THEN '@[' || u.person || '] names no one the coop knows: mention someone the picker offers'
     WHEN c.author IS DISTINCT FROM cella.actor() THEN cella.actor() || ' may not post as ' || c.author
     WHEN c.project IS DISTINCT FROM p.project
       OR c.parent IS DISTINCT FROM p.parent

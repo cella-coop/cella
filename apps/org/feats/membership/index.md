@@ -1,6 +1,6 @@
 +++
 title = "Membership"
-updated = 2026-11-16
+updated = 2026-11-19
 +++
 
 A person's membership, from invited to exited, with the shares they hold.
@@ -210,7 +210,7 @@ is `api/seats.ts` and `app/seats.ts`.
   who is no member, invited or never, holds a seat in their working
   circle, and a suspended member's seats grant nothing until the
   suspension is lifted. Core's `circle_person.counts` asks it beside
-  whether the person is one the co-op knows.
+  whether the person is one the coop knows.
 - `member`, the right every active member holds (`009-active.sql`),
   registered by `person.register_right`: whom core's `person.holds`
   names for a right given to every member.
@@ -264,7 +264,7 @@ takes it up by a person's right, as `circle_person.empowered` asks.
 `counts.test.ts`, `may.test.ts` and `rights.test.ts`, on core's authority with this feat's standing registered: a seat counts in
 the assembly for an active member and elsewhere for anyone known whom
 membership has not suspended or let go; a mandate's scope covers the
-records of its circle, its holder's own or the whole co-op, and a seat
+records of its circle, its holder's own or the whole coop, and a seat
 with no mandate covers none; and a right is held by
 whoever core's person says is one of its people, with no seat, and
 `circle_person.rights` lists a right exactly where `entitled` grants its
@@ -287,7 +287,10 @@ membership's status, to filter and group by, with the shares and the day
 admitted beside it; the New form gains an invitation, under "Invite to
 join", whose link the inviter's browser draws: the write carries its
 digest, and once it settles the form shows the link, once, to pass on. A
-person's page gains the membership's days and shares and, once taken up,
+person's page gains, as a panel of its overview, where they stand as a
+member in a sentence, invited, a member since a day with the shares
+they hold, suspended or gone, linking to their Membership tab; and,
+among its properties, the membership's days and shares and, once taken up,
 the first device the invitation enrolled and the day; while they are
 invited and have not, the Devices step offers a new link, shown the same
 way. Taking an invitation up is the shell's `/join/<secret>` page,
@@ -306,7 +309,7 @@ answer it and through what. A power held by a seat names the circle it
 is held in, the role, the tenure that holds the role, from and until,
 or the seat alone for the participant's, and the mandate, with its
 limit per write, or its budget and its period, said to be unchecked,
-since `may` checks no budget yet, and what it covers, the whole co-op,
+since `may` checks no budget yet, and what it covers, the whole coop,
 a circle or the seat's own circle, each mandate linking to its page and
 its chain ([the shell](../../core/circle/index.md#shell)). A power
 held twice, by two seats or two mandates, lists each. A power held by a

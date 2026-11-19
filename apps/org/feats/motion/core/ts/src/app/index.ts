@@ -36,15 +36,15 @@ export const app: App = {
         eyebrow: 'Motion',
         title: (d: Detail) => d.title,
         subtitle: (d: Detail) => d.id,
+        // Its deadline and its close are the Vote panel's header's, so the
+        // drawer leaves them out.
         properties: (d: Detail) => [
-          { label: 'Procedure', value: d.terms.label },
-          ...(terms(d.terms) === d.terms.label.toLowerCase() ? [] : [{ label: 'Terms', value: terms(d.terms) }]),
+          { label: 'Procedure', value: `${d.terms.label.charAt(0).toLowerCase()}${d.terms.label.slice(1)}`, glyph: icons.Scales, lead: 'by' },
+          ...(terms(d.terms) === d.terms.label.toLowerCase() ? [] : [{ label: 'Terms', value: terms(d.terms), glyph: icons.ListChecks, lead: 'needs' }]),
           { label: 'Circle', value: d.circleName, href: `/circles/${d.circle}` },
-          { label: 'Put by', value: d.authorName, href: `/circles/${d.authorCircle}` },
+          { label: 'Put by', value: d.authorName, href: `/circles/${d.authorCircle}`, lead: 'put by' },
           { label: 'Proposed', value: d.proposed, kind: 'date' },
-          { label: 'Deadline', value: d.deadline, kind: 'date' },
-          { label: 'Closed', value: d.closed, kind: 'date' },
-          { label: 'Cutoff', value: d.cutoff === null ? null : `receipt ${d.cutoff}`, kind: 'mono' },
+          { label: 'Cutoff', value: d.cutoff === null ? null : `receipt ${d.cutoff}`, kind: 'mono', lead: 'counted to' },
         ],
         related: (d: Detail) => [{ label: d.circleName, sub: 'circle', href: `/circles/${d.circle}` }],
         activity: (d: Detail) => d.given.map((g) => ({ at: g.at, who: g.member, text: `${g.stance}, receipt ${g.receipt}` })),
@@ -56,7 +56,9 @@ export const app: App = {
           { id: 'stances', label: 'Stances' },
           { id: 'effects', label: 'Effects' },
         ],
-        blocks: [Proposal, Vote, { tab: 'effects', block: Effects }],
+        layout: 'body',
+        body: Proposal,
+        blocks: [Vote, { tab: 'effects', block: Effects }],
         // The deliberation, under the Activity like any record's.
         comment: Discussion,
         actions: Close,

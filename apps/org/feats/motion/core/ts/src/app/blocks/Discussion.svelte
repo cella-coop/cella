@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Conversation, Form, Hidden, Icon, icons, Mention, Message, Note, plain, Remark, Rich, RichField, type Embeds } from '@cella/org-ui'
+  import { Button, Conversation, Empty, Form, Hidden, Icon, icons, Mention, Message, Note, plain, Remark, Rich, RichField, type Embeds } from '@cella/org-ui'
   import type { Detail } from '../../models/motion.ts'
   import { conversations, parts } from '../../models/thread.ts'
   import { useThread } from '../../hooks/useThread.ts'
@@ -53,7 +53,7 @@
     </Conversation>
   </div>
 {:else}
-  <Note text="No comments yet" quiet />
+  <Empty text="No comments yet" />
 {/each}
 {#if !data.closed}
   <div data-box>

@@ -17,7 +17,7 @@ export interface Payslip {
   employee: number
   employer: number
   net: number
-  // What the co-op pays for it: gross pay and the employer's charges.
+  // What the coop pays for it: gross pay and the employer's charges.
   cost: number
   state: State
   generated: string

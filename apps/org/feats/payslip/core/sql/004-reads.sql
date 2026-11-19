@@ -1,7 +1,7 @@
 -- Who reads pay, in place of core's row-level policy, which `read` would
 -- open: a member their own salary and payslips, and the pay runs they are
 -- paid in; whoever prepares, approves or pays the pay runs, those of the
--- circles their mandates cover, the whole co-op's. A write's transaction sees every row, as its guards do.
+-- circles their mandates cover, the whole coop's. A write's transaction sees every row, as its guards do.
 INSERT INTO cella.reading (what, key, power, owner) VALUES
   ('payslip', NULL, 'prepare-payroll', 'payslip'),
   ('payslip', NULL, 'approve-payroll', 'payslip'),

@@ -1,6 +1,7 @@
 -- What of a contact is personal data: a company's name and contact
--- details, and every contact's address and the notes kept on them, all
--- of class `contact`, erased when asked. A person contact's name, email
+-- details, and every contact's address, all of class `contact`, erased
+-- when asked. Its notes are its body, free text that is its author's
+-- (trust.md, "Personal data"). A person contact's name, email
 -- and phone are core person's, registered there by their address. A
 -- company's are registered so its writes commit to them too, but only a
 -- person is erased. The id is the slug invoices and projects name the
@@ -9,8 +10,7 @@ INSERT INTO cella.personal (schema, tab, col, class, subject, owner) VALUES
   ('contact', 'contact', 'name', 'contact', 'id', 'contact'),
   ('contact', 'contact', 'email', 'contact', 'id', 'contact'),
   ('contact', 'contact', 'phone', 'contact', 'id', 'contact'),
-  ('contact', 'contact', 'address', 'contact', 'id', 'contact'),
-  ('contact', 'contact', 'note', 'contact', 'id', 'contact');
+  ('contact', 'contact', 'address', 'contact', 'id', 'contact');
 
 INSERT INTO cella.power (op, power, amount, owner) VALUES
   ('contact:contact:erase', 'erase-personal-data', NULL, 'contact');

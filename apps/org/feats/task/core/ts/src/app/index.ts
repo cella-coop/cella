@@ -5,7 +5,10 @@ import Comments from './blocks/Comments.svelte'
 import Create from './blocks/Create.svelte'
 import Complete from './blocks/Complete.svelte'
 
-const tones: Record<Stage, Tone> = { backlog: 'neutral', todo: 'neutral', doing: 'accent', done: 'positive' }
+// The statuses read as a progression: at rest, up next, under way, waiting
+// on a check, done. A neutral tone wears an ink seeded by its value, so
+// backlog and review, both neutral, still read apart.
+const tones: Record<Stage, Tone> = { backlog: 'neutral', next: 'accent', active: 'warning', review: 'neutral', done: 'positive' }
 
 // The feat's client side: the tasks as a board by status, on which a card
 // dragged between columns is the move, or into Done the completion; a new
@@ -32,7 +35,7 @@ export const app: App = {
         ],
         look: { layout: 'board', by: 'status', lanes: { status: [...statuses], priority: [...priorities] }, cards: ['priority', 'due', 'created'] },
         shifts: [
-          { by: 'status', to: ['backlog', 'todo', 'doing'], action: 'move' },
+          { by: 'status', to: ['backlog', 'next', 'active', 'review'], action: 'move' },
           { by: 'status', to: ['done'], action: 'complete' },
         ],
       },
@@ -74,7 +77,8 @@ export const app: App = {
           { label: 'Completed', value: t.completed, kind: 'date' },
         ],
         activity: (t: Task) => [...(t.completed ? [{ at: t.completed, text: 'completed' }] : []), { at: t.created, text: 'created' }],
-        blocks: [Body],
+        layout: 'body',
+        body: Body,
         comment: Comments,
         actions: Complete,
       },

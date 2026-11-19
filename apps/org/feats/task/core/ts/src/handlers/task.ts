@@ -17,7 +17,7 @@ export const creating = (input: Create): Write<Created> => ({
       `INSERT INTO task.task (title, priority, due, status, created)
        VALUES ($1, $2, $3, $4, cella.verdict_date())
        RETURNING id, to_char(created, 'YYYY-MM-DD') AS created`,
-      [input.title, input.priority ?? 'normal', input.due || null, input.status ?? 'todo'],
+      [input.title, input.priority ?? 'normal', input.due || null, input.status ?? 'next'],
     )
     return { task: rows[0].id, created: rows[0].created }
   },
@@ -28,7 +28,7 @@ export const creating = (input: Create): Write<Created> => ({
     title: personal('task.task.title', v.task, input.title),
     priority: input.priority ?? 'normal',
     due: input.due || null,
-    status: input.status ?? 'todo',
+    status: input.status ?? 'next',
   }),
 })
 

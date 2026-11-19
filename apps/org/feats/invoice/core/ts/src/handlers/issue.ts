@@ -22,7 +22,7 @@ interface Kept {
 // Spends the series' next number (`invoice.spend`) and issues the invoice
 // on the verdict date, its amounts computed in SQL from its lines by the
 // VAT core library's `priced`, as a bill's are, each line's VAT rate sent
-// in hundredths of a percent, and the seller kept as the co-op's particulars
+// in hundredths of a percent, and the seller kept as the coop's particulars
 // name it then (`invoice.seller`). The guards on the op decide: `invoice.numbered`, that the number follows the
 // last with no gap; `invoice.identified`, that the invoice names its buyer,
 // their address and its seller's mentions; and any graft's on the op.

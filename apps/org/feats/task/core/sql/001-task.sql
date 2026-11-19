@@ -12,7 +12,7 @@ CREATE TABLE task.task (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id text PRIMARY KEY DEFAULT 't-' || nextval('task.number'),
   title text NOT NULL CHECK (title <> ''),
-  status text NOT NULL DEFAULT 'todo' CHECK (status IN ('backlog', 'todo', 'doing', 'done')),
+  status text NOT NULL DEFAULT 'next' CHECK (status IN ('backlog', 'next', 'active', 'review', 'done')),
   priority text NOT NULL DEFAULT 'normal' CHECK (priority IN ('urgent', 'high', 'normal', 'low')),
   due date,
   created date NOT NULL,

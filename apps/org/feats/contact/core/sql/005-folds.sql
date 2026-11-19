@@ -18,7 +18,6 @@ BEGIN
     address = CASE WHEN fields ? 'address' THEN to_jsonb(cella.commits('contact.contact.address', c.id, n, vals -> 'address')) ELSE c.address END,
     parent = CASE WHEN fields ? 'parent' THEN vals ->> 'parent' ELSE c.parent END,
     tags = CASE WHEN fields ? 'tags' THEN ARRAY(SELECT jsonb_array_elements_text(vals -> 'tags')) ELSE c.tags END,
-    note = CASE WHEN fields ? 'note' THEN cella.commits('contact.contact.note', c.id, n, vals -> 'note') ELSE c.note END,
     client = CASE WHEN fields ? 'client' THEN vals ->> 'client' ELSE c.client END,
     archived = CASE WHEN fields ? 'archived' THEN (vals ->> 'archived')::boolean ELSE c.archived END
   WHERE c.id = fold_set.id;

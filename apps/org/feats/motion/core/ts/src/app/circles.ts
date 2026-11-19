@@ -16,7 +16,9 @@ export const app: App = {
   extends: {
     circles: {
       page: {
-        properties: (p: Proposing | null) => (p ? [{ label: 'Decided by', value: p.decider.name, href: `/circles/${p.decider.id}` }] : []),
+        // The circle deciding about it, but the assembly's own, which
+        // answers to none.
+        properties: (p: Proposing | null) => (p && p.decider.id !== p.circle ? [{ label: 'Decided by', value: p.decider.name, href: `/circles/${p.decider.id}`, lead: 'answers to' }] : []),
         related: (p: Proposing | null) => (p?.open ?? []).map((o) => ({ label: o.title, sub: `open until ${o.deadline}`, href: `/motions/${o.motion}` })),
         blocks: [
           { tab: 'policies', block: Policies },

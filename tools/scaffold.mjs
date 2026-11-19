@@ -669,7 +669,7 @@ INSERT INTO cella.power (op, power, amount, owner) VALUES
 -- payload names: its ${F}, its parent, its text and its mentions, each in
 -- the order its text gives them. A reply answers a root: a reply to a
 -- reply is refused, naming the root to reply to, as is a mention of no
--- one the co-op knows. That the actor may discuss in the ${F}'s circle is
+-- one the coop knows. That the actor may discuss in the ${F}'s circle is
 -- the power's guard's, over the circle the payload names.
 CREATE FUNCTION ${F}.posts(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
@@ -677,7 +677,7 @@ BEGIN ATOMIC
   SELECT CASE
     WHEN c.id IS NULL THEN 'no comment ' || coalesce(p.comment, 'is named')
     WHEN r.parent IS NOT NULL THEN 'comment ' || r.id || ' is a reply: reply to its root, comment ' || r.parent
-    WHEN u.person IS NOT NULL THEN '@[' || u.person || '] names no one the co-op knows: mention someone the picker offers'
+    WHEN u.person IS NOT NULL THEN '@[' || u.person || '] names no one the coop knows: mention someone the picker offers'
     WHEN c.author IS DISTINCT FROM cella.actor() THEN cella.actor() || ' may not post as ' || c.author
     WHEN c.${F} IS DISTINCT FROM p.${F}
       OR c.parent IS DISTINCT FROM p.parent
@@ -854,7 +854,7 @@ type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 // the ${F}'s circle, which the payload names for the power's guard: a
 // root, or a reply to a root, which reopens it. Each \`@[address]\` its
 // text gives is a mention, a row each in the order given, of a person the
-// co-op knows; \`${F}.posts\` refuses a reply to a reply, naming the root, a
+// coop knows; \`${F}.posts\` refuses a reply to a reply, naming the root, a
 // mention of no one, and a post naming otherwise than its rows. The text
 // is its author's free text, and the log keeps it as written.
 export async function postComment(input: CommentPost, deps: Deps): Out<'${F}:comment:post', CommentPosted> {

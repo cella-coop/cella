@@ -234,7 +234,7 @@ const circles = (o) => o.kind === 'core' && !o.joins && o.lib === CIRCLES
 // reads: its policies and their values, never their wording.
 const REGISTER = 'policy'
 
-// Core's people, org's core feat `person`: everyone the co-op knows,
+// Core's people, org's core feat `person`: everyone the coop knows,
 // their devices and the rights, which every feat and graft may name, as
 // a comment's author or a task's assignee, as it names a circle.
 const PEOPLE = 'person'

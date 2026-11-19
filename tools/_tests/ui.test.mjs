@@ -5,7 +5,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { inlineCreates, pageSaves, problems, recordIconOverlap } from '../ui-check.mjs'
+import { figures, inlineCreates, layouts, loose, pageSaves, panels, problems, recordIconOverlap } from '../ui-check.mjs'
 
 const block = 'apps/org/feats/invoice/core/ts/src/app/blocks/Lines.svelte'
 const component = (script, markup = '<p>x</p>') => `<script lang="ts">\n${script}\n</script>\n\n${markup}\n`
@@ -126,6 +126,8 @@ test('an item page renders the Detail and its slices\' blocks alone', () => {
   const path = 'apps/org/ts/src/routes/[collection]/[id]/+page.svelte'
   const only = component("  import { Detail } from '@cella/org-ui'", '<svelte:boundary>\n  {#snippet failed(e)}<Failed error={e} />{/snippet}\n{#snippet header()}\n  <w.block data={d} />\n{/snippet}\n{#if page}\n  <Detail title="x">\n    {#each blocks as b}<b.block data={d} />{/each}\n  </Detail>\n{/if}\n</svelte:boundary>')
   assert.deepEqual(problems(path, only, false), [])
+  const listing = component("  import { Collection, Detail } from '@cella/org-ui'", '<Detail title="x">\n  {#if scope}<Collection tab="tasks" />{/if}\n</Detail>')
+  assert.deepEqual(problems(path, listing, false), [], 'a tab listing a collection scoped to the record draws the one Collection')
   const framed = component("  import { Frame, Properties } from '@cella/org-ui'", '<Frame title="x">\n  <Properties items={[]} />\n  <b.block data={d} />\n</Frame>')
   const found = problems(path, framed, false)
   assert.equal(found.length, 3, `${found}`)
@@ -279,4 +281,113 @@ test('a curated record icon overlapping a feature\'s or a collection\'s icon is 
   const none = { path: 'apps/org/core/ui/ts/src/icons.ts', text: "export { default as X } from 'phosphor-svelte/lib/X'\n" }
   assert.deepEqual(recordIconOverlap([curated, none]), [], 'no overlap, no complaint')
   assert.deepEqual(recordIconOverlap([icons]), [], 'no curated file in the sources, nothing to check')
+})
+
+// The layout check: a record's overview is laid out by its page's layout,
+// and every block on it but the body is a panel, a Panel.
+const owner = (page, blocks = {}) => [
+  {
+    path: 'apps/org/feats/invoice/core/ts/src/app/index.ts',
+    text: `import type { App } from '@cella/org-ui'
+import Body from './blocks/Body.svelte'
+import Lines from './blocks/Lines.svelte'
+import Postings from './blocks/Postings.svelte'
+export const app: App = {
+  name: 'invoice',
+  collections: {
+    invoices: {
+      view: { title: 'Invoices', columns: [] },
+      page: ${page},
+    },
+  },
+}
+`,
+  },
+  { path: 'apps/org/feats/invoice/core/ts/src/app/blocks/Body.svelte', text: component('', '<div data-body></div>\n<Editor />') },
+  { path: 'apps/org/feats/invoice/core/ts/src/app/blocks/Lines.svelte', text: blocks.lines ?? component('', '<Panel title="Lines">\n  <Table />\n</Panel>') },
+  { path: 'apps/org/feats/invoice/core/ts/src/app/blocks/Postings.svelte', text: component('', '<Section title="Postings">\n  <Table />\n</Section>') },
+]
+const extension = (blocks, text) => [
+  {
+    path: 'apps/org/grafts/invoice-project/ts/src/app/index.ts',
+    text: `import type { App } from '@cella/org-ui'
+import Project from './blocks/Project.svelte'
+export const app: App = { name: 'invoice-project', extends: { invoices: { page: { blocks: ${blocks} } } } }
+`,
+  },
+  { path: 'apps/org/grafts/invoice-project/ts/src/app/blocks/Project.svelte', text },
+]
+const tabs = "tabs: [{ id: 'overview', label: 'Overview' }, { id: 'postings', label: 'Postings' }]"
+
+test('a panel draws only Panels at its top level, past control blocks, declarations and snippets', () => {
+  assert.deepEqual(loose(component('', '{#if x}\n  {const y = $derived(1)}\n  <Panel title="A">\n    <Table />\n    {y}\n  </Panel>\n{:else}\n  <Panel title="B" />\n{/if}\n{#each xs as x (x)}<Panel title={x}><input type="text"><p>{x}</p></Panel>{/each}')), [])
+  assert.deepEqual(loose(component('', '{#snippet open()}<Button>x</Button>{/snippet}\n<Panel title="A" actions={open}>\n  <Row />\n</Panel>')), [], 'a snippet it defines is no part of what it draws')
+  assert.deepEqual(loose(component('', '<Section title="Lines">\n  <Table />\n</Section>')), ['<Section>'])
+  assert.deepEqual(loose(component('', '<Panel title="A" />\nloose words\n{@render more()}\n<p title={a > b ? "x" : "y"}>x</p>')), ['text', '{@render}', '<p>'])
+  assert.deepEqual(loose(component('', '<Inlay name="A" />')), ['<Inlay>'], 'the retired Inlay is no panel')
+})
+
+test("a button in a Panel's body is refused; its footer's actions, and a bare form's fields in its body, pass", () => {
+  const pressed = (markup) => panels(block, component('', markup))
+  assert.match(pressed('<Panel title="A">\n  <Table />\n  <Row end><Button href="/x">Open</Button></Row>\n</Panel>')[0], /draws a button in a Panel's body/)
+  assert.match(pressed('<Panel title="A">\n  <Form action="vote" submit="Consent" inline />\n</Panel>')[0], /draws a button in a Panel's body/, "a form drawing its own button")
+  assert.match(pressed('<Panel title="A">\n  <Form action="vote" button submit="Consent" />\n</Panel>')[0], /draws a button in a Panel's body/, 'a form that is its button belongs in the footer')
+  assert.deepEqual(pressed('<Panel title="A">\n  <Table />\n  {#snippet actions()}<Button href="/x">Open</Button><Form action="vote" button submit="Consent" />{/snippet}\n  {#snippet help()}Why{/snippet}\n</Panel>'), [])
+  assert.deepEqual(pressed('{#snippet open()}<Button href="/x">Open</Button>{/snippet}\n<Panel title="A" actions={open}>\n  <Form id="f" action="charge" bare><Field label="Project" name="project" /></Form>\n  {#snippet actions()}<Button type="submit" form="f">Move</Button>{/snippet}\n</Panel>'), [])
+  assert.deepEqual(pressed('<Section title="A"><Button>Go</Button></Section>'), [], 'outside a panel a button stands where it is drawn')
+})
+
+test('the retired Inlay, a quiet Note for an empty state and a Sheet of totals are refused by name', () => {
+  assert.match(panels(block, component("  import { Inlay } from '@cella/org-ui'", '<Inlay name="A" />'))[0], /draws an Inlay or a Widget, which the Panel replaced/)
+  assert.match(panels(block, component('', '<Note text="Nothing yet" quiet />'))[0], /empty state as a quiet Note; draw Empty/)
+  assert.deepEqual(panels(block, component('', '<Note text="Closed" subtle />\n<Empty text="Nothing yet" />')), [])
+  assert.match(panels(block, component('', "<Sheet columns={['']} rows={totals} />"))[0], /Sheet of one unnamed column as a list of totals/)
+  assert.deepEqual(panels(block, component('', '<Sheet columns={data.columns} rows={data.rubrics} />\n<Table columns={lines} rows={rows} {totals} />')), [])
+})
+
+test("a sum or a count among a slice's properties is refused; its figures hold it", () => {
+  const app = 'apps/org/feats/project/core/ts/src/app/index.ts'
+  const page = (body) => `export const app = { collections: { projects: { page: { ${body} } } } }\n`
+  assert.match(figures(app, page("properties: (p) => [{ label: 'Budget', value: p.budget, kind: 'money' }],"))[0], /lists a sum or a count among its properties/)
+  assert.match(figures(app, page("properties: (t) => (t ? [{ label: 'Hours', value: t.hours, kind: 'number' }] : []),"))[0], /declare it in figures/)
+  assert.match(figures(app, page("properties: (p) => [{ label: 'Milestones', value: p.done, group: 'Figures' }],"))[0], /lists a sum or a count/)
+  assert.deepEqual(figures(app, page("properties: (p) => [{ label: 'Due', value: p.due, kind: 'date' }],\n        figures: (p) => [{ label: 'Budget', value: p.budget, kind: 'money' }],")), [])
+  assert.deepEqual(figures('apps/org/feats/project/core/ts/src/app/blocks/Budget.svelte', "properties: (p) => [{ kind: 'money' }]"), [], 'only an app module declares properties')
+})
+
+test('a panels page opens on its panels, its body a Notes panel, and each block on its overview is a Panel', () => {
+  assert.deepEqual(layouts(owner(`{ eyebrow: 'Invoice', title: (i) => i.label, ${tabs}, layout: 'panels', body: Body, blocks: [Lines, { tab: 'postings', block: Postings }] }`)), [])
+  assert.deepEqual(layouts(owner(`{ eyebrow: 'Invoice', title: (i) => i.label, ${tabs}, body: Body, blocks: [Lines] }`)), [], 'panels is the layout unset')
+  const loosely = layouts(owner(`{ eyebrow: 'Invoice', title: (i) => i.label, ${tabs}, layout: 'panels', body: Body, blocks: [{ tab: 'overview', block: Postings }] }`))
+  assert.equal(loosely.length, 1)
+  assert.match(loosely[0], /Postings\.svelte: is placed on the invoices page's overview by invoice and draws <Section> outside a panel; draw it in one Panel/)
+  assert.deepEqual(layouts(owner(`{ eyebrow: 'Invoice', title: (i) => i.label, ${tabs}, layout: 'panels', body: Body, blocks: [Body] }`)).length, 1, 'the body placed among the blocks is no panel')
+})
+
+test('a panels page without a panel is refused, and so is a body page without a body', () => {
+  const none = layouts(owner(`{ eyebrow: 'Invoice', title: (i) => i.label, ${tabs}, layout: 'panels', body: Body, blocks: [{ tab: 'postings', block: Postings }] }`))
+  assert.deepEqual(none, [
+    "apps/org/feats/invoice/core/ts/src/app/index.ts: invoice's invoices page opens on its panels and has none, so its overview opens on its notes alone; give it a panel summarising the record, or lay it out as 'body' if it is a record of words",
+  ])
+  const filled = layouts([...owner(`{ eyebrow: 'Invoice', title: (i) => i.label, ${tabs}, body: Body }`), ...extension('[Project]', component('', '<Panel title="Project" />'))])
+  assert.deepEqual(filled, [], "an extension's panel is the page's panel too")
+  const bodiless = layouts(owner(`{ eyebrow: 'Invoice', title: (i) => i.label, ${tabs}, layout: 'body', blocks: [Lines] }`))
+  assert.equal(bodiless.length, 1)
+  assert.match(bodiless[0], /invoices page opens on its body and declares none/)
+  assert.deepEqual(layouts(owner(`{ eyebrow: 'Invoice', title: (i) => i.label, layout: 'body', body: Body, blocks: [Lines] }`)), [], 'a body page puts its panels after its body')
+})
+
+test("an extension's block on the overview is a panel too; in another tab it may be anything", () => {
+  const page = `{ eyebrow: 'Invoice', title: (i) => i.label, ${tabs}, body: Body, blocks: [Lines] }`
+  const section = component('', '<Section title="Project" />')
+  assert.match(layouts([...owner(page), ...extension('[Project]', section)])[0], /Project\.svelte: is placed on the invoices page's overview by invoice-project and draws <Section> outside a panel/)
+  assert.match(layouts([...owner(page), ...extension("[{ tab: 'overview', block: Project }]", section)])[0], /by invoice-project and draws <Section>/, 'named by the tab the owner opens on')
+  assert.deepEqual(layouts([...owner(page), ...extension("[{ tab: 'postings', block: Project }]", section)]), [])
+})
+
+test('a block the layout check cannot read on the overview is refused', () => {
+  const spread = layouts(owner(`{ eyebrow: 'Invoice', title: (i) => i.label, ${tabs}, body: Body, blocks: [...[Lines].map((block) => block)] }`))
+  assert.match(spread[0], /that is not a component's name or a \{ tab, block \} naming one/)
+  const elsewhere = layouts(owner(`{ eyebrow: 'Invoice', title: (i) => i.label, ${tabs}, body: Body, blocks: [Missing] }`))
+  assert.match(elsewhere[0], /places Missing on the invoices page's overview, which the layout check cannot read/)
 })

@@ -45,9 +45,24 @@
 // - No page draws a Save button: a `Form` whose `submit` starts with
 //   Save is drawn only inside the shared `Dialog` or `ProposeInstead`;
 //   a page's own Save is refused by name, wherever it is drawn.
+// - A record's overview is laid out by its page's layout (`layouts`):
+//   every block on it, its owner's or an extension's, the body alone
+//   excepted, is a panel, drawing only `Panel`s at its top level; a
+//   `panels` page shows a panel, and a `body` page declares its body.
+// - Panels are one system (`panels`): a `Button`, or a `Form` drawing
+//   its own button, inside a `Panel`'s body is refused, since its key
+//   actions are its footer's (`actions`), a bare form's submit among
+//   them by the form's id; the retired `Inlay` and `Widget` are refused
+//   by name; an empty state is `Empty`, never a `Note` drawn `quiet`; a
+//   list of totals is a `Table`'s `totals`, never a `Sheet` of one
+//   unnamed column (`columns={['']}`).
+// - A computed figure is no property (`figures`): a slice's `properties`
+//   holding a `money` or `number` value is refused; it declares it in
+//   `figures`, a `Stat` on the overview's Figures panel.
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, normalize, relative, sep } from 'node:path'
+import { pages } from './tabs.mjs'
 
 const client = /(^|\/)src\/(app|hooks|components)\//
 const server = /(^|\/)(api|drivers|handlers|interfaces)(\/|\.ts$|$)/
@@ -151,8 +166,9 @@ const mutable = (path, text) => {
 // its snippets, is the page's frame, as on an item's page.
 const collectionPage = /(^|\/)ts\/src\/routes\/\[collection\]\/\+page\.svelte$/
 // A shell's item page renders the UI core's one Detail, and in it only
-// the blocks its slices declare (`b.block`): no page frames a record
-// itself.
+// the blocks its slices declare (`b.block`) and, in a tab listing a
+// collection scoped to the record, the one Collection: no page frames a
+// record itself.
 const itemPage = /(^|\/)ts\/src\/routes\/\[collection\]\/\[id\]\/\+page\.svelte$/
 // The boundary a page's queries are awaited in, and what it draws while
 // they load and when one throws.
@@ -285,7 +301,7 @@ export function problems(path, text, ui) {
     if (!drawn.includes('Detail')) {
       out.push(`${path}: draws no <Detail>; every record opens on the UI core's one record page`)
     }
-    for (const tag of new Set(drawn.filter((t) => t !== 'Detail' && !t.includes('.') && !bounded.has(t)))) {
+    for (const tag of new Set(drawn.filter((t) => t !== 'Detail' && t !== 'Collection' && !t.includes('.') && !bounded.has(t)))) {
       out.push(`${path}: renders <${tag}> beside the Detail; a record's page is the Detail and its slices' blocks`)
     }
   }
@@ -390,6 +406,258 @@ export function inlineCreates(sources, ui = (path) => /(^|\/)core\/ui\/ts\//.tes
   return out
 }
 
+// The elements that hold nothing, which no closing tag follows.
+const voids = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr'])
+
+// Where a `{…}` or a tag opened at `at` ends: its closing brace or `>`,
+// past nested braces and quoted strings.
+function ending(markup, at, close) {
+  let depth = 0
+  let quote = null
+  for (let i = at; i < markup.length; i++) {
+    const c = markup[i]
+    if (quote) {
+      quote = c === quote ? null : quote
+    } else if (c === '"' || c === "'" || c === '`') {
+      quote = c
+    } else if (c === '{') {
+      depth++
+    } else if (c === '}') {
+      depth--
+      if (close === '}' && depth === 0) {
+        return i
+      }
+    } else if (c === '>' && close === '>' && depth === 0) {
+      return i
+    }
+  }
+  return markup.length
+}
+
+// What a component draws at its top level that is not a panel: every tag,
+// text or expression outside a `<Panel>`, past its scripts, styles,
+// comments, control blocks, declarations and the snippets it defines.
+export function loose(text) {
+  const markup = markupOf(text)
+  const out = new Set()
+  let depth = 0
+  let snippets = 0
+  for (let i = 0; i < markup.length; ) {
+    const c = markup[i]
+    const top = depth === 0 && snippets === 0
+    if (c === '{') {
+      const end = ending(markup, i, '}')
+      const inner = markup.slice(i + 1, end).trim()
+      if (depth === 0 && /^#snippet\b/.test(inner)) {
+        snippets++
+      } else if (depth === 0 && /^\/snippet\b/.test(inner)) {
+        snippets--
+      } else if (top && !/^[#:/]/.test(inner) && !/^const\s/.test(inner)) {
+        out.add(`{${inner.split(/[\s(]/)[0]}}`)
+      }
+      i = end + 1
+      continue
+    }
+    const tag = c === '<' && markup.slice(i).match(/^<(\/?)([A-Za-z][\w.:-]*)/)
+    if (tag) {
+      const end = ending(markup, i, '>')
+      if (tag[1]) {
+        depth--
+      } else {
+        if (top && tag[2] !== 'Panel') {
+          out.add(`<${tag[2]}>`)
+        }
+        if (markup[end - 1] !== '/' && !voids.has(tag[2])) {
+          depth++
+        }
+      }
+      i = end + 1
+      continue
+    }
+    if (top && !/\s/.test(c)) {
+      out.add('text')
+    }
+    i++
+  }
+  return [...out]
+}
+
+// The layout check: a record's overview, its first tab, is laid out by
+// its page's layout, `body` or `panels`, `panels` unset. On it every
+// block, its owner's or an extension's, is a panel, a component drawing
+// only `Panel`s at its top level, the record's body alone excepted; a
+// `body` page declares its body, and a `panels` page shows a panel, its
+// owner's or an extension's. `sources` are every file's `{ path, text }`,
+// paths relative to the repository.
+export function layouts(sources) {
+  const out = []
+  const texts = new Map(sources.map((s) => [s.path, s.text]))
+  const apps = sources.filter(({ path }) => /(^|\/)src\/app\/.*\.ts$/.test(path) && !/\.(svelte|d)\.ts$/.test(path)).map(({ path, text }) => pages(path, text))
+  const owners = new Map(apps.flatMap((p) => p.owned).map((o) => [o.collection, o]))
+  const overview = (o, b) => b.tab === null || b.tab === o?.tabs?.[0]
+  const fix = "draw it in one Panel, or several, each with a title and its key actions in its footer; put what is too big to summarise in a tab"
+  const check = (who, collection, file, imports, b) => {
+    if (b.name === null) {
+      out.push(`${file}: ${who} places a block on the ${collection} page's overview that is not a component's name or a { tab, block } naming one, which the layout check reads; name it`)
+      return
+    }
+    const spec = imports.get(b.name)
+    const path = spec?.startsWith('.') && normalize(join(dirname(file), spec))
+    const text = path && texts.get(path)
+    if (!text) {
+      out.push(`${file}: ${who} places ${b.name} on the ${collection} page's overview, which the layout check cannot read; import it from the slice's own .svelte file`)
+      return
+    }
+    const found = loose(text)
+    if (found.length) {
+      out.push(`${path}: is placed on the ${collection} page's overview by ${who} and draws ${found.join(', ')} outside a panel; ${fix}`)
+    }
+  }
+  for (const o of owners.values()) {
+    const layout = o.layout ?? 'panels'
+    if (layout !== 'body' && layout !== 'panels') {
+      out.push(`${o.file}: ${o.slice}'s ${o.collection} page declares its layout other than as 'body' or 'panels', which the layout check reads`)
+      continue
+    }
+    for (const b of o.blocks.filter((b) => overview(o, b))) {
+      check(o.slice, o.collection, o.file, o.imports, b)
+    }
+  }
+  const extended = apps.flatMap((p) => p.extended)
+  for (const e of extended) {
+    for (const b of e.blocks.filter((b) => overview(owners.get(e.collection), b))) {
+      check(e.slice, e.collection, e.file, e.imports, b)
+    }
+  }
+  for (const o of owners.values()) {
+    const layout = o.layout ?? 'panels'
+    const panels = [...o.blocks.filter((b) => overview(o, b)), ...extended.filter((e) => e.collection === o.collection).flatMap((e) => e.blocks.filter((b) => overview(o, b)))]
+    if (layout === 'panels' && !panels.length) {
+      out.push(
+        `${o.file}: ${o.slice}'s ${o.collection} page opens on its panels and has none, so its overview opens on its notes alone; give it a panel summarising the record, or lay it out as 'body' if it is a record of words`,
+      )
+    }
+    if (layout === 'body' && !o.body) {
+      out.push(`${o.file}: ${o.slice}'s ${o.collection} page opens on its body and declares none; declare its body, or lay it out as 'panels' with a panel summarising the record`)
+    }
+  }
+  return out
+}
+
+// The markup between `open` and its closing tag, past nested tags of the
+// same name; a self-closing tag holds nothing.
+function inside(markup, at, name) {
+  const end = ending(markup, at, '>')
+  if (markup[end - 1] === '/') {
+    return ''
+  }
+  let depth = 1
+  const re = new RegExp(`<(/?)${name}\\b`, 'g')
+  re.lastIndex = end
+  for (let m = re.exec(markup); m; m = re.exec(markup)) {
+    const close = ending(markup, m.index, '>')
+    if (m[1]) {
+      depth--
+    } else if (markup[close - 1] !== '/') {
+      depth++
+    }
+    if (depth === 0) {
+      return markup.slice(end + 1, m.index)
+    }
+  }
+  return markup.slice(end + 1)
+}
+
+// Markup with the snippets named `names` taken out, their own nested
+// snippets with them.
+function without(markup, names) {
+  let out = ''
+  let i = 0
+  const open = new RegExp(`\\{#snippet\\s+(${names.join('|')})\\b`, 'g')
+  for (let m = open.exec(markup); m; m = open.exec(markup)) {
+    out += markup.slice(i, m.index)
+    let depth = 0
+    const marks = /\{(#|\/)snippet\b/g
+    marks.lastIndex = m.index
+    let end = markup.length
+    for (let n = marks.exec(markup); n; n = marks.exec(markup)) {
+      depth += n[1] === '#' ? 1 : -1
+      if (depth === 0) {
+        end = ending(markup, n.index, '}') + 1
+        break
+      }
+    }
+    i = end
+    open.lastIndex = end
+  }
+  return out + markup.slice(i)
+}
+
+// The tags named `name` a markup opens, each read whole.
+const opened = (markup, name) => [...markup.matchAll(new RegExp(`<${name}\\b`, 'g'))].map((m) => markup.slice(m.index, ending(markup, m.index, '>') + 1))
+const flag = (tag, name) => new RegExp(`\\s${name}(?=[\\s/>=])`).test(tag)
+
+// Panels as one system, in a component's markup: no button in a panel's
+// body, the retired names, an empty state drawn as a quiet note, a list of
+// totals drawn as a sheet of one unnamed column.
+export function panels(path, text) {
+  const out = []
+  if (!path.endsWith('.svelte')) {
+    return out
+  }
+  const markup = markupOf(text)
+  for (const m of markup.matchAll(/<Panel\b/g)) {
+    const body = without(inside(markup, m.index, 'Panel'), ['actions', 'help'])
+    const pressed = opened(body, 'Button').length > 0 || opened(body, 'Form').some((t) => !flag(t, 'bare'))
+    if (pressed) {
+      out.push(`${path}: draws a button in a Panel's body; its key actions are its footer's, in its actions snippet, a bare form's submit among them by the form's id`)
+      break
+    }
+  }
+  if (/<(Inlay|Widget)\b/.test(markup) || /import\s*\{[^}]*\bInlay\b[^}]*\}\s*from\s*['"]@cella\/org-ui['"]/.test(text)) {
+    out.push(`${path}: draws an Inlay or a Widget, which the Panel replaced; draw a Panel`)
+  }
+  if (opened(markup, 'Note').some((t) => flag(t, 'quiet'))) {
+    out.push(`${path}: draws an empty state as a quiet Note; draw Empty`)
+  }
+  if (opened(markup, 'Sheet').some((t) => /\scolumns=\{\[\s*(['"])\1\s*\]\}/.test(t))) {
+    out.push(`${path}: draws a Sheet of one unnamed column as a list of totals; a Sheet is a financial statement, and totals are a Table's totals`)
+  }
+  return out
+}
+
+// A slice's `properties` holding a computed figure, in an app module: the
+// body of each `properties:` arrow, read to its close.
+export function figures(path, text) {
+  if (!/(^|\/)src\/app\/.*\.ts$/.test(path) || /\.(svelte|d)\.ts$/.test(path)) {
+    return []
+  }
+  for (const m of text.matchAll(/\bproperties:\s*\(/g)) {
+    let i = m.index + m[0].length
+    for (let depth = 1; i < text.length && depth > 0; i++) {
+      depth += text[i] === '(' ? 1 : text[i] === ')' ? -1 : 0
+    }
+    const start = text.indexOf('=>', i) + 2
+    let end = start
+    for (let depth = 0, began = false; end < text.length; end++) {
+      const c = text[end]
+      if ('([{'.includes(c)) {
+        depth++
+        began = true
+      } else if (')]}'.includes(c)) {
+        depth--
+      }
+      if ((began && depth === 0) || depth < 0 || (!began && c === ',')) {
+        break
+      }
+    }
+    if (/\bkind:\s*['"](money|number)['"]|\bgroup:\s*['"]Figures['"]/.test(text.slice(start, end + 1))) {
+      return [`${path}: lists a sum or a count among its properties; a computed figure is no property of the drawer: declare it in figures, a Stat on the overview`]
+    }
+  }
+  return []
+}
+
 // A phosphor-svelte icon a module import names, by its default export's
 // path, `phosphor-svelte/lib/<Name>`.
 const phosphorIcon = (spec) => spec.match(/^phosphor-svelte\/lib\/([A-Za-z]+)$/)?.[1]
@@ -455,6 +723,8 @@ export function checkUi(repo, dirs) {
       const path = relative(repo, join(repo, file))
       const text = readFileSync(join(repo, file), 'utf8')
       out.push(...problems(path, text, ui))
+      out.push(...panels(path, text))
+      out.push(...figures(path, text))
       sources.push({ path, text })
       if (ui) {
         core.add(path)
@@ -464,5 +734,6 @@ export function checkUi(repo, dirs) {
   out.push(...inlineCreates(sources, (path) => core.has(path)))
   out.push(...pageSaves(sources))
   out.push(...recordIconOverlap(sources))
+  out.push(...layouts(sources))
   return out
 }

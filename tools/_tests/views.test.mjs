@@ -80,7 +80,7 @@ test('a view that reads as its reader takes no declaration, however it came to',
 
 test('a shared view that sums by the columns it names passes; one that sums by whose a row is, or finer, does not', async () => {
   const totals = (by, group = 'l.account', show = 'l.account') =>
-    `CREATE VIEW ledger.totals AS SELECT ${show}, sum(l.amount) AS total, count(DISTINCT l.member) AS members FROM ledger.line l GROUP BY ${group};\nCOMMENT ON VIEW ledger.totals IS 'audience: shared by ${by}: the co-op''s totals';`
+    `CREATE VIEW ledger.totals AS SELECT ${show}, sum(l.amount) AS total, count(DISTINCT l.member) AS members FROM ledger.line l GROUP BY ${group};\nCOMMENT ON VIEW ledger.totals IS 'audience: shared by ${by}: the coop''s totals';`
   assert.equal(await check(totals('account')), '')
   assert.match(await check(totals('member', 'l.member', 'l.member')), /ledger.totals is declared shared, but shows or groups by ledger.line.member, which says whose a row is/)
   assert.match(await check(totals('account', 'l.account, l.member')), /ledger.totals groups by member, which it does not show|ledger.totals groups by l.member/)
@@ -97,7 +97,7 @@ test('a shared view that shows the rows of a circle\'s records is refused, unles
 })
 
 test('a shared view shows through its star, its WITH and the subqueries in its FROM', async () => {
-  const declared = (body, by = 'who') => `CREATE VIEW ledger.totals AS ${body};\nCOMMENT ON VIEW ledger.totals IS 'audience: shared by ${by}: the co-op''s totals';`
+  const declared = (body, by = 'who') => `CREATE VIEW ledger.totals AS ${body};\nCOMMENT ON VIEW ledger.totals IS 'audience: shared by ${by}: the coop''s totals';`
   for (const body of [
     'WITH w AS (SELECT l.member AS who, l.amount FROM ledger.line l) SELECT w.who, sum(w.amount) AS total FROM w GROUP BY w.who',
     'SELECT x.who, sum(x.amount) AS total FROM (SELECT l.member AS who, l.amount FROM ledger.line l) x GROUP BY x.who',

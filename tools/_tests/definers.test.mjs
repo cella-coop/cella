@@ -57,7 +57,7 @@ test('a definer function returning a scalar, or an invoker one returning rows, t
 
 test('a shared function that sums passes; one that shows whose a row is, outside a sum, does not', async () => {
   const sums = `${fn('totals(since date) RETURNS TABLE (account text, total bigint, members bigint)', 'SELECT l.account, sum(l.amount)::bigint, (SELECT count(DISTINCT m.member) FROM ledger.line m) FROM ledger.line l GROUP BY l.account')}
-COMMENT ON FUNCTION ledger.totals(date) IS 'audience: shared by account: the co-op''s totals by account';`
+COMMENT ON FUNCTION ledger.totals(date) IS 'audience: shared by account: the coop''s totals by account';`
   assert.equal(await check(sums), '')
   const whose = `${fn('totals() RETURNS TABLE (member text, total bigint)', 'SELECT l.member, sum(l.amount)::bigint FROM ledger.line l GROUP BY l.member')}
 COMMENT ON FUNCTION ledger.totals() IS 'audience: shared by member: each member''s total';`
@@ -110,7 +110,7 @@ COMMENT ON FUNCTION ledger.lines() IS 'audience: shared: every line';`
     assert.match(await check(shared(body)), /ledger.lines is declared shared, but shows ledger.line.member, which says whose a row is/, body)
   }
   const sums = `${fn('totals() RETURNS TABLE (account text, total bigint)', 'WITH w AS (SELECT l.account, sum(l.amount)::bigint AS total FROM ledger.line l GROUP BY l.account) SELECT * FROM w')}
-COMMENT ON FUNCTION ledger.totals() IS 'audience: shared by account: the co-op''s totals by account';`
+COMMENT ON FUNCTION ledger.totals() IS 'audience: shared by account: the coop''s totals by account';`
   assert.equal(await check(sums), '')
 })
 

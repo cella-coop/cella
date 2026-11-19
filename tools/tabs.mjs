@@ -46,12 +46,52 @@ function declared(tabs) {
   return ids.every((id) => id !== null) ? ids : null
 }
 
+// A page's blocks as the layout check reads them: each a component's
+// name, imported by the module, and the tab it names, null for a bare
+// one, which sits in the first; `name` is null where the block is not a
+// name or a `{ tab, block }` literal naming one.
+function entries(blocks) {
+  if (!blocks) {
+    return []
+  }
+  if (!ts.isArrayLiteralExpression(blocks)) {
+    return [{ name: null, tab: null }]
+  }
+  return blocks.elements.map((b) => {
+    if (ts.isIdentifier(b)) {
+      return { name: b.text, tab: null }
+    }
+    const tab = prop(b, 'tab')
+    const block = prop(b, 'block')
+    return {
+      name: block && ts.isIdentifier(block) ? block.text : null,
+      tab: tab && (ts.isStringLiteral(tab) || ts.isNoSubstitutionTemplateLiteral(tab)) ? tab.text : null,
+    }
+  })
+}
+
+// A module's default imports, by the name each binds.
+function imported(source) {
+  const out = new Map()
+  for (const s of source.statements) {
+    if (ts.isImportDeclaration(s) && s.importClause?.name && ts.isStringLiteral(s.moduleSpecifier)) {
+      out.set(s.importClause.name.text, s.moduleSpecifier.text)
+    }
+  }
+  return out
+}
+
 // What one module declares: the pages it owns, with their tabs and the
 // tabs its own blocks sit in, and the pages it extends, with whether it
-// declares tabs there and the tabs its blocks sit in.
+// declares tabs there and the tabs its blocks sit in. For the layout
+// check, each page's blocks by name, and an owned page's layout and body,
+// with the module's default imports.
 export function pages(file, text) {
   const owned = []
   const extended = []
+  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS)
+  const imports = imported(source)
+  const literal = (e) => (e && (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) ? e.text : e ? null : undefined)
   const visit = (n) => {
     if (ts.isObjectLiteralExpression(n) && (prop(n, 'collections') || prop(n, 'extends'))) {
       const name = prop(n, 'name')
@@ -62,19 +102,30 @@ export function pages(file, text) {
           continue
         }
         const tabs = prop(page, 'tabs')
-        owned.push({ file, slice, collection, tabs: tabs ? declared(tabs) : [], placed: placed(page) })
+        const body = prop(page, 'body')
+        owned.push({
+          file,
+          slice,
+          collection,
+          tabs: tabs ? declared(tabs) : [],
+          placed: placed(page),
+          layout: literal(prop(page, 'layout')),
+          body: body ? (ts.isIdentifier(body) ? body.text : null) : undefined,
+          blocks: entries(prop(page, 'blocks')),
+          imports,
+        })
       }
       for (const [collection, e] of props(prop(n, 'extends'))) {
         const page = prop(e, 'page')
         if (!collection || !page || !ts.isObjectLiteralExpression(page)) {
           continue
         }
-        extended.push({ file, slice, collection, tabs: Boolean(prop(page, 'tabs')), placed: placed(page) })
+        extended.push({ file, slice, collection, tabs: Boolean(prop(page, 'tabs')), placed: placed(page), blocks: entries(prop(page, 'blocks')), imports })
       }
     }
     ts.forEachChild(n, visit)
   }
-  visit(ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS))
+  visit(source)
   return { owned, extended }
 }
 

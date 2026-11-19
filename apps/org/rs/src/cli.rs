@@ -79,7 +79,7 @@ pub enum Command {
         erasures: Option<PathBuf>,
     },
 
-    /// Load a mock co-op from apps/org/fixtures
+    /// Load a mock coop from apps/org/fixtures
     Seed {
         /// The fixture's directory name, such as lanterne
         fixture: String,
@@ -137,7 +137,7 @@ pub enum Command {
         #[arg(long, value_name = "URL", requires = "prod")]
         url: Option<String>,
 
-        /// Serve a demo, a mock co-op's scope and never a real one's: the sign-in offers its fixture members, each marked as a demo member, and every page wears the demo's banner
+        /// Serve a demo, a mock coop's scope and never a real one's: the sign-in offers its fixture members, each marked as a demo member, and every page wears the demo's banner
         #[arg(long, requires = "prod")]
         demo: bool,
     },
@@ -233,7 +233,7 @@ pub enum Scaffolded {
 pub enum Part {
     /// The feat tree's dependencies, imports, actions and SQL boundaries
     Feats,
-    /// The mock co-ops balance, their links resolve, and they show every feature and every circle a slice of its own
+    /// The mock coops balance, their links resolve, and they show every feature and every circle a slice of its own
     Fixtures,
     /// The TypeScript type check of the server layers and tools
     Types,
@@ -243,6 +243,8 @@ pub enum Part {
     Pruned,
     /// The brand's generated files are what its house.json makes
     Brand,
+    /// Every tracked text file writes coop, never the hyphenated spelling, but the site's text and the dated Records
+    Spelling,
     /// The landing site's copy check, astro check over it, its build, the figure fixture's, the diagrams' type check, then the site's tools' tests
     Site,
     /// cargo check and clippy over the workspace
@@ -265,7 +267,7 @@ pub enum Db {
         #[arg(long)]
         db: Option<String>,
 
-        /// Also load a mock co-op from apps/org/fixtures, such as lanterne
+        /// Also load a mock coop from apps/org/fixtures, such as lanterne
         #[arg(long, value_name = "FIXTURE")]
         seed: Option<String>,
     },

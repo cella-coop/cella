@@ -87,7 +87,9 @@ pub fn run(repo: &Repo, steps: &Steps, command: Site) -> Result {
 /// `cella check site`: the text check (`tools/site-text-check.mjs`: a
 /// commit since main that changes the content collections is the
 /// operator's), the copy check (`tools/site-copy.mjs`: no word of copy
-/// outside the content collections), `astro check`, then a build
+/// outside the content collections), the site's half of the spelling
+/// check (`tools/spelling.mjs --site`: the site outside its text and the
+/// diagrams write coop), `astro check`, then a build
 /// into a directory of its own, removed after, so the check leaves `dist`
 /// as it found it, then the figure fixture's two builds there
 /// (`tools/site-figures.mjs`), which refuse an icon Phosphor lacks. It
@@ -103,6 +105,9 @@ pub fn check(repo: &Repo, steps: &Steps) -> Result {
     let mut copy = repo.node("site-copy.mjs");
     copy.arg(repo.site_dir());
     steps.run("site copy", &mut [copy], last_line)?;
+    let mut spelling = repo.node("spelling.mjs");
+    spelling.arg("--site").arg(&repo.root);
+    steps.run("site spelling", &mut [spelling], last_line)?;
     let mut diagrams = repo.node("site-diagrams.mjs");
     diagrams
         .arg(repo.root.join("packages/diagrams"))

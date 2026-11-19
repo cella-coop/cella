@@ -16,6 +16,7 @@ pub fn run(repo: &Repo, steps: &Steps, part: Option<Part>, no_sql: bool) -> Resu
             Part::Shell,
             Part::Pruned,
             Part::Brand,
+            Part::Spelling,
         ];
         if site {
             parts.push(Part::Site);
@@ -73,6 +74,11 @@ pub fn run(repo: &Repo, steps: &Steps, part: Option<Part>, no_sql: bool) -> Resu
                 let mut cmd = repo.node("brand.mjs");
                 cmd.arg("--check").arg(&repo.root);
                 steps.run("brand", &mut [cmd], last_line)?;
+            }
+            Part::Spelling => {
+                let mut cmd = repo.node("spelling.mjs");
+                cmd.arg(&repo.root);
+                steps.run("spelling", &mut [cmd], last_line)?;
             }
             Part::Site => site::check(repo, steps)?,
             Part::Org => unreachable!("org is its parts, listed above"),

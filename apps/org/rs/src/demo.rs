@@ -3,7 +3,7 @@ use crate::data;
 use crate::repo::Repo;
 use crate::run::{Fail, Result, Steps, last_line};
 
-/// The mock co-op every demo is founded as.
+/// The mock coop every demo is founded as.
 const FIXTURE: &str = "lanterne";
 
 /// The demo: its template, built from nothing on a cluster whose keys are

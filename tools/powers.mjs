@@ -7,7 +7,7 @@
 // actions.ts, which the TypeScript reads. This keeps the two equal: every power in one is
 // in the other, with the same amount field. No action is allowed by
 // omission: the one with no power, the log's first entry, declares the
-// check `first`, which SQL must back. And every power is one a co-op can
+// check `first`, which SQL must back. And every power is one a coop can
 // grant: a mandate a fixture adopts names it. Every action folds, too:
 // a slice's SQL registers how its entry applies to the state before it
 // (architecture.md, "Folds").
@@ -174,7 +174,7 @@ export function unfollowed(sources, follows) {
   return out
 }
 
-// The powers a fixture's co-op grants: every mandate and right among the
+// The powers a fixture's coop grants: every mandate and right among the
 // policies its closed motions adopt, as the seed adopts them, to a role,
 // to a circle or to the people a right names, by the power its sentence
 // marks, `{power: pay-supplier}`. `motions` is the fixture's motion.toml
@@ -191,7 +191,7 @@ export function mandates(motions, fixture) {
   return out
 }
 
-// Where an action needs a power no co-op can be seen to grant: no
+// Where an action needs a power no coop can be seen to grant: no
 // mandate, collective mandate or right among the fixtures' adopted
 // policies names it. A stance's power, listed in motion.stance_power, is
 // the procedure's to give the seats on a roll, and no mandate's.

@@ -39,7 +39,7 @@ const exists = async (name) => (await db.query('SELECT 1 FROM pg_database WHERE 
 // What a template's comment opens with, from its making on.
 const TEMPLATE = 'cella demo template: '
 // Refuses to drop a database that is not what its comment must say it is,
-// a demo's template or a copy of it, so no co-op's database is ever
+// a demo's template or a copy of it, so no coop's database is ever
 // dropped for a demo's.
 const refuse = async (name, marker, what) => {
   const made = (await db.query("SELECT coalesce(shobj_description(oid, 'pg_database'), '') AS made FROM pg_database WHERE datname = $1", [name])).rows[0]?.made ?? ''

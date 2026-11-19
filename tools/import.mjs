@@ -5,7 +5,7 @@
 // then undone, to say what would be created and what refused. The run is
 // recorded in the import feat either way. The member signs with their
 // TEST-ONLY fixture device, as the dev server does, so it imports for the
-// mock co-ops alone until members' own devices sign.
+// mock coops alone until members' own devices sign.
 // It connects as the app's role to DATABASE_URL if set, otherwise by the
 // PG* variables.
 // Usage: node tools/import.mjs <kind> <file> <address> [--dry-run]

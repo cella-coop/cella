@@ -25,7 +25,7 @@ pub struct Serve<'a> {
 /// is stopped, applies any new migration, then runs until stopped. Dev
 /// mode is Vite's dev server, whose sign-in page offers the fixture
 /// members; `prod` builds the shell and runs it as a scope's server,
-/// offering no one, or with `demo` a demo of a mock co-op, offering its
+/// offering no one, or with `demo` a demo of a mock coop, offering its
 /// fixture members, each marked as a demo member. Either way members sign
 /// in and sign every write with their own devices, and sessions are MACed
 /// with `.data/session.key`.

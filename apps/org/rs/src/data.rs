@@ -44,7 +44,7 @@ pub fn rewrap(repo: &Repo, url: Option<&str>) -> Result {
     Ok(())
 }
 
-/// A mock co-op's directory under `apps/org/fixtures`, by its name.
+/// A mock coop's directory under `apps/org/fixtures`, by its name.
 pub fn fixture(repo: &Repo, name: &str) -> Result<PathBuf> {
     let fixtures = repo.root.join("apps/org/fixtures");
     let dir = fixtures.join(name);

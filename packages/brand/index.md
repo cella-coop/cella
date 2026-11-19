@@ -1,6 +1,6 @@
 +++
 title = "Brand"
-updated = 2026-11-10
+updated = 2026-11-19
 +++
 
 `@cella/brand` is cella's house style as one package: the tones and
@@ -92,6 +92,17 @@ from the explorer:
   grown most of a pitch in from the box's edge, a focus kept clear of
   the panel. `avatarFrame` says where its picture and its words fall.
   The panel is always on the right: a page mirrors or turns the paths;
+- `actions.ts`, a row of actions as a row of cells, the site's links and
+  the shell's buttons alike: `actionCell`, one cell's corners in its
+  box, flat along its top and foot, each end either a point bulging
+  0.3 of its height past its words, at a height of it, or an edge it
+  shares with the cell beside it, leaning by a tilt, its middle set
+  past the box by `at` and parted from the other's by a gutter measured
+  across the slant; `actionCells`, a row's cells laid edge to edge,
+  each shared edge tilted by a seeded draw between 0.14 and 0.26 of the
+  height, alternately forward and back, and each end's point at a
+  seeded height about the middle; and `actionPath`, a cell's outline
+  with its corners rounded by 0.2 of its height;
 - `silhouette.ts`, the shapes a cluster fills, pure and seeded:
   `organic(kind, seed, limbs?)` for `ORGANIC`'s `amoeba`, a wobbling
   body putting out pseudopods, `branch`, a core whose limbs fork once,

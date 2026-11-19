@@ -1,21 +1,29 @@
 ---
 // The header, sticky at the top on a pane of glass with the paper's grain
-// in it: the brand's lockup linking home, the site's links, and the theme
-// toggle, an icon alone in the bar's far corner.
+// in it: the brand's lockup linking home, the site's links, its call to
+// action, one solid cell, and the theme toggle, an icon alone in the bar's
+// far corner.
 import lockup from '@cella/brand/lockup.svg?raw'
+import type { Link, Status } from '../schemas'
 import { iconMarkup } from '../lib/icon'
+import type { Marks } from '../lib/text'
+import Actions from './Actions.astro'
 import ThemeToggle from './ThemeToggle.astro'
 
-type Link = { label: string; href: string }
 interface Props {
   title: string
   nav: Link[]
   toggle: string
   menu: string
   home?: string
+  cta?: Link
+  drafted?: Marks
 }
 
-const { title, nav, toggle, menu, home = '/' } = Astro.props
+const { title, nav, toggle, menu, home = '/', cta, drafted } = Astro.props
+// the call to action wears one ink on every page, the coral home's hero
+// opens in, rather than each page's turn
+const ink: Status = 'error'
 const here = Astro.url.pathname.replace(/\/$/, '')
 const current = (href: string) => {
   const to = href.replace(/\/$/, '')
@@ -36,6 +44,13 @@ const current = (href: string) => {
       }
     </nav>
     <div class="tools">
+      {
+        cta && (
+          <div class="cta">
+            <Actions links={[{ link: cta, field: 'cta.label' }]} ink={ink} seed={3} drafted={drafted} />
+          </div>
+        )
+      }
       {
         nav.length > 0 && (
           <details class="menu">
@@ -207,6 +222,20 @@ const current = (href: string) => {
     gap: 0.75rem;
   }
 
+  /* the call to action, one cell sized to the bar: a finger's 44px tall
+     and lighter than a section's, so it leads without crowding the links */
+  .cta {
+    display: flex;
+  }
+
+  .cta :global(.actions .cell) {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 1.35rem;
+    font-size: 0.88rem;
+  }
+
   @media (max-width: 48rem) {
     .bar > nav {
       display: none;
@@ -218,6 +247,23 @@ const current = (href: string) => {
 
     .tools {
       margin-inline-start: auto;
+    }
+  }
+
+  /* on a phone the links are already in the menu, so the cell narrows
+     instead, and the bar's gaps with it */
+  @media (max-width: 30rem) {
+    .bar {
+      gap: 1rem;
+    }
+
+    .tools {
+      gap: 0.4rem;
+    }
+
+    .cta :global(.actions .cell) {
+      padding: 0 1rem;
+      font-size: 0.85rem;
     }
   }
 </style>

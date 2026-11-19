@@ -37,7 +37,7 @@ const nav = site.nav.filter((l) => !out.includes(linkedPage(l.href)))
 ---
 
 <Base title={full} description={description ?? site.description} noindex={hidden} card={card} name={site.title}>
-  <Header title={site.title} nav={nav} toggle={site.theme.toggle} menu={site.menu} />
+  <Header title={site.title} nav={nav} toggle={site.theme.toggle} menu={site.menu} cta={site.cta} drafted={site.drafted} />
   <main class="flow" data-drafted={drafted || undefined}>
     <slot />
   </main>

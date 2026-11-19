@@ -9,7 +9,7 @@ export type Status = (typeof STATUSES)[number]
 const link = z.object({ label: z.string(), href: z.string() })
 
 // What every page shares: the site's title and description, the header's
-// links, the theme toggle's label, the footer, the blog's labels, the
+// links and its call to action, the theme toggle's label, the footer, the blog's labels, the
 // forms' words, and the credit under a photo, whose {name} is the
 // photographer's, linked to their profile, and whose {unsplash} is
 // `unsplash`, linked to the photo.
@@ -19,6 +19,9 @@ export const site = z.object({
   // A page's tab title, whose {page} is the page's and {site} the site's.
   titled: z.string(),
   nav: z.array(link).default([]),
+  // The header's one call to action, at the bar's end after its links:
+  // its label and where it leads. None, the bar has none.
+  cta: link.optional(),
   // The address people write to, shown in the footer and wherever a page
   // places `<Email />`, hidden from harvesters (src/lib/email.ts).
   email: z.string().optional(),

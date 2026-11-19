@@ -1,6 +1,6 @@
 +++
 title = "Site"
-updated = 2026-11-14
+updated = 2026-11-19
 +++
 
 `apps/site` (`@cella/site`) is cella's landing site: an
@@ -33,11 +33,15 @@ Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:
 - **the header**, sticky, on a pane of glass with the paper's grain in
   it, near white in the light theme and near black in the dark, seen
   through and borderless: the brand's lockup linking home, the `site`
-  entry's links, the current page's marked, and the theme toggle, an
-  icon alone in the bar's far corner. On a narrow screen the links fold
-  into a menu under Phosphor's `list` icon, a `<details>`, which opens
-  and closes with no script; a small one closes it too on a press
-  outside it or Escape.
+  entry's links, the current page's marked, its call to action, `cta`,
+  and the theme toggle, an icon alone in the bar's far corner. The call
+  to action is a row of one `Action` cell after the links, solid in the
+  coral on every page, sized to the bar: a finger's 44px tall and
+  lighter than a section's; with no `cta` the bar has none. On a narrow
+  screen the links fold into a menu under Phosphor's `list` icon, a
+  `<details>`, which opens and closes with no script; a small one closes
+  it too on a press outside it or Escape. The call to action stays in
+  the bar beside the menu, and on a phone narrows with the bar's gaps.
 - **the page's body**, whatever its file places, in the order it places
   them ([the layout](#the-layout)); words it writes outside a section,
   as a post's prose, keep to a readable column at the sections' left
@@ -214,7 +218,8 @@ A row of `Action`s is a row of cells (`Actions.astro`): side by side,
 their tops and feet aligned, each pair sharing a slanted edge cut by one
 gutter and the row's two ends bulging, the `primary` one solid in the
 section's ink and the rest a wash of it; on a band, the band's light ink
-and a veil of it. A small script draws the cells once the row is laid
+and a veil of it. The cells' shape is the brand's (`actions.ts`), which
+the shell's buttons wear too. A small script draws the cells once the row is laid
 out and again when it changes size; before it, and with no script, each
 link is a plain rounded fill. A hovered or focused cell swells a little.
 
@@ -426,7 +431,7 @@ frontmatter between `+++` lines.
 
 | Collection | Where | What it holds |
 |---|---|---|
-| `site`, `siteDrafts` | `site.toml` | what every page shares: the site's title, description and tab title, the header's links, the menu's label, the theme toggle's label, the footer's line, home link and disclaimer, the blog's labels, the forms' words, the mark a diagram wears and the credit under a photo |
+| `site`, `siteDrafts` | `site.toml` | what every page shares: the site's title, description and tab title, the header's links and its call to action, `[cta]`'s `label` and `href`, the menu's label, the theme toggle's label, the footer's line, home link and disclaimer, the blog's labels, the forms' words, the mark a diagram wears and the credit under a photo |
 | `pages`, `pageDrafts` | `pages/<name>.mdx` | a page a file: its `title`, its `description` and whether it is `unlisted` or a `draft` in its frontmatter, and in its body the components it places ([the layout](#the-layout)); `home` is `/` and `blog` heads the blog |
 | `blog` | `blog/<name>.mdx` | one post a file, the operator's alone: its title, summary, date, authors, its cover (`photo`, with `caption`, `alt` and `ink`, engraved beside its title as a page's hero's) and whether it is a draft post, which shows in the dev server and is left out of the build; its body places what a page's may |
 

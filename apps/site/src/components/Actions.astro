@@ -36,41 +36,21 @@ const { links = [], ink, seed = 7, drafted = () => undefined } = Astro.props
 </div>
 
 <script>
-  import { roundedPath, rng, type Point } from '@cella/brand'
+  import { actionCells, actionPath, rng } from '@cella/brand'
 
   const f = (v: number) => v.toFixed(1)
 
-  // each cell's outline: flat along the row's top and foot, its shared
-  // sides slanted by a seeded tilt and parted by the gutter, measured
-  // across the slant so every gap is the same width, its outer ends
+  // each cell's outline is the brand's (`actions.ts`): its shared sides
+  // slanted by a seeded tilt and parted by the gutter, its outer ends
   // bulging past the label
-  function outlines(widths: number[], h: number, seed: number, gutter: number): Point[][] {
-    const rand = rng(seed)
-    const xs = widths.reduce((acc, w) => [...acc, acc[acc.length - 1] + w], [0])
-    const tilt = xs.map((_, i) => (i % 2 ? 1 : -1) * h * (0.14 + rand() * 0.12))
-    // half the gutter, as a horizontal shift that parts a slanted edge by it
-    const half = tilt.map((t) => ((gutter / 2) * Math.hypot(h, t)) / h)
-    const bulge = h * 0.3
-    return widths.map((_, i) => {
-      const [l, r] = [xs[i], xs[i + 1]]
-      const left: Point[] = i === 0
-        ? [[l + bulge, 0], [l, h * (0.42 + rand() * 0.16)], [l + bulge, h]]
-        : [[l + tilt[i] / 2 + half[i], 0], [l - tilt[i] / 2 + half[i], h]]
-      const right: Point[] = i === widths.length - 1
-        ? [[r - bulge, h], [r, h * (0.42 + rand() * 0.16)], [r - bulge, 0]]
-        : [[r - tilt[i + 1] / 2 - half[i + 1], h], [r + tilt[i + 1] / 2 - half[i + 1], 0]]
-      return [...left, ...right]
-    })
-  }
-
   function draw(row: HTMLElement) {
     const svg = row.querySelector('svg')!
     const cells = [...row.querySelectorAll<HTMLElement>('.cell')]
     const box = row.getBoundingClientRect()
     const h = box.height
-    const polys = outlines(cells.map((c) => c.getBoundingClientRect().width), h, Number(row.dataset.seed), 6)
+    const polys = actionCells(cells.map((c) => c.getBoundingClientRect().width), h, rng(Number(row.dataset.seed)), 6)
     svg.setAttribute('viewBox', `0 0 ${f(box.width)} ${f(h)}`)
-    svg.innerHTML = polys.map((p, i) => `<path class="${cells[i].dataset.tone ?? 'fill'}" d="${roundedPath(p, h * 0.2, f)}"/>`).join('')
+    svg.innerHTML = polys.map((p, i) => `<path class="${cells[i].dataset.tone ?? 'fill'}" d="${actionPath(p, h, f)}"/>`).join('')
     row.dataset.drawn = ''
     cells.forEach((c, i) => {
       const path = svg.children[i]

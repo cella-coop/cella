@@ -3,6 +3,10 @@
 
 email = "hello@cella.coop"
 
+[cta]
+label = "Demo"
+href = "https://app.cella.coop"
+
 [footer]
 home = "Home"
 

@@ -161,7 +161,7 @@ test('an arrangement is refused at its proposal where it is no root\'s, its circ
   assert.match(await refused('show-group', { circle: 'web', group: 'money', shown: 'yes' }), /no group money in the coop's layout: show one of organization, work, books, payments, membership/)
   assert.match(await refused('show-group', { circle: 'web', group: 'payments', shown: 'maybe' }), /say whether web shows payments: shown yes or no/)
   assert.match(await refused('show-group', { circle: 'web', group: 'work', shown: 'yes' }), /web shows work already: show or hide another group/)
-  assert.match(await refused('hide-feature', { circle: 'web', feature: 'tasks', hidden: 'yes' }), /tasks is no feature of the coop's layout: hide one of motion, meeting/)
+  assert.match(await refused('hide-feature', { circle: 'web', feature: 'tasks', hidden: 'yes' }), /tasks is no feature of the coop's layout: hide one of circle, person, motion, meeting/)
   assert.match(await refused('hide-feature', { circle: 'web', feature: 'project', hidden: 'no' }), /web does not hide project already: hide or show another feature/)
   const twice = async (actions: { kind: string; args: Record<string, string> }[], circle = 'web', by = lea) =>
     reason(await propose({ circle, title: 'Twice', deadline: fortnight(), body: '', actions }, as(by)))

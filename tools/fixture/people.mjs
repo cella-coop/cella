@@ -1,4 +1,4 @@
-// fixture check, people: a mock co-op's workers and their candidacies are
+// fixture check, people: a mock coop's workers and their candidacies are
 // consistent. A contract runs forward, a fixed-term one or an
 // apprenticeship to a day it names, for a plausible week; a candidacy is a
 // worker's, its probation within their employment, and a candidate the

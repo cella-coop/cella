@@ -2,7 +2,10 @@
 # with its milestones as quoted and invoiced, and the circles' own, for no
 # client. Each names the circle that runs it. Budgets are in cents, net of
 # VAT, as quoted. Which contact each is for is the contact-project graft's;
-# the shares of a budget, the membership-project graft's.
+# the shares of a budget, the membership-project graft's. A project's body
+# is its brief: its blocks as an outline, each a `type` (paragraph unless
+# named), the props its type keeps, and its text, plain or as runs, which
+# the seed carries in with the project as one Loro snapshot.
 
 [[project]]
 id = "halles-shop"
@@ -12,9 +15,21 @@ started = 2026-06-08
 due = 2026-11-27
 budget = 4800000
 summary = """
-An online shop for a network of farmers' shops: weekly baskets, click and
-collect at six shops, and the farmers' own product sheets. Fixed price in
+An online shop for a network of farmers' shops: weekly baskets, click and \
+collect at six shops, and the farmers' own product sheets. Fixed price in \
 four milestones of 12 000 €, invoiced as each is delivered."""
+body = [
+  { type = "heading", level = 2, text = "Goal" },
+  { text = "Les Halles Paysannes sell their farmers' produce online, with a basket a week collected at any of their six shops, and no marketplace taking a cut." },
+  { type = "heading", level = 2, text = "Scope" },
+  { type = "bullet", text = "Weekly baskets, opened on Tuesday and collected on Friday" },
+  { type = "bullet", text = "Click and collect at six shops, each with its own stock" },
+  { type = "bullet", text = "A product sheet for each farmer, which the farmers fill in themselves" },
+  { type = "heading", level = 2, text = "Who" },
+  { runs = [{ text = "Yusuf", bold = true }, { text = " leads; Thomas builds the checkout and the payments, Amina the catalogue and its import. Margaux Roux answers for Les Halles." }] },
+  { type = "heading", level = 2, text = "Where it stands" },
+  { text = "Launched on 8 October. Care runs until 27 November: the shops' staff trained, the handover guide, and the VAT fix on mixed baskets." },
+]
 
 [[project.milestone]]
 title = "Design"
@@ -43,8 +58,18 @@ started = 2026-06-22
 due = 2026-09-04
 budget = 2400000
 summary = """
-The town website rebuilt to RGAA accessibility, won by tender in two lots.
+The town website rebuilt to RGAA accessibility, won by tender in two lots. \
 The build itself is a later tender."""
+body = [
+  { type = "heading", level = 2, text = "Goal" },
+  { text = "A town website every resident can use, whatever they read it with: RGAA 4.1 compliant from its first template, not fixed after launch." },
+  { type = "heading", level = 2, text = "Deliverables" },
+  { type = "bullet", runs = [{ text = "Lot 1", bold = true }, { text = ": an audit of the old site and the new site's architecture, delivered on 15 July" }] },
+  { type = "bullet", runs = [{ text = "Lot 2", bold = true }, { text = ": the design system and twelve page templates, delivered on 4 September" }] },
+  { type = "heading", level = 2, text = "Who" },
+  { text = "Thomas leads; Léa ran the audits and Yusuf drew the architecture. The town's communications office signs off each lot." },
+  { type = "quote", text = "The build is a later tender, which we mean to answer with the templates as our reference." },
+]
 
 [[project.milestone]]
 title = "Lot 1: audit and architecture"
@@ -64,8 +89,21 @@ started = 2026-01-05
 due = 2026-12-31
 budget = 5760000
 summary = """
-A citizen solar co-op's marketing: strategy, newsletter and social media,
+A citizen solar coop's marketing: strategy, newsletter and social media, \
 4 800 € a month, renewed each January."""
+body = [
+  { type = "heading", level = 2, text = "Goal" },
+  { text = "Nuvola Énergie, a citizen solar coop, grows its membership and fills its open days." },
+  { type = "heading", level = 2, text = "Every month" },
+  { type = "bullet", text = "A strategy call with Nuvola's board" },
+  { type = "bullet", text = "One newsletter to their list" },
+  { type = "bullet", text = "Social media three times a week, from the month's calendar" },
+  { type = "bullet", text = "One campaign a quarter: this one the community solar open day in December" },
+  { type = "heading", level = 2, text = "Who" },
+  { text = "Malik leads and holds the strategy; Chloé writes the newsletter and the calendar." },
+  { type = "heading", level = 2, text = "Renewal" },
+  { text = "The Q4 review, by 11 December, carries the renewal proposal at the 2027 rate card once coordination adopts it." },
+]
 
 [[project.milestone]]
 title = "Q3 review"
@@ -84,6 +122,17 @@ started = 2026-06-01
 due = 2026-07-21
 budget = 620000
 summary = "Posters and a brochure for the theatre company's 26-27 season."
+body = [
+  { type = "heading", level = 2, text = "Brief" },
+  { text = "Compagnie Mauve Horizon's 2026–27 season: one poster for each of its six plays, and a brochure of the season for its subscribers." },
+  { type = "heading", level = 2, text = "Deliverables" },
+  { type = "bullet", text = "Six posters, 120 × 176 for the street and A3 for the venues, printed large format" },
+  { type = "bullet", text = "A 24-page brochure, printed with the posters" },
+  { type = "heading", level = 2, text = "Who" },
+  { text = "Hugo leads and drew the posters; Sofia set the brochure and ran the print; Camille kept the client." },
+  { type = "heading", level = 2, text = "Where it stands" },
+  { text = "Delivered in July. The invoice, F-2026-0044, is long overdue, and Julien is chasing it." },
+]
 
 [[project.milestone]]
 title = "Posters"
@@ -103,6 +152,17 @@ started = 2026-08-17
 due = 2026-09-11
 budget = 330000
 summary = "A brand identity for a bike repair workshop, at the solidarity rate."
+body = [
+  { type = "heading", level = 2, text = "Goal" },
+  { text = "An identity for Vélo Solidaire that works as well on a hang tag tied to a repaired bike as on the workshop's van." },
+  { type = "heading", level = 2, text = "Deliverables" },
+  { type = "numbered", text = "Three concepts, one chosen with the workshop's volunteers" },
+  { type = "numbered", text = "The mark, the wordmark and the workshop's orange with its tints" },
+  { type = "numbered", text = "Guidelines: clear space, minimum sizes and the hang tag" },
+  { type = "heading", level = 2, text = "Who" },
+  { text = "Camille leads and holds the client; Hugo drew the concepts." },
+  { text = "Quoted at the solidarity rate, as an association under ten staff. Delivered on 11 September; Marketing is writing it up as a case study." },
+]
 
 [[project.milestone]]
 title = "Concepts"
@@ -122,8 +182,20 @@ started = 2026-09-01
 due = 2026-11-06
 budget = 1400000
 summary = """
-Packaging for an artisan bakery group's range of six, from concept to the
+Packaging for an artisan bakery group's range of six, from concept to the \
 press check at the printer."""
+body = [
+  { type = "heading", level = 2, text = "Goal" },
+  { text = "One family of packaging for Maison Ferrand's range of six, recognisable on a crowded shelf and keeping the farmers' own crest." },
+  { type = "heading", level = 2, text = "Deliverables" },
+  { type = "bullet", text = "The range concept: two directions, one chosen" },
+  { type = "bullet", text = "Six labels and the six-pack carrier, print-ready as PDF/X-4" },
+  { type = "bullet", text = "The press check at Imprimerie du Parc, and the run signed off" },
+  { type = "heading", level = 2, text = "Who" },
+  { text = "Sofia leads and buys the print; Hugo designs the range; Camille prepares the files." },
+  { type = "heading", level = 2, text = "Watch" },
+  { runs = [{ text = "Past " }, { text = "90 % of its budget", bold = true }, { text = " before the press check. Proofs come first, two rounds if the orchard green drifts on the kraft stock." }] },
+]
 
 [[project.milestone]]
 title = "Range concept"
@@ -147,8 +219,19 @@ started = 2026-09-14
 due = 2026-11-27
 budget = 1800000
 summary = """
-The land trust's annual report, in print and as a microsite with its map of
+The land trust's annual report, in print and as a microsite with its map of \
 the farms it holds. Two milestones of 9 000 €."""
+body = [
+  { type = "heading", level = 2, text = "Goal" },
+  { text = "Fondation Terres Vives shows its donors what their money held this year: the land bought, the farms leased on it, and the accounts." },
+  { type = "heading", level = 2, text = "Deliverables" },
+  { type = "bullet", text = "The annual report, forty-eight pages, laid out for print, delivered on 16 October" },
+  { type = "bullet", text = "A microsite with the map of the farms, one page for each farm, and how to support the trust, by 27 November" },
+  { type = "heading", level = 2, text = "Who" },
+  { text = "Hugo leads; Sofia lays out the report and its infographics. Web lends Léa for the microsite's wireframes and Amina for its build." },
+  { type = "heading", level = 2, text = "Watch" },
+  { text = "Under a 20 % margin since the report's extra pages. The print quote is being compared with a second printer before it is ordered." },
+]
 
 [[project.milestone]]
 title = "Report design"
@@ -168,6 +251,14 @@ due = 2026-07-28
 budget = 950000
 archived = 2026-09-01
 summary = "An online shop for a ceramics studio, at a fixed price."
+body = [
+  { type = "heading", level = 2, text = "Brief" },
+  { text = "Atelier Ondine sells its ceramics online: a catalogue of its standing range, one-off pieces that sell once and are gone, and shipping priced by weight." },
+  { type = "heading", level = 2, text = "Who" },
+  { text = "Thomas led and built it; Yusuf set up the hosting and the payments." },
+  { type = "heading", level = 2, text = "Where it stands" },
+  { text = "Delivered on 28 July at its fixed price and archived on 1 September. The shop is still live: its plugins are updated each quarter under care." },
+]
 
 [[project.milestone]]
 title = "Shop, fixed price"
@@ -183,9 +274,19 @@ circle = "ag"
 started = 2026-09-01
 due = 2027-03-20
 summary = """
-The assembly's review of the statutes before the 2027 assembly: the
-variable capital clause, the shares a new member subscribes, and how a
+The assembly's review of the statutes before the 2027 assembly: the \
+variable capital clause, the shares a new member subscribes, and how a \
 member who lives abroad takes part and votes."""
+body = [
+  { type = "heading", level = 2, text = "Why" },
+  { text = "The statutes are the founders' of 2021. Half the members now live outside France for part of the year, and the capital clause was written for four associates, not ten." },
+  { type = "heading", level = 2, text = "The amendments" },
+  { type = "numbered", text = "The variable capital clause: its floor, and how quickly a leaver is repaid" },
+  { type = "numbered", text = "The shares a new member subscribes, twenty today, and over how many instalments" },
+  { type = "numbered", text = "A member who lives abroad: taking part and voting from afar, and the seats that need someone at the studio" },
+  { type = "heading", level = 2, text = "How it is decided" },
+  { text = "Drafts went round on 16 October; every member's comments are in by 18 December; an extraordinary assembly decides on 20 March 2027, by two thirds of the votes cast once half the associates take part." },
+]
 
 [[project.milestone]]
 title = "Draft amendments"
@@ -207,8 +308,20 @@ circle = "coordination"
 started = 2026-09-14
 due = 2026-12-14
 summary = """
-Which clients and projects the co-op takes on for 2027, who works on
+Which clients and projects the coop takes on for 2027, who works on \
 them, and the rate card they are quoted at."""
+body = [
+  { type = "heading", level = 2, text = "Questions" },
+  { type = "bullet", text = "Which clients we keep, and which new ones we say yes to" },
+  { type = "bullet", text = "Who works on what in the first half of 2027, with two juniors joining in February" },
+  { type = "bullet", text = "What we quote: the 2027 rate card" },
+  { type = "heading", level = 2, text = "Steps" },
+  { type = "todo", checked = true, text = "Client review, at coordination on 12 October" },
+  { type = "todo", checked = false, text = "Rate card published, once m-2026-011 closes" },
+  { type = "todo", checked = false, text = "Staffing plan for the first quarter, by 14 December" },
+  { type = "heading", level = 2, text = "Who" },
+  { text = "Coordination, every Monday: Camille holds the pipeline, Yusuf the staffing and Malik the rate card." },
+]
 
 [[project.milestone]]
 title = "Client review"
@@ -230,8 +343,19 @@ circle = "operations"
 started = 2026-06-15
 due = 2026-11-30
 summary = """
-The books, pay and expenses move from the previous accounting tool into
+The books, pay and expenses move from the previous accounting tool into \
 cella, a month closed in each before the next moves."""
+body = [
+  { type = "heading", level = 2, text = "Goal" },
+  { text = "The books, the pay and the expenses kept in cella alone, and the previous accounting tool closed by the end of the year." },
+  { type = "heading", level = 2, text = "Steps" },
+  { type = "todo", checked = true, text = "The chart and the opening balances, carried over on 1 July" },
+  { type = "todo", checked = true, text = "July to September closed, one pay run entry each" },
+  { type = "todo", checked = true, text = "Pay runs and expenses in cella from 1 October" },
+  { type = "todo", checked = false, text = "October closed in cella alone, by 10 November" },
+  { type = "heading", level = 2, text = "Who" },
+  { text = "Julien, as finance; Camille approves each pay run. What we learn here is what we sell to Coopérative La Ruche for its own move." },
+]
 
 [[project.milestone]]
 title = "Chart and opening balances"
@@ -254,8 +378,17 @@ circle = "clients"
 started = 2026-10-05
 due = 2026-12-18
 summary = """
-Every client whose work ends this year hears from us before it does: a
+Every client whose work ends this year hears from us before it does: a \
 care contract, a retainer or a plain thank-you, decided with each."""
+body = [
+  { type = "heading", level = 2, text = "The list" },
+  { type = "bullet", runs = [{ text = "Les Halles Paysannes", bold = true }, { text = ": a care contract once the shop's care ends; Thomas calls them" }] },
+  { type = "bullet", runs = [{ text = "Nuvola Énergie", bold = true }, { text = ": the 2027 retainer; Malik drafts it" }] },
+  { type = "bullet", runs = [{ text = "Ville de Clairval", bold = true }, { text = ": their feedback first, then the build tender; Chloé asks" }] },
+  { type = "bullet", runs = [{ text = "Fondation Terres Vives", bold = true }, { text = ": once the microsite ships" }] },
+  { type = "heading", level = 2, text = "How" },
+  { text = "Each client hears from the person in Clients who knows them best, by a call before any written proposal. Proposals are sent by 27 November." },
+]
 
 [[project.milestone]]
 title = "Renewal list"
@@ -273,8 +406,21 @@ circle = "hiring"
 started = 2026-10-01
 due = 2027-01-29
 summary = """
-A junior developer for Web and a junior designer for Brand, hired by
+A junior developer for Web and a junior designer for Brand, hired by \
 February 2027, as m-2026-020 decided."""
+body = [
+  { type = "heading", level = 2, text = "The roles" },
+  { type = "bullet", text = "A junior developer in Web, mentored by a member of Web" },
+  { type = "bullet", text = "A junior designer in Brand, mentored by Hugo" },
+  { text = "Both on permanent contracts of 35 hours from February 2027, on the pay grid, and on the path to membership after a year." },
+  { type = "heading", level = 2, text = "Steps" },
+  { type = "todo", checked = true, text = "Job descriptions written and posted on the coop jobs boards" },
+  { type = "todo", checked = false, text = "Interviews by 11 December, on the interview scorecard" },
+  { type = "todo", checked = false, text = "A paid trial day for each role's last two, if m-2026-026 passes" },
+  { type = "todo", checked = false, text = "Offers by 29 January" },
+  { type = "heading", level = 2, text = "Who" },
+  { text = "Léa and Julien run it for Hiring; Camille signs the contracts, as manager." },
+]
 
 [[project.milestone]]
 title = "Job descriptions"
@@ -296,8 +442,19 @@ circle = "care"
 started = 2026-09-21
 due = 2026-11-30
 summary = """
-How much everyone works, and how it feels: an anonymous survey, its
+How much everyone works, and how it feels: an anonymous survey, its \
 findings, and what Care proposes to the assembly from them."""
+body = [
+  { type = "heading", level = 2, text = "Why" },
+  { text = "Overtime went up this autumn, and most of it gathered around a few deadlines. Before proposing anything, Care wants to know where, and how it feels to the people carrying it." },
+  { type = "heading", level = 2, text = "Steps" },
+  { type = "todo", checked = true, text = "An anonymous survey, open two weeks, closed on 9 October" },
+  { type = "todo", checked = false, text = "The findings written up" },
+  { type = "todo", checked = false, text = "Proposals to the assembly, by 30 November" },
+  { type = "heading", level = 2, text = "Ground rules" },
+  { type = "bullet", text = "No answer is traced back to anyone, and nothing is reported for a group smaller than three" },
+  { type = "bullet", text = "Proposals change how we work, never who" },
+]
 
 [[project.milestone]]
 title = "Survey"
@@ -315,8 +472,19 @@ circle = "tools"
 started = 2026-09-14
 due = 2026-12-04
 summary = """
-The studio's servers, its clients' staging and production sites, move to
-a co-operative host, one environment at a time."""
+The studio's servers, its clients' staging and production sites, move to \
+a cooperative host, one environment at a time."""
+body = [
+  { type = "heading", level = 2, text = "Goal" },
+  { text = "Everything we host, for ourselves and for clients, with a cooperative host in the EU, moved without a client noticing more than a planned window." },
+  { type = "heading", level = 2, text = "Steps" },
+  { type = "todo", checked = true, text = "Inventory: every server, site and domain, and when each renews" },
+  { type = "todo", checked = true, text = "Staging moved and checked against production, on 21 October" },
+  { type = "todo", checked = false, text = "Production moved, one client at a time, by 4 December" },
+  { type = "heading", level = 2, text = "Who" },
+  { text = "Yusuf and Thomas move the sites; each client's window is agreed through their contact in Clients." },
+  { type = "quote", text = "The old host stays paid for a month after the last site moves, in case we need to roll back." },
+]
 
 [[project.milestone]]
 title = "Inventory"
@@ -339,8 +507,22 @@ circle = "marketing"
 started = 2026-10-01
 due = 2027-01-15
 summary = """
-A new template and a clearer sign-up, after the newsletter style guide:
+A new template and a clearer sign-up, after the newsletter style guide: \
 one issue a month, built around a case study and a studio note."""
+body = [
+  { type = "heading", level = 2, text = "Goal" },
+  { text = "Lanterne's own newsletter, sent every month instead of whenever someone finds the time, to the coops and associations we work with and want to." },
+  { type = "heading", level = 2, text = "Each issue" },
+  { type = "bullet", text = "One case study, under CC BY" },
+  { type = "bullet", text = "One studio note: a tool, a decision, something we learnt" },
+  { type = "bullet", text = "What is coming: open days, talks, the federation's regional day" },
+  { type = "heading", level = 2, text = "Steps" },
+  { type = "todo", checked = true, text = "The new template, after the newsletter style guide" },
+  { type = "todo", checked = false, text = "A shorter sign-up form on the studio's site" },
+  { type = "todo", checked = false, text = "The first issue, on 15 January" },
+  { type = "heading", level = 2, text = "Who" },
+  { text = "Chloé writes and sends it; Malik reads each issue before it goes." },
+]
 
 [[project.milestone]]
 title = "Template"
@@ -358,8 +540,19 @@ circle = "marketing"
 started = 2026-10-06
 due = 2026-12-01
 summary = """
-Writing up Vélo Solidaire's and Maison Ferrand's work as case studies,
+Writing up Vélo Solidaire's and Maison Ferrand's work as case studies, \
 licensed CC BY as m-2026-015 decided, once each client signs off."""
+body = [
+  { type = "heading", level = 2, text = "The two studies" },
+  { type = "bullet", runs = [{ text = "Vélo Solidaire", bold = true }, { text = ": the identity, and the repair bookings since it shipped; Malik writes it" }] },
+  { type = "bullet", runs = [{ text = "Maison Ferrand", bold = true }, { text = ": the packaging range, from concept to press; Chloé writes it once the run is printed" }] },
+  { type = "heading", level = 2, text = "How" },
+  { text = "Each follows the case study brief template. Each client agrees in writing before anything is published, by a short email for clients whose contracts predate the motion." },
+  { type = "heading", level = 2, text = "Steps" },
+  { type = "todo", checked = true, text = "Drafts, by 24 October" },
+  { type = "todo", checked = false, text = "Each client's sign-off" },
+  { type = "todo", checked = false, text = "Published on the studio's site under CC BY 4.0, by 1 December" },
+]
 
 [[project.milestone]]
 title = "Drafts"
@@ -377,8 +570,20 @@ circle = "coordination"
 started = 2026-10-01
 due = 2027-02-20
 summary = """
-Lanterne hosts the federation's regional day in February: the room, the
+Lanterne hosts the federation's regional day in February: the room, the \
 programme and a short talk on the move into cella."""
+body = [
+  { type = "heading", level = 2, text = "What" },
+  { text = "The federation's regional day, hosted at the studio on a Saturday in February: some forty people from the region's worker coops, for a day of talks and workshops." },
+  { type = "heading", level = 2, text = "A first programme" },
+  { type = "bullet", text = "Morning: the federation's news, then our talk on moving the books into cella" },
+  { type = "bullet", text = "Lunch, from a caterer among our clients' suppliers" },
+  { type = "bullet", text = "Afternoon: three workshops in parallel, chosen by the federation" },
+  { type = "heading", level = 2, text = "Steps" },
+  { type = "todo", checked = false, text = "Date confirmed with the federation, by 15 November" },
+  { type = "todo", checked = false, text = "Programme set, by 30 January" },
+  { type = "todo", checked = false, text = "Run sheet: who speaks, who greets, who clears up" },
+]
 
 [[project.milestone]]
 title = "Date confirmed with the federation"
@@ -395,8 +600,20 @@ circle = "coordination"
 started = 2026-09-28
 due = 2026-12-18
 summary = """
-Every circle's own onboarding notes, Hiring's guide among them, folded
+Every circle's own onboarding notes, Hiring's guide among them, folded \
 into one playbook a new hire reads start to finish."""
+body = [
+  { type = "heading", level = 2, text = "Goal" },
+  { text = "One playbook a new hire reads start to finish in their first week, in place of a note from every circle, ready before the two juniors start in February." },
+  { type = "heading", level = 2, text = "What it covers" },
+  { type = "numbered", text = "The first week: who meets you, and what you will have done by Friday" },
+  { type = "numbered", text = "Tools and accounts, and who to ask for each" },
+  { type = "numbered", text = "How we decide: circles, motions and the assembly" },
+  { type = "numbered", text = "The path to membership, after a year" },
+  { type = "heading", level = 2, text = "Steps" },
+  { type = "todo", checked = true, text = "Every circle's notes collected, by 30 October" },
+  { type = "todo", checked = false, text = "The playbook drafted, by 18 December" },
+]
 
 [[project.milestone]]
 title = "Every circle's notes collected"
@@ -414,8 +631,20 @@ circle = "clients"
 started = 2026-10-12
 due = 2026-12-05
 summary = """
-A short survey sent once a project closes, before the renewal
+A short survey sent once a project closes, before the renewal \
 conversation, and a place to keep what each client says."""
+body = [
+  { type = "heading", level = 2, text = "Goal" },
+  { text = "Hear from every client once their project closes, before we ask them for anything else." },
+  { type = "heading", level = 2, text = "The survey" },
+  { type = "bullet", text = "Three short questions, none of them a score out of ten" },
+  { type = "bullet", text = "Sent by the client's named contact in Clients, a week after the project closes" },
+  { type = "bullet", text = "Each answer kept on the client's contact record" },
+  { type = "heading", level = 2, text = "Steps" },
+  { type = "todo", checked = true, text = "Questions drafted, by 24 October" },
+  { type = "todo", checked = false, text = "Sent to Les Halles Paysannes, Ville de Clairval and Vélo Solidaire" },
+  { type = "todo", checked = false, text = "First responses in, by 5 December" },
+]
 
 [[project.milestone]]
 title = "Survey drafted"
@@ -433,8 +662,19 @@ circle = "clients"
 started = 2026-10-01
 due = 2027-01-30
 summary = """
-Asking every happy client, once their project closes, whether they know
-another co-op or association who could use us."""
+Asking every happy client, once their project closes, whether they know \
+another coop or association who could use us."""
+body = [
+  { type = "heading", level = 2, text = "Goal" },
+  { text = "Most of our work comes by word of mouth. This asks for it on purpose, once, from the clients who were happiest with their project." },
+  { type = "heading", level = 2, text = "How we ask" },
+  { type = "bullet", text = "In person or on a call, never by a mass email" },
+  { type = "bullet", text = "Only once a project has closed and the survey is answered" },
+  { type = "bullet", text = "A thank-you to whoever refers someone, whether or not it leads to work" },
+  { type = "heading", level = 2, text = "Steps" },
+  { type = "todo", checked = false, text = "Who to ask first, listed, by 13 November" },
+  { type = "todo", checked = false, text = "The first round of asks, by 30 January" },
+]
 
 [[project.milestone]]
 title = "Who to ask, listed"
@@ -451,8 +691,19 @@ circle = "tools"
 started = 2026-09-20
 due = 2026-11-20
 summary = """
-Every backup the studio relies on, listed with where it runs and when
+Every backup the studio relies on, listed with where it runs and when \
 it was last restored and checked, not just taken."""
+body = [
+  { type = "heading", level = 2, text = "Goal" },
+  { runs = [{ text = "A backup counts once it has been " }, { text = "restored", italic = true }, { text = " and checked. Every one we rely on, listed with where it runs and when it was last restored." }] },
+  { type = "heading", level = 2, text = "What it covers" },
+  { type = "bullet", text = "The studio's shared files" },
+  { type = "bullet", text = "The password manager's export" },
+  { type = "bullet", text = "Every client site, hosting by hosting, before and after the move" },
+  { type = "heading", level = 2, text = "Steps" },
+  { type = "todo", checked = true, text = "Every backup listed, by 18 October" },
+  { type = "todo", checked = false, text = "Every one restored to a spare machine and checked, by 20 November" },
+]
 
 [[project.milestone]]
 title = "Every backup listed"
@@ -470,8 +721,17 @@ circle = "tools"
 started = 2026-10-05
 due = 2026-12-15
 summary = """
-Every studio laptop and phone, its age and who holds it, with a plan
+Every studio laptop and phone, its age and who holds it, with a plan \
 for which ones are due for replacement in 2027."""
+body = [
+  { type = "heading", level = 2, text = "Goal" },
+  { text = "Know what every studio machine is, how old it is and who holds it, so replacements are planned and budgeted instead of bought the week one dies." },
+  { type = "heading", level = 2, text = "The inventory" },
+  { type = "bullet", text = "Each laptop and phone tagged with the year it was bought" },
+  { type = "bullet", text = "Its warranty, its disk encryption, and who holds it" },
+  { type = "heading", level = 2, text = "The rotation plan" },
+  { text = "Which machines are replaced in 2027, in what order, and what that costs in the 2027 budget. A retired machine is wiped and given to an association." },
+]
 
 [[project.milestone]]
 title = "Inventory"
@@ -488,8 +748,19 @@ circle = "web"
 started = 2026-09-01
 due = 2027-02-01
 summary = """
-The components the Halles shop, Clairval's site and the next build keep
+The components the Halles shop, Clairval's site and the next build keep \
 redrawing, kept once in a shared library instead."""
+body = [
+  { type = "heading", level = 2, text = "Why" },
+  { text = "The Halles shop, Clairval's site and Ondine's shop each drew their own buttons, form fields and cards. The next build should start from ours." },
+  { type = "heading", level = 2, text = "Scope" },
+  { type = "bullet", text = "Start from Clairval's tokens, already checked for contrast" },
+  { type = "bullet", text = "Buttons, form fields, cards and the site header first" },
+  { type = "bullet", text = "Every component meets WCAG 2.2 AA, the floor m-2026-017 proposes" },
+  { type = "heading", level = 2, text = "Steps" },
+  { type = "todo", checked = true, text = "An audit of what repeats across sites, by 23 October" },
+  { type = "todo", checked = false, text = "The first components shared, by 1 February" },
+]
 
 [[project.milestone]]
 title = "Audit of what repeats across sites"

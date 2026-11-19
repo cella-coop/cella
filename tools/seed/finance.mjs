@@ -1,4 +1,4 @@
-// seed, finance: loads a mock co-op's capital, its surplus
+// seed, finance: loads a mock coop's capital, its surplus
 // distributions, pay, expenses and bills into the account, patronage, payslip,
 // expense and bill schemas and their grafts' (account-membership,
 // account-membership-transaction's repayments, employment-payslip,

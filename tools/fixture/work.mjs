@@ -1,4 +1,4 @@
-// fixture check, work: a mock co-op's projects, tasks and timesheets are
+// fixture check, work: a mock coop's projects, tasks and timesheets are
 // consistent. Every link a work graft holds resolves, a project is for a
 // client, and an invoice bills
 // a project of the client it bills; shares never exceed

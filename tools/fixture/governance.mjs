@@ -1,4 +1,4 @@
-// fixture check, governance: a mock co-op's motions decide what can be
+// fixture check, governance: a mock coop's motions decide what can be
 // decided. An action names a kind a graft registers, and its arguments
 // resolve: a policy has a kind and its wording; a member to admit is
 // invited and subscribes shares, one to suspend or let go is a member; a

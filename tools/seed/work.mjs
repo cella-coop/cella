@@ -1,4 +1,4 @@
-// seed, work: loads a mock co-op's projects with their milestones,
+// seed, work: loads a mock coop's projects with their milestones,
 // budgets and shares, their crew, Linear's lead and members, its tasks,
 // each its circle's, and its timesheets into the project,
 // task and timesheet schemas and their grafts' (contact-project,
@@ -6,8 +6,9 @@
 // membership-timesheet, project-timesheet), and the report feat's margin
 // thresholds. Invoices load first. A run of time in the fixture is logged as one entry
 // on each working day, Monday to Friday, from its first day to its last.
-// A task's body is its blocks as one Loro snapshot, carried in with it,
-// and its thread its comments, each with its mentions.
+// A project's body, its brief, and a task's are their blocks as one Loro
+// snapshot, carried in with them, and a task's thread its comments, each
+// with its mentions.
 // Members and contacts load first; an archived project is archived after
 // its milestones are in, and periods are submitted and approved after
 // their entries are in.
@@ -29,9 +30,9 @@ export async function work(db, read, day) {
   const projects = read('project').project ?? []
   for (const p of projects) {
     await db.query(
-      `INSERT INTO project.project (id, title, circle, summary, started, due, budget)
-       VALUES ($1, $2, coalesce($3, circle.assembly()), $4, $5, $6, cella.amount($7))`,
-      [p.id, p.title, p.circle ?? null, p.summary ?? '', day(p.started), day(p.due), p.budget ?? null],
+      `INSERT INTO project.project (id, title, circle, summary, started, due, budget, body)
+       VALUES ($1, $2, coalesce($3, circle.assembly()), $4, $5, $6, cella.amount($7), $8)`,
+      [p.id, p.title, p.circle ?? null, p.summary ?? '', day(p.started), day(p.due), p.budget ?? null, p.body ? snapshot(p.body, `project ${p.id}'s body`) : null],
     )
     for (const [i, m] of (p.milestone ?? []).entries()) {
       await db.query(
@@ -69,7 +70,7 @@ export async function work(db, read, day) {
   for (const t of tasks) {
     await db.query(
       'INSERT INTO task.task (id, title, status, priority, due, created, completed, circle, body) VALUES ($1, $2, $3, $4, $5, $6, $7, coalesce($8, circle.assembly()), $9)',
-      [t.id, t.title, t.status, t.priority, day(t.due), day(t.created), day(t.completed), t.circle ?? null, t.body ? body(t) : null],
+      [t.id, t.title, t.status, t.priority, day(t.due), day(t.created), day(t.completed), t.circle ?? null, t.body ? snapshot(t.body, `task ${t.id}'s body`) : null],
     )
   }
   // New tasks number on from the fixture's last.
@@ -156,10 +157,11 @@ export async function work(db, read, day) {
   return `${projects.length} projects, ${shares.length} shares, ${tasks.length} tasks, ${comments} comments, ${reactions} reactions, ${entries} time entries`
 }
 
-// A task's body, as the snapshot of one Loro document holding its blocks.
-function body(t) {
+// A record's body, as the snapshot of one Loro document holding the
+// blocks its fixture writes as an outline.
+export function snapshot(lines, where) {
   const loro = createDoc(1n)
-  edits.patch(loro, undefined, outline(t.body, `task ${t.id}'s body`))
+  edits.patch(loro, undefined, outline(lines, where))
   loro.commit()
   return loro.export({ mode: 'snapshot' })
 }

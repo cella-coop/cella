@@ -1,5 +1,5 @@
-name,kind,form,email,phone,tags,note
-Librairie La Grande Ourse,company,limited company,contact@grandeourse.example,+33 1 48 00 00 01,retail|books,Met at the Montreuil book fair
-Coopérative Les Toits Verts,company,community-interest co-operative,bonjour@toitsverts.example,,energy,
-Jeanne Morel,person,,jeanne.morel@example.org,,freelance,Photographer we subcontract to
-Maison Ferrand,company,simplified joint-stock company,,,,Already a client
+name,kind,form,email,phone,tags
+Librairie La Grande Ourse,company,limited company,contact@grandeourse.example,+33 1 48 00 00 01,retail|books
+Coopérative Les Toits Verts,company,community-interest co-operative,bonjour@toitsverts.example,,energy
+Jeanne Morel,person,,jeanne.morel@example.org,,freelance
+Maison Ferrand,company,simplified joint-stock company,,,

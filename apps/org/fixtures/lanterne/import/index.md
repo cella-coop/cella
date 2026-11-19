@@ -1,9 +1,9 @@
 +++
 title = "Lanterne's imports"
-updated = 2026-11-04
+updated = 2026-11-19
 +++
 
-Sample files from the tools a co-op leaves when it moves to cella, one for
+Sample files from the tools a coop leaves when it moves to cella, one for
 each kind `cella import` and the Imports page read, each with lines the
 guards refuse beside the ones they take:
 
@@ -20,11 +20,11 @@ guards refuse beside the ones they take:
   Solidaire, the first of two lines, one with no contact and one for
   Maison Ferrand with no address billed.
 - `toggl.csv`: Inès's Toggl detailed report: her time on the Halles' shop,
-  the co-op's own and Clairval, all Web's, her circle's, a row of Thomas's and a project the co-op does
+  the coop's own and Clairval, all Web's, her circle's, a row of Thomas's and a project the coop does
   not hold.
 - `harvest.csv`: Harvest's detailed time report, two rows of Inès's, on Web's
-  work and the co-op's own, and one of Malik's, which she may not log.
+  work and the coop's own, and one of Malik's, which she may not log.
 - `projects.csv`: two projects, and a row with no title.
 - `tasks.csv`: Asana's task export: two tasks for Ferrand's packaging, one
-  done before the switch, one in no project and one in a project the co-op
+  done before the switch, one in no project and one in a project the coop
   does not hold.

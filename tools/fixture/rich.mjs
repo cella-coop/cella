@@ -1,4 +1,4 @@
-// fixture check, richness: a mock co-op is rich enough to show every
+// fixture check, richness: a mock coop is rich enough to show every
 // feature. Every collection the app mounts lists rows of it, enough of
 // them, in every lane its board groups by and with every relation its
 // pages show; every circle owns rows of each collection a circle's work
@@ -225,7 +225,7 @@ export const listing = (read) => {
       },
     },
     reports: { none: 'the report feat draws its reports from the books, which the transactions hold' },
-    log: { none: 'a fixture founds the co-op as the log\'s first entry, its only one; the scenarios write the entries after it' },
+    log: { none: 'a fixture founds the coop as the log\'s first entry, its only one; the scenarios write the entries after it' },
   }
 }
 
@@ -236,7 +236,7 @@ export const declared = {
   expenses: { status: ['draft', 'submitted', 'approved', 'reimbursed', 'refused'] },
   projects: { state: ['active', 'done'] },
   meetings: { status: ['scheduled', 'held', 'cancelled'] },
-  tasks: { status: ['backlog', 'todo', 'doing', 'done'], priority: ['urgent', 'high', 'normal', 'low'] },
+  tasks: { status: ['backlog', 'next', 'active', 'review', 'done'], priority: ['urgent', 'high', 'normal', 'low'] },
   payslips: { state: ['prepared', 'approved', 'paid'] },
   motions: { state: ['open', 'passed', 'rejected'] },
 }

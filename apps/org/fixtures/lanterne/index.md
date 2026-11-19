@@ -1,12 +1,12 @@
 +++
 title = "Lanterne"
-updated = 2026-11-18
+updated = 2026-11-19
 +++
 
 # Lanterne
 
-A mock co-op to build the prototype against: a creative agency in Montreuil,
-in the EU, run as a worker co-operative by its ten worker-members since
+A mock coop to build the prototype against: a creative agency in Montreuil,
+in the EU, run as a worker cooperative by its ten worker-members since
 2021, its members living around the world. Every word a reader sees in it
 is English: its titles, descriptions, motions, documents, minutes,
 policies, rights, roles and account labels, as is every word the
@@ -19,7 +19,7 @@ translated. The fixture's imported sample files use English
 headings and labels too, while retaining their source formats and figures.
 It builds websites
 and online shops, designs brands, print and packaging, and runs marketing for
-clients who are mostly co-ops, associations and small local firms. Every
+clients who are mostly coops, associations and small local firms. Every
 name, number and identifier here is invented.
 
 Lanterne is rich enough to show every feature: each collection and each
@@ -37,14 +37,14 @@ check says what of the fixture it lists. Every circle owns rows of each
 collection a circle's work fills, its projects, tasks, time, meetings,
 motions, documents and expenses, and the invoices and bills spread over
 more than one; the people, devices, contacts, files, books and pay are
-the co-op's, the assembly's. A collection whose rows are not the
+the coop's, the assembly's. A collection whose rows are not the
 fixture's says why: the inbox is what waits on its reader, the reports
 are drawn from the books, the log holds the founding alone, an import's
 run is what importing one of the files under `import/` records, and a
 worker's statement is what approving the 2025 distribution makes. So
 does a lane left empty: no pay run is prepared or approved and not yet
 paid, since October's is the payroll scenarios' to generate. The
-`lenses` scenario reads the seeded co-op as the app does and holds it to
+`lenses` scenario reads the seeded coop as the app does and holds it to
 the check: each board's lanes are the check's, every lane it finds held
 shows, and each circle's lens shows rows of its own and none another's.
 
@@ -58,7 +58,7 @@ circle's lead sits there by their tenure, and Camille sits there as a
 member. A capped role, as the manager's or a circle's lead, is held by
 one person at a time. No circle sits in another: the assembly is one
 circle beside coordination, the four working circles, and four that
-look after the co-op itself, Clients, Hiring, Care and Tools, which
+look after the coop itself, Clients, Hiring, Care and Tools, which
 have no lead. Each of the eleven people sits in three to five
 circles, the assembly among them for a member, so a lens and View as
 this circle show each circle's own slice.
@@ -88,34 +88,36 @@ this circle show each circle's own slice.
 | Sofia | Assembly, Brand, Care |
 | Inès | Web, Care, Tools |
 
-Each of Clients, Hiring, Care and Tools owns a project, tasks, a motion,
-a meeting to come, a document, an hour a day of someone's time in the
-last week of October and an expense: Clients' renewals for 2027 and its
-open motion on one named contact per client; Hiring's two junior hires
-and its passed motion opening them; Care's workload review and its open
-motion on a quiet first hour; Tools' hosting move and its passed motion
-on a password manager.
+Each of Clients, Hiring, Care and Tools owns projects, tasks, motions,
+meetings to come, documents, an hour a day of someone's time in the
+last week of October and expenses: among them Clients' renewals for 2027
+and its open motion on one named contact per client; Hiring's two junior
+hires and its passed motion opening them; Care's workload review and its
+open motion on a quiet first hour; Tools' hosting move and its passed
+motion on a password manager.
 
-The co-op lays its features out once
+The coop lays its features out once
 ([features](../../core/circle/index.md#features)), the founding's
 `[layout]` in `circle.toml`, the root's listing, every installed feature
-under one of five groups: Governance, motions, meetings, documents and
-policies; Work, projects, tasks, timesheets, files and contacts; Books,
-accounts, transactions, reports and imports; Payments, invoices, bills,
-expenses and payslips; and Members, membership, patronage, core's people,
-circles and mandates, and employment. The assembly, the root, shows it
-all. Each other circle shows the groups its work uses and hides what it
-does not, the founding's `[[show]]` rows: coordination its governance
-and projects; Operations, where finance sits, the books and the payments,
-with contacts and employment; Web its projects, tasks, timesheets, files
-and contacts; Brand its projects, tasks, timesheets, files and the print
-and paper bills Sofia approves; Marketing its projects, tasks,
-timesheets, contacts and documents; Clients its governance, and its
-contacts, projects and tasks; Hiring its governance, tasks and
-employment; Care its governance and tasks; Tools its projects, tasks,
-timesheets, files and expenses. Every circle's sidebar draws the layout
+under one of five groups: Organization, core's circles and mandates,
+core's people, motions, meetings and policies; Work, projects, tasks,
+timesheets, documents, files and contacts; Books, accounts,
+transactions, reports and imports; Payments, invoices, bills, expenses
+and payslips; and Membership, membership, patronage and employment. The
+assembly, the root, shows it all. Each other circle shows the groups
+its work uses and hides what it does not, the founding's `[[show]]`
+rows: coordination its organization, projects and documents;
+Operations, where finance sits, the books and the payments, with
+documents, contacts and employment; Web its projects, tasks,
+timesheets, documents, files and contacts; Brand its projects, tasks,
+timesheets, documents, files and the print and paper bills Sofia
+approves; Marketing its projects, tasks, timesheets, documents and
+contacts; Clients its organization, and its contacts, projects, tasks
+and documents; Hiring its organization, tasks, documents and
+employment; Care its organization, tasks and documents; Tools its
+projects, tasks, timesheets, documents, files and expenses. Every circle's sidebar draws the layout
 in its order, so Project sits in Work, first, wherever it shows. How
-the co-op lays them out and what a circle shows is `arrange-features`'s:
+the coop lays them out and what a circle shows is `arrange-features`'s:
 the assembly holds it over every circle from the founding, the root
 among them, and grants it to every circle but Hiring over itself by
 m-2026-018, on 20 June 2026, and to coordination over Hiring, so a
@@ -184,7 +186,7 @@ assembly, and no one opens a candidacy for another.
   lead's mandates to run projects, approve time and hold meetings, and
   a secretary's, mark their scope, the circle the role is held in
   (`{scope: own}`), so each lead covers their own circle alone; the
-  others mark none and cover the whole co-op. The
+  others mark none and cover the whole coop. The
   collective mandates follow them, `m-2021-001/47` to `/59` but `/50`, each on a
   circle, as `The {circle: ag} circle holds {power: admit-member}, to
   admit members, by motion`: the assembly's to admit, suspend and
@@ -229,7 +231,7 @@ assembly, and no one opens a candidacy for another.
   motion, `m-2021-001/79` to `/81`, are how Lanterne reads: `The {role:
   participant} role holds {power: read}, to read the records of its
   {scope: own} circle`, and of the `{scope: ag}` circle, the whole
-  co-op's; and open books, `The {role: member} role holds {power: read},
+  coop's; and open books, `The {role: member} role holds {power: read},
   to read every circle's records`. Every seat reads its own circle's
   records and the assembly's, and every member every circle's, so Inès,
   employed, no member and seated in Web, Care and Tools, reads Web's expenses and
@@ -237,7 +239,7 @@ assembly, and no one opens a candidacy for another.
   Chloé, in Marketing, reads every circle's expenses and the books, and
   her own pay and not Yusuf's, since `read` opens no one's pay. A power
   that reads a feat's rows reads them by its mandate's scope beside it:
-  the manager's `approve-expense`, on the whole co-op, every circle's
+  the manager's `approve-expense`, on the whole coop, every circle's
   expenses, and Web's lead's `approve-time`, on their own circle, Web's
   time alone.
 - **Rules.** The statutes' capital terms and the work share's terms are
@@ -258,7 +260,7 @@ assembly, and no one opens a candidacy for another.
   ([open books](../../core/circle/index.md#open-books)). The internal
   rules' third version, adopted by m-2026-007 on 20 June 2026, holds five
   rules: the 35-hour week, at most three remote days, the pay ratio of at
-  most 1.6, the solidarity rate for associations and co-ops under ten
+  most 1.6, the solidarity rate for associations and coops under ten
   staff, each value saying which way is stricter, and the clients refused,
   which bind by their words alone.
 - **Legal form.** Lanterne is a worker co-operative limited company with
@@ -275,12 +277,14 @@ assembly, and no one opens a candidacy for another.
   coordination's collective mandates and its capital and work share terms
   are its own. It has left none of the defaults, so its statutes say they
   leave none.
-- **Particulars.** Its name, legal name, form, seat, SIREN, registry
-  and VAT number are `scope.toml`'s, which `cella seed` words as its
+- **Particulars.** Its name, legal name, form, seat, SIREN, registry,
+  VAT number and logo are `scope.toml`'s, which `cella seed` words as its
   particulars, a rule of the assembly the founding motion adopts as its
   last action, protected by the extraordinary assembly's procedure
-  ([the co-op's particulars](../../core/circle/index.md#the-co-ops-particulars)):
-  its invoices print them, and the shell calls it Lanterne. Its capital
+  ([the coop's particulars](../../core/circle/index.md#the-coops-particulars)):
+  its invoices print them, and the shell calls it Lanterne and draws its
+  logo, a lantern whose amber glass glows on a teal tile, in the
+  selector, the sign-in card and the gate. Its capital
   varies, so it marks none; its address and timezone stay settings.
 - **Statutes (generated).** The statutes are the assembly's policies in
   order, generated around the fixed text of a worker co-operative limited
@@ -332,14 +336,16 @@ assembly, and no one opens a candidacy for another.
   rules' 1.6. July to September's pay runs were carried over, one entry
   each. Inès was paid apart from them by the previous tool; from October
   her 2 200 € is a run's, and October's waits for every worker's October
-  to be approved, hers with the members'. Seven October expenses are
-  claimed, one for each circle and two for Marketing: three submitted and
-  waiting, Thomas's train a draft, Yusuf's train to the federation's
+  to be approved, hers with the members'. Fifteen October expenses are
+  claimed: three submitted and waiting, Yusuf's train to the federation's
   regional day approved by Camille and reimbursed, Julien's label printer
-  approved and owed him, and Chloé's taxi refused by Malik. Two suppliers' bills are recorded and wait
-  for Camille's approval: Imprimerie du Parc's paper, 1 440 €, Brand's
-  and over Sofia's 1 200 €, and Atelier Lumen's October rent, 1 080 €,
-  the assembly's and outside Brand's.
+  approved and owed him, Chloé's taxi refused by Malik, and nine drafts,
+  Thomas's train among them and the rest Clients', Hiring's, Care's,
+  Tools' and Operations' own small purchases, not yet submitted. Seven
+  suppliers' bills are recorded and wait for approval, Brand's, the
+  assembly's and Operations', among them Imprimerie du Parc's paper,
+  1 440 €, Brand's and over Sofia's 1 200 €, and Atelier Lumen's October
+  rent, 1 080 €, the assembly's and outside Brand's.
 - **Bills, a chain of mandates (ordered).** Who approves a supplier's
   bill below the manager is handed down three mandates deep, each
   narrower than the one above ([circle](../../core/circle/index.md#lanterne)):
@@ -360,19 +366,22 @@ assembly, and no one opens a candidacy for another.
   record a bill, approves Imprimerie du Parc's 1 440 € over her limit
   and Atelier Lumen's rent outside her scope, and each is refused
   saying so.
-- **Work (confluent, bounded and ordered).** Sixteen projects: eight, one per
+- **Work (confluent, bounded and ordered).** Twenty-four projects: eight, one per
   commission, each invoice naming its own: the Halles shop launched on 8 October and is in care until
   November, Ferrand's packaging waits on its press check, Terres Vives's
-  microsite is under way, Ondine's shop is archived; and eight of the
+  microsite is under way, Ondine's shop is archived; and sixteen of the
   circles' own, for no client: the assembly's revision of the statutes
   for 2027, coordination's pipeline and staffing for 2027 and its
   federation day and onboarding playbook, the move of the books into
   cella, Operations', Marketing's newsletter relaunch and its case
-  studies under CC BY, and Web's shared design system. Fifty-eight
+  studies under CC BY, Web's shared design system, Clients' renewals,
+  satisfaction survey and referral programme, Hiring's two junior hires,
+  Care's workload review, and Tools' hosting move, backup audit and
+  device inventory. Fifty-eight
   tasks on the board, each its circle's, its project's where it is
   filed in one, mostly with a member of that circle.
   Timesheets began on 1 September: seven hours a working day for everyone,
-  under a third billable at 80 € an hour; an hour costs the co-op
+  under a third billable at 80 € an hour; an hour costs the coop
   23,64 €. Four members hold shares of project budgets. September is
   approved; October is open, but Sofia submitted hers early. In its last
   week Camille gives part of her time to coordination and the assembly,
@@ -393,7 +402,7 @@ assembly, and no one opens a candidacy for another.
   October, each marked by its lead; Marketing's of 22 October was
   cancelled for the Nuvola workshop. Marketing meets next on 29 October,
   Web on 3 November.
-- **Files (confluent).** The statutes as adopted in 2024 are the co-op's
+- **Files (confluent).** The statutes as adopted in 2024 are the coop's
   own; Camille's subscription form is on her file, Inès's contract on
   hers, filed by Camille as manager, and Sofia's and Chloé's receipts on
   their October expenses. Julien, as finance, opens the receipts and
@@ -493,7 +502,7 @@ and names its end where it has one, and that each candidacy's probation
 falls within its worker's employment and ended before their admission.
 
 Time is written as runs: one entry a working day from one day to another
-(`timesheet.toml`), which the seed expands into the 848 entries of
+(`timesheet.toml`), which the seed expands into the 907 entries of
 September and October; which project a run is for is
 `graft.project-timesheet.toml`'s.
 
@@ -504,9 +513,20 @@ scope's day and a scheduled one meets after it, that the secretary
 recorded only members seated in the circle, others marking themselves as
 guests, and that no item tables a motion before it was proposed.
 
+Every record whose page opens on its body carries one. A project's is
+its brief, its goal, scope, deliverables and who (`project.toml`); a
+meeting's its notes, what was said and decided once it is held and what
+to read or bring before it meets (`meeting.toml`); a motion's its
+proposal and the reasoning for it, in paragraphs (`motion.toml`); a
+document's its versions' blocks, the statutes' generated; and a task's
+its description or checklist, but `t-2`, `t-3` and `t-7`'s, which the
+`body` scenario needs never saved. A body is an outline of blocks, as a
+document's version is, which the seed carries in with its record as one
+Loro snapshot. Circles and people keep no body: core gives them none.
+
 Files are `file.toml`, each one's bytes in `files/` under its name, and
 what holds them its grafts' files. `import/` holds a sample of each kind
-of file the co-op might bring from the tools it leaves, with lines the
+of file the coop might bring from the tools it leaves, with lines the
 guards refuse beside the ones they take ([the samples](import/index.md));
 nothing seeds them.
 

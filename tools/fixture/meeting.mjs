@@ -1,4 +1,4 @@
-// fixture check, meetings: a mock co-op's meetings are consistent. A
+// fixture check, meetings: a mock coop's meetings are consistent. A
 // meeting is a circle's that exists; one held met on or before the
 // scope's day and one scheduled meets after it; every link a meeting graft
 // holds resolves; a mark is an active member's, recorded by the circle's

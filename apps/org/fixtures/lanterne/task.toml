@@ -92,28 +92,100 @@ completed = 2026-09-25
 id = "t-4"
 circle = "web"
 title = "Train the shops' staff on the back office"
-status = "doing"
+status = "active"
 priority = "normal"
 created = 2026-10-08
 due = 2026-10-30
+
+[[task.body]]
+text = "One session per shop, an hour each, at the shop before it opens. Margaux has the rota."
+
+[[task.body]]
+type = "todo"
+checked = true
+text = "Montreuil and Bagnolet"
+
+[[task.body]]
+type = "todo"
+checked = true
+text = "Romainville"
+
+[[task.body]]
+type = "todo"
+checked = false
+text = "Pantin, Les Lilas and Noisy-le-Sec"
+
+[[task.body]]
+type = "heading"
+level = 3
+text = "Each session covers"
+
+[[task.body]]
+type = "bullet"
+text = "This week's baskets: opening, closing and editing them"
+
+[[task.body]]
+type = "bullet"
+text = "Click and collect: marking an order ready and handed over"
+
+[[task.body]]
+type = "bullet"
+text = "Refunding a missing item"
 
 [[task]]
 id = "t-5"
 circle = "web"
 title = "Write the handover guide"
-status = "todo"
+status = "next"
 priority = "normal"
 created = 2026-10-08
 due = 2026-11-20
+
+[[task.body]]
+text = "What Les Halles Paysannes need to run the shop without us once care ends on 27 November. Short, with screenshots, in the order a new shop manager meets things."
+
+[[task.body]]
+type = "numbered"
+text = "Accounts: who holds which login, and how to add a shop's staff"
+
+[[task.body]]
+type = "numbered"
+text = "The week's cycle: farmers' sheets in by Monday, baskets open Tuesday, collection Friday"
+
+[[task.body]]
+type = "numbered"
+text = "Payments, refunds and the monthly payout"
+
+[[task.body]]
+type = "numbered"
+text = "What to send us if something breaks, and what a care contract would cover"
 
 [[task]]
 id = "t-6"
 circle = "web"
 title = "Fix VAT display on mixed baskets"
-status = "doing"
+status = "active"
 priority = "urgent"
 created = 2026-10-19
 due = 2026-10-27
+
+[[task.body]]
+text = "A basket with bread and vegetables shows one VAT total at 5,5 %, but the bread's flour mix from the mill is sold at 10 %. The order's total is right; the line and the receipt are wrong."
+
+[[task.body]]
+type = "todo"
+checked = true
+text = "Reproduce on staging with a mixed basket"
+
+[[task.body]]
+type = "todo"
+checked = false
+text = "Show VAT per rate on the basket, the order email and the receipt"
+
+[[task.body]]
+type = "todo"
+checked = false
+text = "Ask Julien to check one corrected receipt before it ships"
 
 [[task]]
 id = "t-7"
@@ -134,6 +206,25 @@ created = 2026-08-24
 due = 2026-09-03
 completed = 2026-09-03
 
+[[task.body]]
+text = "Every template of Lot 2 checked against RGAA 4.1 before delivery, by hand and with a screen reader, not only by the automated scan."
+
+[[task.body]]
+type = "bullet"
+text = "Twelve templates, each with its worst real page from the old site"
+
+[[task.body]]
+type = "bullet"
+text = "Findings in the accessibility checklist's order, each with its fix"
+
+[[task.body]]
+type = "bullet"
+runs = [
+  { text = "Result: " },
+  { text = "fully compliant", bold = true },
+  { text = " once the date picker and the agenda's filters were fixed" },
+]
+
 [[task]]
 id = "t-9"
 circle = "web"
@@ -143,6 +234,31 @@ priority = "normal"
 created = 2026-08-10
 due = 2026-09-02
 completed = 2026-09-02
+
+[[task.body]]
+text = "Clairval's design system, delivered as Lot 2: the tokens the town's next builder takes over, and the components the templates are made of."
+
+[[task.body]]
+type = "heading"
+level = 3
+text = "Tokens"
+
+[[task.body]]
+type = "bullet"
+text = "Colour, with every text and background pair at 4.5:1 or better"
+
+[[task.body]]
+type = "bullet"
+text = "Type scale, spacing and focus rings"
+
+[[task.body]]
+type = "heading"
+level = 3
+text = "Components"
+
+[[task.body]]
+type = "bullet"
+text = "Header and menu, breadcrumbs, cards, forms, the agenda and the alert banner"
 
 [[task]]
 id = "t-10"
@@ -160,7 +276,7 @@ text = "October's newsletter to Nuvola's list: the heat pump grants opening agai
 id = "t-11"
 circle = "marketing"
 title = "Social calendar, November"
-status = "doing"
+status = "active"
 priority = "normal"
 created = 2026-10-12
 due = 2026-10-28
@@ -193,7 +309,7 @@ text = "Agreed, I've built it into the November calendar already."
 id = "t-13"
 circle = "marketing"
 title = "Campaign for the community solar open day"
-status = "todo"
+status = "next"
 priority = "high"
 created = 2026-10-12
 due = 2026-11-06
@@ -242,7 +358,7 @@ text = "Draft due before the current contract runs out at the end of the year."
 id = "t-15"
 circle = "brand"
 title = "Chase the overdue invoice F-2026-0044"
-status = "todo"
+status = "next"
 priority = "high"
 created = 2026-10-20
 due = 2026-10-31
@@ -327,7 +443,7 @@ text = "Print-ready PDF/X-4 files for all six labels and the carrier, each again
 id = "t-21"
 circle = "brand"
 title = "Press check at the printer"
-status = "todo"
+status = "next"
 priority = "high"
 created = 2026-09-28
 due = 2026-11-04
@@ -351,7 +467,7 @@ emoji = "👍"
 id = "t-22"
 circle = "brand"
 title = "Order colour proofs"
-status = "doing"
+status = "active"
 priority = "normal"
 created = 2026-10-12
 due = 2026-10-29
@@ -396,7 +512,7 @@ text = "A map of every farm the land trust holds, by region, with the year each 
 id = "t-25"
 circle = "brand"
 title = "Microsite wireframes"
-status = "doing"
+status = "review"
 priority = "high"
 created = 2026-10-12
 due = 2026-10-30
@@ -407,7 +523,7 @@ text = "Three screens for the microsite: the map of the farms, one farm's own pa
 id = "t-26"
 circle = "brand"
 title = "Microsite build"
-status = "todo"
+status = "next"
 priority = "normal"
 created = 2026-10-12
 due = 2026-11-20
@@ -422,7 +538,7 @@ text = "The farm pages pull from the same data as the printed map in t-24 — on
 id = "t-27"
 circle = "brand"
 title = "Quotes for printing the report"
-status = "doing"
+status = "active"
 priority = "normal"
 created = 2026-10-14
 due = 2026-10-28
@@ -442,7 +558,7 @@ text = "In hand — within 4 % of Imprimerie du Parc's, but two days slower. I'd
 id = "t-28"
 circle = "operations"
 title = "Close October's books"
-status = "todo"
+status = "next"
 priority = "high"
 created = 2026-10-19
 due = 2026-11-05
@@ -463,7 +579,7 @@ text = "Close the period, once the books balance"
 id = "t-29"
 circle = "coordination"
 title = "Rate card 2027: answer Malik's comment"
-status = "todo"
+status = "next"
 priority = "normal"
 created = 2026-10-21
 due = 2026-11-07
@@ -483,7 +599,7 @@ text = "Asked them — they're fine with the new standard rate once their curren
 id = "t-30"
 circle = "ag"
 title = "Prepare Inès's onboarding as a member"
-status = "todo"
+status = "next"
 priority = "normal"
 created = 2026-10-20
 due = 2026-11-02
@@ -544,7 +660,7 @@ text = "Good catch. Leave that one plugin a version behind until its next releas
 id = "t-34"
 circle = "ag"
 title = "Draft the amendment on members who live abroad"
-status = "doing"
+status = "review"
 priority = "normal"
 created = 2026-10-14
 due = 2026-11-13
@@ -564,7 +680,7 @@ text = "The extraordinary procedure covers it — any amendment to the statutes 
 id = "t-35"
 circle = "coordination"
 title = "Staffing plan for the first quarter of 2027"
-status = "todo"
+status = "next"
 priority = "normal"
 created = 2026-10-12
 due = 2026-12-07
@@ -612,7 +728,7 @@ created = 2026-10-14
 due = 2026-12-18
 
 # The tasks of Clients, Hiring, Care and Tools, the circles that look
-# after the co-op itself.
+# after the coop itself.
 
 [[task.body]]
 text = "Circulate the draft amendments to every member and gather what they would change before the extraordinary assembly is called."
@@ -620,7 +736,7 @@ text = "Circulate the draft amendments to every member and gather what they woul
 id = "t-38"
 circle = "clients"
 title = "Call Les Halles Paysannes about a care contract"
-status = "todo"
+status = "next"
 priority = "high"
 created = 2026-10-19
 due = 2026-10-30
@@ -631,7 +747,7 @@ text = "Les Halles Paysannes asked about care after the shop's launch; walk them
 id = "t-39"
 circle = "clients"
 title = "Draft Nuvola's 2027 retainer proposal"
-status = "doing"
+status = "review"
 priority = "normal"
 created = 2026-10-12
 due = 2026-11-13
@@ -688,7 +804,7 @@ text = "Good, posting it this week."
 id = "t-42"
 circle = "hiring"
 title = "Plan Inès's review at her first year"
-status = "todo"
+status = "next"
 priority = "normal"
 created = 2026-10-16
 due = 2026-11-20
@@ -721,7 +837,7 @@ text = "Thanks for running it, Amina. Over to the write-up."
 id = "t-44"
 circle = "care"
 title = "Write up the survey's findings"
-status = "doing"
+status = "active"
 priority = "normal"
 created = 2026-10-12
 due = 2026-11-06
@@ -741,7 +857,7 @@ text = "Caught it, thanks — anonymised now."
 id = "t-45"
 circle = "care"
 title = "Book the first-aid refresher"
-status = "todo"
+status = "next"
 priority = "low"
 created = 2026-10-19
 due = 2026-11-27
@@ -786,7 +902,7 @@ text = "Confirmed on my end too. Clear to move production once the clients are t
 id = "t-48"
 circle = "tools"
 title = "Move the production sites"
-status = "todo"
+status = "next"
 priority = "high"
 created = 2026-10-19
 due = 2026-12-04
@@ -811,7 +927,7 @@ emoji = "👍"
 id = "t-49"
 circle = "marketing"
 title = "Newsletter: pick the new template"
-status = "doing"
+status = "active"
 priority = "normal"
 created = 2026-10-05
 due = 2026-11-02
@@ -828,7 +944,7 @@ text = "The second one — it gives the case study more room, which is the point
 id = "t-50"
 circle = "marketing"
 title = "Write up the Vélo Solidaire case study"
-status = "todo"
+status = "next"
 priority = "normal"
 created = 2026-10-09
 due = 2026-11-13
@@ -883,7 +999,7 @@ text = "Good — short enough that people will actually answer it. Send the firs
 id = "t-54"
 circle = "clients"
 title = "List clients to approach for referrals first"
-status = "todo"
+status = "next"
 priority = "normal"
 created = 2026-10-06
 due = 2026-11-13
@@ -895,7 +1011,7 @@ text = "The happiest clients first: Vélo Solidaire, Les Halles once care ends, 
 id = "t-55"
 circle = "tools"
 title = "List every backup and its last test"
-status = "doing"
+status = "active"
 priority = "normal"
 created = 2026-09-22
 due = 2026-10-18
@@ -926,7 +1042,7 @@ text = "A label on each machine with the year it was bought, before the rotation
 id = "t-57"
 circle = "web"
 title = "Audit buttons and form fields across every site"
-status = "todo"
+status = "next"
 priority = "normal"
 created = 2026-09-03
 due = 2026-11-20
@@ -937,7 +1053,7 @@ text = "Every button and form field on the Halles shop, Clairval's site and Ondi
 [[task]]
 id = "t-58"
 circle = "hiring"
-title = "Post the two roles on the co-op jobs board"
+title = "Post the two roles on the coop jobs board"
 status = "done"
 priority = "normal"
 created = 2026-10-01
@@ -945,7 +1061,7 @@ due = 2026-10-06
 completed = 2026-10-05
 
 [[task.body]]
-text = "The junior developer and junior designer roles, both from February 2027, on the federation's jobs board and the co-op network's own."
+text = "The junior developer and junior designer roles, both from February 2027, on the federation's jobs board and the coop network's own."
 
 [[task.comment]]
 author = "julien@lanterne.example"

@@ -1,4 +1,4 @@
-// seed, founding: a co-op as it is founded from nothing but its legal
+// seed, founding: a coop as it is founded from nothing but its legal
 // form, as a fixture in memory for `found.mjs` to found: the founders,
 // each a person with one device, an active member since the founding day
 // and seated in the root circle, the form's assembly; and the root's

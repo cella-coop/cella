@@ -1,4 +1,4 @@
-// seed, found: founds a co-op from a fixture, as the log's first entry,
+// seed, found: founds a coop from a fixture, as the log's first entry,
 // the founding (the import feat's `membership-motion:scope:found`), which the first
 // device the fixture enrols in force signs, as its founder seated in the
 // root: the scope's address, its circles and roles, which every record
@@ -31,7 +31,7 @@ import { fill } from '../../apps/org/feats/document/core/ts/src/models/index.ts'
 import { departures, inOrder } from '../../apps/org/core/policy/ts/src/index.ts'
 import { fixture, signer } from '../../apps/org/core/sign/ts/src/index.ts'
 import { found } from '../../apps/org/grafts/membership-motion/ts/src/handlers/found.ts'
-import { work } from './work.mjs'
+import { snapshot, work } from './work.mjs'
 import { finance } from './finance.mjs'
 import { invitations, actions, adopted } from './governance.mjs'
 import { meetings } from './meeting.mjs'
@@ -40,14 +40,14 @@ import { files } from './file.mjs'
 const day = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null)
 const receipt = `nextval('cella.receipt_seq')`
 
-// The co-op's particulars as a rule of its assembly, worded from
+// The coop's particulars as a rule of its assembly, worded from
 // scope.toml: what it is called, and its legal name, form, capital, seat,
-// SIREN, registry and VAT number where it names them, each marked once
-// ([the co-op's particulars](../../apps/org/core/circle/index.md#the-co-ops-particulars)).
+// SIREN, registry, VAT number and logo where it names them, each marked once
+// ([the coop's particulars](../../apps/org/core/circle/index.md#the-coops-particulars)).
 // The founding motion adopts it as its last action, protected by the
 // procedure that amends the statutes where the motion adopts one
 // (`{procedure: extraordinary}`), as Lanterne's does. Answers the
-// motions, the founding's with it; a scope that names no co-op adopts
+// motions, the founding's with it; a scope that names no coop adopts
 // none.
 export function particulars(scope, motions) {
   if (!scope.name) {
@@ -55,7 +55,7 @@ export function particulars(scope, motions) {
   }
   const mark = (name, value) => `{particulars_${name}: ${value}}`
   const wording = [
-    `The co-op is called ${mark('name', scope.name)}`,
+    `The coop is called ${mark('name', scope.name)}`,
     scope.legal_name ? `, its legal name ${mark('legal_name', scope.legal_name)}` : '',
     scope.form ? `, a ${mark('form', scope.form)}` : '',
     scope.capital ? ` with a capital of ${mark('capital', scope.capital)}` : '',
@@ -63,6 +63,8 @@ export function particulars(scope, motions) {
     scope.siren ? `, registered under SIREN ${mark('siren', scope.siren)}` : '',
     scope.rcs ? `${scope.siren ? '' : ', registered'} at the trade register of ${mark('rcs', scope.rcs)}` : '',
     scope.vat ? `, with the VAT number ${mark('vat', scope.vat)}` : '',
+    // The logo, an SVG, on one line: the sentence reads as one.
+    scope.logo ? `, and bears the mark ${mark('logo', scope.logo.trim().replace(/>\s+</g, '><').replace(/\s+/g, ' '))}` : '',
   ].join('')
   return motions.map((d) => {
     if (d.id !== scope.founding) {
@@ -81,7 +83,7 @@ export function particulars(scope, motions) {
 export async function seed(db, read, { from, dir }) {
   // Every write signature names the scope; a new connection reads it. Its
   // timezone rides beside it, whose day the notary dates every verdict
-  // by. What the co-op is called and what its papers print are no
+  // by. What the coop is called and what its papers print are no
   // setting: they are its particulars, which its founding motion adopts.
   const scope = read('scope')
   const settings = {
@@ -133,7 +135,7 @@ export async function seed(db, read, { from, dir }) {
         r.holders ?? null,
       ])
     }
-    // The co-op's layout, the root's listing, each group's id minted from
+    // The coop's layout, the root's listing, each group's id minted from
     // its name; then what each other circle shows of it, the groups it
     // shows and the features it hides inside them.
     if (structure.layout?.features) {
@@ -157,7 +159,7 @@ export async function seed(db, read, { from, dir }) {
       }
     }
 
-    // Everyone the co-op knows, then the memberships they hold.
+    // Everyone the coop knows, then the memberships they hold.
     const people = read('person').person ?? []
     for (const p of people) {
       await db.query('INSERT INTO person.person (address, name, email, phone) VALUES ($1, $2, $3, $4)', [p.address, p.name, p.email ?? null, p.phone ?? null])
@@ -182,7 +184,7 @@ export async function seed(db, read, { from, dir }) {
       )
     }
 
-    // Everyone the co-op employs, member or not, and their candidacies for
+    // Everyone the coop employs, member or not, and their candidacies for
     // membership, before their time and their pay load. Each hire is recorded
     // on the day its contract starts, the register of the staff copying the
     // person's name.
@@ -226,7 +228,7 @@ export async function seed(db, read, { from, dir }) {
     }
     const seats = [...(sitting.member ?? []), ...(sitting.tenure ?? [])]
 
-    // The motions, the founding's adopting the co-op's particulars last.
+    // The motions, the founding's adopting the coop's particulars last.
     const motions = particulars(scope, read('motion').motion ?? [])
     let votes = 0
     let moved = 0
@@ -372,11 +374,12 @@ export async function seed(db, read, { from, dir }) {
       await db.query('INSERT INTO document_membership.reading (version, member, read) VALUES ($1, $2, $3)', [r.version, r.member, day(r.read)])
     }
 
+    // Each contact with its notes, its body, as one Loro snapshot.
     const contacts = read('contact').contact ?? []
     for (const c of contacts) {
       await db.query(
-        'INSERT INTO contact.contact (id, kind, person, name, form, note, email, phone, parent, client) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
-        [c.id, c.kind ?? 'company', c.person ?? null, c.name ?? null, c.form ?? null, c.note ?? '', c.email ?? null, c.phone ?? null, c.parent ?? null, c.client ?? null],
+        'INSERT INTO contact.contact (id, kind, person, name, form, email, phone, parent, client, body) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+        [c.id, c.kind ?? 'company', c.person ?? null, c.name ?? null, c.form ?? null, c.email ?? null, c.phone ?? null, c.parent ?? null, c.client ?? null, c.body ? snapshot(c.body, `contact ${c.id}'s body`) : null],
       )
     }
 

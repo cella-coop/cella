@@ -1,77 +1,78 @@
 # The organisations and people Lanterne deals with: the eight it works
 # for, each an active client, and Margaux Roux, a person at Les Halles,
-# who is no client.
+# who is no client. Each contact's notes are its body, an outline of
+# core body's blocks, as a project's brief is.
 
 [[contact]]
 id = "halles"
 name = "Les Halles Paysannes"
 form = "community-interest co-operative"
 client = "active"
-note = "a network of farmers' shops; brand refresh and an online shop"
+body = [{ text = "A network of farmers' shops; brand refresh and an online shop." }]
 
 # A person: Les Halles' contact for the shop, a core person by her
 # address (person.toml), whose name, email and phone are core's; what
-# Lanterne knows of her is kept here, personal data of class contact.
+# Lanterne knows of her is kept here, her notes in her contact's body.
 # Lanterne bills Les Halles, not her.
 [[contact]]
 id = "halles-roux"
 kind = "person"
 person = "margaux.roux@halles-paysannes.example"
 parent = "halles"
-note = "runs the online shop; prefers mornings"
+body = [{ text = "Runs the online shop; prefers mornings." }]
 
 [[contact]]
 id = "clairval"
 name = "Ville de Clairval"
 form = "municipality"
 client = "active"
-note = "the town website, rebuilt to RGAA accessibility; won by tender"
+body = [{ text = "The town website, rebuilt to RGAA accessibility; won by tender." }]
 
 [[contact]]
 id = "nuvola"
 name = "Nuvola Énergie"
 form = "community-interest co-operative"
 client = "active"
-note = "a citizen solar co-op; monthly marketing retainer"
+body = [{ text = "A citizen solar coop; monthly marketing retainer." }]
 
 [[contact]]
 id = "mauve"
 name = "Compagnie Mauve Horizon"
 form = "association"
 client = "active"
-note = "a theatre company; season posters and brochure"
+body = [{ text = "A theatre company; season posters and brochure." }]
 
 [[contact]]
 id = "velo"
 name = "Vélo Solidaire"
 form = "association"
 client = "active"
-note = "a bike repair workshop; brand identity at the solidarity rate"
+body = [{ text = "A bike repair workshop; brand identity at the solidarity rate." }]
 
 [[contact]]
 id = "ferrand"
 name = "Maison Ferrand"
 form = "limited company"
 client = "active"
-note = "an artisan bakery group; packaging design"
+body = [{ text = "An artisan bakery group; packaging design." }]
 
 [[contact]]
 id = "terres"
 name = "Fondation Terres Vives"
 form = "foundation"
 client = "active"
-note = "a land-trust foundation; annual report and microsite"
+body = [{ text = "A land-trust foundation; annual report and microsite." }]
 
 [[contact]]
 id = "ondine"
 name = "Atelier Ondine"
 form = "simplified joint-stock company"
 client = "active"
-note = "a ceramics studio; online shop"
+body = [{ text = "A ceramics studio; online shop." }]
 
 [[contact]]
 id = "laruche"
 name = "Coopérative La Ruche"
 form = "worker co-operative"
 client = "active"
-note = "a sister co-op; paid consulting on their own move into cella"
+body = [{ text = "A sister coop; paid consulting on their own move into cella." }]

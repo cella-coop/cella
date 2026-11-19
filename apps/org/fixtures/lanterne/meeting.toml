@@ -3,7 +3,10 @@
 # day. Who came is graft.meeting-membership.toml's, the motions an item
 # tables graft.meeting-motion.toml's, and the minutes
 # graft.document-meeting.toml's. Coordination meets every Monday at ten,
-# at the studio and online; the assembly on a Saturday morning.
+# at the studio and online; the assembly on a Saturday morning. A
+# meeting's body is its notes, its blocks as an outline as a project's
+# brief is: what was said and decided once it is held, what to read or
+# bring before it meets.
 
 [[meeting]]
 id = "ag-2026-06-20"
@@ -14,6 +17,16 @@ place = "Studio, 14 rue des Graviers, Montreuil"
 scheduled = 2026-05-29
 status = "held"
 minuted = 2026-06-20
+body = [
+  { text = "All ten members present, at the studio and online. Julien took the minutes, which the next assembly approves." },
+  { type = "heading", level = 2, text = "Decided" },
+  { type = "bullet", text = "The 2025 accounts approved and the surplus of 61 400 € allocated, m-2026-006: nine for, one abstention" },
+  { type = "bullet", text = "The internal rules, version 3, adopted by consent, m-2026-007" },
+  { type = "bullet", text = "Also closed today: coordination may hand down the approval of suppliers' bills, m-2026-008, and each circle arranges its own features, m-2026-018" },
+  { type = "heading", level = 2, text = "Follow-ups" },
+  { type = "todo", checked = true, text = "The minutes written up and filed, Julien" },
+  { type = "todo", checked = false, text = "The minutes approved at the next assembly" },
+]
 
 [[meeting.item]]
 title = "The 2025 accounts and the surplus"
@@ -33,6 +46,18 @@ at = 2026-09-07T10:00:00
 place = "Studio"
 link = "https://meet.lanterne.example/coordination"
 status = "held"
+body = [
+  { type = "heading", level = 3, text = "Pipeline" },
+  { type = "bullet", text = "Halles shop: the build is delivered, launch planned for 8 October" },
+  { type = "bullet", text = "Clairval: Lot 2 delivered on Friday; the build is a later tender" },
+  { type = "bullet", text = "Maison Ferrand starts this week; Terres Vives on the 14th" },
+  { type = "heading", level = 3, text = "Staffing for September" },
+  { type = "bullet", text = "Amina stays on the Halles shop until launch; Léa moves to the design system" },
+  { type = "heading", level = 3, text = "Timesheets from 1 September" },
+  { type = "bullet", text = "Everyone logs their time in cella from today, a project named where the hour is billable. Leads approve their circle's month; Julien approves everyone's." },
+  { type = "heading", level = 3, text = "Actions" },
+  { type = "todo", checked = true, text = "Everyone logs the first week of September, by Friday" },
+]
 
 [[meeting.item]]
 title = "Pipeline"
@@ -57,6 +82,16 @@ at = 2026-09-14T10:00:00
 place = "Studio"
 link = "https://meet.lanterne.example/coordination"
 status = "held"
+body = [
+  { type = "heading", level = 3, text = "Pipeline" },
+  { type = "bullet", text = "Terres Vives starts today: the report first, the microsite after" },
+  { type = "bullet", text = "Camille opens the review of the 2027 pipeline: every client, kept or not, by 12 October" },
+  { type = "heading", level = 3, text = "Ferrand packaging: the range concept" },
+  { type = "bullet", text = "Two directions shown: a hand-drawn orchard motif, and kraft and stamp. Maison Ferrand chose the orchard on Friday." },
+  { type = "bullet", text = "Six packs print-ready by 25 September, then the press check at Imprimerie du Parc" },
+  { type = "heading", level = 3, text = "Staffing" },
+  { type = "bullet", text = "Sofia leads Ferrand and Hugo designs it; Camille prepares the files" },
+]
 
 [[meeting.item]]
 title = "Pipeline"
@@ -81,6 +116,16 @@ at = 2026-09-21T10:00:00
 place = "Studio"
 link = "https://meet.lanterne.example/coordination"
 status = "held"
+body = [
+  { type = "heading", level = 3, text = "Pipeline" },
+  { type = "bullet", text = "No change. Mauve Horizon's poster invoice is a month overdue; Julien sends a reminder." },
+  { type = "heading", level = 3, text = "Halles shop: the launch plan" },
+  { type = "numbered", text = "Load test the checkout the week before" },
+  { type = "numbered", text = "Switch the payments to live keys the day before, with the go-live checklist" },
+  { type = "numbered", text = "Launch on Thursday 8 October; train the shops' staff over the weeks after" },
+  { type = "heading", level = 3, text = "Inès asks to join" },
+  { type = "bullet", text = "Her probation ended on 31 August and her first year is up this month. Camille invites her on the 30th; she applies by her own right, and the assembly decides." },
+]
 
 [[meeting.item]]
 title = "Pipeline"
@@ -105,6 +150,16 @@ at = 2026-09-28T10:00:00
 place = "Studio"
 link = "https://meet.lanterne.example/coordination"
 status = "held"
+body = [
+  { text = "Hugo excused. m-2026-009 closed today: Operations may now grant a working circle's role the approval of its own bills." },
+  { type = "heading", level = 3, text = "Staffing for October" },
+  { type = "bullet", text = "Web on the Halles launch; Brand on Ferrand's files and Terres Vives's report; Marketing on Nuvola's Q3 review" },
+  { type = "heading", level = 3, text = "2027 rates: a first draft" },
+  { type = "bullet", text = "Malik's first numbers: the standard day rate from 520 € to 560 €, the solidarity rate held at 380 €" },
+  { type = "bullet", text = "Project floors rise with the day rate; the solidarity floors stay" },
+  { type = "heading", level = 3, text = "Actions" },
+  { type = "todo", checked = true, text = "Malik drafts the rate card as a document, for next week" },
+]
 
 [[meeting.item]]
 title = "Pipeline"
@@ -129,6 +184,16 @@ at = 2026-10-05T10:00:00
 place = "Studio"
 link = "https://meet.lanterne.example/coordination"
 status = "held"
+body = [
+  { type = "heading", level = 3, text = "Pipeline" },
+  { type = "bullet", text = "The Halles shop launches on Thursday; Ferrand's packs are print-ready" },
+  { type = "bullet", text = "Clients starts its renewals for 2027 today" },
+  { type = "heading", level = 3, text = "September's books, closing today" },
+  { type = "bullet", text = "July to September closed; September is the first month whose time was all logged in cella. Pay runs and expenses are in cella from October." },
+  { type = "heading", level = 3, text = "Rate card 2027, version 1" },
+  { type = "bullet", text = "Malik walked through the draft. Services stay as they are; an online shop gets its own line." },
+  { type = "bullet", text = "Malik saves version 1 as a document by Friday, for everyone's comments" },
+]
 
 [[meeting.item]]
 title = "Pipeline"
@@ -153,6 +218,15 @@ at = 2026-10-12T10:00:00
 place = "Studio"
 link = "https://meet.lanterne.example/coordination"
 status = "held"
+body = [
+  { text = "Yusuf excused." },
+  { type = "heading", level = 3, text = "Pipeline" },
+  { type = "bullet", text = "The client review is done: all eight clients kept for 2027, and Operations' consulting for Coopérative La Ruche besides" },
+  { type = "heading", level = 3, text = "Raise the day rate for 2027" },
+  { type = "bullet", text = "Camille proposes m-2026-011 today: the rate card as drafted, 560 € standard and 380 € solidarity, open until 9 November" },
+  { type = "heading", level = 3, text = "Inès's admission" },
+  { type = "bullet", text = "Inès applies this week; the assembly decides by 31 October, and the assembly of that day hears the result" },
+]
 
 [[meeting.item]]
 title = "Pipeline"
@@ -177,6 +251,19 @@ at = 2026-10-19T10:00:00
 place = "Studio"
 link = "https://meet.lanterne.example/coordination"
 status = "held"
+body = [
+  { type = "heading", level = 3, text = "Pipeline" },
+  { type = "bullet", text = "Camille proposes m-2026-013 today: finance approves suppliers' bills up to 1 500 €, when someone else recorded them" },
+  { type = "heading", level = 3, text = "The day rate: Malik's objection" },
+  { type = "bullet", text = "Malik objects to m-2026-011 until we say whether Nuvola's retainer holds at its current rate through its renewal. Camille answers on the rate card before the motion closes." },
+  { type = "heading", level = 3, text = "Admit Inès Haddad as a member" },
+  { type = "bullet", text = "Five consents so far and no objection; the vote closes on 31 October" },
+  { type = "heading", level = 3, text = "Staffing for November" },
+  { type = "bullet", text = "Amina moves to the Terres Vives microsite; Thomas takes the production moves for Tools" },
+  { type = "heading", level = 3, text = "Actions" },
+  { type = "todo", checked = false, text = "Answer Malik's comment on the rate card, Camille" },
+  { type = "todo", checked = false, text = "Staffing plan for the first quarter of 2027, Yusuf" },
+]
 
 [[meeting.item]]
 title = "Pipeline"
@@ -207,6 +294,14 @@ place = "Studio"
 link = "https://meet.lanterne.example/coordination"
 scheduled = 2026-10-19
 status = "scheduled"
+body = [
+  { type = "heading", level = 3, text = "Before we meet" },
+  { type = "bullet", text = "m-2026-013 and the assembly's m-2026-014 are past their deadline with no objection: close them, in that order" },
+  { type = "bullet", text = "Yusuf brings the November staffing as it stands after the Terres Vives move" },
+  { type = "heading", level = 3, text = "For the assembly of 31 October" },
+  { type = "bullet", text = "Who presents each item: Julien the June minutes, Camille Inès's admission, Malik the rate card" },
+  { type = "bullet", text = "The rate card is coordination's to adopt: it goes to the assembly to be heard, not voted" },
+]
 
 [[meeting.item]]
 title = "Pipeline"
@@ -231,6 +326,15 @@ at = 2026-10-31T10:00:00
 place = "Studio, 14 rue des Graviers, Montreuil"
 scheduled = 2026-10-01
 status = "scheduled"
+body = [
+  { text = "Saturday at ten, at the studio and online. Every member votes; a quarter of the associates taking part makes the quorum." },
+  { type = "heading", level = 3, text = "Read before" },
+  { type = "bullet", text = "The minutes of 20 June, which this assembly approves" },
+  { type = "bullet", text = "Inès's application, m-2026-012, which closes today" },
+  { type = "bullet", text = "The rate card 2027, version 2, and Malik's comment on it" },
+  { type = "heading", level = 3, text = "After" },
+  { type = "todo", checked = false, text = "If Inès is admitted, a seat in the assembly and her mentor named in Web" },
+]
 
 [[meeting.item]]
 title = "The minutes of 20 June"
@@ -259,6 +363,14 @@ title = "Operations: the books and the bills"
 at = 2026-10-05T14:00:00
 place = "Studio"
 status = "held"
+body = [
+  { text = "Julien alone, as Operations' one seat." },
+  { type = "heading", level = 3, text = "September's close" },
+  { type = "bullet", text = "The bank reconciled line by line, September's pay run posted, the period closed" },
+  { type = "bullet", text = "Mauve Horizon's poster invoice is still unpaid after the reminder: a call next" },
+  { type = "heading", level = 3, text = "Brand's print buyer" },
+  { type = "bullet", text = "m-2026-010 proposed today: Brand's print buyer approves Brand's print and paper bills up to 1 200 € a bill. It closes on 12 October, and Sofia takes the role." },
+]
 
 [[meeting.item]]
 title = "September's close"
@@ -277,6 +389,17 @@ title = "Brand review"
 at = 2026-10-15T15:00:00
 place = "Studio"
 status = "held"
+body = [
+  { text = "Camille excused." },
+  { type = "heading", level = 3, text = "Maison Ferrand: the six packs before the press check" },
+  { type = "bullet", text = "All six labels and the carrier signed off by the client" },
+  { type = "bullet", text = "The orchard green is the risk on kraft: colour proofs first, two rounds if it drifts" },
+  { type = "heading", level = 3, text = "Terres Vives: the report's infographics" },
+  { type = "bullet", text = "The map of the farms redrawn by region, each farm with the year it joined; the report goes to the client tomorrow" },
+  { type = "heading", level = 3, text = "Actions" },
+  { type = "todo", checked = false, text = "Order colour proofs for the six labels, Hugo" },
+  { type = "todo", checked = false, text = "A second printer's quote for the report, Camille" },
+]
 
 [[meeting.item]]
 title = "Maison Ferrand: the six packs before the press check"
@@ -296,6 +419,16 @@ at = 2026-10-20T10:00:00
 place = "Studio"
 link = "https://meet.lanterne.example/web"
 status = "held"
+body = [
+  { type = "heading", level = 3, text = "Halles shop: care and handover" },
+  { type = "bullet", text = "Two of the six shops trained; the other four before the end of the month" },
+  { type = "bullet", text = "The VAT shown on mixed baskets is wrong on the line and the receipt: Thomas fixes it this week, urgent" },
+  { type = "bullet", text = "Yusuf writes the handover guide, due 20 November" },
+  { type = "heading", level = 3, text = "Clairval: what the accessibility audit found" },
+  { type = "bullet", text = "The templates passed once the date picker and the agenda's filters were fixed. Both were ours to catch earlier: they go into the design system first." },
+  { type = "heading", level = 3, text = "Accessibility as the floor of every site" },
+  { type = "bullet", text = "Yusuf proposes m-2026-017 today. The checklist stays how we check; the motion is that we always do." },
+]
 
 [[meeting.item]]
 title = "Halles shop: care and handover"
@@ -320,6 +453,9 @@ at = 2026-10-22T11:00:00
 place = "Studio"
 link = "https://meet.lanterne.example/marketing"
 status = "cancelled"
+body = [
+  { text = "Cancelled: Malik and Chloé are at Nuvola's for the open day workshop. The social calendar moves to the meeting of 29 October." },
+]
 
 [[meeting.item]]
 title = "November's social calendar"
@@ -335,6 +471,13 @@ place = "Studio"
 link = "https://meet.lanterne.example/marketing"
 scheduled = 2026-10-22
 status = "scheduled"
+body = [
+  { type = "heading", level = 3, text = "Bring" },
+  { type = "bullet", text = "Chloé: November's calendar, week by week, from the open day workshop's notes" },
+  { type = "bullet", text = "Malik: the Q3 numbers and an outline of Nuvola's renewal" },
+  { type = "heading", level = 3, text = "To decide" },
+  { type = "bullet", text = "Whether the renewal quotes the 2027 rate, which coordination has not adopted yet, or shows both" },
+]
 
 [[meeting.item]]
 title = "November's social calendar"
@@ -355,6 +498,13 @@ place = "Studio"
 link = "https://meet.lanterne.example/web"
 scheduled = 2026-10-20
 status = "scheduled"
+body = [
+  { type = "heading", level = 3, text = "Terres Vives microsite: the build" },
+  { type = "bullet", text = "Léa's wireframes are in review with Brand; Amina starts the build from them" },
+  { type = "bullet", text = "The map is an interactive layer over the static one the report prints, not a second map" },
+  { type = "bullet", text = "The project is under its margin: keep the build to the three screens signed off" },
+  { text = "m-2026-017, accessibility as the floor of every site, closes today." },
+]
 
 [[meeting.item]]
 title = "Terres Vives microsite: the build"
@@ -388,6 +538,14 @@ place = "Studio"
 link = "https://meet.lanterne.example/clients"
 scheduled = 2026-10-19
 status = "scheduled"
+body = [
+  { type = "heading", level = 3, text = "Renewals: who hears from whom" },
+  { type = "bullet", text = "Les Halles Paysannes: Thomas, about a care contract" },
+  { type = "bullet", text = "Nuvola Énergie: Malik, with the 2027 retainer" },
+  { type = "bullet", text = "Ville de Clairval: Chloé, asking for feedback first" },
+  { type = "heading", level = 3, text = "Nuvola's 2027 retainer" },
+  { type = "bullet", text = "Malik's draft is in review: read it before we meet, and say whether to keep them at the solidarity rate they are no longer owed" },
+]
 
 [[meeting.item]]
 title = "Renewals: who hears from whom"
@@ -408,6 +566,12 @@ place = "Studio"
 link = "https://meet.lanterne.example/hiring"
 scheduled = 2026-10-21
 status = "scheduled"
+body = [
+  { type = "heading", level = 3, text = "Before we meet" },
+  { type = "bullet", text = "Read both job descriptions as posted; say what a candidate would misread" },
+  { type = "bullet", text = "Both roles are on the federation's jobs board and the coop network's. Julien looks at what a wider listing would cost, and whether it reaches anyone the boards do not." },
+  { type = "bullet", text = "Interviews by 11 December: each of us says which days they can sit on a panel" },
+]
 
 [[meeting.item]]
 title = "The two job descriptions"
@@ -428,6 +592,13 @@ place = "Studio"
 link = "https://meet.lanterne.example/care"
 scheduled = 2026-10-20
 status = "scheduled"
+body = [
+  { type = "heading", level = 3, text = "The workload survey's findings" },
+  { type = "bullet", text = "Amina presents the draft write-up. Findings are by circle, never by person, and nothing for a group smaller than three." },
+  { type = "bullet", text = "What we take to the assembly of 28 November, and what Care can change by itself" },
+  { type = "heading", level = 3, text = "A quiet first hour" },
+  { type = "bullet", text = "m-2026-021 is open until 3 November. Léa's question stands: client calls are covered too, where we can move them." },
+]
 
 [[meeting.item]]
 title = "The workload survey's findings"
@@ -448,6 +619,14 @@ place = "Studio"
 link = "https://meet.lanterne.example/tools"
 scheduled = 2026-10-21
 status = "scheduled"
+body = [
+  { type = "heading", level = 3, text = "Production move: the plan" },
+  { type = "numbered", text = "Our own site first, as the rehearsal" },
+  { type = "numbered", text = "Atelier Ondine, then Ville de Clairval's templates, then the Halles shop once its care ends" },
+  { type = "numbered", text = "Each in the window its contact in Clients agrees, never on a Friday" },
+  { type = "heading", level = 3, text = "Password manager: who is still out" },
+  { type = "bullet", text = "Inès lists who has not confirmed their seat. The old spreadsheet is deleted once everyone has." },
+]
 
 [[meeting.item]]
 title = "Production move: the plan"
@@ -467,6 +646,13 @@ at = 2026-11-28T10:00:00
 place = "Studio, 14 rue des Graviers, Montreuil"
 scheduled = 2026-10-24
 status = "scheduled"
+body = [
+  { text = "Saturday at ten, at the studio and online." },
+  { type = "heading", level = 3, text = "Read before" },
+  { type = "bullet", text = "October's report: the first month closed in cella alone" },
+  { type = "bullet", text = "Where the two junior hires stand: the interviews booked, and the trial days if m-2026-026 passed" },
+  { type = "bullet", text = "Care's findings from the workload survey, due to the assembly by 30 November" },
+]
 
 [[meeting.item]]
 title = "October close"
@@ -487,6 +673,13 @@ place = "Studio"
 link = "https://meet.lanterne.example/clients"
 scheduled = 2026-10-24
 status = "scheduled"
+body = [
+  { type = "heading", level = 3, text = "Renewal proposals: where things stand" },
+  { type = "bullet", text = "Each of us says where their client is: called, proposal sent, or answered. Proposals are due by 27 November." },
+  { type = "heading", level = 3, text = "Referral programme: kickoff" },
+  { type = "bullet", text = "Malik's list of who to ask first, due on 13 November: Vélo Solidaire, Les Halles once care ends, Terres Vives once the report ships" },
+  { type = "bullet", text = "Agree what we say, so every ask sounds like us and none like a campaign" },
+]
 
 [[meeting.item]]
 title = "Renewal proposals: where things stand"
@@ -507,6 +700,12 @@ place = "Studio"
 link = "https://meet.lanterne.example/clients"
 scheduled = 2026-10-24
 status = "scheduled"
+body = [
+  { type = "heading", level = 3, text = "December check-ins" },
+  { type = "bullet", text = "If m-2026-024 passed, Nuvola's first quarterly check-in falls this month: Chloé books it, separate from the renewal" },
+  { type = "heading", level = 3, text = "2027 pipeline: handing over to coordination" },
+  { type = "bullet", text = "What each client said about next year, in one list for Yusuf's staffing plan, due 14 December" },
+]
 
 [[meeting.item]]
 title = "December check-ins"
@@ -527,6 +726,12 @@ place = "Studio"
 link = "https://meet.lanterne.example/hiring"
 scheduled = 2026-10-24
 status = "scheduled"
+body = [
+  { type = "heading", level = 3, text = "Interview scorecard: a first trial" },
+  { type = "bullet", text = "Léa and Amina each score the first two interviews alone, then compare. Where they differ by more than a point, the criterion needs rewording." },
+  { type = "heading", level = 3, text = "Referral bonus: rolling it out" },
+  { type = "bullet", text = "m-2026-025 passed on 20 October. Tell everyone how to refer someone, and that the bonus is paid once the hire's probation ends." },
+]
 
 [[meeting.item]]
 title = "Interview scorecard: a first trial"
@@ -547,6 +752,12 @@ place = "Studio"
 link = "https://meet.lanterne.example/hiring"
 scheduled = 2026-10-24
 status = "scheduled"
+body = [
+  { type = "heading", level = 3, text = "Candidate pipeline review" },
+  { type = "bullet", text = "Julien brings the shortlist for each role, from the candidate pipeline notes. No names leave this meeting." },
+  { type = "heading", level = 3, text = "Paid trial day: first results" },
+  { type = "bullet", text = "If m-2026-026 passed, the first finalists' days are booked with Web and Brand; Camille says what they cost Hiring's budget" },
+]
 
 [[meeting.item]]
 title = "Candidate pipeline review"
@@ -567,6 +778,12 @@ place = "Studio"
 link = "https://meet.lanterne.example/care"
 scheduled = 2026-10-24
 status = "scheduled"
+body = [
+  { type = "heading", level = 3, text = "Peer support guide: first feedback" },
+  { type = "bullet", text = "Hugo gathers what people found missing or unclear in the guide, without saying who asked for support" },
+  { type = "heading", level = 3, text = "Counselling budget: how it is used" },
+  { type = "bullet", text = "Amina reports only how many of the year's sessions are booked and what they cost, never by whom, as m-2026-027 promised" },
+]
 
 [[meeting.item]]
 title = "Peer support guide: first feedback"
@@ -587,6 +804,12 @@ place = "Studio"
 link = "https://meet.lanterne.example/care"
 scheduled = 2026-10-24
 status = "scheduled"
+body = [
+  { type = "heading", level = 3, text = "Conflict log: first entries" },
+  { type = "bullet", text = "Sofia reads out what kinds of conflict were logged, with no names and no circles, and whether the template asked the right questions" },
+  { type = "heading", level = 3, text = "Quiet hour: how it is going" },
+  { type = "bullet", text = "Léa asks each circle whether the hour before ten holds, and which client calls still land in it" },
+]
 
 [[meeting.item]]
 title = "Conflict log: first entries"

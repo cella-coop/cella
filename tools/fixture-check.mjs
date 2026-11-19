@@ -1,12 +1,12 @@
-// fixture check: a mock co-op is consistent. Every journal entry balances,
+// fixture check: a mock coop is consistent. Every journal entry balances,
 // every surplus distribution splits the whole surplus, every link a graft holds
 // resolves, every billing names a client, every device and every
 // membership and employment is a person's,
 // every vote and seat a member's, every record's owning circle one the
-// co-op has, the books agree with the invoices,
+// coop has, the books agree with the invoices,
 // every document version is an outline of blocks the document model
 // takes, whose embeds name what exists and whose comments quote text one of
-// its blocks holds, and the co-op is rich enough to show every feature,
+// its blocks holds, and the coop is rich enough to show every feature,
 // every circle a slice of its own (`fixture/rich.mjs`).
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
@@ -150,7 +150,7 @@ const check = (name) => {
     }
   }
 
-  // Every record that names its owning circle names one the co-op has;
+  // Every record that names its owning circle names one the coop has;
   // one that names none is the root's.
   for (const [file, key] of [['project', 'project'], ['meeting', 'meeting'], ['expense', 'expense'], ['bill', 'bill'], ['document', 'document']]) {
     for (const r of read(file)[key] ?? []) {

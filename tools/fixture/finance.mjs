@@ -1,4 +1,4 @@
-// fixture check, finance: a mock co-op's capital, surplus distributions, pay
+// fixture check, finance: a mock coop's capital, surplus distributions, pay
 // and expenses are consistent. A capital account is a member's, under
 // 1013, and the journal credits it with their shares at the share's value,
 // the statutes' capital clause, a rule of the founding assembly's, or, once they left, holds nothing and their

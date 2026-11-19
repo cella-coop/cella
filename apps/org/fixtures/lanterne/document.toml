@@ -45,7 +45,7 @@ text = "Rates"
 
 [[document.version.block]]
 runs = [
-  { text = "The standard day rate is set each year by coordination. Associations and co-ops with fewer than ten staff pay the " },
+  { text = "The standard day rate is set each year by coordination. Associations and coops with fewer than ten staff pay the " },
   { text = "solidarity", italic = true },
   { text = " rate." },
 ]
@@ -87,7 +87,7 @@ saved = 2026-10-09
 runs = [
   { text = "Day rates and project floors for " },
   { text = "2027", italic = true },
-  { text = ". Associations and co-ops with fewer than ten staff pay the " },
+  { text = ". Associations and coops with fewer than ten staff pay the " },
   { text = "solidarity", bold = true },
   { text = " rate." },
 ]
@@ -161,7 +161,7 @@ saved = 2026-10-20
 runs = [
   { text = "Day rates and project floors for " },
   { text = "2027", italic = true },
-  { text = ". Associations and co-ops with fewer than ten staff pay the " },
+  { text = ". Associations and coops with fewer than ten staff pay the " },
   { text = "solidarity", bold = true },
   { text = " rate." },
 ]
@@ -348,7 +348,7 @@ text = "What follows is what the associates adopted, in force as these statutes 
 [[document.template]]
 type = "heading"
 level = 2
-text = "How the co-op decides"
+text = "How the coop decides"
 
 [[document.template]]
 type = "embed"
@@ -663,7 +663,7 @@ text = "What the studio runs on, and who keeps each part."
 
 [[document.version.block]]
 type = "bullet"
-text = "Hosting: a co-operative host, moving one environment at a time"
+text = "Hosting: a cooperative host, moving one environment at a time"
 
 [[document.version.block]]
 type = "bullet"
@@ -804,7 +804,7 @@ text = "A short survey sent once a project closes, before the renewal conversati
 
 [[document.version.block]]
 type = "numbered"
-text = "Would you recommend Lanterne to another co-op or association?"
+text = "Would you recommend Lanterne to another coop or association?"
 
 [[document.version.block]]
 type = "numbered"
@@ -894,7 +894,7 @@ text = "The junior developer role: three applications read, two first calls book
 
 [[document.version.block]]
 type = "bullet"
-text = "The junior designer role: posted on the co-op jobs board on 20 October"
+text = "The junior designer role: posted on the coop jobs board on 20 October"
 
 [[document]]
 id = "peer-support-guide"

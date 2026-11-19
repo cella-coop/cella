@@ -1,10 +1,12 @@
-# The scope this deployment serves: one co-op. `form`, `siren`, `rcs` (the
+# The scope this deployment serves: one coop. `form`, `siren`, `rcs` (the
 # town of the registry's court), `vat` and `seat` are what its invoices
 # print; a SCOP's capital varies, so its form says so and `capital`, the
 # amount a fixed capital prints, is not set. `legal_form` is the legal
 # form it chose, as cella offers it (_corpus/doc/forms.md), which its
 # founding names and whose defaults its founding motion takes;
-# `founding` is that motion, which its founders decided.
+# `founding` is that motion, which its founders decided. `logo` is its
+# mark, an SVG its particulars adopt with its name: a lantern, its amber
+# glass lit, on a teal tile.
 name = "Lanterne"
 legal_name = "Lanterne Worker Co-operative Limited Company"
 form = "Worker co-operative limited company with variable capital"
@@ -15,6 +17,16 @@ siren = "000000000"
 rcs = "Bobigny"
 vat = "FR00000000000"
 seat = "14 rue des Graviers, 93100 Montreuil, France"
+logo = '''
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="7" fill="#1d4f5c"/>
+  <path d="M13 8a3 3 0 0 1 6 0" fill="none" stroke="#f7e6c4" stroke-width="2"/>
+  <path d="M9.5 12 12 8.5h8l2.5 3.5z" fill="#f7e6c4"/>
+  <rect x="10.5" y="12" width="11" height="11.5" rx="1.5" fill="#f2a33a"/>
+  <path d="M16 14c2 2.4 2.8 3.8 2.8 5.2a2.8 2.8 0 0 1-5.6 0c0-1.4.8-2.8 2.8-5.2z" fill="#fff3d1"/>
+  <rect x="9" y="23.5" width="14" height="3" rx="1" fill="#f7e6c4"/>
+</svg>
+'''
 founded = 2021-03-01
 fiscal_year = "calendar"
 currency = "EUR"

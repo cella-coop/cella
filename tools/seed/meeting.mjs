@@ -1,11 +1,14 @@
-// seed, meetings: loads a mock co-op's meetings with their agendas into
+// seed, meetings: loads a mock coop's meetings with their agendas into
 // the meeting schema, and its grafts' rows: how each circle meets
 // (the meeting feat), who came (meeting-membership), the motions agenda
 // items table (meeting-motion) and the minutes' documents
 // (document-meeting). Circles, members, motions and documents load
 // first. A held meeting is loaded scheduled, its agenda and its marks put
 // in, then held on its own day, as the feat's triggers fix both once it
-// is.
+// is. A meeting's body, its notes, is its blocks as one Loro snapshot,
+// carried in with it.
+
+import { snapshot } from './work.mjs'
 
 const stamp = (d) => new Date(d).toISOString().slice(0, 16).replace('T', ' ')
 
@@ -18,9 +21,9 @@ export async function meetings(db, read, day) {
   const items = new Map()
   for (const m of list) {
     await db.query(
-      `INSERT INTO meeting.meeting (id, circle, title, at, place, link, scheduled, minuted)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [m.id, m.circle, m.title, stamp(m.at), m.place ?? '', m.link ?? null, day(m.scheduled), day(m.minuted)],
+      `INSERT INTO meeting.meeting (id, circle, title, at, place, link, scheduled, minuted, body)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [m.id, m.circle, m.title, stamp(m.at), m.place ?? '', m.link ?? null, day(m.scheduled), day(m.minuted), m.body ? snapshot(m.body, `meeting ${m.id}'s body`) : null],
     )
     const ids = []
     for (const [i, it] of (m.item ?? []).entries()) {

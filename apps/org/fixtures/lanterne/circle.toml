@@ -1,6 +1,6 @@
-# The co-op's units, none in another. The general assembly is every member; coordination is the
+# The coop's units, none in another. The general assembly is every member; coordination is the
 # circle leads and the manager; four working circles beside them, and
-# four more that look after the co-op itself: its clients, its hiring,
+# four more that look after the coop itself: its clients, its hiring,
 # its people's care and its own tools. What
 # each role may do is a mandate, a policy the founding assembly adopted
 # (`motion.toml`).
@@ -66,13 +66,13 @@ name = "Tools"
 icon = "wrench"
 purpose = "the studio's own stack: hosting, accounts, licences and internal tooling"
 
-# The co-op's layout, the root's listing: every feature it enables, in
+# The coop's layout, the root's listing: every feature it enables, in
 # its order, each under a group, a group's run after its name and a
 # colon; a feature it leaves out is enabled nowhere. Each group's id is
 # minted from its name (`apps/org/core/circle/index.md#features`).
 
 [layout]
-features = "Governance: motion, meeting, document, policy; Work: project, task, timesheet, file, contact; Books: account, transaction, report, import; Payments: invoice, bill, expense, payslip; Members: membership, patronage, person, circle, employment"
+features = "Organization: circle, person, motion, meeting, policy; Work: project, task, timesheet, document, file, contact; Books: account, transaction, report, import; Payments: invoice, bill, expense, payslip; Membership: membership, patronage, employment"
 
 # What each other circle shows of it: the groups it shows, by id, and the
 # features it hides inside them. A circle drops a feature, never moves
@@ -80,7 +80,7 @@ features = "Governance: motion, meeting, document, policy; Work: project, task, 
 
 [[show]]
 circle = "coordination"
-groups = "governance, work"
+groups = "organization, work"
 hides = "policy, task, timesheet, file, contact"
 
 [[show]]
@@ -94,27 +94,27 @@ hides = "contact, invoice, expense, payslip"
 
 [[show]]
 circle = "marketing"
-groups = "governance, work"
-hides = "motion, meeting, policy, file"
+groups = "work"
+hides = "file"
 
 [[show]]
 circle = "operations"
-groups = "work, books, payments, members"
-hides = "project, task, timesheet, file, membership, patronage, person, circle"
+groups = "work, books, payments, membership"
+hides = "project, task, timesheet, file, membership, patronage"
 
 [[show]]
 circle = "clients"
-groups = "governance, work"
+groups = "organization, work"
 hides = "policy, timesheet, file"
 
 [[show]]
 circle = "hiring"
-groups = "governance, work, members"
-hides = "policy, project, timesheet, file, contact, membership, patronage, person, circle"
+groups = "organization, work, membership"
+hides = "policy, project, timesheet, file, contact, membership, patronage"
 
 [[show]]
 circle = "care"
-groups = "governance, work"
+groups = "organization, work"
 hides = "policy, project, timesheet, file, contact"
 
 [[show]]

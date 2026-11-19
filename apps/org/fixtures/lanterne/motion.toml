@@ -2,7 +2,7 @@
 # computed from the votes the notary counted before the deadline.
 
 # The founding assembly, on 1 March 2021, adopted the statutes, and with
-# them how the co-op decides and who may do what: each procedure and each
+# them how the coop decides and who may do what: each procedure and each
 # mandate a policy of the assembly, its terms the values its sentence
 # marks. Beside consent, majority, two thirds and election, which every
 # scope starts with, the statutes give the assembly two procedures: the
@@ -22,8 +22,15 @@ proposed = 2021-02-15
 deadline = 2021-03-01
 closed = 2021-03-01
 body = """
-The founders adopt the statutes of Lanterne, a worker co-operative limited company with variable capital,
-and with them how its circles decide and the mandates they grant.
+The founders adopt the statutes of Lanterne, a worker co-operative limited \
+company with variable capital, and with them how its circles decide and the \
+mandates they grant.
+
+The statutes follow the federation's model for a worker cooperative, with \
+two changes of our own: every circle decides by consent unless the statutes \
+say otherwise, and our books are open to every member. The mandates below \
+are what each role may do without asking first; anything beyond them comes \
+back to a motion.
 """
 
 [[motion.action]]
@@ -83,7 +90,7 @@ args = { kind = "mandate", wording = "The {role: finance} role holds {power: rec
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {role: finance} role holds {power: carry-books}, to carry the books over from the co-op's last tool" }
+args = { kind = "mandate", wording = "The {role: finance} role holds {power: carry-books}, to carry the books over from the coop's last tool" }
 
 [[motion.action]]
 kind = "policy"
@@ -291,7 +298,7 @@ kind = "policy"
 args = { kind = "mandate", wording = "The {circle: coordination} circle holds {power: seat-member}, to give and end seats in the working circles, by motion", protected = "extraordinary" }
 
 # The rights: mandates people hold as such, with no seat, granted by the
-# assembly to the whole co-op. Every person keeps their profile and
+# assembly to the whole coop. Every person keeps their profile and
 # devices, uploads files, takes up an invitation, files their records,
 # marks a text read and records an import; every member draws on their
 # account, spreads what they owe, marks their attendance and saves a
@@ -307,7 +314,7 @@ args = { kind = "right", wording = "Every {right: person} holds {power: keep-dev
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "right", wording = "Every {right: person} holds {power: upload-file}, to upload a file of the co-op's", protected = "extraordinary", takes = "scop-sarl-fr:upload-file" }
+args = { kind = "right", wording = "Every {right: person} holds {power: upload-file}, to upload a file of the coop's", protected = "extraordinary", takes = "scop-sarl-fr:upload-file" }
 
 [[motion.action]]
 kind = "policy"
@@ -319,7 +326,7 @@ args = { kind = "right", wording = "Every {right: person} holds {power: file-rec
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "right", wording = "Every {right: person} holds {power: mark-read}, to mark a text the co-op adopted read", protected = "extraordinary", takes = "scop-sarl-fr:mark-read" }
+args = { kind = "right", wording = "Every {right: person} holds {power: mark-read}, to mark a text the coop adopted read", protected = "extraordinary", takes = "scop-sarl-fr:mark-read" }
 
 [[motion.action]]
 kind = "policy"
@@ -387,7 +394,7 @@ args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: crea
 kind = "policy"
 args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: amend-circle}, to change a circle's name, purpose or procedure, by motion", takes = "scop-sarl-fr:amend-circle" }
 
-# The co-op's layout of features and what each circle shows of it are
+# The coop's layout of features and what each circle shows of it are
 # decided apart from a circle's name, purpose and procedure: the assembly
 # arranges the layout, at the root, and what any circle shows, by motion,
 # and may grant a circle the power over its own (m-2026-018).
@@ -396,7 +403,7 @@ kind = "policy"
 args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: arrange-features}, to arrange any circle's features, by motion", takes = "scop-sarl-fr:arrange-features" }
 
 # Reading, the last of the founding motion: every seat reads its own
-# circle's records and the assembly's, the whole co-op's, and Lanterne
+# circle's records and the assembly's, the whole coop's, and Lanterne
 # keeps open books, so every member reads every circle's records, and
 # Inès, employed, no member and in Web alone, reads Web's and the
 # statutes she would join under, and not Marketing's. A mandate for a
@@ -408,7 +415,7 @@ args = { kind = "mandate", wording = "The {role: participant} role holds {power:
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {role: participant} role holds {power: read}, to read the records of the {scope: ag} circle, the whole co-op's" }
+args = { kind = "mandate", wording = "The {role: participant} role holds {power: read}, to read the records of the {scope: ag} circle, the whole coop's" }
 
 [[motion.action]]
 kind = "policy"
@@ -455,10 +462,15 @@ proposed = 2026-06-01
 deadline = 2026-06-20
 closed = 2026-06-20
 body = """
-The 2025 surplus of 61 400 € is allocated as the statutes require: 45 % to
-the members as their share of work (participation), 54,27 % to the
-indivisible reserves and 0,73 % as interest on capital, 448,22 € on its
+The 2025 surplus of 61 400 € is allocated as the statutes require: 45 % to \
+the members as their share of work (participation), 54,27 % to the \
+indivisible reserves and 0,73 % as interest on capital, 448,22 € on its \
 13 000 €, within the 3,5 % the statutes pay (Act No. 47-1775, article 14).
+
+Julien presented the accounts to coordination in May and they are as the \
+accountant certified them. The work share is the statutes' floor and more: \
+we keep most of the rest in reserve, since the move of the books will draw \
+on it this year and we mean to hire in the next.
 """
 # What it decides beyond its text: the 2025 distribution approved.
 [[motion.action]]
@@ -524,7 +536,16 @@ procedure = "consent"
 proposed = 2026-06-01
 deadline = 2026-06-20
 closed = 2026-06-20
-body = "Version 3 adds remote work days and the solidarity rate for associations."
+body = """
+Adopt version 3 of the internal rules. It adds remote work days, up to \
+three a week with Tuesday at the studio for everyone, and the solidarity \
+rate for associations and coops with fewer than ten staff.
+
+Half of us now work away from Montreuil for part of the year, and the rules \
+said nothing about it. The solidarity rate is what we have quoted case by \
+case for two years; writing it down means no one has to argue for it each \
+time.
+"""
 # What it decides beyond its text: the internal rules adopted as version 3
 # holds them.
 [[motion.action]]
@@ -548,7 +569,7 @@ args = { kind = "rule", wording = "Pay follows one grid: the ratio between the h
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "rule", wording = "Associations and co-ops with fewer than {solidarity_staff: 10 | less is stricter} staff pay the solidarity rate" }
+args = { kind = "rule", wording = "Associations and coops with fewer than {solidarity_staff: 10 | less is stricter} staff pay the solidarity rate" }
 
 [[motion.action]]
 kind = "policy"
@@ -618,8 +639,12 @@ proposed = 2026-06-01
 deadline = 2026-06-20
 closed = 2026-06-20
 body = """
-Camille approves every supplier's bill. Coordination may grant the
+Camille approves every supplier's bill. Coordination may grant the \
 working circles' roles the approval of their own, up to 3 000 € a bill.
+
+Every bill waits on one person today, and the small ones wait longest. The \
+circles that order the work know best whether it arrived; this lets \
+coordination hand that down a step at a time, and take it back by motion.
 """
 [[motion.action]]
 kind = "policy"
@@ -701,8 +726,12 @@ proposed = 2026-09-14
 deadline = 2026-09-28
 closed = 2026-09-28
 body = """
-Operations keeps the suppliers. It may grant a working circle's role the
+Operations keeps the suppliers. It may grant a working circle's role the \
 approval of that circle's bills, up to 2 000 € a bill.
+
+Coordination meets weekly and should not be where a printer's bill waits. \
+Operations already holds every supplier's terms, so it is the right circle \
+to say which role approves what, under the assembly's cap.
 """
 [[motion.action]]
 kind = "policy"
@@ -761,8 +790,11 @@ proposed = 2026-10-05
 deadline = 2026-10-12
 closed = 2026-10-12
 body = """
-Brand orders its own print and paper. Its print buyer approves those
+Brand orders its own print and paper. Its print buyer approves those \
 bills up to 1 200 € a bill; larger ones go to Camille.
+
+Brand checks every proof and every delivery itself, so it knows before \
+anyone else whether a print bill is right. Sofia takes the role from today.
 """
 [[motion.action]]
 kind = "policy"
@@ -793,8 +825,12 @@ procedure = "consent"
 proposed = 2026-10-12
 deadline = 2026-11-09
 body = """
-Raise the standard day rate from 520 € to 560 €, keep the solidarity rate
+Raise the standard day rate from 520 € to 560 €, keep the solidarity rate \
 at 380 €, and publish the rate card as drafted.
+
+The day rate has not moved since 2024 while salaries rose with the grid. At \
+560 € we stay below what the region's agencies quote, and the solidarity \
+rate is untouched, so no association or small coop pays more next year.
 """
 # What it decides beyond its text: the rate card adopted as version 2
 # holds it.
@@ -821,8 +857,11 @@ procedure = "consent"
 proposed = 2026-10-14
 deadline = 2026-10-31
 body = """
-Inès has worked with the web circle since September 2025 and asks to join.
-She subscribes 20 shares.
+I have worked with the web circle since September 2025 and ask to join \
+Lanterne as a member. I subscribe 20 shares.
+
+My probation ended on 31 August. I would like to keep building shops and \
+sites with Web, and to have a say, with a vote, in how we work.
 """
 [[motion.vote]]
 member = "yusuf@lanterne.example"
@@ -888,8 +927,12 @@ procedure = "consent"
 proposed = 2026-10-19
 deadline = 2026-10-24
 body = """
-Julien records every bill. Let finance approve those up to 1 500 € a
+Julien records every bill. Let finance approve those up to 1 500 € a \
 bill, as long as someone else recorded it.
+
+Most of our bills are small and routine: rent, licences, the accountant. \
+Finance can approve those without waiting for Camille, while no one ever \
+approves a bill they recorded themselves.
 """
 [[motion.action]]
 kind = "policy"
@@ -919,8 +962,13 @@ procedure = "consent"
 proposed = 2026-10-19
 deadline = 2026-10-24
 body = """
-Camille approves every supplier's bill again. Coordination's mandate
+Camille approves every supplier's bill again. Coordination's mandate \
 ends, and with it every one issued under it.
+
+Three mandates deep is more than a coop of ten can follow from memory: \
+when a bill is refused, no one can say at a glance who could approve it. \
+Let us go back to one approver, and hand it down again once we can see the \
+chain.
 """
 [[motion.action]]
 kind = "end"
@@ -950,8 +998,12 @@ proposed = 2026-09-28
 deadline = 2026-10-05
 closed = 2026-10-05
 body = """
-Every case study we write for a client goes on our site under CC BY 4.0,
-once the client agrees, so other co-ops can reuse them.
+Every case study we write for a client goes on our site under CC BY 4.0, \
+once the client agrees, so other coops can reuse them.
+
+Our clients are mostly coops and associations, and they ask each other \
+how a project went. If the case studies are free to reuse, they can be \
+passed round, quoted and translated, and our name travels with them.
 """
 
 [[motion.vote]]
@@ -985,8 +1037,12 @@ proposed = 2026-10-01
 deadline = 2026-10-08
 closed = 2026-10-08
 body = """
-Order all of Brand's print from Imprimerie du Parc, for a better rate and
+Order all of Brand's print from Imprimerie du Parc, for a better rate and \
 one press check a month.
+
+We split our print across four printers this year, each with its own \
+specs and its own proofing. One printer would know our stock and our \
+colours, and offers 8 % off for the volume.
 """
 
 [[motion.vote]]
@@ -1024,8 +1080,13 @@ procedure = "consent"
 proposed = 2026-10-20
 deadline = 2026-11-03
 body = """
-No site leaves Web without passing WCAG 2.2 at level AA, checked by
+No site leaves Web without passing WCAG 2.2 at level AA, checked by \
 someone who did not build it.
+
+Clairval paid for accessibility because the law asks it of a town. \
+Everyone else deserves it as much, and the audit showed that what we catch \
+late costs more than what we build right. The accessibility checklist is \
+how we check; this is that we always do.
 """
 
 [[motion.vote]]
@@ -1054,7 +1115,7 @@ reply = 1
 at = 2026-10-22
 text = "Separate for now: the checklist is how, this motion is that we always do. We can link them later."
 
-# The assembly lets each circle choose what it shows of the co-op's
+# The assembly lets each circle choose what it shows of the coop's
 # layout: every circle but Hiring holds the power over itself, so its own
 # motion changes which groups its sidebar shows and which features it
 # hides, and coordination holds it over Hiring. Each circle's lead
@@ -1070,9 +1131,13 @@ proposed = 2026-06-06
 deadline = 2026-06-20
 closed = 2026-06-20
 body = """
-What a circle shows in its sidebar is its own business. Each circle
-arranges its own features by its own motion, and its lead may arrange
+What a circle shows in its sidebar is its own business. Each circle \
+arranges its own features by its own motion, and its lead may arrange \
 them at once; coordination arranges Hiring's.
+
+Today every change to a circle's sidebar comes to the assembly, which has \
+better things to vote on. Hiring has no lead and sees candidates' records, \
+so coordination keeps its layout.
 """
 
 [[motion.action]]
@@ -1155,8 +1220,12 @@ procedure = "consent"
 proposed = 2026-10-19
 deadline = 2026-11-02
 body = """
-Each client we work for has one person in Clients who answers them,
+Each client we work for has one person in Clients who answers them, \
 named in the client's record, from the brief to the end of care.
+
+Clients tell us they never know whom to write to: the designer, the lead, \
+or whoever sent the last invoice. One named person, who can always find the \
+answer, is what they ask for most.
 """
 
 [[motion.vote]]
@@ -1196,8 +1265,12 @@ proposed = 2026-10-02
 deadline = 2026-10-16
 closed = 2026-10-16
 body = """
-Open a junior developer role in Web and a junior designer role in Brand,
+Open a junior developer role in Web and a junior designer role in Brand, \
 both from February 2027, with a member of each circle as mentor.
+
+Web and Brand both turned work away this autumn. Two juniors, mentored \
+from their first day as Inès was, let us take that work on, and grow the \
+people who will one day join us.
 """
 
 [[motion.vote]]
@@ -1241,8 +1314,12 @@ procedure = "consent"
 proposed = 2026-10-20
 deadline = 2026-11-03
 body = """
-No meetings and no calls before ten, so everyone starts the day with an
+No meetings and no calls before ten, so everyone starts the day with an \
 hour of focused work.
+
+The workload survey's first answers point the same way: the day fills with \
+calls before anyone has made anything. Coordination's own meeting already \
+starts at ten.
 """
 
 [[motion.vote]]
@@ -1282,8 +1359,12 @@ proposed = 2026-09-30
 deadline = 2026-10-14
 closed = 2026-10-14
 body = """
-Every worker gets a seat in the studio's password manager, and the shared
+Every worker gets a seat in the studio's password manager, and the shared \
 client logins move into it from the spreadsheet.
+
+The spreadsheet has every client's hosting and shop logins in it, and \
+anyone who ever opened it still can. A seat each lets us share a login \
+with exactly those who need it, and take it back when they leave.
 """
 
 [[motion.vote]]
@@ -1318,8 +1399,12 @@ proposed = 2026-10-08
 deadline = 2026-10-22
 closed = 2026-10-22
 body = """
-Whoever picks up a new enquiry answers within two working days, even if
+Whoever picks up a new enquiry answers within two working days, even if \
 only to say when a fuller answer is coming.
+
+Two enquiries this year waited over a week for an answer, and one went to \
+another agency in the meantime. A quick reply costs nothing and says we \
+are listening.
 """
 
 [[motion.vote]]
@@ -1347,8 +1432,11 @@ procedure = "consent"
 proposed = 2026-10-21
 deadline = 2026-11-04
 body = """
-Beyond the monthly retainer work itself, a short call every quarter to
+Beyond the monthly retainer work itself, a short call every quarter to \
 ask how it's going and whether the scope still fits.
+
+A retainer drifts: the work we do in month ten is rarely what was agreed in \
+month one. A quarterly call catches that before the renewal, not at it.
 """
 
 [[motion.vote]]
@@ -1383,8 +1471,12 @@ proposed = 2026-10-06
 deadline = 2026-10-20
 closed = 2026-10-20
 body = """
-Anyone who refers someone we go on to hire gets a bonus once the new
+Anyone who refers someone we go on to hire gets a bonus once the new \
 hire's probation ends, the same amount for every role.
+
+Our best hires came through people we knew. A bonus paid after probation \
+rewards a good match, not a name passed on, and the same amount for every \
+role keeps it from favouring one circle.
 """
 
 [[motion.vote]]
@@ -1412,8 +1504,12 @@ procedure = "consent"
 proposed = 2026-10-22
 deadline = 2026-11-05
 body = """
-Each role's last two candidates spend a paid day with the circle they
+Each role's last two candidates spend a paid day with the circle they \
 would join, before an offer is made either way.
+
+An interview shows how someone talks about work, a day shows how they do \
+it, and lets them see how we do ours. Paying for the day says we value \
+their time whether or not they join.
 """
 
 [[motion.vote]]
@@ -1448,8 +1544,12 @@ proposed = 2026-10-09
 deadline = 2026-10-23
 closed = 2026-10-23
 body = """
-Up to four sessions a year with an outside counsellor, for anyone who
-asks, paid by the co-op and never discussed in a circle.
+Up to four sessions a year with an outside counsellor, for anyone who \
+asks, paid by the coop and never discussed in a circle.
+
+Peer support goes a long way, but some things are easier to say to someone \
+outside the coop. Care sees only how many sessions were used, never by \
+whom.
 """
 
 [[motion.vote]]
@@ -1477,8 +1577,12 @@ procedure = "consent"
 proposed = 2026-10-23
 deadline = 2026-11-06
 body = """
-Whoever flags a hard week gets a peer check-in within a few days, from
+Whoever flags a hard week gets a peer check-in within a few days, from \
 whoever is next on Care's rota, not whoever happens to be free.
+
+Today the same two or three people end up doing every check-in, because \
+they are the ones who notice. A rota spreads it fairly and means no one has \
+to ask a particular person.
 """
 
 [[motion.vote]]

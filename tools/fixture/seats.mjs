@@ -1,4 +1,4 @@
-// fixture seats: where each person sits in a mock co-op, read from its
+// fixture seats: where each person sits in a mock coop, read from its
 // circles' members and its tenures as `circle.seat` reads
 // them: a person member with no role, a tenure in its circle with its
 // role, and a tenure of a role that is a member of a circle there with no

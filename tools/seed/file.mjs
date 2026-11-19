@@ -1,4 +1,4 @@
-// seed, files: loads a mock co-op's files into the file feat, each one's
+// seed, files: loads a mock coop's files into the file feat, each one's
 // bytes read from the fixture's files/ directory, and the grafts that
 // attach them (expense-file's receipts, file-membership's and employment-file's
 // records). The expenses, members and workers load first.

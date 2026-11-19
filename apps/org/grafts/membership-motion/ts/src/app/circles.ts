@@ -1,5 +1,5 @@
 import { icons, type App, type Tone } from '@cella/org-ui'
-import { outcome, states, type Roll, type State } from '../models/roll.ts'
+import { outcome, states, taking, type Roll, type State } from '../models/roll.ts'
 import type { Standing } from '../models/asking.ts'
 import Appoint from './blocks/Appoint.svelte'
 import Terms from './blocks/Terms.svelte'
@@ -44,6 +44,7 @@ export const app: App = {
         properties: (r: Roll) => [
           { label: 'State', value: r.state, kind: 'badge', tone: tones[r.state] },
           { label: 'Outcome', value: outcome(r, true).text, kind: 'badge', tone: outcome(r).tone },
+          { label: 'Turnout', value: taking(r) },
         ],
         // What its actions change, as their diffs, on its Overview and its
         // Effects.

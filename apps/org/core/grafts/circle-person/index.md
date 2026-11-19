@@ -1,6 +1,6 @@
 +++
 title = "circle-person"
-updated = 2026-11-11
+updated = 2026-11-19
 +++
 
 Core's graft joining the circles to the people, two of org's core feats
@@ -60,7 +60,7 @@ and removing one changes no other slice's authorization.
   suspended or let go ([membership](../../../feats/membership/index.md#seats)).
 - `circle_person.unseated(person, circle, day)`: why a seat in the
   circle does not count on the day, or null where it counts: the person
-  is no one the co-op knows (`person.known`), or the first reason a
+  is no one the coop knows (`person.known`), or the first reason a
   registered standing gives. A scope where no kind of person registers
   one bars no seat of a person it knows.
 - `circle_person.counts(person, circle, day)`: the seat counts, no
@@ -115,7 +115,7 @@ and removing one changes no other slice's authorization.
   day, within its `limit`. A right lets each act on what is their own,
   which the feat's guard checks, so it opens no one else's rows to read
   ([rights](../../circle/index.md#rights)). A right reaches the whole
-  co-op.
+  coop.
 - `circle_person.empowered`, on every action in `cella.power`, the one
   guard that reads a permission's scope: the actor may use the action's
   power on the verdict date over the record the write concerns, by a

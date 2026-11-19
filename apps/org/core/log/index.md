@@ -1,6 +1,6 @@
 +++
 title = "Log"
-updated = 2026-11-16
+updated = 2026-11-19
 +++
 
 A signed, hash-chained log in CBOR, with an envelope every entry extends. It becomes the notary's log: receipts, verdicts and signed batches of confluent writes, checked by their hashes and signatures and never replayed to rebuild the state, which a scope restores from its backup ([trust](../../../../_corpus/doc/trust.md#one-server)).
@@ -15,7 +15,7 @@ deciding guards' owners; an entry with its receipt, hashes and signatures
 and each guard's text from `cella.guard_text`; whether `cella.verify_log()`
 passes, which the collection's header shows as its status, and the head
 and the scope's key; and the scope's address, and its name and legal
-name (`named`, from the co-op's particulars in force, `circle.particulars()`). Its slice
+name (`named`, from the coop's particulars in force, `circle.particulars()`). Its slice
 mounts the `log` collection, the one a core library owns; it has no
 writes, since only the notary appends.
 
@@ -34,6 +34,8 @@ record the entry is about, the first of the ids `cella.records(n)`
 reads whose kind has a page in the shell, its thing's before its
 feats'; an entry about no record the shell shows links to the entry
 itself. The entry's page holds the rest: its op as the log keeps it,
-its receipt, hashes, signatures and deciding guards. An entry keeps
+its receipt, hashes and signatures among its properties, and its deciding
+guards, the panel it opens on (`panels`, with no body, [record page
+layout](../../../../_corpus/doc/architecture.md#record-page-layout)). An entry keeps
 nothing of what a write was about but these ids, its op and its actor,
 so the list says no amount, title or name.

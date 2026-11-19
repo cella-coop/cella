@@ -10,7 +10,7 @@ import assert from 'node:assert/strict'
 import pg from 'pg'
 import { createDoc, tree } from '../src/models/blocks.ts'
 import { create } from '../src/models/edits.ts'
-import { canonical, hash, jcs, plain } from '../src/models/canonical.ts'
+import { blank, canonical, hash, jcs, plain } from '../src/models/canonical.ts'
 import { edit, rng, seeded, sync } from './random.ts'
 
 const db = new pg.Client()
@@ -100,4 +100,12 @@ test('an empty body is its empty form', async () => {
   const empty = createDoc(1)
   assert.deepEqual(await rust(empty.export({ mode: 'snapshot' })), ts(empty))
   assert.equal((ts(empty) as { canonical: string }).canonical, '{"blocks":[],"v":1}')
+})
+
+test('a body is blank where no one wrote in it: none, or empty text blocks; a divider or an embed is written', () => {
+  assert.ok(blank(null) && blank(undefined) && blank({ v: 1, blocks: [] }))
+  assert.ok(blank({ v: 1, blocks: [{ type: 'paragraph' }, { type: 'heading', runs: [{ text: '  ' }], children: [{ type: 'bullet' }] }] }))
+  assert.ok(!blank({ v: 1, blocks: [{ type: 'paragraph' }, { type: 'bullet', children: [{ type: 'paragraph', runs: [{ text: 'a note' }] }] }] }))
+  assert.ok(!blank({ v: 1, blocks: [{ type: 'divider' }] }))
+  assert.ok(!blank({ v: 1, blocks: [{ type: 'embed', embed: 'motion', ref: 'm-1' }] }))
 })

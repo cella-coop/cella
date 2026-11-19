@@ -10,7 +10,7 @@ import { columns } from './views/devices.ts'
 const asking: Record<string, Tone> = { stance: 'accent', mention: 'accent', approval: 'warning', invitation: 'positive', meeting: 'neutral' }
 
 // Core person's client side as the shell mounts it: the people
-// collection, everyone the co-op knows, and a person's page, which the
+// collection, everyone the coop knows, and a person's page, which the
 // feats fill with the membership and the employment they hold, and the grafts
 // joining them with the rest; the inbox, what waits on the acting person;
 // and every device.
@@ -50,7 +50,7 @@ export const app: App = {
     people: {
       view: {
         title: 'People',
-        caption: 'Everyone the co-op knows: its members and its workers, each by the address they sign with.',
+        caption: 'Everyone the coop knows: its members and its workers, each by the address they sign with.',
         // One person, as each record of it is; a circle wears a group.
         icon: icons.User,
         columns: [
@@ -63,7 +63,7 @@ export const app: App = {
         eyebrow: 'Person',
         title: (p: Person) => p.name,
         subtitle: (p: Person) => p.address,
-        properties: (p: Person) => [{ label: 'Address', value: p.address }],
+        properties: (p: Person) => [{ label: 'Address', value: p.address, glyph: icons.Envelope }],
         // Four tabs, which the feats and grafts on a person fill: their
         // membership, joining and what they own and decide; their work,
         // employment, timesheets, payslips and records on file; and their
@@ -75,6 +75,9 @@ export const app: App = {
           { id: 'work', label: 'Work' },
           { id: 'authority', label: 'Authority' },
         ],
+        // A person keeps no body; their overview is where they stand, as
+        // a member and as a worker, the panels those feats add.
+        layout: 'panels',
         blocks: [{ tab: 'authority', block: Devices }],
         actions: Profile,
       },

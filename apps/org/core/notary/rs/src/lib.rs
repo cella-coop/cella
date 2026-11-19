@@ -113,7 +113,7 @@ pub(crate) static CLOCK: GucSetting<Option<CString>> = GucSetting::<Option<CStri
 pub(crate) static SCOPE: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);
 
 /// The scope's timezone, such as `Europe/Paris`: the verdict date is the
-/// day there, so a cutoff or a close falls on the co-op's day; unset, UTC.
+/// day there, so a cutoff or a close falls on the coop's day; unset, UTC.
 pub(crate) static TIMEZONE: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);
 
 /// Whether state may be written outside a write: a superuser's, for the

@@ -1,6 +1,6 @@
 +++
 title = "Policy"
-updated = 2026-11-13
+updated = 2026-11-19
 +++
 
 The register of policies (`@cella/org-policy`): every binding sentence a
@@ -23,7 +23,7 @@ and graft reads it. What joins it to the circles is core's graft
   in the form's order: its kind, its legal wording and its friendly one,
   their hash as `policy.hash` makes it, the procedure that alone changes
   it, if any, the law it states, by its article (`source`), or none where
-  it is cella's practice, and the day a co-op lawyer reviewed it
+  it is cella's practice, and the day a coop lawyer reviewed it
   (`reviewed`), empty until one has. Each form's own migration offers its
   defaults, `sql/002-scop-sarl-fr.sql` the SCOP SARL's.
 - `policy.policy`: a policy, named by the action that adopted it, its
@@ -55,9 +55,9 @@ Its functions:
 - `policy.marks(legal)` and `policy.typed(name, literal)`: the values a
   wording marks, which way each says is stricter, and each one's type and
   value from how it is written: a role or a power by its name, and the
-  co-op's SIREN and capital (`particulars_siren`, `particulars_capital`)
+  coop's SIREN and capital (`particulars_siren`, `particulars_capital`)
   text by theirs, as its papers print them, digits or an amount though
-  they are ([the co-op's particulars](../circle/index.md#the-co-ops-particulars)).
+  they are ([the coop's particulars](../circle/index.md#the-coops-particulars)).
 - `policy.flaw(legal, friendly)`: what is wrong with the wordings, or
   null: a legal wording says something, marks each value once and with a
   value, holds no brace that is not a mark, and says which way is
@@ -76,7 +76,7 @@ Its functions:
   `circle_policy.says(id)`, which quotes a wording only where the
   structure's reading would: in a write's transaction, where every guard
   runs, to a member of the scope, and to anyone signed in while the
-  co-op publishes its register; anyone else reads null
+  coop publishes its register; anyone else reads null
   ([circle-policy](../grafts/circle-policy/index.md#schema)).
 - `policy.hash(legal, friendly)`: what a motion adopts, the BLAKE3 of the
   two as a JSON array, the friendly wording trimmed and an empty one
@@ -127,7 +127,7 @@ The app role and the guards role, `cella_guards`, may select the
 policies and their values, and only the app the wordings; the app role
 reads only what the structure's reading lets it: a member of the scope
 reads the whole register, and anyone else signed in all of it while
-the co-op publishes its register by a rule of the assembly, and none
+the coop publishes its register by a rule of the assembly, and none
 of it otherwise
 ([circle](../circle/index.md#who-reads-the-structure)): core's graft
 joining the circles to the register, circle-policy, puts its tables

@@ -36,7 +36,7 @@ BEGIN ATOMIC
       THEN 'its cap, ' || circle.cap(wider."limit", wider.budget, wider.per)
         || ', is wider than its parent''s, ' || circle.cap(u."limit", u.budget, u.per)
     WHEN u.scope IS NOT NULL AND wider.scope IS DISTINCT FROM u.scope
-      THEN 'it covers ' || coalesce(wider.scope, 'the whole co-op') || ', wider than its parent, which covers ' || u.scope || ' alone'
+      THEN 'it covers ' || coalesce(wider.scope, 'the whole coop') || ', wider than its parent, which covers ' || u.scope || ' alone'
     WHEN wider."from" < u."from" THEN 'it applies from ' || wider."from" || ', before its parent, from ' || u."from"
     WHEN u.until IS NOT NULL AND (wider.until IS NULL OR wider.until > u.until)
       THEN 'it outlasts its parent, which ends on ' || u.until

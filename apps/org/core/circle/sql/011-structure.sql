@@ -4,7 +4,7 @@
 -- which core's graft `circle-policy` puts under the same test. A member
 -- reads every row; anyone else signed in, their own seats, the
 -- circles and roles they name, the mandates on those roles and the
--- parts the co-op publishes by motion; no one
+-- parts the coop publishes by motion; no one
 -- signed in, none. A write's
 -- transaction and a superuser's session read the whole, and the guards
 -- role every row.
@@ -47,7 +47,7 @@ RETURN ARRAY(
   SELECT unnest(circle.held())
   ORDER BY 1
 );
--- Whether the co-op publishes a part of its structure to the reader, who
+-- Whether the coop publishes a part of its structure to the reader, who
 -- is signed in: the one publication in force on the verdict date
 -- (`circle.overlap_flaw`) names it. It runs as its owner, as `inside` does, and says no more than
 -- whether.
@@ -63,16 +63,17 @@ RETURN cella.reader() IS NOT NULL AND coalesce((
   LIMIT 1
 ), false);
 
--- The co-op's particulars in force on the verdict date: those of the one
+-- The coop's particulars in force on the verdict date: those of the one
 -- rule standing then (`circle.overlap_flaw`), none where no rule stands.
 -- It runs as its owner, so every reader reads them, signed in or not:
--- the co-op's name and its mentions are what its every paper prints.
+-- the coop's name and its mentions are what its every paper prints, and
+-- its logo what the sign-in shows before anyone is signed in.
 CREATE FUNCTION circle.particulars() RETURNS TABLE (policy text, name text, legal_name text, form text, capital text, siren text,
-                                                    rcs text, vat text, seat text)
+                                                    rcs text, vat text, seat text, logo text)
 LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp
 BEGIN ATOMIC
-  SELECT r.policy, r.name, r.legal_name, r.form, r.capital, r.siren, r.rcs, r.vat, r.seat
+  SELECT r.policy, r.name, r.legal_name, r.form, r.capital, r.siren, r.rcs, r.vat, r.seat, r.logo
   FROM circle.particulars r
   WHERE r."from" <= cella.verdict_date()
     AND (r.until IS NULL OR r.until > cella.verdict_date())
@@ -80,7 +81,7 @@ BEGIN ATOMIC
   ORDER BY r."from" DESC, r.id DESC
   LIMIT 1;
 END;
-COMMENT ON FUNCTION circle.particulars() IS 'audience: shared: the co-op''s name and the mentions its every paper prints are no one''s to keep from a reader';
+COMMENT ON FUNCTION circle.particulars() IS 'audience: shared: the coop''s name and the mentions its every paper prints are no one''s to keep from a reader';
 
 -- The assembly an application is made to, its name and the procedure
 -- that decides it, which a person reads before they are a member.
@@ -98,7 +99,7 @@ GRANT EXECUTE ON FUNCTION circle.inside(), circle.held(), circle.own(), circle.p
 -- Every table of the structure under row-level security, enabled and
 -- forced: `structure` for the app role, which reads the whole in a
 -- write's transaction, every row as a member, its own seats, what they
--- name and the mandates on its roles, and each part the co-op publishes
+-- name and the mandates on its roles, and each part the coop publishes
 -- (`published`); `structure_guards`, every row for the guards role.
 
 ALTER TABLE circle.grantee ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;

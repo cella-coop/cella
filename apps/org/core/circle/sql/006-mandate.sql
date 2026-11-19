@@ -46,7 +46,7 @@ CREATE FUNCTION circle.overlap_flaw(what text, day date, until date, replaces te
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT o.policy || CASE overlap_flaw.what WHEN 'disclosure' THEN ' sets open books'' disclosure values'
-                         WHEN 'particulars' THEN ' sets the co-op''s particulars' ELSE ' publishes parts of the structure' END
+                         WHEN 'particulars' THEN ' sets the coop''s particulars' ELSE ' publishes parts of the structure' END
     || ' from ' || to_char(o."from", 'YYYY-MM-DD') || coalesce(' until ' || to_char(o.ends, 'YYYY-MM-DD'), '')
     || ': one ' || CASE overlap_flaw.what WHEN 'disclosure' THEN 'disclosure rule' WHEN 'particulars' THEN 'particulars rule' ELSE 'publication' END
     || ' stands at a time, so one on days that meet its replaces ' || o.policy
@@ -102,7 +102,7 @@ BEGIN ATOMIC
   SELECT CASE
     WHEN NOT coalesce(marks, '{}') ? 'publish' THEN NULL
     WHEN issuer IS DISTINCT FROM circle.assembly()
-      THEN 'what of its structure the co-op publishes is the assembly''s: only a motion of the assembly adopts it'
+      THEN 'what of its structure the coop publishes is the assembly''s: only a motion of the assembly adopts it'
     WHEN x.other IS NOT NULL
       THEN 'a publication marks publish and nothing else, not ' || x.other
     WHEN cardinality(x.parts) = 0
@@ -119,31 +119,69 @@ BEGIN ATOMIC
   ) x;
 END;
 
--- The particulars a rule names: the eight values it may mark, each by
+-- The particulars a rule names: the nine values it may mark, each by
 -- its name in the rule and its column.
 CREATE FUNCTION circle.particular_names() RETURNS text[]
 LANGUAGE sql IMMUTABLE
 RETURN ARRAY['particulars_name', 'particulars_legal_name', 'particulars_form', 'particulars_capital',
-             'particulars_siren', 'particulars_rcs', 'particulars_vat', 'particulars_seat'];
+             'particulars_siren', 'particulars_rcs', 'particulars_vat', 'particulars_seat', 'particulars_logo'];
+
+-- What is wrong with a coop's logo, an SVG as its rule marks it, or
+-- null. The shell draws it only as an image, where no script runs and
+-- nothing outside it loads; this refuses what would matter anywhere else
+-- too, should the text be served or opened as a document: one `<svg>`
+-- element of at most 4096 characters, declaring nothing (`<!…>`, `<?…>`),
+-- with no script, no HTML (`<foreignObject>`), no event handler
+-- (`on…=`), no `javascript:`, and no reference outside itself: an
+-- `href`, an `xlink:href` or a `url()` names only `#…`, and no
+-- animation sets an `href`.
+CREATE FUNCTION circle.logo_flaw(svg text) RETURNS text
+LANGUAGE sql IMMUTABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN length(svg) > 4096
+      THEN 'a coop''s logo is an SVG of at most 4096 characters, not ' || length(svg)
+    WHEN svg !~* '^<svg[\s>]' OR svg !~* '</svg>$'
+      THEN 'a coop''s logo is one SVG, from <svg to </svg>'
+    WHEN svg ~ '<[!?]'
+      THEN 'a coop''s logo declares nothing: drop its ' || substring(svg from '<[!?][^>]{0,30}')
+    WHEN svg ~* '<\s*script'
+      THEN 'a coop''s logo runs no script: drop its <script>'
+    WHEN svg ~* '<\s*foreignObject'
+      THEN 'a coop''s logo embeds no HTML: drop its <foreignObject>'
+    WHEN svg ~* '[\s"''/]on[a-z]+\s*='
+      THEN 'a coop''s logo handles no event: drop its ' || substring(svg from '(?i)on[a-z]+\s*=') || '…'
+    WHEN svg ~* 'javascript\s*:'
+      THEN 'a coop''s logo links nowhere: drop its javascript:'
+    WHEN svg ~* 'href\s*=\s*(?!["'']#)'
+      THEN 'a coop''s logo references only its own parts, as href="#flame", not ' || substring(svg from '(?i)href\s*=\s*\S{0,40}')
+    WHEN svg ~* 'url\(\s*(?!["'']?#)'
+      THEN 'a coop''s logo references only its own parts, as url(#glow), not ' || substring(svg from '(?i)url\([^)]{0,40}\)?')
+    WHEN svg ~* 'attributeName\s*=\s*["'']?\s*(xlink:)?href'
+      THEN 'a coop''s logo animates no reference: drop the animation of its href'
+  END;
+END;
 
 -- What is wrong with the particulars, by their marks as written, each name
 -- with its literal (`{"particulars_name": {"literal": "Lanterne"}}`), and
 -- the circle adopting them, or null: null too for a rule marking none of
 -- them. They are the assembly's, mark `particulars_name` and nothing but
--- the eight, and a SIREN marked is nine digits, spaces aside.
+-- the nine, a SIREN marked is nine digits, spaces aside, and a logo
+-- marked is one `circle.logo_flaw` passes.
 CREATE FUNCTION circle.particulars_flaw(marks jsonb, issuer text) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
     WHEN NOT EXISTS (SELECT FROM jsonb_object_keys(coalesce(marks, '{}')) k WHERE k = ANY (circle.particular_names())) THEN NULL
     WHEN issuer IS DISTINCT FROM circle.assembly()
-      THEN 'the co-op''s particulars are the assembly''s: only a motion of the assembly adopts them'
+      THEN 'the coop''s particulars are the assembly''s: only a motion of the assembly adopts them'
     WHEN x.other IS NOT NULL
-      THEN 'the co-op''s particulars mark any of ' || array_to_string(circle.particular_names(), ', ') || ' and nothing else, not ' || x.other
+      THEN 'the coop''s particulars mark any of ' || array_to_string(circle.particular_names(), ', ') || ' and nothing else, not ' || x.other
     WHEN coalesce(marks #>> '{particulars_name,literal}', '') !~ '\S'
-      THEN 'the co-op''s particulars name it, as {particulars_name: Lanterne}'
+      THEN 'the coop''s particulars name it, as {particulars_name: Lanterne}'
     WHEN marks ? 'particulars_siren' AND translate(marks #>> '{particulars_siren,literal}', E'   ', '') !~ '^[0-9]{9}$'
       THEN 'a SIREN is nine digits, as {particulars_siren: 123 456 789}, not ' || coalesce(marks #>> '{particulars_siren,literal}', 'none')
+    WHEN marks ? 'particulars_logo' THEN circle.logo_flaw(marks #>> '{particulars_logo,literal}')
   END
   FROM (
     SELECT (SELECT k FROM jsonb_object_keys(coalesce(marks, '{}')) k
@@ -271,15 +309,16 @@ BEGIN ATOMIC
   RETURNING id;
 END;
 
--- Sets the co-op's particulars the rule `ref` marks, on its days, each
+-- Sets the coop's particulars the rule `ref` marks, on its days, each
 -- as written, a value it marks not being null. Returns the row it made.
 CREATE FUNCTION circle.particularise(ref text, name text, legal_name text, form text, capital text, siren text, rcs text,
-                                     vat text, seat text, "from" date, until date) RETURNS bigint
+                                     vat text, seat text, logo text, "from" date, until date) RETURNS bigint
 LANGUAGE sql
 BEGIN ATOMIC
-  INSERT INTO circle.particulars (policy, name, legal_name, form, capital, siren, rcs, vat, seat, "from", until)
+  INSERT INTO circle.particulars (policy, name, legal_name, form, capital, siren, rcs, vat, seat, logo, "from", until)
   VALUES (particularise.ref, particularise.name, particularise.legal_name, particularise.form, particularise.capital,
-          particularise.siren, particularise.rcs, particularise.vat, particularise.seat, particularise."from", particularise.until)
+          particularise.siren, particularise.rcs, particularise.vat, particularise.seat, particularise.logo,
+          particularise."from", particularise.until)
   RETURNING id;
 END;
 

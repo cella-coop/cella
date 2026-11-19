@@ -12,11 +12,11 @@ export const actions = {
   // ordered, since the procedure it sets decides the motions put to the
   // circle after it
   'circle:circle:amend': ordered({ power: 'amend-circle' }),
-  // the co-op's layout of features, at its root, by the motion it cites,
+  // the coop's layout of features, at its root, by the motion it cites,
   // of a circle holding `arrange-features` over the root; ordered, as
   // what a motion carries is, and since it replaces the whole layout
   'circle:circle:arrange': ordered({ power: 'arrange-features' }),
-  // the co-op's layout of features, at once, by whoever holds
+  // the coop's layout of features, at once, by whoever holds
   // `arrange-features` over the root by a seat; ordered, since it replaces
   // the whole layout from the one its entry says it was, so two saves at
   // once do not commute

@@ -272,7 +272,7 @@ test('open books\' disclosure rule is the assembly\'s, marks its three values so
   }
 })
 
-const publishes = (parts: string) => `The co-op publishes its {publish: ${parts}} to every person signed in to the scope, member or not`
+const publishes = (parts: string) => `The coop publishes its {publish: ${parts}} to every person signed in to the scope, member or not`
 const unpublished = async (wording: string, issuer = 'ag') =>
   (await db.query<{ r: string | null }>('SELECT circle.publication_flaw($1, $2) AS r', [await marks(wording), issuer])).rows[0].r
 

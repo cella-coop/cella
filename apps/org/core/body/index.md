@@ -1,6 +1,6 @@
 +++
 title = "Body"
-updated = 2026-11-18
+updated = 2026-11-19
 +++
 
 Core's body: free-form content as a Loro tree of blocks, its
@@ -55,7 +55,12 @@ props its type keeps, its text as `runs` (each a `text` with its sorted
 left out, equal neighbouring runs joined. Numbers are safe integers;
 anything else, an unknown type, or bytes that are not a whole Loro
 document, has no canonical form. See
-[trust](../../../../_corpus/doc/trust.md#what-a-motion-adopts).
+[trust](../../../../_corpus/doc/trust.md#what-a-motion-adopts). A body
+is blank (`blank`) where it holds nothing anyone wrote: none, or only
+empty text blocks; a divider or an embed is something written. A
+record's page offers its Notes as a quiet "Add a note" while its body
+is blank ([record page
+layout](../../../../_corpus/doc/architecture.md#record-page-layout)).
 
 The database computes it from a Loro snapshot, as a document's version
 generates its `canonical`, `hash` and `plain` columns, by the

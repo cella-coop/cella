@@ -1,13 +1,13 @@
 +++
 title = "circle-policy"
-updated = 2026-11-13
+updated = 2026-11-19
 +++
 
 Core's graft joining the circles to the policy register, two of org's
 core feats that know nothing of each other
 ([core grafts](../../../../../_corpus/doc/architecture.md#core-grafts)).
 A mandate, a right, open books' disclosure values, the publication and
-the co-op's particulars are each a policy's: a sentence a circle adopted by motion, its values
+the coop's particulars are each a policy's: a sentence a circle adopted by motion, its values
 marked in it. The circles keep them in their own tables by the policy's
 id ([circle](../../circle/index.md#mandates)), and the register keeps
 the policy ([policy](../../policy/index.md)); this graft reads the one
@@ -29,7 +29,7 @@ and writes the other, through the circles' writes.
 - `002-register.sql`: the register's tables under the circles'
   row-level policies, which the register, knowing no circle, cannot put
   them under: a member of the scope, a write's transaction and anyone
-  signed in while the co-op publishes its register read every policy,
+  signed in while the coop publishes its register read every policy,
   its wordings and its values ([who reads the
   structure](../../circle/index.md#who-reads-the-structure)), and the
   forms and their defaults are registries every reader reads. And

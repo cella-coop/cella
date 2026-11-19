@@ -50,7 +50,7 @@ export async function amend(input: Amend, deps: Deps): Out<'circle:circle:amend'
   })
 }
 
-// Arranges the co-op's layout of features at its root, replaced by the
+// Arranges the coop's layout of features at its root, replaced by the
 // listing given: citing the motion that arranges it,
 // `circle:circle:arrange`, or, citing none, at once by the actor's own
 // power over the root, `circle:feature:arrange`. It takes the root's lock

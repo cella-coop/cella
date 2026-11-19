@@ -1,9 +1,9 @@
 +++
 title = "Circle"
-updated = 2026-11-18
+updated = 2026-11-19
 +++
 
-Core's circles: the co-op's structure and the authority that flows
+Core's circles: the coop's structure and the authority that flows
 through it, which every feat builds on, as groups are in standard RBAC.
 It is a library of org's core, `apps/org/core/circle`, and no feat: its
 tables are in the `circle` schema, which every feat's and graft's SQL
@@ -24,13 +24,13 @@ so no action of it is declared.
 
 | Entity | Fields | Notes |
 |---|---|---|
-| circle | `id`, `name`, `assembly`, `purpose`, `procedure` | `assembly` marks the general assembly, one circle and only one, which holds every power inherently; no circle contains another; `procedure` names the procedure its motions are decided by where nothing they act under asks another: consent, majority, two thirds or one of the co-op's own, which the motion feat holds and checks |
+| circle | `id`, `name`, `assembly`, `purpose`, `procedure` | `assembly` marks the general assembly, one circle and only one, which holds every power inherently; no circle contains another; `procedure` names the procedure its motions are decided by where nothing they act under asks another: consent, majority, two thirds or one of the coop's own, which the motion feat holds and checks |
 | role | `id`, `circle`, `name`, `duty`, `holders?` | `circle` is one circle, or `*` for a role every working circle has; `holders` caps how many hold it at once in a circle, one manager or one lead a circle, none uncapped; `participant`, built in, is every circle's, the assembly's too |
 | grantee | `id`, `kind` | what a mandate is granted to, what a procedure's party names and what a motion is proposed as ([motion](../../feats/motion/index.md#schema)): a `circle` or a `role`, by its id, one row for each, made as the circle or the role is, so circles and roles share one key |
-| mandate | `id`, `grantee`, `issuer`, `parent?`, `power`, `policy`, `limit?`, `budget?`, `per?`, `procedure?`, `scope?`, `from`, `until?`, `revoked?` | the values of the mandate policy `policy` that grants it: its `grantee` is a role, an individual mandate, or a circle, a collective one; `issuer` is the circle whose motion adopted it, and `parent` the mandate it is issued under, none for one the assembly issues; `power` is an id; `limit` caps a single write, in cents, `budget` caps a cumulative total over its `per` ("month" or "year"); `procedure` names the procedure a motion acting under it is decided by, which passes down to every mandate issued under it, by name, since the motion feat holds procedures; `scope` is the condition on what it covers, a circle's id or `own`, the circle its holder holds the role in, none for the whole co-op; `from` and `until` are the days its policy applies |
+| mandate | `id`, `grantee`, `issuer`, `parent?`, `power`, `policy`, `limit?`, `budget?`, `per?`, `procedure?`, `scope?`, `from`, `until?`, `revoked?` | the values of the mandate policy `policy` that grants it: its `grantee` is a role, an individual mandate, or a circle, a collective one; `issuer` is the circle whose motion adopted it, and `parent` the mandate it is issued under, none for one the assembly issues; `power` is an id; `limit` caps a single write, in cents, `budget` caps a cumulative total over its `per` ("month" or "year"); `procedure` names the procedure a motion acting under it is decided by, which passes down to every mandate issued under it, by name, since the motion feat holds procedures; `scope` is the condition on what it covers, a circle's id or `own`, the circle its holder holds the role in, none for the whole coop; `from` and `until` are the days its policy applies |
 | right | `id`, `right`, `power`, `policy`, `limit?`, `from`, `until?`, `revoked?` | the values of the right policy `policy`: a power the legal form gives every `person`, `member` or `employee` as such; no mandate, so no grantee |
-| feature group | `id`, `name`, `position` | a group of the co-op's layout ([features](#features)): `id` it keeps whatever it is renamed; `position` its place among the groups, from 0 |
-| feature | `feat`, `group`, `position` | a feature the co-op's layout enables: `feat` a feature the co-op installed, by its schema; `group` the group it sits under, by id; `position` its place in the layout, from 0 |
+| feature group | `id`, `name`, `position` | a group of the coop's layout ([features](#features)): `id` it keeps whatever it is renamed; `position` its place among the groups, from 0 |
+| feature | `feat`, `group`, `position` | a feature the coop's layout enables: `feat` a feature the coop installed, by its schema; `group` the group it sits under, by id; `position` its place in the layout, from 0 |
 | shown | `circle`, `group` | a group of the layout a circle other than the root shows |
 | hidden | `circle`, `feat` | a feature of the layout a circle other than the root hides |
 | message | `id`, `circle`, `thread?`, `author`, `at`, `text` | the circle's channel; planned, not built, so it has no table yet |
@@ -96,7 +96,7 @@ covers, never a place in a tree: one marking `{scope: web}` covers
 Web's projects, meetings and time; one on a role marking `{scope: own}`
 covers those of the circle its holder holds the role in, so each
 working circle's lead covers their own circle's alone; one marking none
-covers the whole co-op, every circle's records. Whether a scope covers a
+covers the whole coop, every circle's records. Whether a scope covers a
 record's owning circle is core's, `circle.covers(scope, held, about)`
 (`008-scope.sql`), `held` the circle the holder holds the role in;
 ownership grants nothing by itself, only the label a scope is read
@@ -126,9 +126,9 @@ records and its roles act on them from the day it is created, with no
 further motion. The bundle is every mandate in force on the roles every
 circle has (`*`): the participant's, which every seat in a circle holds
 there, and those of the lead, the secretary and any other `*` role a
-co-op defines. Each is a mandate policy of the assembly like any other,
+coop defines. Each is a mandate policy of the assembly like any other,
 its values copied into `circle.mandate` as it is adopted, never parsed
-from its wording, so the bundle is a template each co-op changes by
+from its wording, so the bundle is a template each coop changes by
 motion of the assembly: adopting a mandate on a `*` role adds to it,
 ending or replacing one takes from it.
 
@@ -150,7 +150,7 @@ A role made for one circle holds only what a motion grants it.
 `The {role: member} role holds {power: read}, to read every circle's
 records`, marking no scope, so whoever holds the member role, every
 active member, seated in the assembly, reads every circle's records
-([reading](#reading)). A co-op that keeps its books closed adopts none,
+([reading](#reading)). A coop that keeps its books closed adopts none,
 and its members read their own circles' records and what the law gives
 them. What every member reads of the totals of members' own figures,
 their pay, time, capital, work share and expenses, is open books'
@@ -182,7 +182,7 @@ each action is carried out ([motion](../../feats/motion/index.md#circles)).
 | `seat-member` | giving and ending a seat (`circle:seat:add`, `:remove`) |
 | `create-circle` | creating a circle (`circle:circle:create`) |
 | `amend-circle` | changing a circle's name, purpose or procedure (`circle:circle:amend`), and making and changing its roles (`circle:role:make`, `:amend`) |
-| `arrange-features` | arranging the co-op's layout over the root, and a circle's groups shown and features hidden over the circle, by motion (`circle:circle:arrange`, `.show`, `.hide`), or at once by a holder on a seat (`circle:feature:arrange`, `circle:group:show`, `circle:feature:hide`), where the mandate's scope covers the circle, its own for `{scope: own}`, so unlike every power above a circle may hold it over itself ([features](#features)) |
+| `arrange-features` | arranging the coop's layout over the root, and a circle's groups shown and features hidden over the circle, by motion (`circle:circle:arrange`, `.show`, `.hide`), or at once by a holder on a seat (`circle:feature:arrange`, `circle:group:show`, `circle:feature:hide`), where the mandate's scope covers the circle, its own for `{scope: own}`, so unlike every power above a circle may hold it over itself ([features](#features)) |
 
 Whom a circle's motion decides about is `motion.decides`, and
 never where a circle sits, since none nests: the assembly decides about
@@ -229,7 +229,7 @@ adopted, as a mandate's are into `circle.mandate`, by the same
 one right, a power, at most a limit, and no other value. Who is one of
 them on a day is core person's to say, `person.holds(actor, right,
 day)`, by the function each kind of person registers there: `person`
-the people the co-op knows, `membership` its active members,
+the people the coop knows, `membership` its active members,
 `employment` those employed. Core's guard on every op
 with a power takes a right, `circle_person.entitled`, beside the
 mandates on the actor's seats, so Inès, employed and no member, holds an
@@ -239,17 +239,17 @@ since 30 November 2025, a person's alone.
 A right lets each act on what is their own: the feat's guard that the
 record is theirs stays, and a right is never the authority a read asks
 (`circle_person.covered`), so it opens no one else's rows. It reaches the
-whole co-op, is issued under no mandate, and no mandate is issued under
+whole coop, is issued under no mandate, and no mandate is issued under
 it.
 
 | Right | Power | Actions |
 |---|---|---|
 | person | `keep-profile` | their profile (`person:person:profile`) and erasing their contact details (`person:person:forget`) |
 | person | `keep-devices` | enrolling and revoking their devices (`person:device:enrol`, `:revoke`) |
-| person | `upload-file` | uploading a file of the co-op's (`file:file:upload`) |
+| person | `upload-file` | uploading a file of the coop's (`file:file:upload`) |
 | person | `accept-invitation` | taking up their invitation (`membership:member:accept`) |
 | person | `file-record` | filing a record of their own (`file-membership:member:attach`) |
-| person | `mark-read` | marking a text the co-op adopted read (`document-membership:version:read`) |
+| person | `mark-read` | marking a text the coop adopted read (`document-membership:version:read`) |
 | person | `record-import` | recording an import of their own (`import:run:record`) |
 | person | `withdraw-membership` | withdrawing their own membership, and the freeze and withdrawal of their capital that follow (`membership:member:withdraw`, `account:own:freeze`, `account:own:withdraw`); worded on every person, since the withdrawal ends the membership on its own verdict date, and held to a member's own by the membership feat's guard |
 | person | `erase-own-data` | erasing all their own personal data once they have left (`membership:member:erase`), within the holds the law keeps; held to their own, and to one who has left, by the membership feat's guard |
@@ -270,8 +270,8 @@ every record its scope covers, as `{scope: own}` on the participant
 role lets every participant read their own circle's records. A power a
 feat names as reading its rows in `cella.reading` reads them too, by
 its scope, as Expense's `approve-expense` lets Web's lead read Web's
-expenses and the manager's, on the whole co-op, every circle's. Open books, where a
-co-op adopts it, is a mandate for `read` on the member role marking no
+expenses and the manager's, on the whole coop, every circle's. Open books, where a
+coop adopts it, is a mandate for `read` on the member role marking no
 scope, so every member reads every circle's records ([the default
 bundle](#the-default-bundle)). What the law gives every member to read, the year's accounts and the
 activity report, needs no mandate, and a person reads what is theirs,
@@ -303,7 +303,7 @@ function that filters its rows by its reader asks it in place of
 
 ### Who reads the structure
 
-The co-op's structure is its members' (the operator, 6 November 2026:
+The coop's structure is its members' (the operator, 6 November 2026:
 "members of the scope read it; a signed-in person who is not a member
 reads none of it"): core's circles, roles and grantees, the mandates,
 the rights and open books' values, the members and the tenures, and
@@ -319,8 +319,8 @@ and the mandates on the roles they hold, the participant's among them
 (`circle.held()`), which say what their seats let them do; and
 nothing else: no other role's mandates, no circle's, no right but
 those they hold, which a feat that reads a person's rights gives them
-as its owner, and no policy, but what the co-op publishes by motion
-([what the co-op publishes](#what-the-co-op-publishes)).
+as its owner, and no policy, but what the coop publishes by motion
+([what the coop publishes](#what-the-coop-publishes)).
 No one signed in reads none of it. A write's transaction and a
 superuser's session read the whole (`circle.whole()`), and the guards
 role reads every row, as it reads a slice's.
@@ -355,17 +355,17 @@ name and the procedure that decides them, `circle.applied()`, declared
 so a report asks them as its reader (`circle.disclosed`), and shows a
 person who is no member only their own cells of a counted view.
 
-### What the co-op publishes
+### What the coop publishes
 
 What a person who is no member reads of the structure beyond their own
-is the co-op's choice by motion (the operator, 6 November 2026: "except
-what the co-op publishes by motion, the same pattern as the shared
+is the coop's choice by motion (the operator, 6 November 2026: "except
+what the coop publishes by motion, the same pattern as the shared
 totals ruling of 5 Nov (sharing set by motion)"): a rule of the
 assembly marking one value, `publish`, the parts it publishes, as a
-co-op that shows its circles and its roles to its candidates reads:
+coop that shows its circles and its roles to its candidates reads:
 
 ```text
-The co-op publishes its {publish: circles and roles} to every person signed in to the scope, member or not
+The coop publishes its {publish: circles and roles} to every person signed in to the scope, member or not
 ```
 
 The parts are a list, by commas and a last `and`, each one of five:
@@ -411,18 +411,18 @@ person signed in reads a part published whole, as a member does, and
 nothing of a part that is not; `circle.publication` itself is the
 members'. Lanterne publishes nothing.
 
-### The co-op's particulars
+### The coop's particulars
 
-What the co-op is called, and the mentions its invoices print, are the
+What the coop is called, and the mentions its invoices print, are the
 assembly's by motion, never a setting a host makes: a rule of the
-assembly marking the co-op's particulars, each a text, as Lanterne's
+assembly marking the coop's particulars, each a text, as Lanterne's
 founding motion adopts them:
 
 ```text
-The co-op is called {particulars_name: Lanterne}, its legal name {particulars_legal_name: Lanterne Worker Co-operative Limited Company}, a {particulars_form: Worker co-operative limited company with variable capital}, whose seat is {particulars_seat: 14 rue des Graviers, 93100 Montreuil, France}, registered under SIREN {particulars_siren: 000000000} at the trade register of {particulars_rcs: Bobigny}, with the VAT number {particulars_vat: FR00000000000}
+The coop is called {particulars_name: Lanterne}, its legal name {particulars_legal_name: Lanterne Worker Co-operative Limited Company}, a {particulars_form: Worker co-operative limited company with variable capital}, whose seat is {particulars_seat: 14 rue des Graviers, 93100 Montreuil, France}, registered under SIREN {particulars_siren: 000000000} at the trade register of {particulars_rcs: Bobigny}, with the VAT number {particulars_vat: FR00000000000}
 ```
 
-- `particulars_name`: what the shell calls the co-op by;
+- `particulars_name`: what the shell calls the coop by;
 - `particulars_legal_name`: its name in law, which its invoices print
   as their seller's;
 - `particulars_form`: its legal form as its papers print it, "with
@@ -432,11 +432,14 @@ The co-op is called {particulars_name: Lanterne}, its legal name {particulars_le
 - `particulars_seat`: its registered office;
 - `particulars_siren`: its SIREN, nine digits;
 - `particulars_rcs`: the town of the trade register it is registered at;
-- `particulars_vat`: its VAT number.
+- `particulars_vat`: its VAT number;
+- `particulars_logo`: its logo, one SVG on one line, which Lanterne's
+  wording ends with, `, and bears the mark {particulars_logo: <svg …>}`.
 
 A rule marking any of them is the particulars: it marks
-`particulars_name` and no value but these eight, its SIREN, if it marks
-one, is nine digits, spaces aside, and only the assembly adopts it; one
+`particulars_name` and no value but these nine, its SIREN, if it marks
+one, is nine digits, spaces aside, its logo, if it marks one, is one the
+logo's guard passes, and only the assembly adopts it; one
 that does not is refused as its motion is proposed and again as it is
 adopted, saying what is wrong (`circle.particulars_flaw`). Each value
 is text, the SIREN and the capital as the register types them by their
@@ -453,15 +456,26 @@ with it: `circle_policy.particulars_from`, which
 `circle_policy.mandate_from` calls, and `circle.withdraw`, which
 `circle_policy.mandate_ended` calls.
 
+The logo's guard, `circle.logo_flaw`, holds an SVG to what is safe to
+draw anywhere: one `<svg>` element of at most 4096 characters,
+declaring nothing (`<!…>`, `<?…>`), with no `<script>`, no
+`<foreignObject>`, no event handler (`on…=`), no `javascript:`, and
+no reference outside itself, every `href`, `xlink:href` and `url()`
+naming only `#…` and no animation setting an `href`; each refusal names
+what to drop. The shell never inlines it: its `Logo` draws it as an
+image from a `data:` URL, where no script runs and nothing outside it
+loads, whatever the guard let through
+([components](../ui/index.md#components)).
+
 `circle.particulars()` reads the particulars in force on the verdict
 date, none where no rule stands: it runs as its owner, so every reader
-reads them, signed in or not, since a co-op's name and its mentions are
+reads them, signed in or not, since a coop's name and its mentions are
 what its every paper prints. The invoice feat keeps them with an invoice
 as its seller as it issues (`invoice.seller()`), so a motion replacing
 the particulars changes the invoices issued once it applies and never
 one issued before ([invoice](../../feats/invoice/index.md#the-pdf)); and
-the shell calls the co-op by its name (`named` in `@cella/org-log`)
-and shows the particulars on Settings' Organization page, where a
+the shell calls the coop by its name and draws its logo (`named` in
+`@cella/org-log`), and shows the particulars on Settings' Organization page, where a
 value's edit proposes the assembly's motion replacing them
 ([settings](../ui/index.md#settings)).
 The scope's address and its timezone are no particulars: the notary
@@ -473,7 +487,7 @@ invoices issued before it and after.
 
 ## Open books
 
-What a co-op shares with every member of the totals of members' own
+What a coop shares with every member of the totals of members' own
 figures is its choice by motion: a rule of the assembly marking three
 disclosure values, by name, each with the way it is stricter, as
 Lanterne's reads:
@@ -519,7 +533,7 @@ them put in more than the others allow, or it sums to nothing
 ([what is withheld](../analytics/index.md#what-is-withheld)). A reader
 always reads the cells whose every row is theirs or is in a circle a
 power of theirs over the feat's rows covers. Where no disclosure rule
-stands, every other cell is withheld: a co-op that adopts none shares
+stands, every other cell is withheld: a coop that adopts none shares
 no such total beyond its readers' own rights.
 
 The assembly's page configures them: Open books, the motion feat's,
@@ -530,14 +544,14 @@ words ([the circles in the shell](../../feats/motion/index.md#the-circles-in-the
 
 ## Features
 
-The co-op lays its features out once, and each circle shows what it
-uses of that layout. A **feature** is a feat the co-op has installed,
+The coop lays its features out once, and each circle shows what it
+uses of that layout. A **feature** is a feat the coop has installed,
 named by its schema, or one of core's own collections, which are no
 feat: `circle`, its circles and mandates, `person`, its people, and
 `policy`, its register. Which are installed `circle.installed()` reads:
 core's three, and every feat that owns a power in `cella.power`, which
 every feat the composition root lists does; a graft is never one. So
-there are three levels: the co-op installs a feat; the co-op's
+there are three levels: the coop installs a feat; the coop's
 **layout** enables it, in its place under one of the layout's groups;
 and a circle shows the groups it uses and hides the features of them it
 does not. A feature installed that the layout leaves out is enabled
@@ -549,7 +563,7 @@ group's run after its name and a colon, the runs separated by
 semicolons, every feature under a group.
 
 ```text
-Governance: motion, meeting, document, policy; Work: project, task, timesheet, file, contact; Books: account, transaction, report, import
+Organization: circle, person, motion, meeting, policy; Work: project, task, timesheet, document, file, contact; Books: account, transaction, report, import
 ```
 
 `circle.listed(listing)` reads a listing into its rows, each feature's
@@ -641,13 +655,13 @@ its groups by the ids it gives; a row by `circle.fold_show` and
 show: a feature's write refused in a circle that does not show it is a
 later stream's
 (`26-11-14-a-feature-s-write-in-a-circle-that-has-not-enabled-it-is-refused-and-being-in-a-circle-replaces-the-lens`).
-The layout is the co-op's, read by everyone in it; a circle's rows are
+The layout is the coop's, read by everyone in it; a circle's rows are
 the structure's, read by whoever reads it ([who reads
 it](#who-reads-the-structure)).
 
 The sidebar shows what the circle the member is in shows, the whole
 layout where they lensed none, in the layout's order and under its
-groups, and nothing else of the co-op's collections but the Inbox and
+groups, and nothing else of the coop's collections but the Inbox and
 Activity ([the shell](../ui/index.md#components)): what a circle does
 not show is missing, never moved. Its api's `lenses` reads each circle
 the member reads with its features spelt as one listing, so the shell
@@ -662,7 +676,7 @@ name, its default and the slice that registered it by
 `circle.setting_value`, each circle's value of each that a rule it
 adopted set, on the rule's days until it is revoked.
 `circle.setting_of(circle, name)` reads the circle's value on the
-verdict date, else the assembly's, the co-op's, since circles never
+verdict date, else the assembly's, the coop's, since circles never
 nest and the assembly is the root, else the default.
 
 A rule marking `setting` sets one: `{setting: reactions}` and `{value:
@@ -704,11 +718,11 @@ that changes it
 `circle.grantee`, `circle.mandate` and `circle.right`, as in the
 entities above, `circle.disclosure`, open books' values by the rule
 that marks them, and `circle.publication`, the parts of the structure
-the publication publishes, `circle.particulars`, the co-op's
+the publication publishes, `circle.particulars`, the coop's
 particulars, and `circle.setting_value`, a circle's value of a setting
 of `circle.setting` ([settings](#settings)), each on its rule's days
 until it is revoked, and
-`circle.feature_group` and `circle.feature`, the co-op's layout, its
+`circle.feature_group` and `circle.feature`, the coop's layout, its
 groups by id and its features by feat, each one's positions distinct, and
 `circle.shown` and `circle.hidden`, each circle's rows of it
 ([features](#features)), keyed by the circle and the group or the feat; a role's `holders` is a positive count or none. Every circle and every role is a grantee, its row made
@@ -751,7 +765,7 @@ on a day, its mandate with every mandate issued under it.
 Who is in which circle, and who holds which role: a circle's members,
 people and roles, and a person's tenures of roles, and the seats read
 from them (`007-seat.sql`). Any person may hold a role or be a member
-of a circle, member of the co-op or not; whether a seat counts on a day
+of a circle, member of the coop or not; whether a seat counts on a day
 is core's to say, as membership says the assembly's asks an active
 membership ([who may act](../grafts/circle-person/index.md#who-may-act)).
 
@@ -796,7 +810,7 @@ membership ([who may act](../grafts/circle-person/index.md#who-may-act)).
   it, as the week of time offers a project's circle.
 - `lenses(db, person, day)` (`./api`): every circle the person reads,
   those they sit in on the day first, then the rest, each marked
-  `sits`, which the co-op selector offers as the member's lens
+  `sits`, which the coop selector offers as the member's lens
   ([the lens](../../../../_corpus/doc/architecture.md#the-lens)).
 
 The app role and the guards role may select, the app role what [the
@@ -814,7 +828,7 @@ mandate the assembly did not issue has a parent: a mandate its issuer
 holds as a whole, a collective mandate, for the same power. So the
 mandates form a provenance tree by `parent`, and what is under a circle
 or a role is what it issued, never where it sits. The assembly holds
-every power inherently, the co-op's members being its sovereign: a
+every power inherently, the coop's members being its sovereign: a
 mandate it issues is a root, with no parent, and the founding motion
 issues the first of them from the legal form. Any other circle issues
 a mandate only under one it holds: coordination grants Web's lead
@@ -841,7 +855,7 @@ and that adopting another in its place, in the same motion, keeps it.
 A mandate is narrower than its parent: it grants the same power; its
 cap is no wider, so where the parent is capped it limits a write by at
 most the parent's limit or budgets the same period by at most its
-budget; its scope is no wider, any under a parent on the whole co-op,
+budget; its scope is no wider, any under a parent on the whole coop,
 and under one on a circle, or on `own`, the same; its term is no
 longer, from no earlier and until no later than the parent's; and its
 procedure, where it states one, is no looser
@@ -896,8 +910,8 @@ tenure changes who holds the role, never what it holds.
 |---|---|---|
 | `POST /api/circle/create` | ordered | a new circle, by motion |
 | `POST /api/circle/amend` | ordered | a circle's name, purpose or procedure, by motion |
-| `POST /api/circle/arrange` | ordered | the co-op's layout, at the root, by motion |
-| `POST /api/circle/feature.arrange` | ordered | the co-op's layout, at once, by whoever holds `arrange-features` over the root |
+| `POST /api/circle/arrange` | ordered | the coop's layout, at the root, by motion |
+| `POST /api/circle/feature.arrange` | ordered | the coop's layout, at once, by whoever holds `arrange-features` over the root |
 | `POST /api/circle/show` | ordered | a group a circle shows or not, by motion: one row, from what it was |
 | `POST /api/circle/hide` | ordered | a feature a circle hides or not, by motion: one row, from what it was |
 | `POST /api/circle/group.show` | ordered | a group a circle shows or not, at once, by whoever holds `arrange-features` over it |
@@ -928,7 +942,7 @@ and `revoking`. Creating a circle places it nowhere: circles never nest.
   changes, so every record, mandate and seat it owns stays its own. It
   commits what it changed and what it was. Ordered, since the
   procedure it sets decides the motions put to the circle after it.
-- **arrange** replaces the co-op's layout by the listing given, at the
+- **arrange** replaces the coop's layout by the listing given, at the
   root, by the motion it cites, ordered as what a motion carries is;
   and **feature.arrange** the same at once, citing no motion, by the
   actor's own `arrange-features` over the root, ordered too, since two
@@ -985,7 +999,7 @@ and `revoking`. Creating a circle places it nowhere: circles never nest.
 | a mandate policy adopted or ended | `adopt-policy` or `end-policy`, collective mandates: the cited motion adopts or ends it, and carried | the assembly or coordination, by motion |
 | create | `create-circle`, a collective mandate: the motion it cites creates this circle | the assembly, by motion |
 | amend | `amend-circle`, a collective mandate: the motion it cites changes this circle so | the assembly, by motion |
-| arrange | `arrange-features`, a collective mandate covering the root: the motion it cites arranges the co-op's layout so | the assembly, by motion |
+| arrange | `arrange-features`, a collective mandate covering the root: the motion it cites arranges the coop's layout so | the assembly, by motion |
 | feature.arrange | `arrange-features`, a mandate on a seat covering the root | none in Lanterne: the assembly arranges it by motion |
 | show, hide | `arrange-features`, a collective mandate covering the circle: the motion it cites sets this row so | the circle itself, by its own motion, for every circle but Hiring, whose coordination does; the assembly any |
 | group.show, feature.hide | `arrange-features`, a mandate on a seat covering the circle | a circle's lead, their own circle's |
@@ -1195,7 +1209,7 @@ graft's.
 Core's circles know no members, motions, accounts or policies: a
 mandate names its policy by id alone, and what reads the register is
 core's graft joining the circles to it, circle-policy. Templates of roles for
-common co-op shapes, colleges of a multi-stakeholder co-op and mandates
+common coop shapes, colleges of a multi-stakeholder coop and mandates
 requested by another scope (rung 5) build on these entities later.
 
 ## Shell
@@ -1205,7 +1219,10 @@ a gallery of cards by default, and its structure drawn as the mandates
 link the circles, never as a tree: each circle with the circles that
 issued what it and its roles hold, and those it issued to. A circle's
 page, its header's crumb its id, opens on its purpose, as the record's
-own words; its Roles tab lists its roles, those every working circle
+own words, then its roles summarised, each with its duty, in a panel (it
+keeps no body and is laid out as `panels`, [record page
+layout](../../../../_corpus/doc/architecture.md#record-page-layout)); its
+Roles tab lists its roles, those every working circle
 has among them, each with its duty and the circle it is of, and the
 mandates granted to them in the Mandates collection's columns: its
 power, the role it is granted to, its cap, what it covers, who issued
@@ -1218,7 +1235,7 @@ membership-motion fills; a tab no slice fills is not shown. Its
 projects, motions, meetings and every other collection whose rows name
 it are jumps in Related. Its header offers "View as this
 circle", which sets the member's lens to it and returns to the home page,
-and "Stop viewing as this circle" where it is the lens already; the co-op
+and "Stop viewing as this circle" where it is the lens already; the coop
 selector lists the circles the member sits in, and the lens's own, so any
 other circle is lensed from its page here.
 
@@ -1230,7 +1247,7 @@ Every page that shows a mandate says it in the same words: a role, a
 circle, an issuer and the circle a scope covers by name, never by id; a
 cap as `cap` in `bindings/words.ts` says it, "up to 1 200,00 € a write" or
 "within 1 000,00 € a month", an amount as `models/format.ts` writes
-one; and what it covers as `covers` says it, the whole co-op, its own
+one; and what it covers as `covers` says it, the whole coop, its own
 circle or a circle by name. The feat's `./bindings` shares `cap`, so
 motion's and membership's pages say a cap in the same words.
 A mandate's page, `/mandates/<id>`, as the shell addresses an item,
@@ -1260,7 +1277,7 @@ which its Settings tab links to under its terms: a `Settings` form of
 one setting, the circle's features ([features](#features)), drawn as an
 arrangement ([settings](../ui/index.md#settings)): the tree of the
 features the circle shows, in its order, each at the top level or in an
-accordion, and under it every other feature the co-op installed
+accordion, and under it every other feature the coop installed
 (`circle.installed`), not shown. Where a feature sits is all there is
 to say of it, with no toggle and no field naming its accordion: it is
 dragged, by the pointer or the keyboard, into an accordion or out of
@@ -1322,7 +1339,7 @@ Every feat and graft reads core's circles; those that extend them:
 
 No circle sits in another: coordination is the working circles' by the
 mandates the assembly issued it, not by a place above them. Clients,
-Hiring, Care and Tools look after the co-op itself and have no lead;
+Hiring, Care and Tools look after the coop itself and have no lead;
 each person sits in three to five circles, the assembly among them for
 a member ([the fixture](../../fixtures/lanterne/index.md#people-and-circles)).
 
@@ -1331,16 +1348,16 @@ them ([features](#features)):
 
 | Circle | Features |
 |---|---|
-| General assembly | Governance: motion, policy, document, meeting; Members: membership, patronage, person, circle |
-| Coordination | Governance: motion, meeting, document; project |
-| Web | project, task, timesheet, file, contact |
-| Brand | project, task, timesheet, file, bill |
-| Marketing | project, task, timesheet, contact, document |
-| Operations | Books: account, transaction, report, import; Payments: invoice, bill, expense, payslip; contact, employment |
-| Clients | contact, project, task, document; Governance: motion, meeting |
-| Hiring | task, document, employment; Governance: motion, meeting |
-| Care | task, meeting, document, motion |
-| Tools | project, task, timesheet, expense, file |
+| General assembly | Organization: circle, person, motion, meeting, policy; Membership: membership, patronage |
+| Coordination | Organization: circle, person, motion, meeting; project, document |
+| Web | project, task, timesheet, document, file, contact |
+| Brand | project, task, timesheet, document, file, bill |
+| Marketing | project, task, timesheet, document, contact |
+| Operations | Books: account, transaction, report, import; Payments: invoice, bill, expense, payslip; document, contact, employment |
+| Clients | contact, project, task, document; Organization: circle, person, motion, meeting |
+| Hiring | task, document, employment; Organization: circle, person, motion, meeting |
+| Care | task, document; Organization: circle, person, motion, meeting |
+| Tools | project, task, timesheet, document, expense, file |
 
 Every circle but Hiring holds `arrange-features` over itself, `{scope:
 own}`, so its own motion arranges its features; coordination holds it
@@ -1376,7 +1393,7 @@ A cap of "its own circle" is the mandate's scope, `{scope: own}`: a
 lead runs, approves the time of and keeps the minutes of their own
 circle alone. The print buyer's names Brand, `{scope: brand}`, so it
 covers Brand's bills alone. Every other mandate marks none and covers
-the whole co-op, so the manager's `manage-project` and the treasurer's
+the whole coop, so the manager's `manage-project` and the treasurer's
 `approve-time` cover every circle's, and finance pays a Web supplier
 as it pays any.
 

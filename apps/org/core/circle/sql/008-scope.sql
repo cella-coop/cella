@@ -1,5 +1,5 @@
 -- Whether a mandate's scope covers a record's owning circle `about`: a
--- mandate marking none covers the whole co-op, every circle's records;
+-- mandate marking none covers the whole coop, every circle's records;
 -- one on a circle that circle's alone; one on `own` those of the circle
 -- `held`, where its holder holds the role. A scope is a condition on the
 -- permission, never a place in a tree, and ownership grants nothing by

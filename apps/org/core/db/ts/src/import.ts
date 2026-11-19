@@ -38,7 +38,7 @@ const undoing = (deps: Deps): Deps => {
 // Runs an imported file's records as writes, in the file's order, as the
 // importing member: each settles, or is refused with the guard's reason,
 // alone. A dry run makes each write and undoes it, so it says what would
-// be created and what refused, each line judged on the co-op as it
+// be created and what refused, each line judged on the coop as it
 // stands; a settled line names no entry, since none stays.
 export async function importing(records: Imported[], deps: Deps, dry: boolean): Promise<Line[]> {
   const as = dry ? undoing(deps) : deps

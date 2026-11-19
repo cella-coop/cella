@@ -30,7 +30,7 @@ END;
 REVOKE EXECUTE ON FUNCTION circle_person.register_standing(regprocedure, text) FROM PUBLIC;
 
 -- Why a seat in a circle does not count on a day, or null where it
--- counts: the person is no one the co-op knows, or the first reason a
+-- counts: the person is no one the coop knows, or the first reason a
 -- registered standing gives, by its owner's name. A scope where no kind
 -- of person registers one bars no seat of a person it knows.
 CREATE FUNCTION circle_person.unseated(person text, circle text, day date) RETURNS text
@@ -40,7 +40,7 @@ DECLARE
   why text;
 BEGIN
   IF person IS NULL OR NOT person.known(person, day) THEN
-    RETURN 'no person the co-op knows';
+    RETURN 'no person the coop knows';
   END IF;
   FOR call IN
     SELECT format('SELECT %I.%I($1::%s, $2::%s, $3::%s)', n.nspname, p.proname,
@@ -225,7 +225,7 @@ BEGIN ATOMIC
   ),
   wanted AS (
     SELECT why_not.power || coalesce(' up to ' || cella.amount(why_not.cents)::text || ' €', '') AS power,
-      coalesce(why_not.about, 'the whole co-op') AS about
+      coalesce(why_not.about, 'the whole coop') AS about
   )
   SELECT CASE
     WHEN circle_person.may(why_not.actor, why_not.power, why_not.cents, why_not.about, why_not.day) THEN NULL
@@ -287,7 +287,7 @@ END;
 -- circle, `circle`, as its handler reads it from the record or writes it
 -- there, and one naming none concerns the root's, the assembly's. This is
 -- the one guard that reads a permission's scope: no slice checks it again.
--- A right reaches the whole co-op. Refused, `why_not` says by what
+-- A right reaches the whole coop. Refused, `why_not` says by what
 -- mandate, missing or exceeded, and what would fix it.
 CREATE FUNCTION circle_person.empowered(payload jsonb) RETURNS text
 LANGUAGE sql STABLE

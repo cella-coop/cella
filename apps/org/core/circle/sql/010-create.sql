@@ -6,7 +6,7 @@
 -- The default bundle on a day: every mandate in force then on a role
 -- every circle has (`*`), the participant's, the lead's, the
 -- secretary's, by id. Each is a mandate policy of the assembly, so a
--- co-op changes the template by motion; one scoped `own` covers, for each
+-- coop changes the template by motion; one scoped `own` covers, for each
 -- holder, the circle they hold the role in, the new one among them. The
 -- creation's entry names it, so the log says what a circle was created
 -- with.

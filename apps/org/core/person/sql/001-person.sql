@@ -1,8 +1,8 @@
 CREATE SCHEMA person;
 
--- Someone the co-op knows, by the address they sign with, for good: their
+-- Someone the coop knows, by the address they sign with, for good: their
 -- name and how to reach them. Whether they are a member is membership's,
--- whether they work for the co-op employment's; a person holds neither
+-- whether they work for the coop employment's; a person holds neither
 -- until one of them says so.
 CREATE TABLE person.person (
   circle text NOT NULL,

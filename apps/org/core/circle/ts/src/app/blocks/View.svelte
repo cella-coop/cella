@@ -2,7 +2,7 @@
   import { Button, useShell } from '@cella/org-ui'
   import type { Detail } from '../../models/circle.ts'
 
-  // Lenses the co-op on this circle, which every collection then reads
+  // Lenses the coop on this circle, which every collection then reads
   // through, or clears the lens where it is already this circle's.
   let { data }: { data: Detail; id: string } = $props()
   const shell = useShell()

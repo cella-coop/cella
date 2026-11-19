@@ -1,6 +1,7 @@
 import { icons, power, recordIcon, recordIcons, type App } from '@cella/org-ui'
 import type { Circle, Detail, Standing, Provenance } from '../models/circle.ts'
 import Chain from './blocks/Chain.svelte'
+import Roles from './blocks/Roles.svelte'
 import Structure from './blocks/Structure.svelte'
 import View from './blocks/View.svelte'
 import { cap, covers, tones } from '../bindings/words.ts'
@@ -33,10 +34,9 @@ export const app: App = {
         summary: (c: Detail) => c.purpose,
         properties: (c: Detail) => [
           { label: 'Icon', value: recordIcons.find((i) => i.slug === c.icon)?.name ?? null, icon: recordIcon(c.icon), ink: c.name, edit: { kind: 'icon' as const, write: 'icon', field: 'icon', current: c.icon } },
-          { label: 'Id', value: c.id, kind: 'mono' },
-          ...(c.assembly ? [{ label: 'The assembly', value: 'holds every power' }] : []),
-          { label: 'Decides by', value: c.procedure, kind: 'badge' },
-          { label: 'Roles', value: c.roles.length, kind: 'number' },
+          // Its id is the reference under its title.
+          ...(c.assembly ? [{ label: 'The assembly holds every power', value: 'the assembly', kind: 'badge' as const, tone: 'accent' as const }] : []),
+          { label: 'Decides by', value: c.procedure, glyph: icons.Scales, lead: 'decides by' },
         ],
         related: (c: Detail) => [
           ...c.issuers.map((k) => ({ label: k.name, sub: 'issued its mandates', href: `/circles/${k.id}` })),
@@ -52,7 +52,10 @@ export const app: App = {
           { id: 'policies', label: 'Policies' },
           { id: 'settings', label: 'Settings' },
         ],
-        blocks: [{ tab: 'roles', block: Structure }],
+        // A circle keeps no body; its overview is its purpose, then its
+        // roles summarised.
+        layout: 'panels',
+        blocks: [Roles, { tab: 'roles', block: Structure }],
       },
     },
     mandates: {
@@ -75,22 +78,22 @@ export const app: App = {
         eyebrow: 'Mandate',
         title: (m: Provenance) => `${power(m.power)}, to ${m.granteeName}`,
 
+        // Its power is its title's; its state's day only where it is not
+        // the day it starts.
         properties: (m: Provenance) => [
           { label: 'State', value: m.state, kind: 'badge', tone: tones[m.state] },
-          { label: 'Since', value: m.since, kind: 'date' },
-          { label: 'Power', value: m.power, kind: 'mono' },
-          { label: 'Granted to', value: m.granteeName, ...(m.circle ? { href: `/circles/${m.circle}` } : {}) },
-          ...(m.limit !== null
-            ? [{ label: 'Limit a write', value: m.limit, kind: 'money' as const }]
-            : m.budget !== null
-              ? [{ label: `Budget a ${m.per}`, value: m.budget, kind: 'money' as const }]
-              : [{ label: 'Cap', value: 'uncapped' }]),
-          { label: 'Covers', value: covers(m) },
+          ...(String(m.since).slice(0, 10) === String(m.from).slice(0, 10) ? [] : [{ label: 'Since', value: m.since, kind: 'date' as const, lead: `${m.state} since` }]),
+          { label: 'Granted to', value: m.granteeName, lead: 'to', ...(m.circle ? { href: `/circles/${m.circle}` } : {}) },
+          // Its cap in words, as the chain says it: a figure alone would
+          // not say what it bounds.
+          { label: 'Cap', value: cap(m), glyph: icons.Wallet },
+          { label: 'Covers', value: covers(m), glyph: icons.CirclesThree, lead: 'covers' },
           { label: 'From', value: m.from, kind: 'date' },
           ...(m.until ? [{ label: 'Until', value: m.until, kind: 'date' as const }] : []),
-          ...(m.procedure ? [{ label: 'Decided by', value: m.procedure, kind: 'badge' as const }] : []),
-          { label: 'Issued by', value: m.issuerName, href: `/circles/${m.issuer}` },
+          ...(m.procedure ? [{ label: 'Decided by', value: m.procedure, glyph: icons.Scales, lead: 'decided by' }] : []),
+          { label: 'Issued by', value: m.issuerName, href: `/circles/${m.issuer}`, lead: 'issued by' },
         ],
+        layout: 'panels',
         blocks: [Chain],
       },
     },

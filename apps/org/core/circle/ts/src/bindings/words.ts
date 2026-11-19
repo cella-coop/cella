@@ -7,7 +7,7 @@ export const cap = (m: Pick<Standing, 'limit' | 'budget' | 'per'>) =>
 
 // What a mandate covers in words, a circle by its name where it is read.
 export const covers = (m: Pick<Standing, 'scope'> & { scopeName?: string | null }) =>
-  m.scope === null ? 'the whole co-op' : m.scope === 'own' ? 'its own circle' : (m.scopeName ?? m.scope)
+  m.scope === null ? 'the whole coop' : m.scope === 'own' ? 'its own circle' : (m.scopeName ?? m.scope)
 
 // How a link of a chain narrows the one above it, in words: a smaller
 // cap, a narrower scope, a later start, an earlier end; none where it is

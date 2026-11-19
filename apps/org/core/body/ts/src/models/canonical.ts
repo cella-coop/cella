@@ -104,6 +104,14 @@ export function hash(doc: LoroDoc): string {
   return bytesToHex(blake3(bytes(doc)))
 }
 
+// Whether a body holds nothing anyone wrote: none at all, or only empty
+// text blocks, as a new record's lone empty line; a divider or an embed
+// is something written.
+export function blank(c: Canon | null | undefined): boolean {
+  const empty = (bs: Block[]): boolean => bs.every((b) => !atomic.has(b.type) && !(b.runs ?? []).some((r) => r.text.trim()) && empty(b.children ?? []))
+  return !c || empty(c.blocks)
+}
+
 // A canonical document's text as a reader sees it, each text block a line,
 // as `cella.document_text` gives it.
 export function plain(c: Canon): string {

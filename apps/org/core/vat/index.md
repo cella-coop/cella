@@ -1,11 +1,11 @@
 +++
 title = "VAT"
-updated = 2026-11-10
+updated = 2026-11-19
 +++
 
 A document's lines, their amounts and their VAT (`@cella/org-vat`), the
 one way every feat that bills or is billed counts them, so an invoice the
-co-op issues and a bill it receives add up alike. The `invoice` and
+coop issues and a bill it receives add up alike. The `invoice` and
 `bill` feats each keep their own lines in their own schema and take the
 arithmetic from here, never from each other.
 

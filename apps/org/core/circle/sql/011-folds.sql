@@ -43,7 +43,7 @@ BEGIN
 END
 $$;
 
--- circle:circle:arrange and circle:feature:arrange: the co-op's layout,
+-- circle:circle:arrange and circle:feature:arrange: the coop's layout,
 -- arranged at the root its entry names, made the listing it carries, its
 -- groups by the ids it gives, from what the entry says it was, as
 -- `circle.features` spells it (`012-features.sql`): a motion's

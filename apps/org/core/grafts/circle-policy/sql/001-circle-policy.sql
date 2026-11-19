@@ -1,6 +1,6 @@
 -- circle-policy, core's graft joining the circles to the policy register:
 -- a mandate, a right, open books' disclosure values, the publication and
--- the co-op's particulars are each a policy's, a sentence a circle adopted by motion. Their
+-- the coop's particulars are each a policy's, a sentence a circle adopted by motion. Their
 -- values are read here from the register, by its values, never its
 -- wording, and issued by the circles' writes as the policy is adopted
 -- (`circle.issue`, `circle.give`, `circle.disclose`, `circle.publish`,
@@ -250,7 +250,8 @@ $$;
 -- The particulars as their rule marks them, each as written, and its
 -- days; no row for a policy that marks none of them.
 CREATE FUNCTION circle_policy.particulars_of(ref text) RETURNS TABLE (name text, legal_name text, form text, capital text, siren text,
-                                                                     rcs text, vat text, seat text, "from" date, until date)
+                                                                     rcs text, vat text, seat text, logo text, "from" date,
+                                                                     until date)
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT max(v.literal) FILTER (WHERE v.name = 'particulars_name'),
@@ -261,6 +262,7 @@ BEGIN ATOMIC
          max(v.literal) FILTER (WHERE v.name = 'particulars_rcs'),
          max(v.literal) FILTER (WHERE v.name = 'particulars_vat'),
          max(v.literal) FILTER (WHERE v.name = 'particulars_seat'),
+         max(v.literal) FILTER (WHERE v.name = 'particulars_logo'),
          p.applies, p.ends
   FROM policy.policy p
   JOIN policy.value v ON v.policy = p.id
@@ -269,7 +271,7 @@ BEGIN ATOMIC
   HAVING bool_or(v.name = ANY (circle.particular_names()));
 END;
 
--- Copies the co-op's particulars into `circle.particulars` in the write
+-- Copies the coop's particulars into `circle.particulars` in the write
 -- that adopts their rule (`circle.particularise`). Returns the row it
 -- made, or null for a policy that marks none of them; particulars that
 -- are unsound, or whose days meet another's they do not replace
@@ -289,7 +291,8 @@ BEGIN
   IF wrong IS NOT NULL THEN
     RAISE EXCEPTION '%', wrong USING ERRCODE = 'triggered_action_exception';
   END IF;
-  SELECT circle.particularise(ref, o.name, o.legal_name, o.form, o.capital, o.siren, o.rcs, o.vat, o.seat, o."from", o.until) INTO made
+  SELECT circle.particularise(ref, o.name, o.legal_name, o.form, o.capital, o.siren, o.rcs, o.vat, o.seat, o.logo, o."from", o.until)
+  INTO made
   FROM circle_policy.particulars_of(ref) o;
   RETURN made;
 END
@@ -490,9 +493,9 @@ BEGIN ATOMIC
     WHEN r.kind = 'rule' AND EXISTS (SELECT FROM circle_policy.particulars_of(r.id)) AND NOT EXISTS (
       SELECT FROM circle_policy.particulars_of(r.id) v
       JOIN circle.particulars s ON s.policy = r.id
-      WHERE (s.name, s.legal_name, s.form, s.capital, s.siren, s.rcs, s.vat, s.seat, s."from", s.until)
-        IS NOT DISTINCT FROM (v.name, v.legal_name, v.form, v.capital, v.siren, v.rcs, v.vat, v.seat, v."from", v.until)
-    ) THEN r.id || ' sets no particulars the co-op''s papers read: its values are copied as it is adopted'
+      WHERE (s.name, s.legal_name, s.form, s.capital, s.siren, s.rcs, s.vat, s.seat, s.logo, s."from", s.until)
+        IS NOT DISTINCT FROM (v.name, v.legal_name, v.form, v.capital, v.siren, v.rcs, v.vat, v.seat, v.logo, v."from", v.until)
+    ) THEN r.id || ' sets no particulars the coop''s papers read: its values are copied as it is adopted'
     WHEN EXISTS (SELECT FROM circle.particulars s WHERE s.policy = r.id) AND NOT EXISTS (SELECT FROM circle_policy.particulars_of(r.id))
       THEN r.id || ' marks no particulars, and sets some'
     WHEN r.kind = 'rule' AND EXISTS (SELECT FROM circle_policy.setting_marked(r.id)) AND NOT EXISTS (

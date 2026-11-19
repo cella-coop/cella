@@ -10,12 +10,12 @@ export async function scope(db: Db): Promise<string | null> {
   return rows[0].scope
 }
 
-// The scope as a person reads it: its address, and the co-op's name and
-// legal name, from its particulars in force (`circle.particulars()`); the
-// address stands in for a name none marks.
-export async function named(db: Db): Promise<{ address: string | null; name: string | null; legal: string | null }> {
-  const { rows } = await db.query<{ address: string | null; name: string | null; legal: string | null }>(
-    `SELECT nullif(current_setting('cella.scope', true), '') AS address, p.name, p.legal_name AS legal
+// The scope as a person reads it: its address, and the coop's name and
+// legal name and its logo, an SVG, from its particulars in force
+// (`circle.particulars()`); the address stands in for a name none marks.
+export async function named(db: Db): Promise<{ address: string | null; name: string | null; legal: string | null; logo: string | null }> {
+  const { rows } = await db.query<{ address: string | null; name: string | null; legal: string | null; logo: string | null }>(
+    `SELECT nullif(current_setting('cella.scope', true), '') AS address, p.name, p.legal_name AS legal, p.logo
      FROM (SELECT) one LEFT JOIN circle.particulars() p ON true`,
   )
   return rows[0]

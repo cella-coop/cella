@@ -24,7 +24,7 @@ export type R = ReturnType<typeof rng>
 
 // Words that test the canonical spelling: escapes, control characters,
 // astral and combining characters, the line separators JSON leaves as is.
-export const words = ['a', 'é', 'lantern ', '€', '😀', 'co-op', '\n', 'rate', '"q"', '\\', '\t', '\u0001', ' ', 'é', '</', '\u007f']
+export const words = ['a', 'é', 'lantern ', '€', '😀', 'coop', '\n', 'rate', '"q"', '\\', '\t', '\u0001', ' ', 'é', '</', '\u007f']
 
 const p = (...rs: (string | ops.Run)[]): ops.Run[] => rs.map((r) => (typeof r === 'string' ? { text: r } : r))
 const b = (t: string): ops.Run => ({ text: t, marks: { bold: true } })
@@ -33,7 +33,7 @@ export const rateCard: ops.Fragment[] = [
   { type: 'heading', level: 1, runs: p('Rate card 2027'), children: [] },
   {
     type: 'paragraph',
-    runs: p('Day rates for ', { text: '2027', marks: { italic: true } }, '. Small co-ops pay the ', b('solidarity'), ' rate.'),
+    runs: p('Day rates for ', { text: '2027', marks: { italic: true } }, '. Small coops pay the ', b('solidarity'), ' rate.'),
     children: [],
   },
   { type: 'embed', embed: 'motion', ref: 'm-2026-011', runs: [], children: [] },

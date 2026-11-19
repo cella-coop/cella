@@ -29,7 +29,7 @@ CREATE POLICY registry_guards ON policy.default FOR SELECT TO cella_guards USING
 -- `policy.says` reads it, which no role may call but through this, and
 -- this asks the structure's test first, which the register knows no
 -- circle to ask. A write's transaction, where every guard runs, a member
--- of the scope, and anyone signed in while the co-op publishes its
+-- of the scope, and anyone signed in while the coop publishes its
 -- register read it; anyone else, null. It runs as its owner, since the
 -- guards role reads no wording.
 CREATE FUNCTION circle_policy.says(ref text) RETURNS text

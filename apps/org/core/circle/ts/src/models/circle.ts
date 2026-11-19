@@ -1,5 +1,5 @@
 // The id of a procedure the motion feat holds: consent, majority, two
-// thirds or one of the co-op's own.
+// thirds or one of the coop's own.
 export type Procedure = string
 
 // A circle as the feat reads it: none is within another, and one only
@@ -35,7 +35,7 @@ export interface Mandate {
   budget: number | null
   per: 'month' | 'year' | null
   // What it covers: a circle's id, `own`, the circle its holder holds
-  // the role in, or null, the whole co-op.
+  // the role in, or null, the whole coop.
   scope: string | null
   issuer: string
   from: string
@@ -62,8 +62,8 @@ export interface Sat {
   name: string
 }
 
-// A circle the co-op selector offers as a lens, whether it is the
-// assembly, the co-op's root, which is no lens, whether the member sits
+// A circle the coop selector offers as a lens, whether it is the
+// assembly, the coop's root, which is no lens, whether the member sits
 // in it, and its features spelt as one listing (`circle.features`).
 export interface Lens {
   id: string
@@ -113,7 +113,7 @@ export interface Amended {
   was: Terms
 }
 
-// The co-op's layout of features arranged at its root, `circle`,
+// The coop's layout of features arranged at its root, `circle`,
 // replaced by one listing in its order, each feature under a group, a
 // group's run after its name and a colon, the runs separated by
 // semicolons: `Books: account, transaction; Work: project`. By the motion
@@ -219,7 +219,7 @@ export interface Created {
 export interface Standing extends Mandate {
   granteeName: string
   // The issuer's name, and the name of the circle its scope covers, none
-  // for `own` or the whole co-op.
+  // for `own` or the whole coop.
   issuerName: string
   scopeName: string | null
   circle: string | null

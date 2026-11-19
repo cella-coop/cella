@@ -1,9 +1,9 @@
 +++
 title = "Person"
-updated = 2026-11-17
+updated = 2026-11-19
 +++
 
-Everyone the co-op knows, by the address they sign with, and their
+Everyone the coop knows, by the address they sign with, and their
 devices. A person is who someone is, whatever they hold: their name, how
 to reach them and the keys that sign their writes. People are org's
 core, as circles are ([people are
@@ -12,7 +12,7 @@ core](../../../../_corpus/doc/architecture.md#people-are-core)):
 slice and actions of its own, and every feat and graft may reference
 its schema, `person`, as it references `circle`. What a person holds is
 the feats': a membership is `membership`'s, an employment is
-`employment`'s and a contact the co-op keeps is `contact`'s, each a feat
+`employment`'s and a contact the coop keeps is `contact`'s, each a feat
 whose rows name a core person, as a feat's rows name a circle. Nothing
 can be signed without a person, and no feat is needed for one.
 
@@ -129,7 +129,7 @@ recovery is not built.
   not declared: `POST /api/person/recover` comes with the guardians, and
   with the power it needs and the mandate that grants it.
 
-Erasing all of one's own personal data, once one has left the co-op, is
+Erasing all of one's own personal data, once one has left the coop, is
 every person's right, `erase-own-data`, taken as a membership's write
 (`membership:member:erase`); no one erases another, and no motion decides
 it. A worker who was never a member is not erased yet.
@@ -172,7 +172,7 @@ what they keep is theirs.
   by name. `person.holds(actor, right, day)` asks it, calling the
   function by its schema and name with its arguments cast to the types
   it was registered with, so a function overloaded under its name runs
-  the overload registered: only a person the co-op knows holds any
+  the overload registered: only a person the coop knows holds any
   right, and no one a right nobody registered.
   The app role and the guards role may select it; only the migrations
   register.
@@ -291,13 +291,15 @@ refuses them).
 
 ## Shell
 
-The `people` collection in Governance: everyone the co-op knows, by name.
+The `people` collection in Organization: everyone the coop knows, by name.
 Each feat that holds what a person holds adds its chip, a badge column to filter and group by: Member,
 the membership's status, and Worker, employed or left. The New form is the
 feats': an invitation and a hire, each under its title. A person's
 page has four tabs, which this core chooses and the feats and grafts
 on a person fill ([record pages](../ui/index.md#components)): Overview,
-their address and the properties every slice adds; Membership, the
+laid out as `panels` with no body, where they stand as a member and as
+a worker, the panels `membership` and `employment` add, and the
+properties every slice adds; Membership, the
 steps joining asks and what a member owns and decides; Work, their
 employment, timesheets, payslips and records on file; and Authority,
 their seats, every power they hold and by what, and their devices, with

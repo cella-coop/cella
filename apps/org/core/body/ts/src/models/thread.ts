@@ -7,7 +7,7 @@
 // knows no feat.
 
 // A person a comment mentions, with their name as it stands now: null
-// where the co-op knows no one by the address, `redacted` once erased.
+// where the coop knows no one by the address, `redacted` once erased.
 export interface Named {
   person: string
   name: string | null
@@ -79,7 +79,7 @@ export function parts(text: string): Part[] {
 export const mentioned = (text: string): string[] => [...new Set(parts(text).flatMap((p) => ('mention' in p ? [p.mention] : [])))]
 
 // What a mention reads: the person's name, or `erased` once it is, or
-// their address where the co-op knows no one by it.
+// their address where the coop knows no one by it.
 export function label(named: Named | undefined, person: string): string {
   if (named?.name === 'redacted') {
     return 'erased'

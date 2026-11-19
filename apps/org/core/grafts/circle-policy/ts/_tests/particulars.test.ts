@@ -1,5 +1,5 @@
-// The co-op's particulars, alone, on a database holding only the app's
-// core: a rule of the assembly marking what the co-op is called and the
+// The coop's particulars, alone, on a database holding only the app's
+// core: a rule of the assembly marking what the coop is called and the
 // mentions its papers print, each a text, whose values this graft holds
 // sound, copies into `circle.particulars` as it is adopted and revokes as
 // it is replaced or ends; one stands at a time, and every reader reads
@@ -13,7 +13,7 @@ import pg from 'pg'
 const db = new pg.Client()
 
 const particulars = (seat: string, siren = '123456789') =>
-  `The co-op is called {particulars_name: Lanterne}, its legal name {particulars_legal_name: Lanterne Worker Co-operative}, a {particulars_form: Worker co-operative limited company with variable capital}, whose seat is {particulars_seat: ${seat}}, registered under SIREN {particulars_siren: ${siren}} at the trade register of {particulars_rcs: Bobigny}, with the VAT number {particulars_vat: FR12123456789}`
+  `The coop is called {particulars_name: Lanterne}, its legal name {particulars_legal_name: Lanterne Worker Co-operative}, a {particulars_form: Worker co-operative limited company with variable capital}, whose seat is {particulars_seat: ${seat}}, registered under SIREN {particulars_siren: ${siren}} at the trade register of {particulars_rcs: Bobigny}, with the VAT number {particulars_vat: FR12123456789}`
 const montreuil = '14 rue des Graviers, 93100 Montreuil, France'
 const paris = '3 avenue Gambetta, 75020 Paris, France'
 
@@ -78,15 +78,15 @@ after(async () => {
   await db.end()
 })
 
-test('the particulars are the assembly\'s, name the co-op, mark nothing else and a SIREN of nine digits', async () => {
+test('the particulars are the assembly\'s, name the coop, mark nothing else and a SIREN of nine digits', async () => {
   await staged()
   try {
     assert.equal(await unsound(particulars(montreuil)), null)
     assert.equal(await unsound(particulars(montreuil, '123 456 789')), null, 'a SIREN may be spaced')
-    assert.equal(await unsound('The co-op is called {particulars_name: Lanterne}'), null, 'a name alone is enough')
+    assert.equal(await unsound('The coop is called {particulars_name: Lanterne}'), null, 'a name alone is enough')
     assert.equal(await unsound('Refused clients are named in the internal rules'), null, 'a rule marking none is no particulars')
-    assert.match((await unsound(particulars(montreuil), 'operations')) ?? '', /^the co-op's particulars are the assembly's: only a motion of the assembly adopts them$/)
-    assert.match((await unsound('Its seat is {particulars_seat: Montreuil}')) ?? '', /^the co-op's particulars name it, as \{particulars_name: Lanterne\}$/)
+    assert.match((await unsound(particulars(montreuil), 'operations')) ?? '', /^the coop's particulars are the assembly's: only a motion of the assembly adopts them$/)
+    assert.match((await unsound('Its seat is {particulars_seat: Montreuil}')) ?? '', /^the coop's particulars name it, as \{particulars_name: Lanterne\}$/)
     assert.match((await unsound(`${particulars(montreuil)}, with {particulars_motto: light}`)) ?? '', /and nothing else, not particulars_motto$/)
     assert.match((await unsound(particulars(montreuil, '12345'))) ?? '', /^a SIREN is nine digits, as \{particulars_siren: 123 456 789\}, not 12345$/)
   } finally {
@@ -108,7 +108,7 @@ test('the particulars are copied as they are adopted, read by everyone, replaced
   await staged()
   try {
     const first = await adopt(particulars(montreuil), 'm-2026-050')
-    assert.match((await guard('grants', first)) ?? '', /sets no particulars the co-op's papers read/)
+    assert.match((await guard('grants', first)) ?? '', /sets no particulars the coop's papers read/)
     assert.equal(await refused(first), null)
     assert.equal(await guard('grants', first), null)
     const lanterne = [{ policy: first, name: 'Lanterne', seat: montreuil, siren: '123456789' }]
@@ -118,7 +118,7 @@ test('the particulars are copied as they are adopted, read by everyone, replaced
     const beside = await adopt(particulars(paris), 'm-2026-051')
     assert.match(
       (await refused(beside)) ?? '',
-      new RegExp(`^${first} sets the co-op's particulars from 2026-11-21: one particulars rule stands at a time, so one on days that meet its replaces ${first}$`),
+      new RegExp(`^${first} sets the coop's particulars from 2026-11-21: one particulars rule stands at a time, so one on days that meet its replaces ${first}$`),
     )
     await db.query(`SELECT policy.end($1, 'm-2026-052', 1)`, [beside])
 
@@ -137,6 +137,47 @@ test('the particulars are copied as they are adopted, read by everyone, replaced
     await db.query('SELECT circle_policy.mandate_ended($1)', [moved])
     assert.equal(await guard('revokes', moved), null)
     assert.deepEqual(await read(), [], 'ended, no particulars stand, and none an earlier rule set')
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})
+
+test('a logo is one SVG that runs nothing and reaches nothing outside itself, copied with the particulars', async () => {
+  const lantern =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs><path id="glass" d="M10 12h12v12H10z"/></defs><use href="#glass" fill="url(#glow)"/><rect width="32" height="32" rx="7" fill="#1d4f5c"/></svg>'
+  const logo = (svg: string) => `The coop is called {particulars_name: Lanterne}, and bears the mark {particulars_logo: ${svg}}`
+  await staged()
+  try {
+    assert.equal(await unsound(logo(lantern)), null, 'a logo referencing only its own parts is sound')
+    const refusals: [string, RegExp][] = [
+      ['<svg><script>alert(1)</script></svg>', /^a coop's logo runs no script: drop its <script>$/],
+      ['<svg><SCRIPT href="#x"></SCRIPT></svg>', /runs no script/],
+      ['<svg onload="alert(1)"></svg>', /^a coop's logo handles no event: drop its onload=…$/],
+      ['<svg><rect x="0" onclick="alert(1)"/></svg>', /handles no event: drop its onclick=/],
+      ['<svg><a href="javascript:alert(1)"><rect/></a></svg>', /references only its own parts|links nowhere/],
+      ['<svg><a xlink:href="https://evil.example/"><rect/></a></svg>', /references only its own parts, as href="#flame", not href="https:/],
+      ['<svg><image href="https://evil.example/pixel.png"/></svg>', /references only its own parts/],
+      ['<svg><use href=data:image/svg+xml,x /></svg>', /references only its own parts/],
+      ['<svg><rect fill="url(https://evil.example/f)"/></svg>', /references only its own parts, as url\(#glow\)/],
+      ['<svg><foreignObject><iframe src="https://evil.example"></iframe></foreignObject></svg>', /embeds no HTML/],
+      ['<svg><set attributeName="href" to="#x"/></svg>', /animates no reference/],
+      ['<!DOCTYPE svg [ <!ENTITY x "y"> ]><svg></svg>', /one SVG, from <svg to <\/svg>/],
+      ['<svg><!-- a note --></svg>', /^a coop's logo declares nothing: drop its <!-- a note --$/],
+      ['<svg><rect style="fill:red"/><style>@import url(https://evil.example/a.css);</style></svg>', /references only its own parts/],
+      ['<img src="x">', /one SVG, from <svg to <\/svg>/],
+      [`<svg>${'<rect/>'.repeat(700)}</svg>`, /^a coop's logo is an SVG of at most 4096 characters, not 4911$/],
+    ]
+    for (const [svg, why] of refusals) {
+      assert.match((await unsound(logo(svg))) ?? '', why, svg.slice(0, 60))
+    }
+
+    const lit = await adopt(logo(lantern), 'm-2026-060')
+    assert.equal(await refused(lit), null)
+    assert.equal(await guard('grants', lit), null)
+    assert.equal((await db.query<{ logo: string }>('SELECT logo FROM circle.particulars()')).rows[0].logo, lantern, 'the logo is copied as written')
+
+    const scripted = await adopt(logo('<svg onload="alert(1)"></svg>'), 'm-2026-061', lit)
+    assert.match((await refused(scripted)) ?? '', /handles no event/, 'a logo the guard refuses is never adopted')
   } finally {
     await db.query('ROLLBACK')
   }

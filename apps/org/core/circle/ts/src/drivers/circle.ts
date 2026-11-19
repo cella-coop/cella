@@ -32,7 +32,7 @@ export async function sitting(db: Db, person: string, from: string, until: strin
   return rows
 }
 
-// The circles a person may lens the co-op on: every circle they read,
+// The circles a person may lens the coop on: every circle they read,
 // the assembly first, then those they sit in on `day`, then the rest,
 // each in the circles' order, with the features each enabled.
 export async function lenses(db: Db, person: string, day: string): Promise<Lens[]> {

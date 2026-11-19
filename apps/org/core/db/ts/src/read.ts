@@ -22,12 +22,15 @@ export const numbered = (id: string, dir: 'ASC' | 'DESC' = 'ASC') => `length(${i
 // What one collection's rows are read from: its owner's select and those
 // of the extensions that add rows of their own, in that order, and each
 // extension's select of `id` and the fields it adds to that row; and the
-// circle the member lensed the co-op on, if any, which keeps only the
-// rows a select says that circle owns, under `circle`.
+// circle the member lensed the coop on, if any, which keeps only the
+// rows a select says that circle owns, under `circle`; and its scope,
+// conditions every read of it keeps to whatever else it asks, as a
+// record's tab lists only the rows of a collection that name the record.
 export interface Source {
   rows: Read[]
   fields: string[]
   lens?: string | null
+  scope?: Condition[]
 }
 
 // A condition on a row, as a view holds one: a field among some of its
@@ -139,7 +142,11 @@ function rows(st: Statement, s: Source, every = false): string {
     : `SELECT 0 AS src, 0::bigint AS at, NULL::jsonb AS row WHERE false`
   const merged = [...(every ? [dated] : []), 'o.row', ...s.fields.map((_, i) => `coalesce(to_jsonb(e${i}) - 'id', '{}')`)].join(' || ')
   const joins = [...(every ? [`LEFT JOIN ${making('o')} m ON m.id = o.row->>'id'`] : []), ...s.fields.map((f, i) => `LEFT JOIN (${f}) e${i} ON e${i}.id::text = o.row->>'id'`)].join('\n  ')
-  return `WITH o AS (\n  ${from}\n), r AS MATERIALIZED (\n  SELECT o.src, o.at, ${merged} AS row FROM o\n  ${joins}\n)`
+  const merging = `SELECT o.src, o.at, ${merged} AS row FROM o\n  ${joins}`
+  // A scope's conditions test the merged row, as an extension's field
+  // may be what names the record.
+  const scoped = s.scope?.length ? `SELECT * FROM (\n  ${merging}\n  ) s WHERE ${s.scope.map((c) => condition(st, c)).join(' AND ')}` : merging
+  return `WITH o AS (\n  ${from}\n), r AS MATERIALIZED (\n  ${scoped}\n)`
 }
 
 // The SQL test of one condition; a field's value is as the row holds it

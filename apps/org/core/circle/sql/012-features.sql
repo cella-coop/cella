@@ -1,11 +1,11 @@
--- The co-op's features: the co-op's layout, every feature it enables, each
+-- The coop's features: the coop's layout, every feature it enables, each
 -- in its place under one of its groups, and what each other circle shows
 -- of it, the groups it shows and the features it hides inside them. The
 -- layout is the root's listing, arranged under its own power,
 -- `arrange-features` over the root: at once by whoever holds it over the
 -- root by a seat (`circle:feature:arrange`), or by a motion of a circle
 -- holding it over the root as a collective mandate
--- (`circle:circle:arrange`). A feature the co-op installed that the layout
+-- (`circle:circle:arrange`). A feature the coop installed that the layout
 -- leaves out is enabled nowhere. A circle's rows change under
 -- `arrange-features` over that circle, one row a write: a group shown or
 -- not (`circle:group:show`, by motion `circle:circle:show`), a feature
@@ -47,7 +47,7 @@ CREATE TABLE circle.hidden (
   PRIMARY KEY (circle, feat)
 );
 
--- The features the co-op installed: core's collections a circle shows
+-- The features the coop installed: core's collections a circle shows
 -- or not, its circles and mandates, its people and its register, and
 -- every feat, each owning a power in `cella.power`, as a graft's
 -- hyphenated name never is one.
@@ -124,7 +124,7 @@ BEGIN ATOMIC
   ORDER BY f.position;
 END;
 
--- A circle's features, spelt as one listing: the root's, the co-op's
+-- A circle's features, spelt as one listing: the root's, the coop's
 -- layout; another's, what it shows of it; empty where it shows none.
 CREATE FUNCTION circle.features(circle text) RETURNS text
 LANGUAGE sql STABLE
@@ -208,10 +208,10 @@ BEGIN
 END
 $$;
 
--- What is wrong with a listing of the co-op's layout, arranged at
+-- What is wrong with a listing of the coop's layout, arranged at
 -- `circle`, that would replace `was`, the layout it has, or null: the
 -- circle is the root, for another shows groups of the layout and hides
--- features, never arranges them; each feature is one the co-op installed
+-- features, never arranges them; each feature is one the coop installed
 -- (`circle.installed`), none twice, each under a group named, each
 -- group's features listed together; and it changes something of `was`,
 -- compared as spelt (`circle.spelt`). An empty listing enables none.
@@ -222,12 +222,12 @@ LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
     WHEN c.id IS NULL
-      THEN 'no circle ' || coalesce(listing_flaw.circle, 'is named') || ': the co-op''s features are arranged at its root, ' || coalesce(circle.assembly(), 'the assembly')
+      THEN 'no circle ' || coalesce(listing_flaw.circle, 'is named') || ': the coop''s features are arranged at its root, ' || coalesce(circle.assembly(), 'the assembly')
     WHEN NOT c.assembly
-      THEN c.id || ' is no root: the co-op''s features are arranged at ' || coalesce(circle.assembly(), 'the assembly')
+      THEN c.id || ' is no root: the coop''s features are arranged at ' || coalesce(circle.assembly(), 'the assembly')
         || ', and ' || c.id || ' shows groups of them and hides features in them (show-group, hide-feature)'
     WHEN u.feat IS NOT NULL
-      THEN u.feat || ' is no feature the co-op has installed: give ' || c.id || ' features of ' || (SELECT string_agg(i, ', ') FROM circle.installed() i)
+      THEN u.feat || ' is no feature the coop has installed: give ' || c.id || ' features of ' || (SELECT string_agg(i, ', ') FROM circle.installed() i)
     WHEN t.feat IS NOT NULL
       THEN 'the features of ' || c.id || ' name ' || t.feat || ' twice: list each once'
     WHEN EXISTS (SELECT FROM circle.listed(listing_flaw.listing) l WHERE l."group" !~ '\S')
@@ -282,14 +282,14 @@ LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
     WHEN c.id IS NULL
-      THEN 'no circle ' || coalesce(row_flaw.circle, 'is named') || ': a circle there is, by its id, shows groups of the co-op''s features'
+      THEN 'no circle ' || coalesce(row_flaw.circle, 'is named') || ': a circle there is, by its id, shows groups of the coop''s features'
     WHEN c.assembly
-      THEN c.id || ' is the root, which shows every feature of the co-op''s layout: arrange the layout instead (arrange-features)'
+      THEN c.id || ' is the root, which shows every feature of the coop''s layout: arrange the layout instead (arrange-features)'
     WHEN row_flaw.feature IS NULL AND NOT EXISTS (SELECT FROM circle.feature_group g WHERE g.id = row_flaw."group")
-      THEN 'no group ' || coalesce(row_flaw."group", 'is named') || ' in the co-op''s layout: show one of '
+      THEN 'no group ' || coalesce(row_flaw."group", 'is named') || ' in the coop''s layout: show one of '
         || coalesce((SELECT string_agg(g.id, ', ' ORDER BY g.position) FROM circle.feature_group g), 'none')
     WHEN row_flaw.feature IS NOT NULL AND NOT EXISTS (SELECT FROM circle.feature f WHERE f.feat = row_flaw.feature)
-      THEN row_flaw.feature || ' is no feature of the co-op''s layout: hide one of '
+      THEN row_flaw.feature || ' is no feature of the coop''s layout: hide one of '
         || coalesce((SELECT string_agg(f.feat, ', ' ORDER BY f.position) FROM circle.feature f), 'none')
   END
   FROM (SELECT row_flaw.circle AS circle) p
@@ -335,7 +335,7 @@ END;
 -- circle:feature:arrange and circle:circle:arrange — the layout a holder
 -- of `arrange-features` over the root wrote, at once or by the motion it
 -- cites, is a sound listing of it, judged against what its entry says it
--- was (`circle.listing_flaw`), and the co-op has it now, its groups by the
+-- was (`circle.listing_flaw`), and the coop has it now, its groups by the
 -- ids its entry gives. Whether the actor holds the power over the root is
 -- core's guard on every op with a power, by the circle the payload names
 -- (`circle_person.empowered`); whether the motion's circle does, the
@@ -348,7 +348,7 @@ BEGIN ATOMIC
     CASE WHEN circle.features(payload ->> 'circle') IS DISTINCT FROM circle.spelt(payload ->> 'features')
       THEN 'the features of ' || (payload ->> 'circle') || ' are not ' || coalesce(payload ->> 'features', 'none') || ' as its entry says' END,
     CASE WHEN circle.groups() IS DISTINCT FROM ARRAY(SELECT jsonb_array_elements_text(payload -> 'groups'))
-      THEN 'the co-op''s groups are ' || array_to_string(circle.groups(), ', ') || ', not ' || coalesce(payload ->> 'groups', 'none') || ' as its entry says' END
+      THEN 'the coop''s groups are ' || array_to_string(circle.groups(), ', ') || ', not ' || coalesce(payload ->> 'groups', 'none') || ' as its entry says' END
   );
 END;
 
@@ -444,13 +444,13 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
   ('circle:feature:hide', 'circle.hid(jsonb)', 'circle'),
   ('circle:circle:hide', 'circle.hid(jsonb)', 'circle');
 
--- An arrangement lays the co-op's features out; a circle's write sets one
+-- An arrangement lays the coop's features out; a circle's write sets one
 -- of its rows.
 GRANT SELECT ON circle.feature_group, circle.feature, circle.shown, circle.hidden TO cella_app, cella_guards;
 GRANT INSERT, UPDATE, DELETE ON circle.feature_group, circle.feature TO cella_app;
 GRANT INSERT, DELETE ON circle.shown, circle.hidden TO cella_app;
 
--- The layout is the co-op's, read by everyone in it, as every sidebar
+-- The layout is the coop's, read by everyone in it, as every sidebar
 -- draws it; a circle's rows are the structure's, read as the circles are.
 -- Named `registry`, as `circle.scoped()` would have named it itself for a
 -- table with no owning circle: the denial scenario reads every reader's

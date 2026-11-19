@@ -1,14 +1,14 @@
 import type { Db } from '@cella/org-db'
 
 // The kinds of policy: who may do something, what the legal form gives
-// every person, member or employee, what else the co-op agreed, and how
+// every person, member or employee, what else the coop agreed, and how
 // a circle decides.
 export type Kind = 'mandate' | 'right' | 'rule' | 'procedure'
 
 export const kinds: { value: Kind; label: string }[] = [
   { value: 'mandate', label: 'Mandate: who may do something' },
   { value: 'right', label: 'Right: what every person, member or employee may do as such' },
-  { value: 'rule', label: 'Rule: what else the co-op agreed' },
+  { value: 'rule', label: 'Rule: what else the coop agreed' },
   { value: 'procedure', label: 'Procedure: how a circle decides' },
 ]
 
@@ -153,7 +153,7 @@ export async function inOrder(db: Db, circle: string, day: string): Promise<Orde
 // A default policy of a legal form, as the register offers it: its id
 // (`scop-sarl-fr:ordinary`), its form in words (`SCOP SARL, France`), its
 // kind, its sentence as it reads, the law it states, if any, and the day
-// a co-op lawyer reviewed it, if one has.
+// a coop lawyer reviewed it, if one has.
 export interface Default {
   id: string
   form: string

@@ -4,7 +4,7 @@
 // issued or issued under a parent its issuer holds, narrower than it in
 // cap, scope and term, and revoking one revokes every mandate issued
 // under it; a role's holder cap counts its holders on each day; and a
-// co-op's layout read from a listing, judged, its groups keeping their
+// coop's layout read from a listing, judged, its groups keeping their
 // ids, and a circle's rows of it, each folding as its entry says; and
 // a circle reads a setting as its own rule set it, else the assembly's,
 // else its default. Run by `cella test slice circle`.
@@ -135,10 +135,10 @@ test('a mandate the assembly issues is a root; one another circle issues stands 
     assert.match((await overreach()) ?? '', new RegExp(`mandate ${borrowed} grants pay-supplier to maker, issued by brand, under mandate ${root}, which is coordination's`))
     await revoke(borrowed)
     // No wider a scope: under one on Brand's resources, Brand's alone, so
-    // the whole co-op's or another circle's is wider.
+    // the whole coop's or another circle's is wider.
     const branded = await grant('coordination', 'ag', null, 'manage-project', 12, { scope: 'brand' })
     const whole = await grant('maker', 'coordination', branded, 'manage-project', 13)
-    assert.match((await overreach()) ?? '', new RegExp(`mandate ${whole} .* it covers the whole co-op, wider than its parent, which covers brand alone`))
+    assert.match((await overreach()) ?? '', new RegExp(`mandate ${whole} .* it covers the whole coop, wider than its parent, which covers brand alone`))
     await revoke(whole)
     const elsewhere = await grant('maker', 'coordination', branded, 'manage-project', 14, { scope: 'marketing' })
     assert.match((await overreach()) ?? '', /it covers marketing, wider than its parent, which covers brand alone/)
@@ -218,7 +218,7 @@ test('a role\'s holder cap counts the holders on each day, never every tenure a 
   }
 })
 
-test('the co-op\'s layout is read from a listing in order, under its groups, spelt one way, judged before it is arranged, keeps a renamed group\'s id, and its fold and a circle\'s rows fold as they say', async () => {
+test('the coop\'s layout is read from a listing in order, under its groups, spelt one way, judged before it is arranged, keeps a renamed group\'s id, and its fold and a circle\'s rows fold as they say', async () => {
   const listed = await db.query(`SELECT feat, position, "group" FROM circle.listed($1)`, [' Books:account ,transaction; contact,, ; Pay: bill '])
   assert.deepEqual(listed.rows, [
     { feat: 'account', position: 0, group: 'Books' },
@@ -233,7 +233,7 @@ test('the co-op\'s layout is read from a listing in order, under its groups, spe
   assert.equal(await spelt(null), '')
   const installed = (await db.query<{ i: string }>('SELECT i FROM circle.installed() i')).rows.map((r) => r.i)
   for (const core of ['circle', 'person', 'policy']) {
-    assert.ok(installed.includes(core), `core's ${core} is a feature every co-op has`)
+    assert.ok(installed.includes(core), `core's ${core} is a feature every coop has`)
   }
   assert.ok(!installed.some((i) => i.includes('-') || i.includes('_')), 'no graft is a feature')
 
@@ -241,17 +241,17 @@ test('the co-op\'s layout is read from a listing in order, under its groups, spe
   try {
     const features = async (circle = 'ag') => (await db.query<{ f: string }>(`SELECT circle.features($1) AS f`, [circle])).rows[0].f
     const ids = async () => (await db.query<{ g: string[] }>(`SELECT circle.groups() AS g`)).rows[0].g
-    assert.equal(await features(), '', 'the co-op enables nothing until it says so')
+    assert.equal(await features(), '', 'the coop enables nothing until it says so')
     const flaw = async (listing: string, was = '', circle = 'ag') =>
       (await db.query<{ f: string | null }>(`SELECT circle.listing_flaw($3, $1, $2) AS f`, [listing, was, circle])).rows[0].f
     assert.equal(await flaw('Work: circle, person; Rules: policy'), null, 'a sound listing of installed features')
-    assert.match((await flaw('W: circle, people')) ?? '', /people is no feature the co-op has installed: give ag features of .*circle/)
+    assert.match((await flaw('W: circle, people')) ?? '', /people is no feature the coop has installed: give ag features of .*circle/)
     assert.match((await flaw('W: circle, person, circle')) ?? '', /the features of ag name circle twice: list each once/)
     assert.match((await flaw(' : circle; W: person')) ?? '', /a group of ag's features has a blank name/)
     assert.match((await flaw('W: circle; person')) ?? '', /the features of ag put person under no group: list it under one/)
     assert.match((await flaw('W: circle; V: person; W: policy')) ?? '', /the features of ag list the W group's apart: list them together/)
     assert.match((await flaw('W: circle ,person', 'W: circle, person')) ?? '', /the arrangement of ag changes nothing: its features are W: circle, person already/)
-    assert.match((await flaw('W: circle', '', 'brand')) ?? '', /brand is no root: the co-op's features are arranged at ag/)
+    assert.match((await flaw('W: circle', '', 'brand')) ?? '', /brand is no root: the coop's features are arranged at ag/)
     assert.match((await flaw('W: circle', '', 'nowhere')) ?? '', /no circle nowhere/)
     const fold = (payload: object) => db.query('SELECT circle.fold_arrange($1)', [{ n: 7, date: '2026-11-14', payload: { circle: 'ag', motion: 'm-1', ...payload } }])
     await fold({ features: 'Work: circle, person; Rules: policy', groups: ['work', 'rules'], was: '' })
@@ -279,8 +279,8 @@ test('the co-op\'s layout is read from a listing in order, under its groups, spe
     const flawed = async (circle: string, group: string | null, feature: string | null) =>
       (await db.query<{ f: string | null }>(`SELECT circle.row_flaw($1, $2, $3) AS f`, [circle, group, feature])).rows[0].f
     assert.match((await flawed('ag', 'work', null)) ?? '', /ag is the root, which shows every feature/)
-    assert.match((await flawed('brand', 'nope', null)) ?? '', /no group nope in the co-op's layout: show one of work, rules/)
-    assert.match((await flawed('brand', null, 'task')) ?? '', /task is no feature of the co-op's layout/)
+    assert.match((await flawed('brand', 'nope', null)) ?? '', /no group nope in the coop's layout: show one of work, rules/)
+    assert.match((await flawed('brand', null, 'task')) ?? '', /task is no feature of the coop's layout/)
 
     // Renamed, a group keeps its id and every circle's choice of it; a
     // feature moved shows where its new group is shown, still hidden where

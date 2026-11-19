@@ -9,7 +9,7 @@ CREATE TABLE circle.grantee (
   kind text NOT NULL CHECK (kind IN ('circle', 'role'))
 );
 
--- A circle of the co-op: its members, the membership feat's, and
+-- A circle of the coop: its members, the membership feat's, and
 -- its decision rule, the procedure its motions are decided by where
 -- nothing they act under asks another. Circles never nest: no circle has
 -- a parent, and `assembly` marks the general assembly, one circle only,
@@ -69,7 +69,7 @@ ALTER TABLE circle.role ADD FOREIGN KEY (id) REFERENCES circle.grantee;
 -- decided by, which passes down its chain; the motion feat holds
 -- procedures, so this feat keeps its name alone. `scope` is the
 -- condition on what it covers: a circle's id, or `own`, the circle its
--- holder holds the role in; none, the whole co-op.
+-- holder holds the role in; none, the whole coop.
 CREATE TABLE circle.mandate (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   grantee text NOT NULL REFERENCES circle.grantee,
@@ -131,7 +131,7 @@ CREATE TABLE circle.disclosure (
   CHECK (until IS NULL OR "from" < until)
 );
 
--- What of the structure the co-op publishes to every person signed in,
+-- What of the structure the coop publishes to every person signed in,
 -- member or not: the parts its assembly's publication rule names,
 -- copied as it is adopted (`circle.publish`), on its policy's
 -- days; `revoked`, the day its rule ended or was replaced.
@@ -145,11 +145,12 @@ CREATE TABLE circle.publication (
   CHECK (until IS NULL OR "from" < until)
 );
 
--- The co-op's particulars: what it is called and the mentions its papers
+-- The coop's particulars: what it is called and the mentions its papers
 -- print, copied from the assembly's rule that marks them as it is
 -- adopted (`circle.particularise`), on its policy's days, each a text as
--- written, a value it marks not being null; `revoked`, the day its rule
--- ended or was replaced.
+-- written, a value it marks not being null; `logo`, its mark, an SVG
+-- `circle.logo_flaw` passed; `revoked`, the day its rule ended or was
+-- replaced.
 CREATE TABLE circle.particulars (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   policy text NOT NULL UNIQUE,
@@ -161,13 +162,14 @@ CREATE TABLE circle.particulars (
   rcs text,
   vat text,
   seat text,
+  logo text CHECK (length(logo) <= 4096),
   "from" date NOT NULL,
   until date,
   revoked date,
   CHECK (until IS NULL OR "from" < until)
 );
 
--- The settings slices offer: each a value a co-op or a circle sets for
+-- The settings slices offer: each a value a coop or a circle sets for
 -- itself, never one person, a switch, `on` or `off`, with its default and
 -- the slice that registered it (`circle.register_setting`), from its
 -- migration alone.
@@ -200,7 +202,7 @@ GRANT USAGE ON SCHEMA circle TO cella_app, cella_guards;
 GRANT SELECT ON ALL TABLES IN SCHEMA circle TO cella_app, cella_guards;
 
 -- The general assembly's id: the one circle marked so, or null before
--- the co-op is founded. It runs as its owner, so whoever applies to it
+-- the coop is founded. It runs as its owner, so whoever applies to it
 -- learns its id, and nothing more of the structure.
 CREATE FUNCTION circle.assembly() RETURNS text
 LANGUAGE sql STABLE SECURITY DEFINER

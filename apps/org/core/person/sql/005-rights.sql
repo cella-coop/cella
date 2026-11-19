@@ -21,7 +21,7 @@ END;
 
 REVOKE EXECUTE ON FUNCTION person.register_right(text, regprocedure, text) FROM PUBLIC;
 
--- Whether an address is a person the co-op knows: everyone who signs is,
+-- Whether an address is a person the coop knows: everyone who signs is,
 -- for good, so every person's right is held on any day.
 CREATE FUNCTION person.known(address text, day date) RETURNS boolean
 LANGUAGE sql STABLE

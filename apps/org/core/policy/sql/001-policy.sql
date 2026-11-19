@@ -12,9 +12,9 @@
 -- `policy.offer`.
 CREATE SCHEMA policy;
 
--- A legal form in a region, as cella offers it: a kind of co-op the law
+-- A legal form in a region, as cella offers it: a kind of coop the law
 -- knows, `scop-sarl-fr`, a SCOP SARL in France, with its ready-made
--- policies. Cella offers the forms; a co-op chooses one.
+-- policies. Cella offers the forms; a coop chooses one.
 CREATE TABLE policy.form (
   id text PRIMARY KEY CHECK (id ~ '^[a-z][a-z0-9-]*$'),
   label text NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE policy.form (
 -- A default policy of a form, `scop-sarl-fr:ordinary`, in the form's
 -- order: its kind, its wordings and their hash, as `policy.hash` makes
 -- it, perhaps the procedure that alone changes it, the law it states, by
--- its article, or none where it is cella's practice, and the day a co-op
+-- its article, or none where it is cella's practice, and the day a coop
 -- lawyer reviewed it, empty until one has. Only `policy.offer` writes it,
 -- from a form's migration.
 CREATE TABLE policy.default (
@@ -124,7 +124,7 @@ END;
 -- written: `3 000 €` an amount in cents, `20 %` a share in percent,
 -- `2026-01-01` or `1 January 2026` a day, `10` a number; a value named
 -- `role` or `power`, or ending so (`payer_role`), a role or a power by
--- its id; the co-op's SIREN and capital (`particulars_siren`,
+-- its id; the coop's SIREN and capital (`particulars_siren`,
 -- `particulars_capital`) text, as its papers print them; anything else
 -- text.
 CREATE FUNCTION policy.typed(name text, literal text) RETURNS TABLE (type text, value jsonb)

@@ -5,7 +5,7 @@
 -- surplus. Each names the law it states, by its article, or none where it
 -- is cella's practice. Every source is the building lane's reading of loi
 -- n° 47-1775, loi n° 78-763, the Code de commerce and the GDPR, not
--- settled law: none is reviewed by a co-op lawyer yet (_corpus/doc/forms.md).
+-- settled law: none is reviewed by a coop lawyer yet (_corpus/doc/forms.md).
 -- Its assembly is the circle `ag`, as the form's founding makes its root.
 INSERT INTO policy.form (id, label, region) VALUES ('scop-sarl-fr', 'SCOP SARL', 'France');
 
@@ -79,7 +79,7 @@ SELECT policy.offer('scop-sarl-fr', 'keep-devices', 'right',
   'Every {right: person} holds {power: keep-devices}, to enrol and revoke their own devices',
   NULL, 'extraordinary', NULL);
 SELECT policy.offer('scop-sarl-fr', 'upload-file', 'right',
-  'Every {right: person} holds {power: upload-file}, to upload a file of the co-op''s',
+  'Every {right: person} holds {power: upload-file}, to upload a file of the coop''s',
   NULL, 'extraordinary', NULL);
 SELECT policy.offer('scop-sarl-fr', 'accept-invitation', 'right',
   'Every {right: person} holds {power: accept-invitation}, to take up their invitation to join',
@@ -88,7 +88,7 @@ SELECT policy.offer('scop-sarl-fr', 'file-record', 'right',
   'Every {right: person} holds {power: file-record}, to file a record of their own',
   NULL, 'extraordinary', NULL);
 SELECT policy.offer('scop-sarl-fr', 'mark-read', 'right',
-  'Every {right: person} holds {power: mark-read}, to mark a text the co-op adopted read',
+  'Every {right: person} holds {power: mark-read}, to mark a text the coop adopted read',
   NULL, 'extraordinary', NULL);
 SELECT policy.offer('scop-sarl-fr', 'record-import', 'right',
   'Every {right: person} holds {power: record-import}, to record an import of their own',

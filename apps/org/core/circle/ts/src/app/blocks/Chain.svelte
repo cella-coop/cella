@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Note, power, Section, Table, type Column } from '@cella/org-ui'
+  import { icons, Panel, power, Table, type Column } from '@cella/org-ui'
   import type { Depth, Provenance } from '../../models/circle.ts'
   import { cap, covers, narrows, tones } from '../../bindings/words.ts'
 
@@ -9,7 +9,9 @@
   // its revocation revokes the same day. Each row opens its mandate. A
   // link is the root only where its parent is none; where the highest
   // link the reader reads has one they do not, the chain says the links
-  // above it are withheld, and names nothing of them.
+  // above it are withheld, and names nothing of them. Two panels of the
+  // mandate's overview, the second only where something was issued
+  // under it.
   let { data }: { data: Provenance; id: string } = $props()
 
   const above = (k: Depth) => data.chain.find((p) => p.depth === k.depth - 1)
@@ -39,10 +41,14 @@
   const open = (k: Depth) => `/mandates/${k.id}`
 </script>
 
-<Section title="Chain" count={data.chain.length}>
-  {#if data.withheld}<Note text="The links above are withheld from you." />{/if}
-  <Table columns={chain} rows={data.chain} href={open} />
-</Section>
-<Section title="Issued under it" count={data.under.length}>
-  <Table columns={under} rows={data.under} href={open} empty="Nothing is issued under it" />
-</Section>
+{#snippet withheld()}The links above are withheld from you.{/snippet}
+
+<Panel title="Chain" icon={icons.TreeStructure} count={data.chain.length} help={data.withheld ? withheld : undefined}>
+  <Table dense columns={chain} rows={data.chain} href={open} />
+</Panel>
+<!-- A heading heads content: with nothing issued under it, no panel. -->
+{#if data.under.length}
+  <Panel title="Issued under it" icon={icons.TreeStructure} count={data.under.length}>
+    <Table dense columns={under} rows={data.under} href={open} />
+  </Panel>
+{/if}

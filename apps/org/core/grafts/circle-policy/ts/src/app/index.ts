@@ -10,7 +10,7 @@ export const app: App = {
       page: {
         subtitle: (w: Worded | null) => w?.sentence ?? '',
         properties: (w: Worded | null) =>
-          w?.motion ? [{ label: 'Adopted by', value: w.motion, kind: 'mono' as const, href: `/motions/${w.motion}` }] : [],
+          w?.motion ? [{ label: 'Adopted by', value: w.motion, kind: 'mono' as const, href: `/motions/${w.motion}`, lead: 'adopted by' }] : [],
       },
     },
   },

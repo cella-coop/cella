@@ -263,6 +263,11 @@ test('every row carries when and by whom it was created and last updated, from t
     'the first entry about the row and the latest, their dates and actors',
   )
   assert.deepEqual((await page(db, contacts, { where: [{ field: 'created_by', is: [camille] }, { field: 'updated', from: '2026-10-25', to: '2026-10-25' }] })).map((r) => r.id), ['dated-atelier'], 'a condition reads them as any field')
+  const scoped: Source = { ...contacts, scope: [{ field: 'created_by', is: [camille] }] }
+  const theirs = (await page(db, scoped, { where: [] })) as Record<string, unknown>[]
+  assert.ok(theirs.some((r) => r.id === 'dated-atelier') && theirs.every((r) => r.created_by === camille), 'a scope reads them as any condition, though nothing else asks after them')
+  assert.deepEqual(await counts(db, scoped, [{ where: [] }]), [theirs.length], 'and so do its counts')
+  assert.deepEqual(await measures(db, scoped, [{ where: [], op: 'count' }]), [theirs.length], 'and its widgets')
   assert.ok((await values(db, contacts, ['updated_by'])).updated_by.includes(julien), 'and so do the values')
   assert.equal((await page(db, contacts, { where: [], sort: { field: 'updated', dir: 'desc' } }))[0]?.id, 'dated-atelier', 'and a sort, the rows no entry names last')
   const seeded = (await page(db, contacts, { where: [] })).find((r) => r.id !== 'dated-atelier') as Record<string, unknown>

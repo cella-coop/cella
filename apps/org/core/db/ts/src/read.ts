@@ -102,10 +102,12 @@ class Statement {
 export const logged = ['created', 'updated', 'created_by', 'updated_by'] as const
 
 // Whether a read asks after one of the logged fields over every row, by a
-// condition, the text filter, a sort, a group, a value or a widget, so they
-// are read for every row rather than for the rows a page draws.
+// scope's condition, a condition, the text filter, a sort, a group, a value
+// or a widget, so they are read for every row rather than for the rows a
+// page draws.
 const asking = (keys: string[]) => keys.some((k) => (logged as readonly string[]).includes(k))
-const named = (k: Keep) => [...k.where.map((c) => c.field), ...(k.q?.text.trim() ? k.q.keys : []), ...(k.sort ? [k.sort.field] : []), ...(k.then ? [k.then.field] : []), ...(k.group ? [k.group.field] : [])]
+const scoping = (s: Source) => (s.scope ?? []).map((c) => c.field)
+const named =(k: Keep) => [...k.where.map((c) => c.field), ...(k.q?.text.trim() ? k.q.keys : []), ...(k.sort ? [k.sort.field] : []), ...(k.then ? [k.then.field] : []), ...(k.group ? [k.group.field] : [])]
 
 // A row's logged fields, from `cella.made` over the ids of `rows`, a
 // relation of `row`s: what the log holds of the rows read, so only of
@@ -237,7 +239,7 @@ export async function read(
 ): Promise<{ rows: { id: string }[]; counts: number[]; values: Record<string, string[]>; groups: Record<string, number>; whole: boolean }> {
   const st = new Statement()
   const parts: string[] = []
-  const every = asking([...(a.keep ? named(a.keep) : []), ...(a.counts ?? []).flatMap(named), ...(a.values ?? []), ...(a.few?.keys ?? []), ...(a.few?.keep ? named(a.few.keep) : [])])
+  const every = asking([...scoping(s), ...(a.keep ? named(a.keep) : []), ...(a.counts ?? []).flatMap(named), ...(a.values ?? []), ...(a.few?.keys ?? []), ...(a.few?.keep ? named(a.few.keep) : [])])
   if (a.keep) {
     const order = sorting(st, a.keep.sort, a.keep.group, a.keep.then)
     const where = kept(st, a.keep)
@@ -343,7 +345,7 @@ export async function measures(db: Db, s: Source, ms: Measure[]): Promise<(numbe
     const skip = m.by.month ? ` AND coalesce(row->>${by}, '') <> ''` : ''
     return `(SELECT coalesce(json_agg(json_build_object('label', label, 'value', value) ORDER BY label), '[]') FROM (SELECT ${label} AS label, coalesce(${value}, 0)::float8 AS value FROM r WHERE ${where}${skip} GROUP BY 1) g) AS m${i}`
   })
-  const every = asking(ms.flatMap((m) => [...named(m), ...(m.field ? [m.field] : []), ...(m.by ? [m.by.field] : [])]))
+  const every = asking([...scoping(s), ...ms.flatMap((m) => [...named(m), ...(m.field ? [m.field] : []), ...(m.by ? [m.by.field] : [])])])
   const { rows: found } = await db.query<Record<string, number | null | { label: string; value: number }[]>>(`${rows(st, s, every)}\nSELECT ${each.join(',\n  ')}`, st.params)
   return ms.map((_, i) => found[0]?.[`m${i}`] ?? null)
 }

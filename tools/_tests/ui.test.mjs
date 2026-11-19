@@ -166,6 +166,8 @@ test('a menu floated by hand is refused; the Popover opens it in the top layer',
   assert.match(problems('apps/org/core/ui/ts/src/components/Shell.svelte', floated, true)[0], /floats its own layer/)
   const stretched = component('', '<a class="s">x</a>\n<style>\n  .s::after {\n    position: absolute;\n    inset: 0;\n  }\n</style>')
   assert.deepEqual(problems('apps/org/core/ui/ts/src/components/Table.svelte', stretched, true), [], 'a stretched link is no layer')
+  const under = component('', '<button class="b">x</button>\n<style>\n  .b::before {\n    position: absolute;\n    inset: 0;\n    z-index: -1;\n  }\n</style>')
+  assert.deepEqual(problems('apps/org/core/ui/ts/src/components/Button.svelte', under, true), [], 'a cell drawn under its own words floats over nothing')
   assert.deepEqual(problems('apps/org/core/ui/ts/src/components/Popover.svelte', floated, true), [])
 })
 

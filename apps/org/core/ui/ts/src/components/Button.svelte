@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { Component, Snippet } from 'svelte'
-  import { cell } from '../attachments/cell.ts'
   import Icon from './Icon.svelte'
 
   let {
@@ -43,36 +42,31 @@
     children: Snippet
   } = $props()
 
-  // A filled tone is always a cell, a quiet one only beside a filled one
-  // or in a group its parent marks (`data-run`, `attachments/cell.ts`);
-  // an icon alone is never one.
+  // A filled tone is always a cell; a quiet one is one in a run its
+  // parent marks (`data-run`) that holds a filled one, or in a group
+  // (`data-run="group"`); an icon alone never is. Its style draws it.
   const shape = $derived(icon ? undefined : tone === 'primary' || tone === 'info' || tone === 'danger' || tone === 'positive' ? 'fill' : 'plain')
-  const id = $props.id()
 </script>
 
-<!-- Its cell, which `attachments/cell.ts` draws: one outline, its fill,
-     and its edge clipped to it, so the edge stands inside the cell. -->
-{#snippet drawn()}
-  <svg aria-hidden="true"><g><clipPath id="{id}-cell"><path /></clipPath><path class="fill" /><path class="edge" clip-path="url(#{id}-cell)" /></g></svg>
-{/snippet}
-
 {#if href}
-  <a class="button {tone}" class:icon {href} {download} {title} {onclick} aria-label={ariaLabel} data-cell={shape} {@attach cell}>{#if shape}{@render drawn()}{/if}{#if lead}<Icon icon={lead} size="1em" />{/if}{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}</a>
+  <a class="button {tone}" class:icon {href} {download} {title} {onclick} aria-label={ariaLabel} data-cell={shape}>{#if lead}<Icon icon={lead} size="1em" />{/if}{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}</a>
 {:else}
-  <button class="button {tone}" class:icon {type} {form} {title} {onclick} {disabled} aria-busy={busy} aria-disabled={busy} aria-label={ariaLabel} data-cell={shape} {@attach cell}>
-    {#if shape}{@render drawn()}{/if}{#if lead}<Icon icon={lead} size="1em" />{/if}{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}
+  <button class="button {tone}" class:icon {type} {form} {title} {onclick} {disabled} aria-busy={busy} aria-disabled={busy} aria-label={ariaLabel} data-cell={shape}>
+    {#if lead}<Icon icon={lead} size="1em" />{/if}{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}
   </button>
 {/if}
 
 <style>
   /* A caller paints a button by its tone, or by setting `--fill`, and
      outlines it by `--edge`, never by its background or border: drawn
-     as a cell, its box paints neither, and its path both. */
+     as a cell, its box paints neither. It sizes it by `--h`, its height,
+     which a cell's ends are drawn at. */
   .button {
+    --h: 2rem;
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    height: 2rem;
+    height: var(--h);
     padding: 0 var(--space-3);
     border: 1px solid var(--edge, transparent);
     border-radius: var(--radius-control);
@@ -83,87 +77,126 @@
     white-space: nowrap;
     transition: background var(--fast) var(--ease);
   }
-  /* A filled button's pointed ends bulge into its padding, so it keeps
-     more of it, drawn or not yet: drawing never moves its words. */
-  .button[data-cell='fill'] {
-    padding-inline: var(--space-4);
-  }
-  /* Drawn, its fill is its cell's. The svg is its first item, a pixel
-     wide, its end margin taking back the room it and the gap after it
-     hold, so it moves nothing and its words follow it in the flow and
-     paint over it, with no layer of its own; its cell runs back from it
-     over the whole button, and past it where a shared edge leans into
-     the gap. It takes no pointer, so the button's whole box is what a
-     click hits. As the first item it sets the button's baseline, its
-     foot, so it stands as tall as an icon does, and a button set in a
-     line of text sits where one led by an icon always sat. */
-  svg {
-    flex: none;
-    width: 1px;
-    height: 1rem;
-    margin-inline-end: calc(-1px - var(--space-2));
-    overflow: visible;
-    pointer-events: none;
-  }
-  .button:global([data-drawn]) {
-    background: none;
-    border-color: transparent;
-  }
-  .fill {
-    fill: var(--fill);
-    stroke: transparent;
-    stroke-width: 4px;
-    stroke-linejoin: round;
-    /* the focus ring is the stroke's outer half, painted under the fill,
-       so it stands 2px outside the cell as the box-shadow ring stands
-       outside a plain button */
-    paint-order: stroke;
-    transition: fill var(--fast) var(--ease);
-  }
-  /* The edge is the inner half of a stroke clipped to the cell, so it
-     stands 1px inside it as a plain button's border stands inside its
-     box: an outlined cell keeps the footprint of a filled one. */
-  .edge {
-    fill: none;
-    stroke: var(--edge, transparent);
-    stroke-width: 2px;
-    stroke-linejoin: round;
-  }
-  .button:global([data-drawn]):focus-visible {
-    box-shadow: none;
-  }
-  .button:global([data-drawn]):focus-visible .fill {
-    stroke: var(--accent-border);
-  }
-  /* Forced colours repaint the words but not an svg's fill, so the cell
-     gives way to the plain box the system draws, its border shown. */
-  /* Not yet drawn, as in the page the server sends before its script
-     runs, a cell is clipped to a lone cell's pointed ends, as far as its
-     height reads (`ACTION_BULGE`, `@cella/brand`'s `actions.ts`), so the
-     cell drawn after it never follows a rectangle: a filled button, and
-     one its parent groups (`data-run`). */
-  .button[data-cell='fill']:global(:not([data-drawn])),
-  :global([data-run]) .button[data-cell]:global(:not([data-drawn])) {
-    --bulge: 0.6rem;
-    clip-path: polygon(var(--bulge) 0, calc(100% - var(--bulge)) 0, 100% 50%, calc(100% - var(--bulge)) 100%, var(--bulge) 100%, 0 50%);
-  }
-  @media (forced-colors: active) {
-    .button:global([data-drawn]) {
-      background: var(--fill);
+
+  /* A cell: a row of actions drawn as the brand's (`@cella/brand`'s
+     `actions.ts`), every end of it a mask the brand writes
+     (its tokens.css), so the page the server sends is drawn as it stays,
+     with no script. A run is the buttons a parent marks (`data-run`),
+     each its child or a form that is its one button (`data-through`),
+     standing a cell's gap apart: the first's start and the last's end
+     are pointed, and each pair shares a slanted edge, leaning forward
+     then back from the run's start, as the site's do. A filled button
+     out of every run is a lone cell, pointed at both ends.
+
+     Its fill and its edge are drawn behind its words, by its two
+     pseudo-elements reaching past its box (`--cell-reach`) for a shared
+     edge leaning into the gap and the focus ring round it: each a mask
+     of its start, its flat middle and its end. Forced colours repaint
+     the words but not a mask's fill, so there the cell gives way to the
+     plain box the system draws, its border shown. */
+  :global {
+    [data-run] {
+      column-gap: var(--space-2);
     }
-    /* the system's box, unclipped: the rule above, matched as it is */
-    .button[data-cell='fill']:global(:not([data-drawn])),
-    :global([data-run]) .button[data-cell]:global(:not([data-drawn])) {
-      clip-path: none;
+    [data-run] > :nth-child(odd of .button[data-cell], [data-through]) {
+      --run-start-fill: var(--cell-start-back-fill);
+      --run-start-edge: var(--cell-start-back-edge);
+      --run-start-ring: var(--cell-start-back-ring);
+      --run-end-fill: var(--cell-end-fore-fill);
+      --run-end-edge: var(--cell-end-fore-edge);
+      --run-end-ring: var(--cell-end-fore-ring);
     }
-    svg {
-      display: none;
+    [data-run] > :nth-child(even of .button[data-cell], [data-through]) {
+      --run-start-fill: var(--cell-start-fore-fill);
+      --run-start-edge: var(--cell-start-fore-edge);
+      --run-start-ring: var(--cell-start-fore-ring);
+      --run-end-fill: var(--cell-end-back-fill);
+      --run-end-edge: var(--cell-end-back-edge);
+      --run-end-ring: var(--cell-end-back-ring);
     }
-    /* The svg carrying the focus stroke is hidden here, and the drawn
-       button's rule above cleared its box-shadow ring: a system-colour
-       outline stands in for both. */
-    .button:global([data-drawn]):focus-visible {
-      outline: 2px solid Highlight;
+    [data-run] > :nth-child(1 of .button[data-cell], [data-through]) {
+      --run-start-fill: var(--cell-start-point-fill);
+      --run-start-edge: var(--cell-start-point-edge);
+      --run-start-ring: var(--cell-start-point-ring);
+    }
+    [data-run] > :nth-last-child(1 of .button[data-cell], [data-through]) {
+      --run-end-fill: var(--cell-end-point-fill);
+      --run-end-edge: var(--cell-end-point-edge);
+      --run-end-ring: var(--cell-end-point-ring);
+    }
+    /* what a run's item sets reaches no button inside it but its own */
+    .button:not([data-run] > *, [data-run] > [data-through] > *) {
+      --run-start-fill: initial;
+      --run-start-edge: initial;
+      --run-start-ring: initial;
+      --run-end-fill: initial;
+      --run-end-edge: initial;
+      --run-end-ring: initial;
+    }
+
+    @media (forced-colors: none) {
+      .button[data-cell='fill'],
+      :is([data-run='group'], [data-run]:has(> .button[data-cell='fill'], > [data-through] > .button[data-cell='fill'])) > .button[data-cell],
+      :is([data-run='group'], [data-run]:has(> .button[data-cell='fill'], > [data-through] > .button[data-cell='fill'])) > [data-through] > .button[data-cell] {
+        /* the reach past its box, the ring's above and below it, and
+           how far each end's mask runs in from its pseudo-element's side */
+        --reach: calc(var(--h) * var(--cell-reach));
+        --ring: calc(var(--h) * var(--cell-ring));
+        --ends: calc(2 * var(--h) * (var(--cell-reach) + var(--cell-end)) - 2px);
+        position: relative;
+        isolation: isolate;
+        padding-inline: var(--space-4);
+        background: none;
+        border-color: transparent;
+
+        &::before,
+        &::after {
+          content: '';
+          position: absolute;
+          /* from its padding box, so a border's pixel further */
+          inset: calc(-1px - var(--ring)) calc(-1px - var(--reach));
+          z-index: -1;
+          pointer-events: none;
+        }
+        &::before {
+          background: var(--fill);
+          transition: background-color var(--fast) var(--ease);
+          mask:
+            var(--run-start-fill, var(--cell-start-point-fill)) left / auto 100% no-repeat,
+            linear-gradient(#000 0 0) center / calc(100% - var(--ends)) calc(100% - 2 * var(--ring)) no-repeat,
+            var(--run-end-fill, var(--cell-end-point-fill)) right / auto 100% no-repeat;
+        }
+        /* The edge stands a pixel inside the cell, as a plain button's
+           border stands inside its box. */
+        &::after {
+          background: var(--edge, transparent);
+          mask:
+            var(--run-start-edge, var(--cell-start-point-edge)) left / auto 100% no-repeat,
+            linear-gradient(#000 0 0) 50% var(--ring) / calc(100% - var(--ends)) 1px no-repeat,
+            linear-gradient(#000 0 0) 50% calc(100% - var(--ring)) / calc(100% - var(--ends)) 1px no-repeat,
+            var(--run-end-edge, var(--cell-end-point-edge)) right / auto 100% no-repeat;
+        }
+        /* Focused, the edge gives way to the ring, astride the outline
+           and under the fill, so it stands outside the cell as the ring
+           stands outside a plain button. */
+        &:focus-visible {
+          box-shadow: none;
+        }
+        &:focus-visible::after {
+          z-index: -2;
+          background: var(--accent-border);
+          mask:
+            var(--run-start-ring, var(--cell-start-point-ring)) left / auto 100% no-repeat,
+            linear-gradient(#000 0 0) 50% 0 / calc(100% - var(--ends)) calc(2 * var(--ring)) no-repeat,
+            linear-gradient(#000 0 0) 50% 100% / calc(100% - var(--ends)) calc(2 * var(--ring)) no-repeat,
+            var(--run-end-ring, var(--cell-end-point-ring)) right / auto 100% no-repeat;
+        }
+        /* right to left, the run starts at the right: its cells mirrored */
+        &:dir(rtl)::before,
+        &:dir(rtl)::after {
+          scale: -1 1;
+        }
+      }
     }
   }
   .button.icon {
@@ -221,8 +254,8 @@
   .danger:hover {
     filter: brightness(0.96);
   }
-  /* An affirmative choice, as a vote's Consent: filled as a refusal is,
-     in the positive ink. */
+  /* An affirmative choice, as a vote's Consent or an expense's Approve:
+     filled as a refusal is, in the positive ink. */
   .positive {
     --fill: var(--positive-soft);
     color: var(--positive-text);

@@ -51,3 +51,70 @@ export function actionCells(widths: number[], h: number, rand: () => number, gut
 export function actionPath(cell: Point[], h: number, f: (v: number) => string): string {
   return roundedPath(cell, h * ACTION_ROUND, f)
 }
+
+/** How far apart two cells of a row stand, box to box, in their heights:
+ * a shared edge sits in the middle of it. */
+export const ACTION_GAP = 0.25
+
+/** How far a cell's drawing reaches past its box, in its heights: across,
+ * for a shared edge leaning into the gap and the focus ring round it, and
+ * up and down, for the ring alone. */
+export const ACTION_REACH = 0.375
+export const ACTION_RING = 1 / 16
+
+/** How far into its box a cell's end reaches before its top and foot run
+ * flat, rounding and all, in its heights. */
+export const ACTION_END = 0.5
+
+/** The tilt of a shared edge and the gutter parting it, in the cell's
+ * heights: the middle of the site's seeded range, and its width at the
+ * shell's size. */
+export const ACTION_TILT = 0.2
+export const ACTION_GUTTER = 0.125
+
+/** A cell's ends, each as the shell draws it: pointed, or an edge shared
+ * with the cell beside it leaning forward (`fore`) or back. */
+export const ACTION_ENDS = ['point', 'fore', 'back'] as const
+export type ActionEndKind = (typeof ACTION_ENDS)[number]
+
+// A cell's ends, the start and the end, as three masks each: its fill,
+// its edge (the inner half of a stroke as wide as the ring, clipped to
+// it, a pixel wide) and its focus ring (a stroke astride its outline,
+// standing as wide as the ring reaches past it). A tile is drawn
+// at a height of 32, the shell's, in pixels, its ring's reach above and
+// below; a mask scales it to the cell's height.
+function actionTile(side: 'start' | 'end', kind: ActionEndKind, layer: 'fill' | 'edge' | 'ring'): string {
+  const h = 32
+  const far = 100
+  const end: ActionEnd = kind === 'point' ? { point: 0.5 } : { tilt: (kind === 'fore' ? 1 : -1) * h * ACTION_TILT, gutter: h * ACTION_GUTTER, at: (h * ACTION_GAP) / 2 }
+  const pointed: ActionEnd = { point: 0.5 }
+  const cell = side === 'start' ? actionCell(0, far, h, end, pointed) : actionCell(0, far, h, pointed, end)
+  const d = actionPath(cell, h, (v) => String(+v.toFixed(2)))
+  const reach = h * ACTION_REACH
+  const ring = h * ACTION_RING
+  const w = reach + h * ACTION_END
+  const x = side === 'start' ? -reach : far - h * ACTION_END
+  const body =
+    layer === 'fill'
+      ? `<path d="${d}"/>`
+      : layer === 'edge'
+        ? `<clipPath id="c"><path d="${d}"/></clipPath><path d="${d}" fill="none" stroke="#000" stroke-width="${ring}" clip-path="url(#c)"/>`
+        : `<path d="${d}" fill="none" stroke="#000" stroke-width="${ring * 2}"/>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${-ring} ${w} ${h + 2 * ring}">${body}</svg>`
+}
+
+const url = (svg: string): string => `url("data:image/svg+xml,${svg.replace(/"/g, "'").replace(/#/g, '%23').replace(/</g, '%3C').replace(/>/g, '%3E')}")`
+
+/** Every end of a cell as a mask, `--cell-<side>-<kind>-<layer>`, and the
+ * proportions they are drawn at, which a shell's buttons are laid out by
+ * (`apps/org`'s `Button`): a block of tokens.css. */
+export function actionsCss(): string {
+  const lines = [
+    `--cell-gap: ${ACTION_GAP};`,
+    `--cell-reach: ${ACTION_REACH};`,
+    `--cell-ring: ${ACTION_RING};`,
+    `--cell-end: ${ACTION_END};`,
+    ...(['start', 'end'] as const).flatMap((side) => ACTION_ENDS.flatMap((kind) => (['fill', 'edge', 'ring'] as const).map((layer) => `--cell-${side}-${kind}-${layer}: ${url(actionTile(side, kind, layer))};`))),
+  ]
+  return `:root {\n${lines.map((l) => `  ${l}`).join('\n')}\n}\n`
+}

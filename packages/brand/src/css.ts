@@ -9,6 +9,7 @@ import { hues, inkAction, PENTAD, TONES, type Face, type House } from './house.t
 import { grain, SURFACES } from './paper.ts'
 import { compressed, inks, K, ROLES, role, rung, shades, sunkL, sunkRung, onActionL, type Role, type Theme } from './tones.ts'
 import { PRINT_INKS, printInk } from './print.ts'
+import { actionsCss } from './actions.ts'
 
 const n = (v: number, d = 4): string => String(+v.toFixed(d))
 const ok = ([l, c, h]: Oklch): string => `oklch(${n(l)} ${n(c)} ${n(h, 2)})`
@@ -111,6 +112,9 @@ export function tokensCss(house: House): string {
     '   compresses its surfaces, and wears the paper at a fraction. */',
     media(block(':root:not([data-theme=\'light\'])', darkLines(house))),
     block('[data-theme=\'dark\']', darkLines(house)),
+    '/* A button\'s cell: every end of it as a mask, and the proportions',
+    '   they are drawn at (`actions.ts`). */',
+    actionsCss(),
   ].join('\n')
 }
 

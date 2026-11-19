@@ -353,6 +353,7 @@ test("a sum or a count among a slice's properties is refused; its figures hold i
   assert.match(figures(app, page("properties: (p) => [{ label: 'Milestones', value: p.done, group: 'Figures' }],"))[0], /lists a sum or a count/)
   assert.deepEqual(figures(app, page("properties: (p) => [{ label: 'Due', value: p.due, kind: 'date' }],\n        figures: (p) => [{ label: 'Budget', value: p.budget, kind: 'money' }],")), [])
   assert.deepEqual(figures('apps/org/feats/project/core/ts/src/app/blocks/Budget.svelte', "properties: (p) => [{ kind: 'money' }]"), [], 'only an app module declares properties')
+  assert.match(figures(app, page("properties: p => [{ label: 'Budget', value: p.budget, kind: 'money' }],"))[0], /lists a sum or a count among its properties/, 'an unparenthesised param is still caught')
 })
 
 test('a panels page opens on its panels, its body a Notes panel, and each block on its overview is a Panel', () => {

@@ -632,12 +632,19 @@ export function figures(path, text) {
   if (!/(^|\/)src\/app\/.*\.ts$/.test(path) || /\.(svelte|d)\.ts$/.test(path)) {
     return []
   }
-  for (const m of text.matchAll(/\bproperties:\s*\(/g)) {
-    let i = m.index + m[0].length
-    for (let depth = 1; i < text.length && depth > 0; i++) {
-      depth += text[i] === '(' ? 1 : text[i] === ')' ? -1 : 0
+  for (const m of text.matchAll(/\bproperties:\s*(\(|[A-Za-z_$][\w$]*\s*=>)/g)) {
+    let start
+    if (m[1] === '(') {
+      let i = m.index + m[0].length
+      for (let depth = 1; i < text.length && depth > 0; i++) {
+        depth += text[i] === '(' ? 1 : text[i] === ')' ? -1 : 0
+      }
+      start = text.indexOf('=>', i) + 2
+    } else {
+      // An unparenthesised single param, as `p => […]`: the arrow is
+      // already in this match, so the body starts right after it.
+      start = m.index + m[0].length
     }
-    const start = text.indexOf('=>', i) + 2
     let end = start
     for (let depth = 0, began = false; end < text.length; end++) {
       const c = text[end]

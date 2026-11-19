@@ -44,26 +44,37 @@
   } = $props()
 
   // A filled tone is always a cell, a quiet one only beside a filled one
-  // (`attachments/cell.ts`); an icon alone is never one.
+  // or in a group its parent marks (`data-run`, `attachments/cell.ts`);
+  // an icon alone is never one.
   const shape = $derived(icon ? undefined : tone === 'primary' || tone === 'info' || tone === 'danger' || tone === 'positive' ? 'fill' : 'plain')
+  const id = $props.id()
 </script>
 
+<!-- Its cell, which `attachments/cell.ts` draws: one outline, its fill,
+     and its edge clipped to it, so the edge stands inside the cell. -->
+{#snippet drawn()}
+  <svg aria-hidden="true"><g><clipPath id="{id}-cell"><path /></clipPath><path class="fill" /><path class="edge" clip-path="url(#{id}-cell)" /></g></svg>
+{/snippet}
+
 {#if href}
-  <a class="button {tone}" class:icon {href} {download} {title} {onclick} aria-label={ariaLabel} data-cell={shape} {@attach cell}>{#if shape}<svg aria-hidden="true"><path /></svg>{/if}{#if lead}<Icon icon={lead} size="1em" />{/if}{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}</a>
+  <a class="button {tone}" class:icon {href} {download} {title} {onclick} aria-label={ariaLabel} data-cell={shape} {@attach cell}>{#if shape}{@render drawn()}{/if}{#if lead}<Icon icon={lead} size="1em" />{/if}{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}</a>
 {:else}
   <button class="button {tone}" class:icon {type} {form} {title} {onclick} {disabled} aria-busy={busy} aria-disabled={busy} aria-label={ariaLabel} data-cell={shape} {@attach cell}>
-    {#if shape}<svg aria-hidden="true"><path /></svg>{/if}{#if lead}<Icon icon={lead} size="1em" />{/if}{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}
+    {#if shape}{@render drawn()}{/if}{#if lead}<Icon icon={lead} size="1em" />{/if}{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}
   </button>
 {/if}
 
 <style>
+  /* A caller paints a button by its tone, or by setting `--fill`, and
+     outlines it by `--edge`, never by its background or border: drawn
+     as a cell, its box paints neither, and its path both. */
   .button {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
     height: 2rem;
     padding: 0 var(--space-3);
-    border: 1px solid transparent;
+    border: 1px solid var(--edge, transparent);
     border-radius: var(--radius-control);
     background: var(--fill);
     font-size: var(--text-sm);
@@ -96,22 +107,32 @@
   }
   .button:global([data-drawn]) {
     background: none;
+    border-color: transparent;
   }
-  path {
+  .fill {
     fill: var(--fill);
     stroke: transparent;
     stroke-width: 4px;
     stroke-linejoin: round;
-    /* the ring is the stroke's outer half, painted under the fill, so it
-       stands 2px outside the cell as the box-shadow ring stands outside
-       a plain button */
+    /* the focus ring is the stroke's outer half, painted under the fill,
+       so it stands 2px outside the cell as the box-shadow ring stands
+       outside a plain button */
     paint-order: stroke;
     transition: fill var(--fast) var(--ease);
+  }
+  /* The edge is the inner half of a stroke clipped to the cell, so it
+     stands 1px inside it as a plain button's border stands inside its
+     box: an outlined cell keeps the footprint of a filled one. */
+  .edge {
+    fill: none;
+    stroke: var(--edge, transparent);
+    stroke-width: 2px;
+    stroke-linejoin: round;
   }
   .button:global([data-drawn]):focus-visible {
     box-shadow: none;
   }
-  .button:global([data-drawn]):focus-visible path {
+  .button:global([data-drawn]):focus-visible .fill {
     stroke: var(--accent-border);
   }
   /* Forced colours repaint the words but not an svg's fill, so the cell

@@ -7,7 +7,8 @@ import { actionCell, actionPath, type ActionEnd } from '@cella/brand'
 // small gap; a run holding a filled button is drawn as one row of cells,
 // its two ends pointed and each pair sharing a slanted edge across the
 // middle of the gap between them, and a run of quiet buttons alone stays
-// plain. Each button draws its own cell in its own svg, so the shapes
+// plain, but where their parent marks them one group (`data-run`), as the
+// sign-in's Link device and Forget identity. Each button draws its own cell in its own svg, so the shapes
 // need no container; one no longer drawn has its path cleared, since the
 // cell it drew before, at another tone's padding, would show from under
 // its box.
@@ -61,6 +62,10 @@ const through = (el: Element): el is HTMLElement => el instanceof HTMLElement &&
 // child it passes through.
 const items = (parent: Element): Element[] => [...parent.children].flatMap((el) => (through(el) ? items(el) : [el]))
 
+// A parent whose buttons are one group, drawn as cells whatever their
+// tones, as a row of quiet ones is not.
+const grouped = (el: HTMLElement) => el.dataset.run !== undefined
+
 // The parent a cell's run is read in: the nearest ancestor it is not
 // passed through.
 const runOf = (el: HTMLElement): HTMLElement | null => {
@@ -99,9 +104,10 @@ function runs(parent: HTMLElement, rtl: boolean): Box[][] {
 
 type Plan = { el: HTMLElement; d?: string; at?: [number, number] }
 
-// What each cell of a run draws: nothing, in a run with no filled button.
-function plan(run: Box[], rtl: boolean): Plan[] {
-  if (!run.some((b) => b.el.dataset.cell === 'fill')) {
+// What each cell of a run draws: nothing, in a run with no filled button
+// that is no group.
+function plan(run: Box[], rtl: boolean, group: boolean): Plan[] {
+  if (!group && !run.some((b) => b.el.dataset.cell === 'fill')) {
     return run.map((b) => ({ el: b.el }))
   }
   return run.map((b, i) => {
@@ -126,24 +132,32 @@ function draw(page: Page) {
   page.marked.clear()
   const plans = marked.flatMap((parent) => {
     const cells = [...(page.parents.get(parent)?.cells ?? [])]
-    if (!cells.some((c) => c.dataset.cell === 'fill')) {
+    const group = grouped(parent)
+    if (!group && !cells.some((c) => c.dataset.cell === 'fill')) {
       return cells.map((el): Plan => ({ el }))
     }
     const rtl = getComputedStyle(parent).direction === 'rtl'
-    const drawn = runs(parent, rtl).flatMap((run) => plan(run, rtl))
+    const drawn = runs(parent, rtl).flatMap((run) => plan(run, rtl, group))
     // a cell out of every run, hidden or no longer shaped, is plain
     const planned = new Set(drawn.map((p) => p.el))
     return [...drawn, ...cells.filter((c) => !planned.has(c)).map((el): Plan => ({ el }))]
   })
   for (const { el, d, at } of plans) {
-    const path = el.querySelector(':scope > svg > path')
-    if (d && at && path) {
+    // the cell's group, and its paths: its fill, its edge and the clip
+    // that keeps the edge inside it, one outline
+    const g = el.querySelector(':scope > svg > g')
+    const paths = g?.querySelectorAll('path') ?? []
+    if (d && at && g) {
       // drawn in the button's box, moved back to where its svg stands
-      path.setAttribute('d', d)
-      path.setAttribute('transform', `translate(${f(-at[0])} ${f(-at[1])})`)
+      g.setAttribute('transform', `translate(${f(-at[0])} ${f(-at[1])})`)
+      for (const p of paths) {
+        p.setAttribute('d', d)
+      }
       el.dataset.drawn = ''
     } else {
-      path?.removeAttribute('d')
+      for (const p of paths) {
+        p.removeAttribute('d')
+      }
       delete el.dataset.drawn
     }
   }

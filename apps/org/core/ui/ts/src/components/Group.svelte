@@ -2,8 +2,8 @@
   import CaretDown from 'phosphor-svelte/lib/CaretDown'
   import CaretRight from 'phosphor-svelte/lib/CaretRight'
   import Plus from 'phosphor-svelte/lib/Plus'
-  import { closed, type Column } from '../models/view.ts'
-  import { toneOf } from '../models/status.ts'
+  import { closed, stated, type Column } from '../models/view.ts'
+  import { stateOf, toneOf } from '../models/status.ts'
   import { monthName, show } from '../models/format.ts'
   import { groupTint } from '../models/query.ts'
   import { inked } from '../models/ink.ts'
@@ -59,8 +59,9 @@
     return by.kind === 'circle' ? (shell.circle(text) ?? text) : text
   })
   const shut = $derived(closed(by.kind, by.record))
-  // A status's bar wears its category's tone, never an ink of its word.
-  const tone = $derived(by.kind === 'status' && by.states && value !== '' ? toneOf(by.states, by.value(row)) : by.kind === 'badge' && shut ? by.tone?.(row) : undefined)
+  // A status's bar wears its category's tone, never an ink of its word;
+  // a value its lifecycle does not list, as a bill's overdue, its column's.
+  const tone = $derived(by.states && value !== '' && stateOf(by.states, by.value(row)) ? toneOf(by.states, by.value(row)) : stated(by.kind) && shut ? by.tone?.(row) : undefined)
   const tint = $derived(groupTint(by, drawn, month, tone))
 </script>
 

@@ -309,24 +309,36 @@ fn slices(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
     dev.up()?;
     repo.install(steps)?;
     for slice in chosen {
-        steps.run(
-            &format!("db slice/{slice}"),
-            &mut dev.renew(DB, Some(slice), None),
-            quiet,
-        )?;
         let files: Vec<&PathBuf> = found
             .iter()
             .filter(|(s, _)| s == slice)
             .map(|(_, f)| f)
             .collect();
         if files.is_empty() {
+            steps.run(
+                &format!("db slice/{slice}"),
+                &mut dev.renew(DB, Some(slice), None),
+                quiet,
+            )?;
             continue;
         }
-        steps.run(
-            &format!("slice {slice}"),
-            &mut [node_test(&dev, steps, DB, &files)],
-            tap,
-        )?;
+        // Each file on a database of its own: a file that commits a stub
+        // (an authority, a guard dropped, rows) never reaches another, as
+        // node would run them at once on one.
+        for file in files {
+            let name = file.file_stem().and_then(|s| s.to_str()).unwrap_or("");
+            let name = name.strip_suffix(".test").unwrap_or(name);
+            steps.run(
+                &format!("db slice/{slice}/{name}"),
+                &mut dev.renew(DB, Some(slice), None),
+                quiet,
+            )?;
+            steps.run(
+                &format!("slice {slice}/{name}"),
+                &mut [node_test(&dev, steps, DB, &[file])],
+                tap,
+            )?;
+        }
     }
     Ok(())
 }

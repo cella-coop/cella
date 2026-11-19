@@ -4,9 +4,12 @@
 
   // A document of blocks, as the block editor and its read-only reader
   // draw it: the surface and the look of every kind of block, which the
-  // document feat's components name by class and data attribute and never
-  // style themselves. Its attributes, handlers and attachments pass
-  // through to the surface. Every kind is set in the body face, Inter
+  // document feat's components and this package's own `blocks/` (the
+  // presentational `Paragraph`, `Heading`, `Quote`, `List`, `Item`,
+  // `Todo`, `Code`, `Divider` and `Embed`, holding no editing behaviour
+  // of their own) name by class and data attribute and never style
+  // themselves. Its attributes, handlers and attachments pass through
+  // to the surface. Every kind is set in the body face, Inter
   // (`--font-ui`), headings and embeds' titles too.
   //
   // - `.block` holds a block: its `.line` (the grip and the `.body`) and
@@ -14,9 +17,11 @@
 //   `DragHandle`, shown on hover; `[data-selected]` on the block
   //   marks it chosen whole, `[data-drop]` on a line where a drag lands.
   // - a body is `.text` (an editable or a reader's text) inside a kind:
-  //   `.heading[data-level]`, `.item` with its `.marker` (bullets,
-  //   numbers, to-dos), `.quote`, `.code` with its `.language`,
-  //   `.divider`, `.embed`; `[data-done]` strikes a to-do through.
+  //   `.paragraph` (its text, no box of its own), `.heading[data-level]`,
+  //   `.list` with its `.item`s, each its `.marker` (bullets, numbers), a
+  //   to-do's own `.item` outside a list, `.quote`, `.code` with its
+  //   `.language`, `.divider`, `.embed`; `[data-done]` strikes a to-do
+  //   through.
   // - `.card` is an embed's card, `.unknown` an embed nothing draws.
   let { children, readonly = false, ...rest }: HTMLAttributes<HTMLDivElement> & { children: Snippet; readonly?: boolean } = $props()
 </script>
@@ -182,6 +187,17 @@
     font-size: var(--text-lg);
     font-weight: 700;
     margin-top: var(--space-2);
+  }
+  /* `blocks/Paragraph` wraps its text in no box of its own. */
+  .blocks :global(.paragraph) {
+    display: contents;
+  }
+  /* `blocks/List` draws no browser bullet or number: each `Item` its own
+     marker. */
+  .blocks :global(.list) {
+    list-style: none;
+    margin: 0;
+    padding: 0;
   }
   .blocks :global(.item) {
     display: flex;

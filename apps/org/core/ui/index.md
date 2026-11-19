@@ -879,6 +879,23 @@ draws.
   the body font, Inter (`--font-ui`), headings and all, wherever the
   editor or its reader stands. Core body's components name its classes
   and draw nothing of their own.
+- `blocks` (a namespace, `Heading` among them colliding with the panel's
+  own): the presentational block components a body draws inside
+  `Blocks`, each named by this package alone and holding no editing
+  behaviour — `Paragraph` (its text, no box of its own), `Heading`
+  (`level`, 1 to 3), `Quote`, `List` (`kind`, bulleted or numbered) and
+  `Item` (its marker, a bullet, deeper under the last by `depth`, or a
+  counted `number`), `Todo` (the UI core's own `Checkbox`, struck through
+  once `checked`, `oncheck` hearing a turn), `Code` (`language`, the
+  caller's own control, a word or the editable `Select` the editor
+  binds), `Divider` (one rule, atomic) and `Embed` (atomic, its content
+  wholly the caller's, a thing's card, its picker or `.unknown`). Each
+  takes its text or its content as `children`, its attributes and
+  attachments passed through to its own root, so core body (or any slice
+  keeping a body) binds the editable `Text`, the Loro-bound controls and
+  an atomic block's id, and nothing here imports a slice's editing state.
+  The `/specimens/blocks` page draws each one, read-only, for the `blocks`
+  e2e scenario's screenshot.
 - `Select`: the one select, a combobox and its listbox as WAI-ARIA's
   select-only combobox. The button keeps the focus throughout, naming
   the option the keyboard is on as its active descendant, and shows the

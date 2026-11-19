@@ -11,3 +11,13 @@ export const ink = query(() => {
   }
   return true
 })
+
+// DEV ONLY. The block kinds specimen, a page of the design system
+// drawing the kit's own presentational block components, which the dev
+// server alone serves and which reads nothing.
+export const blocks = query(() => {
+  if (!dev) {
+    error(404, 'There is no page specimens/blocks')
+  }
+  return true
+})

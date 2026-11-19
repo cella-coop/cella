@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Form, Hidden, Grid, Note, date } from '@cella/org-ui'
+  import { Button, verb, Form, Hidden, Grid, Note, date } from '@cella/org-ui'
   import { cell, circle, hours, type Week } from '../../models/week.ts'
   import { useWeek } from '../../hooks/useWeek.ts'
 
@@ -32,7 +32,7 @@
       {#snippet corner()}
         Week of {date(w.monday)}
         {#if (about.weeks ?? []).length > 1}
-          <Button onclick={() => state.show(state.shown ? 0 : 1)}>{state.shown ? 'This week' : 'The week before'}</Button>
+          <Button lead={verb('This week')} onclick={() => state.show(state.shown ? 0 : 1)}>{state.shown ? 'This week' : 'The week before'}</Button>
         {/if}
       {/snippet}
     </Grid>

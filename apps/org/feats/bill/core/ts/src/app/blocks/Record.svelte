@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Field, Form } from '@cella/org-ui'
+  import { Button, verb, Field, Form } from '@cella/org-ui'
   import { categories, type Listed, type Recording } from '../../models/bill.ts'
   import { useRecord } from '../../hooks/useRecord.ts'
 
@@ -25,8 +25,8 @@
     <Field label="Unit price, €" name="unit_price" placeholder="1200.00" required />
     <Field label="VAT %" name="vat_rate" value="20" required />
     {#if bill.lines.length > 1}
-      <div><Button onclick={() => bill.remove(line.key)}>Remove line</Button></div>
+      <div><Button lead={verb('Remove line')} onclick={() => bill.remove(line.key)}>Remove line</Button></div>
     {/if}
   {/each}
-  <div><Button onclick={() => bill.add()}>Add a line</Button></div>
+  <div><Button lead={verb('Add a line')} onclick={() => bill.add()}>Add a line</Button></div>
 </Form>

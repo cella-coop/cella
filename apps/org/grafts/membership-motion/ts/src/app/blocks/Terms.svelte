@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Note, Section, Settings, type Declared } from '@cella/org-ui'
+  import { Button, verb, Note, Section, Settings, type Declared } from '@cella/org-ui'
   import type { Amending, OnCircle } from '../../models/asking.ts'
 
   // A circle's Settings tab: its name, its purpose and its procedure, from
@@ -42,10 +42,10 @@
   </Section>
   <Section title="Features">
     <Note text="What {amending.name} shows in the sidebar, in its order, under its accordions, which {amending.arranger} arranges." />
-    <Button href="/settings/features/{amending.circle}">Choose its features</Button>
+    <Button lead={verb('Choose its features')} href="/settings/features/{amending.circle}">Choose its features</Button>
   </Section>
   <Section title="Rules">
     <Note text="What {amending.name} sets for itself, as whether its comments take reactions, each by a rule a motion adopts." />
-    <Button href="/settings/rules/{amending.circle}">See its rules</Button>
+    <Button lead={verb('See its rules')} href="/settings/rules/{amending.circle}">See its rules</Button>
   </Section>
 {/if}

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, useShell } from '@cella/org-ui'
+  import { Button, verb, useShell } from '@cella/org-ui'
   import type { Detail } from '../../models/circle.ts'
 
   // Lenses the coop on this circle, which every collection then reads
@@ -12,5 +12,5 @@
 <form method="post" action="/lens">
   <input type="hidden" name="back" value="/" />
   <input type="hidden" name="lens" value={on ? '' : data.id} />
-  <Button type="submit">{on ? 'Stop viewing as this circle' : 'View as this circle'}</Button>
+  <Button type="submit" lead={verb(on ? 'Stop viewing' : 'View')}>{on ? 'Stop viewing as this circle' : 'View as this circle'}</Button>
 </form>

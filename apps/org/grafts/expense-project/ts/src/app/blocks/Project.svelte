@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Field, Form, icons, Panel } from '@cella/org-ui'
+  import { Button, verb, Field, Form, icons, Panel } from '@cella/org-ui'
   import type { Filed } from '../../models/rebill.ts'
 
   // The project an expense was spent for, to bill on to its client: its
@@ -16,6 +16,6 @@
     <Field label="Project" name="project" {options} value={data.project ?? ''} placeholder="the coop’s own" />
   </Form>
   {#snippet actions()}
-    <Button type="submit" {form} lead={icons.ArrowRight}>File</Button>
+    <Button type="submit" {form} lead={verb('File')}>File</Button>
   {/snippet}
 </Panel>

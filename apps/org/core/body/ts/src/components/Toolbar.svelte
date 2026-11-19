@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Field, Floating, Popover } from '@cella/org-ui'
+  import { Button, verb, Field, Floating, Popover } from '@cella/org-ui'
   import { useEditor } from '../hooks/useEditor.ts'
 
   // The toolbar over a selection: bold, italic and code, and a link, whose
@@ -31,7 +31,7 @@
         }}
       >
         <Field label="Link to" name="href" bind:value={ed.menu.href} />
-        <Button type="submit">Link</Button>
+        <Button lead={verb('Link')} type="submit">Link</Button>
       </form>
     </Popover>
   </Floating>

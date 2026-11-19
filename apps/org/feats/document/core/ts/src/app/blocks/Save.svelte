@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Dialog, Form, Note, useCreate } from '@cella/org-ui'
+  import { Button, verb, Dialog, Form, Note, useCreate } from '@cella/org-ui'
   import type { Page } from '../../models/document.ts'
 
   // Saving the draft as a version, from the page's header: New version
@@ -14,7 +14,7 @@
 </script>
 
 {#if !data.generated}
-  <Button tone="quiet" onclick={() => create.show()}>New version</Button>
+  <Button lead={verb('New version')} tone="quiet" onclick={() => create.show()}>New version</Button>
   <Dialog bind:dialog={create.dialog} title="New version" oncancel={() => create.close()} onclose={() => create.closed()}>
     {#if create.open}
       <Note text="Saves the draft as version {next}, {stands}." />

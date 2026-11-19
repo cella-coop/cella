@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Note, Section, Table, money, type Column } from '@cella/org-ui'
+  import { Button, verb, Note, Section, Table, money, type Column } from '@cella/org-ui'
   import type { Figure } from '../../models/patronage.ts'
 
   // A year's return to the federation: each figure, the law it answers
@@ -28,6 +28,6 @@
   <Table {columns} rows={data} empty="The return is drawn up once the year's surplus is distributed." />
   {#if data.length}
     <Note text="Which figures the CG SCOP’s annual return and its cooperative review ask for is not verified against their forms; the figures marked unverified are offered, not required." />
-    <Button href={`data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`} download={`${id}-return.csv`}>Export CSV</Button>
+    <Button lead={verb('Export CSV')} href={`data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`} download={`${id}-return.csv`}>Export CSV</Button>
   {/if}
 </Section>

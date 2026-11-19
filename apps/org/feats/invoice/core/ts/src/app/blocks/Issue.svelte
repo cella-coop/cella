@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Field, Form } from '@cella/org-ui'
+  import { Button, verb, Field, Form } from '@cella/org-ui'
   import type { Issuing, Listed } from '../../models/invoice.ts'
   import { useIssue } from '../../hooks/useIssue.ts'
 
@@ -23,8 +23,8 @@
     <Field label="Unit price, €" name="unit_price" placeholder="1200.00" required />
     <Field label="VAT %" name="vat_rate" value="20" required />
     {#if issue.lines.length > 1}
-      <div><Button onclick={() => issue.remove(line.key)}>Remove line</Button></div>
+      <div><Button lead={verb('Remove line')} onclick={() => issue.remove(line.key)}>Remove line</Button></div>
     {/if}
   {/each}
-  <div><Button onclick={() => issue.add()}>Add a line</Button></div>
+  <div><Button lead={verb('Add a line')} onclick={() => issue.add()}>Add a line</Button></div>
 </Form>

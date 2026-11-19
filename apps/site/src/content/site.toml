@@ -7,7 +7,11 @@ nav = [
   { label = "Contact", href = "/contact" },
 ]
 menu = "Menu"
-email = "hello@cella.coop" 
+email = "hello@cella.coop"
+
+[cta]
+label = "Demo"
+href = "https://app.cella.coop"
 
 [theme]
 toggle = "Switch theme"

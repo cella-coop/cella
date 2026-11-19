@@ -161,7 +161,7 @@
     <aside class="dev" aria-labelledby="fx">
       <div class="head">
         <Icon icon={Warning} size="1.1rem" />
-        <h2 id="fx" class="label">{demo ? 'Demo members' : 'Test accounts'}{#if demo} <span class="tag">demo</span>{/if}</h2>
+        <h2 id="fx" class="label">{demo ? 'Demo members' : 'Test accounts'}</h2>
       </div>
       <p class="hint">Pick anyone to look around. A real co-op has no such list: members sign in from their own devices.</p>
       <div class="list">
@@ -416,12 +416,6 @@
     margin: 0;
     font-size: var(--text-sm);
     font-weight: 500;
-  }
-  /* The one mark naming the heading itself a demo's, never a row's own
-     (`strip` in `demo.test.ts` reads it once). */
-  .tag {
-    font-weight: 400;
-    color: var(--warning-text);
   }
   .hint {
     margin: 0;

@@ -1,7 +1,7 @@
 // A demo build, end to end on a seeded Lanterne: the built server outside
 // dev mode with `CELLA_DEMO`, as `cella serve --prod --demo` and the NixOS
 // module's demo option run it. Its sign-in offers Lanterne's fixture
-// members, under one demo tag on the heading, and a member signed in with
+// members, under a heading naming them the demo’s, and a member signed in with
 // their TEST-ONLY device finds the banner on their pages and writes
 // through the notary. The same build without it, a scope's server, offers
 // no one and wears no banner. A visitor's copy, as `cella demo serve`
@@ -39,7 +39,7 @@ after(async () => {
   await su.end()
 })
 
-it('a demo build offers every fixture member at its sign-in, under one demo tag on the heading, under the demo banner', async () => {
+it('a demo build offers every fixture member at its sign-in, under a heading naming them the demo’s, under the demo banner', async () => {
   await shell.start('2026-10-24', { CELLA_DEMO: '1' })
   const { text } = await shell.page('/sign-in')
   // The members whose device in force is a fixture's, its key derived from
@@ -49,7 +49,7 @@ it('a demo build offers every fixture member at its sign-in, under one demo tag 
   const members = new Set(derived.filter((a) => a !== null)).size
   assert.ok(members > 0, 'Lanterne enrols its members’ fixture devices')
   assert.match(text, /Demo members/)
-  assert.equal(text.split('>demo</span>').length - 1, 1, 'only the heading wears the demo tag, not each row')
+  assert.ok(!text.includes('>demo</span>'), 'nothing wears a demo tag: the heading says it')
   assert.doesNotMatch(text, /demo member/, 'no row wears its own demo badge')
   assert.match(text, /Camille Martin/)
   assert.ok(text.includes(banner), 'the sign-in wears the demo’s banner')

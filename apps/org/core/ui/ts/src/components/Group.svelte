@@ -15,7 +15,7 @@
   // set's (`closed`: a state, a priority, a boolean, whose values the code
   // declares and are a handful) keeps its colour: a subtle gradient in its
   // tone, or in an ink seeded by its value where the tone has none
-  // (`groupTint`), the value drawn as `Cell` draws it. An open set's (a
+  // (`groupTint`), the value drawn as `Value` draws it. An open set's (a
   // circle's, a person's, a record's, any other the data holds) is a plain
   // grey bar, its value its `Chip`, a circle's icon in its ink inside it,
   // a person's avatar; a date's month and None are the grey bar and their

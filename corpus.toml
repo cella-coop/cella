@@ -48,8 +48,10 @@ reads = ["**", "!apps/site/src", "!apps/site/public", "!apps/site/test", "!apps/
 # runs them all. It drives Chromium alone (`BROWSERS=chromium`), the
 # version's own check before review; `cella-test-all` is the whole suite
 # in every browser, under a name of its own so a selected pass is never
-# kept for it: the integrator's `merge` needs it, and the `test` flow a
-# push runs, so main is still guarded in Chromium, Firefox and WebKit.
+# kept for it: the `test` flow a push of main runs, and a release runs
+# before it deploys, so a release is judged in Chromium, Firefox and
+# WebKit while a merge waits on none of them (the operator, 19 Nov: the
+# heavy tests move from the merge to the release).
 [[op]]
 name = "cella-test"
 run = ["nix", "develop", "-c", "sh", "-c", "export CELLA_PGPORT=$((10000 + $$ % 9000)) CELLA_ANALYTICS_PORT=$((20000 + $$ % 9000)) BROWSERS=chromium; base=$(git rev-parse -q --verify origin/main || git rev-parse -q --verify main); cella db start && cella test ${base:+--since $base}; status=$?; cella db stop; exit $status"]
@@ -87,12 +89,13 @@ kind = "check"
 # The integrator's pass (apps/org/rs/index.md, Gates): `merge` is corpus's
 # own merge pass, an action run by its name (`corpus flow run merge`), and
 # its needs are what it judges each version by over its train: the org's
-# check, the whole suite in Chromium, Firefox and WebKit, `cella-test-all`,
-# in place of the lane's Chromium-only `cella-test`, and the site's check,
-# so a version merges only where every scenario passes in every browser,
-# composed with the versions ahead of it; a WebKit or Firefox red stops
-# the train though the lane's own gates ran green.
+# check, the e2e scenarios the train's change reaches in Chromium,
+# `cella-test`, and the site's check, so a merge waits minutes, not the
+# whole suite in three browsers. The whole suite, `cella-test-all`, judges
+# main after the push and a release before it deploys: a Firefox or WebKit
+# red on main is fixed first, as a red main is, and a commit that fails it
+# is never released (the operator, 19 Nov: trunk-based releases).
 [[op]]
 name = "merge"
 kind = "action"
-needs = ["cella-check", "cella-test-all", "site-check"]
+needs = ["cella-check", "cella-test", "site-check"]

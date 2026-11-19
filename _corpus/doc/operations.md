@@ -231,6 +231,29 @@ dump as its baseline: migrated in place, its log verified under the
 TEST-ONLY key that signed it, its vault moved to a vault key of its own,
 and both keys rotated.
 
+## Releases
+
+Cella is built on one trunk, and a host runs a release of it, never its
+main: a deployment's flake locks the `cella` input at one commit, and a
+release moves that lock by a commit of its own, so what production ran
+on any day is the deployment's history, and rolling back is reverting
+that commit. Main moves freely between releases; a host follows nothing
+until its lock moves.
+
+A release is judged before it deploys, not when it merges. A merge waits
+on the org's check, the e2e scenarios its change reaches in Chromium and
+the site's check ([the CLI's gates](../../apps/org/rs/index.md#gates));
+the whole suite in Chromium, Firefox and WebKit runs on each push of
+main, where a red is fixed first, and again on the release's commit
+before it deploys, with cella's module, demo and visitors VM tests and
+the host's own VM test. A release that fails any of them never deploys
+and is never tried again. Exposure is the graft architecture's: a feat a
+scope has not installed, or a circle's layout hides, is in the release
+and not in front of anyone.
+
+Lanterne's demo at app.cella.coop is released this way from the
+workshop's flake, whose lock a commit moves (the operator, 19 Nov).
+
 ## Packaging
 
 A host installs a scope from the flake, never from a checkout. The

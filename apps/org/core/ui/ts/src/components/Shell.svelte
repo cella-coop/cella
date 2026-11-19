@@ -34,7 +34,6 @@
   import Popover from './Popover.svelte'
   import { typing } from '../models/keys.ts'
   import { worn } from '../models/theme.ts'
-  import { TestTube } from '../icons.ts'
   import favicon from '@cella/brand/favicon.svg?url'
 
   // The shell: the sidebar and the content beside it; the last write's
@@ -50,7 +49,6 @@
     scope,
     nav,
     actor,
-    dev,
     demo = false,
     copy = 0,
     ends = 0,
@@ -69,7 +67,6 @@
     scope: { address: string; name: string; legal: string | null; logo?: string | null }
     nav: Nav
     actor: Person | null
-    dev: boolean
     // A demo build, whose banner every page wears.
     demo?: boolean
     // A visitor's copy of the demo: the seconds idle before it resets.
@@ -347,15 +344,6 @@
 
   <main class="main">
     {@render children()}
-    {#if dev && !demo}
-      <!-- Dev mode, where anyone signs in as a fixture member: a watermark
-           at the content's foot, by the drawer. Its word is drawn by CSS,
-           a mark and no text to read. A demo's banner, or the panel it is
-           dismissed to, is that corner's one mark instead. -->
-      <p class="prototype" title="Development server: anyone may sign in as a fixture member" aria-hidden="true">
-        <Icon icon={TestTube} size="1.1rem" />
-      </p>
-    {/if}
   </main>
 </div>
 {#if demo}
@@ -384,25 +372,6 @@
     min-height: 0;
     padding: var(--space-3);
     font-size: var(--text-sm);
-  }
-  /* The dev-mode watermark: upright at the content's bottom right, below
-     the drawer, large and faint enough to read past. */
-  .prototype {
-    position: absolute;
-    right: var(--space-4);
-    bottom: var(--space-3);
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    margin: 0;
-    font-size: var(--text-md);
-    color: var(--text);
-    opacity: 0.16;
-    pointer-events: none;
-    user-select: none;
-  }
-  .prototype::after {
-    content: 'prototype';
   }
   .top {
     display: grid;

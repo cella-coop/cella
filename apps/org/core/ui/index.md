@@ -190,9 +190,7 @@ draws.
   member's own (Devices), then Organization, the coop's (Imports,
   and Features, the circle the member is in, the same page More…
   opens). The account menu's Settings opens
-  it at Personal's first page, the coop menu's at Organization's. In
-  dev mode a faint upright "prototype" with a test tube sits at the
-  content's bottom right. A demo build's banner (`DemoBanner`) is one
+  it at Personal's first page, the coop menu's at Organization's. A demo build's banner (`DemoBanner`) is one
   fixed strip along the viewport's foot, on every page, never dismissed,
   which pads the page it sits on by its own height so it hides nothing: a
   flask, "Prototype · mock coop", its tooltip the operator's notice and,

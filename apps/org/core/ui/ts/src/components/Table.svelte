@@ -180,9 +180,15 @@
     padding-inline-end: var(--edge);
   }
   /* A table of totals alone keeps its columns for assistive technology
-     and shows no headers. */
+     and shows no headers: hidden visually, not from the accessibility
+     tree, so a screen reader still has the column names for its row. */
   thead.none {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   tfoot th {
     text-align: start;

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { AddReaction, Button, Conversation, Form, Hidden, Icon, icons, Mention, Message, Reactions, Rich, RichField, date, type Suggest } from '@cella/org-ui'
+  import { AddReaction, Button, Chip, Conversation, Form, Hidden, Icon, icons, Message, Reactions, Rich, RichField, date, type Suggest } from '@cella/org-ui'
   import { label, parts, tally, type Comment, type Thread } from '../models/thread.ts'
 
   // One thread, a `Conversation`: its root and under it its replies, one
@@ -37,7 +37,7 @@
 </script>
 
 {#snippet said(c: Comment, depth: number)}
-  {#snippet words(text: string)}{#each parts(text) as p, i (i)}{#if 'mention' in p}<Mention label="@{label(c.mentions.find((m) => m.person === p.mention), p.mention)}" title={p.mention} />{:else}{p.text}{/if}{/each}{/snippet}
+  {#snippet words(text: string)}{#each parts(text) as p, i (i)}{#if 'mention' in p}<Chip inline label="@{label(c.mentions.find((m) => m.person === p.mention), p.mention)}" title={p.mention} />{:else}{p.text}{/if}{/each}{/snippet}
   {#snippet chips()}<Reactions items={tally(c.reactions)} action={discuss && react ? react : undefined} fields={{ comment: c.id }} />{/snippet}
   {#snippet actions()}
     {#if discuss && reactions && react}

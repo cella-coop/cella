@@ -10,7 +10,9 @@
   // menu, it focuses its first item on opening, and the arrow keys, Home
   // and End move among its items. `open` opens it once it is drawn, as a
   // condition just added opens to pick its values; `onclose` hears it
-  // close.
+  // close. `form` is the preset a form popover takes, `menu` false,
+  // `wide` and its trigger read as a button at once, as a motion's
+  // Propose.
   let {
     label,
     trigger,
@@ -24,6 +26,7 @@
     icon = false,
     open = false,
     onclose,
+    form = false,
   }: {
     // The trigger is an icon alone, as `Button`'s `icon`: named by `label`.
     icon?: boolean
@@ -47,9 +50,13 @@
     chip?: boolean
     open?: boolean
     onclose?: () => void
+    // The form preset: no menu, wide, its trigger a button, one flag in
+    // place of the three.
+    form?: boolean
   } = $props()
 
   const id = $props.id()
+  const asMenu = $derived(form ? false : menu)
   const opening = (pop: HTMLElement) => {
     if (open && !pop.matches(':popover-open')) {
       pop.showPopover()
@@ -67,7 +74,7 @@
     if (anchor && !CSS.supports('position-anchor', '--a')) {
       place(pop, anchor, side)
     }
-    if (menu) {
+    if (asMenu) {
       const on = pop.querySelector<HTMLElement>('[role^="menuitem"][aria-checked="true"]')
       ;(on ?? items(pop)[0])?.focus()
     }
@@ -81,7 +88,7 @@
   }
 
   function onkeydown(e: KeyboardEvent) {
-    if (!menu) {
+    if (!asMenu) {
       return
     }
     const list = items(e.currentTarget as HTMLElement)
@@ -99,7 +106,7 @@
   }
 </script>
 
-<button type="button" class="trigger" class:button class:chip class:icon popovertarget={id} title={icon ? label : undefined} aria-label={icon ? label : undefined} aria-haspopup={menu ? 'menu' : 'dialog'} aria-describedby="{id}-about" style:anchor-name="--{id}">
+<button type="button" class="trigger" class:button={button || form} class:chip class:icon popovertarget={id} title={icon ? label : undefined} aria-label={icon ? label : undefined} aria-haspopup={asMenu ? 'menu' : 'dialog'} aria-describedby="{id}-about" style:anchor-name="--{id}">
   {@render trigger()}
   <span id="{id}-about" hidden>{label}</span>
 </button>
@@ -109,9 +116,9 @@
   popover="auto"
   class="popover {side}"
   class:end={align === 'end'}
-  class:wide
+  class:wide={wide || form}
   class:fit={icon}
-  role={menu ? 'menu' : 'dialog'}
+  role={asMenu ? 'menu' : 'dialog'}
   aria-label={label}
   style:position-anchor="--{id}"
   {ontoggle}

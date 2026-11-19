@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Conversation, Empty, Form, Hidden, Icon, icons, Mention, Message, Note, plain, Remark, Rich, RichField, type Embeds } from '@cella/org-ui'
+  import { Button, Chip, Conversation, Empty, Form, Hidden, Icon, icons, Message, Note, plain, Remark, Rich, RichField, type Embeds } from '@cella/org-ui'
   import type { Detail } from '../../models/motion.ts'
   import { conversations, parts } from '../../models/thread.ts'
   import { useThread } from '../../hooks/useThread.ts'
@@ -22,9 +22,9 @@
   const local = (address: string) => address.split('@')[0]
 </script>
 
-{#snippet person(ref: string, label: string)}{#if member}<member.embed.block {ref} data={member.data} />{:else}<Mention {label} />{/if}{/snippet}
+{#snippet person(ref: string, label: string)}{#if member}<member.embed.block {ref} data={member.data} />{:else}<Chip inline {label} />{/if}{/snippet}
 
-{#snippet words(text: string)}{#each parts(text) as p, i (i)}{#if 'mention' in p}{@render person(p.mention, `@${p.mention}`)}{:else if 'link' in p}{#if document}<document.embed.block ref={p.link} data={document.data} />{:else}<Mention label={p.link} />{/if}{:else}{p.text}{/if}{/each}{/snippet}
+{#snippet words(text: string)}{#each parts(text) as p, i (i)}{#if 'mention' in p}{@render person(p.mention, `@${p.mention}`)}{:else if 'link' in p}{#if document}<document.embed.block ref={p.link} data={document.data} />{:else}<Chip inline label={p.link} />{/if}{:else}{p.text}{/if}{/each}{/snippet}
 
 {#each cards as card (card.root.receipt)}
   {const answering = $derived(card.messages.find((m) => m.receipt === thread.reply && m.receipt !== card.root.receipt) ?? null)}

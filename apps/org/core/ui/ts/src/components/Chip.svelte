@@ -15,7 +15,11 @@
   // surface declares), so it reads on the panel, a raised card, a grey
   // bar, a hovered row or a floating list alike, in either theme, and
   // never shouts. One a list lets go of, as a view's displayed field,
-  // ends in a small × that removes it (`remove`), named for what it does.
+  // ends in a small × that removes it (`remove`), named for what it
+  // does. `inline` draws it as a member or a document named inside a
+  // text instead, a quiet accent chip sitting in the line rather than
+  // stepped from a surface, plain where it names nothing (no `href`),
+  // as a mention gone unresolved.
   let {
     label,
     icon,
@@ -25,6 +29,7 @@
     title,
     weight = 'duotone',
     remove,
+    inline = false,
   }: {
     label: string
     icon?: Component<any>
@@ -34,6 +39,7 @@
     title?: string
     weight?: 'regular' | 'duotone'
     remove?: { label: string; onclick: () => void }
+    inline?: boolean
   } = $props()
 </script>
 
@@ -51,9 +57,9 @@
 {/snippet}
 
 {#if href}
-  <a class="chip" class:lead={!!(avatar || icon)} {href} {title} style={ink !== undefined ? inked(ink) : undefined}>{@render inner()}</a>
+  <a class="chip" class:lead={!!(avatar || icon)} class:inline {href} {title} style={ink !== undefined ? inked(ink) : undefined}>{@render inner()}</a>
 {:else}
-  <span class="chip" class:lead={!!(avatar || icon)} {title} style={ink !== undefined ? inked(ink) : undefined}>{@render inner()}</span>
+  <span class="chip" class:lead={!!(avatar || icon)} class:inline class:unknown={inline} {title} style={ink !== undefined ? inked(ink) : undefined}>{@render inner()}</span>
 {/if}
 
 <style>
@@ -78,6 +84,22 @@
   }
   a.chip:hover {
     background: color-mix(in oklab, var(--text) calc(var(--lift) * 2), var(--surface));
+  }
+  /* Inline, as a text's mention or linked document: a quiet accent chip
+     in the line, never stepped from a surface. */
+  .inline {
+    padding: 0 0.3em;
+    background: var(--accent-soft);
+    color: var(--accent-text);
+    font-weight: 500;
+  }
+  a.chip.inline:hover {
+    background: var(--accent-soft);
+    text-decoration: underline;
+  }
+  .inline.unknown {
+    background: var(--sunk);
+    color: var(--text-muted);
   }
   .mark {
     display: inline-flex;

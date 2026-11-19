@@ -12,7 +12,11 @@
   import { useForm } from '../hooks/useForm.ts'
 
   // A field: text, a number, a date, a time, an address, an email or a
-  // file, or a choice among `options`, its label over it. Its modes:
+  // file, a choice among `options`, a circle (`type` `circle`, posting
+  // its id) or a person (`type` `person`, posting their address), its
+  // label over it. `unit` draws quiet after its value or its input, as a
+  // number's kilograms, hours or per cent where `Value`'s own kinds do
+  // not already carry one. Its modes:
   // - as a form's, it posts its value with the form it is in;
   // - `readonly`, its label and its value as text, no input drawn and
   //   nothing posted, the value drawn by `Value` as its `kind`, or as its
@@ -57,11 +61,12 @@
     editor,
     open = false,
     onclose,
+    unit,
     children,
   }: {
     label: string
     name?: string
-    type?: 'text' | 'number' | 'date' | 'time' | 'url' | 'email' | 'file'
+    type?: 'text' | 'number' | 'date' | 'time' | 'url' | 'email' | 'file' | 'circle' | 'person'
     value?: string | number | null
     options?: { value: string; label: string }[]
     rows?: number
@@ -70,6 +75,9 @@
     step?: string
     list?: string[]
     wide?: boolean
+    // Quiet after the value or the input, as a number's kilograms, hours
+    // or per cent, where `Value`'s own kind does not already carry one.
+    unit?: string
     // For a file, the media types it offers to pick, such as image/*.
     accept?: string
     // What the field says beside its label, as who changes it.
@@ -101,7 +109,7 @@
   // Its name as the form it is in posts it.
   const form = useForm()
   const posted = $derived(form.name(name))
-  const drawn = $derived<Kind>(kind ?? (type === 'number' ? 'number' : type === 'date' ? 'date' : 'text'))
+  const drawn = $derived<Kind>(kind ?? (type === 'number' ? 'number' : type === 'date' ? 'date' : type === 'circle' ? 'circle' : type === 'person' ? 'person' : 'text'))
   const commits = $derived(live && !bare ? committing({ commit: () => oncommit?.(), revert: () => onrevert?.() }) : undefined)
 </script>
 
@@ -113,6 +121,7 @@
   {:else}
     <Value {value} kind={drawn} {tone} {record} {href} size={bare ? 'drawer' : 'cell'} />
   {/if}
+  {#if unit}<span class="unit">{unit}</span>{/if}
 {/snippet}
 
 {#snippet line()}
@@ -157,26 +166,29 @@
     {:else}
       <label class="label" for={id} id="{id}-label">{label}</label>
     {/if}
-    {#if options}
-      <Select {id} labelledby="{id}-label" name={posted} {options} {placeholder} {required} bind:value={() => String(value ?? ''), (v) => (value = v)} />
-    {:else if type === 'date'}
-      <DateField {id} name={posted} {required} bind:value={() => value ?? '', (v) => (value = v)} />
-    {:else if type === 'time'}
-      <TimeField {id} name={posted} {required} bind:value={() => value ?? '', (v) => (value = v)} />
-    {:else if type === 'file'}
-      <FilePicker {id} labelledby="{id}-label" name={posted} {required} {accept} />
-    {:else if rows}
-      <textarea {id} name={posted} {rows} {required} {placeholder} bind:value></textarea>
-    {:else}
-      <input {id} name={posted} {type} {required} {placeholder} {step} bind:value list={list ? `${id}-list` : undefined} />
-      {#if list}
-        <datalist id="{id}-list">
-          {#each list as l (l)}
-            <option value={l}></option>
-          {/each}
-        </datalist>
+    <span class="control" class:grouped={!!unit}>
+      {#if options}
+        <Select {id} labelledby="{id}-label" name={posted} {options} {placeholder} {required} bind:value={() => String(value ?? ''), (v) => (value = v)} />
+      {:else if type === 'date'}
+        <DateField {id} name={posted} {required} bind:value={() => value ?? '', (v) => (value = v)} />
+      {:else if type === 'time'}
+        <TimeField {id} name={posted} {required} bind:value={() => value ?? '', (v) => (value = v)} />
+      {:else if type === 'file'}
+        <FilePicker {id} labelledby="{id}-label" name={posted} {required} {accept} />
+      {:else if rows}
+        <textarea {id} name={posted} {rows} {required} {placeholder} bind:value></textarea>
+      {:else}
+        <input {id} name={posted} {type} {required} {placeholder} {step} bind:value list={list ? `${id}-list` : undefined} />
+        {#if list}
+          <datalist id="{id}-list">
+            {#each list as l (l)}
+              <option value={l}></option>
+            {/each}
+          </datalist>
+        {/if}
       {/if}
-    {/if}
+      {#if unit}<span class="unit">{unit}</span>{/if}
+    </span>
   </div>
 {/if}
 
@@ -218,6 +230,22 @@
   .link:hover {
     text-decoration: underline;
     text-decoration-color: var(--accent-border);
+  }
+  /* No unit: the control alone, taking no box of its own. */
+  .control {
+    display: contents;
+  }
+  /* A unit beside the control, as a number's kilograms or per cent. */
+  .control.grouped {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .unit {
+    flex: none;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    white-space: nowrap;
   }
 
   /* Bare, as the drawer's rows: one height, a step in from the heading

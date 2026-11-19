@@ -203,6 +203,9 @@
     text-decoration-color: var(--accent-border);
     text-underline-offset: 2px;
   }
+  /* A mention or a link picked here, in the contenteditable surface
+     itself rather than a component: `Chip`'s own `inline` look, raw DOM
+     having no room for the component that draws it elsewhere. */
   .text :global(.token) {
     padding: 0 0.3em;
     border-radius: var(--radius-control);

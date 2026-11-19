@@ -249,7 +249,9 @@ draws.
   trigger fills its row, as in the sidebar, or reads as a quiet button
   (`button`) or a chip (`chip`), as a condition on a collection's rows;
   `open` opens it once drawn, as a condition just added opens to pick
-  its values. The ui
+  its values. `form` is the preset a form popover takes, in one flag
+  what `menu` false, `wide` and `button` are together, as a motion's
+  Propose. The ui
   check refuses a layer floated by hand (`position: absolute` with a
   `z-index`) anywhere else.
 - `Dialog`: the one modal, a native `dialog` in the top layer, what
@@ -741,7 +743,10 @@ draws.
   `Segmented` (one of a few mutually exclusive choices, each an icon, in
   a well with its chosen segment lifted, as the collection's layout
   picker), `Chip` (a record named compactly, as
-  below), `Person` (a person wherever one appears:
+  below; `inline` draws it as a member or a document named inside a
+  text instead, a quiet accent chip in the line rather than stepped
+  from a surface, plain where it names nothing, as a mention gone
+  unresolved: what the shell's Mention was, now Chip's own), `Person` (a person wherever one appears:
   their name, their address on hover; a column, property or event of the
   `person` kind is an address drawn so, from the names of the people the
   coop knows, which the shell reads once for its pages; a column of the
@@ -797,8 +802,12 @@ draws.
   `Hidden` (a value a form posts that no one types, named through the
   form it is in),
   `Field` (text, a number, a date, a time, an address, an email or a
-  file, or a choice among `options`, drawn by `Select`, in one of its
-  modes ([fields](#fields)); its label names
+  file, a choice among `options`, drawn by `Select`, a circle (`circle`,
+  a select posting the circle's id) or a person (`person`, posting
+  their address), in one of its
+  modes ([fields](#fields)); `unit` draws quiet after its value or its
+  input, a number's kilograms, hours or per cent where `Value`'s own
+  kind does not already carry one; its label names
   it by its id and never wraps it; a date is typed in the app's locale
   and posts as an ISO day, its own calendar a button beside it
   (`DateField`): a month of days in the top layer, anchored to the
@@ -838,9 +847,7 @@ draws.
   slice puts at its end and a quiet removal when the slice offers one;
   `fixed` drops both once the list may not change), `Prose`, `Note` (a line that says something, a state or a reason; where nothing is shown, `Empty` says so), `Row` (items side by side, wrapping; `spaced` sets read-only fields apart), the comment parts
   ([comments](#comments)): `Conversation`, `Message`, `Reactions`,
-  `AddReaction`, `Remark`, `Rich` and `RichField`,
-  `Mention` (a member or a document named inside a
-  text, a quiet chip linking to it), `Icon`
+  `AddReaction`, `Remark`, `Rich` and `RichField`, `Icon`
   (Phosphor, duotone), `Outcome` (the last write's outcome, floating
   until dismissed: each write with its verdict and reason; a write of
   several stopped part-way says that those it wrote first stand and only
@@ -889,7 +896,9 @@ draws.
   inside it, or named by its `label` where it has no text; Space or a
   press anywhere on it turns it once, fired as a `change`. A checkbox is a small box, filled with ink and checked once
   on; a switch (`role="switch"`), a track its knob crosses, filled once
-  on. With a `name` it posts its value while on.
+  on. With a `name` it posts its value while on; `required` holds the
+  form back while it is off, a terms box as much as a native one, and
+  sends the focus to the button.
 - `icons`: the Phosphor icons slices may name.
 
 A view whose rows are not its own items links each where its `href`

@@ -8,7 +8,9 @@
   // on it turning it once, its box and the text that names it inside it,
   // or, with no text, named by its `label`. A switch (`role="switch"`)
   // wears a track and a knob, a checkbox a box with a check. With a
-  // `name` it posts `value` while on, as a form's checkbox does. Given
+  // `name` it posts `value` while on, as a form's checkbox does;
+  // `required` holds the form back while it is off, a terms box as much
+  // as a native one, and sends the focus to the button. Given
   // `checked`, it turns at once and follows the value as it changes, as
   // where the address follows it; bound, it reads only what holds it
   // says. A turn is handed to `onchange` and announced to what holds it
@@ -20,6 +22,7 @@
     disabled = false,
     name,
     value = 'on',
+    required = false,
     onchange,
     children,
   }: {
@@ -30,9 +33,12 @@
     disabled?: boolean
     name?: string
     value?: string
+    required?: boolean
     onchange?: (checked: boolean) => void
     children?: Snippet
   } = $props()
+
+  let trigger: HTMLButtonElement
 
   function onclick(e: MouseEvent) {
     const next = !checked
@@ -42,13 +48,48 @@
   }
 </script>
 
-<button type="button" class="check {role}" class:bare={!children} {role} aria-checked={checked} aria-label={label} {disabled} {onclick}>
-  <span class="box">{#if role === 'checkbox' && checked}<Icon icon={Check} size="0.8em" />{/if}</span>
-  {#if children}<span class="text">{@render children()}</span>{/if}
-</button>
-{#if name && checked}<input type="hidden" {name} {value} />{/if}
+<span class="field">
+  <button
+    bind:this={trigger}
+    type="button"
+    class="check {role}"
+    class:bare={!children}
+    {role}
+    aria-checked={checked}
+    aria-label={label}
+    aria-required={required || undefined}
+    {disabled}
+    {onclick}
+  >
+    <span class="box">{#if role === 'checkbox' && checked}<Icon icon={Check} size="0.8em" />{/if}</span>
+    {#if children}<span class="text">{@render children()}</span>{/if}
+  </button>
+  {#if name && checked}
+    <input type="hidden" {name} {value} />
+  {:else if required && !checked}
+    <!-- What the form validates, unseen and out of the tab order: held
+         back while it is off, the focus sent to the button. -->
+    <input class="proxy" tabindex="-1" aria-hidden="true" autocomplete="off" required value="" oninvalid={() => trigger.focus()} />
+  {/if}
+</span>
 
 <style>
+  .field {
+    position: relative;
+    display: inline-flex;
+    min-width: 0;
+  }
+  .proxy {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
   .check {
     display: inline-flex;
     align-items: center;

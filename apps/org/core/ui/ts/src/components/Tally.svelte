@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Kind, Tone } from '../models/view.ts'
   import { show } from '../models/format.ts'
+  import Dot from './Dot.svelte'
 
   // A whole split in parts: one thin bar in proportion and its legend
   // under it, each part's dot in its tone, its label and its figure, as a
@@ -22,7 +23,7 @@
   </div>
   <ul class="legend" aria-label="Tally of {show(of ?? total, kind)}">
     {#each items as i (i.label)}
-      <li><span class="dot" data-tone={i.tone ?? 'neutral'} aria-hidden="true"></span>{i.label} <b>{show(i.value, kind)}</b></li>
+      <li><span class="dotwrap"><Dot tone={i.tone ?? 'neutral'} /></span>{i.label} <b>{show(i.value, kind)}</b></li>
     {/each}
   </ul>
 </div>
@@ -62,13 +63,10 @@
     color: var(--text);
     font-variant-numeric: tabular-nums;
   }
-  .dot {
-    display: inline-block;
-    width: 0.5em;
-    height: 0.5em;
+  .dotwrap {
+    display: inline-flex;
     margin-inline-end: var(--space-1);
-    border-radius: 50%;
-    background: var(--text-subtle);
+    vertical-align: middle;
   }
   [data-tone='positive'] {
     background: var(--positive-text);

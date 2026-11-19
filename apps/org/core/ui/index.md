@@ -67,16 +67,19 @@ ink. Components read roles, never shades:
   and a card's own padding is their inset;
 - states: a state has one look everywhere, a table's cell, a list's
   line, a card, the drawer, a panel's header: a soft pill with a dot and
-  its word (`Badge`, which `Value` draws for a `badge`), the dot in its
-  tone or, where the tone has no colour of its own, in an ink seeded by
-  its word. A badge's tone is its state's class, alike in both themes:
-  neutral at rest (a draft, closed, voided), accent under way (open,
-  unpaid, submitted, approved and not yet paid), drawn as an ink ring
-  with no fill so it never reads as an alarm, positive settled, warning
-  wanting attention (overdue, suspended), negative refused or failed;
+  its word (`Badge`, which `Value` draws for a `badge`), drawn from the
+  kit's own primitives, the dot (`Dot`) in its tone or, where the tone
+  has no colour of its own, in an ink seeded by its word. A badge's tone
+  is its state's class, alike in both themes: neutral at rest (a draft,
+  closed, voided), accent under way (open, unpaid, submitted, approved
+  and not yet paid), drawn as an ink ring with no fill so it never reads
+  as an alarm, positive settled, warning wanting attention (overdue,
+  suspended), negative refused, failed an operational failure rather
+  than a refusal (an import row, a run), never confused with one;
   positive and negative are the brand's success and error
   (`--positive-*` reads `--success-*`, `--negative-*` reads `--error-*`),
-  and info and help wait for a state that needs them. The soft fills are
+  failed the brand's help (`--help-*`), and info waits for a state that
+  needs it still. The soft fills are
   tints (`--soft`, the brand's `--soft-a`), lighter in dark, so a tone
   shows in its text and never saturates; a state is never told by colour
   alone, keeping its word; a tone's text is never dimmed, since it
@@ -715,9 +718,11 @@ draws.
   alone, and the ui check refuses an item page that frames itself. Esc
   goes back to the collection.
 - `Card` (a borderless card raised on the panel, in the drawer, as the
-  View panel and a calendar's Legend), `Section` (a titled block in a
-  tab or a page), both headed by the one `Heading`, as a `Panel` is
-  ([panels](#panels)),
+  View panel and a calendar's Legend) and `Section` (a titled block in a
+  tab or a page) keep their own roles, a card's and a tab's content, but
+  share `Panel`'s own header, its icon, its count, a state's pill and
+  quiet facts ([panels](#panels)): all three are headed by the one
+  `Heading`.
   `Properties`, `Related`, `Activity`, `Table` (with `dense` and
   `totals`, [panels](#panels); with `onmove`, its columns reorder by
   their headers, [dragging](#dragging)), `Sheet` (a financial statement alone:
@@ -728,7 +733,14 @@ draws.
   label and what bounds it, its value now and the one proposed as
   read-only `Field`s, a badge saying how it bears, over a sentence
   saying what it means, which wraps and is never cut off), `Badge` (a
-  state's pill: its tone's soft fill, a dot and its word), `Chip` (a record named compactly, as
+  state's pill: its tone's soft fill, a dot (`Dot`) and its word),
+  `Dot` (the one dot, a state's own mark where it carries no icon,
+  Badge's, a `Tally`'s legend and a group's bar alike, its tone's own
+  colour or an ink seeded by its value), `Count` (a whole figure, muted
+  and tabular, beside a title or a value, a heading's, a legend's),
+  `Segmented` (one of a few mutually exclusive choices, each an icon, in
+  a well with its chosen segment lifted, as the collection's layout
+  picker), `Chip` (a record named compactly, as
   below), `Person` (a person wherever one appears:
   their name, their address on hover; a column, property or event of the
   `person` kind is an address drawn so, from the names of the people the
@@ -978,7 +990,9 @@ with its left edge. Its anatomy:
 - the header, the one heading (`Heading`): its icon, its `title` and
   its `count` muted beside it, then at its end its state's pill
   (`status`, a `Badge`) and quiet facts (`meta`, a `Meta`: a date, "due
-  19 Nov", "3 mandates");
+  19 Nov", "3 mandates"); `Section`, a tab's content, and the drawer's
+  `Card` keep their own roles but draw this same header, so a tab and a
+  card wear a state's pill and quiet facts exactly as a panel does;
 - the body, what it summarises, composed of the inner elements below;
 - the footer, where it has one: `help` on its left, muted, as why a vote
   is not offered or what a threshold means, and its key actions

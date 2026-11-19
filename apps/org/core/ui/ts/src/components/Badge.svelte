@@ -2,19 +2,23 @@
   import type { Component, Snippet } from 'svelte'
   import type { Tone } from '../models/view.ts'
   import { inked } from '../models/ink.ts'
+  import Dot from './Dot.svelte'
   import Icon from './Icon.svelte'
 
-  // A state, its tone its class, the same in both themes: neutral at rest
-  // (a draft, closed, voided); accent under way (open, unpaid, submitted),
-  // a soft ring around muted text, quieter than what wants attention;
-  // positive settled (paid, passed); warning wanting attention (overdue,
-  // suspended); negative refused or failed. The fills are soft tints, lighter still in
-  // dark (`--soft`), so a tone shows in its text and never saturates. A
-  // badge naming a record wears its collection's `icon` before its text,
-  // in the record's own ink (`ink`, `models/ink.ts`'s `inkOf`) where one
-  // is given; one with neither wears a small dot instead, in its tone or
-  // its ink, as Linear's chips do, so a state is never told by colour
-  // alone but always carries one.
+  // A state, one look everywhere, a soft pill with a dot: its tone its
+  // class, the same in both themes: neutral at rest (a draft, closed,
+  // voided); accent under way (open, unpaid, submitted), a soft ring
+  // around muted text, quieter than what wants attention; positive
+  // settled (paid, passed); warning wanting attention (overdue,
+  // suspended); negative refused; failed, an operational failure rather
+  // than a refusal (an import row, a run), its own tone so it is never
+  // confused with one. The fills are soft tints, lighter still in dark
+  // (`--soft`), so a tone shows in its text and never saturates. A badge
+  // naming a record wears its collection's `icon` before its text, in
+  // the record's own ink (`ink`, `models/ink.ts`'s `inkOf`) where one is
+  // given; one with neither wears the kit's own `Dot` instead, in its
+  // tone or its ink, as Linear's chips do, so a state is never told by
+  // colour alone but always carries one.
   let { tone = 'neutral', icon, ink, children }: { tone?: Tone; icon?: Component<any>; ink?: number; children: Snippet } = $props()
 </script>
 
@@ -22,7 +26,7 @@
   {#if icon}
     <span class="mark" class:inked={ink !== undefined}><Icon {icon} size="1em" /></span>
   {:else}
-    <span class="dot" class:inked={ink !== undefined} aria-hidden="true"></span>
+    <span class="dotwrap"><Dot {tone} {ink} /></span>
   {/if}
   <span class="text">{@render children()}</span>
 </span>
@@ -53,17 +57,10 @@
     opacity: 1;
     color: var(--mark);
   }
-  .dot {
-    display: inline-block;
-    width: 0.4em;
-    height: 0.4em;
+  .dotwrap {
+    display: inline-flex;
     margin-inline-end: var(--space-1);
-    border-radius: 50%;
-    background: currentColor;
     vertical-align: middle;
-  }
-  .dot.inked {
-    background: var(--mark);
   }
   .neutral {
     background: var(--neutral-soft);
@@ -84,5 +81,9 @@
   .warning {
     background: var(--warning-soft);
     color: var(--warning-text);
+  }
+  .failed {
+    background: var(--help-soft);
+    color: var(--help-text);
   }
 </style>

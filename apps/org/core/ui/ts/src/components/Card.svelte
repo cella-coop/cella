@@ -1,16 +1,25 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte'
+  import type { Component, Snippet } from 'svelte'
+  import type { Tone } from '../models/view.ts'
   import Heading from './Heading.svelte'
 
   // A borderless card, raised on the panel: the drawer's View or Legend,
-  // a dashboard's figure. Its header is the one heading, its count muted
-  // and an optional quiet control at its end, which the title's own line
-  // makes room for; its own padding insets what it holds.
-  let { title, count, actions, children }: { title: string; count?: number; actions?: Snippet; children: Snippet } = $props()
+  // a dashboard's figure. Its header is the one heading, as a `Panel`'s:
+  // its icon, its count muted, a state's pill and an optional quiet
+  // control at its end, which the title's own line makes room for; its
+  // own padding insets what it holds.
+  let {
+    title,
+    icon,
+    count,
+    status,
+    actions,
+    children,
+  }: { title: string; icon?: Component<any>; count?: number; status?: { label: string; tone?: Tone; ink?: number } | null; actions?: Snippet; children: Snippet } = $props()
 </script>
 
 <section class="card">
-  <Heading {title} {count} {actions} />
+  <Heading {title} {icon} {count} {status} {actions} />
   {@render children()}
 </section>
 

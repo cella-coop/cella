@@ -24,6 +24,7 @@
   import Card from './Card.svelte'
   import Icon from './Icon.svelte'
   import Popover from './Popover.svelte'
+  import Segmented from './Segmented.svelte'
   import Select from './Select.svelte'
   import Widgets from './Widgets.svelte'
 
@@ -235,13 +236,7 @@
       </button>
     {/if}
   {/snippet}
-  <div class="views" role="group" aria-label="Layout">
-    {#each layouts as l (l.id)}
-      <button class:on={spec.layout === l.id} aria-pressed={spec.layout === l.id} aria-label={l.label} title={l.label} onclick={() => change({ layout: l.id })}>
-        <Icon icon={l.icon} />
-      </button>
-    {/each}
-  </div>
+  <Segmented label="Layout" options={layouts.map((l) => ({ value: l.id, label: l.label, icon: l.icon }))} value={spec.layout} onchange={(id) => change({ layout: id as Layout })} />
 
   <div class="rows">
     {#if spec.layout === 'board'}
@@ -465,29 +460,6 @@
   }
   legend {
     padding: 0 0 var(--space-1);
-  }
-  .views {
-    display: flex;
-    background: var(--sunk);
-    border-radius: var(--radius-control);
-    padding: 2px;
-  }
-  .views button {
-    display: grid;
-    place-items: center;
-    flex: 1;
-    height: 1.75rem;
-    padding: 0;
-    border: none;
-    border-radius: calc(var(--radius-control) - 2px);
-    background: none;
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    cursor: pointer;
-  }
-  .views button.on {
-    background: var(--selected);
-    color: var(--text);
   }
   /* Fields: its label over the chips, which flow from the panel's start
      across its whole width, in even rows. */

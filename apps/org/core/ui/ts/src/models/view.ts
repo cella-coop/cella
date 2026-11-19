@@ -26,7 +26,7 @@ export type Kind = 'text' | 'title' | 'mono' | 'money' | 'date' | 'number' | 'ba
 // a colour, so only a closed set's group headers wear one.
 export const closed = (kind: Kind = 'text', record?: string): boolean => !record && (kind === 'badge' || kind === 'priority' || kind === 'boolean')
 
-export type Tone = 'neutral' | 'accent' | 'positive' | 'negative' | 'warning'
+export type Tone = 'neutral' | 'accent' | 'positive' | 'negative' | 'warning' | 'failed'
 
 // A column of a collection. In the list view `role` places it: the title,
 // the line under it, or the trailing meta; `hidden` keeps it to the table.

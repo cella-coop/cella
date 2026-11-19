@@ -2,6 +2,7 @@
   import type { Component, Snippet } from 'svelte'
   import type { Tone } from '../models/view.ts'
   import Badge from './Badge.svelte'
+  import Count from './Count.svelte'
   import Icon from './Icon.svelte'
   import Meta from './Meta.svelte'
 
@@ -36,7 +37,7 @@
   <h2 class="title" {id}>
     {#if icon}<span class="mark" aria-hidden="true"><Icon {icon} size="1em" /></span>{/if}
     <span class="name">{title}</span>
-    {#if count !== undefined}<span class="count">{count}</span>{/if}
+    {#if count !== undefined}<span class="count"><Count value={count} /></span>{/if}
   </h2>
   {#if status || meta || actions}
     <span class="end">
@@ -86,8 +87,6 @@
     font-family: var(--font-ui);
     font-size: var(--text-xs);
     font-weight: 400;
-    color: var(--text-subtle);
-    font-variant-numeric: tabular-nums;
   }
   .end {
     display: inline-flex;

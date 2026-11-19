@@ -3,6 +3,7 @@
   import type { Key } from '../models/calendar.ts'
   import { inked } from '../models/ink.ts'
   import Card from './Card.svelte'
+  import Count from './Count.svelte'
   import Value from './Value.svelte'
 
   // What a grouped calendar's colours mean, as a card of the drawer under
@@ -25,7 +26,7 @@
           {:else}
             <Value value={by.value(k.row)} kind={by.kind} tone={by.tone?.(k.row)} record={by.record} />
           {/if}
-          <span class="count">{k.count}</span>
+          <span class="count"><Count value={k.count} /></span>
         </button>
       </li>
     {/each}
@@ -72,8 +73,6 @@
   }
   .count {
     margin-inline-start: auto;
-    color: var(--text-muted);
-    font-variant-numeric: tabular-nums;
   }
   .swatch {
     flex: none;

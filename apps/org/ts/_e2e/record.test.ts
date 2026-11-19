@@ -4,7 +4,8 @@
 // record of each kind the dev fixture holds, chosen in its circle where
 // it has one in the assembly's, else any of its own, and finds the
 // body's note under its header: opening, read-only or ready to edit,
-// never nothing. Left out: the import and report feats, whose fixture
+// never nothing, a record laid out on its panels once its Notes' "Add a
+// note" opens it. Left out: the import and report feats, whose fixture
 // seeds no run and no saved report to open, and patronage's statements,
 // a view with no row of its own to keep one on. `SHOTS` names where its
 // screenshots go. Run by `cella test e2e record`.
@@ -65,6 +66,12 @@ eachBrowser((name, launch) => {
 
         await page.goto(`${base}/${path}/${encodeURIComponent(row.id)}`)
         await page.waitForLoadState('networkidle')
+        // A record laid out on its panels keeps its body in its Notes,
+        // which offer only "Add a note" while it holds nothing.
+        const add = page.getByRole('button', { name: 'Add a note' })
+        if (await add.isVisible()) {
+          await add.click()
+        }
         const body = page.locator('[data-body]')
         await body.waitFor({ timeout: 20_000 })
         assert.equal(await body.count(), 1, `${name}: ${path}/${row.id} shows one body`)

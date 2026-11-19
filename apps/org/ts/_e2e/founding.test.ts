@@ -1,5 +1,5 @@
 // The founding, end to end on a fresh scope beside the seeded Lanterne: a
-// database migrated and empty, as a new co-op's is, founded as a SCOP SARL
+// database migrated and empty, as a new coop's is, founded as a SCOP SARL
 // in France by three founders, as the log's first entry. A founding with
 // no procedure for its root, one naming no founding motion, one whose
 // motion a founder gave no stance on and one with a founder seated
@@ -64,7 +64,7 @@ test('a founding with no procedure for its root is refused, and leaves the log e
   const read = await founding(su, { scope, founders, day, keep: (d: { kind: string }) => d.kind !== 'procedure' })
   const { outcome } = await seed(su, read, { from: 'no procedure' })
   assert.equal(outcome.state, 'refused')
-  assert.match(outcome.reason ?? '', /ag decides by consent, which no policy in force there makes: a co-op is founded with the procedure its root decides by/)
+  assert.match(outcome.reason ?? '', /ag decides by consent, which no policy in force there makes: a coop is founded with the procedure its root decides by/)
   assert.equal(await head(), 0)
   assert.equal(Number((await one<{ n: string }>('SELECT count(*) AS n FROM person.person')).n), 0)
 })
@@ -161,7 +161,7 @@ test('a founder\'s next write passes the guards the founding\'s policies set', a
 test('a second founding is refused', async () => {
   const again = await found({ form: 'scop-sarl-fr', motion: 'm-2026-001', from: 'again', load: async () => ({}) }, as(su))
   assert.equal(again.state, 'refused')
-  assert.match((again as { reason: string }).reason, /a co-op is founded once, as its log's first entry; the log holds 2 already/)
+  assert.match((again as { reason: string }).reason, /a coop is founded once, as its log's first entry; the log holds 2 already/)
   assert.equal(await head(), 2)
 })
 

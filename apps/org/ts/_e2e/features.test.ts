@@ -1,7 +1,7 @@
 // The features scenario, in every browser, light and dark, on a seeded
 // Lanterne through the dev server. Léa, a member of Web, opens Web's
 // Settings tab and follows it to Web's features page,
-// `/settings/features/web`: the co-op's groups in the layout's order,
+// `/settings/features/web`: the coop's groups in the layout's order,
 // each with a switch, Work's on, and under each its features, a feature
 // of a group Web does not show waiting on it; no arrangement, no Save
 // button, how to use it an icon's tooltip, and beside each the motion
@@ -12,14 +12,14 @@
 // deadline she closes it, and the page reads Payments shown with its
 // features. Then Yusuf, Web's lead, who holds `arrange-features` over
 // Web by his seat, switches Invoice off and Payments off, each saved at
-// once, with no motion. Then Camille opens the root's page, the co-op's
+// once, with no motion. Then Camille opens the root's page, the coop's
 // layout: every feature under a group, none left out, the assembly's
 // motion arranging it; she renames Work Studio, proposes it to the
 // assembly, which consents, and Web's page shows Studio switched on.
 // `SHOTS` names where its screenshots go. Run by `cella test e2e
 // features`.
 
-// browsers: one at a time: each browser changes Web's features by Web's motion, the co-op's layout by the assembly's and the scope's clock, which the others read
+// browsers: one at a time: each browser changes Web's features by Web's motion, the coop's layout by the assembly's and the scope's clock, which the others read
 // covers: membership-motion motion core
 
 import { after, before, test } from 'node:test'
@@ -42,7 +42,7 @@ const shots = process.env.SHOTS ?? '/tmp/cella-features-shots'
 const lea = 'lea@lanterne.example'
 const yusuf = 'yusuf@lanterne.example'
 const camille = 'camille@lanterne.example'
-const web = 'Work: project, task, timesheet, file, contact'
+const web = 'Work: project, task, timesheet, document, file, contact'
 let today = '2026-11-09'
 // The motions proposed from the page, so each run finds its own.
 const seen: string[] = []
@@ -128,7 +128,7 @@ eachBrowser((name, launch) => {
             assert.equal(await page.getByRole('link', { name: 'Back to app' }).count(), 1, `${at}: Settings' sidebar stands`)
             const form = page.locator('form.settings')
             await form.getByRole('switch').first().waitFor()
-            assert.deepEqual(await groups(page), ['Governance', 'Work', 'Books', 'Payments', 'Members'], `${at}: the layout's groups, in its order`)
+            assert.deepEqual(await groups(page), ['Organization', 'Work', 'Books', 'Payments', 'Membership'], `${at}: the layout's groups, in its order`)
             assert.equal(await on_(page, 'Work'), true, `${at}: Web shows Work`)
             assert.equal(await on_(page, 'Payments'), false, `${at}: and not Payments`)
             assert.equal(await on_(page, 'Project'), true, `${at}: nor hides a feature of Work`)
@@ -208,7 +208,7 @@ eachBrowser((name, launch) => {
             await lead.close()
           }
 
-          // Camille, on the root's page, the co-op's layout: every feature
+          // Camille, on the root's page, the coop's layout: every feature
           // under a group, renamed by the assembly's motion; Web still shows
           // the group it showed, under its new name.
           const member = await browser.newContext({ viewport: { width: 1280, height: 900 }, colorScheme: scheme, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
@@ -218,7 +218,7 @@ eachBrowser((name, launch) => {
             await page.goto(`${dev.base}/settings/features/ag`)
             await page.waitForLoadState('networkidle')
             const form = page.locator('form.settings')
-            assert.equal(await shown(page), 'Motion, Meeting, Document, Policy, Project, Task, Timesheet, File, Contact, Account, Transaction, Report, Import, Invoice, Bill, Expense, Payslip, Membership, Patronage, Person, Circle, Employment', `${at}: the layout, in its order`)
+            assert.equal(await shown(page), 'Circle, Person, Motion, Meeting, Policy, Project, Task, Timesheet, Document, File, Contact, Account, Transaction, Report, Import, Invoice, Bill, Expense, Payslip, Membership, Patronage, Employment', `${at}: the layout, in its order`)
             assert.equal(await form.getByLabel('Name of the Books group').inputValue(), 'Books', `${at}: under its groups`)
             assert.match((await form.locator('fieldset.arrange .off').textContent()) ?? '', /Not enabled.*Every feature is enabled/s, `${at}: what it leaves out is enabled nowhere`)
             assert.equal(await form.getByRole('button', { name: 'Assembly changes this by motion' }).count(), 1, `${at}: the assembly's motion arranges it`)
@@ -228,7 +228,7 @@ eachBrowser((name, launch) => {
             await name_.press('Enter')
             await basket(page, 'Assembly').waitFor()
             const dialog = await review(page, 'Assembly')
-            assert.equal(await dialog.getByLabel('Title').inputValue(), 'Rearrange the co-op\'s features', `${at}: its title says the change`)
+            assert.equal(await dialog.getByLabel('Title').inputValue(), 'Rearrange the coop\'s features', `${at}: its title says the change`)
             await dialog.getByRole('button', { name: 'Propose it to Assembly' }).click()
             await dialog.waitFor({ state: 'hidden' })
             const { motion } = await one<{ motion: string }>(

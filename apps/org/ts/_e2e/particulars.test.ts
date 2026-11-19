@@ -1,4 +1,4 @@
-// The co-op's particulars, end to end on a seeded Lanterne, through the
+// The coop's particulars, end to end on a seeded Lanterne, through the
 // handlers: they are the rule its founding motion adopted from
 // scope.toml, protected by the extraordinary assembly's procedure, and
 // the seller its invoices name; a motion of the assembly replacing them is
@@ -44,7 +44,7 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
 const montreuil = '14 rue des Graviers, 93100 Montreuil, France'
 const paris = '3 avenue Gambetta, 75020 Paris, France'
 const wording = (seat: string, siren = '000000000') =>
-  `The co-op is called {particulars_name: Lanterne}, its legal name {particulars_legal_name: Lanterne Worker Co-operative Limited Company}, a {particulars_form: Worker co-operative limited company with variable capital}, whose seat is {particulars_seat: ${seat}}, registered under SIREN {particulars_siren: ${siren}} at the trade register of {particulars_rcs: Bobigny}, with the VAT number {particulars_vat: FR00000000000}`
+  `The coop is called {particulars_name: Lanterne}, its legal name {particulars_legal_name: Lanterne Worker Co-operative Limited Company}, a {particulars_form: Worker co-operative limited company with variable capital}, whose seat is {particulars_seat: ${seat}}, registered under SIREN {particulars_siren: ${siren}} at the trade register of {particulars_rcs: Bobigny}, with the VAT number {particulars_vat: FR00000000000}`
 
 const seller = async (invoice: string) => (await one<{ seller: Record<string, string | null> }>('SELECT seller FROM invoice.invoice WHERE id = $1', [invoice])).seller
 const issued = async (label: string) =>
@@ -83,8 +83,11 @@ test('Lanterne\'s particulars are its founding\'s, protected by the extraordinar
   assert.match(founding, /^m-2021-001\/\d+$/)
   assert.equal(rule.kind, 'rule')
   assert.equal(rule.protected, 'extraordinary')
-  assert.ok(rule.sentence.startsWith('The co-op is called Lanterne, its legal name Lanterne Worker Co-operative Limited Company'), rule.sentence)
-  assert.deepEqual(await named(app), { address: 'lanterne.example', name: 'Lanterne', legal: 'Lanterne Worker Co-operative Limited Company' })
+  assert.ok(rule.sentence.startsWith('The coop is called Lanterne, its legal name Lanterne Worker Co-operative Limited Company'), rule.sentence)
+  const { logo, ...called } = await named(app)
+  assert.deepEqual(called, { address: 'lanterne.example', name: 'Lanterne', legal: 'Lanterne Worker Co-operative Limited Company' })
+  assert.match(logo ?? '', /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 32 32"><rect .*<\/svg>$/, 'its logo is scope.toml\'s, on one line')
+  assert.ok(rule.sentence.endsWith(`, and bears the mark ${logo}`), 'the founding words the logo last')
 
   before_ = (await issued('Upkeep, October')).invoice
   assert.deepEqual(await seller(before_), {

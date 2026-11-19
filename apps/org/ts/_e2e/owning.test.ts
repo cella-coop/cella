@@ -129,7 +129,7 @@ test('Lanterne\'s records are owned as its fixtures place them', async () => {
   for (const part of ['invoice.line', 'invoice.payment']) {
     assert.deepEqual(await all(`SELECT count(*)::int AS n FROM ${part} x JOIN invoice.invoice i ON i.id = x.invoice WHERE x.circle <> i.circle`), [{ n: 0 }], part)
   }
-  // The books, pay and membership are the whole co-op's.
+  // The books, pay and membership are the whole coop's.
   for (const table of ['transaction.entry', 'transaction.line', 'payslip.payslip', 'membership.member', 'contact.contact']) {
     assert.deepEqual(await all(`SELECT DISTINCT circle FROM ${table}`), [{ circle: 'ag' }], table)
   }

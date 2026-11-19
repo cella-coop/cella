@@ -1,13 +1,13 @@
 // The files scenario, end to end on a seeded Lanterne, through the built
 // shell: Thomas claims his train with its receipt in one write from the
 // expenses' New form, and the receipt is a file about him, logged only as
-// commitments. Who opens a file: the co-op's statutes anyone; Sofia's
+// commitments. Who opens a file: the coop's statutes anyone; Sofia's
 // receipt Sofia and Julien, whose finance seat reimburses expenses, and
 // not Inès or Thomas; Inès's contract Inès and Camille, who hires, and
 // not Thomas. Léa attaches a receipt to her own expense and not to
 // Sofia's; Camille files Inès's amended contract on her worker page and
 // Thomas may not; Camille files a record of her own and not of Hugo's;
-// and Thomas uploads a paper of the co-op's own from the Files page. Run
+// and Thomas uploads a paper of the coop's own from the Files page. Run
 // by `cella test e2e files`.
 // covers: employment employment-file expense expense-file file file-membership
 
@@ -62,7 +62,7 @@ test('Thomas claims his train with its receipt in one write, the receipt a file 
 
 test('who opens a file: the person it concerns, who uploaded it, and a power over what it records', async () => {
   const opens = async (id: string, who: string) => (await shell.page(`/files/${id}/content`, who)).status
-  // fi-0001, the statutes, the co-op's own, the assembly's: every seat
+  // fi-0001, the statutes, the coop's own, the assembly's: every seat
   // reads it, Inès's in Web too.
   const statutes = await shell.page('/files/fi-0001/content', ines)
   assert.equal(statutes.status, 200)
@@ -105,7 +105,7 @@ test('whoever hires files a worker\'s records, and a member their own', async ()
   assert.match(other.reason ?? '', /camille@lanterne.example may not file a record of hugo@lanterne.example/)
 })
 
-test('Thomas uploads a paper of the co-op\'s own, which every member opens', async () => {
+test('Thomas uploads a paper of the coop\'s own, which every member opens', async () => {
   const done = await shell.upload('/files', 'upload', {}, { file: pdf('reglement interieur v3') }, thomas)
   assert.equal(done.state, 'settled', done.reason)
   const f = await one<{ id: string; class: string }>(`SELECT id, class FROM file.file WHERE name = 'reglement-interieur-v3.pdf'`)

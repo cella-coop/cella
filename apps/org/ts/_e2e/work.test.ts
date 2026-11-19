@@ -71,6 +71,13 @@ test('the work pages render, each collection in its own layout', async () => {
     assert.equal(status, 200, path)
     assert.ok(text.includes(says), `${path} says ${says}`)
   }
+  // A project's Tasks tab lists the tasks collection scoped to it: the
+  // shop's tasks, and none of another project's.
+  const scoped = (await shell.page('/projects/halles-shop?tab=tasks', thomas)).text
+  assert.ok(scoped.includes('href="/tasks/t-6"') && !scoped.includes('Press check at the printer'), "the shop's Tasks tab lists its tasks alone")
+  assert.ok(!scoped.includes('aria-label="Views"'), 'under the project\'s header, with no views of its own')
+  const commissioned = (await shell.page('/contacts/halles?tab=projects', thomas)).text
+  assert.ok(commissioned.includes('href="/projects/halles-shop"') && !commissioned.includes('href="/projects/ferrand-packaging"'), "a contact's Projects tab lists the projects it commissioned alone")
   // An invoice is the circle's whose project it bills: F-2026-0052 is
   // Brand's, so Inès, in Web and no member, reads none of it and finds no
   // page, while Thomas, a member, reads it by open books.
@@ -86,7 +93,7 @@ test('the work pages render, each collection in its own layout', async () => {
   assert.ok(projects.text.includes('Les Halles Paysannes') && projects.text.includes('3 / 4'), 'a row names its contact and its milestones')
   const tasks = await shell.page('/tasks', thomas)
   assert.match(tasks.text, /class="board[\s"]/, 'tasks open as a board')
-  for (const l of ['backlog', 'todo', 'doing', 'done']) {
+  for (const l of ['backlog', 'next', 'active', 'review', 'done']) {
     assert.ok(tasks.text.includes(`data-drop-list="${l}"`), `the board has its ${l} column`)
   }
   assert.match((await shell.page('/timesheets', thomas)).text, /class="table[\s"]|<table/, 'timesheets open as a table')
@@ -118,15 +125,17 @@ test('Thomas creates a task; Yusuf gives it to him and files it under the shop\'
   const away = await shell.act(`/tasks/${task}`, 'assign', { member: 'ines@lanterne.example' }, yusuf)
   assert.equal(away.state, 'refused')
   assert.match(away.reason ?? '', /ines@lanterne.example is no active member/)
-  assert.ok(lane((await shell.page('/tasks', thomas)).text, 'todo').includes('Audit the checkout for RGAA'), 'it waits in To do')
+  assert.ok(lane((await shell.page('/tasks', thomas)).text, 'next').includes('Audit the checkout for RGAA'), 'it waits in Next')
 })
 
-test('Thomas drags it into Doing, then Done, each drop a write signed as him', async () => {
+test('Thomas drags it into Active, then Review, then Done, each drop a write signed as him', async () => {
   // What the board posts on a drop: the write its column names, with the
   // column entered.
-  const doing = await shell.act(`/tasks/${task}`, 'move', { to: 'doing' }, thomas)
-  assert.deepEqual([doing.op, doing.state], ['task:task:move', 'settled'])
-  assert.ok(lane((await shell.page('/tasks', thomas)).text, 'doing').includes('Audit the checkout for RGAA'))
+  for (const to of ['active', 'review']) {
+    const moved = await shell.act(`/tasks/${task}`, 'move', { to }, thomas)
+    assert.deepEqual([moved.op, moved.state], ['task:task:move', 'settled'])
+    assert.ok(lane((await shell.page('/tasks', thomas)).text, to).includes('Audit the checkout for RGAA'), `it moves into ${to}`)
+  }
   const done = await shell.act(`/tasks/${task}`, 'complete', { to: 'done' }, thomas)
   assert.deepEqual([done.op, done.state], ['task:task:complete', 'settled'])
   assert.deepEqual(await one(`SELECT status, to_char(completed, 'YYYY-MM-DD') AS completed FROM task.task WHERE id = $1`, [task]), {
@@ -199,7 +208,7 @@ test('Thomas logs time against the shop for Web, its circle, which the page offe
 
 test('Thomas logs his week from the form, each row naming the circle its time is worked for, and both rows land in Web\'s October', async () => {
   // The week names each row's circle: the shop's offers Web first, the
-  // co-op's own time the root's, and he chooses Web for it, the time he
+  // coop's own time the root's, and he chooses Web for it, the time he
   // gave Web's own meeting. The week is read as the server reads it for
   // him, through the app's connection as its actor.
   const app = new pg.Client({ user: 'cella_app' })
@@ -302,7 +311,7 @@ test('a lead\'s mandates cover their own circle\'s projects: Yusuf, Web\'s lead,
   const brand = await shell.act('/projects/velo-identity', 'budget', { amount: '3400' }, yusuf)
   assert.equal(brand.state, 'refused')
   assert.match(brand.reason ?? '', /holds set-budget by no mandate covering brand's records/)
-  // His mandates mark their scope; the manager's mark none and cover the whole co-op.
+  // His mandates mark their scope; the manager's mark none and cover the whole coop.
   const scopes = await one<{ lead: string[]; manager: string[] }>(
     `SELECT array_agg(DISTINCT coalesce(scope, '—')) FILTER (WHERE grantee = 'lead' AND power IN ('manage-project', 'set-budget')) AS lead,
             array_agg(DISTINCT coalesce(scope, '—')) FILTER (WHERE grantee = 'manager' AND power IN ('manage-project', 'set-budget')) AS manager

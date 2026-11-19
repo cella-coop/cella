@@ -55,7 +55,7 @@ test('October\'s time is submitted and approved, and its run prepared, approved 
       // Sofia's brand month is submitted already.
       if (!submitted) settled(await submitTime({ member: m, month: '2026-10', circle }, as(m)))
       // Camille's own, in coordination and the assembly, the treasurer's,
-      // whose approve-time holds on the whole co-op as no lead's does.
+      // whose approve-time holds on the whole coop as no lead's does.
       settled(await approveTime({ member: m, month: '2026-10', circle }, as(m === camille ? julien : camille)))
     }
   }

@@ -144,7 +144,7 @@ test('open books: Hugo, in Brand, reads Web\'s expenses', async () => {
   assert.deepEqual(await reading(ines, `SELECT id FROM expense.expense WHERE circle = 'marketing'`), [])
 })
 
-test('a co-op that changes the template issues the changed bundle to the next circle it creates', async () => {
+test('a coop that changes the template issues the changed bundle to the next circle it creates', async () => {
   const wording = 'The {role: secretary} role holds {power: manage-project}, to start and run the projects of its {scope: own} circle'
   const adopted = await decided('Secretaries run their circle\'s projects', [{ kind: 'policy', args: { kind: 'mandate', wording } }], '2026-11-09', '2026-11-23')
   assert.deepEqual(states(adopted), [['motion:policy:adopt', 'settled', '']])

@@ -83,7 +83,7 @@ test('Camille holds the commit as manager, by her tenure from 2024 to 2028, up t
   const commit = listed.filter((p) => p.power === 'commit')
   assert.deepEqual(commit.map((p) => [p.role, p.circle, p.since, p.until, p.limit, p.scope]), [['manager', 'ag', '2024-06-20', '2028-06-20', 2_000_000, null]])
   const { html, text } = await tab(camille)
-  for (const says of ['Powers', 'Commit', 'Manager in Assembly', '20 Jun 2024 – 20 Jun 2028', 'the whole co-op', 'seat in Coordination', "every member's right"]) {
+  for (const says of ['Powers', 'Commit', 'Manager in Assembly', '20 Jun 2024 – 20 Jun 2028', 'the whole coop', 'seat in Coordination', "every member's right"]) {
     assert.ok(text.includes(says), `Camille's tab says ${says}`)
   }
   assert.ok(html.includes(`href="/mandates/${await mandate('manager', 'commit')}"`), 'the commit\'s line opens its mandate')
@@ -152,7 +152,7 @@ unseeded('in every browser, light and dark, Camille\'s Powers tab opens and its 
         await line.scrollIntoViewIfNeeded()
         await Promise.all([page.waitForURL(`${dev.base}/mandates/${commit}`), line.click()])
         await page.waitForLoadState('networkidle')
-        const chain = page.locator('section', { has: page.getByRole('heading', { name: 'Chain' }) })
+        const chain = page.getByRole('complementary', { name: 'Chain', exact: true })
         assert.match((await chain.textContent()) ?? '', /this one/, `${engine}, ${scheme}: the commit's page draws its chain`)
         assert.deepEqual(errors, [], 'the page threw nothing')
         await context.close()

@@ -233,7 +233,7 @@ test('each member reads their statement, which reconciles with the books; their 
 })
 
 test('the year\'s return to the federation reconciles with the split, the parts and the shares', async () => {
-  // The return is the co-op's: Chloé, who reads no colleague's part, reads it whole.
+  // The return is the coop's: Chloé, who reads no colleague's part, reads it whole.
   const f = Object.fromEntries((await figures(await reading(chloe), '2025')).map((x) => [x.id, x.value]))
   assert.equal(f.surplus, 61_400_00)
   assert.equal(f.work, 27_630_00)

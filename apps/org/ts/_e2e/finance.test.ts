@@ -156,7 +156,7 @@ test('once every October is approved, Julien prepares the run from the approved 
       }
       // The manager approves time over the assembly, where everyone sits;
       // her own, in coordination and the assembly, the treasurer, whose
-      // approve-time holds on the whole co-op as no lead's does.
+      // approve-time holds on the whole coop as no lead's does.
       const approved = await approveTime({ member: m, month: '2026-10', circle }, as(m === camille ? julien : camille))
       assert.equal(approved.state, 'settled', reason(approved))
     }

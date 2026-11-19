@@ -225,6 +225,8 @@ async function walk(stage: string, steps: (w: Walker) => Promise<void>) {
 // A section by its title, its count after it or none, so Powers is not
 // Powers held.
 const section = (page: Page, heading: string) => page.locator('section', { has: page.getByRole('heading', { name: new RegExp(`^${heading}\\s*\\d*$`) }) })
+// A panel of a record's overview by its name.
+const panel = (page: Page, name: string) => page.getByRole('complementary', { name, exact: true })
 
 // Clicks a bill's Approve and returns the refusal its page shows.
 async function approving(w: Walker, bill: string) {
@@ -261,8 +263,8 @@ unseeded('before any close: the chain, Sofia\'s powers and refusals, Brand\'s Pr
     await Promise.all([w.page().waitForURL(`${w.base}/mandates/${chain}`), w.page().locator(`a[href="/mandates/${chain}"]`).first().click()])
     await w.page().waitForLoadState('networkidle')
     // A page is drawn once its query answers, after the address.
-    await section(w.page(), 'Chain').getByText('this one').first().waitFor()
-    assert.match((await section(w.page(), 'Chain').textContent()) ?? '', /this one/, `${w.at}: the chain is drawn`)
+    await panel(w.page(), 'Chain').getByText('this one').first().waitFor()
+    assert.match((await panel(w.page(), 'Chain').textContent()) ?? '', /this one/, `${w.at}: the chain is drawn`)
     await w.shot('1-chain')
 
     await w.open(`/people/${encodeURIComponent(sofia)}?tab=authority`)
@@ -300,7 +302,7 @@ unseeded('before any close: the chain, Sofia\'s powers and refusals, Brand\'s Pr
     await w.page().getByRole('button', { name: 'Revoke…' }).click()
     const revoking = w.page().locator('form', { has: w.page().locator('input[name^="f.kind["][value="revoke"]') })
     assert.match((await revoking.textContent()) ?? '', /Put to operations, which issued it; ending it revokes every mandate issued under it the same day/, `${w.at}: the revocation says what it revokes`)
-    await revoking.getByLabel('Why').fill('Brand buys its print through the co-op\'s finance role from November.')
+    await revoking.getByLabel('Why').fill('Brand buys its print through the coop\'s finance role from November.')
     await w.shot('4-revoke-mandate')
     await w.page().keyboard.press('Escape')
 

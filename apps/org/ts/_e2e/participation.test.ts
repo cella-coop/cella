@@ -231,11 +231,11 @@ test('each member’s inbox holds what waits on them, counted in the sidebar', a
 })
 
 test('Inès logs her week in the grid by her right, booking hours to a project', async () => {
-  // Behind the New button, her week from Monday the 19th, the co-op's own
+  // Behind the New button, her week from Monday the 19th, the coop's own
   // time last, the days from her hire to today open.
   const [now, before] = await weeks(await reading(ines), ines)
   assert.deepEqual([now.monday, before.monday], ['2026-10-19', '2026-10-12'])
-  assert.equal(now.rows.at(-1)?.title, 'The co-op’s own time')
+  assert.equal(now.rows.at(-1)?.title, 'The coop’s own time')
   assert.deepEqual(
     now.days.map((d) => d.open),
     [true, true, true, true, true, true, false],

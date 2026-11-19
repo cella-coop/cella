@@ -1,5 +1,5 @@
 // A policy adopted by motion, end to end on a seeded Lanterne, through the
-// handlers: the assembly proposes that associations and small co-ops pay
+// handlers: the assembly proposes that associations and small coops pay
 // the solidarity rate, 20 % below the rate card; a proposal whose wording
 // marks a value twice is refused; once the motion passes and its close
 // carries it, the register keeps the policy with its motion, the day it
@@ -22,8 +22,8 @@ let app: pg.Client
 
 const camille = 'camille@lanterne.example'
 const malik = 'malik@lanterne.example'
-const legal = 'Associations and small co-ops pay the solidarity rate, {rate: 20 % | less is stricter} below the rate card'
-const friendly = 'Associations and small co-ops pay a fifth less than the rate card.'
+const legal = 'Associations and small coops pay the solidarity rate, {rate: 20 % | less is stricter} below the rate card'
+const friendly = 'Associations and small coops pay a fifth less than the rate card.'
 
 async function on(date: string) {
   await su.query(`ALTER ROLE cella_app IN DATABASE ${su.escapeIdentifier(su.database ?? '')} SET cella.clock = '${date}'`)
@@ -76,7 +76,7 @@ test('the assembly proposes the solidarity rate as a rule, and every member cons
         title: 'The solidarity rate',
         procedure: 'consent',
         deadline: '2026-11-21',
-        body: 'Associations and small co-ops have asked for it since spring.',
+        body: 'Associations and small coops have asked for it since spring.',
         actions: [{ kind: 'policy', args: { kind: 'rule', wording: legal, friendly } }],
       },
       as(camille),
@@ -130,7 +130,7 @@ test('the assembly\'s page lists the policy in force, as it reads, with its moti
     [
       {
         id: `${motion}/1`,
-        sentence: 'Associations and small co-ops pay the solidarity rate, 20 % below the rate card',
+        sentence: 'Associations and small coops pay the solidarity rate, 20 % below the rate card',
         motion,
         applies: '2026-11-21',
         ends: null,

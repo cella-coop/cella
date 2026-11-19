@@ -80,7 +80,7 @@ test('in every browser, light and dark, Inès opens the print buyer\'s mandate a
         page.on('pageerror', (e) => errors.push(e.message))
         await page.goto(`${dev.base}/mandates/${deep}`)
         await page.waitForLoadState('networkidle')
-        const chain = (await page.locator('section', { has: page.getByRole('heading', { name: 'Chain' }) }).textContent()) ?? ''
+        const chain = (await page.getByRole('complementary', { name: 'Chain', exact: true }).textContent()) ?? ''
         assert.ok(chain.includes(withheld), `${engine}, ${scheme}: the chain says the links above are withheld`)
         assert.ok(!chain.includes(root), `${engine}, ${scheme}: and calls no link the root`)
         await page.screenshot({ path: `${shots}/withheld-${engine}-${scheme}.png`, fullPage: true })

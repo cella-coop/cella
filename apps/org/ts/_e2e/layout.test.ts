@@ -1,14 +1,14 @@
-// The co-op's layout scenario, in every browser, on a seeded Lanterne
-// through the dev server: the co-op lays its features out once, at its
+// The coop's layout scenario, in every browser, on a seeded Lanterne
+// through the dev server: the coop lays its features out once, at its
 // root, and each circle only drops what it does not show. Camille looks
-// through Web and through Tools: both show Project, Task and Timesheet,
-// in Work, in the same order. Yusuf, Web's lead, hides Timesheet in Web
+// through Web and through Tools: both show Project, Task, Timesheet and
+// Document, in Work, in the same order. Yusuf, Web's lead, hides Timesheet in Web
 // at once: Web's sidebar drops it, and Tools' keeps it. The assembly
 // renames Work to Studio by motion: Web and Tools still show the group,
 // now Studio, Web still without Timesheet. Each browser then puts the
 // layout and Web back. Run by `cella test e2e layout`.
 
-// browsers: one at a time: each browser hides a feature in Web and renames a group of the co-op's layout by the assembly's motion, which the others read
+// browsers: one at a time: each browser hides a feature in Web and renames a group of the coop's layout by the assembly's motion, which the others read
 // covers: membership-motion motion core
 
 import { after, before, test } from 'node:test'
@@ -48,12 +48,12 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
 const states = (out: Done[]) => out.map((d) => [d.op, d.state, d.reason ?? ''])
 const fortnight = () => new Date(Date.parse(`${today}T00:00:00Z`) + 14 * 86400000).toISOString().slice(0, 10)
 
-// The assembly lays the co-op's features out as `features` by its
+// The assembly lays the coop's features out as `features` by its
 // motion, Camille proposing it and closing it on its deadline once every
 // member consents.
 async function laid(features: string) {
   const { motion } = settled(
-    await propose({ circle: 'ag', title: 'Arrange the co-op\'s features', deadline: fortnight(), body: '', actions: [{ kind: 'arrange-features', args: { circle: 'ag', features } }] }, as(camille)),
+    await propose({ circle: 'ag', title: 'Arrange the coop\'s features', deadline: fortnight(), body: '', actions: [{ kind: 'arrange-features', args: { circle: 'ag', features } }] }, as(camille)),
   ) as { motion: string }
   for (const { member } of await all<{ member: string }>('SELECT member FROM motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
@@ -118,22 +118,22 @@ eachBrowser((name, launch) => {
 
       const web = await drawn(page, dev.base, 'web')
       const tools = await drawn(page, dev.base, 'tools')
-      assert.deepEqual(web.Work, ['/projects', '/tasks', '/timesheets', '/contacts'], `${name}: Web shows Work`)
-      assert.deepEqual(tools.Work, ['/projects', '/tasks', '/timesheets'], `${name}: Tools shows Work`)
+      assert.deepEqual(web.Work, ['/projects', '/tasks', '/timesheets', '/documents', '/contacts'], `${name}: Web shows Work`)
+      assert.deepEqual(tools.Work, ['/projects', '/tasks', '/timesheets', '/documents'], `${name}: Tools shows Work`)
       assert.deepEqual(shared(web.Work!, tools.Work!), shared(tools.Work!, web.Work!), `${name}: what both show sits in the same order`)
       assert.deepEqual(Object.keys(tools), ['Work', 'Payments'], `${name}: Tools' groups in the layout's order`)
 
       // Yusuf hides Timesheet in Web, at once: Web drops it, Tools keeps it.
       settled(await hide({ circle: 'web', feature: 'timesheet', hidden: true }, as(yusuf)))
-      assert.deepEqual((await drawn(page, dev.base, 'web')).Work, ['/projects', '/tasks', '/contacts'], `${name}: Web no longer shows Timesheet`)
-      assert.deepEqual((await drawn(page, dev.base, 'tools')).Work, ['/projects', '/tasks', '/timesheets'], `${name}: Tools still does`)
+      assert.deepEqual((await drawn(page, dev.base, 'web')).Work, ['/projects', '/tasks', '/documents', '/contacts'], `${name}: Web no longer shows Timesheet`)
+      assert.deepEqual((await drawn(page, dev.base, 'tools')).Work, ['/projects', '/tasks', '/timesheets', '/documents'], `${name}: Tools still does`)
 
       // Work renamed Studio in the layout: each circle still shows it.
       await laid(layout.replace('Work:', 'Studio:'))
       const renamed = { web: await drawn(page, dev.base, 'web'), tools: await drawn(page, dev.base, 'tools') }
-      assert.deepEqual(renamed.web, { Studio: ['/projects', '/tasks', '/contacts'] }, `${name}: Web shows Studio, still without Timesheet`)
+      assert.deepEqual(renamed.web, { Studio: ['/projects', '/tasks', '/documents', '/contacts'] }, `${name}: Web shows Studio, still without Timesheet`)
       assert.deepEqual(Object.keys(renamed.tools), ['Studio', 'Payments'], `${name}: Tools shows Studio where it showed Work`)
-      assert.deepEqual(renamed.tools.Studio, ['/projects', '/tasks', '/timesheets'])
+      assert.deepEqual(renamed.tools.Studio, ['/projects', '/tasks', '/timesheets', '/documents'])
       assert.deepEqual(errors, [], `${name}: the pages threw nothing`)
 
       // Put back for the next browser.

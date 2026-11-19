@@ -74,17 +74,17 @@ test('every main page renders on the seed', async () => {
   assert.equal((await page('/motions/m-1999-001')).status, 404)
 })
 
-test('the sidebar names the co-op as the database does, and its menus open in the top layer', async () => {
+test('the sidebar names the coop as the database does, and its menus open in the top layer', async () => {
   const { text } = await page('/people')
-  assert.ok(text.includes('<title>Lanterne · cella</title>'), 'the co-op is called by its name')
+  assert.ok(text.includes('<title>Lanterne · cella</title>'), 'the coop is called by its name')
   assert.ok(text.includes('Lanterne Worker Co-operative Limited Company'), 'its menu gives its legal name')
   assert.ok(!text.includes('lanterne.example</b>'), 'not by its address')
   // The sidebar's own: the View panel's Display is a popover too.
   const sidebar = text.match(/<nav class="sidebar[\s\S]*?<\/nav>/)?.[0] ?? ''
-  assert.equal((sidebar.match(/popover="auto"/g) ?? []).length, 2, 'the co-op menu and the account menu are popovers')
+  assert.equal((sidebar.match(/popover="auto"/g) ?? []).length, 2, 'the coop menu and the account menu are popovers')
 })
 
-test('the co-op selector lists the circles the member sits in, and the one chosen is the lens its trigger names until the co-op clears it', async () => {
+test('the coop selector lists the circles the member sits in, and the one chosen is the lens its trigger names until the coop clears it', async () => {
   const session = await shell.signIn(camille)
   const logged = async () => (await one<{ n: number }>('SELECT count(*)::int AS n FROM cella.log')).n
   const before = await logged()
@@ -108,34 +108,34 @@ test('the co-op selector lists the circles the member sits in, and the one chose
   const order = ['Lanterne', 'Circles', 'Brand', 'Coordination']
   const at = order.map((s) => menu.indexOf(s))
   assert.ok(at.every((i) => i >= 0), `the menu holds ${order.join(', ')}`)
-  assert.deepEqual([...at].sort((a, b) => a - b), at, 'the co-op first, then the circles Camille sits in')
-  assert.ok(!menu.includes('All circles') && !menu.includes('Yours') && !menu.includes('Others'), 'no All circles and no groups: the co-op itself clears the lens')
-  assert.ok(!menu.includes('Assembly'), 'the assembly is the co-op row, not a circle of its own')
+  assert.deepEqual([...at].sort((a, b) => a - b), at, 'the coop first, then the circles Camille sits in')
+  assert.ok(!menu.includes('All circles') && !menu.includes('Yours') && !menu.includes('Others'), 'no All circles and no groups: the coop itself clears the lens')
+  assert.ok(!menu.includes('Assembly'), 'the assembly is the coop row, not a circle of its own')
   for (const other of ['Marketing', 'Operations', 'Web']) {
     assert.ok(!menu.includes(other), `${other}, a circle Camille does not sit in, is not listed`)
   }
-  assert.deepEqual(checked(whole), [''], 'with no lens, the co-op is checked')
-  assert.ok(!whole.includes('Co-op: Lanterne / '), 'and the trigger names the co-op alone')
+  assert.deepEqual(checked(whole), [''], 'with no lens, the coop is checked')
+  assert.ok(!whole.includes('Coop: Lanterne / '), 'and the trigger names the coop alone')
 
   const set = await lensing('web')
   assert.equal(set.status, 303)
   assert.equal(set.location, '/projects', 'the menu returns to the page it was chosen on')
   assert.match(set.cookie, /^cella-lens=web;.*HttpOnly/i, 'the lens is a cookie of the member\'s browser')
   const lensed = await seen('web')
-  assert.ok(lensed.includes('Co-op: Lanterne / Web'), 'the trigger names the lens: Lanterne / Web')
+  assert.ok(lensed.includes('Coop: Lanterne / Web'), 'the trigger names the lens: Lanterne / Web')
   assert.ok(lensed.replace(/<!--.*?-->|<[^>]+>/g, '').includes('Lanterne / Web'), 'in its visible text too')
   assert.deepEqual(checked(lensed), ['web'], 'and Web is checked in the menu')
 
   const stale = await seen('nowhere')
-  assert.ok(!stale.includes('Co-op: Lanterne / '), 'a lens naming no circle the member reads is none')
+  assert.ok(!stale.includes('Coop: Lanterne / '), 'a lens naming no circle the member reads is none')
   assert.deepEqual(checked(stale), [''])
   const root = await seen('ag')
-  assert.ok(!root.includes('Co-op: Lanterne / '), 'a lens naming the assembly is none, where the co-op reads whole')
+  assert.ok(!root.includes('Coop: Lanterne / '), 'a lens naming the assembly is none, where the coop reads whole')
   assert.deepEqual(checked(root), [''])
 
   const cleared = await lensing('')
   assert.equal(cleared.status, 303)
-  assert.match(cleared.cookie, /^cella-lens=;.*Max-Age=0/i, 'the co-op clears the lens')
+  assert.match(cleared.cookie, /^cella-lens=;.*Max-Age=0/i, 'the coop clears the lens')
   assert.equal(await logged(), before, 'and nothing of it enters the log')
 })
 
@@ -156,7 +156,7 @@ test('a lensed collection lists only its circle’s rows, and a registry reads w
     const kept = listed(lensed, name)
     assert.ok(kept.size > 0 && kept.size < all.size, `the lens on Web keeps some of the ${name}, not all: ${kept.size} of ${all.size}`)
     assert.deepEqual([...kept].sort(), [...all].filter((id) => webs.has(id)).sort(), `the lens on Web keeps exactly Web's ${name}`)
-    assert.ok(lensed.includes('Co-op: Lanterne / Web'), 'the trigger reads Lanterne / Web')
+    assert.ok(lensed.includes('Coop: Lanterne / Web'), 'the trigger reads Lanterne / Web')
     assert.ok(!lensed.includes('whole: no circle owns its rows'), `the ${name} are not left whole`)
   }
 
@@ -179,10 +179,10 @@ test('an accordion the viewer shut or opened stays so across page loads, by its 
   }
   const open = (html: string, name: string) =>
     new RegExp(`<button class="head[^"]*"[^>]*aria-expanded="true"[^>]*>(?:(?!</button>).)*?${name}`, 's').test(html)
-  const key = encodeURIComponent('feature:Governance')
-  assert.ok(open(await seen(`${key}:1`), 'Governance'), 'an accordion opened stays open')
-  assert.ok(!open(await seen(`${key}:0`), 'Governance'), 'an accordion shut stays shut')
-  assert.ok(open(await seen(`${key}:1;;`), 'Governance'), 'a malformed cookie is ignored, and an accordion left unset opens by default')
+  const key = encodeURIComponent('feature:Organization')
+  assert.ok(open(await seen(`${key}:1`), 'Organization'), 'an accordion opened stays open')
+  assert.ok(!open(await seen(`${key}:0`), 'Organization'), 'an accordion shut stays shut')
+  assert.ok(open(await seen(`${key}:1;;`), 'Organization'),'a malformed cookie is ignored, and an accordion left unset opens by default')
 })
 
 test('the sidebar’s counts narrow with the lens, and the Inbox and a shut accordion’s dot stay whole', async () => {
@@ -196,13 +196,14 @@ test('the sidebar’s counts narrow with the lens, and the Inbox and a shut acco
   const dots = (html: string) => [...html.matchAll(/aria-label="(\d+) waiting in ([^"]+)"/g)].map((m) => `${m[2]}: ${m[1]}`)
   const whole = await seen()
   const lensed = await seen('coordination')
-  assert.ok(lensed.includes('Co-op: Lanterne / Coordination'), 'the co-op is lensed on Coordination')
+  assert.ok(lensed.includes('Coop: Lanterne / Coordination'), 'the coop is lensed on Coordination')
   assert.ok(pill(whole, '/inbox') > 0, 'Camille has asks waiting in her Inbox')
   assert.equal(pill(lensed, '/inbox'), pill(whole, '/inbox'), 'the Inbox counts what waits on her whatever the lens')
-  // The assembly's Governance and Coordination's hold the same collections,
-  // motions, documents and meetings, both shut on the projects.
-  const governance = (html: string) => dots(html).filter((d) => d.startsWith('Governance:'))
-  assert.deepEqual(governance(lensed), governance(whole), 'and a shut accordion’s dot is the same under the lens as without')
+  // The assembly's Organization and Coordination's hold the same
+  // collections, motions, meetings, circles, mandates and people, both
+  // shut on the projects.
+  const organization = (html: string) => dots(html).filter((d) => d.startsWith('Organization:'))
+  assert.deepEqual(organization(lensed), organization(whole),'and a shut accordion’s dot is the same under the lens as without')
 })
 
 test('every collection has a dashboard, its widgets run by the server', async () => {
@@ -279,7 +280,7 @@ test('a motion\'s overview says what is decided in full; its stances are their o
   }
   assert.ok(!overview.text.includes('Latest stance'), 'the roll is not on the overview')
   const stances = await page('/motions/m-2026-012?tab=stances')
-  assert.ok(stances.text.includes('Latest stance') && !stances.text.includes('data-widget="vote"'), 'the stances tab holds the roll alone')
+  assert.ok(stances.text.includes('Latest stance') && !stances.text.includes('data-panel="vote"'), 'the stances tab holds the roll alone')
 })
 
 test('a motion lands with its vote widget in view, after its body, and discussion is no tab of its own', async () => {
@@ -290,7 +291,7 @@ test('a motion lands with its vote widget in view, after its body, and discussio
   assert.ok(!text.includes('Discussion'), 'Discussion is no tab and no block of its own')
   // Asking for the tab it used to hold reads the overview instead, not a
   // tab that no longer exists.
-  assert.ok((await page('/motions/m-2026-012?tab=discussion')).text.includes('data-widget="vote"'), 'tab=discussion now reads as the overview')
+  assert.ok((await page('/motions/m-2026-012?tab=discussion')).text.includes('data-panel="vote"'), 'tab=discussion now reads as the overview')
 })
 
 test('a card dropped on a closed column is the close write; refused before the deadline, it stays open', async () => {

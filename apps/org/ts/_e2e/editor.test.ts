@@ -45,7 +45,7 @@ const service = (name: string, unit: string, standard: string, solidarity: strin
 // the services from the fifth.
 const card: Fragment[] = [
   { type: 'heading', level: 1, runs: p('Rate card 2027'), children: [] },
-  { type: 'paragraph', runs: p('Day rates and project floors for ', { text: '2027', marks: { italic: true } }, '. Small co-ops pay the ', b('solidarity'), ' rate.'), children: [] },
+  { type: 'paragraph', runs: p('Day rates and project floors for ', { text: '2027', marks: { italic: true } }, '. Small coops pay the ', b('solidarity'), ' rate.'), children: [] },
   { type: 'embed', embed: 'motion', ref: 'm-2026-011', runs: [], children: [] },
   { type: 'heading', level: 2, runs: p('Services'), children: [] },
   service('Day of work', 'day', '560 €', '380 €'),
@@ -955,11 +955,16 @@ eachBrowser((name, launch) => {
 
     it('saves a version through the shared Dialog, and cancels one', async () => {
       await fresher()
-      const versions = () =>
-        a.evaluate(() => {
-          const dt = [...document.querySelectorAll('dt')].find((d) => d.textContent === 'Versions')
-          return dt ? Number(dt.nextElementSibling?.textContent) : NaN
-        })
+      // The document's saved versions as the database holds them, the page
+      // counting none on its overview; a save is waited for.
+      const id = decodeURIComponent(new URL(a.url()).pathname.split('/').pop() ?? '')
+      const count = async () => Number((await su.query<{ n: string }>('SELECT count(*) AS n FROM document.version WHERE document = $1', [id])).rows[0]?.n)
+      const versions = async (want?: number) => {
+        for (let i = 0; want !== undefined && i < 50 && (await count()) !== want; i++) {
+          await a.waitForTimeout(100)
+        }
+        return count()
+      }
       const before = await versions()
       await a.getByRole('button', { name: 'New version' }).click()
       const dialog = a.locator('dialog[open]')
@@ -971,7 +976,7 @@ eachBrowser((name, launch) => {
       await a.getByRole('button', { name: 'New version' }).click()
       await dialog.getByRole('button', { name: 'Save version' }).click()
       await dialog.waitFor({ state: 'hidden' })
-      assert.equal(await versions(), before + 1, 'Save version through the dialog saves one')
+      assert.equal(await versions(before + 1), before + 1, 'Save version through the dialog saves one')
       clean()
     })
 

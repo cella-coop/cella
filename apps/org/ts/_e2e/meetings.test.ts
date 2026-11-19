@@ -101,7 +101,7 @@ test('Camille schedules coordination for 2 November; Yusuf, whose power reaches 
   const web = await shell.act('/meetings', 'schedule', { ...fields, circle: 'web', title: 'Web' }, yusuf)
   assert.equal(web.state, 'settled', web.reason)
   // A meeting's circle is its owning circle, a key into core's circles:
-  // one the co-op does not have is never written.
+  // one the coop does not have is never written.
   const nowhere = await shell.act('/meetings', 'schedule', { ...fields, circle: 'dreams' }, camille)
   assert.equal(nowhere.state, 'failed')
   assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM meeting.meeting WHERE circle = 'dreams'`)).n, 0)

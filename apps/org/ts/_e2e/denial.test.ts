@@ -45,7 +45,7 @@ const retired = (schema: string, sql: string) =>
 // The schemas no feat or graft owns: the notary's and the migrations',
 // layers under every slice, and core's. The analytics port's is read as a
 // slice's is, and so are core's circles and its register of policies, the
-// co-op's structure, which a member of the scope reads whole
+// coop's structure, which a member of the scope reads whole
 // ([circle](../../core/circle/index.md#who-reads-the-structure)), and
 // core's people, read by their owning circle as a slice's records are.
 const LAYERS = new Set(['cella', 'vault', 'migration', 'public'])

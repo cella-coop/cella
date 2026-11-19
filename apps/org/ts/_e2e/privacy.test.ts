@@ -80,10 +80,7 @@ after(async () => {
 test('only a holder of erase-personal-data erases a contact: Julien may not, Camille may', async () => {
   assert.match(reason(await eraseContact({ id: margaux }, as(julien))), /erase-personal-data/)
   const done = settled(await eraseContact({ id: margaux }, as(camille)))
-  assert.deepEqual(
-    await one('SELECT note, archived FROM contact.contact WHERE id = $1', [margaux]),
-    { note: 'redacted', archived: true },
-  )
+  assert.deepEqual(await one('SELECT archived FROM contact.contact WHERE id = $1', [margaux]), { archived: true })
   // She is a core person: her contact details there are erased with her
   // contact's data, and her name, of class profile, stays.
   assert.deepEqual(await one('SELECT name, email, phone FROM person.person WHERE address = $1', [roux]), { name: 'Margaux Roux', email: 'redacted', phone: 'redacted' })
@@ -96,8 +93,9 @@ test('only a holder of erase-personal-data erases a contact: Julien may not, Cam
   assert.equal((await one<{ name: string }>(`SELECT name FROM contact.contact WHERE id = 'halles'`)).name, 'Les Halles Paysannes')
 })
 
-test('erasure wins: a later note on Margaux is refused', async () => {
-  assert.match(reason(await update({ id: margaux, fields: { note: 'call in the afternoon' } }, as(camille))), /erasure wins/)
+test('erasure wins: a later address for Margaux is refused', async () => {
+  const address = { street: '3 place du Marché', city: 'Tours', postal_code: '37000', country: 'FR' }
+  assert.match(reason(await update({ id: margaux, fields: { address } }, as(camille))), /erasure wins/)
 })
 
 test('Léa gives her email and phone, which the log commits to and the vault opens; then she erases them herself', async () => {

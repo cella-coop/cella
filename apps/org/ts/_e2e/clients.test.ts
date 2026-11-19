@@ -1,5 +1,5 @@
 // Clients on a seeded Lanterne, through the built shell: a client is a
-// contact the co-op bills, a role on the contact. The Clients view keeps
+// contact the coop bills, a role on the contact. The Clients view keeps
 // the contacts holding it, its condition kept in the address, and leaves
 // out Margaux Roux, a person at Les Halles who is no client; an invoice's
 // picker offers clients only, and linking her is refused, naming her
@@ -34,7 +34,7 @@ after(async () => {
   await su.end()
 })
 
-test('a client is a contact the co-op bills: the Clients view keeps them, and an invoice offers only them', async () => {
+test('a client is a contact the coop bills: the Clients view keeps them, and an invoice offers only them', async () => {
   const all = await page('/contacts')
   assert.ok(all.text.includes('href="/contacts/halles-roux"') && all.text.includes('Vélo Solidaire'), 'All lists every contact')
   const clients = await page('/contacts?v=clients')

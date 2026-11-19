@@ -55,7 +55,7 @@ after(async () => {
 
 test('a person contact added by address brings a core person in, in the same write, with the details it gives', async () => {
   const n = settled(
-    await add({ id: 'ferrand-laurent', kind: 'person', person: odile, parent: 'ferrand', name: 'Odile Laurent', email: odile, phone: '+33 6 18 22 40 07', note: 'orders the packaging' }, as(camille)),
+    await add({ id: 'ferrand-laurent', kind: 'person', person: odile, parent: 'ferrand', name: 'Odile Laurent', email: odile, phone: '+33 6 18 22 40 07', address: { street: '4 rue du Four', city: 'Tours', postal_code: '37000', country: 'FR' } }, as(camille)),
   )
   assert.deepEqual(await one('SELECT name, email, phone FROM person.person WHERE address = $1', [odile]), {
     name: 'Odile Laurent', email: odile, phone: '+33 6 18 22 40 07',
@@ -105,7 +105,7 @@ test('erasing her erases her contact\'s data and her contact details in core; he
   assert.deepEqual(form.erasure, { $erasure: { subject: 'ferrand-laurent', erased: ['contact'], restricted: [] } })
   assert.deepEqual(form.details, { $erasure: { subject: odile, erased: ['contact'], restricted: [] } })
   assert.deepEqual(await one('SELECT email, phone FROM person.person WHERE address = $1', [odile]), { email: 'redacted', phone: 'redacted' })
-  assert.deepEqual(await one(`SELECT note, archived FROM contact.contact WHERE id = 'ferrand-laurent'`), { note: 'redacted', archived: true })
+  assert.deepEqual(await one(`SELECT address, archived FROM contact.contact WHERE id = 'ferrand-laurent'`), { address: 'redacted', archived: true })
   assert.equal((await one<{ name: string }>(`SELECT name FROM contact.contact WHERE id = 'ferrand'`)).name, 'Maison Ferrand')
   assert.ok(!(await shell.page('/contacts', camille)).text.includes('href="/contacts/ferrand-laurent"'), 'an erased contact is archived, so no longer listed')
   assert.equal(await verifies(), true)

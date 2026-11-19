@@ -120,7 +120,7 @@ eachBrowser((name, launch) => {
       assert.equal(await posted(), '16:45', 'a time picked by a press posts')
       await page.keyboard.press('Escape')
 
-      // A file of the co-op's own.
+      // A file of the coop's own.
       await page.goto(`${base}/files`, { waitUntil: 'networkidle' })
       await page.getByRole('button', { name: 'New' }).click()
       const upload = page.locator('form').filter({ has: page.getByRole('button', { name: 'Upload' }) })

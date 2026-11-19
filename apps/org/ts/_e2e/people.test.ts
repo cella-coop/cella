@@ -89,7 +89,7 @@ test('every worker has a contract, the members who work and Inès, who is employ
     { address: 'paul@lanterne.example', stage: 'gone' },
   ])
   const { text } = await shell.page('/people', camille)
-  // Her group: invited to be a member, with the co-op's workers.
+  // Her group: invited to be a member, with the coop's workers.
   for (const says of ['People', 'Inès Haddad', 'worker', 'invited']) {
     assert.ok(text.includes(says), `the people say ${says}`)
   }
@@ -359,7 +359,7 @@ test('a year on, Bastien applies by his right: his candidacy opens, and the moti
   const applied = await shell.act(`/people/${bastien}`, 'apply', {
     shares: '20',
     deadline: '2027-11-16',
-    body: 'I have worked with the co-op for a year and ask to join.',
+    body: 'I have worked with the coop for a year and ask to join.',
   }, bastien)
   assert.deepEqual([applied.op, applied.state], ['membership:member:apply', 'settled'], applied.reason)
   assert.deepEqual(applied.then.map((d) => [d.op, d.state]), [['employment-membership:candidacy:open', 'settled']])

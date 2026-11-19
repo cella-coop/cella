@@ -1,5 +1,5 @@
 // The import scenario, end to end on a seeded Lanterne, with the sample
-// files a co-op brings from the tools it leaves (fixtures/lanterne/import):
+// files a coop brings from the tools it leaves (fixtures/lanterne/import):
 // Camille tries the members' list in a dry run from the Imports page,
 // which invites no one, then imports it, inviting Nadia and Olivier with
 // their devices and refusing Rose, who has none. Julien carries October

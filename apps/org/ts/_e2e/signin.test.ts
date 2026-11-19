@@ -115,13 +115,12 @@ eachBrowser((name, launch) => {
       await page.getByRole('button', { name: 'Sign out' }).click()
       await page.waitForURL(`${base}/sign-in`)
       await page.waitForLoadState('networkidle')
-      // The recent sign-in reads as the fixture rows do: the member's
-      // name, then their circle, Web, the assembly left out since every
-      // member sits in it; never the address or the device.
-      assert.ok(await page.getByRole('button', { name: 'Sam Petit-Roux Web' }).isVisible(), 'the row shows the name and the circle')
+      // The recent sign-in is chosen in the card's select by the member's
+      // name; never the address or the device.
+      const as = page.getByRole('combobox', { name: 'Sign in as' })
+      assert.match((await as.textContent()) ?? '', /Sam Petit-Roux/, 'the select shows the name')
       assert.equal(await page.getByText('laptop').count(), 0, 'no device is shown')
-      assert.equal(await page.getByText('Assembly').count(), 0, 'the assembly is left out')
-      await page.getByRole('button', { name: 'Sam Petit-Roux Web' }).click()
+      await page.getByRole('button', { name: 'Sign in', exact: true }).click()
       await page.waitForURL(`${base}/inbox`)
       await page.waitForLoadState('networkidle')
       assert.ok(await page.getByText('Sam Petit-Roux').first().isVisible(), 'signed in again, on the same device')

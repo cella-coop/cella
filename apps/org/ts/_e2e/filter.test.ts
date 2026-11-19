@@ -279,8 +279,16 @@ eachBrowser((browserName, launch) => {
       assert.equal(await page.locator('.bar .chip').count(), 0, `${browserName}: it holds no chip while nothing is filtered`)
       assert.equal(await panel(page).getByRole('button', { name: 'Filter', exact: true }).count(), 0, `${browserName}: the View panel offers no Filter`)
       assert.equal(await panel(page).getByPlaceholder('Search').count(), 0, `${browserName}: the View panel has no search box`)
-      await page.getByRole('button', { name: 'Search' }).waitFor()
       await filterButton(page).waitFor()
+      assert.equal(await page.getByRole('button', { name: 'Search' }).count(), 0, `${browserName}: Search has no button of its own`)
+
+      // The Filter menu opens with Search, ruled off from the fields.
+      await filterButton(page).click()
+      const menu = page.getByRole('menu', { name: 'Filter by a field' })
+      assert.equal((await menu.getByRole('menuitem').first().textContent())?.replace('/', '').trim(), 'Search', `${browserName}: Search heads the Filter menu`)
+      assert.equal(await menu.locator('hr').count(), 1, `${browserName}: a rule parts Search from the fields`)
+      await page.keyboard.press('Escape')
+      await menu.waitFor({ state: 'hidden' })
 
       // "/" opens Search, focused, in place: the bar keeps its height and
       // the rows their place; an empty blur folds it back.
@@ -291,7 +299,7 @@ eachBrowser((browserName, launch) => {
       assert.ok(await search.evaluate((el) => el === document.activeElement), `${browserName}: / focuses Search`)
       assert.deepEqual(await page.locator('.content > div.bar').boundingBox(), before, `${browserName}: opening Search moves nothing`)
       await search.blur()
-      assert.equal(await search.count(), 0, `${browserName}: an empty Search folds back to the magnifier on blur`)
+      assert.equal(await search.count(), 0, `${browserName}: an empty Search folds away on blur`)
 
       // Grouped by nothing and in the collection's own order, for a
       // deterministic check that typing filters live.

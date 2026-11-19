@@ -250,7 +250,7 @@ test('every row carries when and by whom it was created and last updated, from t
   const settled = (out: { state: string; reason?: string }) => assert.equal(out.state, 'settled', out.reason)
   settled(await add({ id: 'dated-atelier', kind: 'company', name: 'Atelier Daté' }, writing(camille)))
   await on('2026-10-25')
-  settled(await update({ id: 'dated-atelier', fields: { note: 'met at the fair' } }, writing(julien)))
+  settled(await update({ id: 'dated-atelier', fields: { tags: ['met at the fair'] } }, writing(julien)))
   await on('2026-10-24')
 
   const contacts = source('contacts') as Source

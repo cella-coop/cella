@@ -189,7 +189,7 @@ test('a motion\'s second change, cited once another motion\'s version is adopted
   const two = await motioned(
     'Two rules for the archive',
     [
-      { kind: 'policy', args: { kind: 'rule', wording: 'The archive keeps every adopted text for as long as the co-op stands' } },
+      { kind: 'policy', args: { kind: 'rule', wording: 'The archive keeps every adopted text for as long as the coop stands' } },
       { kind: 'policy', args: { kind: 'rule', wording: 'Any member may read the archive on request' } },
     ],
     '2027-01-04',

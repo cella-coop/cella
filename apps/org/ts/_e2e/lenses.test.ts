@@ -5,7 +5,7 @@
 // lens shows rows of each collection a circle's work fills, a slice of
 // its own, and each collection whose rows spread over the circles shows
 // rows under more than one lens. Read as Camille, the manager, whose
-// mandates on the whole co-op read every circle's records. Run by
+// mandates on the whole coop read every circle's records. Run by
 // `cella test e2e lenses`.
 
 import { after, before, test } from 'node:test'

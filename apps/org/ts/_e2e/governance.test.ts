@@ -206,7 +206,7 @@ test('Chloé suspended by the assembly\'s motion: carried out in the close\'s tr
   assert.match(reason(stance), /chloe@lanterne\.example is (not on the roll|not an active member)/)
 })
 
-test('circles never nest: no circle has a parent, and a motion to nest one carries no action the co-op knows', async () => {
+test('circles never nest: no circle has a parent, and a motion to nest one carries no action the coop knows', async () => {
   const columns = await all<{ c: string }>(`SELECT column_name AS c FROM information_schema.columns WHERE table_schema = 'circle' AND table_name = 'circle'`)
   assert.equal(columns.some((r) => r.c === 'parent' || r.c === 'path'), false)
   assert.deepEqual(await all(`SELECT id FROM circle.circle WHERE assembly`), [{ id: 'ag' }])

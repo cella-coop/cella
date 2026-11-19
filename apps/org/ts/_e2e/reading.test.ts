@@ -96,7 +96,7 @@ test('reading follows the mandates: Inès reads Web\'s expenses and not Marketin
   const scoped = await page('/expenses', ines)
   assert.equal(scoped.status, 200)
   assert.ok(scoped.text.includes('ex-0002'), 'Inès, in Web, reads Web\'s expense by read on her own circle')
-  assert.ok(scoped.text.includes('ex-0004'), 'and the assembly\'s, the whole co-op\'s')
+  assert.ok(scoped.text.includes('ex-0004'), 'and the assembly\'s, the whole coop\'s')
   assert.ok(!scoped.text.includes('ex-0003'), 'and not Marketing\'s: no member, she holds no open books')
   assert.equal((await page('/expenses/ex-0003', ines)).status, 404, 'Marketing\'s expense is none to her')
   assert.deepEqual(await reading(ines, `SELECT id FROM expense.expense WHERE circle = 'marketing'`), [], 'and a direct query as the app role reads none of Marketing\'s')
@@ -152,12 +152,12 @@ test('a worker reads their own capital account and its lines, and no colleague\'
   const accounts = await page('/accounts', chloe)
   assert.ok(accounts.text.includes('101310'), 'Chloé reads her capital account')
   assert.ok(!accounts.text.includes('101301'), 'and not Camille\'s')
-  assert.ok(accounts.text.includes('Bank —'), 'the co-op\'s own accounts are every member\'s')
+  assert.ok(accounts.text.includes('Bank —'), 'the coop\'s own accounts are every member\'s')
   assert.ok(accounts.text.includes('trial balance agrees'), 'and the whole trial balance agrees for her, as it does')
   assert.ok(!(await page(`/people/${camille}?tab=membership`, chloe)).text.includes('101301'), 'Camille\'s page shows her no capital of Camille\'s')
 
   // The opening balances carry every member's capital: Chloé reads the
-  // entry and its lines on the co-op's own accounts and on her own.
+  // entry and its lines on the coop's own accounts and on her own.
   const opening = await page('/journal/je-0001', chloe)
   assert.equal(opening.status, 200)
   assert.ok(opening.text.includes('101310') && !opening.text.includes('101301'))

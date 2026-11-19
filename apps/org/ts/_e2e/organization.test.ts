@@ -1,7 +1,7 @@
 // The organization scenario, in every browser, light and dark, on a
 // seeded Lanterne through the dev server: Camille opens Settings from the
-// co-op menu and lands on Organization, `/settings/organization`, first
-// under Organization: the co-op's particulars in force, each changed by a
+// coop menu and lands on Organization, `/settings/organization`, first
+// under Organization: the coop's particulars in force, each changed by a
 // motion of the Assembly, and under them the scope's address and
 // timezone, each set by a host, said by an icon beside each label. The
 // form has no Save. She types a SIREN of five digits and presses Enter:
@@ -28,7 +28,7 @@ const camille = 'camille@lanterne.example'
 const montreuil = '14 rue des Graviers, 93100 Montreuil, France'
 
 eachBrowser((name, launch) => {
-  test(`${name}: Camille changes the co-op's seat from Settings' Organization page, and proposes the assembly's motion from the changes to propose, light and dark`, async () => {
+  test(`${name}: Camille changes the coop's seat from Settings' Organization page, and proposes the assembly's motion from the changes to propose, light and dark`, async () => {
     mkdirSync(shots, { recursive: true })
     const su = new pg.Client()
     await su.connect()
@@ -36,7 +36,7 @@ eachBrowser((name, launch) => {
     const { base, stop } = await serve()
     const browser = await launch()
     try {
-      const { policy } = await one<{ policy: string }>('SELECT policy FROM circle.particulars() p')
+      const { policy, logo } = await one<{ policy: string; logo: string }>('SELECT policy, logo FROM circle.particulars() p')
       for (const scheme of ['light', 'dark'] as const) {
         const at = `${name}, ${scheme}`
         const seat = `${scheme === 'light' ? 3 : 5} avenue Gambetta, 75020 Paris, France (${name})`
@@ -89,7 +89,7 @@ eachBrowser((name, launch) => {
           assert.equal(await form.getByRole('button', { name: 'Proposed to Assembly' }).count(), 1, `${at}: its icon says it is proposed`)
           const dialog = await review(page, 'Assembly')
           assert.match((await dialog.locator('figure.diff').textContent()) ?? '', /SIREN\s*000000000\s*to\s*12345/, `${at}: it shows the change`)
-          assert.equal(await dialog.getByLabel('Title').inputValue(), "Change the co-op's SIREN to 12345", `${at}: its title says the change`)
+          assert.equal(await dialog.getByLabel('Title').inputValue(), "Change the coop's SIREN to 12345", `${at}: its title says the change`)
           assert.equal(await chosen(dialog.getByLabel('Circle')), 'ag',
  `${at}: put to the assembly`)
           assert.equal(await dialog.getByLabel('New SIREN').count(), 0, `${at}: the change is the diff, not a field`)
@@ -127,8 +127,8 @@ eachBrowser((name, launch) => {
           )
           assert.equal(
             proposed.args.wording,
-            `The co-op is called {particulars_name: Lanterne}, its legal name {particulars_legal_name: Lanterne Worker Co-operative Limited Company}, a {particulars_form: Worker co-operative limited company with variable capital}, whose seat is {particulars_seat: ${seat}}, registered under SIREN {particulars_siren: 000000000} at the trade register of {particulars_rcs: Bobigny}, with the VAT number {particulars_vat: FR00000000000}`,
-            `${at}: the particulars worded again, the seat typed and the rest as they stand`,
+            `The coop is called {particulars_name: Lanterne}, its legal name {particulars_legal_name: Lanterne Worker Co-operative Limited Company}, a {particulars_form: Worker co-operative limited company with variable capital}, whose seat is {particulars_seat: ${seat}}, registered under SIREN {particulars_siren: 000000000} at the trade register of {particulars_rcs: Bobigny}, with the VAT number {particulars_vat: FR00000000000}, and bears the mark {particulars_logo: ${logo}}`,
+            `${at}: the particulars worded again, the seat typed and the rest as they stand, the logo among them`,
           )
           assert.equal((await one<{ seat: string }>('SELECT seat FROM circle.particulars()')).seat, montreuil, `${at}: nothing changes until the motion carries`)
           await page.screenshot({ path: `${shots}/organization-proposed-${name}-${scheme}.png`, fullPage: true })

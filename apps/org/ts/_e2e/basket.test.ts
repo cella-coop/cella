@@ -1,5 +1,5 @@
 // The basket scenario, in every browser, on a seeded Lanterne through the
-// dev server: Camille changes the co-op's seat on Settings' Organization
+// dev server: Camille changes the coop's seat on Settings' Organization
 // page and turns Web's reactions off on Web's rules page, both decided by
 // the assembly. Neither opens a dialog: each joins the changes to propose
 // to the assembly, in the settings pages' sidebar, which counts two on
@@ -67,7 +67,7 @@ eachBrowser((name, launch) => {
         const dialog = await review(page, 'Assembly')
         const diffs = dialog.locator('figure.diff')
         assert.equal(await diffs.count(), 2, `${name}: one diff for each change`)
-        assert.match((await diffs.nth(0).textContent()) ?? '', new RegExp(`The co-op · Seat\\s*${montreuil.replace(/[()]/g, '\\$&')}\\s*to\\s*${seat.replace(/[()]/g, '\\$&')}`), `${name}: the seat, from the one in force`)
+        assert.match((await diffs.nth(0).textContent()) ?? '', new RegExp(`The coop · Seat\\s*${montreuil.replace(/[()]/g, '\\$&')}\\s*to\\s*${seat.replace(/[()]/g, '\\$&')}`), `${name}: the seat, from the one in force`)
         assert.match((await diffs.nth(1).textContent()) ?? '', /Web · Reactions on comments.*On\s*to\s*Off/, `${name}: the rule, from on to off`)
         assert.equal(await chosen(dialog.getByLabel('Circle')), 'ag', `${name}: put to the assembly`)
         await page.screenshot({ path: `${shots}/basket-review-${name}.png` })

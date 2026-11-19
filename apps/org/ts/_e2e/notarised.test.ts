@@ -74,13 +74,13 @@ test('the seed founds Lanterne as the log\'s first entry, and every table a feat
   assert.deepEqual(tables, { made: tables.made, registered: tables.made, triggered: tables.made })
   const again = await found({ form: 'scop-sarl-fr', motion: 'm-2021-001', from: 'again', load: async () => ({}) }, as())
   assert.equal(again.state, 'refused')
-  assert.match((again as { reason: string }).reason, /a co-op is founded once, as its log's first entry; the log holds 1 already/)
+  assert.match((again as { reason: string }).reason, /a coop is founded once, as its log's first entry; the log holds 1 already/)
 })
 
 test('a psql write is refused, as the app or as a superuser', async () => {
   for (const [db, sql] of [
     [su, `INSERT INTO contact.contact (id, kind, name) VALUES ('cl-forged', 'company', 'Forged')`],
-    [su, `UPDATE contact.contact SET note = note || '.'`],
+    [su, `UPDATE contact.contact SET tags = tags || '{forged}'`],
     [su, `DELETE FROM document_membership.reading`],
     [su, 'TRUNCATE timesheet.entry CASCADE'],
     [app, `INSERT INTO import.run (kind, name, actor, day, dry, settled, refused, lines) VALUES ('members', 'x.csv', '${camille}', '2026-10-25', true, 0, 0, '[]')`],

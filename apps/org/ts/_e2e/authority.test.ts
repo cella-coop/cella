@@ -194,9 +194,9 @@ test('a person edits their own profile, and no one else\'s', async () => {
 })
 
 test('every active member edits contacts and documents through the member role\'s mandates in the assembly', async () => {
-  const noted = await update({ id: 'nuvola', fields: { note: 'Renews in January' } }, as(chloe))
-  assert.equal(noted.state, 'settled')
-  const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [noted.state === 'settled' && noted.entry])
+  const tagged = await update({ id: 'nuvola', fields: { tags: ['renews in January'] } }, as(chloe))
+  assert.equal(tagged.state, 'settled')
+  const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [tagged.state === 'settled' && tagged.entry])
   assert.deepEqual(logged.guards.map((r) => r.owner), ['circle-person'])
   const remarked = await comment({ version: 'rate-card-2027@2', quote: 'from 4 800 €', text: 'Agreed.' }, as(hugo))
   assert.equal(remarked.state, 'settled')
@@ -208,7 +208,7 @@ test('a suspended member\'s device and a non-member\'s are refused: nothing is a
   const before = await head()
   await su.query(`UPDATE membership.member SET status = 'suspended' WHERE address = $1`, [thomas])
   try {
-    const suspended = await update({ id: 'nuvola', fields: { note: 'Suspended' } }, as(thomas))
+    const suspended = await update({ id: 'nuvola', fields: { tags: ['suspended'] } }, as(thomas))
     assert.match(reason(suspended), /the actor holds no mandate for edit-contact/)
     const silenced = await comment({ version: 'rate-card-2027@2', quote: 'from 4 800 €', text: 'Suspended.' }, as(thomas))
     assert.match(reason(silenced), /the actor holds no mandate for edit-document/)

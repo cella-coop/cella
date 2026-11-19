@@ -47,7 +47,7 @@ before(async () => {
   await on('2026-10-25')
   settled(await add({ id: 'logged-tampon', kind: 'company', name: 'Bureau Tampon' }, as(julien)))
   await on('2026-10-26')
-  settled(await update({ id: 'logged-estampe', fields: { note: 'met at the fair' } }, as(julien)))
+  settled(await update({ id: 'logged-estampe', fields: { tags: ['met at the fair'] } }, as(julien)))
 })
 
 after(async () => {

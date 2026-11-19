@@ -1,7 +1,7 @@
 // The sidebar scenario, in every browser, light and dark, on a seeded
 // Lanterne through the dev server: Camille signs in and lands in the
-// assembly, the co-op's own row first in the co-op selector and checked,
-// the circles she sits in below it, the co-op's whole layout in the
+// assembly, the coop's own row first in the coop selector and checked,
+// the circles she sits in below it, the coop's whole layout in the
 // sidebar under its groups, above it only the Inbox and Activity. Each
 // of Lanterne's circles, chosen, shows what it shows of the layout, in
 // the layout's order and under its groups. She chooses Brand from the
@@ -116,8 +116,8 @@ eachBrowser((name, launch) => {
           await page.waitForLoadState('networkidle')
           const nav = page.getByRole('navigation', { name: 'Main' })
           const trigger = nav.locator('.coop .trigger')
-          // The trigger's name: the co-op's alone, or through a circle the
-          // co-op as its eyebrow over the circle's, read as "co-op / circle".
+          // The trigger's name: the coop's alone, or through a circle the
+          // coop as its eyebrow over the circle's, read as "coop / circle".
           const named = async () =>
             (await trigger.evaluate((t) => {
               const names = t.querySelector('.names')
@@ -125,19 +125,19 @@ eachBrowser((name, launch) => {
             })).replace(/\s+/g, ' ').trim()
 
           // The assembly: where she lands, first in the selector and checked.
-          assert.equal(await named(), 'Lanterne', `${at}: she lands in the assembly, the trigger naming the co-op alone`)
+          assert.equal(await named(), 'Lanterne', `${at}: she lands in the assembly, the trigger naming the coop alone`)
           const top = await nav.locator('.top > ul a').evaluateAll((as) => as.map((a) => a.getAttribute('href')))
           assert.deepEqual(top, ['/inbox', '/log'], `${at}: the Inbox and Activity always stand above the features`)
           const { middle, more } = await drawn(page)
           assert.deepEqual(middle, expected(assembly.features), `${at}: the assembly's features, in its order, under its accordions`)
-          assert.deepEqual(middle.slice(0, 1), ['[Governance]'], `${at}: its first accordion is Governance`)
-          assert.ok(middle.includes('/tasks') && middle.includes('/accounts'), `${at}: the assembly, the root, shows the co-op's whole layout`)
+          assert.deepEqual(middle.slice(0, 1), ['[Organization]'], `${at}: its first accordion is Organization`)
+          assert.ok(middle.includes('/tasks') && middle.includes('/accounts'), `${at}: the assembly, the root, shows the coop's whole layout`)
           assert.equal(more, `/settings/features/${assembly.id}`, `${at}: More… opens the assembly's features page`)
           await page.screenshot({ path: `${shots}/sidebar-assembly-${name}-${scheme}.png` })
           await trigger.click()
-          const menu = page.getByRole('group', { name: 'Co-op' })
+          const menu = page.getByRole('group', { name: 'Coop' })
           const rows = await menu.getByRole('menuitemradio').evaluateAll((bs) => bs.map((b) => `${b.textContent?.replace(/\s+/g, ' ').trim()}${b.getAttribute('aria-checked') === 'true' ? ' ✓' : ''}`))
-          assert.match(rows[0] ?? '', /Lanterne.* ✓$/, `${at}: the co-op's own row, the assembly's, is first in the selector, and checked`)
+          assert.match(rows[0] ?? '', /Lanterne.* ✓$/, `${at}: the coop's own row, the assembly's, is first in the selector, and checked`)
           assert.ok(!rows.some((r) => /All circles/.test(r)), `${at}: no row lists all circles`)
           assert.ok(rows.includes('Brand') && rows.includes('Coordination'), `${at}: the circles she sits in are offered`)
           assert.ok(!rows.includes('Web') && !rows.includes(assembly.name), `${at}: a circle she does not sit in is not, nor the assembly as a circle of its own`)

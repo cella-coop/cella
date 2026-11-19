@@ -91,12 +91,13 @@ export async function addFilter(page: Page, label: string) {
   await page.getByRole('menuitem', { name: label, exact: true }).click()
 }
 
-// The labels of the fields the Filter menu offers, opened and closed.
+// The labels of the fields the Filter menu offers, opened and closed;
+// its Search, which heads it, is no field.
 export async function filterFields(page: Page): Promise<string[]> {
   await filterButton(page).click()
   const menu = page.getByRole('menu', { name: 'Filter by a field' })
   await menu.waitFor()
-  const labels = (await menu.getByRole('menuitem').allTextContents()).map((t) => t.trim())
+  const labels = (await menu.locator('[role="menuitem"]:not([data-search])').allTextContents()).map((t) => t.trim())
   await page.keyboard.press('Escape')
   await menu.waitFor({ state: 'hidden' })
   return labels

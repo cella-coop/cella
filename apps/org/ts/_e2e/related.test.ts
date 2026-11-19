@@ -7,7 +7,8 @@
 // project's page Related counts each collection whose rows name it, the
 // count the scenario reads itself in SQL; following the jump lands on
 // that collection filtered to the record, the condition in the address,
-// with as many rows in its header's count. Nothing is written. Run by
+// with as many rows in its header's count, or, where a tab of the record
+// lists it, as a project's Tasks, on that tab. Nothing is written. Run by
 // `cella test e2e related`.
 // covers: core membership membership-task employment project project-task project-timesheet
 
@@ -100,8 +101,9 @@ eachBrowser((browserName, launch) => {
         }
 
         // Related's jumps: each count is what SQL reads of that collection
-        // filtered to the record, and following it lands there.
-        const jumps = async (path: string, want: string, key: string, id: string) => {
+        // filtered to the record, and following it lands there, or on the
+        // record's tab that lists it scoped to the record (`tab`).
+        const jumps = async (path: string, want: string, key: string, id: string, tab?: string) => {
           await visit(path)
           const related = page.locator('section.related')
           const link = related.locator('a.jump', { hasText: want })
@@ -111,6 +113,14 @@ eachBrowser((browserName, launch) => {
           assert.ok(count > 0, `${at}: ${path} has ${want}`)
           assert.equal((await link.locator('.count').textContent())?.trim(), String(count), `${at}: ${path}'s Related counts its ${want}`)
           await link.click()
+          if (tab) {
+            await page.waitForURL((u) => u.pathname === path && u.searchParams.get('tab') === tab)
+            await page.waitForLoadState('networkidle')
+            const tabs = page.locator('nav.tabs')
+            await tabs.locator('[aria-current="page"]', { hasText: want }).waitFor()
+            assert.equal((await tabs.locator('[aria-current="page"]').textContent())?.trim(), want, `${at}: ${want} opens the record's ${want} tab`)
+            return
+          }
           await page.waitForURL((u) => u.pathname === `/${want.toLowerCase()}`)
           await page.waitForLoadState('networkidle')
           assert.deepEqual(JSON.parse(new URL(page.url()).searchParams.get('where') ?? '[]'), where, `${at}: ${want} filtered to ${id}`)
@@ -118,7 +128,7 @@ eachBrowser((browserName, launch) => {
         }
         await jumps(home, 'Tasks', 'assigned', person)
         await jumps(`/circles/${encodeURIComponent(circle)}`, 'Projects', 'circle', circle)
-        await jumps(`/projects/${encodeURIComponent(project)}`, 'Tasks', 'project_id', project)
+        await jumps(`/projects/${encodeURIComponent(project)}`, 'Tasks', 'project_id', project, 'tasks')
         assert.deepEqual(errors, [], `${at}: no page error`)
         await context.close()
       }

@@ -11,9 +11,9 @@
 // task of its own, so they meet in nothing they write. Screenshots light
 // and dark go to `SHOTS`. Run by `cella test e2e body`. One drawer
 // property, which saves the same way core body's own save does, has the
-// same window an edit followed at once by a reload opens, so Yusuf
-// types a project's budget and reloads at once too.
-// covers: task project
+// same window an edit followed at once by a reload opens, so Léa picks
+// a task's priority and reloads at once too.
+// covers: task
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -346,49 +346,46 @@ for (const [name, launch] of browsers().filter(([n]) => n in reloadNowTasks)) {
   })
 }
 
-// A drawer property has the same window: its popover's text field
-// commits on Enter alone, which starts its own signed write; Yusuf
-// types a project's budget, presses Enter and reloads at once, before
-// that write is known to have landed. It survives all the same, kept
-// until the Details drawer mounts again, which posts it once more. In
-// Chromium: the window is the write's, not the body's, so one browser
-// proves it.
-const yusuf = 'yusuf@lanterne.example'
+// A drawer property has the same window: its popover's pick commits as
+// it is made, which starts its own signed write; Léa picks a task's
+// priority and reloads at once, before that write is known to have
+// landed. It survives all the same, kept until the Details drawer mounts
+// again, which posts it once more. In Chromium: the window is the
+// write's, not the body's, so one browser proves it.
 if (chromium) {
   test('chromium: a drawer property accepted and reloaded at once still reaches the server', async () => {
-    const project = 'clairval-site'
+    const task = tasks.chromium
     const su = new pg.Client()
     await su.connect()
     const { base, stop } = await serve()
     const browser = await chromium[1]()
     const errors: string[] = []
     try {
+      const was = (await su.query<{ priority: string }>('SELECT priority FROM task.task WHERE id = $1', [task])).rows[0]?.priority
+      const want = was === 'urgent' ? 'low' : 'urgent'
       const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
-      await signIn(context, base, yusuf)
+      await signIn(context, base, lea)
       const page = await context.newPage()
       page.on('pageerror', (e) => errors.push(e.message))
-      await page.goto(`${base}/projects/${project}`)
+      await page.goto(`${base}/tasks/${task}`)
       await page.getByRole('tab', { name: 'Details' }).click()
       const drawer = page.getByRole('complementary', { name: 'Details' })
-      await drawer.getByRole('button', { name: /^Budget/ }).click()
-      const dialog = page.getByRole('dialog', { name: 'Budget' })
+      await drawer.getByRole('button', { name: /^Priority/ }).click()
+      const dialog = page.getByRole('dialog', { name: 'Priority' })
       await dialog.waitFor()
-      const input = dialog.getByRole('spinbutton', { name: 'Budget' })
-      await input.fill('9000')
-      // Enter alone accepts it, starting the signed write; the reload
+      // The pick accepts it, starting the signed write; the reload
       // follows at once, with nothing awaited in between.
-      await input.press('Enter')
+      await dialog.getByRole('option', { name: want, exact: true }).click()
       await page.reload()
-      let budget: number | null = null
+      let priority: string | null = null
       for (let i = 0; i < 100; i++) {
-        const row = await su.query<{ budget: string | null }>('SELECT budget FROM project.project WHERE id = $1', [project])
-        budget = row.rows[0]?.budget === null || row.rows[0]?.budget === undefined ? null : Number(row.rows[0].budget)
-        if (budget === 9_000) {
+        priority = (await su.query<{ priority: string }>('SELECT priority FROM task.task WHERE id = $1', [task])).rows[0]?.priority ?? null
+        if (priority === want) {
           break
         }
         await page.waitForTimeout(100)
       }
-      assert.equal(budget, 9_000, "the project's budget reached the server after the reload")
+      assert.equal(priority, want, "the task's priority reached the server after the reload")
       assert.deepEqual(errors, [], 'the pages threw nothing')
     } finally {
       await browser.close()

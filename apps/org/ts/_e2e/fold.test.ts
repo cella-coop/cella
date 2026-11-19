@@ -179,7 +179,7 @@ test('24 October: people keep their profiles and devices, Nadia and Yara are inv
 })
 
 test('24 October: contacts are kept, archived and erased, and the work goes on: a project, its milestones, its body and a thread, tasks, a body and a thread, time and files', async () => {
-  settled(await updateContact({ id: 'nuvola', fields: { note: 'Renews in January' } }, as(chloe)))
+  settled(await updateContact({ id: 'nuvola', fields: { tags: ['renews in January'] } }, as(chloe)))
   settled(await archiveContact({ id: 'velo' }, as(camille)))
   settled(await eraseContact({ id: 'halles-roux' }, as(camille)))
   const { project } = settled(await createProject({ title: 'Terres d\'Oc, label refresh', circle: 'brand', summary: 'A new label range' }, as(hugo))) as { project: string }
@@ -201,7 +201,7 @@ test('24 October: contacts are kept, archived and erased, and the work goes on: 
   const { task } = settled(await createTask({ title: 'Redraw the vine', priority: 'high', due: '2026-11-06' }, as(sofia))) as { task: string }
   settled(await fileTask({ task, project }, as(hugo)))
   settled(await assign({ task, member: sofia }, as(hugo)))
-  settled(await move({ task, status: 'doing' }, as(sofia)))
+  settled(await move({ task, status: 'active' }, as(sofia)))
   settled(await setTask({ task, priority: 'urgent', due: '2026-11-05' }, as(sofia)))
   const notes = createDoc()
   edits.paste(notes, undefined, 0, [{ type: 'todo', checked: false, runs: [{ text: 'Send the redrawn vine to the printer' }], children: [] }])
@@ -296,7 +296,7 @@ test('24 October: the assembly and coordination put their motions, which are dis
     { kind: 'circle', args: { id: 'design', name: 'Design', purpose: 'product and service design' } },
     { kind: 'seat', args: { circle: 'design', member: sofia } },
     { kind: 'amend-circle', args: { circle: 'web', purpose: 'the studio\'s websites' } },
-    { kind: 'arrange-features', args: { circle: 'ag', features: layout.replace('Members:', 'People:') } },
+    { kind: 'arrange-features', args: { circle: 'ag', features: layout.replace('Membership:', 'Members:') } },
     { kind: 'show-group', args: { circle: 'web', group: 'books', shown: 'yes' } },
     { kind: 'hide-feature', args: { circle: 'web', feature: 'import', hidden: 'yes' } },
     { kind: 'policy', args: { kind: 'mandate', wording: 'The {role: manager} role holds {power: arrange-features}, to arrange the features of the {scope: ag} circle' } },
@@ -331,11 +331,11 @@ test('31 October: the closes carry Inès\'s and Nadia\'s admissions, their subsc
   await on('2026-10-31')
   settled(await close({ motion: 'm-2026-012' }, as(camille)))
   await closed('assembly')
-  // Members renamed People keeps its id; the manager, granted the power
-  // over the root, moves Contact into it at once.
+  // Membership renamed Members keeps its id; the manager, granted the
+  // power over the root, moves Contact into it at once.
   const layout = (await one<{ f: string }>(`SELECT circle.features('ag') AS f`)).f
-  assert.match(layout, /People: membership/)
-  settled(await arrange({ circle: 'ag', features: layout.replace(', contact;', ';').replace('People: ', 'People: contact, ') }, as(camille)))
+  assert.match(layout, /Members: membership/)
+  settled(await arrange({ circle: 'ag', features: layout.replace(', contact;', ';').replace('Members: ', 'Members: contact, ') }, as(camille)))
   settled(await adoptVersion({ document: (motions.get('handbook') ?? '').split('@')[0], version: motions.get('handbook') ?? '', base: null, motion: motions.get('assembly') ?? '' }, as(camille)))
   await closed('finance')
   settled(await spread({ member: ines, instalments: 10 }, as(ines)))
@@ -381,12 +381,18 @@ test('3 November: Camille keeps a body on a record of every other kind that has 
   settled(await saveBodyPeriod({ period: '2026-10', ...note('October closed with the pay run paid') }, by))
   settled(await accountTermsBody({ terms: await first('SELECT id FROM account.terms ORDER BY id LIMIT 1'), ...note('Why the accounts bear no interest') }, by))
   settled(await billBody({ bill: await first('SELECT id FROM bill.bill ORDER BY id LIMIT 1'), ...note('Paid by transfer on approval') }, by))
-  settled(await contactBody({ contact: await first(`SELECT id FROM contact.contact WHERE kind = 'company' ORDER BY id LIMIT 1`), ...note('Prefers proofs by post') }, by))
+  // The seed's contacts carry their notes, so this save merges the body
+  // it replaces, named by its hash, as a meeting's does below.
+  const kept = await one<{ id: string; base: string }>(`SELECT id, encode(sha256(body), 'hex') AS base FROM contact.contact WHERE kind = 'company' ORDER BY id LIMIT 1`)
+  settled(await contactBody({ contact: kept.id, ...note('Prefers proofs by post'), base: kept.base }, by))
   settled(await expenseBody({ expense: await first('SELECT id FROM expense.expense ORDER BY id LIMIT 1'), ...note('The train was the cheapest fare') }, by))
   settled(await fileBody({ file: await first('SELECT id FROM file.file ORDER BY id LIMIT 1'), ...note('Kept for the auditors') }, by))
   settled(await importBody({ import: await first('SELECT id FROM import.run ORDER BY id LIMIT 1'), ...note('October’s FEC, as the bank sent it') }, by))
   settled(await invoiceBody({ invoice: await first('SELECT id FROM invoice.invoice ORDER BY id LIMIT 1'), ...note('Paid on time') }, by))
-  settled(await meetingBody({ meeting: await first('SELECT id FROM meeting.meeting ORDER BY id LIMIT 1'), ...note('Coffee from the corner shop') }, by))
+  // The seed's meetings carry their notes, so this save merges the body
+  // it replaces, named by its hash.
+  const held = await one<{ id: string; base: string }>(`SELECT id, encode(sha256(body), 'hex') AS base FROM meeting.meeting ORDER BY id LIMIT 1`)
+  settled(await meetingBody({ meeting: held.id, ...note('Coffee from the corner shop'), base: held.base }, by))
   settled(await saveBodyDistribution({ distribution: '2025', ...note('Approved as the assembly moved it') }, by))
   settled(await patronageTermsBody({ terms: await first('SELECT id FROM patronage.terms ORDER BY id LIMIT 1'), ...note('Why pay alone weighs') }, by))
   settled(await payslipBody({ payslip: await first(`SELECT id FROM payslip.payslip WHERE month = '2026-10' AND member = '${camille}'`), ...note('Overtime agreed with the circle') }, by))
@@ -433,7 +439,7 @@ test('January: the year\'s periods close, the 2026 split is drafted, moved and a
 
 test('a year after his hire, Bastien applies by his right, and his candidacy opens', async () => {
   await on('2027-11-02')
-  settled(await apply({ member: bastien, shares: 20, deadline: '2027-11-16', body: 'I have worked with the co-op for a year and ask to join.' }, as(bastien)))
+  settled(await apply({ member: bastien, shares: 20, deadline: '2027-11-16', body: 'I have worked with the coop for a year and ask to join.' }, as(bastien)))
   head = Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
   console.log(`# the year wrote ${head - 1} entries in ${((performance.now() - started) / 1000).toFixed(1)}s`)
 })

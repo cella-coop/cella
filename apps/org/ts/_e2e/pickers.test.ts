@@ -42,7 +42,7 @@ eachBrowser((name, launch) => {
       const page = await context.newPage()
 
       // A meeting's time.
-      await page.goto(`${base}/meetings`)
+      await page.goto(`${base}/meetings`, { waitUntil: 'networkidle' })
       await page.getByRole('button', { name: 'New' }).click()
       const form = page.locator('form').filter({ has: page.getByRole('button', { name: 'Schedule meeting' }) })
       await catching(form, 'time')

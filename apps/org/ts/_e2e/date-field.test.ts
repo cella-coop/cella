@@ -16,7 +16,8 @@ eachBrowser((name, launch) => {
       const context = await browser.newContext({ extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
       await signIn(context, base, 'camille@lanterne.example')
       const page = await context.newPage()
-      await page.goto(`${base}/projects`)
+      // A click before the page hydrates opens nothing.
+      await page.goto(`${base}/projects`, { waitUntil: 'networkidle' })
       await page.getByRole('button', { name: 'New' }).click()
       const form = page.locator('form').filter({ has: page.getByRole('button', { name: 'Start project' }) })
       const day = form.getByLabel('Due')

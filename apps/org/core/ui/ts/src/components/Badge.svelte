@@ -24,7 +24,7 @@
   {:else}
     <span class="dot" class:inked={ink !== undefined} aria-hidden="true"></span>
   {/if}
-  {@render children()}
+  <span class="text">{@render children()}</span>
 </span>
 
 <style>

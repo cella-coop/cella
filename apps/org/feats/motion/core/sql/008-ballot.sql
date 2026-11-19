@@ -33,6 +33,21 @@ INSERT INTO cella.personal (schema, tab, col, class, subject, owner) VALUES
   ('motion', 'motion', 'body', 'profile', 'proposer', 'motion'),
   ('motion', 'message', 'body', 'profile', 'member', 'motion');
 
+-- As before, but for the notary's redaction (`cella.redacting()`), the one
+-- change a closed motion takes: erasing its proposer redacts its title
+-- and its text, and nothing else of it. Every other change to a closed
+-- motion is refused, during a redaction too.
+CREATE OR REPLACE FUNCTION motion.stays_closed() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  IF OLD.closed IS NOT NULL
+    AND NOT (cella.redacting() AND to_jsonb(NEW) - 'title' - 'body' = to_jsonb(OLD) - 'title' - 'body') THEN
+    RAISE EXCEPTION '% closed on %', OLD.id, OLD.closed
+      USING ERRCODE = 'triggered_action_exception';
+  END IF;
+  RETURN NEW;
+END
+$$;
+
 ALTER TABLE motion.vote
   DROP CONSTRAINT vote_stance_check,
   ADD CONSTRAINT vote_stance_check CHECK (stance IN ('for', 'against', 'abstain', 'consent', 'object', 'redacted'));

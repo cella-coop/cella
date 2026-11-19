@@ -9,6 +9,7 @@
   import type { Draft } from '../hooks/DashboardState.svelte.ts'
   import { useDrag } from '../hooks/useDrag.ts'
   import Button from './Button.svelte'
+  import { verb } from '../verbs.ts'
   import Checkbox from './Checkbox.svelte'
   import Dialog from './Dialog.svelte'
   import DragHandle from './DragHandle.svelte'
@@ -79,10 +80,10 @@
     <DropIndicator show={drag.before('widgets', widgets.length)} />
   </ol>
 
-  <div class="buttons">
+  <div class="buttons" data-run>
     <Button onclick={() => state.open(-1, undefined, fields)}><Icon icon={Plus} />Add widget</Button>
     {#if custom}
-      <Button onclick={() => onchange(null)}>Reset</Button>
+      <Button lead={verb('Reset')} onclick={() => onchange(null)}>Reset</Button>
     {/if}
   </div>
 </div>
@@ -146,9 +147,9 @@
           />
         </div>
       {/if}
-      <div class="buttons">
-        <Button tone="primary" type="submit">{state.editing === -1 ? 'Add' : 'Save'}</Button>
-        <Button onclick={() => state.close()}>Cancel</Button>
+      <div class="buttons" data-run>
+        <Button lead={verb('Cancel')} onclick={() => state.close()}>Cancel</Button>
+        <Button tone="primary" type="submit" lead={verb(state.editing === -1 ? 'Add' : 'Save')}>{state.editing === -1 ? 'Add' : 'Save'}</Button>
       </div>
     </form>
   {/if}

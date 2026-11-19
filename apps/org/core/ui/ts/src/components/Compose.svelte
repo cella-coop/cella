@@ -3,6 +3,7 @@
   import type { Decider } from '../models/settings.ts'
   import { useCompose } from '../hooks/useCompose.ts'
   import Button from './Button.svelte'
+  import { verb } from '../verbs.ts'
   import Dialog from './Dialog.svelte'
   import Field from './Field.svelte'
 
@@ -41,7 +42,7 @@
 </script>
 
 <div class="compose">
-  <Button onclick={() => state.open()}>{label}</Button>
+  <Button lead={verb(label)} onclick={() => state.open()}>{label}</Button>
 </div>
 <Dialog bind:dialog={state.dialog} {title} submit="Propose to {decider.name}" busy={state.proposing} problem={state.problem} onsubmit={() => state.propose(action)}>
   {#snippet lead()}

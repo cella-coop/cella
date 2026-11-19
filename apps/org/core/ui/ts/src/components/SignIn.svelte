@@ -13,6 +13,7 @@
   import Avatar from './Avatar.svelte'
   import Logo from './Logo.svelte'
   import Button from './Button.svelte'
+  import { verb } from '../verbs.ts'
   import Field from './Field.svelte'
   import Icon from './Icon.svelte'
   import Select from './Select.svelte'
@@ -119,9 +120,9 @@
       {#if state.confirming === pick.key}
         <div class="confirm" role="alert">
           <p>This browser will no longer be able to sign in as {pick.name ?? pick.address}. To stop the key working anywhere, revoke it in Devices.</p>
-          <div class="acts">
-            <Button tone="danger" onclick={() => state.forget(pick)}>Forget</Button>
-            <Button onclick={() => (state.confirming = null)}>Cancel</Button>
+          <div class="acts" data-run>
+            <Button lead={verb('Forget')} tone="danger" onclick={() => state.forget(pick)}>Forget</Button>
+            <Button lead={verb('Cancel')} onclick={() => (state.confirming = null)}>Cancel</Button>
           </div>
         </div>
       {/if}
@@ -142,8 +143,8 @@
 
       <div class="bar">
         <!-- The ways besides Sign in, one group drawn as one row of cells
-             though both are quiet (`data-run`, `attachments/cell.ts`). -->
-        <span class="others" data-run>
+             though both are quiet (`data-run="group"`, `Button`). -->
+        <span class="others" data-run="group">
           <span data-link data-through>
             <Button tone={pick || !state.loaded ? 'quiet' : 'primary'} onclick={() => (state.opened = true)}>
               <Icon icon={Link} size="1rem" />Link device
@@ -161,15 +162,13 @@
       </div>
     {:else}
       <div class="new">
-        <button class="back" type="button" onclick={() => state.leave()}>
-          <Icon icon={ArrowLeft} size="1rem" />Back
-        </button>
+        <span class="back"><Button tone="subtle" lead={ArrowLeft} onclick={() => state.leave()}>Back</Button></span>
         <h1 id="in" class="title">Link this browser</h1>
         {#if !state.made}
           <p class="hint">Make a key in this browser, then approve it from a device where you are already signed in.</p>
           <Field label="Your address" name="address" type="email" bind:value={state.address} placeholder="name@lanterne.example" />
           <Field label="Name for this browser" name="label" bind:value={state.label} placeholder="laptop" />
-          <Button tone="primary" onclick={() => state.make()} disabled={!state.address.trim()}>Continue</Button>
+          <Button lead={verb('Continue')} tone="primary" onclick={() => state.make()} disabled={!state.address.trim()}>Continue</Button>
         {:else}
           <p class="hint">On a device where {state.made.address} is signed in, scan this code, or open the link, and approve. It asks you for the code below.</p>
           {#if state.qr}
@@ -186,7 +185,7 @@
               <Icon icon={Copy} size="1rem" />
             </Button>
           </div>
-          <Button tone="primary" busy={state.busy} onclick={() => state.made && state.as(state.made)}>
+          <Button tone="primary" lead={verb('Sign in')} busy={state.busy} onclick={() => state.made && state.as(state.made)}>
             I approved it, sign in
           </Button>
         {/if}
@@ -327,12 +326,13 @@
     padding-inline: var(--space-2);
   }
   /* Kept in this browser: a row tinted faintly in Sign in's ink. Chosen in
-     the card: tinted strongly. */
-  .fx.kept :global(.button) {
-    background: color-mix(in oklab, var(--info-text) 8%, var(--sunk));
+     the card: tinted strongly. Its fill, so hovered it takes every quiet
+     button's hover. */
+  .fx.kept :global(.button:not(:hover)) {
+    --fill: color-mix(in oklab, var(--info-text) 8%, var(--sunk));
   }
-  .fx.chosen :global(.button) {
-    background: color-mix(in oklab, var(--info-text) 24%, var(--sunk));
+  .fx.chosen :global(.button:not(:hover)) {
+    --fill: color-mix(in oklab, var(--info-text) 24%, var(--sunk));
   }
   .fx.chosen .chip {
     border-color: var(--info-text);
@@ -429,30 +429,16 @@
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-3);
   }
+  /* The way back, a subtle button at the card's top left. */
   .back {
     justify-self: start;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    margin: calc(var(--space-1) * -1) 0 0 calc(var(--space-2) * -1);
-    padding: var(--space-1) var(--space-2);
-    border: 0;
-    border-radius: var(--radius-control);
-    background: none;
-    color: var(--text-muted);
-    font: inherit;
-    font-size: var(--text-sm);
-    cursor: pointer;
-  }
-  .back:hover {
-    background: var(--hover);
-    color: var(--text);
+    margin: calc(var(--space-1) * -1) 0 0 calc(var(--space-3) * -1);
   }
   /* Every row one line and one height: the name on the left, ending in an
      ellipsis where it runs out, the circles on the right in what is left. */
   .list :global(.button) {
+    --h: calc(var(--row) + var(--space-1));
     width: 100%;
-    height: calc(var(--row) + var(--space-1));
     justify-content: flex-start;
   }
   .name {

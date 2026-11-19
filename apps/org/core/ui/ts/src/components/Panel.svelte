@@ -45,7 +45,7 @@
     {#if actions || help}
       <footer class="foot">
         {#if help}<span class="help">{@render help()}</span>{/if}
-        {#if actions}<span class="actions">{@render actions()}</span>{/if}
+        {#if actions}<span class="actions" data-run>{@render actions()}</span>{/if}
       </footer>
     {/if}
   </aside>

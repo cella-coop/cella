@@ -2,6 +2,7 @@
   import X from 'phosphor-svelte/lib/X'
   import { useBasket } from '../hooks/useBasket.ts'
   import Button from './Button.svelte'
+  import { verb } from '../verbs.ts'
   import Icon from './Icon.svelte'
 
   // The changes to propose, in the settings pages' sidebar, standing
@@ -32,9 +33,9 @@
             </li>
           {/each}
         </ul>
-        <div class="buttons">
-          <Button tone="primary" onclick={() => basket.review(b.circle)}>Review and propose</Button>
-          <Button onclick={() => basket.discard(b.circle)}>Discard</Button>
+        <div class="buttons" data-run>
+          <Button lead={verb('Discard')} onclick={() => basket.discard(b.circle)}>Discard</Button>
+          <Button lead={verb('Review and propose')} tone="primary" onclick={() => basket.review(b.circle)}>Review and propose</Button>
         </div>
       </section>
     {:else}

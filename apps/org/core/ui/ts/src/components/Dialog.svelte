@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
   import Button from './Button.svelte'
+  import { verb } from '../verbs.ts'
 
   // The one modal: a dialog in the top layer, what lies behind it dimmed,
   // its title naming it, what it says above its form, the form's fields,
@@ -67,9 +68,9 @@
     <form method="post" class="form" onsubmit={submitted}>
       {@render children()}
       {#if problem}<p class="problem" role="alert">{problem}</p>{/if}
-      <div class="buttons">
-        <Button onclick={cancel}>Cancel</Button>
-        <Button type="submit" tone="primary" {busy}>{submit}</Button>
+      <div class="buttons" data-run>
+        <Button lead={verb('Cancel')} onclick={cancel}>Cancel</Button>
+        <Button type="submit" tone="primary" lead={verb(submit)} {busy}>{submit}</Button>
       </div>
     </form>
   {:else}

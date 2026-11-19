@@ -1,6 +1,7 @@
 <script lang="ts">
   import { useJoin } from '../hooks/useJoin.ts'
   import Button from './Button.svelte'
+  import { verb } from '../verbs.ts'
   import Field from './Field.svelte'
 
   // An invitation's link, opened: taking it up makes the invitee's first
@@ -26,7 +27,7 @@
   device: it signs everything you do here, and never leaves it.
 </p>
 <Field label="This device" name="label" bind:value={state.label} placeholder="laptop" />
-<Button tone="primary" busy={state.busy} onclick={() => state.take()}>Take up the invitation</Button>
+<Button lead={verb('Take up the invitation')} tone="positive" busy={state.busy} onclick={() => state.take()}>Take up the invitation</Button>
 {#if state.problem}
   <p class="problem" role="alert">{state.problem}</p>
 {/if}

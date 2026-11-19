@@ -103,7 +103,7 @@
       {#each badges as b (b.label)}<Badge tone={b.tone}>{b.label}</Badge>{/each}
     </div>
     <div class="tabs">{@render bar?.()}</div>
-    {#if actions}<div class="actions">{@render actions()}</div>{/if}
+    {#if actions}<div class="actions" data-run>{@render actions()}</div>{/if}
     {#if drawer}
       <div class="icons">
         <div class="panels" role="tablist" aria-label="Drawer panels">
@@ -355,7 +355,10 @@
        across it, touching neither (the operator, 19 Nov). An overlay bar
        is drawn inside the content's padding, at its edge, so the content
        keeps the larger share and the drawer the smaller. */
-    padding: var(--space-4) var(--space-4) var(--space-4) var(--space-1);
+    padding: var(--drawer-inset) var(--drawer-inset) var(--drawer-inset) var(--drawer-lead);
+    /* clear of a demo's dismissed banner below it, standing in its
+       column (`DemoBanner`) */
+    padding-bottom: max(var(--drawer-inset), calc(var(--demo-watermark-h, 0px) - var(--frame-margin) + var(--drawer-inset)));
   }
   .drawn > .content {
     padding-inline-end: var(--space-3);

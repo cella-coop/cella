@@ -110,12 +110,12 @@
         <time>{countdown.left}</time>
       </span>
     {/if}
-    <span class="actions">
+    <span class="actions" data-run>
       {#if copy}
         <!-- A fresh copy answers to a fresh join code: every draft this
              browser kept on this one, now gone, is dropped with it. Its
              button stands in the actions' run, beside Copy invite
-             (`data-through`, `attachments/cell.ts`). -->
+             (`data-through`, `Button`). -->
         <form method="post" action="/_demo/reset" onsubmit={clearDrafts} data-through>
           <Button tone="quiet" type="submit"><Icon icon={ArrowCounterClockwise} size="0.95em" />Reset</Button>
         </form>
@@ -246,11 +246,12 @@
     color: oklch(0.25 0.05 80);
   }
   /* The strip's buttons, 20% shorter than Button's own 2rem, in step
-     with the padding and gap above. */
+     with the padding and gap above: their height, which their cells are
+     drawn at. */
   .actions :global(.button),
   .hide :global(.button),
   .show :global(.button) {
-    height: 1.6rem;
+    --h: 1.6rem;
   }
   /* The close button: square, no label, the strip's own quiet amber. */
   .hide :global(.button) {
@@ -264,14 +265,19 @@
     --fill: oklch(var(--shade-4) var(--tone-warning) / 35%);
   }
   /* Where the strip is dismissed, a small panel in its amber, in the
-     viewport's bottom right corner: Prototype, the time left where the
-     strip counts it down, and the button that brings the strip back. */
+     drawer's column at the window's foot: as wide as a panel in the
+     drawer, as View, and as far from the content's edges as it is, so
+     the two stand as one column (the operator, 19 Nov). It holds
+     Prototype and the time left where the strip counts it down, and at
+     its end the button that brings the strip back. */
   .watermark {
     position: fixed;
-    right: var(--space-4);
-    bottom: var(--space-3);
+    right: calc(var(--frame-margin) + var(--drawer-inset));
+    bottom: calc(var(--frame-margin) + var(--drawer-inset));
     z-index: 20;
-    display: inline-flex;
+    box-sizing: border-box;
+    width: calc(var(--drawer) - var(--drawer-inset) - var(--drawer-lead));
+    display: flex;
     align-items: center;
     gap: var(--space-2);
     margin: 0;
@@ -284,6 +290,9 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+  }
+  .show {
+    margin-inline-start: auto;
   }
   .show :global(.button) {
     padding: 0;

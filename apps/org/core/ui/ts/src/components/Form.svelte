@@ -6,6 +6,7 @@
   import { formOf } from '../models/bound.ts'
   import { took, type Answer } from '../post.ts'
   import Button from './Button.svelte'
+  import { verb } from '../verbs.ts'
 
   // A write: the fields post to the route's `write` form for the named
   // write, files and all, each bound to it by name, and this browser's
@@ -38,9 +39,11 @@
     submit?: string
     // The form is its one button, its children only the hidden values it
     // posts, as a vote's stance: drawn in the run of buttons beside it,
-    // as a panel's footer holds them, never on a line of its own.
+    // as a panel's footer holds them, never on a line of its own. A form
+    // with no children at all, as an expense's Submit, is one too.
     button?: boolean
-    // An icon before its button's words.
+    // An icon before its button's words; else the one its verb names
+    // (`verbs.ts`).
     lead?: Component<any>
     // The form draws nothing of its own but a refusal: its children are
     // its fields and its submit, as a comment box's arrow inside its text
@@ -57,6 +60,10 @@
   const form = useForm()
   const writes = useWrites()
   const create = inCreate()
+  // A form with nothing to fill in is its button, outside a create
+  // dialog, whose Cancel it keeps.
+  const alone = $derived(button || (!children && !bare && !create))
+  const icon = $derived(lead ?? verb(submit))
   // Each form on a page binds a `write` instance of its own.
   const n = $props.id()
   const remote = $derived(writes.route.form(action, n))
@@ -111,21 +118,22 @@
 </script>
 
 <!-- A form that is its button passes the button's run through it
-     (`data-through`, `attachments/cell.ts`). -->
-<form {...enhanced} {id} enctype="multipart/form-data" class="form" class:inline class:bare={bare || button} data-write={action} data-through={button || undefined}>
-  {#if button}
+     (`data-through`, `Button`); a create form's Cancel and its button
+     are one run. -->
+<form {...enhanced} {id} enctype="multipart/form-data" class="form" class:inline class:bare={bare || alone} data-write={action} data-through={alone || undefined}>
+  {#if alone}
     {@render children?.()}
-    <Button type="submit" {tone} {lead} busy={form.pending} disabled={!ready}>{submit}</Button>
+    <Button type="submit" {tone} lead={icon} busy={form.pending} disabled={!ready}>{submit}</Button>
   {:else if bare}
     {@render children?.()}
   {:else if children}
     <div class="fields">{@render children()}</div>
   {/if}
   {#if form.problem}<p class="problem" role="alert">{form.problem}</p>{/if}
-  {#if !bare && !button}
-    <div class="submit">
-      {#if create}<Button onclick={() => create.close()}>Cancel</Button>{/if}
-      <Button type="submit" {tone} {lead} busy={form.pending} disabled={!ready}>{submit}</Button>
+  {#if !bare && !alone}
+    <div class="submit" data-run>
+      {#if create}<Button lead={verb('Cancel')} onclick={() => create.close()}>Cancel</Button>{/if}
+      <Button type="submit" {tone} lead={icon} busy={form.pending} disabled={!ready}>{submit}</Button>
     </div>
   {/if}
 </form>

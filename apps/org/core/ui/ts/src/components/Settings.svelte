@@ -35,9 +35,10 @@
 <ProposeInstead action={propose} />
 
 <style>
+  /* Its fields fill the centred column, as a record's body does. */
   .settings {
     display: grid;
-    grid-template-columns: minmax(0, 32rem);
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-4);
     padding-inline: var(--inset, 0);
   }

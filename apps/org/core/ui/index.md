@@ -200,7 +200,11 @@ draws.
   the idle reset's own last two minutes, a warning; Reset, a quiet
   button posting to the demo's front; and, in a room, Copy invite, the
   filled primary button, which copies the room's link and confirms
-  Copied, or opens it where the clipboard refuses. The last write's
+  Copied, or opens it where the clipboard refuses. Dismissed, it gives
+  way to a small amber panel in the drawer's column at the window's
+  foot, as wide as a panel in the drawer and as far from the content's
+  edges (`--frame-margin`, `--drawer-inset`), its + at its end bringing
+  the strip back; the drawer keeps clear of it. The last write's
   outcome floats above.
 - `Logo`: the coop's mark in its square, `md` in the selector, the
   sign-in card and the gate, `sm` in the selector's menu: the logo its
@@ -343,11 +347,14 @@ draws.
   descending, before it, and the field alone, any of the collection's;
   the order the view opened with, else the field its read leads with,
   else As listed, is marked quietly in the options as the default,
-  never named in the panel); then Display, a
-  row that opens a popover of what is shown (in a list, the fields under
-  and after each row's title, in a table, its columns, in
-  a gallery or on a board, its cards' fields, in a calendar, its cards'
-  fields, in a dashboard, its widgets); then Circles, what the view
+  never named in the panel); then Fields, a block of its own under the
+  rows, its label on its own line and what is shown as chips flowing
+  across the panel's width, each with its ×, Add after the last (in a
+  list, the fields under and after each row's title, in a table, its
+  columns, which reorder by their headers in the table itself, in a
+  gallery or on a board, its cards' fields, in a calendar, its cards'
+  fields), or, in a dashboard, Display, a row whose popover holds its
+  widgets; then Circles, what the view
   reads: This circle, the lens's, or Every circle, which drops the
   lens's condition and reads every circle's rows the reader may read,
   so a view across circles is a person's own and no feature holds a
@@ -703,7 +710,8 @@ draws.
   tab or a page), both headed by the one `Heading`, as a `Panel` is
   ([panels](#panels)),
   `Properties`, `Related`, `Activity`, `Table` (with `dense` and
-  `totals`, [panels](#panels)), `Sheet` (a financial statement alone:
+  `totals`, [panels](#panels); with `onmove`, its columns reorder by
+  their headers, [dragging](#dragging)), `Sheet` (a financial statement alone:
   headings, lines and ruled-off totals with a figure per named column,
   a line opening on its accounts, each linking to its ledger; a list of
   totals is a table's), `Cell`, `Stats` and `Stat`, `Empty` and `Meta`
@@ -731,22 +739,32 @@ draws.
   keeps its focus and reads as unavailable; a filled tone, `primary`,
   `info`, `danger` or `positive`, is one of the brand's cells, as the site's row of
   actions is, from the same geometry (`@cella/brand`'s `actions.ts`):
-  flat along its top and foot, its ends pointed past its words, and the
-  buttons beside it on its line, siblings a small gap apart, or the
-  buttons of forms that are their button (`Form`'s `button`, passed
-  through by `data-through`), drawn with
-  it as one row, each pair sharing a slanted edge parted by one gutter,
-  so a quiet Cancel beside it takes the shape too, while a run of quiet
-  buttons or an icon stays a plain rounded fill; the cell is an svg
-  under its words, first in its flow and a pixel wide, drawn once the
-  row is laid out and again as it changes, mirrored right to left, so
-  before it, and with no script or forced colours, it is the plain fill
-  at the same padding; its focus ring follows the cell 2px outside it,
-  and its whole box takes the pointer (`attachments/cell.ts`)),
+  flat along its top and foot, its ends pointed past its words; a row
+  of actions marks itself a run (`data-run`, as a page's header, a
+  panel's footer, a form's submit row and a dialog's buttons do), its
+  buttons and the forms that are their button (`Form` with no fields,
+  passed through by `data-through`) a cell's gap apart, and where it
+  holds a filled one, or is a group (`data-run="group"`), every button in
+  it is drawn as one row of cells, each pair sharing a slanted edge
+  parted by one gutter, leaning forward then back from its start, so a
+  quiet Cancel beside it takes the shape too, while a run of quiet
+  buttons or an icon stays a plain rounded fill; the cell is drawn by
+  the style alone, behind its words, from masks the brand writes
+  (its tokens.css), so the page the server sends is drawn as it stays,
+  with no script; mirrored right to left; its focus ring follows the
+  cell 2px outside it; forced colours draw the plain box; every button
+  with words leads with an icon, the same verb the same icon everywhere,
+  `verb(words)` (`verbs.ts`) naming it, as Approve a check, Refuse an X,
+  Cancel an X in a circle, File a file going up; approving and accepting
+  are `positive`, refusing, revoking and cancelling a thing `danger`, a
+  step forward `primary`, the rest quiet; in a run the negative stands
+  first and the positive last (the operator, 19 Nov)),
   `Form` (a write, posting to the route's `write` form for a
   named write, files and all, through `post`, its fields bound to it;
-  `button` makes it its one button, its children the hidden values it
-  posts, drawn in the run of buttons beside it, as a vote's stances;
+  its button leads with the icon its verb names unless `lead` names one;
+  `button`, or no children at all outside New's dialog, makes it its one
+  button, its children the hidden values it posts, drawn in the run of
+  buttons beside it, as a vote's stances and a header's writes;
   `bare` with an `id` draws its fields alone, its submit a `Button`
   naming it by `form`, as a panel's footer holds it; `lead` puts an
   icon before its button's words; `ready` false keeps its button disabled while
@@ -1051,7 +1069,8 @@ for the form to post
 ## Settings
 
 
-A settings page is a plain form, `Settings`, one `Setting` a row: its
+A settings page is a plain form, `Settings`, its fields filling the
+centred column as a record's body does, one `Setting` a row: its
 label, beside it who changes it where the reader's own write does not,
 and its current value in its field. Who changes it is one quiet icon,
 `Who` (`who` in `models/settings.ts`): the motions' scales where a
@@ -1325,8 +1344,9 @@ and down arrow or caret buttons that move things. The primitives:
   near its edges and drops on release; Escape cancels. On a
   focused handle the keyboard lifts with Space (or Enter on a button),
   moves with the arrows, drops with Space or Enter, cancels with Escape,
-  each step announced in a live region. `onmove(from, to)` hears the
-  drop.
+  each step announced in a live region; `keys: false` leaves the keys to
+  the list, as a table's header, whose Enter orders by its column, moves
+  by Alt and an arrow. `onmove(from, to)` hears the drop.
 - `DragHandle` (a labelled grip) and `DropIndicator`, the one line where
   an item will land, from the tokens.
 - `placing(drag, { list, lift, describe, onplace })`, an attachment for a
@@ -1345,8 +1365,9 @@ and down arrow or caret buttons that move things. The primitives:
   (`describe`), Escape cancelling either. `DragState` holds the lifted
   item's key beside its drag (`placing`, `aiming`, `holding`).
 
-Dashboard widgets, a table's columns in the View panel's Display popover, the viewer's own
-view tabs, a document's blocks and a meeting's agenda reorder this way, and an
+Dashboard widgets, a table's columns by their headers in the table itself
+(`Table`'s `onmove`, kept in the view's order as the View panel keeps
+it; the operator, 19 Nov), the viewer's own view tabs, a document's blocks and a meeting's agenda reorder this way, and an
 arrangement (`Arrange`) places its choices so;
 `Popover`, `DragHandle`, `Ordered`, `sortable` and `useDrag` are
 exported for slices to compose.

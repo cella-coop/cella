@@ -475,7 +475,7 @@
   }
   .main {
     position: relative;
-    margin: var(--space-2) var(--space-2) var(--space-2) 0;
+    margin: var(--frame-margin) var(--frame-margin) var(--frame-margin) 0;
     --surface: var(--panel);
     background: var(--surface);
     border-radius: var(--radius-panel);

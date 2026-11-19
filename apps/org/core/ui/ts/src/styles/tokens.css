@@ -1,7 +1,8 @@
 /* Cella's tokens: the brand's, and over them only what is the shell's
-   own. The tones, shades, roles, theme and type come from @cella/brand;
-   change its house.json, never this file, to change them. Components
-   read roles, never shades. */
+   own. The tones, shades, roles, theme and type, and the masks a
+   button's cell is drawn by, come from @cella/brand; change its
+   house.json, never this file, to change them. Components read roles,
+   never shades. */
 
 @import '@cella/brand/fonts.css';
 @import '@cella/brand/tokens.css';
@@ -81,6 +82,13 @@
   --row: 2.25rem;
   --sidebar: 15rem;
   --drawer: 20rem;
+  /* The content's margin from the window, but by the sidebar; the
+     drawer's padding at its outer edges, and by the content. A panel in
+     the drawer, as View, stands by them; so does what floats in its
+     column, as a demo's dismissed banner. */
+  --frame-margin: var(--space-2);
+  --drawer-inset: var(--space-4);
+  --drawer-lead: var(--space-1);
 
   --fast: 120ms;
 }

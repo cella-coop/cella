@@ -12,6 +12,7 @@ export type { Outcome as Done } from './models/outcome.ts'
 export { said } from './models/outcome.ts'
 export { money, date, short, show, power } from './models/format.ts'
 export * as icons from './icons.ts'
+export { verb } from './verbs.ts'
 
 export { default as Shell } from './components/Shell.svelte'
 export { default as Frame } from './components/PageFrame.svelte'

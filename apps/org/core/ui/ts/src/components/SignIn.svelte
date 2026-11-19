@@ -20,8 +20,9 @@
   // Signing in as a real member of the coop sees it, in a card of its
   // own: the people this browser holds a key for in one select, the first
   // chosen, and Sign in at the bottom right; at the left, Link device and
-  // Forget identity, which forgets the chosen key in this browser, after a
-  // confirmation unless it is a fixture's. With no key, why, and the two
+  // Forget identity, one group drawn as a row of two cells, the second
+  // forgetting the chosen key in this browser, after a confirmation unless
+  // it is a fixture's. With no key, why, and the two
   // ways in, an invitation's link for a first device, or this browser
   // approved from a device the person already uses, behind one disclosure
   // that makes the key here and shows it as a QR code and a link, which
@@ -126,13 +127,19 @@
     {/if}
 
       <div class="bar">
-        <span data-link>
-          <Button tone={pick ? 'quiet' : 'primary'} onclick={() => (state.opened = true)}>
-            <Icon icon={Link} size="1rem" />Link device
-          </Button>
+        <!-- The ways besides Sign in, one group drawn as one row of cells
+             though both are quiet (`data-run`, `attachments/cell.ts`). -->
+        <span class="others" data-run>
+          <span data-link data-through>
+            <Button tone={pick ? 'quiet' : 'primary'} onclick={() => (state.opened = true)}>
+              <Icon icon={Link} size="1rem" />Link device
+            </Button>
+          </span>
+          {#if pick}
+            <Button onclick={drop}><Icon icon={UserMinus} size="1rem" />Forget identity</Button>
+          {/if}
         </span>
         {#if pick}
-          <Button onclick={drop}><Icon icon={UserMinus} size="1rem" />Forget identity</Button>
           <span class="go">
             <Button tone="info" busy={state.busy} onclick={() => state.as(pick)}><Icon icon={SignInIcon} size="1rem" />Sign in</Button>
           </span>
@@ -284,6 +291,19 @@
     align-items: center;
     gap: var(--space-2);
     margin-block-start: var(--space-5);
+  }
+  /* One row that never wraps nor shrinks: it is one run of cells, and the
+     bar wraps Sign in below it where the card is too narrow for both. */
+  .others {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  /* Link device's wrapper is only what its focus is found by: its button
+     stands in the group's row itself. */
+  [data-link] {
+    display: contents;
   }
   .go {
     margin-inline-start: auto;

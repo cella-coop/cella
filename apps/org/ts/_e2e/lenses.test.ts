@@ -28,7 +28,7 @@ export async function resolve(spec, ctx, next) {
   return next(spec, ctx)
 }`
 register(`data:text/javascript,${encodeURIComponent(stub)}`)
-const { look } = await import('#lib/slices.ts')
+const { columns, look } = await import('#lib/slices.ts')
 const { declared, listing } = await import(new URL('../../../../tools/fixture/rich.mjs', import.meta.url).href)
 
 const dir = new URL('../../fixtures/lanterne/', import.meta.url)
@@ -62,9 +62,11 @@ test('each board groups by the lanes the fixture check reads, and every lane it 
   for (const name of collections.filter((n) => !listed[n]?.none)) {
     // A board's lanes, and those the fixture check reads; a list's
     // groups take their order from the look's lanes too, which a value
-    // may leave empty, as a person's path may hold no candidate.
+    // may leave empty, as a person's path may hold no candidate. A status
+    // column whose look declares no lanes takes its lifecycle's order.
     const own = look(name)
-    const lanes = Object.fromEntries(Object.entries(own.lanes ?? {}).filter(([k]) => own.layout === 'board' || k in (declared[name] ?? {})))
+    const stated = Object.fromEntries(columns(name).flatMap((c) => (c.states ? [[c.key, c.states.states.map((s) => s.value)]] : [])))
+    const lanes = Object.fromEntries(Object.entries({ ...stated, ...own.lanes }).filter(([k]) => own.layout === 'board' || k in (declared[name] ?? {})))
     assert.deepEqual(lanes, declared[name] ?? {}, `${name}'s board groups by the lanes tools/fixture/rich.mjs reads`)
     const held = await values(app, source(name) as Source, Object.keys(lanes))
     for (const [lane, all] of Object.entries(lanes)) {

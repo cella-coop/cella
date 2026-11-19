@@ -12,8 +12,8 @@
 {#if data.status === 'draft'}
   <Form action="submit" submit="Submit" tone="primary" />
 {:else if data.status === 'submitted'}
-  <Form action="refuse" submit="Refuse" tone="danger" />
-  <Form action="approve" submit="Approve" tone="primary" />
+  <Form action="refuse" button submit="Refuse" tone="danger" />
+  <Form action="approve" button submit="Approve" tone="primary" />
 {:else if data.status === 'approved'}
   <Form action="reimburse" submit="Reimburse" tone="primary" />
 {/if}

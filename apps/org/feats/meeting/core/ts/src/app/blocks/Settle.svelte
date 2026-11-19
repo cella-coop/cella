@@ -8,6 +8,6 @@
 </script>
 
 {#if data.status === 'scheduled'}
-  <Form action="cancel" button submit="Cancel" tone="quiet" />
+  <Form action="cancel" button submit="Cancel" tone="danger" />
   <Form action="hold" button submit="Hold" />
 {/if}

@@ -9,7 +9,7 @@
 </script>
 
 {#if data.status === 'recorded'}
-  <Form action="approve" submit="Approve" tone="primary" />
+  <Form action="approve" submit="Approve" tone="positive" />
 {:else if data.status === 'approved'}
   <Form action="pay" submit="Pay" tone="primary" />
 {/if}

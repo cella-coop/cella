@@ -19,5 +19,5 @@
 {#if data.sheet.state === 'open'}
   <Form action="submit" submit="Submit {data.month}" tone="quiet" />
 {:else if data.sheet.state === 'submitted'}
-  <Form action="approve" submit="Approve {data.month}" tone="quiet" />
+  <Form action="approve" submit="Approve {data.month}" tone="positive" />
 {/if}

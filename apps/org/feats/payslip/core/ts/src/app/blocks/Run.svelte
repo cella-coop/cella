@@ -8,7 +8,7 @@
 </script>
 
 {#if data.state === 'prepared'}
-  <Form action="approve" submit="Approve the {data.month} run" tone="primary" />
+  <Form action="approve" submit="Approve the {data.month} run" tone="positive" />
 {:else if data.state === 'approved'}
   <Form action="pay" submit="Pay the {data.month} run" tone="primary" />
 {/if}

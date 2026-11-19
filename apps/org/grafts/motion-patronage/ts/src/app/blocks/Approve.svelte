@@ -12,7 +12,7 @@
 </script>
 
 {#if open.length}
-  <Form action="approve" submit="Approve" tone="primary" inline>
+  <Form action="approve" submit="Approve" tone="positive" inline>
     <Field label="Decided by" name="motion" {options} value={options[0]?.value} />
   </Form>
 {/if}

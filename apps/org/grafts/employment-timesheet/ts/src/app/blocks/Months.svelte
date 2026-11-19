@@ -34,7 +34,7 @@
       <Field label="Month" name="month" options={open} value={open[open.length - 1].value} />
     </Form>
   {:else if data.acting && !data.own && submitted.length}
-    <Form action="approve" submit="Approve" tone="quiet" inline>
+    <Form action="approve" submit="Approve" tone="positive" inline>
       <Field label="Month" name="month" options={submitted} value={submitted[submitted.length - 1].value} />
     </Form>
   {/if}

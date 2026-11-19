@@ -98,9 +98,18 @@ export function keep(cookies: Cookies, s: Session, secure: boolean) {
   cookies.delete('cella-basket', { path: '/', secure })
 }
 
+const ending = [COOKIE, 'cella-basket']
+
 export function end(cookies: Cookies, secure: boolean) {
-  cookies.delete(COOKIE, { path: '/', secure })
-  cookies.delete('cella-basket', { path: '/', secure })
+  for (const name of ending) {
+    cookies.delete(name, { path: '/', secure })
+  }
+}
+
+// What a response the server hook makes itself sets to end the session,
+// as `end` does: the kit carries `cookies` only into what it resolves.
+export function ended(cookies: Cookies, secure: boolean): string[] {
+  return ending.map((name) => cookies.serialize(name, '', { path: '/', secure, maxAge: 0 }))
 }
 
 // The session a request's cookie holds, if its MAC is the server's, it

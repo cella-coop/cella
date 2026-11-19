@@ -9,14 +9,19 @@
 // visitor's own and offers Reset; a room's lifetime
 // (`CELLA_DEMO_LIFETIME`) counts down only once its first member signs
 // in, never before; and, in a real browser, a successful Copy invite
-// stays on the page and shows Copied, never following the link.
+// stays on the page and shows Copied, never following the link. A
+// member's lease that lapsed while its browser was away is renewed where
+// no one took the member since; where another did, the session ends and
+// the browser is sent to the sign-in, which names who was freed; and a
+// session or a sign-in naming no browser is refused, as ever.
 // covers: core
 
-import { after, before, it } from 'node:test'
+import { after, before, describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
+import { parse } from 'devalue'
 import { chromium } from 'playwright-core'
-import { fixture, random, sha256 } from '@cella/org-sign'
+import { fixture, open as opening, random, sha256 } from '@cella/org-sign'
 import { signIn } from './browser.ts'
 import { Shell } from './serve.ts'
 
@@ -144,4 +149,103 @@ it('dismissing the banner leaves its watermark with the timer, + brings it back,
   } finally {
     await browser.close()
   }
+})
+
+// A room's lease, lapsed: each browser here is a header, as the front's
+// hash of its cookie is, and a browser is idle after a second.
+describe("a room's lease that lapsed while its browser was away", () => {
+  const idle = 1
+  const lapse = () => new Promise((r) => setTimeout(r, idle * 1000 + 500))
+  const as = (browser: string | null, more: Record<string, string> = {}) => ({ 'x-forwarded-proto': 'http', ...(browser ? { 'x-cella-browser': browser } : {}), ...more })
+  // Opens `actor`'s session on `browser`, as the sign-in page does: the
+  // session's cookie, or the status the server refused it with.
+  const open = async (browser: string | null, actor: string) => {
+    const d = await shell.device(actor)
+    const { challenge, scope } = (await (await fetch(`${shell.base}/session`, { headers: as(browser) })).json()) as { challenge: string; scope: string }
+    const res = await fetch(`${shell.base}/session`, {
+      method: 'POST',
+      headers: as(browser, { 'content-type': 'application/json' }),
+      body: JSON.stringify({ actor, device: d.key, challenge, sig: await opening(scope, actor, d, challenge) }),
+    })
+    return res.ok ? (res.headers.get('set-cookie') ?? '').split(';')[0]! : res.status
+  }
+  const inbox = (browser: string | null, cookie: string) => fetch(`${shell.base}/inbox`, { headers: as(browser, { accept: 'text/html', cookie }), redirect: 'manual' })
+  // Any query a page's script asks that needs a session: the hook
+  // answers it before any query runs.
+  const query = (browser: string, cookie: string) => fetch(`${shell.base}/_app/remote/0/index`, { headers: as(browser, { cookie }) })
+
+  before(async () => {
+    await shell.start('2026-10-24', { CELLA_DEMO: '1', CELLA_DEMO_IDLE: '7200', CELLA_DEMO_BROWSER_IDLE: String(idle) })
+  })
+
+  it('is renewed on its next request where no one took the member, and the visitor carries on', async () => {
+    const cookie = await open('e2e-lapse-back', camille)
+    assert.equal(typeof cookie, 'string', 'camille signs in')
+    await lapse()
+    // Another browser's request finds the first idle and frees camille.
+    assert.equal((await fetch(`${shell.base}/sign-in`, { headers: as('e2e-lapse-other') })).status, 200)
+    const back = await inbox('e2e-lapse-back', cookie as string)
+    assert.equal(back.status, 200, 'the page answers, never the sign-in or a 401')
+    assert.equal(await open('e2e-lapse-other', camille), 409, 'camille is the first browser’s again, so no other may take her')
+    await lapse()
+  })
+
+  it('ends the session where another browser took the member, sending it to the sign-in, which says so', async () => {
+    const cookie = (await open('e2e-lapse-away', camille)) as string
+    await lapse()
+    const taker = await open('e2e-lapse-taker', camille)
+    assert.equal(typeof taker, 'string', 'camille, freed, is another browser’s now')
+    const page = await inbox('e2e-lapse-away', cookie)
+    assert.equal(page.status, 303)
+    assert.equal(page.headers.get('location'), `/sign-in?back=%2Finbox&away=${encodeURIComponent(camille)}`)
+    assert.ok(page.headers.getSetCookie().some((c) => /^cella-session=;/.test(c)), 'the session’s cookie is cleared')
+    const asked = await query('e2e-lapse-away', cookie)
+    assert.equal(asked.status, 200, 'a query is answered as the client follows a redirect, never a 401')
+    const out = (await asked.json()) as { type: string; data: string }
+    assert.equal(out.type, 'result')
+    assert.deepEqual(parse(out.data), { redirect: `/sign-in/ended/${encodeURIComponent(camille)}` })
+    const ended = await fetch(`${shell.base}/sign-in/ended/${encodeURIComponent(camille)}`, { headers: as('e2e-lapse-away', { accept: 'text/html' }), redirect: 'manual' })
+    assert.equal(ended.status, 303)
+    assert.equal(ended.headers.get('location'), `/sign-in?away=${encodeURIComponent(camille)}`, 'loaded in full, it lands on the sign-in')
+    const { text } = await shell.page(`/sign-in?away=${encodeURIComponent(camille)}`)
+    assert.ok(text.includes('You were away a while, so Camille Martin was freed for others. Pick someone to continue.'), 'the sign-in says who was freed')
+    assert.equal(await open('e2e-lapse-away', camille), 409, 'and camille stays the taker’s')
+    const odd = await shell.page('/sign-in?away=nobody%40example.org')
+    assert.ok(!odd.text.includes('You were away'), 'a member it does not offer is never named')
+    await lapse()
+  })
+
+  // browsers: Chromium alone: what it proves is the server's answer, which
+  // every browser's SvelteKit client follows alike.
+  it('in a browser, the next click after the member was taken lands on the sign-in, saying so, never on a broken page', async () => {
+    const browser = await chromium.launch()
+    try {
+      const context = await browser.newContext({ extraHTTPHeaders: { 'x-forwarded-proto': 'http', 'x-cella-browser': 'e2e-lapse-page' } })
+      await signIn(context, shell.base, camille)
+      const page = await context.newPage()
+      await page.goto(`${shell.base}/inbox`, { waitUntil: 'networkidle' })
+      const people = page.locator('nav a[href="/people"]').first()
+      await people.waitFor()
+      await lapse()
+      assert.equal(typeof (await open('e2e-lapse-page-taker', camille)), 'string', 'another browser takes camille, freed')
+      await people.click()
+      await page.waitForURL(/\/sign-in\?away=/)
+      await page.getByText('You were away a while, so Camille Martin was freed for others. Pick someone to continue.').waitFor()
+      assert.equal(await page.getByText('Something broke').count(), 0, 'no error page')
+      // Loaded in full, the sign-in stands in the gate, never inside the
+      // ended session's shell and its navigation.
+      assert.equal(await page.locator('nav a[href="/people"]').count(), 0, 'the signed-in shell is gone')
+    } finally {
+      await browser.close()
+    }
+    await lapse()
+  })
+
+  it('refuses a session that names no browser, and a sign-in that names none', async () => {
+    const cookie = (await open('e2e-lapse-none', camille)) as string
+    const page = await inbox(null, cookie)
+    assert.equal(page.status, 303)
+    assert.equal(page.headers.get('location'), '/sign-in?back=%2Finbox', 'refused with no word of anyone freed')
+    assert.equal(await open(null, camille), 409)
+  })
 })

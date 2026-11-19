@@ -6,7 +6,7 @@
 
   // Where to go once signed in and what the dev server or a demo offers, and the
   // scope the shell reads, both started at once.
-  const offered = $derived(signing({ back: page.url.searchParams.get('back') ?? '' }))
+  const offered = $derived(signing({ back: page.url.searchParams.get('back') ?? '', away: page.url.searchParams.get('away') ?? '' }))
   const around = shell()
 </script>
 
@@ -20,5 +20,5 @@
   {/snippet}
   {const data = $derived(await offered)}
   {const s = $derived(await around)}
-  <SignIn scope={s.scope.address} name={s.scope.name} logo={s.scope.logo} back={data.back} fixtures={data.fixtures} demo={data.demo} />
+  <SignIn scope={s.scope.address} name={s.scope.name} logo={s.scope.logo} back={data.back} fixtures={data.fixtures} demo={data.demo} notice={data.notice} />
 </svelte:boundary>

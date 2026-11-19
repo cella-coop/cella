@@ -39,7 +39,8 @@
   // a faint ring and signs in with that key, and the one chosen in the
   // card's select is lit in its Sign in's ink. In a demo's room, a member
   // another browser leased reads `taken`, drawn disabled and greyed,
-  // until they are freed.
+  // until they are freed. A notice, where the page has one, says in a
+  // sentence why this browser is here again, under the coop's name.
   let {
     scope,
     name,
@@ -47,6 +48,7 @@
     back,
     fixtures,
     demo = false,
+    notice = '',
   }: {
     scope: string
     name: string
@@ -55,6 +57,7 @@
     back: string
     fixtures: { address: string; name: string; label: string; circles: string[]; taken?: boolean }[]
     demo?: boolean
+    notice?: string
   } = $props()
 
   const state = useSignIn(
@@ -97,6 +100,9 @@
 <div class="sign" class:two={fixtures.length > 0}>
   <section class="card" aria-labelledby="in">
     <p class="coop"><Logo {name} {logo} /><b>{name}</b></p>
+    {#if notice}
+      <p class="notice" role="status">{notice}</p>
+    {/if}
     {#if !state.opened}
       <span class="help">
         <Popover label="Ways in" menu={false} icon wide align="end">
@@ -513,6 +519,14 @@
     background: var(--sunk);
     font-family: var(--font-mono, monospace);
     font-size: var(--text-xs);
+    color: var(--text);
+  }
+  .notice {
+    margin: 0;
+    padding: var(--space-3);
+    border-radius: var(--radius-control);
+    background: var(--sunk);
+    font-size: var(--text-sm);
     color: var(--text);
   }
   .problem {

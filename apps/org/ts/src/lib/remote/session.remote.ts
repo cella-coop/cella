@@ -42,11 +42,16 @@ export const shell = query(() =>
 // The sign-in page: where to go once signed in, the Inbox unless asked,
 // and, on the dev server or a demo build alone, the fixture members it
 // offers, a demo's each marked as a demo member and, in a room, those
-// another browser leased marked taken, by `x-cella-browser`.
-export const signing = query(texts(['back']), async ({ back }) => {
+// another browser leased marked taken, by `x-cella-browser`. Sent here
+// because the member this browser held was taken by another while it
+// was away (`away`, `hooks.server.ts`), it says so, by the member's
+// name: only a member it offers, so no other text is ever echoed.
+export const signing = query(texts(['back', 'away']), async ({ back, away }) => {
   const browser = getRequestEvent().request.headers.get('x-cella-browser')
   const offered = await fixtures()
-  return { back: safe(back || '/inbox'), fixtures: offered.map((f) => ({ ...f, taken: taken(f.address, browser) })), demo }
+  const freed = away ? offered.find((f) => f.address === away) : undefined
+  const notice = freed ? `You were away a while, so ${freed.name} was freed for others. Pick someone to continue.` : ''
+  return { back: safe(back || '/inbox'), fixtures: offered.map((f) => ({ ...f, taken: taken(f.address, browser) })), demo, notice }
 })
 
 // The proof a device signed for a run that asked for it, posted back by

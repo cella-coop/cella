@@ -102,9 +102,9 @@ export function taken(member: string, id: string | null | undefined): boolean {
 // none to hold, so every browser does; inside one, only the browser
 // `held` names, which a sign-in sets (`grant`) and an eject, a sign-out
 // or the front's own join (switching rooms) clears (`release`). Call it
-// on every authenticated request, not only a sign-in: once a lease moves
-// on, the session that opened it authorizes nothing more, whoever still
-// holds its cookie.
+// on every authenticated request, not only a sign-in, by way of `renew`:
+// once a lease moves on, the session that opened it authorizes nothing
+// more, whoever still holds its cookie.
 export function holds(member: string, id: string | null | undefined): boolean {
   if (!copy) {
     return true
@@ -114,6 +114,18 @@ export function holds(member: string, id: string | null | undefined): boolean {
   }
   sweep(Date.now())
   return held.get(member) === id
+}
+
+// Keeps `id`'s lease on `member` for a session that opened it: whether
+// `id` still holds it, or holds it again because it lapsed by idleness
+// alone and no other browser took it since, so a visitor back from a
+// pause carries on where they were. False where another browser holds
+// it now, or, inside a room, where no id names this browser: never two
+// browsers acting as one member, and never one the room cannot tell
+// apart. A sign-out ends the session's cookie and a switch of rooms
+// changes the browser's id, so neither is renewed here.
+export function renew(member: string, id: string | null | undefined): boolean {
+  return holds(member, id) || grant(member, id)
 }
 
 // Releases every member `id` holds, as signing out does.

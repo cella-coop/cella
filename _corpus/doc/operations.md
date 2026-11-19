@@ -449,6 +449,11 @@ sign-in naming no browser id refused outright rather than let through
 unleased, a second browser's refused it until the first signs out or
 goes 15 minutes unseen, when the lease is freed and the front itself
 forgets that browser's cookie, though the room goes on for the rest.
+A session whose lease lapsed is renewed on its browser's next request
+if no other browser took the member since; if one did, the session ends
+and its browser lands on the sign-in, which names the member freed,
+never on an error page, a page's own queries answered by a redirect
+its script follows rather than a 401.
 Reset now is refused unless its browser is alone in the room; a reset or
 a room recycled at the cap makes a fresh one, its join code with it, so
 the old link names nothing from then on. Past the cap, a newcomer with

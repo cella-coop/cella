@@ -8,7 +8,7 @@
 
   const columns: Column<Asked>[] = [
     { key: 'member', label: 'Member', kind: 'person', value: (a) => a.member },
-    { key: 'kind', label: 'It', value: (a) => verbs[a.kind] },
+    { key: 'kind', label: 'Asks', value: (a) => verbs[a.kind] },
     { key: 'shares', label: 'Shares', kind: 'number', value: (a) => a.shares },
   ]
 </script>

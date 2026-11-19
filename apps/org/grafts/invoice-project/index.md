@@ -51,7 +51,7 @@ is not checked in SQL; the fixture check holds Lanterne to it.
 Adds to the invoices the project each charges, a column a table shows
 once a view does, drawn as the project's chip; to an invoice's page its
 project and, a panel of its overview, the form that names it; to a
-project's page what it invoiced, among its properties, and its
+project's page what it invoiced, among its figures, and its
 invoices, on its Budget tab.
 
 ## Lanterne

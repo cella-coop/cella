@@ -74,6 +74,11 @@ const repeats = (p: Prop, chips: Set<string>): boolean =>
 export const mark = (p: Prop, fallback: Component<any>, crowd: Component<any>): Component<any> | undefined =>
   leads(p) ? undefined : (p.icon ?? p.glyph ?? (p.people ? crowd : fallback))
 
+// Whether two rows' people are the same crowd, order aside; two with no
+// people at all are not the same crowd, so two such rows never merge on
+// that alone.
+const samePeople = (a: string[] | undefined, b: string[] | undefined): boolean => !!a && !!b && a.length === b.length && a.every((x) => b.includes(x))
+
 // The order a reader needs: state first, then who and where, then what
 // else it holds.
 function rank(p: Prop): number {
@@ -106,7 +111,16 @@ export function sections(props: Prop[]): Section[] {
     // A record named twice by fields read alike, as a motion's circle
     // that also put it, is one row.
     const kind = sort(p)
-    const same = kind && !p.edit ? s.rows.find((r) => !r.prop.edit && sort(r.prop) === kind && r.prop.href === p.href && String(r.prop.value) === String(p.value)) : undefined
+    const same = kind && !p.edit
+      ? s.rows.find(
+          (r) =>
+            !r.prop.edit &&
+            sort(r.prop) === kind &&
+            r.prop.href === p.href &&
+            String(r.prop.value) === String(p.value) &&
+            ((!r.prop.people && !p.people) || samePeople(r.prop.people, p.people)),
+        )
+      : undefined
     if (same) {
       same.label = `${same.label} · ${p.label}`
       // One lead word cannot say two fields; their names on hover do.

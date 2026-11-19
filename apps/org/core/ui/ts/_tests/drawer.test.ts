@@ -84,6 +84,20 @@ test("an invoice's billed name beside its client's chip is not drawn, the chip k
   assert.deepEqual(laid([{ label: 'Bills', value: 'La Ruche', glyph: icon('receipt') }]), [{ name: 'Properties', rows: ['Bills'] }])
 })
 
+test('two rows of people, null-valued and unlinked, are two rows unless their people agree', () => {
+  const differ = laid([
+    { label: 'Reviewers', value: null, people: ['a@x', 'b@x'] },
+    { label: 'Assignees', value: null, people: ['c@x'] },
+  ])
+  assert.deepEqual(differ, [{ name: 'Properties', rows: ['Reviewers', 'Assignees'] }])
+
+  const same = laid([
+    { label: 'Reviewers', value: null, people: ['a@x', 'b@x'] },
+    { label: 'Watchers', value: null, people: ['b@x', 'a@x'] },
+  ])
+  assert.deepEqual(same, [{ name: 'Properties', rows: ['Reviewers · Watchers'] }])
+})
+
 test('two rows merged keep a lead word only where both share it', () => {
   const [s] = sections([
     { label: 'Granted to', value: 'Assembly', href: '/circles/ag', lead: 'to' },

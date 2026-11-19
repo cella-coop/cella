@@ -28,6 +28,7 @@
   } from '../models/query.ts'
   import { anchor, legend, period, placed } from '../models/calendar.ts'
   import { widest } from '../models/format.ts'
+  import { reorder } from '../models/drag.ts'
   import { abandon } from '../models/navigation.ts'
   import { control, focused, typing } from '../models/keys.ts'
   import { inked, inkOf } from '../models/ink.ts'
@@ -43,6 +44,7 @@
   import { useViews } from '../hooks/useViews.ts'
   import Board from './Board.svelte'
   import Button from './Button.svelte'
+  import { verb } from '../verbs.ts'
   import Calendar from './Calendar.svelte'
   import Legend from './Legend.svelte'
   import Dialog from './Dialog.svelte'
@@ -210,6 +212,13 @@
   // A table's columns, but the one its rows are grouped by, which each
   // group's header names.
   const visible = $derived(arranged(columns, spec.order).filter((c) => c === titled || (!hidden.has(c.key) && c !== group?.by)))
+  // A table's column moved in its header: the order of those shown, then
+  // the rest as they stood, the same order the View panel keeps.
+  function moved(from: number, to: number) {
+    const now = reorder(visible, from, to)
+    const all = arranged(columns, spec.order)
+    change({ ...spec, q: state.filter, order: [...now, ...all.filter((c) => !now.includes(c))].map((c) => c.key) })
+  }
 
   const active = $derived(views.find((v) => v.id === view))
   const custom = $derived(saved.find(view))
@@ -589,6 +598,7 @@
         onfocusrow={(i) => (state.active = i)}
         {sorted}
         onsort={(key) => change({ ...spec, q: state.filter, sort: { field: key, dir: sorted?.key === key && sorted.dir === 'ascending' ? 'desc' : 'asc' } })}
+        onmove={moved}
         {group}
         mark={markOf}
       />
@@ -653,7 +663,7 @@
     {/if}
     {#if paging && state.left > 0}
       <p class="more">
-        <Button onclick={() => state.extend()}>Show {Math.min(state.left, PAGE)} more</Button>
+        <Button lead={verb('Show')} onclick={() => state.extend()}>Show {Math.min(state.left, PAGE)} more</Button>
         <span>{state.shown.length} of {matched}</span>
       </p>
     {/if}

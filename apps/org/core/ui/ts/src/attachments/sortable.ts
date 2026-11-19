@@ -16,6 +16,9 @@ export interface Sortable {
   axis?: 'x' | 'y'
   label: (i: number) => string
   onmove: (from: number, to: number) => void
+  // false where the handle's own keys mean something else, as a table
+  // header's Enter orders by its column: its list moves by keys of its own.
+  keys?: boolean
 }
 
 const threshold = 4
@@ -184,6 +187,9 @@ export const sortable =
     }
 
     function onkeydown(e: KeyboardEvent) {
+      if (o.keys === false) {
+        return
+      }
       const handle = (e.target as Element).closest('[data-drag-handle]')
       if (!handle || !ours(handle)) {
         return

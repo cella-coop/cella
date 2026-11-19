@@ -1,10 +1,13 @@
 <script lang="ts">
   import type { Component } from 'svelte'
+  import type { Attachment } from 'svelte/attachments'
   import type { Column, Total } from '../models/view.ts'
   import { opens, under, type Grouping } from '../models/query.ts'
   import { focused, scroller } from '../models/keys.ts'
   import { inked, inkOf } from '../models/ink.ts'
   import { useSection } from '../hooks/useSection.ts'
+  import { useDrag } from '../hooks/useDrag.ts'
+  import { sortable } from '../attachments/sortable.ts'
   import SortAscending from 'phosphor-svelte/lib/SortAscending'
   import SortDescending from 'phosphor-svelte/lib/SortDescending'
   import Cell from './Cell.svelte'
@@ -24,7 +27,10 @@
   // order, the keyboard's row (`active`) takes the focus and a row
   // focused otherwise is reported (`onfocusrow`); `sorted` is the column
   // the rows are ordered by, which its header says; with `onsort`, a
-  // header is a button that asks to order by its column. Where the rows
+  // header is a button that asks to order by its column; with `onmove`,
+  // its columns reorder in the table itself, a header dragged along the
+  // row, or moved a place by Alt and an arrow key on its button, each
+  // move announced (the operator, 19 Nov). Where the rows
   // are grouped (`group`), a row heads each group's rows with its value
   // and how many rows it holds, `counts`, by value.
   let {
@@ -36,6 +42,7 @@
     onfocusrow,
     sorted = null,
     onsort,
+    onmove,
     empty,
     group,
     mark,
@@ -52,6 +59,8 @@
     onfocusrow?: (i: number) => void
     sorted?: { key: string; dir: 'ascending' | 'descending' } | null
     onsort?: (key: string) => void
+    // A column moved from one place among them to another.
+    onmove?: (from: number, to: number) => void
     empty?: string
     group?: Grouping
     // A row's own icon, in place of the title column's first cell's;
@@ -62,6 +71,29 @@
   const section = useSection()
   const none = $derived(empty ?? (section ? `No ${section().toLowerCase()}` : 'Nothing here yet.'))
   const end = (c: Column) => c.kind === 'money' || c.kind === 'number'
+  const drag = useDrag()
+  // A header the keyboard moved takes the focus back once its column
+  // stands where it was moved to.
+  const land =
+    (key: string, i: number): Attachment<HTMLElement> =>
+    (node) => {
+      if (drag.landed('columns', key, i)) {
+        node.focus()
+        // landed: what it said stays said, and no later drawing refocuses it
+        drag.moved = { list: 'columns', key, to: -1 }
+      }
+    }
+
+  function onkey(e: KeyboardEvent, i: number) {
+    const by = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0
+    const to = i + (getComputedStyle(e.currentTarget as Element).direction === 'rtl' ? -by : by)
+    if (!onmove || !e.altKey || !by || to < 0 || to >= columns.length) {
+      return
+    }
+    e.preventDefault()
+    drag.nudge('columns', columns[i].key, columns[i].label, to, columns.length)
+    onmove(i, to)
+  }
 </script>
 
 {#if rows.length === 0 && totals.length === 0}
@@ -70,11 +102,19 @@
   <div class="scroll" class:dense {@attach scroller(section?.() ?? 'Table')}>
     <table>
       <thead class:none={!rows.length}>
-        <tr>
-          {#each columns as c (c.key)}
-            <th class:end={end(c)} class:titled={c.kind === 'title'} aria-sort={sorted?.key === c.key ? sorted.dir : undefined}>
+        <tr {@attach onmove && sortable(drag, { list: 'columns', axis: 'x', keys: false, label: (i) => columns[i]?.label ?? 'column', onmove })}>
+          {#each columns as c, i (c.key)}
+            <th
+              class:end={end(c)}
+              class:titled={c.kind === 'title'}
+              class:before={drag.before('columns', i)}
+              class:after={i === columns.length - 1 && drag.before('columns', columns.length)}
+              aria-sort={sorted?.key === c.key ? sorted.dir : undefined}
+              data-drag-item={onmove ? 'columns' : undefined}
+              data-drag-index={i}
+            >
               {#if onsort}
-                <button class="sort" onclick={() => onsort(c.key)}>
+                <button class="sort" class:moves={!!onmove} data-drag-handle={onmove ? '' : undefined} title={onmove ? `Order by ${c.label}; drag to move the column, or Alt and an arrow key` : undefined} onclick={() => onsort(c.key)} onkeydown={(e) => onkey(e, i)} {@attach land(c.key, i)}>
                   {c.label}{#if sorted?.key === c.key}<Icon icon={sorted.dir === 'ascending' ? SortAscending : SortDescending} />{/if}
                 </button>
               {:else}
@@ -142,6 +182,7 @@
       {/if}
     </table>
   </div>
+  {#if onmove}<p class="visually-hidden" aria-live="polite">{drag.moved?.list === 'columns' ? drag.announcement : ''}</p>{/if}
 {/if}
 
 <style>
@@ -241,6 +282,20 @@
   }
   .sort:hover {
     color: var(--text);
+  }
+  .sort.moves {
+    cursor: grab;
+  }
+  /* Where a dragged column would land: a rule at the edge of the header
+     it would stand before, or after the last. */
+  th.before {
+    background: linear-gradient(var(--accent-border) 0 0) left / 2px 100% no-repeat;
+  }
+  th.after {
+    background: linear-gradient(var(--accent-border) 0 0) right / 2px 100% no-repeat;
+  }
+  th:global([data-dragging]) {
+    opacity: 0.4;
   }
   td {
     padding: 0 var(--space-3);

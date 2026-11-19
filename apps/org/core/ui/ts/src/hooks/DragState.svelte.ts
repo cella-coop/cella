@@ -30,6 +30,21 @@ export class DragState {
   // The key of the item lifted, where its list lands it on places it
   // names (`placing`) rather than between its items.
   key: string | null = $state(null)
+  // An item the keyboard moved a place at once, as a table's column by Alt
+  // and an arrow: its list, its key and where it lands, so its handle
+  // takes the focus back there once the list has moved it.
+  moved: { list: string; key: string; to: number } | null = $state(null)
+
+  // An item moved a place by the keyboard, announced.
+  nudge(list: string, key: string, label: string, to: number, length: number) {
+    this.moved = { list, key, to }
+    this.announcement = `${label} moved to position ${to + 1} of ${length}.`
+  }
+
+  // Whether this item, at `i`, is where the keyboard moved it.
+  landed(list: string, key: string, i: number) {
+    return this.moved?.list === list && this.moved.key === key && this.moved.to === i
+  }
 
   // Whether a list that lands its items on places is carrying one.
   placing(list: string) {

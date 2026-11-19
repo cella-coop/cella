@@ -11,21 +11,17 @@
     import type { Column } from '../models/view.ts'
   import { spans } from '../models/calendar.ts'
   import { arranged, groupable, laned, type Custom, type Field, type Layout, type Pin, type Result, type Spec, type Widget } from '../models/query.ts'
-  import { reorder } from '../models/drag.ts'
   import { marks } from '../marks.ts'
-  import { sortable } from '../attachments/sortable.ts'
   import { useCollection } from '../hooks/useCollection.ts'
-  import { useDrag } from '../hooks/useDrag.ts'
   import { useShell } from '../hooks/useShell.ts'
   import { usePinned } from '../hooks/usePinned.ts'
   import { useViews } from '../hooks/useViews.ts'
   import { Plus } from '../icons.ts'
   import Button from './Button.svelte'
+  import { verb } from '../verbs.ts'
   import Checkbox from './Checkbox.svelte'
   import Chip from './Chip.svelte'
   import Card from './Card.svelte'
-  import DragHandle from './DragHandle.svelte'
-  import DropIndicator from './DropIndicator.svelte'
   import Icon from './Icon.svelte'
   import Popover from './Popover.svelte'
   import Select from './Select.svelte'
@@ -137,7 +133,6 @@
   const showing = $derived(new Set(shown.map((c) => c.key)))
   const hidden = $derived(new Set(spec.hide))
   const ordered = $derived(arranged(columns, spec.order))
-  const drag = useDrag()
 
   // Order by's default, marked quietly in its options: the order the
   // view opened with, else the field the collection's read leads with,
@@ -159,9 +154,10 @@
     change({ sort: !key || (!initial && key === fallback?.field && dir === fallback.dir) ? null : { field: key, dir } })
   }
 
-  // What Display shows: the fields drawn, a table's columns or the
+  // What Fields shows: the fields drawn, a table's columns or the
   // fields of a list's line or a card, as chips in their order, each
   // removable but a table's title; and those not drawn, which its + adds.
+  // A table's columns reorder in its own header (`Table`'s `onmove`).
   // A dashboard's widgets keep their own popover.
   const picks = $derived(
     spec.layout === 'table'
@@ -180,13 +176,6 @@
     } else {
       card(key, on)
     }
-  }
-
-  // A table's column dragged among the chips: the order of those shown,
-  // then the hidden ones as they stood.
-  function moved(from: number, to: number) {
-    const now = reorder(picks?.shown ?? [], from, to)
-    change({ order: [...now, ...ordered.filter((c) => !now.includes(c))].map((c) => c.key) })
   }
 
   const change = (s: Partial<Spec>) => onchange({ ...spec, q: state.filter, ...s })
@@ -317,65 +306,55 @@
       <Select fit labelledby="{id}-order" options={orders} disabled={spec.layout === 'dashboard'} bind:value={() => sorted?.field ?? '', (key) => order(key)} />
     </div>
 
-    <!-- Fields: its label stands by the chips' first line, as every
-         other row's by its control. -->
-    <span class="label" class:top={!!picks} id="{id}-display">{picks ? 'Fields' : 'Display'}</span>
-    <div class="control">
-      {#if picks}
-        <!-- The fields drawn, as chips; a table's reorder by dragging
-             them, as its columns stand. -->
-        <ul
-          class="chips"
-          aria-labelledby="{id}-display"
-          {@attach spec.layout === 'table' &&
-            sortable(drag, {
-              list: 'shown',
-              label: (i) => picks?.shown[i]?.label ?? 'column',
-              onmove: moved,
-            })}
-        >
-          {#each picks.shown as c, i (c.key)}
-            {#if spec.layout === 'table'}
-              <DropIndicator show={drag.before('shown', i)} />
-            {/if}
-            <li data-drag-item="shown" data-drag-index={i}>
-              {#if spec.layout === 'table'}<DragHandle label={c.label} />{/if}
-              <Chip label={c.label} remove={c === titled ? undefined : { label: `Hide ${c.label}`, onclick: () => shows(c.key, false) }} />
-            </li>
-          {/each}
-          {#if spec.layout === 'table'}
-            <DropIndicator show={drag.before('shown', picks.shown.length)} />
-          {/if}
-          <!-- Add, after the last chip, wrapping as a chip would. -->
-          {#if picks.rest.length}
-            <li class="add">
-              <Popover label="Add a field" menu={false} align="end">
-                {#snippet trigger()}<Icon icon={Plus} size="1em" />Add{/snippet}
-                <fieldset class="columns">
-                  <legend class="label">{picks.noun}</legend>
-                  <ul>
-                    {#each picks.rest as c (c.key)}
-                      <li>
-                        <Checkbox checked={false} onchange={(on) => shows(c.key, on)}>{c.label}</Checkbox>
-                      </li>
-                    {/each}
-                  </ul>
-                </fieldset>
-              </Popover>
-            </li>
-          {/if}
-        </ul>
-      {:else if widgets && dashboard}
-        <Popover label="Display" menu={false} wide button>
-          {#snippet trigger()}{widgets}{/snippet}
-          <Widgets widgets={dashboard.widgets} {fields} {values} custom={dashboard.custom} onchange={(ws) => change({ widgets: ws })} />
-        </Popover>
-      {:else}
-        <Select fit labelledby="{id}-display" options={[{ value: '', label: 'As listed' }]} disabled />
-      {/if}
-    </div>
+    {#if !picks}
+      <span class="label" id="{id}-display">Display</span>
+      <div class="control">
+        {#if widgets && dashboard}
+          <Popover label="Display" menu={false} wide button>
+            {#snippet trigger()}{widgets}{/snippet}
+            <Widgets widgets={dashboard.widgets} {fields} {values} custom={dashboard.custom} onchange={(ws) => change({ widgets: ws })} />
+          </Popover>
+        {:else}
+          <Select fit labelledby="{id}-display" options={[{ value: '', label: 'As listed' }]} disabled />
+        {/if}
+      </div>
+    {/if}
 
   </div>
+
+  {#if picks}
+    <!-- Fields, a block of its own under the rows: its label on its own
+         line, the fields drawn as chips flowing across the panel's whole
+         width, and Add after the last (the operator, 19 Nov). -->
+    <div class="fields">
+      <span class="label" id="{id}-display">Fields</span>
+      <ul class="chips" aria-labelledby="{id}-display">
+        {#each picks.shown as c (c.key)}
+          <li>
+            <Chip label={c.label} remove={c === titled ? undefined : { label: `Hide ${c.label}`, onclick: () => shows(c.key, false) }} />
+          </li>
+        {/each}
+        <!-- Add, after the last chip, wrapping as a chip would. -->
+        {#if picks.rest.length}
+          <li class="add">
+            <Popover label="Add a field" menu={false} align="start">
+              {#snippet trigger()}<Icon icon={Plus} size="1em" />Add{/snippet}
+              <fieldset class="columns">
+                <legend class="label">{picks.noun}</legend>
+                <ul>
+                  {#each picks.rest as c (c.key)}
+                    <li>
+                      <Checkbox checked={false} onchange={(on) => shows(c.key, on)}>{c.label}</Checkbox>
+                    </li>
+                  {/each}
+                </ul>
+              </fieldset>
+            </Popover>
+          </li>
+        {/if}
+      </ul>
+    </div>
+  {/if}
 
   <!-- The foot, one row: Pin, which pins the open view under Pinned in
        the sidebar, or unpins it; and, on a view of the viewer's own, its
@@ -398,15 +377,15 @@
             </button>
           {/each}
         </div>
-        <div class="buttons">
-          <Button tone="primary" type="submit">Save view</Button>
-          <Button onclick={() => (views.naming = false)}>Cancel</Button>
+        <div class="buttons" data-run>
+          <Button lead={verb('Cancel')} onclick={() => (views.naming = false)}>Cancel</Button>
+          <Button lead={verb('Save view')} tone="primary" type="submit">Save view</Button>
         </div>
       </form>
     {:else}
       <div class="foot">
         {#if custom}
-          <span class="end"><Button tone="danger" onclick={onremove}>Delete</Button></span>
+          <span class="end"><Button lead={verb('Delete')} tone="danger" onclick={onremove}>Delete</Button></span>
         {/if}
       </div>
     {/if}
@@ -414,9 +393,9 @@
   {#if changed && keep && discard}
     <div class="unsaved" role="status">
       <span>Unsaved changes</span>
-      <span class="keep">
-        <Button onclick={discard}>Reset</Button>
-        <Button tone="primary" onclick={keep}>Save</Button>
+      <span class="keep" data-run>
+        <Button lead={verb('Reset')} onclick={discard}>Reset</Button>
+        <Button lead={verb('Save')} tone="primary" onclick={keep}>Save</Button>
       </span>
     </div>
   {/if}
@@ -510,32 +489,27 @@
     background: var(--selected);
     color: var(--text);
   }
-  /* The fields drawn, as chips wrapping in the panel's width, ending at
-     its right edge as every control does. */
+  /* Fields: its label over the chips, which flow from the panel's start
+     across its whole width, in even rows. */
+  .fields {
+    display: grid;
+    gap: var(--space-1);
+  }
   .chips {
     list-style: none;
     margin: 0;
     padding: 0;
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-end;
+    justify-content: flex-start;
     align-items: center;
     gap: var(--space-1);
     min-width: 0;
   }
-  /* Each line of chips as tall as a control, so the row's label, set
-     at its top (`.top`), stands by the first line as the other rows'
-     labels stand by theirs. */
   .chips > li {
     display: inline-flex;
     align-items: center;
     min-width: 0;
-    min-height: 1.9rem;
-    border-radius: var(--radius-control);
-  }
-  .label.top {
-    align-self: start;
-    line-height: 1.9rem;
   }
   /* Add, a peer of the chips: a chip's height, type, radius and fill
      (`Chip.svelte`), its + before its word, hovered as a quiet button. */

@@ -22,7 +22,7 @@ function rng(seed: number) {
 
 type R = ReturnType<typeof rng>
 
-const words = ['a', 'é', 'lantern ', '€', '😀', 'co-op', '\n', 'rate']
+const words = ['a', 'é', 'lantern ', '€', '😀', 'coop', '\n', 'rate']
 
 function textual(doc: LoroDoc): TreeID[] {
   return order(doc)

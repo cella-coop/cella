@@ -389,7 +389,7 @@
           touch $out
         '';
 
-        # The module run in a VM: a co-op's scope, a demo's, and a demo
+        # The module run in a VM: a coop's scope, a demo's, and a demo
         # serving each visitor a copy of their own (nix/test.nix).
         module = import ./nix/test.nix { inherit self pkgs; kind = "scope"; };
         demo = import ./nix/test.nix { inherit self pkgs; kind = "demo"; };

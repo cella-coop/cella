@@ -1,7 +1,7 @@
 # Cella
 
-A cooperative workspace for member-governed organisations: co-ops and
-partnerships. It is single-tenant and federated: each co-op has its own
+A cooperative workspace for member-governed organisations: coops and
+partnerships. It is single-tenant and federated: each coop has its own
 server, database and notary, and other scopes keep only signed copies of
 what concerns them. Cella orders the writes that contend and signs each
 verdict into a log the members can audit.
@@ -15,10 +15,10 @@ verdict into a log the members can audit.
 - [Operations](_corpus/doc/operations.md) — a scope's server, its two keys
   and their rotation, backups and restore, upgrades.
 - [Users](_corpus/doc/users.md) — who cella is for, starting with
-  professional-services worker co-ops.
+  professional-services worker coops.
 - [Legal forms](_corpus/doc/forms.md) — the forms cella offers, a SCOP
   SARL in France first, and their default policies, each with its source.
-- [Glossary](_corpus/doc/glossary.md) — cella's terms and the co-op terms it
+- [Glossary](_corpus/doc/glossary.md) — cella's terms and the coop terms it
   uses.
 - [Conflicts](_corpus/doc/conflicts.md) — every write against the
   invariants it contends with, testing each label.

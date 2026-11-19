@@ -1,15 +1,15 @@
 +++
 title = "Legal forms"
-updated = 2026-11-16
+updated = 2026-11-19
 +++
 
 # Legal forms
 
-A **legal form** is a kind of co-op the law of a region knows, such as a
+A **legal form** is a kind of coop the law of a region knows, such as a
 SCOP SARL in France, and in cella a set of ready-made policies, its
 **default policies**: the rights the law gives, the procedures it asks,
 the rules with the law's floors, and the mandates and rights cella
-suggests where no law speaks. Cella offers the forms; a co-op chooses
+suggests where no law speaks. Cella offers the forms; a coop chooses
 one, and cella makes keeping to it easy without choosing for it. The
 register keeps each form and its defaults (`policy.form`,
 `policy.default`, [the register](../../apps/org/core/policy/index.md)).
@@ -19,7 +19,7 @@ reading, not settled law.** The sources below are its reading of loi
 n° 47-1775 of 10 September 1947, loi n° 78-763 of 19 July 1978, the Code
 de commerce and the GDPR, through the permission study of 1 November
 2026, with Légifrance and EUR-Lex only partly reachable from the box;
-each waits on a co-op lawyer's review before the pilot. The register
+each waits on a coop lawyer's review before the pilot. The register
 says so of each default: `policy.default.reviewed` is the day a lawyer
 reviewed it, and is empty for every default today.
 
@@ -33,13 +33,13 @@ practice. A default names no circle: every one is the root's, the
 assembly's, and a collective mandate in it names the assembly as the
 form's founding makes it.
 
-**Taking.** A co-op takes a default by adopting a policy that takes it,
+**Taking.** A coop takes a default by adopting a policy that takes it,
 the policy action's `takes`, worded and protected as the default reads:
 a motion that takes one worded otherwise is refused as it is proposed
-and again as it is carried out, saying so. A co-op takes its form's
+and again as it is carried out, saying so. A coop takes its form's
 defaults at founding; Lanterne's founding motion takes the SCOP SARL's.
 
-**Leaving.** A co-op leaves a default by motion: one that replaces the
+**Leaving.** A coop leaves a default by motion: one that replaces the
 policy taking it with a policy that takes none, or ends it. Each
 default stands one of four ways in a circle that took any of its form's
 (`policy.standing`):
@@ -63,7 +63,7 @@ takes a default, and lists every default it left or never took, each
 with the motion that left it ([motion](../../apps/org/feats/motion/index.md#circles)).
 A motion's page says the default each policy it adopts takes, and each
 default it leaves ([the motion feat](../../apps/org/feats/motion/index.md)).
-The statutes say, after their policies, every default the co-op left
+The statutes say, after their policies, every default the coop left
 and by which motion ([generated documents](../../apps/org/feats/document/index.md#generated-documents)).
 
 ## SCOP SARL, France
@@ -94,8 +94,8 @@ and by which motion ([generated documents](../../apps/org/feats/document/index.m
 | `seat-member` | mandate, protected | the assembly gives and ends seats | cella |
 | `create-circle` | mandate | the assembly creates a circle, by motion, which holds the default bundle from that day | cella |
 | `amend-circle` | mandate | the assembly changes a circle's name, purpose or procedure, by motion, its id kept, and makes and changes its roles | cella |
-| `arrange-features` | mandate | the assembly arranges the co-op's layout of features at the root, and which of its groups and features any circle shows, by motion; a circle may be given it over itself, to choose what it shows | cella |
-| `withdraw-membership` | right, protected | every member withdraws from the co-op by their own action | Code de commerce art. L231-6 |
+| `arrange-features` | mandate | the assembly arranges the coop's layout of features at the root, and which of its groups and features any circle shows, by motion; a circle may be given it over itself, to choose what it shows | cella |
+| `withdraw-membership` | right, protected | every member withdraws from the coop by their own action | Code de commerce art. L231-6 |
 | `keep-profile` | right, protected | every person keeps their own profile | GDPR art. 16 |
 | `keep-devices` | right, protected | every person enrols and revokes their own devices | cella |
 | `upload-file` | right, protected | every person uploads a file | cella |
@@ -127,7 +127,7 @@ feat's guard, made once they have worked a year, by the
 employment-membership graft's, and puts the motion to admit them to the
 assembly in the same write, by membership-motion's, so the
 assembly must rule on it as it rules on any motion. The year is the
-guard's and not a value of the policy's: a co-op that rewords it changes
+guard's and not a value of the policy's: a coop that rewords it changes
 no guard ([the membership feat](../../apps/org/feats/membership/index.md)). A rule's
 values are named for no feat, so no guard reads them: they bind by the
 members' judgement, as the law's floors do until a feat reads them.
@@ -138,4 +138,4 @@ employee associates' 65 % of the votes and 51 % of the capital (loi n°
 78-763 art. 3 bis, found only in secondary sources), and the repayment
 of a departed associate's shares within five years (loi n° 47-1775 art.
 18; loi n° 78-763 art. 42). The capital's and the work share's terms are
-each co-op's own rules, read by the account and patronage feats.
+each coop's own rules, read by the account and patronage feats.

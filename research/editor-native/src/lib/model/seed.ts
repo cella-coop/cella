@@ -21,7 +21,7 @@ export const rateCard: Fragment[] = [
   { type: 'heading', level: 1, runs: p('Rate card 2027'), children: [] },
   {
     type: 'paragraph',
-    runs: p('Day rates and project floors for ', { text: '2027', marks: { italic: true } }, '. Associations and co-ops with fewer than ten staff pay the ', b('solidarity'), ' rate.'),
+    runs: p('Day rates and project floors for ', { text: '2027', marks: { italic: true } }, '. Associations and coops with fewer than ten staff pay the ', b('solidarity'), ' rate.'),
     children: [],
   },
   { type: 'decision', decision: 'd-2026-011', runs: [], children: [] },

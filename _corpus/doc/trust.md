@@ -1,18 +1,18 @@
 +++
 title = "Trust"
-updated = 2026-11-15
+updated = 2026-11-19
 +++
 
 # Trust
 
-Each scope — a co-op, a joint circle of co-ops, or a federation — runs its
+Each scope — a coop, a joint circle of coops, or a federation — runs its
 own server, with its own Postgres database, log and notary. Every piece of
 data has exactly one owning scope; anything shared gets a scope of its own.
 There is no consensus between servers and nothing to resolve: other scopes
 keep signed copies of what concerns them.
 
 Cella is single-tenant and federated, and both protect privacy. No server
-holds two scopes, so a co-op's records sit beside no other co-op's: no
+holds two scopes, so a coop's records sit beside no other coop's: no
 query, bug or operator of another scope reaches them through a shared
 database. Federation (rung 5 of [the ratchet](ratchet.md)) joins scopes by
 signed events between their servers, never by pooling their data: a
@@ -78,7 +78,7 @@ open to close ([tests](architecture.md#tests)).
 ## One server
 
 The notary is software with no legal force: it runs the guards on every
-action and alone appends to the log, and a record holds because the co-op
+action and alone appends to the log, and a record holds because the coop
 agreed to it, never because the notary signed it. It lives inside Postgres
 as the `cella` extension, built with pgrx
 on the pure Rust guards crate (`apps/org/core/notary/rs` over
@@ -173,7 +173,7 @@ sequenceDiagram
   commitment in the log and its value stays in the vault, so a folded
   scope holds each commitment and opens none. A person's own words, a
   motion's title and text, a message or a comment, are such values; a
-  document's text is the co-op's, and its edits' entries carry it. Every
+  document's text is the coop's, and its edits' entries carry it. Every
   action folds, which `cella check feats` holds, and every e2e scenario's
   log is folded and compared after it, but those that stage around the
   notary what their logged writes build on. The vault's sweep redacts on
@@ -218,12 +218,12 @@ sequenceDiagram
   migrations, which change the schema and its registries, and the slice
   tests, which test a slice's SQL below the notary, write with
   `cella.unbound`, which only a superuser may set; erasure's redactions
-  are the notary's own. What a co-op is when its log begins comes in as
+  are the notary's own. What a coop is when its log begins comes in as
   a write too: the founding, below.
-- **The first entry founds the co-op.** One write, the founding
+- **The first entry founds the coop.** One write, the founding
   (`membership-motion:scope:found`), settles on an empty log alone, so a scope is
   founded once and a second founding is refused. It names the legal
-  form the co-op chose, one cella offers, and brings in its founders, as
+  form the coop chose, one cella offers, and brings in its founders, as
   persons with their devices and their memberships; the assembly,
   with each founder seated in it; and the root's founding motion, which
   its founders decided and which adopts the first policies, each taking
@@ -239,11 +239,11 @@ sequenceDiagram
   brings. A founding with no procedure for its root, no founding
   motion, a motion its founders did not decide, a founder with no seat,
   or a signer with no vote there, is refused, saying which, and leaves
-  the log empty. A mock co-op's founding
+  the log empty. A mock coop's founding
   also carries the state it held before its log, as Lanterne's seed
   does, and its entry carries every row of it, each personal value as
   its commitment, so the fold rebuilds what it founded
-  ([folds](architecture.md#folds)); a real co-op's books come in after it, by the import of each
+  ([folds](architecture.md#folds)); a real coop's books come in after it, by the import of each
   kind under the importer's mandates. Every later entry passes the
   guards the founding's policies set: none is allowed because the
   founding allowed it. What a founding must carry is not yet ruled:
@@ -280,7 +280,7 @@ sequenceDiagram
   whose scope covers the owning circle of the record the write's
   payload names, the root's where it names none, within its limit for
   the write's amount, or a right granting it, which reaches the whole
-  co-op: every person,
+  coop: every person,
   every member or every employee, as core's person says the actor is one
   that day. It is the one guard that reads a permission's scope; a
   record's owning circle grants nothing by itself, and a seat in it
@@ -335,7 +335,7 @@ sequenceDiagram
   capital. What the law gives every member to read, the year's accounts
   and the activity report, needs no mandate: the statements sum the
   whole for every reader, below. A graft that knows whose a row is opens it further
-  (`cella.reach`): `account-transaction` opens the lines on the co-op's
+  (`cella.reach`): `account-transaction` opens the lines on the coop's
   own accounts to every member and a capital account's to its holder, and
   `file-membership` a class of personal files to the powers over
   what they record. No one signed in reads none of it. A view the app reads
@@ -396,7 +396,7 @@ Guards come in four layers:
 | Members' view | members | forms that read back as sentences |
 
 The law for each legal form is ours to write, as primitives and composed
-guards. A co-op's own guards live in custom feats, each with its own schema,
+guards. A coop's own guards live in custom feats, each with its own schema,
 enabled by motion.
 
 Composed guards are written in a declared subset of SQL: `SELECT`, joins
@@ -609,12 +609,12 @@ erased until their legal clock runs out.
   holds after it, and a repayment's amount is logged as given, so the
   withdrawal that draws repayments up keeps them as given too
   ([current limits](#current-limits)).
-- **A figure that is both a person's and the co-op's is personal, an
+- **A figure that is both a person's and the coop's is personal, an
   open question.** A draw, a pay, a capital payment in or withdrawn and
-  a patronage part are a member's and also a line of the co-op's books,
+  a patronage part are a member's and also a line of the coop's books,
   which every member reads. They are kept personal, in the vault behind
   their commitments, and the log carries no plain figure of them; whether
-  some of them are the co-op's to log plain is open, and keeping them
+  some of them are the coop's to log plain is open, and keeping them
   personal is the choice that is easier to undo.
 - **The keys.** A vault key is 32 random bytes per subject, class and
   year, sealed (XChaCha20-Poly1305) under a wrap key derived from the
@@ -646,7 +646,7 @@ erased until their legal clock runs out.
   erases another member, and no motion decides it: erasure is the
   person's right (GDPR art. 17), within the holds the law keeps, art.
   17(3)(b), a legal obligation, and (e), legal claims. So a member who
-  has not left is not erased, since the co-op keeps its register of
+  has not left is not erased, since the coop keeps its register of
   members, and their payroll, receipts and books are restricted, not
   erased. That reading of the law waits on a lawyer, as every default's
   does ([legal forms](forms.md)). Each
@@ -757,7 +757,7 @@ What the build does not yet do, and what lifts each:
   (rung 4) and the host's trust (A2) lift this.
 - **Some of what concerns a person is every member's.** The register of
   members, who holds how many shares, and the journal's entries with
-  their lines on the co-op's own accounts are read by every member, so
+  their lines on the coop's own accounts are read by every member, so
   a colleague's capital paid in shows on the bank's line as an amount;
   an expense, an invoice and a draw's amount the same. A page that sums
   rows shows the sum of those its reader reads, but for the statements,
@@ -791,10 +791,10 @@ What the build does not yet do, and what lifts each:
   it, though their seat grants no power. And core's analytical
   contract shares the structure by id to the analytics shell, read as
   its owner, as the shared-view rules allow.
-- **A published part is published whole.** What the co-op publishes by
-  motion ([what the co-op publishes](../../apps/org/core/circle/index.md#what-the-co-op-publishes))
+- **A published part is published whole.** What the coop publishes by
+  motion ([what the coop publishes](../../apps/org/core/circle/index.md#what-the-coop-publishes))
   every person signed in reads, every row of the part, never a chosen
-  circle's: a co-op that publishes its seats shows who sits where by
+  circle's: a coop that publishes its seats shows who sits where by
   the address each seat keeps, and no name or other value the person
   feat holds. The rule says which parts; whether to publish the seats
   at all is the assembly's motion, which no tool judges.
@@ -812,7 +812,7 @@ What the build does not yet do, and what lifts each:
   what they held before; and the repayments a withdrawal draws up are
   logged as given, as each repayment is, so what it owes them is their
   sum. The open question on a figure that is both a person's and the
-  co-op's ([personal data](#personal-data)) decides these with the rest.
+  coop's ([personal data](#personal-data)) decides these with the rest.
 - **A write's run lives in one server process.** It waits for each
   signature up to a minute (`CELLA_PATIENCE`), holding no database
   connection while it waits, and goes with the process; sessions outlive
@@ -836,7 +836,7 @@ What the build does not yet do, and what lifts each:
   member who reads two reports over the same people, or the same report
   before and after someone joins, may subtract one from the other. Nor
   does any value stop inference from what a reader knows outside the
-  books, a colleague's pay or who left a team: a co-op that shares such
+  books, a colleague's pay or who left a team: a coop that shares such
   totals consents to that residual risk, which the assembly's Open books
   page says beside every value it proposes
   ([the circles in the shell](../../apps/org/feats/motion/index.md#the-circles-in-the-shell)).
@@ -857,7 +857,7 @@ What the build does not yet do, and what lifts each:
   log, which replays every erasure up to that point, lifts both.
 - **`cella import` signs with the fixture devices too.** It imports as a
   member through their TEST-ONLY fixture key, as the dev server signs, so
-  it imports into the mock co-ops alone; a member's own device signing the
+  it imports into the mock coops alone; a member's own device signing the
   import's writes, as for any write, lifts this.
 - **A mandate's budget is enforced only on expenses.** A power's limit per
   write is checked everywhere; a budget only where a graft tracks the

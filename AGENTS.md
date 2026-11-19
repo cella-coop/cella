@@ -270,7 +270,7 @@ migrate, contract, and its dependents change in parallel.**
 
 ### 6. Modularity
 
-**Each co-op chooses the modules its tree is composed of.**
+**Each coop chooses the modules its tree is composed of.**
 
 - *accepted*: a module is a manifest and its contributions, named in
   reverse-DNS by its publisher's domain; its tables are private to it,
@@ -305,6 +305,11 @@ entries.**
 - **Docs are present-tense** and say what the thing is. A feat's doc is its
   `index.md`; when you change a feat, update its doc and its `updated`.
   No tool sees a doc's tense or its `updated`; review holds both.
+- **Write "coop" and "coops"**, never with a hyphen, in every string,
+  reason, comment, fixture, doc and test. A proper name keeps its own
+  spelling, as "Co-operatives UK" and a legal form's "co-operative" do;
+  `cella check spelling` refuses the hyphenated word by file and line
+  ([enforcement](_corpus/doc/enforcement.md)).
 
 ## Workflow
 

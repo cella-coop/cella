@@ -152,8 +152,8 @@ in
           };
           demo = {
             enable = mkEnableOption ''
-              a demo: Lanterne, the mock co-op, with a scenario played on it,
-              never a pilot co-op's data. Its template, `<database>_template`,
+              a demo: Lanterne, the mock coop, with a scenario played on it,
+              never a pilot coop's data. Its template, `<database>_template`,
               is built by `cella demo template` when the unit first starts and
               after each upgrade; the scope serves a copy of it, made afresh
               each time the template is, as `cella serve --prod --demo`, its
@@ -284,7 +284,7 @@ in
     assertions = [
       {
         assertion = demos == { } || kept == { };
-        message = "services.cella: the cluster's keys sign every scope on it, and a demo's keys are the demo's own; serve demos on a host of their own, never beside a co-op's scope";
+        message = "services.cella: the cluster's keys sign every scope on it, and a demo's keys are the demo's own; serve demos on a host of their own, never beside a coop's scope";
       }
       {
         assertion = lib.length ports == lib.length (lib.unique ports);

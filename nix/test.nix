@@ -2,7 +2,7 @@
 # a unit makes by `cella key init` before Postgres starts, as a host's
 # operator makes its keys once, by hand; never a real scope's.
 #
-# - `scope`: a co-op's scope. It migrates and serves a sign-in offering no
+# - `scope`: a coop's scope. It migrates and serves a sign-in offering no
 #   one; Lanterne is founded in it, the log's first write, and a member
 #   signs in with their TEST-ONLY device and signs a write of their own;
 #   the nightly backup is taken and restored into a database of its own,
@@ -119,7 +119,7 @@ pkgs.testers.runNixOSTest {
           assert after > head, f"the log's head stayed at {head}"
           host.succeed("${as "${cella} log verify --url '${url "demo"}'"}")
 
-      with subtest("a demo drops no database that is not its own: a co-op's is refused as a copy and as a template"):
+      with subtest("a demo drops no database that is not its own: a coop's is refused as a copy and as a template"):
           host.succeed("${as "createdb coop"}")
           host.succeed("""${psql "coop" "CREATE TABLE kept (n int); INSERT INTO kept VALUES (1)"} """)
           said = host.fail("${as "${cella} demo copy coop --url '${url "demo_template"}' --replace"} 2>&1")

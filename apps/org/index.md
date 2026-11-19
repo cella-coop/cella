@@ -1,10 +1,10 @@
 +++
 title = "Org"
-updated = 2026-11-17
+updated = 2026-11-19
 +++
 
 The cooperative workspace, for member-governed organisations. One deployment
-serves one scope: a co-op, a joint circle of co-ops, or a federation.
+serves one scope: a coop, a joint circle of coops, or a federation.
 
 Org is an app, the root node of a tree built by the six axioms of
 [architecture](../../_corpus/doc/architecture.md#the-axioms): a node is
@@ -57,7 +57,7 @@ where `/` lands, and Activity, the log. Each feat's collection is a page
 in the sidebar where the circle the member is in enabled its feature,
 under the circle's accordions ([features](core/circle/index.md#features));
 the platform's are Settings', the member's Devices
-under Personal and the co-op's Imports under Organization, and Files is
+under Personal and the coop's Imports under Organization, and Files is
 reached by the command menu ([the shell](core/ui/index.md#components)).
 Every collection is the same component: a filter bar on the line under
 its header, above its rows, chips of its conditions and its search on
@@ -75,7 +75,7 @@ guard's reason:
 
 - an invitation carrying the invitee's first device; a new motion, by
   its circle's procedure or another, consent, a majority, two thirds or
-  one of the co-op's own with its quorum, with what it decides: admitting, suspending or
+  one of the coop's own with its quorum, with what it decides: admitting, suspending or
   letting go a member, seating or unseating one,
   granting or revoking a mandate, proposed from the New form or from a
   member's or a circle's page;
@@ -98,13 +98,13 @@ guard's reason:
 - a new invoice, numbered by the server and posted to the books; a
   payment, posted; a void, its credit note posted; marking it sent;
   linking it to a contact;
-- a member's own name, a contact's note, closing a month;
+- a member's own name, a contact's notes in its body, closing a month;
 - a project, its milestones, its budget (ordered), its contact and the
   shares of its budget (bounded); a task, given to someone, filed under a
   project and moved across the board, a drop between columns being the
   move; time logged as the acting worker by their employment, member or
   not, a week at a time in the grid behind the timesheets' New button,
-  booked to a project or the co-op's own, a month submitted by its
+  booked to a project or the coop's own, a month submitted by its
   worker and approved by someone else (ordered), which closes it to new
   entries;
 - a hire with the worker's first device, enrolled at once; an
@@ -112,7 +112,7 @@ guard's reason:
   admission to the assembly and opens their candidacy, the probation they
   served and the shares they pledge; for a candidate invited by a member,
   their admission proposed from the form their candidacy fills in once
-  it is over; a member marking the co-op's adopted texts read;
+  it is over; a member marking the coop's adopted texts read;
 - an expense claimed as the acting member, submitted, approved within the
   approver's limit and monthly budget or refused, and reimbursed, each a
   drop between the board's columns, approval and reimbursement posted;
@@ -132,7 +132,7 @@ guard's reason:
   due;
 - an expense claimed with its receipt, or a receipt attached to one
   later; a worker's employment record filed by whoever hires, a member's
-  own record, and a paper of the co-op's own uploaded, each opening at
+  own record, and a paper of the coop's own uploaded, each opening at
   `/files/<id>/content` to whom it concerns, who uploaded it and whoever
   holds a power over what it records;
 - a file from another tool imported, or tried in a dry run first, from
@@ -151,7 +151,7 @@ roles, the seats read from their members and the tenures of each role,
 and the mandates and rights, and their page in the sidebar
 ([circle](core/circle/index.md)).
 
-People are core too: `core/person` holds everyone the co-op knows, by
+People are core too: `core/person` holds everyone the coop knows, by
 the address they sign with, their devices and the keyring, the rights
 registry, and the Inbox, what waits on the acting person
 ([person](core/person/index.md)). Every feat's rows may name a core
@@ -172,7 +172,7 @@ that join a person's role name the feat.
 | `patronage` | finance | 1 | the work share's terms, each year's distribution of its surplus, from draft to approved to distributed, and each worker's part and statement |
 | `transaction` | finance | 1 | the journal's balanced entries |
 | `invoice` | finance | 1 | issue, send, get paid |
-| `contact` | work | 1 | the organisations and people the co-op deals with |
+| `contact` | work | 1 | the organisations and people the coop deals with |
 | `project` | work | 1 | initiatives, their milestones and budgets |
 | `task` | work | 1 | assignable work |
 | `timesheet` | work | 1 | time entries and members' months |
@@ -180,11 +180,11 @@ that join a person's role name the feat.
 | `payslip` | finance | 1 | salaries, monthly pay runs and payslips |
 | `report` | finance | 1 | saved reports read through the analytics port: the financial statements, the project margins, the federation figures and a member's own |
 | `meeting` | governance | 1 | circles' meetings, their agendas, held or cancelled; how a circle meets |
-| `file` | platform | 1 | the files the co-op keeps, named by their BLAKE3 |
+| `file` | platform | 1 | the files the coop keeps, named by their BLAKE3 |
 | `import` | platform | 1 | files brought in from other tools, and what each line came to |
 | `agent` | platform | later | agents acting for members, with narrower grants |
 
-Seedling's co-op economics that rung 1 still leaves out: a work share
+Seedling's coop economics that rung 1 still leaves out: a work share
 divided by revenue, which French law does not offer a SCOP; paying out
 the work share's cash; a deduction for losses from a departed associate's
 repayment, revolving capital and dues in `account`; quotes with
@@ -220,7 +220,7 @@ and admit a member by vote (ordered).
 | `meeting-motion` | the motions a meeting's agenda tables, and where each stands |
 | `motion-patronage` | a year's distribution and the motion that approves its split; the work share's terms and the motion that adopts them |
 | `document-meeting` | a meeting's minutes, written as a document |
-| `document-membership` | who has read the co-op's adopted texts |
+| `document-membership` | who has read the coop's adopted texts |
 | `employment-file` | a worker's employment records, filed by whoever hires |
 | `employment-membership` | a worker's candidacy and probation, and each person's path from hired to member |
 | `employment-payslip` | whose a salary and a payslip are: a worker's, member or not |
@@ -239,5 +239,5 @@ and admit a member by vote (ordered).
 | `payslip-timesheet` | a pay run from approved time |
 | `payslip-transaction` | a pay run's approval and payment post transactions |
 | `project-task` | which project and milestone a task is in |
-| `project-timesheet` | time against a project, what it spent of the budget and cost the co-op, and its spend at completion |
+| `project-timesheet` | time against a project, what it spent of the budget and cost the coop, and its spend at completion |
 

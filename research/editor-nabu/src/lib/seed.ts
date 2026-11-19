@@ -32,7 +32,7 @@ export const rateCard: Seed[] = [
   {
     type: 'paragraph',
     delta: [
-      t('Prices are per unit, before VAT. Associations and co-ops with fewer than ten staff pay the '),
+      t('Prices are per unit, before VAT. Associations and coops with fewer than ten staff pay the '),
       t('solidarity rate', { italic: true }),
       t('; see the '),
       t('règlement intérieur', { link: 'https://lanterne.example/documents/internal-rules' }),

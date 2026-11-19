@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-11-16
+updated = 2026-11-19
 +++
 
 # Architecture
@@ -366,7 +366,7 @@ known.
 
 ### 6. Modularity
 
-**Each co-op chooses the modules its tree is composed of.**
+**Each coop chooses the modules its tree is composed of.**
 
 - *accepted*: a module is a manifest and its contributions, named in
   reverse-DNS by its publisher's domain, which lists the signing key;
@@ -476,17 +476,17 @@ Unplanned, and answered by no clause yet:
   calls and keys other modules may use, how they are versioned with the
   module, and how the checker knows which module owns what.
 - **Upgrades**: after launch migrations are append-only; how a module
-  version declares what it migrates, and what a co-op sees before its
+  version declares what it migrates, and what a coop sees before its
   policy applies it.
-- **Listing and vetting**: where modules are listed, and how a co-op
+- **Listing and vetting**: where modules are listed, and how a coop
   vets one before its motion.
-- **Per-co-op builds**: shells generated from each co-op's modules mean
-  a build per co-op, which a signed native client has to accommodate.
+- **Per-coop builds**: shells generated from each coop's modules mean
+  a build per coop, which a signed native client has to accommodate.
 - **Grafting into a nested core**: adopted in the design, so a root
   feat's graft can join a nested node's core feat; whether it erodes
   the nested node's encapsulation is watched.
 - **Manifests**: `app.toml` and `feat.toml`, or one `node.toml`.
-- **Two CLIs**: the `cella` dev tool and a co-op's runtime cli shell
+- **Two CLIs**: the `cella` dev tool and a coop's runtime cli shell
   are different things.
 
 ## The tree
@@ -575,9 +575,9 @@ the app that each read the core person and neither knows the other, and
 a person's roles are derived: a member is a person who holds a
 membership, a worker one who holds an employment. An agent is a later
 feat of the same shape. A contact, an organisation or a
-person the co-op deals with, is not one: most contacts are organisations,
+person the coop deals with, is not one: most contacts are organisations,
 so `contact` is a top-level feat of its own, and a person among them is
-no person of the co-op. What everything grafts onto belongs in the
+no person of the coop. What everything grafts onto belongs in the
 parent's core, not in a feat.
 
 A feat's name is unique in its app, at any depth, since it names its
@@ -612,7 +612,7 @@ circles to another core feat is a core graft, as `circle-policy` joins
 them to the register ([core grafts](#core-grafts)).
 
 Circles know no policy. A mandate, a right, open books' disclosure
-values, the publication and the co-op's particulars are each copied from a policy as it is
+values, the publication and the coop's particulars are each copied from a policy as it is
 adopted, and the circles keep them in their own tables by the policy's
 id; what reads the policy is the core graft joining the circles to the
 register, `circle-policy` ([core grafts](#core-grafts)).
@@ -1005,11 +1005,11 @@ makes is held to it by tooling, never by hand:
   own seats, the circles and roles they name and the mandates on those
   roles
   ([circle](../../apps/org/core/circle/index.md#who-reads-the-structure)),
-  and the parts of it the co-op publishes by a rule of the assembly,
+  and the parts of it the coop publishes by a rule of the assembly,
   as open books' values are set: its circles, roles, mandates, seats or
   register, which core copies into its own rows at adoption and its
   policies read by a function, never the rule's wording
-  ([what the co-op publishes](../../apps/org/core/circle/index.md#what-the-co-op-publishes)).
+  ([what the coop publishes](../../apps/org/core/circle/index.md#what-the-coop-publishes)).
   A slice's policy, view or invoker function that reads core reads it
   as its reader; a guard reads it whole, as the guards role, and so
   does a write's transaction. What a reader needs of core before a
@@ -1025,7 +1025,7 @@ makes is held to it by tooling, never by hand:
   two ways. It **sums**: what it returns shows, outside a sum or a
   count, no column that says whose a row is nor one that is personal,
   and groups by none, each column it names one it returns or takes, as
-  the federation's figures of a distributed year are the co-op's. Or it
+  the federation's figures of a distributed year are the coop's. Or it
   **filters**: a share that needs the whole to divide, or a figure of
   one record, keeps only the rows its reader may read by its query's own
   test, of the known pattern above, as `patronage_payslip.division`
@@ -1145,7 +1145,7 @@ outside one, which no check would read. A schema takes its owner's name;
 a graft's hyphens become underscores, so `contact-invoice` owns the schema
 `contact_invoice`.
 
-A co-op's customisations are custom feats: a feat of its own, with its own
+A coop's customisations are custom feats: a feat of its own, with its own
 schema, SQL and grafts, built on the same primitives and enabled by
 motion. Custom feats are how cella is extended.
 
@@ -1161,7 +1161,7 @@ circle table, `circle text NOT NULL DEFAULT circle.assembly() REFERENCES
 circle.circle`. Data is scoped by circle, as in an ERP: a record that is
 a circle's work names that circle, as a project names the circle that
 runs it and an expense the one it was spent for, and a record that is
-the whole co-op's, the books, pay, membership, invoices and contacts and
+the whole coop's, the books, pay, membership, invoices and contacts and
 every record no circle runs, is the root's, the assembly's, which a
 write naming no circle names. An unknown circle is impossible, since the
 key refuses it, and so is a record of no circle. Ownership grants
@@ -1420,7 +1420,7 @@ comment, one of two:
   Every view that shows the rows of a record a circle owns is scoped, and
   so is a sum kept per record, as a bill's VAT by rate is.
 - **shared**, `audience: shared by <columns>`: only sums and counts,
-  grouped by the columns it names and no finer. It is the whole co-op's
+  grouped by the columns it names and no finer. It is the whole coop's
   figure, read by every reader, and a report filters it by no field
   below that grain. It sums at its own top level, each key of its
   `GROUP BY` a column it shows and names, as `payslip.months` sums by
@@ -2014,10 +2014,10 @@ to whom its guard or an extension's `allows` opens them; `/sign-in`,
 the one slice that serves invitations, membership's `accept` as its slice
 serves it (`joins`), and no one's where none does; `/settings/[page]`, a settings page a slice
 serves, with its writes and `theme`, which saves the theme as `/theme`
-does; `/theme` for the user menu; `/lens` for the co-op selector's circles; `/journal`, the transactions' old address,
+does; `/theme` for the user menu; `/lens` for the coop selector's circles; `/journal`, the transactions' old address,
 which redirects to them; `/specimens/settings`, on the dev server alone, a
 settings form of no slice for the browser test to see
-([settings](../../apps/org/core/ui/index.md#settings)); and `/`, which lands a member in their Inbox until the co-op has a
+([settings](../../apps/org/core/ui/index.md#settings)); and `/`, which lands a member in their Inbox until the coop has a
 first page of its own. A collection's owner is a feat,
 or a core library, the log or the circles. A graft extends only a collection of a feat it
 joins, or of a feat one of them nests in, and a nested feat its parent's,
@@ -2042,8 +2042,9 @@ invoice in the same transaction, replaces the invoice feat's.
   `tabs.test.mjs`): **a record's page shows at most four tabs, and the
   slice owning its collection chooses them.** Only the owner's page
   declares tabs, in order; every extension, a core feat's, a feat's or
-  a graft's, places its blocks in a tab the owner names, and declares
-  none of its own. An extender the owner gives no tab is a jump in the
+  a graft's, places its blocks, and the collections it lists scoped to
+  the record ([record page layout](#record-page-layout)), in a tab the
+  owner names, and declares none of its own. An extender the owner gives no tab is a jump in the
   drawer's Related: each collection whose rows name the record, by a
   person's address, a circle's id or a column `of` the record's
   collection, counted as the reader sees it and opening that collection
@@ -2112,6 +2113,73 @@ A client with no page posts the same writes to `POST
 /api/<feat>/<verb>` and signs them the same way ([remote
 functions](#remote-functions)).
 
+### Record page layout
+
+A record's page opens on its first tab, its overview, which the slice
+owning its collection lays out by its **record page layout**, its
+`layout` (the operator, 19 Nov): `body` for a record of words, a
+document, a motion, a meeting, a project, a task, which opens on its
+body, the block editor or the text it is written in, with the slice's
+panels inline after it; or `panels`, unset, as most records are, a
+record of structured data, an invoice, a bill, an expense, a payslip, an
+entry, an account, a period, a report, a circle, a person, which opens
+on its stack of panels, its body not dropped but the last of them,
+Notes, which while it holds nothing is no panel and no heading, only a
+quiet "Add a note", and is the editor once someone writes. The page declares its body apart
+from its blocks (`body`); a record that keeps none, as a circle or a
+person, shows no Notes. The title, the body and the panels are one
+column of a readable width, centred in the content, the space either
+side split evenly; the title's text, the body's and every panel's
+content start at one edge, the column's inset. A tab listing a
+collection takes the content's width. Every slice's computed figures,
+its sums and counts (`figures`), are one panel, Figures, of `Stat`s,
+after the body in `body` and first in `panels`; a figure is never a
+property of the drawer, and is declared only as a quantity a reader
+acts on or compares, never a count a tab or the Activity already gives
+(the operator, 19 Nov: "Don't show useless stuff"), so a page with none
+shows no Figures panel.
+
+- *enforced* (`ui-check`'s `layouts`, `ui.test.mjs`): **on the
+  overview, everything that is not the record's text is a panel.**
+  Every block on the overview, its owner's or an extension's, a bare
+  one or one naming the first tab, draws only `Panel`s at its top level
+  ([panels](../../apps/org/core/ui/index.md#panels)): one framed
+  summary, a faint fill and a hairline, the one heading at its head,
+  flush with the column's left edge, never centred in it and never
+  full-bleed. A `panels` page shows at least one panel, its owner's or
+  an extension's, so no record opens on its notes alone, and a `body`
+  page declares its body. The check reads each `App` literal and the
+  markup of each block it places, and refuses a block it cannot read
+  there.
+- *enforced* (`ui-check`'s `panels` and `figures`, `ui.test.mjs`): **a
+  panel's key actions are its footer's**, one run at its right end, in
+  their context's tones with their icons; no button stands in its body.
+  A sum or a count is a slice's `figures`, never its `properties`.
+- *convention*: a record's own writes, Send, Close, Archive, stay in
+  the page's header, never in a panel; a tone and an icon fit their
+  context, which no tool sees. Inside the block editor too, whatever is
+  not rich text sits in a panel, as an embed's card does.
+- *convention*: **a panel summarises; a tab lists, or holds what is too
+  big to summarise.** A tab is any further view of the record: a
+  collection scoped to it, as a project's Tasks, or more of the same
+  feat's, as an account's Ledger or an invoice's Postings. An overview
+  is never spread across tabs: an invoice's lines are a panel of its
+  overview, not a tab of their own. No tool sees what summarises.
+
+A tab may list another collection scoped to the record (`scoped`, a tab
+and a collection), declared by the slice that joins the two, as
+`project-task` lists a project's tasks in its Tasks tab and
+`contact-project` and `contact-invoice` a contact's projects and
+invoices: the collection's rows that name the record, by the column
+that names it, as its jump in Related counts them, read by the shell's
+`within` query, which narrows every part of the collection's read to
+them (the source's `scope`, `@cella/org-db`). The tab draws the one
+`Collection` under the record's header with no frame, views or View
+panel of its own, its filters, grouping, layout and paging working as
+on its page and kept in the address with the tab, and none of it saved;
+its writes are the record's, so it offers no New and moves no card. A
+jump in Related to such a collection opens the tab.
+
 ### Reading at scale
 
 A collection is read in SQL, a page at a time. `@cella/org-db` composes
@@ -2151,11 +2219,11 @@ date picker or checkbox.
 
 ### The lens
 
-A member may lens the co-op on one of its circles, from the co-op
+A member may lens the coop on one of its circles, from the coop
 selector ([the shell](../../apps/org/core/ui/index.md#components)): the
 circles they read, the assembly first and the default. The assembly is
-the co-op's root and the same place as the co-op, so being in it is no
-lens, and the co-op reads whole; any other circle chosen is the circle
+the coop's root and the same place as the coop, so being in it is no
+lens, and the coop reads whole; any other circle chosen is the circle
 the member is in, whose enabled features the sidebar shows
 ([features](../../apps/org/core/circle/index.md#features)). The lens is
 the member's view and never a write: a cookie of the scope's, which
@@ -2186,7 +2254,7 @@ the command menu and the Inbox, which is what waits on the member,
 read whatever the lens. A view that reads across circles (`across`,
 [views](../../apps/org/core/ui/index.md#components)) only drops the
 lens's condition: it reads every circle's rows the reader may read, so
-the row-level policies and the co-op's disclosure policies bound it as
+the row-level policies and the coop's disclosure policies bound it as
 they bound the assembly's, no feature holds a read of its own for it,
 and nothing says how many rows the lens would have left out.
 
@@ -2294,7 +2362,7 @@ circle of the project or meeting it is of. One naming none concerns the
 root's, the assembly's. Core's guard on every power reads
 it, the one guard that reads a permission's scope: the actor holds the
 power by a mandate whose scope covers that circle, or by a right, which
-reaches the whole co-op (`circle_person.may`, its scope below). No slice
+reaches the whole coop (`circle_person.may`, its scope below). No slice
 checks a scope again; a slice's own guard still checks what is its own,
 as that an approver is not the month's member.
 
@@ -2342,13 +2410,13 @@ that ([motion](../../apps/org/feats/motion/index.md#circles)).
 covers, never a place in a tree. A mandate policy may mark it, a circle
 (`{scope: web}`, Web's projects, meetings and time) or the circle its
 holder holds the role in (`{scope: own}`), and one that marks none
-covers the whole co-op; it is copied into `circle.mandate.scope` with
+covers the whole coop; it is copied into `circle.mandate.scope` with
 the rest. One guard reads it on every action, core's
 `circle_person.empowered`, by `circle_person.may(actor, power, cents, about,
 day)` against the record's owning circle, `about`, which the write's
 payload names, and core's `circle.covers`: Web's lead, whose mandates
 are on their own circle, runs Web's projects and approves Web's time
-and is refused Brand's, and the manager's, on the whole co-op, cover
+and is refused Brand's, and the manager's, on the whole coop, cover
 every circle's records. Ownership grants nothing by itself, and a seat
 in a circle nothing over its records without a mandate
 ([who may act](../../apps/org/core/grafts/circle-person/index.md#who-may-act)).
@@ -2358,7 +2426,7 @@ scope covers, and one for a power a feat names as reading its rows
 those of that feat's, so Web's lead reads Web's time and not Brand's
 ([SQL](#sql)). Lanterne's participants hold `read` on their own circle
 and on the assembly, so a seat in Marketing reads Marketing's records
-and the assembly's, the whole co-op's, and not Web's, unless it is a
+and the assembly's, the whole coop's, and not Web's, unless it is a
 member's: Lanterne keeps open books, `read` on the member role over
 every circle.
 
@@ -2368,7 +2436,7 @@ parent a mandate that circle holds as a whole for the same power, so
 the mandates form a provenance tree by `parent`: what is under a circle
 or a role is what it issued, never where it sits. A mandate is narrower
 than its parent, the same power, a cap no wider, a scope no wider (any
-under one on the whole co-op, under one on a circle that circle alone),
+under one on the whole coop, under one on a circle that circle alone),
 a term no longer and a procedure no looser;
 the assembly holds every power inherently, so what it issues is a root,
 the founding motion's first from the legal form. It uses a power by
@@ -2412,14 +2480,14 @@ the actor's seats, so a person with no seat holds their rights all the
 same. A right lets each act on what is their own, and so is never the
 authority a read asks (`circle_person.may`): holding `keep-profile`
 opens no one else's profile, nor `log-time` another's time. A right is
-adopted with the statutes and reaches the whole co-op: no mandate is
+adopted with the statutes and reaches the whole coop: no mandate is
 issued under it.
 What was once the actor's own is a right's power, and the guard that it
 is their own stays the feat's: a person keeps their profile and devices
 (`keep-profile`, `keep-devices`), uploads a file (`upload-file`), takes
 up an invitation (`accept-invitation`), files a record of their own
 (`file-record`), marks a text read (`mark-read`) and records an import
-(`record-import`); a member withdraws from the co-op
+(`record-import`); a member withdraws from the coop
 (`withdraw-membership`, worded on every person, since the withdrawal
 ends the membership on its own verdict date, and held to their own
 membership by the feat), draws on their account (`draw-account`),
@@ -2442,9 +2510,9 @@ the new holder and ends no mandate
 ([circle](../../apps/org/core/circle/index.md#seats)).
 
 **Any person may hold a seat.** A seat is a person's place in a circle,
-member of the co-op or not, and only the assembly's seats ask an active membership:
+member of the coop or not, and only the assembly's seats ask an active membership:
 `circle_person.counts(person, circle, day)`, core's, says whether a
-seat counts on a day: the person is one the co-op knows, and no kind of
+seat counts on a day: the person is one the coop knows, and no kind of
 person bars the seat by what it registers (`circle_person.standing`),
 membership the assembly's but where it says the person is active, and
 any other circle's where it has suspended them or let them go. A scope
@@ -2477,7 +2545,7 @@ configuration and not built
 
 No action is allowed by omission: every action declares the power it
 needs. The one that cannot is the log's first entry, the founding
-(`membership-motion:scope:found`), which founds the co-op once,
+(`membership-motion:scope:found`), which founds the coop once,
 before any mandate is adopted: it declares the check `first` instead,
 backed by `membership-motion`'s guard registered on it in
 `cella.guard`: the log is empty, the form it names is one cella offers
@@ -2504,9 +2572,9 @@ power by a row in `motion.stance_power`.
 nor `first`, or `first` with no guard on it; a power no SQL registers;
 a label and its SQL that name a different power or amount; and a power
 that no mandate, collective mandate or right grants among the policies
-a fixture's co-op adopts by its closed motions, Lanterne's, but `vote`,
+a fixture's coop adopts by its closed motions, Lanterne's, but `vote`,
 which a procedure gives. So every action someone can take is one a
-co-op can grant, and a fixture shows who holds it. That a guard does
+coop can grant, and a fixture shows who holds it. That a guard does
 what its check or its power says is its owner's and its tests'. An
 action not yet built is not declared: recovering a key from guardian
 shares comes with the power it needs and the mandate that grants it
@@ -2661,7 +2729,7 @@ person's own words, a motion's title and text, a message, a comment,
 are personal data of their writer: the log keeps their commitments, the
 vault their values, so the fold writes each as `redacted` and the
 compare reads its commitment on both sides. A document's content is the
-co-op's text, not personal, so an edit's entry carries its update's
+coop's text, not personal, so an edit's entry carries its update's
 bytes and a version's its snapshot, and the fold rebuilds both. `cella
 test e2e` folds each scenario's log after it and compares, so a write
 whose entry carries less than it changed fails the day it is written. A
@@ -2679,12 +2747,12 @@ commitments the sweep has since redacted.
 
 A **policy** is one binding sentence a circle adopted by motion. It is of
 one of three kinds: a **mandate**, who may do something; a **rule**, what
-else the co-op agreed; a **procedure**, how a circle decides. Its legal
+else the coop agreed; a **procedure**, how a circle decides. Its legal
 wording is the sentence that binds, each value in it marked once by a
 name, `{name: value}`:
 
 ```text
-Associations and small co-ops pay the solidarity rate, {rate: 20 %} below the rate card
+Associations and small coops pay the solidarity rate, {rate: 20 %} below the rate card
 ```
 
 The value's type is how it is written: `3 000 €` an amount in cents,
@@ -2786,11 +2854,11 @@ as its own do
 form, a SCOP SARL in France first, is a set of ready-made policies the
 register keeps (`policy.form`, `policy.default`), each with the law it
 states, by its article, or none where it is cella's practice, and the
-day a co-op lawyer reviewed it, empty for every one until the pilot. A
+day a coop lawyer reviewed it, empty for every one until the pilot. A
 policy **takes** a default, its adoption's `takes` argument
 (`policy.policy.takes`), only worded and protected as the default reads:
 the register refuses one that differs, and the motion feat refuses it as
-the motion is proposed. A co-op takes its form's defaults at founding,
+the motion is proposed. A coop takes its form's defaults at founding,
 as Lanterne's founding motion does, and **leaves** one by motion,
 replacing the policy that takes it with one that takes none, or ending
 it. The register reads each default's standing in a circle,
@@ -2800,7 +2868,7 @@ with cella, which offers its defaults again (`policy.offer`); an update
 changes no policy, so a default taken stands as updated until a motion
 takes the new wording, and a default left stays left, never silently
 restored. The circle's page, the motion's page and the statutes show
-every default the co-op left and by which motion. Cella offers the
+every default the coop left and by which motion. Cella offers the
 forms; it never chooses one.
 
 **Values bind where they are read.** The feat that reads a kind of
@@ -2825,7 +2893,7 @@ in the same write
 circle's default mandate bundle is read from the same rows: the mandate
 policies of the assembly on the roles every circle has (`*`), whose
 members read their circle's records and whose roles act on them by
-`{scope: own}`, so a co-op changes the template by adopting and ending
+`{scope: own}`, so a coop changes the template by adopting and ending
 such policies, and a circle created by motion holds the bundle in force
 that day, which its creation's entry names. Open books is one mandate
 policy of the assembly, `read` on the member role with no scope
@@ -2836,7 +2904,7 @@ which core copies into `circle.disclosure` in the same write, as it does
 a mandate's, and the analytics port reads: what of the totals of
 members' figures every member reads, and what is withheld
 ([open books](../../apps/org/core/circle/index.md#open-books)). No
-contract fixes those values; a co-op that adopts no such rule shares no
+contract fixes those values; a coop that adopts no such rule shares no
 such total beyond its readers' own rights.
 
 A rule whose values are named for a feat, as `account_minimum`, is that
@@ -2855,11 +2923,11 @@ and copies the values on the same verdict date. So that no rule is
 adopted whose values its feat would refuse, the same graft's guard on
 the proposal checks them as the feat does (`account.terms_flaw`,
 `patronage.terms_flaw`). Terms are replaced by later terms, never ended,
-since a co-op always has its terms.
+since a coop always has its terms.
 
-**The statutes are the co-op's policies in order**, generated and never
+**The statutes are the coop's policies in order**, generated and never
 written. A document may be generated from a circle's policies
-(`document.generated`): its template is the fixed text of the co-op's
+(`document.generated`): its template is the fixed text of the coop's
 legal form, with a `policies` block where they read, and each policy of
 the circle in force reads there in its legal wording as it reads, a
 replacement where the policy it replaces read; a `departures` block
@@ -2887,13 +2955,13 @@ A row-level policy, which says which rows a reader sees
 
 ### Settings
 
-A **setting** is a value a co-op or a circle sets for itself, never one
+A **setting** is a value a coop or a circle sets for itself, never one
 person: whether its comments take reactions is the first. Settings are
 the one sanctioned use of a registry for what slices offer, and it is
 used sparingly: core circle keeps `circle.setting`, the settings slices
 register by `circle.register_setting(name, default, owner)`, and each
 circle's value of each, which a circle inherits from the assembly, the
-root, where it sets none, the assembly's being the co-op's. A value
+root, where it sets none, the assembly's being the coop's. A value
 changes by a rule the circle adopts by motion, its value marked as
 every rule's is, and core's graft joining the circles to the register,
 circle-policy, copies it into the circle's row at adoption, so a guard
@@ -2909,6 +2977,6 @@ A feat's `feat.toml` names it, its group, the sidebar section it opens in
 which is Settings' own sidebar), whether it is
 built in, the rung it arrives at and the grafts it
 declares. Groups are for navigation only; they are a field, not
-directories. A co-op enables the feats it uses; a disabled feat's pages are
+directories. A coop enables the feats it uses; a disabled feat's pages are
 not served and its jobs and subscriptions go inert. Built-in feats are
 always on.

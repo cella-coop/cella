@@ -1,12 +1,12 @@
 +++
 title = "Ratchet"
-updated = 2026-11-14
+updated = 2026-11-19
 +++
 
 # Ratchet
 
 Cella starts simple and only ever tightens. The first customers are small
-co-ops of five to ten members, hosted by us, online and unfederated. Each
+coops of five to ten members, hosted by us, online and unfederated. Each
 rung adds a guarantee without undoing the one before, towards full
 decentralisation and zero trust.
 
@@ -16,8 +16,8 @@ decentralisation and zero trust.
 | 2 · Offline | queued confluent writes, budget shares and device series; guards for late writes | members keep working without signal |
 | 3 · Books of record | VAT, statutory exports such as France's FEC, e-invoicing through an approved platform | cella replaces the accounting tool instead of feeding it |
 | 4 · Native client | signing in an app the host does not serve | the host cannot forge a vote |
-| 5 · Federation | signed events between co-ops, sign-in across servers, joint scopes | co-ops can trust each other's records |
-| 6 · Witnesses | peers cosign log heads; a co-op can move host without losing a write | no single host can rewrite a log or hold a co-op hostage |
+| 5 · Federation | signed events between coops, sign-in across servers, joint scopes | coops can trust each other's records |
+| 6 · Witnesses | peers cosign log heads; a coop can move host without losing a write | no single host can rewrite a log or hold a coop hostage |
 | 7 · Local-first | clients take over the confluent and bounded writes | zero trust: the server becomes one more peer |
 
 ## The pawls

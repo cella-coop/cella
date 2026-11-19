@@ -1,6 +1,6 @@
 +++
 title = "Rules language spike"
-updated = 2026-10-24
+updated = 2026-11-19
 +++
 
 # Rules language spike
@@ -77,7 +77,7 @@ All five agree on every line they can express (CEL in two runtimes).
 
 | | Cedar | CEL | Soufflé | TypeScript | Rust |
 |---|---|---|---|---|---|
-| Read by a co-op member | best: `permit … when { amount <= 300000 }` with prose ids | short rules fine; nested `exists` gets dense | logic style, low | code | code |
+| Read by a coop member | best: `permit … when { amount <= 300000 }` with prose ids | short rules fine; nested `exists` gets dense | logic style, low | code | code |
 | Determinism | by construction | by construction (map iteration order is unspecified, and nothing here relied on it) | sets are deterministic; overflow is not | by discipline only: `Date`, `Math.random`, floats are all in reach | `#![no_std]` lib cannot reach a clock, file, network or RNG; floats denied by clippy; `overflow-checks` on |
 | Termination | guaranteed (no loops) | guaranteed (non-Turing-complete; cel-js adds parse limits) | guaranteed without arithmetic in recursive heads | none | none; wasmtime fuel can bound it for auditors |
 | Analysis | **symbolic over every possible store** (SymCC + cvc5, run here) | type check, AST references; no semantic queries | queries over today's facts (run here: only Camille pays outside operations, up to 20 000 €) | none | none |
@@ -95,7 +95,7 @@ negative-amount hole.
 
 ## General-purpose languages
 
-**What they give up.** The logic is not data a co-op adopts by decision:
+**What they give up.** The logic is not data a coop adopts by decision:
 a new kind of rule ships as a release. Neither enforces termination or
 answers "can anyone outside operations pay?" by itself. TS cannot enforce
 determinism without a sandbox (SES, or QuickJS with no host APIs), has
@@ -117,7 +117,7 @@ byte.
 - Analysability: a closed API (mandate table, fixed procedures `consent`,
   `majority`, later `threshold`, a non-negative money type) makes common
   questions data queries. Symbolic proof is not recovered.
-- Termination: fixed, reviewed procedures matter less than co-op-authored
+- Termination: fixed, reviewed procedures matter less than coop-authored
   text; auditors can meter WASM with fuel.
 
 ## Recommendation
@@ -125,18 +125,18 @@ byte.
 **Shared Rust**, answering trust.md's open question: one `#![no_std]`
 rules crate in org's core (`ops`), with procedures, invariants and
 computations as pure functions over typed facts. The notary links it, and
-the TS app and auditors load it as WASM. The co-op's governance lives in
+the TS app and auditors load it as WASM. The coop's governance lives in
 typed parameter tables (mandates, decision rules, split bounds) that are
 adopted by decision and versioned in the log. Money is a non-negative cents
 type.
 
-Keep **Cedar** in reserve for permissions if co-ops start writing
+Keep **Cedar** in reserve for permissions if coops start writing
 free-form policies. It is the only candidate here that proves properties,
-and it runs in Rust and WASM. **CEL** is the fallback if co-ops need custom
+and it runs in Rust and WASM. **CEL** is the fallback if coops need custom
 conditions as data: it is small, terminating, and two independent
 implementations agreed here.
 
-**Main risk:** the logic is code, not data. A co-op that wants a procedure
+**Main risk:** the logic is code, not data. A coop that wants a procedure
 the crate lacks waits for a release, and rules no tool can analyse
 symbolically sit inside the trusted base. Determinism rests on `no_std`,
 lints and cross-target replay tests, not on the language. The second risk

@@ -1,19 +1,19 @@
 +++
 title = "Users"
-updated = 2026-11-08
+updated = 2026-11-19
 +++
 
 # Users
 
 Cella serves organisations whose members govern them, and usually own them.
-The first target is the **professional-services worker co-op**: ten to
+The first target is the **professional-services worker coop**: ten to
 fifty people selling their work, starting with a creative agency like
 [Lanterne](../../apps/org/fixtures/lanterne/index.md). Every other segment
 comes later, and each takes from the same feats.
 
 ## The first target
 
-Worker co-ops in IT, consulting, design, architecture and training, owned
+Worker coops in IT, consulting, design, architecture and training, owned
 and run by the people who work in them.
 
 | | Typical |
@@ -21,13 +21,13 @@ and run by the people who work in them.
 | Headcount | 5–50; the pilot is 5–10 |
 | Members | 70–85 % of the workers |
 | Revenue | 0.5–5 M€ a year |
-| Legal forms | SCOP (France), cooperativa di lavoro (Italy), CTA (Spain), worker co-op (UK) |
-| Where | Italy, Spain and France hold most of Europe's worker co-ops; France has about 2 700 SCOPs |
+| Legal forms | SCOP (France), cooperativa di lavoro (Italy), CTA (Spain), worker coop (UK) |
+| Where | Italy, Spain and France hold most of Europe's worker coops; France has about 2 700 SCOPs |
 
 **Governance.** One member, one vote, whatever their seniority or
 capital. A general assembly at least yearly approves the accounts, admits
 members and splits the surplus. An elected manager (the gérant of a SCOP
-SARL) represents the co-op; working circles run day to day, often with a
+SARL) represents the coop; working circles run day to day, often with a
 coordination circle beside them. Any member may propose.
 
 **Money.** The surplus is split as the law and statutes require: a share
@@ -50,7 +50,7 @@ surplus split, then the assembly.
 | Year-end surplus split in a spreadsheet, opaque to members | critical | `patronage`, a feat of its own: each year's distribution, its split checked against the law and approved by signed vote, the work share divided by the statutes' terms in that write, then distributed by finance into the books and the associates' capital; a statement for each worker and the year's return to the federation |
 | Capital accounts no accounting tool models | critical | capital as accounts, balances from the journal; a subscription paid in at once or in instalments from pay, what is left to pay on 1012, and a departed associate's capital repaid on the statutes' schedule |
 | Decisions scattered across email, chat and forms | high | `motion`, with outcomes folded from signed votes |
-| No live view of margins; overruns found late | high | each project's margin, live: invoiced less its time's cost and its expenses, its budget burn and forecasts at completion, and the projects to watch past the co-op's thresholds |
+| No live view of margins; overruns found late | high | each project's margin, live: invoiced less its time's cost and its expenses, its budget burn and forecasts at completion, and the projects to watch past the coop's thresholds |
 | Time tracking resented, yet patronage depends on it | medium | `timesheet`, entry by entry; a weekly grid is not built |
 | New members do not understand what they own | medium | a member's page among the people: what joining asks, step by step, each kept by the slice that knows it, and what they own and decide, read back as sentences from the statutes' terms, their seats and their mandates |
 | Workers who are not members, and the probation before admission | medium | one `person` for everyone, with `membership` and `employment` nested in it: every worker's contract, member or not, so their time and pay rest on their employment, and a worker invited to join is the same person, their roles chips on the People collection; a candidacy's probation and pledge, and the admission proposed from it once the probation ends |
@@ -59,21 +59,21 @@ surplus split, then the assembly.
 
 | Person | At Lanterne | Needs |
 |---|---|---|
-| Manager | Camille, gérante | a dashboard of the co-op, the assembly's agenda and records, contracts within her mandate |
+| Manager | Camille, gérante | a dashboard of the coop, the assembly's agenda and records, contracts within her mandate |
 | Finance | Julien | invoices, payments, the monthly close, the surplus split by the statutes, capital accounts |
 | Circle lead | Yusuf, Hugo, Malik | the circle's budget and quotes, staffing, margins |
 | Worker-member | Léa, Thomas, Sofia, Amina, Chloé | simple time entry, voting, their own capital account in plain words |
 | Candidate | Inès | how to join, what she subscribes, what it means |
 
-Today such a co-op runs Notion or Asana for projects, Toggl for time,
+Today such a coop runs Notion or Asana for projects, Toggl for time,
 Pennylane, QuickBooks or an accountant for the books, and Loomio or a form
-for votes: none of them co-op-aware.
+for votes: none of them coop-aware.
 
 ### Not yet answered
 
 What the first target needs that the org app does not do yet, by severity:
 
-- **Critical:** the work share's cash paid. A co-op brings what it had
+- **Critical:** the work share's cash paid. A coop brings what it had
   from the tools it leaves, each record through the signed write it would
   take by hand, tried first in a dry run: members, contacts, projects and
   tasks (Asana's export among them) from CSV, its books from the FEC, its
@@ -105,11 +105,11 @@ What the first target needs that the org app does not do yet, by severity:
   who is no member books time to a project by their employment.
 - **Across personas:** files are kept in the scope's database, named by
   their BLAKE3: an expense's receipts, a worker's employment records, a
-  member's records and the co-op's own papers, each opened by whom it
+  member's records and the coop's own papers, each opened by whom it
   concerns, who uploaded it and whoever holds a power over what it
   records; files in documents are not built. Each member's inbox gathers
   what waits on them, counted in the sidebar, and is where `/` lands; a motion is decided by a
-  procedure, consent, a majority, two thirds or the co-op's own share of
+  procedure, consent, a majority, two thirds or the coop's own share of
   the votes cast, with a quorum, chosen per circle and per motion.
 
 ## The full profiles
@@ -129,13 +129,13 @@ government](users/09-large-gov.md).
 | Segment | Size | Takes first | Differs by |
 |---|---|---|---|
 | Professional partnerships (law, audit, medicine) | 2–50 partners | `account`, `motion` | profit formulas with many factors; votes weighted by equity |
-| Producer and freelancer co-ops | 5–50 producers | `invoice`, `account` | patronage by volume traded; members are busy, governance light |
-| Freelancers | 1 | `invoice`, `contact` | not member-governed; the on-ramp to forming a co-op |
-| Industrial worker co-ops | 50–250 | `account`, `motion` | shifts, safety, delegated governance |
-| Multi-stakeholder co-ops (SCIC) | 50–250 | `circle`, `motion` | colleges with weighted votes and their own patronage basis |
-| Agricultural co-ops | 50–250 | `account`, `invoice` | pool pricing, seasons, revolving capital |
-| Consumer co-ops | 500+ | `member`, `motion` | mass membership, delegate assemblies |
-| Collectives, housing co-ops, mutual aid | 3–50 | `motion`, `document` | consensus, often no legal entity, shared property |
+| Producer and freelancer coops | 5–50 producers | `invoice`, `account` | patronage by volume traded; members are busy, governance light |
+| Freelancers | 1 | `invoice`, `contact` | not member-governed; the on-ramp to forming a coop |
+| Industrial worker coops | 50–250 | `account`, `motion` | shifts, safety, delegated governance |
+| Multi-stakeholder coops (SCIC) | 50–250 | `circle`, `motion` | colleges with weighted votes and their own patronage basis |
+| Agricultural coops | 50–250 | `account`, `invoice` | pool pricing, seasons, revolving capital |
+| Consumer coops | 500+ | `member`, `motion` | mass membership, delegate assemblies |
+| Collectives, housing coops, mutual aid | 3–50 | `motion`, `document` | consensus, often no legal entity, shared property |
 | Parties, unions, professional bodies | 50–250 | `member`, `motion` | branches, delegates, dues, congresses |
 | Federations and large associations | 250+ | `member`, `circle` | members are organisations; joint scopes at rung 5 |
 | Councils, citizen assemblies, participatory budgets | 5–250 | `motion`, `document` | public records, sortition, roll-call votes |

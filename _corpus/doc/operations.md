@@ -29,11 +29,11 @@ Both key files are readable by the server's user alone. The database
 carries `cella.scope`, the scope's address every signature names, and the
 scope's timezone, `cella.timezone` (an IANA zone such as `Europe/Paris`,
 whose day the notary dates every verdict by; UTC when unset), both set
-with `ALTER DATABASE … SET`. Nothing else of the co-op is a host's: its
+with `ALTER DATABASE … SET`. Nothing else of the coop is a host's: its
 name, its legal name and the mentions its invoices print are its
 particulars, a policy its assembly adopts by motion, which `cella seed`
 carries in by the founding motion from the fixture's `scope.toml`
-([the co-op's particulars](../../apps/org/core/circle/index.md#the-co-ops-particulars)).
+([the coop's particulars](../../apps/org/core/circle/index.md#the-coops-particulars)).
 An invoice keeps the mentions as they stand when it issues, so a seat
 that moves changes the invoices issued after the move and never the PDF
 of one issued before
@@ -317,9 +317,9 @@ each port behind its own proxy, which terminates TLS and sets
 
 Since the notary's key is the cluster's, every scope on a host is signed
 by one key: the module refuses a host mixing a demo's scope with a
-co-op's, so a demo's keys are the demo's own. Every scope's server and
+coop's, so a demo's keys are the demo's own. Every scope's server and
 shell run as the one `cella` user, so a demo host serves demos only, and
-a co-op's scope is never on a host anyone may sign in to as a demo.
+a coop's scope is never on a host anyone may sign in to as a demo.
 
 The module refuses as well two scopes naming one database, counting a
 demo's `<database>_template` among them, and a scope's `environment`
@@ -328,24 +328,24 @@ demo, and a server listens on 127.0.0.1 alone. A demo never drops a
 database that is not its own: `cella demo template` renews only a
 database its comment marks a template `cella demo template` made, and
 `cella demo copy --replace` drops only one its comment marks a copy of
-that template, each refusing any other, so turning a co-op's scope into
+that template, each refusing any other, so turning a coop's scope into
 a demo by its `demo.enable` fails its setup and leaves its database as
 it was.
 
 ## The demo
 
-The demo is a production build serving Lanterne, the mock co-op, and
-nothing else: never a pilot co-op's data. `cella serve --prod --demo`
+The demo is a production build serving Lanterne, the mock coop, and
+nothing else: never a pilot coop's data. `cella serve --prod --demo`
 runs it, and so does the module's `demo.enable`, each setting the
 server's `CELLA_DEMO`: its sign-in offers Lanterne's fixture members by
 name, each marked as a demo member, whose TEST-ONLY keys anyone can
 derive from their address and their device's label, as the dev
 server's are, where a production sign-in offers no one; every page, the
 sign-in's and each signed-in one, wears the demo's banner, saying the
-co-op is a mock that anyone may sign in to and nothing in it is real.
+coop is a mock that anyone may sign in to and nothing in it is real.
 The demo's scope carries its own keys, never a real scope's: its host's
 notary and vault keys are the demo's, made by `cella key init`, and the
-module refuses a host mixing a demo with a co-op's scope. The e2e
+module refuses a host mixing a demo with a coop's scope. The e2e
 scenario `demo` asserts a demo build's sign-in, its banner and a demo
 member's write, and that the same build without it offers no one.
 
@@ -546,7 +546,7 @@ per-address limits then count together: with one, raise `perAddress`
 or take the client's address from the CDN's own header in the proxy.
 
 A visitor's copy is a scope spawned on demand, the first form of how a
-host spawns a scope per co-op: a database made from a template, a role
+host spawns a scope per coop: a database made from a template, a role
 and a server of its own, and an end.
 
 A copy that ends has its server stopped and its database dropped with
@@ -559,7 +559,7 @@ upgrade, which builds the template again, leaves no copy older than it.
 
 Every page of a demo build wears its banner, never dismissed, one fixed
 strip along the viewport's foot, which pads the page it sits on by its
-own height so it hides nothing: a flask, "Prototype · mock co-op",
+own height so it hides nothing: a flask, "Prototype · mock coop",
 whose tooltip carries the operator's notice, "This is a prototype
 environment for demo purposes and can't be used for real work.", and,
 on a visitor's copy, that Lanterne is a mock and this copy is the

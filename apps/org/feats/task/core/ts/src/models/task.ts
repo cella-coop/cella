@@ -1,7 +1,8 @@
 import type { Canon, Comment } from '@cella/org-body/models'
+import { status } from './status.ts'
 
-export const statuses = ['backlog', 'next', 'active', 'review', 'done'] as const
-export type Status = (typeof statuses)[number]
+export type Status = (typeof status.states)[number]['value']
+export const statuses: Status[] = status.states.map((s) => s.value)
 
 export const priorities = ['urgent', 'high', 'normal', 'low'] as const
 export type Priority = (typeof priorities)[number]

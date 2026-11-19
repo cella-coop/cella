@@ -15,19 +15,23 @@ the grafts'.
 | comment | `id`, `task`, `author`, `parent?`, `text`, `mentions[]`, `posted`, `resolved?` | `task` a foreign key into `task.task`, `author` into `person.person`; `parent` a root comment, never a reply, so replies are flat, one level; `resolved` only on a root |
 | reaction | `comment`, `person`, `emoji` | one row per comment, person and emoji of core body's fixed set; toggled |
 
-| Status | Meaning | Tone |
+| Status | Meaning | Category |
 |---|---|---|
-| backlog | someday, not planned | neutral |
-| next | planned, not started; a new task's, unless it names another | accent |
-| active | under way | warning |
-| review | made, waiting on someone's check: a draft, a proof, a sign-off | neutral |
-| done | completed, on its day | positive |
+| backlog | someday, not planned | backlog |
+| next | planned, not started; a new task's, unless it names another | unstarted |
+| active | under way | started |
+| review | made, waiting on someone's check: a draft, a proof, a sign-off | started |
+| done | completed, on its day | completed |
 
-The statuses run in that order, which the board's columns follow, and
-read as a progression by their tones: a status's tone colours its dot
-and its group's header, a neutral one in an ink seeded by its value, so
-backlog and review read apart. Every status but done is open: a
-project's tasks open count backlog, next, active and review alike.
+The statuses are the task's lifecycle, `status` in its models
+(`models/status.ts`), which `cella check feats` holds equal to
+`task.task`'s CHECK, and the UI kit draws as the `status` kind
+([statuses](../../core/ui/index.md#statuses)): each its category's
+glyph and tone, review's circle fuller than active's. They run in that
+order, which the board's columns and the list's groups follow. Every
+status but done is open: a project's tasks open count backlog, next,
+active and review alike, by their categories; a card dropped in an open
+column is a move, in Done a completion.
 
 Priorities are `urgent`, `high`, `normal` and `low`. Seedling's
 `cancelled` and subtasks are left out: a task no one will do goes back to

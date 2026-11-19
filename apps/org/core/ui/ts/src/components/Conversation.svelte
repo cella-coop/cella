@@ -6,12 +6,16 @@
   // A thread: one quiet card under a record's Activity, its messages
   // (`Message`) in it apart by space, its replies set in under their
   // root, and at its foot the box that replies. A resolved thread folds to
-  // one quiet line saying so, which opens it to read.
+  // one quiet line saying so, which opens it to read. `id` is the thread's
+  // own, an anchor a notification or Related jumps to, in place of a
+  // slice's own wrapping div naming it.
   let {
+    id,
     resolved = null,
     children,
     reply,
   }: {
+    id?: string
     // What its fold says, as `Resolved on 3 March`; none while it is open.
     resolved?: string | null
     children: Snippet
@@ -20,13 +24,13 @@
 </script>
 
 {#if resolved}
-  <details class="card resolved" data-conversation>
+  <details {id} class="card resolved" data-conversation>
     <summary><Icon icon={CheckCircle} /> {resolved}</summary>
     <div class="messages">{@render children()}</div>
     {#if reply}<div class="reply">{@render reply()}</div>{/if}
   </details>
 {:else}
-  <section class="card" data-conversation>
+  <section {id} class="card" data-conversation>
     <div class="messages">{@render children()}</div>
     {#if reply}<div class="reply">{@render reply()}</div>{/if}
   </section>

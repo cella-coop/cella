@@ -5,7 +5,9 @@
   import { useForm } from '../hooks/useForm.ts'
   import { useRich } from '../hooks/useRich.ts'
   import { ArrowUp } from '../icons.ts'
+  import CaretMenu from './CaretMenu.svelte'
   import Floating from './Floating.svelte'
+  import FormatBar from './FormatBar.svelte'
   import Hidden from './Hidden.svelte'
   import Icon from './Icon.svelte'
 
@@ -51,12 +53,21 @@
     { key: 'bold', label: 'B', title: 'Bold (Ctrl-B)' },
     { key: 'italic', label: 'I', title: 'Italic (Ctrl-I)' },
     { key: 'code', label: '</>', title: 'Code (Ctrl-E)' },
-  ] as const
-  const kinds = [
+    { key: 'link', label: 'Link', title: 'Link (Ctrl-K)' },
     { key: 'bullet', label: '•', title: 'Bulleted list' },
     { key: 'numbered', label: '1.', title: 'Numbered list' },
-  ] as const
+  ]
   const heads: Record<Trigger, string> = { '@': 'Mention', '[[': 'Link a document' }
+
+  function choose(key: string) {
+    if (key === 'link') {
+      rich.linking()
+    } else if (key === 'bullet' || key === 'numbered') {
+      rich.list(key)
+    } else if (key === 'bold' || key === 'italic' || key === 'code') {
+      rich.mark(key)
+    }
+  }
 </script>
 
 <div class="box" class:sends={!!send} data-box-field>
@@ -82,16 +93,10 @@
   <Hidden {name} value={rich.value} />
 </div>
 {#if rich.bar}
-  <Floating x={rich.bar.x} y={rich.bar.y} above={rich.bar.above} label="Format" role="toolbar">
-    {#if rich.href === null}
-      {#each tools as t (t.key)}
-        <button class={t.key} title={t.title} aria-label={t.title} aria-pressed={rich.marks[t.key]} tabindex="-1" onclick={() => rich.mark(t.key)}>{t.label}</button>
-      {/each}
-      <button title="Link (Ctrl-K)" aria-label="Link (Ctrl-K)" aria-pressed={rich.marks.link} tabindex="-1" onclick={() => rich.linking()}>Link</button>
-      {#each kinds as k (k.key)}
-        <button title={k.title} aria-label={k.title} aria-pressed={rich.marks[k.key]} tabindex="-1" onclick={() => rich.list(k.key)}>{k.label}</button>
-      {/each}
-    {:else}
+  {#if rich.href === null}
+    <FormatBar x={rich.bar.x} y={rich.bar.y} above={rich.bar.above} {tools} active={(k) => rich.marks[k as keyof typeof rich.marks]} onchoose={choose} />
+  {:else}
+    <Floating x={rich.bar.x} y={rich.bar.y} above={rich.bar.above} label="Format" role="toolbar">
       <div class="href">
         <!-- svelte-ignore a11y_autofocus -->
         <input
@@ -112,18 +117,17 @@
         />
         <button onclick={() => rich.link()}>{rich.href ? 'Link' : 'Unlink'}</button>
       </div>
-    {/if}
-  </Floating>
+    </Floating>
+  {/if}
 {/if}
 {#if rich.asking && rich.offered.length}
   <div data-picker>
-    <Floating x={rich.asking.x} y={rich.asking.y} above={rich.asking.above} label={heads[rich.asking.trigger]} role="listbox">
-      {#each rich.offered as s, i (s.token)}
-        <button role="option" aria-selected={i === rich.active} tabindex="-1" onclick={() => rich.pick(s)}>
-          <span>{s.label}</span>{#if s.sub}<span class="hint">{s.sub}</span>{/if}
-        </button>
-      {/each}
-    </Floating>
+    <CaretMenu x={rich.asking.x} y={rich.asking.y} above={rich.asking.above} label={heads[rich.asking.trigger]} items={rich.offered} active={rich.active} onchoose={(i) => rich.pick(rich.offered[i])}>
+      {#snippet item(it)}
+        {const s = $derived(it as (typeof rich.offered)[number])}
+        <span>{s.label}</span>{#if s.sub}<span class="hint">{s.sub}</span>{/if}
+      {/snippet}
+    </CaretMenu>
   </div>
 {/if}
 

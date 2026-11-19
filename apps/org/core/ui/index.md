@@ -861,6 +861,17 @@ draws.
   the point it is given (`above`) where below it would pass the window's
   bottom; a press on its buttons never takes the focus, so the caret
   stays.
+- `FormatBar`: the toolbar over a selection, on `Floating`: a run of
+  named, titled toggles, pressed where the selection already carries
+  one (`active`), and, after them, whatever the caller puts there, a
+  link's own control among them (`children`); `RichField`'s and the
+  body's both float one over a selection from it, each wiring its own
+  marks to `onchoose`. It holds no selection and no marks of its own.
+- `CaretMenu`: the menu at the caret, on `Floating`: the caller's items,
+  each drawn by `item`, the one the keyboard is on (`active`) scrolling
+  into view, "No match" with none; a press calls `onchoose` and reads no
+  key itself. The body's slash menu and `RichField`'s `@` and `[[`
+  suggestions are both its items.
 - `Blocks`: a document of blocks, the block editor's surface and its
   read-only reader's, and the look of every kind of block (headings, list
   items with their markers, to-dos, quotes, code, dividers, embeds' cards,
@@ -952,7 +963,9 @@ document's comments alike, under the record's Activity.
 - `Conversation` is a thread: one quiet card, the board's tile's
   hairline, its messages apart by space, replies set in under their
   root, and at its foot the box that replies. A resolved thread folds to
-  one quiet line (`Resolved on` its day), which opens it.
+  one quiet line (`Resolved on` its day), which opens it. Its `id` is the
+  thread's own, an anchor a notification or Related jumps to, so a slice
+  wraps it in no div of its own to carry it.
 - `Message` is one comment: a small avatar, the author's name and a
   quiet relative time on one line, the text under them at body size, and
   under that its `foot`, as its reactions. Its `actions`, small icon
@@ -985,7 +998,12 @@ document's comments alike, under the record's Activity.
   change (`hooks/RichState.svelte.ts`), so the browser keeps the caret,
   composition, undo and the clipboard; a paste is read as Markdown. Its
   `head` sits inside its top: `Remark`, the quote a comment answers,
-  with a × that drops it, or read above a posted comment.
+  with a × that drops it, or read above a posted comment. Its toolbar
+  and its `@`/`[[` suggestions are `FormatBar` and `CaretMenu`.
+- `Composer` is what starts or answers a conversation: a `Form` posting
+  `action`, its other fields named in `hidden`, around one `RichField`;
+  a record's own box and a thread's reply box, at its foot, are both
+  one, as `Conversation`'s `reply` holds.
 
 ### Panels
 

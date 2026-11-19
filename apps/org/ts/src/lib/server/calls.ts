@@ -1,6 +1,6 @@
 import { ask as asking, counts, made, ordered, read, texts, today, type Condition, type Db, type Source } from '@cella/org-db'
 import { scoped } from '@cella/org-analytics'
-import { anchor, defaults, fields, grouping, limits, logged, period, resolve, swimlane, wheres, widgets, type Field, type Sort, type Spec } from '@cella/org-ui/models'
+import { anchor, declared, defaults, fields, grouping, limits, logged, period, resolve, swimlane, wheres, widgets, type Field, type Sort, type Spec } from '@cella/org-ui/models'
 import { named } from '@cella/org-log/api'
 import type { Named } from '@cella/org-body/models'
 import { people, person } from '@cella/org-person/api'
@@ -79,11 +79,12 @@ export const collection = {
     // The field a board's swimlanes group by, none for a single lane;
     // answered with all its values too, as the lanes are drawn from them.
     const lane = swimlane(spec, fs)
-    // A date groups by its month; groups not declared in the look's lanes,
+    // A date groups by its month; groups not declared in the look's lanes
+    // or a status's lifecycle,
     // months among them, follow the direction of the view's sort.
     const group =
       paged && by
-        ? { field: by.key, values: looks.lanes?.[by.key] ?? [], ...(by.type === 'date' ? { month: true } : {}), ...(spec.sort ? { dir: spec.sort.dir } : {}) }
+        ? { field: by.key, values: declared(looks, by.key, by.states), ...(by.type === 'date' ? { month: true } : {}), ...(spec.sort ? { dir: spec.sort.dir } : {}) }
         : undefined
     const full = (f: Field) => f.type === 'enum' || ((f === by || f === lane) && f.type !== 'date' && spec.layout !== 'dashboard')
     const { rows, counts, values, groups, whole } = await read(db, from, {

@@ -221,7 +221,7 @@
             {:else}
               {#each values[f.key] ?? [] as v (v)}
                 <button role="menuitemcheckbox" class="item" aria-checked={kept(f.key, v)} data-value={v} onclick={() => toggle(f.key, v)}>
-                  <Value value={v} kind={f.kind ?? (f.type === 'enum' ? 'badge' : f.type)} record={f.record} />{#if kept(f.key, v)}<Tick />{/if}
+                  <Value value={v} kind={f.kind ?? (f.type === 'enum' ? 'badge' : f.type)} states={f.states} record={f.record} />{#if kept(f.key, v)}<Tick />{/if}
                 </button>
               {/each}
             {/if}

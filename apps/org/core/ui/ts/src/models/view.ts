@@ -1,6 +1,7 @@
 import type { Component, Snippet } from 'svelte'
 import type { Look, Preset, Shift, Widget } from './query.ts'
 import type { Option } from './select.ts'
+import type { Lifecycle } from './status.ts'
 
 // The client side of a slice: what a feat's collections look like, and
 // what a graft adds to the collections of the feats it joins. Views and
@@ -17,14 +18,19 @@ export type Group = 'home' | 'platform'
 
 // A `person` is an address, shown as the person's chip: their name, the
 // address on hover, after the icon of the collection of people; a `circle`
-// is a circle's id, shown as its name.
-export type Kind = 'text' | 'title' | 'mono' | 'money' | 'date' | 'number' | 'badge' | 'priority' | 'boolean' | 'person' | 'circle' | 'percent' | 'hours'
+// is a circle's id, shown as its name. A `status` is a state of the
+// lifecycle its feat declares (`states`), drawn as a `badge` whose glyph
+// and tone its category gives.
+export type Kind = 'text' | 'title' | 'mono' | 'money' | 'date' | 'number' | 'badge' | 'status' | 'priority' | 'boolean' | 'person' | 'circle' | 'percent' | 'hours'
+
+// Whether a kind is a state's, drawn as its pill: a `badge` or a `status`.
+export const stated = (kind?: Kind): boolean => kind === 'badge' || kind === 'status'
 
 // Whether a field's values are a closed set the code declares, a state's,
 // a priority's or a boolean's, rather than an open one the data holds (a
 // circle, a person, a record, free text): a handful of values can each own
 // a colour, so only a closed set's group headers wear one.
-export const closed = (kind: Kind = 'text', record?: string): boolean => !record && (kind === 'badge' || kind === 'priority' || kind === 'boolean')
+export const closed = (kind: Kind = 'text', record?: string): boolean => !record && (stated(kind) || kind === 'priority' || kind === 'boolean')
 
 export type Tone = 'neutral' | 'accent' | 'positive' | 'negative' | 'warning' | 'failed'
 
@@ -36,6 +42,9 @@ export interface Column<R = any> {
   kind?: Kind
   value: (row: R) => unknown
   tone?: (row: R) => Tone
+  // A `status`'s lifecycle, which gives each value its tone, its glyph
+  // and its place.
+  states?: Lifecycle
   role?: 'title' | 'sub' | 'meta' | 'hidden'
   // The collection whose record the value names, as a task's assignee
   // names one of `people`: the value wears that collection's icon.
@@ -96,6 +105,7 @@ export interface Prop {
   value: unknown
   kind?: Kind
   tone?: Tone
+  states?: Lifecycle
   href?: string
   // A glyph of its own, in the ink seeded by `ink`, as a record's icon.
   icon?: Component<any>

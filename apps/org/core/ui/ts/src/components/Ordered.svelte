@@ -51,7 +51,7 @@
         {#if !fixed}<DragHandle label={label(i)} />{/if}
         <span class="n">{i + 1}</span>
         {#each columns as c, j (c.key)}
-          <span class="cell" class:first={j === 0}><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} /></span>
+          <span class="cell" class:first={j === 0}><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} states={c.states} record={c.record} /></span>
         {/each}
         {#if end}<span class="end">{@render end(row)}</span>{/if}
         {#if onremove && !fixed}

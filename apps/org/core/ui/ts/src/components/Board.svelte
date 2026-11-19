@@ -78,7 +78,7 @@
       {const open = $derived(!!drag.carry.group && drag.carry.group === group && takes(drag.carry.origin, l))}
       <section class="lane" class:open class:aimed={drag.aimed(group, l)} data-drop-list={l} aria-label="{by.label}: {l}, {cards.length}">
         <h3>
-          <Value value={l} kind={by.kind} tone={by.tone?.(cards[0] ?? {})} record={by.record} size="card" />
+          <Value value={l} kind={by.kind} tone={by.tone?.(cards[0] ?? {})} states={by.states} record={by.record} size="card" />
           <span class="count">{cards.length}</span>
         </h3>
         <div class="cards">

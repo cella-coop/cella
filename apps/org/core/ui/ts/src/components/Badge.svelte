@@ -2,7 +2,9 @@
   import type { Component, Snippet } from 'svelte'
   import type { Tone } from '../models/view.ts'
   import { inked } from '../models/ink.ts'
+  import type { Stage } from '../models/status.ts'
   import Dot from './Dot.svelte'
+  import Glyph from './Glyph.svelte'
   import Icon from './Icon.svelte'
 
   // A state, one look everywhere, a soft pill with a dot: its tone its
@@ -18,12 +20,15 @@
   // the record's own ink (`ink`, `models/ink.ts`'s `inkOf`) where one is
   // given; one with neither wears the kit's own `Dot` instead, in its
   // tone or its ink, as Linear's chips do, so a state is never told by
-  // colour alone but always carries one.
-  let { tone = 'neutral', icon, ink, children }: { tone?: Tone; icon?: Component<any>; ink?: number; children: Snippet } = $props()
+  // colour alone but always carries one. A status wears its category's
+  // glyph (`Glyph`) in place of the dot, its `stage`.
+  let { tone = 'neutral', icon, ink, stage, children }: { tone?: Tone; icon?: Component<any>; ink?: number; stage?: Stage; children: Snippet } = $props()
 </script>
 
 <span class="badge {tone}" style={ink !== undefined ? inked(ink) : undefined}>
-  {#if icon}
+  {#if stage}
+    <span class="mark staged"><Glyph {stage} /></span>
+  {:else if icon}
     <span class="mark" class:inked={ink !== undefined}><Icon {icon} size="1em" /></span>
   {:else}
     <span class="dotwrap"><Dot {tone} {ink} /></span>
@@ -52,6 +57,9 @@
     vertical-align: -0.125em;
     margin-inline-end: var(--space-1);
     opacity: 0.7;
+  }
+  .mark.staged {
+    opacity: 1;
   }
   .mark.inked {
     opacity: 1;

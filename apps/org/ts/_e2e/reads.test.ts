@@ -196,11 +196,11 @@ test('every collection reads in one statement, as a worker and as finance', asyn
   }
 })
 
-test('each badge and date column\'s key holds what the column shows, as conditions, boards and widgets read it', async () => {
+test('each badge, status and date column\'s key holds what the column shows, as conditions, boards and widgets read it', async () => {
   const db = await as(julien)
   let checked = 0
   for (const name of collections) {
-    const shown = columns(name).filter((c) => c.kind === 'badge' || c.kind === 'date')
+    const shown = columns(name).filter((c) => c.kind === 'badge' || c.kind === 'status' || c.kind === 'date')
     for (const row of await page(db, source(name) as Source, { where: [] })) {
       for (const c of shown) {
         const held = (row as Record<string, unknown>)[c.key]

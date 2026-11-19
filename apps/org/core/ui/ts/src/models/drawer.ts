@@ -1,5 +1,5 @@
 import type { Component } from 'svelte'
-import type { Prop } from './view.ts'
+import { stated, type Prop } from './view.ts'
 
 // The drawer's properties, laid out to be read at a glance, as Linear's
 // are: sections, each a quiet heading over rows of one height. Every
@@ -45,7 +45,7 @@ export function sort(p: Prop): string | null {
   if (of) {
     return of
   }
-  if (p.kind === 'badge' || p.kind === 'priority' || p.kind === 'boolean') {
+  if (p.kind && (stated(p.kind) || p.kind === 'priority' || p.kind === 'boolean')) {
     return p.kind
   }
   if (p.icon || p.glyph) {
@@ -58,7 +58,7 @@ export function sort(p: Prop): string | null {
 // priority's bars, a person's avatar or a record's chip, so the row
 // draws no glyph before it.
 export const leads = (p: Prop): boolean =>
-  !!(p.kind === 'badge' || p.kind === 'priority' || p.kind === 'person' || p.kind === 'circle' || (p.people && p.people.length === 1) || (record(p.href) && !p.icon))
+  !!(stated(p.kind) || p.kind === 'priority' || p.kind === 'person' || p.kind === 'circle' || (p.people && p.people.length === 1) || (record(p.href) && !p.icon))
 
 // The quiet word before a row's value: its slice's, else a day's name,
 // as "issued" before the day an invoice was issued.
@@ -83,7 +83,7 @@ const samePeople = (a: string[] | undefined, b: string[] | undefined): boolean =
 // else it holds.
 function rank(p: Prop): number {
   const s = sort(p)
-  if (s === 'badge' || s === 'priority' || s === 'boolean') {
+  if (s === 'badge' || s === 'status' || s === 'priority' || s === 'boolean') {
     return 0
   }
   if (s && !s.startsWith('own:')) {

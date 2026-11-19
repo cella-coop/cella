@@ -1,3 +1,4 @@
+import { values as stateValues, type Lifecycle } from './status.ts'
 import { closed, type Column, type Kind, type Prop, type Tone } from './view.ts'
 import { spans, type Span } from './calendar.ts'
 import { inkOf } from './ink.ts'
@@ -21,12 +22,13 @@ export interface Field {
   // The column's kind and record, which its values are drawn by.
   kind?: Kind
   record?: string
+  states?: Lifecycle
 }
 
-const types: Partial<Record<Kind, Type>> = { money: 'money', number: 'number', date: 'date', badge: 'enum', priority: 'enum', person: 'person', circle: 'circle' }
+const types: Partial<Record<Kind, Type>> = { money: 'money', number: 'number', date: 'date', badge: 'enum', status: 'enum', priority: 'enum', person: 'person', circle: 'circle' }
 
 export const fields = (columns: Column[]): Field[] =>
-  columns.map((c) => ({ key: c.key, label: c.label, type: (c.kind && types[c.kind]) ?? 'text', value: c.value, kind: c.kind, record: c.record }))
+  columns.map((c) => ({ key: c.key, label: c.label, type: (c.kind && types[c.kind]) ?? 'text', value: c.value, kind: c.kind, record: c.record, states: c.states }))
 
 // The four fields the core read gives every collection's rows from the
 // log, which no slice declares: the dates and the actors of the first and
@@ -428,11 +430,15 @@ export interface Look {
   span?: Span
 }
 
+// The declared order of an enumeration's values: the look's, else a
+// status's, its lifecycle's.
+export const declared = (look: Look, by: string, states?: Lifecycle): string[] => look.lanes?.[by] ?? (states ? stateValues(states) : [])
+
 // A board's columns: the declared order of the enumeration's values, then
 // any other value its rows hold.
-export const lanes = (look: Look, by: string, held: string[]): string[] => {
-  const declared = look.lanes?.[by] ?? []
-  return [...declared, ...held.filter((v) => !declared.includes(v))]
+export const lanes = (look: Look, by: string, held: string[], states?: Lifecycle): string[] => {
+  const order = declared(look, by, states)
+  return [...order, ...held.filter((v) => !order.includes(v))]
 }
 
 // A move between a board's columns that is a write: dropping a card from

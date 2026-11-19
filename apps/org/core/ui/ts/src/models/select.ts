@@ -1,5 +1,6 @@
 import type { Component } from 'svelte'
 import type { Kind, Tone } from './view.ts'
+import type { Lifecycle } from './status.ts'
 
 // A select's options as plain data, and the moves its keyboard makes over
 // them: the next option the arrows, Home and End reach, past disabled
@@ -16,6 +17,8 @@ export interface Option {
   // icon in its ink, a priority's bars, a state's dot (`Value`).
   kind?: Kind
   record?: string
+  // A `status`'s lifecycle, its glyph and tone (`Value`).
+  states?: Lifecycle
   // A person's name, drawn as their avatar before the label.
   who?: string
   // Chosen by nobody: shown, never picked.

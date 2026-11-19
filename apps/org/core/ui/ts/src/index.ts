@@ -4,6 +4,8 @@
 export type * from './models/view.ts'
 export type * from './models/query.ts'
 export type * from './models/calendar.ts'
+export { categories, finished, open, stage, stateOf, toneOf, values, within, type Category, type Lifecycle, type Stage, type State } from './models/status.ts'
+export { stated } from './models/view.ts'
 export type { Setting as Declared, Decider, Moved, Proposal, Who as Changer } from './models/settings.ts'
 export { direct, who } from './models/settings.ts'
 export * as arrangement from './models/arrange.ts'

@@ -67,9 +67,11 @@ ink. Components read roles, never shades:
   and a card's own padding is their inset;
 - states: a state has one look everywhere, a table's cell, a list's
   line, a card, the drawer, a panel's header: a soft pill with a dot and
-  its word (`Badge`, which `Value` draws for a `badge`), drawn from the
-  kit's own primitives, the dot (`Dot`) in its tone or, where the tone
-  has no colour of its own, in an ink seeded by its word. A badge's tone
+  its word (`Badge`, which `Value` draws for a `badge` or a `status`),
+  drawn from the kit's own primitives, the dot (`Dot`) in its tone or,
+  where the tone has no colour of its own, in an ink seeded by its
+  word, or, a status's, its category's glyph (`Glyph`) in the dot's
+  place. A badge's tone
   is its state's class, alike in both themes: neutral at rest (a draft,
   closed, voided), accent under way (open, unpaid, submitted, approved
   and not yet paid), drawn as an ink ring with no fill so it never reads
@@ -735,10 +737,15 @@ draws.
   label and what bounds it, its value now and the one proposed as
   read-only `Field`s, a badge saying how it bears, over a sentence
   saying what it means, which wraps and is never cut off), `Badge` (a
-  state's pill: its tone's soft fill, a dot (`Dot`) and its word),
+  state's pill: its tone's soft fill, a dot (`Dot`) and its word, a
+  status's category's glyph (`Glyph`, `stage`) in the dot's place),
   `Dot` (the one dot, a state's own mark where it carries no icon,
   Badge's, a `Tally`'s legend and a group's bar alike, its tone's own
-  colour or an ink seeded by its value), `Count` (a whole figure, muted
+  colour or an ink seeded by its value), `Glyph` (a status's category
+  as a shape instead of the dot: backlog a dashed ring, unstarted a
+  ring, started a ring filling by the state's place among the started
+  ones, completed a disc with a check cut out of it, cancelled one with
+  a cross), `Count` (a whole figure, muted
   and tabular, beside a title or a value, a heading's, a legend's),
   `Segmented` (one of a few mutually exclusive choices, each an icon, in
   a well with its chosen segment lifted, as the collection's layout
@@ -968,8 +975,9 @@ priority, names no record and wears none.
 `Value` draws two kinds besides money and the rest, `percent` and
 `hours`, each `models/format.ts`'s own helper, tabular like every other
 figure; and takes an `href` on any kind, not a record alone, so a figure
-that names what it links to, as a timesheet entry's hours its day, is
-the link itself rather than a block wrapped around it.
+that names what it links to, as a timesheet entry's hours its day, or a
+status that links to what holds it, is the link itself rather than a
+block wrapped around it.
 
 ### Comments
 
@@ -1121,6 +1129,39 @@ icon is the value's own lead where it has one, else the field's
 "quorum"), muted, says what it is where the value alone would not. A bare `live` field fills on hover and opens its `editor` in a
 popover on a press anywhere on it, never a pencil, a record's chip in it
 staying its link; every row of the drawer's Properties is one.
+
+### Statuses
+
+A record's status is the `status` kind: a state of a lifecycle its feat
+declares in its models, `models/status.ts`, as a `Lifecycle`
+(`models/status.ts` here): the column it is, `<table>.<column>` in the
+feat's own schema, and its states in order, each a value and one of five
+fixed categories, `backlog`, `unstarted`, `started`, `completed` and
+`cancelled`, with a tone of its own only where the house keeps one
+(refused and rejected negative, suspended warning). A column, a
+property or an option of the `status` kind names its lifecycle
+(`states`), and the kit reads the category, never the word, so a coop's
+"review" or "à valider" both read as under way:
+
+- its pill is a `Badge` with its category's glyph (`Glyph`) in place of
+  the dot: backlog a dashed ring, unstarted a ring, started a ring
+  filling by the state's place among the started ones, so active and
+  review read apart and in order, completed a disc with a check and
+  cancelled one with a cross, each cut out of it;
+- its tone is its category's, neutral at rest (backlog, unstarted,
+  cancelled), accent under way, positive completed, never an ink seeded
+  by its word, and its group's bar wears it;
+- its order is the lifecycle's: a board's columns and a list's groups
+  follow it where the look declares no lanes of its own;
+- `open`, `within` and `finished` say which states are open, in a
+  category or settled, so a count of what is open, a board's moves and
+  the like name no value.
+
+The SQL keeps its own list, the CHECK on the column; `cella check feats`
+holds the two equal by `tools/states.mjs`, refusing by file and line a
+value one lists and the other does not, a lifecycle whose column no
+CHECK lists, a value declared twice and an unknown category. Nothing of
+it is in the schema or the notary.
 
 
 ## Never native

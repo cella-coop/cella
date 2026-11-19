@@ -11,6 +11,7 @@ import CalendarStar from 'phosphor-svelte/lib/CalendarStar'
 import ClockCounterClockwise from 'phosphor-svelte/lib/ClockCounterClockwise'
 import Hash from 'phosphor-svelte/lib/Hash'
 import Tag from 'phosphor-svelte/lib/Tag'
+import CircleHalf from 'phosphor-svelte/lib/CircleHalf'
 import CellSignalHigh from 'phosphor-svelte/lib/CellSignalHigh'
 import CheckSquare from 'phosphor-svelte/lib/CheckSquare'
 import User from 'phosphor-svelte/lib/User'
@@ -29,6 +30,7 @@ export const glyphs: Record<Kind, Component<any>> = {
   date: CalendarBlank,
   number: Hash,
   badge: Tag,
+  status: CircleHalf,
   priority: CellSignalHigh,
   boolean: CheckSquare,
   person: User,

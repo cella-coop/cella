@@ -158,11 +158,11 @@
                   {#if link && j === 0}
                     <a href={link} class="stretched" tabindex={stop < 0 ? undefined : -1}>
                       {#if rowIcon}<span class="mark" style={inked(inkOf(String(c.value(row))))}><Icon icon={rowIcon} /></span>{/if}
-                      <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} />
+                      <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} states={c.states} record={c.record} />
                     </a>
                   {:else}
                     {#if rowIcon}<span class="mark" style={inked(inkOf(String(c.value(row))))}><Icon icon={rowIcon} /></span>{/if}
-                    <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} />
+                    <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} states={c.states} record={c.record} />
                   {/if}
                 </td>
               {/each}

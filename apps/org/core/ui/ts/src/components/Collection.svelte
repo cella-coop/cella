@@ -303,7 +303,7 @@
   // The field a calendar colours its cards by, where the view groups by
   // one, and its values in its board's order, which hand out the inks.
   const tinted = $derived(spec.layout === 'calendar' && spec.by ? columns.find((c) => c.key === grouping(spec, typed)?.key && c.kind !== 'date') : undefined)
-  const tints = $derived(tinted ? lanes(look, tinted.key, values[tinted.key] ?? []) : [])
+  const tints = $derived(tinted ? lanes(look, tinted.key, values[tinted.key] ?? [], tinted.states) : [])
   // What the colours mean, over the rows the period shows: the drawer's
   // Legend.
   const keys = $derived(tinted && placing ? legend([...placed(state.shown, placing, shownPeriod, spec.sort !== null).values()].flat(), tinted.key, tints) : [])
@@ -608,9 +608,9 @@
       <Board
         rows={state.shown}
         by={grouped}
-        lanes={lanes(look, grouped.key, values[grouped.key] ?? [])}
+        lanes={lanes(look, grouped.key, values[grouped.key] ?? [], grouped.states)}
         swimlane={laning}
-        swimlanes={laning ? lanes(look, laning.key, values[laning.key] ?? []) : []}
+        swimlanes={laning ? lanes(look, laning.key, values[laning.key] ?? [], laning.states) : []}
         collapsed={state.collapsed}
         oncollapse={(v) => state.toggleGroup(v)}
         {titled}
@@ -643,7 +643,7 @@
                 <span class="title">{#if rowIcon}<span class="mark" style={inked(inkOf(String(titled.value(row))))}><Icon icon={rowIcon} /></span>{/if}{titled.value(row)}</span>
               {/if}
               {#each lines as c (c.key)}
-                <span class="sub"><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} /></span>
+                <span class="sub"><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} states={c.states} record={c.record} /></span>
               {/each}
             </span>
             <span class="meta">
@@ -652,7 +652,7 @@
                   <!-- A date takes the width of the widest, an empty one its dim dash in the same box, so what comes before it lines up down the list. -->
                   <span class="dated"><span class="widest" aria-hidden="true">{widest}</span><Cell value={c.value(row)} kind="date" tone={c.tone?.(row)} /></span>
                 {:else}
-                  <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} />
+                  <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} states={c.states} record={c.record} />
                 {/if}
               {/each}
             </span>

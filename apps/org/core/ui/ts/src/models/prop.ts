@@ -2,6 +2,7 @@ import type { Component } from 'svelte'
 import type { Kind, Tone } from './view.ts'
 import { show } from './format.ts'
 import { inkOf } from './ink.ts'
+import { stage, type Lifecycle, type Stage } from './status.ts'
 
 // What a property wears before its text, in every place it is drawn:
 // one table of kind to look, so a cell, a card, a drawer's row and the
@@ -36,14 +37,22 @@ export interface Look {
   icon?: Component<any>
   ink?: number
   // What is drawn before the text.
-  lead: 'avatar' | 'icon' | 'dot' | 'bars' | 'check' | 'none'
+  lead: 'avatar' | 'icon' | 'dot' | 'stage' | 'bars' | 'check' | 'none'
   level?: number | 'urgent'
+  // A status's place in its lifecycle: its category's glyph and tone.
+  stage?: Stage
 }
 
 /** How a value looks as a kind: its text, its lead and its ink. */
-export function look(shell: Known, value: unknown, kind: Kind = 'text', tone?: Tone, record?: string): Look {
+export function look(shell: Known, value: unknown, kind: Kind = 'text', tone?: Tone, record?: string, states?: Lifecycle): Look {
   const text = show(value, kind)
   const empty = text === '—'
+  // A status is drawn by its lifecycle; a value it does not list, as a
+  // badge.
+  const at = kind === 'status' && states && !empty ? stage(states, value) : undefined
+  if (at) {
+    return { text, shown: at.label, empty, record: false, lead: 'stage', stage: at }
+  }
   const shown = kind === 'circle' ? (shell.circle(text) ?? text) : kind === 'person' ? (shell.name(text) ?? text) : text
   // A circle is always a circle's; any other value is a record where its
   // column says of which collection.
@@ -65,7 +74,7 @@ export function look(shell: Known, value: unknown, kind: Kind = 'text', tone?: T
   if (icon) {
     return { ...base, lead: 'icon', icon, ink: inkOf(shown) }
   }
-  if (kind === 'badge') {
+  if (kind === 'badge' || kind === 'status') {
     // A tone with a colour of its own keeps it; the rest wear an ink
     // seeded by their value.
     return { ...base, lead: 'dot', ink: !tone || tone === 'neutral' || tone === 'accent' ? inkOf(text) : undefined }

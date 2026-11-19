@@ -24,7 +24,7 @@
           {#if k.value === ''}
             <span class="none">None</span>
           {:else}
-            <Value value={by.value(k.row)} kind={by.kind} tone={by.tone?.(k.row)} record={by.record} />
+            <Value value={by.value(k.row)} kind={by.kind} tone={by.tone?.(k.row)} states={by.states} record={by.record} />
           {/if}
           <span class="count"><Count value={k.count} /></span>
         </button>

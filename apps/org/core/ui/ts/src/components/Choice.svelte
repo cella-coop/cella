@@ -16,7 +16,7 @@
   <Avatar name={o.who} size="1.25rem" />
   <span class="text">{o.label}</span>
 {:else if o.kind || o.tone}
-  <span class="text"><Value value={raw} kind={o.kind ?? 'badge'} tone={o.tone} record={o.record} size="cell" /></span>
+  <span class="text"><Value value={raw} kind={o.kind ?? 'badge'} tone={o.tone} states={o.states} record={o.record} size="cell" /></span>
 {:else}
   {#if o.icon}<span class="mark"><Icon icon={o.icon} size="1em" /></span>{/if}
   <span class="text">{o.label}</span>

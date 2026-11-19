@@ -123,11 +123,11 @@
     <span class="who">{show(p.value, p.kind)}</span>
   {:else if record(p.href)}
     <!-- A record is its chip, the chip its link. -->
-    <Value value={p.value} kind={p.kind} tone={p.tone} record={record(p.href)} href={p.href} size="drawer" />
+    <Value value={p.value} kind={p.kind} tone={p.tone} states={p.states} record={record(p.href)} href={p.href} size="drawer" />
   {:else if p.href}
-    <a href={p.href} onclick={(e) => e.stopPropagation()}><Value value={p.value} kind={p.kind} tone={p.tone} size="drawer" /></a>
+    <a href={p.href} onclick={(e) => e.stopPropagation()}><Value value={p.value} kind={p.kind} tone={p.tone} states={p.states} size="drawer" /></a>
   {:else}
-    <Value value={p.value} kind={p.kind} tone={p.tone} size="drawer" />
+    <Value value={p.value} kind={p.kind} tone={p.tone} states={p.states} size="drawer" />
   {/if}
 {/snippet}
 

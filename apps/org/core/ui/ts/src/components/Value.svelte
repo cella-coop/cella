@@ -3,6 +3,7 @@
   import WarningOctagon from 'phosphor-svelte/lib/WarningOctagon'
   import { Calendar } from '../icons.ts'
   import type { Kind, Tone } from '../models/view.ts'
+  import type { Lifecycle } from '../models/status.ts'
   import { look, type Size } from '../models/prop.ts'
   import { inked } from '../models/ink.ts'
   import { useShell } from '../hooks/useShell.ts'
@@ -15,30 +16,32 @@
   // list's line, a card's chip, a drawer's row, an option of a popover.
   // What leads is the kind's: a state is its pill (`Badge`), its dot in
   // its tone (an ink seeded by its value where the tone has no colour of
-  // its own), a priority's bars, a
-  // person's avatar, a boolean's check, a date's calendar on cards and in
-  // the drawer alone. A record, a circle among them, is its `Chip` at
-  // every size, its own icon in its own ink inside it. Only the size
-  // changes how the rest sits: a `card` is a hairline chip, the rest
-  // borderless; in a `drawer` row what leads sits in a box of one width,
-  // so the text of every row it leads starts at one edge, and the row's
-  // name is the drawer's to draw. A record given its
-  // `href` is a link, its chip the link itself. `chip` draws any value as
-  // a chip, a person's with their avatar inside, as a group's header names
-  // an open set's value. `href` links any kind, not a record alone: a
-  // figure that names what it is a figure of.
+  // its own), or, a status's, its category's glyph in its lifecycle's
+  // tone (`states`); a priority's bars, a person's avatar, a boolean's
+  // check, a date's calendar on cards and in the drawer alone. A record,
+  // a circle among them, is its `Chip` at every size, its own icon in
+  // its own ink inside it. Only the size changes how the rest sits: a
+  // `card` is a hairline chip, the rest borderless; in a `drawer` row
+  // what leads sits in a box of one width, so the text of every row it
+  // leads starts at one edge, and the row's name is the drawer's to
+  // draw. A record given its `href` is a link, its chip the link
+  // itself. `chip` draws any value as a chip, a person's with their
+  // avatar inside, as a group's header names an open set's value.
+  // `href` links any kind, not a record alone: a figure that names what
+  // it is a figure of, a status too.
   let {
     value,
     kind = 'text',
     tone,
+    states,
     record,
     href,
     size = 'cell',
     chip = false,
-  }: { value: unknown; kind?: Kind; tone?: Tone; record?: string; href?: string; size?: Size; chip?: boolean } = $props()
+  }: { value: unknown; kind?: Kind; tone?: Tone; states?: Lifecycle; record?: string; href?: string; size?: Size; chip?: boolean } = $props()
 
   const shell = useShell()
-  const v = $derived(look(shell, value, kind, tone, record))
+  const v = $derived(look(shell, value, kind, tone, record, states))
   const calendar = $derived(kind === 'date' && size === 'card' && !v.empty)
   // A card drops what a person's avatar already says.
   const bare = $derived(kind === 'person' && size === 'card')
@@ -61,7 +64,9 @@
 {/if}
 
 {#snippet drawn()}
-  {#if kind === 'badge'}
+  {#if v.stage}
+    <span class="prop {size} badge"><Badge tone={v.stage.tone} stage={v.stage}>{v.shown}</Badge></span>
+  {:else if kind === 'badge' || kind === 'status'}
     <!-- A state is its pill wherever it is drawn: its tone's soft fill, a
          dot in its tone or its ink, and its word. -->
     <span class="prop {size} badge"><Badge {tone} ink={v.ink}>{v.shown}</Badge></span>

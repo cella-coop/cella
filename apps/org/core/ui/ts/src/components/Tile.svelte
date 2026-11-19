@@ -67,7 +67,7 @@
   {#if chips.length}
     <span class="chips">
       {#each chips as c (c.key)}
-        <Value value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} record={c.record} size="card" />
+        <Value value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} states={c.states} record={c.record} size="card" />
       {/each}
     </span>
   {/if}

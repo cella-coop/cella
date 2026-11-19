@@ -109,14 +109,16 @@
     padding: 0 var(--space-2);
     border: none;
     border-radius: var(--radius-control);
-    /* Half the sunk ground: present, but quieter than the controls. */
-    background: color-mix(in oklab, var(--sunk) 50%, transparent);
+    /* The sunk ground, lifted a step toward the text so it stands apart
+       from the sidebar it sits in, in either theme. */
+    background: color-mix(in oklab, var(--text) 5%, var(--sunk));
     color: var(--text-muted);
     font-size: var(--text-sm);
     cursor: pointer;
   }
   .trigger:hover {
-    background: var(--sunk);
+    background: color-mix(in oklab, var(--text) 10%, var(--sunk));
+    color: var(--text);
   }
   .trigger span {
     flex: 1;
@@ -125,7 +127,7 @@
   kbd {
     font-family: var(--font-ui);
     font-size: var(--text-2xs);
-    color: var(--text-subtle);
+    color: var(--text-muted);
   }
   .menu {
     width: min(36rem, calc(100vw - 2rem));

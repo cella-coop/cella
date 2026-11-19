@@ -9,7 +9,8 @@
 
   // One setting: its label, beside it who changes it where the reader's
   // own write does not (`Who`) and how to use it where it says (`help`),
-  // its value in its field, editable whoever reads it, and under it,
+  // its value in its field, a `Field` drawn `live`, editable whoever
+  // reads it, and under it,
   // quietly, how its last commit went, announced as it changes. A pick
   // commits as it is made, a typed value on leaving the field or on
   // Enter, and Escape takes a typed edit back; one declaring choices is an
@@ -29,7 +30,9 @@
   {#if setting.help}<Who who={{ kind: 'help', label: `How to change ${setting.label.toLowerCase()}`, text: setting.help }} />{/if}
 {/snippet}
 
-<div class="setting" class:inner={setting.depth === 1} class:toggle={setting.type === 'toggle'} {@attach committing({ commit: () => state.commit(setting), revert: () => state.revert(setting) })}>
+<!-- A field commits as it changes (`Field`'s `live`); an arrangement's
+     own fields, as an accordion's name, commit as the setting holds them. -->
+<div class="setting" class:inner={setting.depth === 1} class:toggle={setting.type === 'toggle'} {@attach setting.choices ? committing({ commit: () => state.commit(setting), revert: () => state.revert(setting) }) : undefined}>
   {#if setting.choices}
     <Arrange
       label={setting.label}
@@ -62,6 +65,9 @@
       type={setting.type}
       options={setting.options}
       rows={setting.rows}
+      live
+      oncommit={() => state.commit(setting)}
+      onrevert={() => state.revert(setting)}
       hint={changer || setting.help ? hint : undefined}
       bind:value={() => state.value(setting), (v) => state.type(setting, v === null || v === undefined ? '' : String(v))}
     />

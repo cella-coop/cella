@@ -2,7 +2,7 @@
   import { useShell } from '../hooks/useShell.ts'
 
   // A person wherever one appears: their name, their address on hover,
-  // or the address alone where the co-op knows no one by it.
+  // or the address alone where the coop knows no one by it.
   let { address }: { address: string } = $props()
 
   const shell = useShell()

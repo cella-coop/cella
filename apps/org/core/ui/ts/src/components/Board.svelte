@@ -119,21 +119,23 @@
   .board {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(15rem, 1fr);
+    grid-auto-columns: minmax(17rem, 1fr);
     gap: var(--space-2);
     overflow-x: auto;
     align-items: stretch;
   }
-  /* A column is a faint band off the page, a few percent of the text's
-     own colour over it, so it reads alike in light and dark; the gutters
-     between are narrow. */
+  /* A column is a faint band off the panel, a few percent of the text's
+     own colour mixed into it, so it reads alike in light and dark, and a
+     surface of its own for what sits in it; the gutters between are
+     narrow. */
   .lane {
     display: grid;
     gap: var(--space-2);
     align-content: start;
     padding: var(--space-2);
     grid-template-columns: minmax(0, 1fr);
-    background: color-mix(in oklab, var(--text) 1.5%, transparent);
+    --surface: color-mix(in oklab, var(--text) 1.5%, var(--panel));
+    background: var(--surface);
     border-radius: var(--radius-panel);
     outline: 2px dashed transparent;
     outline-offset: -2px;

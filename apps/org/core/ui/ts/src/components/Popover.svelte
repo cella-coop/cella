@@ -185,7 +185,8 @@
        as well as in light. */
     border: 1px solid var(--line);
     border-radius: var(--radius-float);
-    background: var(--float);
+    --surface: var(--float);
+    background: var(--surface);
     color: var(--text);
     box-shadow: var(--shadow-float);
     position-try-fallbacks: flip-block, flip-inline;

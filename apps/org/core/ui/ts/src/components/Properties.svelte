@@ -1,30 +1,40 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import Plus from 'phosphor-svelte/lib/Plus'
-  import PencilSimple from 'phosphor-svelte/lib/PencilSimple'
+  import UsersThree from 'phosphor-svelte/lib/UsersThree'
+  import CalendarPlus from 'phosphor-svelte/lib/CalendarPlus'
+  import ClockCounterClockwise from 'phosphor-svelte/lib/ClockCounterClockwise'
   import { editValue, type Prop } from '../models/view.ts'
   import { show } from '../models/format.ts'
-  import { inked, inkOf } from '../models/ink.ts'
   import { none } from '../models/outcome.ts'
+  import { mark, record, sections, word } from '../models/drawer.ts'
+  import { glyph } from '../glyphs.ts'
   import { useProps } from '../hooks/useProps.ts'
   import { useShell } from '../hooks/useShell.ts'
   import { useWrites } from '../hooks/useWrites.ts'
   import { peek, propertyDraftId, retry, unstash } from '../hooks/drafts.svelte.ts'
   import Avatar from './Avatar.svelte'
-  import Value from './Value.svelte'
+  import Field from './Field.svelte'
+  import Heading from './Heading.svelte'
   import Icon from './Icon.svelte'
   import Pick from './Pick.svelte'
   import Popover from './Popover.svelte'
   import PropEdit from './PropEdit.svelte'
+  import Value from './Value.svelte'
 
-  // The drawer's properties as Linear's: a Properties section of lines,
-  // each an icon and its value, its name on hover and for a screen reader
-  // and drawn only where the value cannot say what it is (a figure, a
-  // count, a phrase); a press opens the popover that changes it, where it
-  // can be changed. The record's dates sit in a section of their own, its
-  // Created and Updated last among them, each its day and who. A property
-  // with no value is not listed, but Add property offers the ones that can
-  // be set; a section with nothing in it does not render.
+  // The drawer's properties as Linear's: sections under the one heading,
+  // Properties, then any its slices name, then Dates, each of rows of one
+  // height a step in from it. Every row is a bare `Field`, its icon and
+  // its value, no name shown: its name is its tooltip and its accessible
+  // name (`models/drawer.ts` says which icon), and a quiet lead word
+  // before the value says what a day or a phrase is ("closes 31 Oct",
+  // "quorum half the seats"). An editable row is live:
+  // it fills on hover and opens the popover that changes it on a press,
+  // the whole row, never a pencil. The record's Created and Updated end
+  // its Dates, each its day and who. A property with no value is not
+  // listed, but Add property offers the ones that can be set; a section
+  // with nothing in it does not render. A computed figure is never here:
+  // it is a `Stat` on the overview.
   let { items }: { items: Prop[] } = $props()
   const shell = useShell()
   const writes = useWrites()
@@ -60,204 +70,197 @@
   const stamp = ['Created', 'Updated', 'Created by', 'Updated by']
   const empty = (p: Prop) => (p.people ? p.people.length === 0 : show(p.value, p.kind) === '—')
 
-  // The collection a property's link is a record of, where it is one:
-  // `/<collection>/<id>`, whose icon its value wears.
-  const record = (href: string | undefined) => href?.match(/^\/([\w-]+)\/[^/?#]+$/)?.[1]
-
   // Added: the empty properties the reader asked for, shown for the
   // popover that sets each, opened as it is added.
   const state = useProps()
   const offered = $derived(items.filter((p) => empty(p) && p.edit && !stamp.includes(p.label) && !state.added.includes(p.label)))
   const live = $derived(items.filter((p) => !empty(p) || state.added.includes(p.label)))
   const log = $derived(live.filter((p) => stamp.includes(p.label)))
-  const rest = $derived(live.filter((p) => !stamp.includes(p.label)))
-  const dates = $derived(rest.filter((p) => p.kind === 'date' && !empty(p)))
-  const plain = $derived(rest.filter((p) => !dates.includes(p)))
-
-  const groups = $derived.by(() => {
-    const out: { name: string | null; items: Prop[] }[] = []
-    for (const p of plain) {
-      const name = p.group ?? null
-      let g = out.find((g) => g.name === name)
-      if (!g) {
-        g = { name, items: [] }
-        out.push(g)
-      }
-      g.items.push(p)
-    }
-    return out
-  })
 
   // The log's stamps, rows of Dates as any date is: when, then who.
   const name = (a: string) => shell.name(a) ?? a
   const get = (label: string) => log.find((p) => p.label === label)
   const stamps = $derived(
     [
-      ['Created', 'Created by'],
-      ['Updated', 'Updated by'],
+      ['Created', 'Created by', CalendarPlus],
+      ['Updated', 'Updated by', ClockCounterClockwise],
     ]
-      .map(([when, who]) => ({ label: when, when: get(when), who: get(who) }))
+      .map(([when, who, icon]) => ({ label: when as string, icon: icon as typeof CalendarPlus, when: get(when as string), who: get(who as string) }))
       .filter((s) => s.when || s.who),
   )
+
+  // Properties holds Add property, and Dates the stamps, even where no
+  // other row would make them.
+  const laid = $derived.by(() => {
+    const out = sections(live.filter((p) => !stamp.includes(p.label)))
+    if (offered.length && !out.some((s) => s.name === 'Properties')) {
+      out.unshift({ name: 'Properties', rows: [] })
+    }
+    if (stamps.length && !out.some((s) => s.name === 'Dates')) {
+      out.push({ name: 'Dates', rows: [] })
+    }
+    return out
+  })
 
   const add = (v: string | string[]) => state.add(Array.isArray(v) ? v[0] : v)
 </script>
 
-{#snippet value(p: Prop, bare: boolean = false)}
+{#snippet crew(people: string[])}
+  <span class="people">
+    <span class="crew" aria-hidden="true">
+      {#each people.slice(0, 4) as a (a)}<Avatar name={name(a)} size="1rem" />{/each}
+    </span>
+    <span class="who">{people.map(name).join(', ')}</span>
+  </span>
+{/snippet}
+
+{#snippet value(p: Prop)}
   {#if empty(p)}
     <span class="blank">{p.label}</span>
+  {:else if p.people}
+    {@render crew(p.people)}
+  {:else if p.icon}
+    <span class="who">{show(p.value, p.kind)}</span>
+  {:else if record(p.href)}
+    <!-- A record is its chip, the chip its link. -->
+    <Value value={p.value} kind={p.kind} tone={p.tone} record={record(p.href)} href={p.href} size="drawer" />
+  {:else if p.href}
+    <a href={p.href} onclick={(e) => e.stopPropagation()}><Value value={p.value} kind={p.kind} tone={p.tone} size="drawer" /></a>
   {:else}
-    {#if p.icon}
-      <span class="mark inked" style={inked(inkOf(p.ink ?? p.label))} aria-hidden="true"><Icon icon={p.icon} size="1em" /></span>
-    {/if}
-    {#if p.people}
-      <span class="crew" aria-hidden="true">
-        {#each p.people.slice(0, 4) as a (a)}<Avatar name={name(a)} size="1.25rem" />{/each}
-      </span>
-      <span class="who">{p.people.map(name).join(', ')}</span>
-    {:else if p.icon}
-      <span class="who">{show(p.value, p.kind)}</span>
-    {:else if p.href && !bare}
-      <!-- A plain property's own link; one also edited renders it a
-           level up, a sibling of the button that edits it, never its
-           own interactive descendant. -->
-      <a href={p.href} onclick={(e) => e.stopPropagation()}><Value value={p.value} kind={p.kind} tone={p.tone} record={record(p.href)} size="drawer" label={p.label} /></a>
-    {:else}
-      <Value value={p.value} kind={p.kind} tone={p.tone} record={p.href && bare ? record(p.href) : undefined} size="drawer" label={p.label} />
-    {/if}
+    <Value value={p.value} kind={p.kind} tone={p.tone} size="drawer" />
   {/if}
 {/snippet}
 
-{#snippet row(p: Prop)}
-  <li class="row">
-    {#if p.edit && p.href}
-      <!-- A record both linked and edited: the link stands apart from
-           the button that opens its editor, each its own interactive
-           element, never one inside the other. -->
-      <span class="line" title={p.label}>
-        <span class="visually-hidden">{p.label}: </span>
-        <a href={p.href} onclick={(e) => e.stopPropagation()}>{@render value(p, true)}</a>
-        <Popover label="Change {p.label}" icon menu={false} wide open={state.fresh === p.label} onclose={() => (state.fresh = null)}>
-          {#snippet trigger()}<Icon icon={PencilSimple} size="0.85em" />{/snippet}
-          <PropEdit edit={p.edit} label={p.label} />
-        </Popover>
-      </span>
-    {:else if p.edit}
-      <Popover label={p.label} menu={false} wide open={state.fresh === p.label} onclose={() => (state.fresh = null)}>
-        {#snippet trigger()}
-          <span class="line" title={p.label}>
-            <span class="visually-hidden">{p.label}: </span>
-            {@render value(p)}
-          </span>
-        {/snippet}
-        <PropEdit edit={p.edit} label={p.label} />
-      </Popover>
-    {:else}
-      <span class="line plain" title={p.label}>
-        <span class="visually-hidden">{p.label}: </span>
-        {@render value(p)}
-      </span>
-    {/if}
-  </li>
+{#snippet row(label: string, p: Prop)}
+  {const kind = $derived(glyph(p.kind, p.lead ?? p.label))}
+  {const icon = $derived(empty(p) ? (p.glyph ?? kind) : mark(p, kind, UsersThree))}
+  {const lead = $derived(empty(p) ? undefined : word(p))}
+  {#snippet shown()}{@render value(p)}{/snippet}
+  {#if p.edit}
+    {#snippet editor()}{#if p.edit}<PropEdit edit={p.edit} label={p.label} />{/if}{/snippet}
+    <li>
+      <Field bare live {label} {icon} {lead} href={p.href} {editor} open={state.fresh === p.label} onclose={() => (state.fresh = null)} children={shown} />
+    </li>
+  {:else}
+    <li><Field bare readonly {label} {icon} {lead} children={shown} /></li>
+  {/if}
 {/snippet}
 
-{#if groups.length || offered.length}
-  <section class="sect" aria-labelledby="{id}-props">
-    <h2 id="{id}-props">Properties</h2>
-    {#each groups as g (g.name)}
-      <ul class="props">
-        {#each g.items as p (p.label)}{@render row(p)}{/each}
-      </ul>
+{#if laid.length}
+  <div class="properties">
+    {#each laid as s, i (s.name)}
+      <section class="sect" aria-labelledby="{id}-{i}">
+        <Heading id="{id}-{i}" title={s.name} />
+        <ul class="props">
+          {#each s.rows as r (r.label)}{@render row(r.label, r.prop)}{/each}
+          {#if s.name === 'Dates'}
+            {#each stamps as t (t.label)}
+              {#snippet stamped()}
+                {#if t.when}<Value value={t.when.value} kind="date" size="drawer" />{/if}
+                {#if t.who}
+                  <span class="people">
+                    <span class="crew" aria-hidden="true"><Avatar name={name(String(t.who.value))} size="1rem" /></span>
+                    <span class="who"><span class="visually-hidden">by </span>{name(String(t.who.value))}</span>
+                  </span>
+                {/if}
+              {/snippet}
+              <li class="stamp"><Field bare readonly label={t.label} icon={t.icon} lead={t.when ? t.label.toLowerCase() : `${t.label.toLowerCase()} by`} children={stamped} /></li>
+            {/each}
+          {/if}
+          {#if s.name === 'Properties' && offered.length}
+            <li class="add">
+              <Popover label="Add property" menu={false}>
+                {#snippet trigger()}
+                  <span class="line">
+                    <span class="glyph" aria-hidden="true"><Icon icon={Plus} size="1em" /></span>
+                    <span>Add property</span>
+                  </span>
+                {/snippet}
+                <Pick label="Add property" options={offered.map((p) => ({ value: p.label, label: p.label }))} value="" onpick={add} />
+              </Popover>
+            </li>
+          {/if}
+        </ul>
+      </section>
     {/each}
-    {#if offered.length}
-      <Popover label="Add property" menu={false}>
-        {#snippet trigger()}
-          <span class="line add"><span class="mark" aria-hidden="true"><Icon icon={Plus} size="1em" /></span>Add property</span>
-        {/snippet}
-        <Pick label="Add property" options={offered.map((p) => ({ value: p.label, label: p.label }))} value="" onpick={add} />
-      </Popover>
-    {/if}
-  </section>
-{/if}
-
-{#if dates.length || stamps.length}
-  <section class="sect" aria-labelledby="{id}-dates">
-    <h2 id="{id}-dates">Dates</h2>
-    <ul class="props">
-      {#each dates as p (p.label)}{@render row(p)}{/each}
-      {#each stamps as s (s.label)}
-        <li class="row">
-          <span class="line plain" title={s.label}>
-            {#if s.when}<Value value={s.when.value} kind="date" size="drawer" label={s.label} />{:else}<span>{s.label}</span>{/if}
-            {#if s.who}
-              <span class="crew" aria-hidden="true"><Avatar name={name(String(s.who.value))} size="1.25rem" /></span>
-              <span class="who"><span class="visually-hidden">by </span>{name(String(s.who.value))}</span>
-            {/if}
-          </span>
-        </li>
-      {/each}
-    </ul>
-  </section>
+  </div>
 {/if}
 
 <style>
+  /* Sections as far apart as Related sits below them, each heading at
+     the drawer's inset with a small gap under it, its rows a subtle step
+     in from it and one height, their hover fill reaching a little past
+     the heading's edge. */
+  .properties {
+    display: grid;
+    row-gap: calc(var(--space-4) + var(--space-3));
+    padding-inline: var(--inset, 0);
+    font-size: var(--text-sm);
+  }
   .sect {
     display: grid;
-    gap: var(--space-1);
-    padding-inline: var(--inset, 0);
-  }
-  .sect:not(:first-child) {
-    margin-top: var(--space-3);
-  }
-  h2 {
-    font-family: var(--font-ui);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    color: var(--text-muted);
-    letter-spacing: normal;
-    margin: 0 0 var(--space-1);
+    row-gap: var(--space-2);
+    min-width: 0;
   }
   .props {
-    list-style: none;
+    display: grid;
+    row-gap: 2px;
     margin: 0;
     padding: 0;
-    display: grid;
-    gap: 2px;
-    font-size: var(--text-sm);
-  }
-  .props + .props {
-    margin-top: var(--space-2);
-  }
-  .row {
+    list-style: none;
     min-width: 0;
+  }
+  .blank,
+  .add {
+    color: var(--text-subtle);
+  }
+  /* Add property is a row as any: its button fills it, its plus in the
+     icons' box. */
+  .add {
+    margin-inline: calc(-1 * var(--space-2));
+    border-radius: var(--radius-control);
+  }
+  .add:hover {
+    background: var(--hover);
+  }
+  .add > :global(.trigger) {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: none;
+    border-radius: inherit;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+  }
+  .add > :global(.trigger:hover) {
+    background: none;
   }
   .line {
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    min-width: 0;
-    min-height: 1.75rem;
-    line-height: 1.5;
-    font-size: var(--text-sm);
+    min-height: 1.875rem;
+    padding-inline: calc(var(--space-2) + var(--space-3)) var(--space-2);
   }
-  .plain {
-    padding: var(--space-1);
-  }
-  .line > :global(*:not(.mark):not(.crew)) {
-    min-width: 0;
-  }
-  .mark {
+  .glyph {
     display: inline-flex;
     flex: none;
-    color: var(--text-muted);
+    justify-content: center;
+    width: 1rem;
   }
-  .mark.inked {
-    color: var(--mark);
+  .stamp :global(.value) {
+    gap: var(--space-2);
   }
-  .blank {
-    color: var(--text-subtle);
+  .people {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
   }
   .who {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -267,11 +270,8 @@
     flex: none;
   }
   .crew > :global(* + *) {
-    margin-inline-start: -0.35rem;
-    box-shadow: 0 0 0 2px var(--float, var(--bg));
-  }
-  .add {
-    color: var(--text-subtle);
+    margin-inline-start: -0.3rem;
+    box-shadow: 0 0 0 2px var(--surface);
   }
   a:hover {
     text-decoration: underline;

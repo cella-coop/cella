@@ -1,4 +1,4 @@
-import type { Column, Kind, Prop } from './view.ts'
+import { closed, type Column, type Kind, type Prop, type Tone } from './view.ts'
 import { spans, type Span } from './calendar.ts'
 import { inkOf } from './ink.ts'
 
@@ -354,13 +354,13 @@ export const under = (row: Record<string, unknown>, key: string, month = false):
 export const opens = (rows: Record<string, unknown>[], i: number, key: string, month = false): boolean =>
   i === 0 || under(rows[i] ?? {}, key, month) !== under(rows[i - 1] ?? {}, key, month)
 
-// A group's header wears its value's own ink, seeded by its name, as a
-// record's icon elsewhere does (`Cell`): none holding no value, a
-// month, or an enumeration with a tone of its own, which keeps its
-// meaning instead; a record chip with none, as a project's, takes the
-// ink even where it is drawn as a badge.
-export const groupTint = (by: Column, value: string, month: boolean): number | null =>
-  by.record && !by.tone && !month && value !== '' ? inkOf(value) : null
+// The ink a group's header is tinted in: only a closed set's state
+// (`closed`) whose tone has no colour of its own wears one, seeded by
+// its value; a tone with a colour keeps it instead, and an open set (a
+// record's, even drawn as a badge, a circle's, a person's), a month and
+// no value wear none, their bar plain grey.
+export const groupTint = (by: Column, value: string, month: boolean, tone?: Tone): number | null =>
+  by.kind === 'badge' && closed(by.kind, by.record) && !month && value !== '' && (!tone || tone === 'neutral' || tone === 'accent') ? inkOf(value) : null
 
 // How a list, a table and a gallery draw the rows grouped by a
 // field: the column and how many rows each value holds across every
@@ -471,7 +471,7 @@ export interface Preset {
 }
 
 // A view a viewer saved from what they were looking at: a preference of
-// theirs, never a record of the co-op's.
+// theirs, never a record of the coop's.
 export interface Custom {
   id: string
   name: string

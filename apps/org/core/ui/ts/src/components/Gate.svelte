@@ -4,9 +4,10 @@
   import '../styles/base.css'
   import favicon from '@cella/brand/favicon.svg?url'
   import DemoBanner from './DemoBanner.svelte'
+  import Logo from './Logo.svelte'
 
   // What a person reaches before signing in, alone on the page: the
-  // co-op's mark and name above one panel, the sign-in or an invitation;
+  // coop's mark and name above one panel, the sign-in or an invitation;
   // in a demo build, the demo's banner, one fixed strip at the viewport's
   // foot, which pads the page by its own height so it hides nothing, or,
   // dismissed, by its watermark's reach from the foot instead.
@@ -21,7 +22,7 @@
   }: {
     // The sign-in's: no panel of its own, for it lays out cards.
     wide?: boolean
-    scope: { address: string; name: string; legal: string | null }
+    scope: { address: string; name: string; legal: string | null; logo?: string | null }
     demo?: boolean
     copy?: number
     ends?: number
@@ -36,7 +37,7 @@
 
 <div class="gate">
   <div class="panel" class:wide>
-    {#if !wide}<p class="coop"><span class="mark">{scope.name.slice(0, 1).toUpperCase()}</span><b>{scope.name}</b></p>{/if}
+    {#if !wide}<p class="coop"><Logo name={scope.name} logo={scope.logo} /><b>{scope.name}</b></p>{/if}
     {@render children()}
   </div>
 </div>
@@ -76,15 +77,5 @@
   }
   .coop b {
     font-weight: 500;
-  }
-  .mark {
-    display: grid;
-    place-items: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    border-radius: var(--radius-control);
-    background: var(--accent-fill);
-    color: var(--on-accent);
-    font-size: var(--text-md);
   }
 </style>

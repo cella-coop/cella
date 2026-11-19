@@ -26,8 +26,8 @@ export class CollectionState {
   // the first value it keeps.
   adding: string | null = $state(null)
   // The filter bar's search: expanded to its input, which a blur or
-  // Escape collapses back, to its chip once it holds text, else to the
-  // magnifier alone.
+  // Escape collapses back, to its chip once it holds text, else away, to
+  // the Filter menu's Search.
   searching = $state(false)
   search: HTMLInputElement | undefined = $state()
   // The filter bar's + Filter, wherever it is mounted, header or bar, so
@@ -110,7 +110,7 @@ export class CollectionState {
   }
 
   // Escape: the search folds back, its text kept, and the focus goes to
-  // what stands for it, its chip or the magnifier.
+  // what stands for it, its chip or + Filter.
   collapse() {
     this.searching = false
     this.search?.blur()

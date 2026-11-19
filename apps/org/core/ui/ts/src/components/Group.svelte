@@ -2,26 +2,30 @@
   import CaretDown from 'phosphor-svelte/lib/CaretDown'
   import CaretRight from 'phosphor-svelte/lib/CaretRight'
   import Plus from 'phosphor-svelte/lib/Plus'
-  import type { Column } from '../models/view.ts'
+  import { closed, type Column } from '../models/view.ts'
   import { monthName, show } from '../models/format.ts'
   import { groupTint } from '../models/query.ts'
-  import { inked, inkOf } from '../models/ink.ts'
+  import { inked } from '../models/ink.ts'
   import { useShell } from '../hooks/useShell.ts'
-  import Cell from './Cell.svelte'
   import Icon from './Icon.svelte'
+  import Value from './Value.svelte'
 
   // The header over a group of a list's, a table's or a
-  // gallery's rows, as Linear's: a solid bar across its width, a subtle
-  // gradient in the value's own ink where it names a record
-  // (`groupTint`, its icon the same ink), kept at an enumeration's tone
-  // instead, a date's month, or None where they hold none; the value, a
-  // person's chip or a circle's name as `Cell` draws it, and how many
-  // rows the group holds across every page, as a board's column says; a
-  // chevron that collapses it where `oncollapse` is given, and a + that
-  // creates in it where `oncreate` is. `row` is one of them, which the
-  // value and its tone are read from; `value` is the group's, as the
-  // rows are grouped by it, a date's `YYYY-MM`. `compact`, a calendar's
-  // legend, draws the value and its count alone, beside its own swatch.
+  // gallery's rows, as Linear's: a solid bar across its width. A closed
+  // set's (`closed`: a state, a priority, a boolean, whose values the code
+  // declares and are a handful) keeps its colour: a subtle gradient in its
+  // tone, or in an ink seeded by its value where the tone has none
+  // (`groupTint`), the value drawn as `Cell` draws it. An open set's (a
+  // circle's, a person's, a record's, any other the data holds) is a plain
+  // grey bar, its value its `Chip`, a circle's icon in its ink inside it,
+  // a person's avatar; a date's month and None are the grey bar and their
+  // words. Then how many rows the group holds across every page, as a
+  // board's column says; a chevron that collapses it where `oncollapse`
+  // is given, and a + that creates in it where `oncreate` is. `row` is
+  // one of them, which the value and its tone are read from; `value` is
+  // the group's, as the rows are grouped by it, a date's `YYYY-MM`.
+  // `compact`, a calendar's legend, draws the value and its count alone,
+  // beside its own swatch.
   let {
     by,
     row,
@@ -46,17 +50,16 @@
 
   const label = $derived(value === '' ? 'None' : month ? monthName(value) : String(by.value(row) ?? value))
   const shell = useShell()
-  // The bar's ink is the one `Cell` gives the value's icon: seeded by what
-  // it draws, a circle's name rather than its id, so the two always agree.
+  // The bar's ink is the one `Value` gives the state's dot: seeded by what
+  // it draws, so the two always agree.
   const drawn = $derived.by(() => {
     if (value === '') return ''
     const text = show(by.value(row), by.kind)
     return by.kind === 'circle' ? (shell.circle(text) ?? text) : text
   })
-  const tone = $derived(by.kind === 'badge' ? by.tone?.(row) : undefined)
-  // A state whose tone has no colour of its own wears its chip's ink.
-  const plain = $derived(by.kind === 'badge' && value !== '' && !month && (!tone || tone === 'neutral' || tone === 'accent'))
-  const tint = $derived(plain ? inkOf(drawn) : groupTint(by, drawn, month))
+  const shut = $derived(closed(by.kind, by.record))
+  const tone = $derived(by.kind === 'badge' && shut ? by.tone?.(row) : undefined)
+  const tint = $derived(groupTint(by, drawn, month, tone))
 </script>
 
 {#snippet inner()}
@@ -65,7 +68,7 @@
   {:else if month}
     <span>{monthName(value)}</span>
   {:else}
-    <Cell value={by.value(row)} kind={by.kind} tone={by.tone?.(row)} record={by.record} />
+    <Value value={by.value(row)} kind={by.kind} tone={by.tone?.(row)} record={by.record} chip={!shut && !compact} />
   {/if}
   <span class="count">{count}</span>
 {/snippet}
@@ -96,7 +99,8 @@
     width: 100%;
     padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-control);
-    background: var(--raised);
+    --surface: var(--raised);
+    background: var(--surface);
   }
   /* A state with a tone of its own: the same faint breath as an ink's,
      of its soft tone, fading into the plain ground. Mixed in oklab, never
@@ -111,9 +115,11 @@
   .bar[data-tone='warning'] {
     background: linear-gradient(to right, color-mix(in oklab, var(--warning-soft) 50%, var(--raised)), var(--raised) 60%);
   }
-  /* A record's group: a faint breath of its ink at the start, fading
-     into the plain ground (the operator, 16 Nov: much more subtle). The
-     name keeps the usual text colour; its icon carries the ink. */
+  /* A state's group whose tone has no colour of its own: a faint breath
+     of its ink at the start, fading into the plain ground (the operator,
+     16 Nov: much more subtle). The name keeps the usual text colour; its
+     dot carries the ink. An open set's bar wears none (the operator,
+     19 Nov): its chip names it. */
   .bar.inked {
     background: linear-gradient(to right, color-mix(in oklab, var(--wash) 30%, var(--raised)), var(--raised) 60%);
   }

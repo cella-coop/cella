@@ -39,7 +39,8 @@
     padding: var(--space-3);
     border: 1px solid color-mix(in oklab, var(--text) 5%, transparent);
     border-radius: var(--radius-panel);
-    background: var(--raised);
+    --surface: var(--raised);
+    background: var(--surface);
   }
   .messages {
     display: grid;

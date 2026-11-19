@@ -129,8 +129,10 @@
     font-size: var(--text-sm);
     padding: var(--space-1) var(--space-2) var(--space-2);
   }
+  /* The picker's own field, focused whenever it is open: no ring, only
+     its rule taking the accent, which the global `input:focus` gives. */
   .search:focus-visible {
-    box-shadow: var(--focus);
+    box-shadow: none;
   }
   .options {
     display: grid;

@@ -2,10 +2,12 @@
   import type { Tone } from '../models/view.ts'
   import type { Who as Changer } from '../models/settings.ts'
   import Badge from './Badge.svelte'
+  import Field from './Field.svelte'
   import Who from './Who.svelte'
 
   // Settings, each said in full: its label and what bounds it, its value
-  // now and the one proposed, a badge saying how it bears, and below them
+  // now and the one proposed, each a read-only `Field`, a badge saying
+  // how it bears, and below them
   // a sentence saying what it means, which wraps, never cut off, or, where
   // it says who sets it, an icon beside its label whose tooltip says why. In a
   // section it sits at the section's inset.
@@ -26,7 +28,7 @@
       </dt>
       <dd class="values">
         {#each item.values as v (v.label)}
-          <span class="value"><span class="sub">{v.label}</span> {v.value}</span>
+          <Field readonly label={v.label} value={v.value} />
         {/each}
         {#if item.badge}<Badge tone={item.badge.tone}>{item.badge.label}</Badge>{/if}
       </dd>
@@ -67,8 +69,8 @@
   .values {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-3);
+    align-items: end;
+    gap: var(--space-2) var(--space-5);
     font-size: var(--text-sm);
     font-variant-numeric: tabular-nums;
   }

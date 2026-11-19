@@ -1,44 +1,46 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
   import { useSection } from '../hooks/useSection.ts'
+  import { useTab } from '../hooks/useTab.ts'
+  import Heading from './Heading.svelte'
 
-  // A block in a page's content: a title in sentence case with its count
-  // muted beside it, over what it holds, on the panel itself, so blocks
-  // read as one page rather than boxes. Its title, notes, forms and
-  // figures share one inline padding (`--inset`), its tables' first
-  // column's.
-  let { title, count, children }: { title: string; count?: number; children: Snippet } = $props()
+  // A titled block in a page's content, as a tab's: the one heading, its
+  // count muted beside it and quiet facts or small actions at its end,
+  // over what it holds, on the panel itself, so blocks read as one page
+  // rather than boxes. Its title, notes, forms and figures sit at the
+  // content's inset (`--inset`), its tables' first column's. A heading
+  // heads content: a section counting nothing whose title only repeats
+  // the open tab's name, as an empty Postings in the Postings tab, shows
+  // its empty line alone.
+  let {
+    title,
+    count,
+    meta,
+    actions,
+    children,
+  }: { title: string; count?: number; meta?: string | (string | null | undefined | false)[] | null; actions?: Snippet; children: Snippet } = $props()
 
   useSection(() => title)
+  const tab = useTab()
+  const repeats = $derived.by(() => {
+    const name = tab?.()?.toLowerCase()
+    return !!name && title.toLowerCase().endsWith(name)
+  })
+  const headed = $derived(!(count === 0 && !actions && repeats))
 </script>
 
-<section class="section">
-  <h2 class="title">{title}{#if count !== undefined}<span class="count">{count}</span>{/if}</h2>
+<section class="section" aria-label={headed ? undefined : title}>
+  {#if headed}<div class="head"><Heading {title} {count} {meta} {actions} /></div>{/if}
   {@render children()}
 </section>
 
 <style>
   .section {
-    --inset: var(--space-3);
     display: grid;
     gap: var(--space-2);
     min-width: 0;
   }
-  .title {
-    font-family: var(--font-display);
-    font-size: var(--text-lg);
-    font-weight: 500;
-    color: var(--text);
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-2);
-    padding-inline: var(--inset);
-  }
-  .count {
-    font-family: var(--font-ui);
-    font-size: var(--text-sm);
-    font-weight: 400;
-    color: var(--text-subtle);
-    font-variant-numeric: tabular-nums;
+  .head {
+    padding-inline: var(--inset, 0);
   }
 </style>

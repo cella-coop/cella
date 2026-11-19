@@ -100,14 +100,16 @@
     align-content: start;
     padding: var(--space-3);
     border-radius: var(--radius-panel);
-    background: var(--raised);
+    --surface: var(--raised);
+    background: var(--surface);
     border: 1px solid color-mix(in oklab, var(--text) 5%, transparent);
     grid-template-columns: minmax(0, 1fr);
     min-width: 0;
     transition: background var(--fast) var(--ease);
   }
   a.tile:hover {
-    background: var(--hover);
+    --surface: var(--hovered);
+    background: var(--surface);
   }
   .top {
     display: flex;

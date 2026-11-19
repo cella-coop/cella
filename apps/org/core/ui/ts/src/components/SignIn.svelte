@@ -4,44 +4,53 @@
   import Copy from 'phosphor-svelte/lib/Copy'
   import Warning from 'phosphor-svelte/lib/Warning'
   import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft'
-  import X from 'phosphor-svelte/lib/X'
   import Link from 'phosphor-svelte/lib/Link'
   import Question from 'phosphor-svelte/lib/Question'
+  import SignInIcon from 'phosphor-svelte/lib/SignIn'
+  import UserMinus from 'phosphor-svelte/lib/UserMinus'
   import Popover from './Popover.svelte'
   import { useSignIn } from '../hooks/useSignIn.ts'
   import Avatar from './Avatar.svelte'
+  import Logo from './Logo.svelte'
   import Button from './Button.svelte'
   import Field from './Field.svelte'
   import Icon from './Icon.svelte'
+  import Select from './Select.svelte'
 
-  // Signing in as a real member of the co-op sees it, in a card of its
-  // own: "Continue as" each person this browser holds a key for, one click
-  // each; with none, why, and the two ways in, an invitation's link for a
-  // first device, or this browser approved from a device the person
-  // already uses, behind one disclosure that makes the key here and shows
-  // it as a QR code and a link, which that device opens to enrol it. Every
-  // row stands one line high: the person's name on
-  // the left, the circles they sit in as compact chips on the right, all on
-  // one line, the name giving way first, in the dev list alone: the card's rows
-  // are the person's name, and each has a quiet remove, which forgets the
-  // key in this browser, after a confirmation unless it is a fixture's.
+  // Signing in as a real member of the coop sees it, in a card of its
+  // own: the people this browser holds a key for in one select, the first
+  // chosen, and Sign in at the bottom right; at the left, Link device and
+  // Forget identity, which forgets the chosen key in this browser, after a
+  // confirmation unless it is a fixture's. With no key, why, and the two
+  // ways in, an invitation's link for a first device, or this browser
+  // approved from a device the person already uses, behind one disclosure
+  // that makes the key here and shows it as a QR code and a link, which
+  // that device opens to enrol it. Help is an icon at the card's top
+  // right. Every row of the dev list stands one line high: the person's
+  // name on the left, the circles they sit in as compact chips on the
+  // right, the name giving way first.
   //
   // At the right of the screen, or below the card on a narrow one, with no
   // panel but the page's own ground, a list of its own offers
   // the fixture members on the dev server, and in a demo build the demo's
   // members, whose keys anyone can derive: a shortcut, never how a member
-  // signs in. A person already in the card is not offered twice. In a
-  // demo's room, a member another browser leased reads `taken`, drawn
-  // disabled and greyed, until they are freed.
+  // signs in. Every one is listed: one this browser keeps a key for wears
+  // a faint ring and signs in with that key, and the one chosen in the
+  // card's select is lit in its Sign in's ink. In a demo's room, a member
+  // another browser leased reads `taken`, drawn disabled and greyed,
+  // until they are freed.
   let {
     scope,
     name,
+    logo = null,
     back,
     fixtures,
     demo = false,
   }: {
     scope: string
     name: string
+    // The coop's logo, an SVG, if its particulars mark one.
+    logo?: string | null
     back: string
     fixtures: { address: string; name: string; label: string; circles: string[]; taken?: boolean }[]
     demo?: boolean
@@ -53,9 +62,21 @@
   )
 
   const held = $derived(state.devices.filter((d) => d.key !== state.made?.key))
-  const people = $derived(new Set(held.map((d) => d.address)))
-  const offered = $derived(fixtures.filter((f) => !people.has(f.address)))
+  const keys = $derived(new Map(held.map((d) => [d.address, d])))
+  const pick = $derived(held.find((d) => d.key === state.chosen) ?? held[0])
+  const options = $derived(held.map((d) => ({ value: d.key, label: d.name ?? d.address, who: d.name ?? d.address })))
 
+  // A fixture's key anyone can derive again, so it goes at once.
+  function drop() {
+    if (!pick) {
+      return
+    }
+    if (fixtures.some((f) => f.address === pick.address)) {
+      void state.forget(pick)
+    } else {
+      state.confirming = pick.key
+    }
+  }
 </script>
 
 {#snippet row(name: string, circles: string[], tip: string, go: () => void, off = false, taken = false)}
@@ -72,31 +93,31 @@
 
 <svelte:window onkeydown={(e) => e.key === 'Escape' && state.opened && state.leave()} />
 
-<div class="sign" class:two={offered.length > 0}>
+<div class="sign" class:two={fixtures.length > 0}>
   <section class="card" aria-labelledby="in">
-    <p class="coop"><span class="mark" aria-hidden="true">{name.slice(0, 1).toUpperCase()}</span><b>{name}</b></p>
+    <p class="coop"><Logo {name} {logo} /><b>{name}</b></p>
     {#if !state.opened}
-    {#if held.length}
-      <h1 id="in" class="title">Welcome back</h1>
-      <div class="list">
-        {#each held as d (d.key)}
-          <div class="line">
-            {@render row(d.name ?? d.address, d.circles ?? [], d.address, () => state.as(d))}
-            <button class="x" type="button" title="Remove from this browser" aria-label="Remove {d.name ?? d.address} from this browser" onclick={() => (fixtures.some((f) => f.address === d.address) ? state.forget(d) : (state.confirming = d.key))}>
-              <Icon icon={X} size="0.9rem" />
-            </button>
+      <span class="help">
+        <Popover label="Ways in" menu={false} icon wide align="end">
+          {#snippet trigger()}<Icon icon={Question} size="1.1rem" />{/snippet}
+          <div class="ways">
+            <p><b>New here?</b> Open the invitation link you were sent. It sets this browser up as your first device.</p>
+            <p><b>Already a member?</b> Choose Link device to approve this browser from a device you already use: you make a key here, and approve it there.</p>
           </div>
-          {#if state.confirming === d.key}
-            <div class="confirm" role="alert">
-              <p>This browser will no longer be able to sign in as {d.name ?? d.address}. To stop the key working anywhere, revoke it in Devices.</p>
-              <div class="acts">
-                <Button tone="danger" onclick={() => state.forget(d)}>Remove</Button>
-                <Button onclick={() => (state.confirming = null)}>Cancel</Button>
-              </div>
-            </div>
-          {/if}
-        {/each}
-      </div>
+        </Popover>
+      </span>
+    {#if pick}
+      <h1 id="in" class="title">Welcome back</h1>
+      <Select label="Sign in as" {options} value={pick.key} onchange={(v) => (state.chosen = v)} />
+      {#if state.confirming === pick.key}
+        <div class="confirm" role="alert">
+          <p>This browser will no longer be able to sign in as {pick.name ?? pick.address}. To stop the key working anywhere, revoke it in Devices.</p>
+          <div class="acts">
+            <Button tone="danger" onclick={() => state.forget(pick)}>Forget</Button>
+            <Button onclick={() => (state.confirming = null)}>Cancel</Button>
+          </div>
+        </div>
+      {/if}
     {:else}
       <div class="empty">
         <h1 id="in" class="title">This browser isn't signed in to {name} yet</h1>
@@ -106,17 +127,16 @@
 
       <div class="bar">
         <span data-link>
-          <Button tone={held.length ? 'quiet' : 'primary'} onclick={() => (state.opened = true)}>
+          <Button tone={pick ? 'quiet' : 'primary'} onclick={() => (state.opened = true)}>
             <Icon icon={Link} size="1rem" />Link device
           </Button>
         </span>
-        <Popover label="Ways in" menu={false} button wide align="end">
-          {#snippet trigger()}<Icon icon={Question} size="1rem" />Help{/snippet}
-          <div class="ways">
-            <p><b>New here?</b> Open the invitation link you were sent. It sets this browser up as your first device.</p>
-            <p><b>Already a member?</b> Choose Link device to approve this browser from a device you already use: you make a key here, and approve it there.</p>
-          </div>
-        </Popover>
+        {#if pick}
+          <Button onclick={drop}><Icon icon={UserMinus} size="1rem" />Forget identity</Button>
+          <span class="go">
+            <Button tone="info" busy={state.busy} onclick={() => state.as(pick)}><Icon icon={SignInIcon} size="1rem" />Sign in</Button>
+          </span>
+        {/if}
       </div>
     {:else}
       <div class="new">
@@ -157,23 +177,26 @@
     {/if}
   </section>
 
-  {#if offered.length}
+  {#if fixtures.length}
     <aside class="dev" aria-labelledby="fx">
       <div class="head">
         <Icon icon={Warning} size="1.1rem" />
         <h2 id="fx" class="label">{demo ? 'Demo members' : 'Test accounts'}</h2>
       </div>
-      <p class="hint">Pick anyone to look around. A real co-op has no such list: members sign in from their own devices.</p>
+      <p class="hint">Pick anyone to look around. A real coop has no such list: members sign in from their own devices.</p>
       <div class="list">
-        {#each offered as f (f.address)}
-          {@render row(
-            f.name,
-            f.circles,
-            f.taken ? `${f.address}: signed in on another browser already` : f.address,
-            () => state.fixture(f.address, f.label),
-            f.taken,
-            f.taken,
-          )}
+        {#each fixtures as f (f.address)}
+          {const k = $derived(keys.get(f.address))}
+          <div class="fx" class:kept={!!k} class:chosen={!!k && k.key === pick?.key}>
+            {@render row(
+              f.name,
+              f.circles,
+              f.taken ? `${f.address}: signed in on another browser already` : f.address,
+              () => (k ? state.as(k) : state.fixture(f.address, f.label)),
+              f.taken,
+              f.taken,
+            )}
+          </div>
         {/each}
       </div>
     </aside>
@@ -209,6 +232,7 @@
     }
   }
   .card {
+    position: relative;
     display: grid;
     gap: var(--space-4);
     padding: var(--space-5);
@@ -222,40 +246,11 @@
     min-width: 0;
     padding-inline: var(--space-2);
   }
-  .line {
-    position: relative;
-  }
-  .x {
+  .help {
     position: absolute;
-    inset-block: 0;
-    inset-inline-end: var(--space-1);
-    margin-block: auto;
-    display: grid;
-    place-items: center;
-    width: 2rem;
-    height: 2rem;
-    padding: 0;
-    border: 0;
-    border-radius: var(--radius-control);
-    background: none;
+    inset-block-start: var(--space-3);
+    inset-inline-end: var(--space-3);
     color: var(--text-muted);
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity var(--fast) var(--ease);
-  }
-  .line:hover .x,
-  .line:focus-within .x,
-  .x:focus-visible {
-    opacity: 1;
-  }
-  .x:hover {
-    background: var(--hover);
-    color: var(--text);
-  }
-  @media (hover: none) {
-    .x {
-      opacity: 1;
-    }
   }
   .confirm {
     display: grid;
@@ -268,10 +263,6 @@
   }
   .confirm p {
     margin: 0;
-  }
-  .list .confirm :global(.button) {
-    width: auto;
-    height: 2rem;
   }
   .acts {
     display: flex;
@@ -289,13 +280,29 @@
   }
   .bar {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
     gap: var(--space-2);
+    margin-block-start: var(--space-5);
+  }
+  .go {
+    margin-inline-start: auto;
   }
   .dev .list :global(.button) {
     gap: var(--space-2);
     padding-inline: var(--space-2);
+  }
+  /* Kept in this browser: a row tinted faintly in Sign in's ink. Chosen in
+     the card: tinted strongly. */
+  .fx.kept :global(.button) {
+    background: color-mix(in oklab, var(--info-text) 8%, var(--sunk));
+  }
+  .fx.chosen :global(.button) {
+    background: color-mix(in oklab, var(--info-text) 24%, var(--sunk));
+  }
+  .fx.chosen .chip {
+    border-color: var(--info-text);
+    color: var(--info-text);
   }
   .chips {
     display: flex;
@@ -334,16 +341,6 @@
   }
   .coop b {
     font-weight: 500;
-  }
-  .mark {
-    display: grid;
-    place-items: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    border-radius: var(--radius-control);
-    background: var(--accent-fill);
-    color: var(--on-accent);
-    font-size: var(--text-md);
   }
   .empty {
     display: grid;

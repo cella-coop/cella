@@ -30,6 +30,9 @@ export class SignInState {
   copied = $state(false)
   // The key a person is asked to confirm forgetting, by its public key.
   confirming = $state<string | null>(null)
+  // The kept key chosen to sign in with, by its public key; none chosen
+  // reads as the first.
+  chosen = $state<string | null>(null)
 
   constructor(
     readonly scope: () => string,

@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-18
+updated = 2026-11-19
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -28,6 +28,17 @@ ink. Components read roles, never shades:
   `--float` for floating things, `--sunk` for fields and a segmented
   control's well, `--selected` for its chosen segment, lighter than the
   well in both themes, `--hover`;
+- layering: a surface declares the solid colour it is as `--surface`
+  and paints that, the page's own the ground, the content the panel
+  (`Shell`), a card, a board's tile, a panel, a thread and a group's bar the
+  raised step, a board's column the panel a breath toward the text, a
+  popover, a select's list and a dialog the float, and a list's, a
+  table's or a menu's row under the pointer or the keyboard the hover
+  laid solid on the panel (`--hovered`); what sits on it reads it, so a
+  `Chip` fills one step from it toward the text (`--lift`, darker in
+  light and lighter in dark) and an avatar's ring cuts out in its
+  colour, whatever it sits on, and a `Stat`'s tile fills the same way at
+  a lighter step, so it stands out on a panel;
 - text: `--text`, `--text-muted`, `--text-subtle`; the shell sets
   `--text-subtle` to the muted step, since the brand's subtle step reads
   under 4.5:1 on the ground and the wells and its quiet text is small;
@@ -38,20 +49,27 @@ ink. Components read roles, never shades:
 - type: the brand's, Urbanist for the shell's display and headings, its
   buttons and the mark (`--font-display`), Inter for everything read or
   measured (`--font-text`, which the shell reads as `--font-ui`), the
-  co-op's own writing whole, a document's headings and `Prose` included,
+  coop's own writing whole, a document's headings and `Prose` included,
   Geist Mono for code (`--font-mono`), self-hosted
   from Fontsource through the brand's `fonts.css`; headings take the
   brand's weight and tracking, the body its weight and leading. The
   shell keeps its own denser scale, `--text-2xs` to `--text-2xl` around
-  15px, beside the brand's `--t-*`. A section's title is
-  Urbanist in sentence case with its count muted beside it, a card's and
-  a table's columns' labels quiet sentence case; the one eyebrow, small
-  capitals tracked `0.1em`, is a stat tile's label. A section, and the
-  page's content outside one, sets one inline padding (`--inset`) that
-  its notes, forms, properties and figures share with its title and its
-  tables' first column, so a block never sits left of its heading; a
-  card's own padding is its inset;
-- states: a badge's tone is its state's class, alike in both themes:
+  15px, beside the brand's `--t-*`. There is one heading (`Heading`),
+  a panel's, a section's, a card's, the drawer's sections' and the
+  record page's Related and Activity: Urbanist at 650, a tenth over the
+  small size, a tad below muted (the operator, 19 Nov), in sentence
+  case, its icon before it and its count muted beside it; a table's
+  columns' labels and a stat's label are quiet sentence case, and
+  nothing is set in small capitals. The page's content sets one inline
+  padding (`--inset`), a record's column a step more, that its notes,
+  forms, properties and figures share with its titles and its tables'
+  first column, so a block never sits left of its heading; a panel's
+  and a card's own padding is their inset;
+- states: a state has one look everywhere, a table's cell, a list's
+  line, a card, the drawer, a panel's header: a soft pill with a dot and
+  its word (`Badge`, which `Value` draws for a `badge`), the dot in its
+  tone or, where the tone has no colour of its own, in an ink seeded by
+  its word. A badge's tone is its state's class, alike in both themes:
   neutral at rest (a draft, closed, voided), accent under way (open,
   unpaid, submitted, approved and not yet paid), drawn as an ink ring
   with no fill so it never reads as an alarm, positive settled, warning
@@ -90,8 +108,8 @@ primary button solid in its ink (`styles/base.css`'s `--primary-fill`,
 `Button`'s alone, so a secondary action, a checkbox and a date field's
 selection stay as they were); a feature's run of collections in its
 own ink, in the sidebar's turn (`Shell`); a record chip's icon or dot
-in its own, even drawn as a badge (`Cell`, `Badge`); a group's header
-bar the same (`Group`); and a circle's or a person's avatar seeded by
+in its own, even drawn as a badge (`Chip`, `Badge`); a closed set's
+group header bar, a state's (`Group`); and a circle's or a person's avatar seeded by
 its name (`Avatar`), as the site seeds its lists — every one landed,
 across the app. A secondary action as a wash of the lead ink, the
 selected navigation row and the focus ring stay candidates, laid over
@@ -109,11 +127,11 @@ draws.
 
 - `Shell`: the grid, sidebar · content. The sidebar shows the circle
   the member is in. Its top and foot stay put and only its middle
-  scrolls. Its top is the co-op selector, the co-op's mark and name,
+  scrolls. Its top is the coop selector, the coop's mark and name,
   followed by the circle's name where the member is in one but the
   assembly, "Lanterne / Web", so a lens is never hidden. Its menu lists
   the scopes the shell serves (one today) with their legal names; the
-  co-op row, whose root is the assembly, is checked where the member has
+  coop row, whose root is the assembly, is checked where the member has
   no lens and clears it, and below it come the circles the member sits
   in, with the lens's own where they do not; nothing lists all circles
   at once, and a rule sets Settings apart below them. A circle chosen
@@ -164,20 +182,20 @@ draws.
   then the account menu, the signed-in member, whose menu holds their
   address, Settings and Sign out, beside one icon button for the theme,
   which cycles system, light and dark and shows the current one. Settings is its own
-  sidebar, one for the member and the co-op as Linear's, in place of
+  sidebar, one for the member and the coop as Linear's, in place of
   the top and the features while one of its pages is open: Back to app,
   which returns to the last page left, then Settings' own heading, the
   sidebar's title, above the `platform` collections in two groups, each
   under a small, dim label naming its `subgroup`: Personal, the
-  member's own (Devices), then Organization, the co-op's (Imports,
+  member's own (Devices), then Organization, the coop's (Imports,
   and Features, the circle the member is in, the same page More…
   opens). The account menu's Settings opens
-  it at Personal's first page, the co-op menu's at Organization's. In
+  it at Personal's first page, the coop menu's at Organization's. In
   dev mode a faint upright "prototype" with a test tube sits at the
   content's bottom right. A demo build's banner (`DemoBanner`) is one
   fixed strip along the viewport's foot, on every page, never dismissed,
   which pads the page it sits on by its own height so it hides nothing: a
-  flask, "Prototype · mock co-op", its tooltip the operator's notice and,
+  flask, "Prototype · mock coop", its tooltip the operator's notice and,
   on a visitor's copy, that Lanterne is a mock and the copy the
   visitor's own; a timer and the time left, shown once there is one to
   watch, the room's lifetime once its first member has signed in, else
@@ -186,8 +204,14 @@ draws.
   filled primary button, which copies the room's link and confirms
   Copied, or opens it where the clipboard refuses. The last write's
   outcome floats above.
+- `Logo`: the coop's mark in its square, `md` in the selector, the
+  sign-in card and the gate, `sm` in the selector's menu: the logo its
+  particulars mark, an SVG drawn as an image from a `data:` URL and
+  never inlined, so no script in it runs and nothing outside it loads
+  ([the coop's particulars](../circle/index.md#the-coops-particulars));
+  with none, its name's initial on the accent fill.
 - `Gate`: what a person reaches before signing in, alone on the page,
-  the co-op's mark and name above one panel, in a demo build the same
+  the coop's mark and name above one panel, in a demo build the same
   banner at the viewport's foot; `SignIn` in it, a button for
   each device this browser keeps for the scope, which signs the server's
   challenge, the fixture members on the dev server, a demo's leading the
@@ -263,10 +287,13 @@ draws.
   ([enforcement](../../../../_corpus/doc/enforcement.md)).
 - `Frame` (`PageFrame.svelte`): the one page frame, its header one
   compact row as Linear's, spanning the content and the drawer: on an
-  item, a quiet caret back to its collection, on a collection its icon as
-  the sidebar shows it; the page's name (on an item, a muted crumb of
-  its kind and reference, its title the content's heading), its
-  caption as the name's tooltip, with its count and status badges; the
+  item, a breadcrumb as Linear's, its collection's icon and name as the
+  sidebar shows them, muted, a link back to the collection, a small
+  caret, then the item's title in the text's colour, which alone gives
+  way to a narrow row, cut short by an ellipsis (the circle is left out,
+  since the coop menu names it); on a collection its icon and its name;
+  the page's caption as the name's tooltip, with its count and status
+  badges; the
   page's tabs right after, a collection's views, scrolling in their own
   strip; then the page's writes and one quiet icon group, the drawer's
   panel tabs beside its toggle, which stays there when the drawer is
@@ -352,13 +379,14 @@ draws.
   person's and a circle's among them; choosing one opens its chip's
   popover at once, a date keeping the current month, any other the
   values it offers to pick among, a person's and a circle's by name.
-  Search (key `/`) is a magnifier that expands to an input, filtering
+  Search (key `/`) is the Filter menu's first item, ruled off from the
+  fields below it, each marked by its kind's icon; it opens an input, filtering
   live as the typing pauses, in place on the bar's line (into the
   address, as the view's text filter always did; the editor follows the
   address, so back and forward, a view and Reset change what it holds)
   and, on a blur, folding back to a chip, `Search contains "…"`, which
   a click reopens to edit; Escape folds it back with its text kept, the
-  focus on its chip or magnifier. A chip reads its field, an operator and
+  focus on its chip or + Filter. A chip reads its field, an operator and
   its values: `is` for one value, `is any of` for several, `in` for a
   date's month or year, `contains` for the search; the query model has no
   other operators, so there is no operator step in adding one, and a
@@ -405,16 +433,23 @@ draws.
   None, and the view's order within each; so a page of a hundred continues
   the group the last one ended in, under its header again, and each
   header's count is the group's whole, read with the page. A group's
-  header is a bar across the row's width, as Linear's: a subtle
-  gradient in the value's own ink where it names a record, as a
-  project's, its icon in the same ink, even drawn as a badge, kept at
-  an enumeration's tone instead, which keeps its meaning; a chevron
+  header is a bar across the row's width, as Linear's, coloured only
+  where the field's values are a closed set the code declares, a
+  handful (`closed` in `models/view.ts`: a state, a priority, a
+  boolean): a state's bar is a subtle gradient in its tone, or, where
+  the tone has no colour of its own, in an ink seeded by its value. An
+  open set's, whose values the data holds (a circle, a person, a record,
+  even drawn as a badge, any other), is a plain grey bar, the raised
+  step, its value its `Chip`, a circle's icon in its ink inside it, a
+  person's avatar; a date's month and None are the grey bar and their
+  words (the operator, 19 Nov). Decided by the field's kind, never by
+  counting its values; a chevron
   collapses its own rows alone, the other groups' kept as they are;
   and, where the collection offers New, a + ("Create in …", never
   named New, so the two are never confused by a voice or a test) opens
   the same dialog (`Group`, `models/query.ts`'s `groupTint`). A
   board and a calendar place every row the view keeps. `Gallery`
-  lays the items out as cards (`Tile`, drawn as Linear's: a muted reference and a person's avatar on top, the title in two lines at most, the other fields as quiet unlabelled chips (`Chip`, a hairline outline with an icon or a tone's dot, none drawn for an empty field) and a muted created or updated line at the foot); `Board` puts them in a column
+  lays the items out as cards (`Tile`, drawn as Linear's: a muted reference and a person's avatar on top, the title in two lines at most, the other fields as quiet unlabelled chips (a hairline outline with an icon or a tone's dot, a record its filled `Chip`, none drawn for an empty field) and a muted created or updated line at the foot); `Board` puts them in a column
   per value of an enumeration, a person or a circle, each with its
   count, the board offered only where a field is one of them; `Calendar` puts them on the days of a
   month, in whole weeks from Monday, or of a week, by a date field, in
@@ -509,23 +544,52 @@ draws.
   board's cards in each column and a calendar's in each day, each read
   in that order by the one statement, so the next hundred continue it.
 - `Detail`: the one record page, the same for every collection, as
-  Linear's issue page. The content is the record's: its title, large,
-  then its free-form content, a document's blocks where its kind holds
-  them, a record's own words where it holds them as text, a circle's
-  purpose or a report's caption (`summary`, in the text face as
-  `Prose`), and under a hairline its Activity, what happened to it in
+  Linear's issue page. The content is the record's, one column centred
+  in it: its title, large, then its words where it holds them as text, a
+  circle's purpose or a report's caption (`summary`, in the text face as
+  `Prose`), then its overview as its record page layout lays it out
+  (`layout`, below), its body and its panels, and under a hairline its
+  Activity, what happened to it in
   order, with its comments and the box that adds one where its kind
   takes comments (`comment`). Each slice gives its events newest first
   (`activity`), a comment's words as its `body`; the page merges every
   slice's and shows them oldest first, the box last. The drawer's
   Details panel holds its properties, in sections as Linear's drawer
-  has them, nothing boxed and no form in it: Properties, each one line,
-  an icon and its value, its name on hover and for a screen reader and
-  drawn beside the value only where the value cannot say what it is (a
-  figure, a count, a phrase; a status, a person, a circle, a date and a
-  record link go without); and Dates, each a calendar icon and the day.
-  A property with no value is not listed; Add property, at the end of
-  Properties, offers the empty ones that can be set. A press on a
+  has them, nothing boxed and no form in it, each under the one heading,
+  a small gap under it: Properties, its state first, then who and
+  where, then its phrases; and Dates, its days, the record's Created
+  and Updated last. A slice names another section by a property's
+  `group`, drawn between them; otherwise its kind places it
+  (`models/drawer.ts`). A computed figure, a sum or a count, is no
+  property: it is a `Stat` of the overview's Figures panel (`figures`),
+  which the ui check holds. Every row is a bare `Field`, one height, a
+  step in from its heading, a record's chip within it: an icon and its
+  value, no name shown, its name its tooltip and its accessible name.
+  The icon says what the field is: the value's own lead where it has
+  one, a state's pill, a priority's bars, a person's avatar, a circle's
+  or a record's chip; else the field's glyph, its slice's (`glyph`, as
+  an envelope before an email, a fingerprint before a digest, a scale
+  before a procedure) or its kind's (`glyphs.ts`), a day's telling when
+  it began, falls due, was carried through, ended or last changed by its
+  lead word or its name. Where the value alone would not say what it
+  is, a quiet lead word or two stands before it in the same row, muted
+  (`lead` on its `Prop`, as "closes 31 Oct 2026", "due 19 Nov", "since 1
+  Sept 2025", "quorum half the seats", "minutes bind as written",
+  "answers to" a circle's chip): a day always has one, its name
+  lowercased where its slice gives none, so two days never read alike,
+  and the Created and Updated stamps lead with theirs. A slice prefers
+  a kind the kit draws over words where it is clear (a state's pill, a
+  record's chip, a person), and a day a panel's header already shows,
+  as a motion's deadline in its Vote panel's, is not repeated in the
+  drawer. Two rows naming the same record, as a motion's circle that
+  also put it, are one, naming both fields, and keep a lead word only
+  where both share it; a phrase that only repeats what a record's chip
+  in another row names, as an invoice's billed name beside its client's
+  chip, is not drawn, the chip kept. A property with no value is not
+  listed; Add property, at the end of Properties, offers the empty ones
+  that can be set. An editable row is `live`: it fills on hover, and a
+  press anywhere on it, or Enter on it, opens its popover, never a
+  pencil; a record's chip in it stays its link. A press on a
   property that can be changed (`edit` on its `Prop`) opens the popover
   that changes it, through the write the property names, as a form
   posts it: `Pick` for a choice among options, one or many, with a
@@ -559,9 +623,11 @@ draws.
   whom as the log has them (`stamps`), the dates and actors of its
   first and latest entries, which the item's read gives beside its
   data, but those its slices' properties already name, as a task's
-  Created. Related, a section of its own, has each line one row with
-  its collection's icon in the record's ink and its title, ending in an
-  ellipsis, its kind on hover. Related lists first its
+  Created. Related, a section of its own, has each line one row of the
+  Properties' height, its collection's icon (read from its link where
+  it names none), its title ending in an ellipsis, and at its end, quiet,
+  how many rows a jump holds or what a record is to this one; a list
+  longer than seven shows its first five and Show N more. Related lists first its
   jumps: each other collection whose rows name the record, by the
   collection's icon and name and how many of its rows the reader sees
   that name it, through their lens, counted in the core read's one
@@ -572,25 +638,59 @@ draws.
   record by a column that says it is `of` that record's collection, as
   a task's hidden project id is a project's; never by who created or
   last updated it, nor in a collection of home or Settings, and a
-  collection holding none of its rows is no jump. Then the records its
-  slices link to (`related`). A record whose structured
-  data is central to it puts that data in a tab of its own after the
-  first (`tabs`): a motion's Stances and Effects, a meeting's Agenda, a
-  circle's Roles, Policies and Settings, a document's Versions, a report's
-  Figures, an invoice's Lines, a period's Entries, a project's Tasks,
-  Milestones and Budget, a contact's Projects and Invoices, a person's
-  Membership, Work and Authority; the first tab is the
-  content and its Activity, and a kind with no free-form content shows
-  its overview's blocks there. The header's crumb names the record by
-  its kind and reference (`subtitle`, its id), never a sentence about
-  it, which its properties and content say. Tabs show as
+  collection holding none of its rows is no jump, and a jump to a
+  collection a tab of the record lists opens that tab. Then the records its
+  slices link to (`related`), but those a property's chip already links,
+  as an invoice's client or a motion's circle, which the drawer never
+  names twice. The first tab is the overview, laid out
+  by the page's record page layout (`layout`,
+  [architecture](../../../../_corpus/doc/architecture.md#record-page-layout)):
+  `body`, the record's body (`body`, the block editor or the text it is
+  written in) and then its panels, as a motion's proposal and its Vote;
+  or `panels`, unset, the slice's panels stacked and then the body in
+  a Notes panel (`Notes`, which, while the body holds nothing, as the
+  body's `canon` says, is no panel and no heading but only a quiet "Add
+  a note", a subtle button at the column's inset, and is the editor in
+  its panel once someone writes or presses it), as an invoice's Lines,
+  Payments and Project, then its Notes; then the Activity. **A heading
+  heads content** (the operator, 19 Nov): the Activity's shows only
+  over an event or a thread, the comment box standing alone where there
+  is neither; Related, a drawer's section and the Figures panel draw
+  nothing when empty; a `Panel` given no body and no footer is not
+  drawn; and a `Section` counting nothing whose title only repeats the
+  open tab's name, as an empty Postings in the Postings tab, shows what
+  it holds without its heading. The title, the body and the panels are
+  one column, 48rem at
+  most, centred in the content, the title's text, the body's and every
+  panel's content starting at one edge, the column's inset, a body's
+  grip hanging before it; a tab listing a collection takes the
+  content's width. The slices' figures are one panel, Figures, after the
+  body in `body` and first in `panels`. Every block on the overview but
+  the body is a `Panel` ([panels](#panels)), which the ui check's
+  `layouts` refuses otherwise. A panel
+  summarises; a tab lists, or holds what is too big to summarise
+  (`tabs`): a collection scoped to the record (`scoped`), as a
+  project's Tasks and a contact's Projects and Invoices, drawn by
+  `Collection` under the record's header (`tab`: no frame, views or
+  View panel of its own, its filters and paging kept in the address with
+  the tab, nothing saved, no New and no card moved), or more of the
+  same feat's, as a motion's Stances and Effects, a meeting's Agenda, a
+  circle's Roles, Policies and Settings, a document's Versions, an
+  invoice's Postings, an account's Ledger, a period's Entries, a
+  project's Milestones and Budget, a person's Membership, Work and
+  Authority. The header's breadcrumb leads from the
+  record's collection to its title, and Escape, as the collection's
+  segment, goes back to the collection; its reference (`subtitle`, its
+  id or address) is a quiet line under the title, never a sentence
+  about it, which its properties and content say. Tabs show as
   pills in the header when there are two or more, the open one in the
   URL (`?tab=`). **A page shows at most four tabs, and the slice that
   owns the record's collection chooses them and their order**: only the
   owner's page declares `tabs`, and an extension's blocks, a core
   feat's, a feat's or a graft's alike, sit in a tab the owner names
   (`{ tab, block }`), a bare one in the first; a tab past the first
-  that holds no block, as one whose filler is pruned, is not shown. An
+  that holds no block and lists no collection, as one whose filler is
+  pruned, is not shown. An
   extender the owner gives no tab is a jump in Related, as a person's
   tasks and expenses are. A tab earns its place only as a genuinely
   different view of the record, as a project's tasks are. The tabs
@@ -600,18 +700,24 @@ draws.
   would fix it. Every collection's item page is drawn by `Detail`
   alone, and the ui check refuses an item page that frames itself. Esc
   goes back to the collection.
-- `Card` (a borderless card raised on the panel, in the drawer or the
-  content), `Section` (a block in the content),
-  `Properties`, `Related`, `Activity`, `Table`, `Sheet` (a financial
-  statement: headings, lines and ruled-off totals with a figure per
-  column, a line opening on its accounts, each linking to its ledger),
-  `Cell`, `Stats`, `Explained` (settings said in full: each its label
-  and what bounds it, its value now and the one proposed, a badge saying
-  how it bears, over a sentence saying what it means, which wraps and is
-  never cut off), `Badge`, `Person` (a person wherever one appears:
+- `Card` (a borderless card raised on the panel, in the drawer, as the
+  View panel and a calendar's Legend), `Section` (a titled block in a
+  tab or a page), both headed by the one `Heading`, as a `Panel` is
+  ([panels](#panels)),
+  `Properties`, `Related`, `Activity`, `Table` (with `dense` and
+  `totals`, [panels](#panels)), `Sheet` (a financial statement alone:
+  headings, lines and ruled-off totals with a figure per named column,
+  a line opening on its accounts, each linking to its ledger; a list of
+  totals is a table's), `Cell`, `Stats` and `Stat`, `Empty` and `Meta`
+  ([panels](#panels)), `Explained` (settings said in full: each its
+  label and what bounds it, its value now and the one proposed as
+  read-only `Field`s, a badge saying how it bears, over a sentence
+  saying what it means, which wraps and is never cut off), `Badge` (a
+  state's pill: its tone's soft fill, a dot and its word), `Chip` (a record named compactly, as
+  below), `Person` (a person wherever one appears:
   their name, their address on hover; a column, property or event of the
   `person` kind is an address drawn so, from the names of the people the
-  co-op knows, which the shell reads once for its pages; a column of the
+  coop knows, which the shell reads once for its pages; a column of the
   `circle` kind is a circle's id drawn as its name, as the circles a
   mandate names are), `Grid` (figures to type into, a row per
   thing and a column per day, each cell showing what it holds and taking
@@ -619,16 +725,43 @@ draws.
   `pick` gives each row a choice in a column after its label, the
   first of its options chosen, as the circle a row's time is worked
   for),
-  `Button`, `Form` (a write, posting to the route's `write` form for a
-  named write, files and all, through `post`, its fields bound to it; `ready` false keeps its button disabled while
+  `Button` (a tone, `primary`, `info`, `danger`, `positive` (an
+  affirmative choice, as a vote's Consent, in the positive ink, filled as
+  `danger` is), `quiet` or `subtle`, an icon before its words (`lead`),
+  or its `icon` alone, small and square; a link with `href`; the submit
+  of a form drawn elsewhere by its id (`form`); `busy`
+  keeps its focus and reads as unavailable; a filled tone, `primary`,
+  `info`, `danger` or `positive`, is one of the brand's cells, as the site's row of
+  actions is, from the same geometry (`@cella/brand`'s `actions.ts`):
+  flat along its top and foot, its ends pointed past its words, and the
+  buttons beside it on its line, siblings a small gap apart, or the
+  buttons of forms that are their button (`Form`'s `button`, passed
+  through by `data-through`), drawn with
+  it as one row, each pair sharing a slanted edge parted by one gutter,
+  so a quiet Cancel beside it takes the shape too, while a run of quiet
+  buttons or an icon stays a plain rounded fill; the cell is an svg
+  under its words, first in its flow and a pixel wide, drawn once the
+  row is laid out and again as it changes, mirrored right to left, so
+  before it, and with no script or forced colours, it is the plain fill
+  at the same padding; its focus ring follows the cell 2px outside it,
+  and its whole box takes the pointer (`attachments/cell.ts`)),
+  `Form` (a write, posting to the route's `write` form for a
+  named write, files and all, through `post`, its fields bound to it;
+  `button` makes it its one button, its children the hidden values it
+  posts, drawn in the run of buttons beside it, as a vote's stances;
+  `bare` with an `id` draws its fields alone, its submit a `Button`
+  naming it by `form`, as a panel's footer holds it; `lead` puts an
+  icon before its button's words; `ready` false keeps its button disabled while
   there is nothing to post; the fields a refused write names as `spent`,
-  written before it stopped, are emptied; in New's dialog it ends in
-  Cancel, closes the dialog once settled and says a refusal's reason
-  itself),
+  written before it stopped, are emptied; its button floats right, an
+  inline form's at the end of its line (the operator, 19 Nov); in New's
+  dialog it ends in Cancel, closes the dialog once settled and says a
+  refusal's reason itself),
   `Hidden` (a value a form posts that no one types, named through the
   form it is in),
   `Field` (text, a number, a date, a time, an address, an email or a
-  file, or a choice among `options`, drawn by `Select`; its label names
+  file, or a choice among `options`, drawn by `Select`, in one of its
+  modes ([fields](#fields)); its label names
   it by its id and never wraps it; a date is typed in the app's locale
   and posts as an ISO day, its own calendar a button beside it
   (`DateField`): a month of days in the top layer, anchored to the
@@ -666,7 +799,7 @@ draws.
   where it does not), `Ordered` (a list a slice's writes reorder, as an
   agenda: each row numbered, with its grip and its columns, what the
   slice puts at its end and a quiet removal when the slice offers one;
-  `fixed` drops both once the list may not change), `Prose`, `Note` (a quiet line), the comment parts
+  `fixed` drops both once the list may not change), `Prose`, `Note` (a line that says something, a state or a reason; where nothing is shown, `Empty` says so), `Row` (items side by side, wrapping; `spaced` sets read-only fields apart), the comment parts
   ([comments](#comments)): `Conversation`, `Message`, `Reactions`,
   `AddReaction`, `Remark`, `Rich` and `RichField`,
   `Mention` (a member or a document named inside a
@@ -734,9 +867,17 @@ by default can be put in a list's meta. A look's cards' fields are its
 own, not a list's: it shows its own default until
 the view chooses otherwise.
 
-A value that names a record wears its collection's icon before it,
-wherever `Cell` draws it: in a card's field, a list's or a table's
-cell and the drawer's Properties. A column names the collection its
+A value that names a record, a circle among them, is one `Chip`
+wherever `Value` draws it: a list's line, a table's cell, a card's
+field, a board's column, a group's header and the drawer's
+Properties, where it is the record's link as well and goes without its
+label. A chip is one compact line, its name ending in an ellipsis
+where its place runs out, its collection's icon before it in the
+record's own ink, filled one step from the surface it sits on toward
+the text ([tokens](#tokens)'s layering), so it reads on the panel, a
+card, a grey bar, a hovered row or a popover alike, in either theme. A
+person keeps its avatar and name, and is a chip, its avatar inside it,
+only in a group's header. A column names the collection its
 value is a record of by `record`, as a task's assignee names `people`
 and its project `projects`; a property, by an `href` that is a record's
 own, `/<collection>/<id>`; a `person` is always one of `people`. The
@@ -747,7 +888,7 @@ imports another's to find it. A person wears one person (Phosphor
 (`Users`), as core circle's `circles` declares. It stands at the value's size, quieter
 than its text, and is hidden from assistive technology, since the text
 names the record. A collection that declares no icon, or that the shell
-does not mount, leaves the value bare; an enumeration, as a task's
+does not mount, leaves its chip with none; an enumeration, as a task's
 priority, names no record and wears none.
 
 ### Comments
@@ -794,9 +935,103 @@ document's comments alike, under the record's Activity.
   `head` sits inside its top: `Remark`, the quote a comment answers,
   with a × that drops it, or read above a posted comment.
 
-### Widgets
+### Panels
 
-A record's body is its blocks, and everything else stays out of their way. What a slice shows inside it that is not a block is a widget: one inline panel, as a figure or a chart sits among text, a faint fill and a hairline, a muted header with an icon and a name and, at its end, a state (`Inlay`, whose `aside` fills the header's end). A widget may be interactive, is always distinguished as one, and takes the body's column. What it holds is composed of `Row` (items side by side, wrapping), `Tally` (a count per answer as one thin proportional bar over its counts), `Note`, `Cell` and a form; inside it `--inset` is nil, so these sit flush to its padding. A slice puts one widget where it has custom content, never a stack of sections beside its text: the motion's Vote is one, after the proposal. `Note` takes `quiet` for an empty state, italic, small and the dimmest shade ("No comments yet").
+A record's body is its blocks, and everything else stays out of their
+way. What a slice shows on a record's overview that is not its body is
+a panel (`Panel`), and every panel is one system (the operator, 19
+Nov): one framed summary, as a figure or a chart sits among text, a
+faint fill (the raised step) and a hairline, the column's width, flush
+with its left edge. Its anatomy:
+
+- the header, the one heading (`Heading`): its icon, its `title` and
+  its `count` muted beside it, then at its end its state's pill
+  (`status`, a `Badge`) and quiet facts (`meta`, a `Meta`: a date, "due
+  19 Nov", "3 mandates");
+- the body, what it summarises, composed of the inner elements below;
+- the footer, where it has one: `help` on its left, muted, as why a vote
+  is not offered or what a threshold means, and its key actions
+  (`actions`) as one run of buttons at its right end, so a filled one
+  and those beside it are drawn as one row of cells: each in its
+  context's tone with an icon saying what it does, a vote's Consent
+  `positive` with a check, Object `danger` with a raised hand, Abstain
+  `quiet`, an "Open …" leading on with an arrow, a move such as "Move
+  to project" whose choice stays a `Field` in the body (a bare `Form`
+  there, its submit naming it by `form`).
+
+Header, body and footer share one inset, the record's title's, so
+every left edge lines up, and inside it `--inset` is nil, so what it
+holds sits flush to it. No button stands in a panel's body, nor a form
+drawing its own button: the ui check's `panels` refuses either, a
+panel's `actions` and `help` snippets passed over
+([enforcement](../../../../_corpus/doc/enforcement.md)). A record's own
+writes, Send, Close, Archive, stay in the page's header, never in a
+panel. A slice puts one panel where it has custom content, never a
+stack of sections beside its text: the motion's Vote is one, after the
+proposal. A record's overview draws its panels after the body in the
+`body` layout and as its stack in the `panels` layout, the body then
+the last panel, `Notes`, which while it holds nothing is only its quiet
+"Add a note", no panel; the slices' computed figures, their `figures`,
+are one panel, Figures, of `Stat`s, after the body or first. A figure
+earns its place as a quantity a reader acts on or compares, money owed,
+a budget against what is spent, hours, work left: never a mere count a
+tab or the Activity already gives (a document's versions and comments),
+nor what a panel's sentence or table already states (a terms' clauses,
+a lines table's totals), nor a nil that says nothing (nothing owed,
+nothing shared, no task open); a figure with no value is dropped, and
+with none left there is no Figures panel. A panel given no body and no
+footer is not drawn, never an empty frame under its title.
+
+Its inner elements are the UI core's, used inside panels and out:
+
+- `Table` drawn `dense`: rows closer, their text flush with the panel's
+  content edge and a row's hover reaching into its padding; with
+  `totals`, lines ruled off under its rows (net, VAT, total), each
+  figure under the last column and a `total` heavier under its own
+  rule, or alone with no headers, as a payslip's pay and an expense's
+  claim. A `Sheet` is a financial statement alone, never a list of
+  totals, which the ui check refuses as a sheet of one unnamed column.
+- `Stats` of `Stat`s: computed figures, each a tile one step from the
+  surface toward the text, so it stands out on the panel, its label in
+  quiet sentence case over its value in the display face, a tone on the
+  value alone, a figure naming a record linking to it; tiles of one
+  width, as many as fit a line.
+- `Field` in its modes ([fields](#fields)): read-only label→value rows
+  (`readonly`), set apart in a `Row spaced`; a choice that commits
+  (`live`), or that a footer's action posts.
+- `Empty`: one muted line where there is nothing to show, "Nothing
+  received for it yet", which `Table` draws for no rows; never a `Note`
+  drawn `quiet`, which the ui check refuses.
+- `Meta`: quiet trailing facts in a header, a footer or a line's end.
+- `Tally`: a whole split in parts as one thin bar in proportion over
+  its legend, each part's dot in its tone, its label and its figure
+  (`kind` writes them, a sum as money); `of` is the whole where the
+  parts fall short of it, its rest a bare track, as eight stances of a
+  roll of ten.
+- `Prose`, `Note`, `Row`, `Cell` and `Diff`, as anywhere.
+
+### Fields
+
+`Field` is the one field, in modes rather than other components:
+
+- as a form's, its default: its label over its input, posting with the
+  form it is in;
+- `readonly`: its label and its value as text, no input drawn and
+  nothing posted, the value drawn by `Value` as its `kind`, else as its
+  `type` says where the two agree (a number, a day), a link where it has
+  an `href`; every read-only label→value row is one, a panel's and
+  `Explained`'s;
+- `live`: it commits as it changes, as a setting's does, a pick as it
+  is made and a typed value on leaving it or on Enter, Escape taking a
+  typed edit back (`committing`); `Setting` draws its field so.
+
+`bare` draws it compactly, as Linear's properties: its icon and its
+value alone, its label only its tooltip and its accessible name. The
+icon is the value's own lead where it has one, else the field's
+(`icon`); a quiet word or two before the value (`lead`, "closes",
+"quorum"), muted, says what it is where the value alone would not. A bare `live` field fills on hover and opens its `editor` in a
+popover on a press anywhere on it, never a pencil, a record's chip in it
+staying its link; every row of the drawer's Properties is one.
 
 
 ## Never native
@@ -853,7 +1088,7 @@ Its value is one listing (`models/arrange.ts`): the choices on, in
 order, separated by commas, an accordion's run after its name and a
 colon, the runs separated by semicolons, as a circle's features are
 written ([features](../circle/index.md#features)). One declared
-`grouped`, as the co-op's layout is, puts every choice on show in an
+`grouped`, as the coop's layout is, puts every choice on show in an
 accordion, called a group: a choice lands in a group only, never at the
 top level, a group named blank keeps its name, New group makes one, and
 those not shown are not enabled. How to drag is the help icon's tooltip
@@ -869,9 +1104,9 @@ in flight of its own, so a circle's switches each save one row
 
 A record's page draws a field it saves in the same way: its block draws
 `Settings` with that one setting, its write posted with the record's id
-as an item's are, as a contact's note is
-([contact](../../feats/contact/index.md#shell)), and the page has no
-Save button either.
+as an item's are, and the page has no Save button either; a record's
+own words are its body, as a contact's notes are, never such a field
+([contact](../../feats/contact/index.md#shell)).
 
 A settings page is served at `/settings/<name>`, listed in Settings'
 sidebar under its group, or, a page of one thing, at
@@ -978,13 +1213,13 @@ under it their devices, the one their session signs with marked as this
 device and each other current one with its revoke, as on their page.
 Its fields are all the reader's own, so none opens a motion.
 
-Organization, the co-op's own, comes first under Organization at
-`/settings/organization`, which the co-op menu's Settings opens: a
-`Settings` form of the co-op's particulars in force, its name, legal
+Organization, the coop's own, comes first under Organization at
+`/settings/organization`, which the coop menu's Settings opens: a
+`Settings` form of the coop's particulars in force, its name, legal
 name, legal form, capital, seat, SIREN, trade register and VAT number,
 none saved by anyone's write, since only a motion of the assembly
-adopts them ([the co-op's
-particulars](../circle/index.md#the-co-ops-particulars)). A value's
+adopts them ([the coop's
+particulars](../circle/index.md#the-coops-particulars)). A value's
 edit, as it commits, joins the changes to propose to the assembly, and
 the motion proposing them carries one Adopt a policy replacing the
 particulars with every value changed, its procedure the one their
@@ -1161,7 +1396,7 @@ and the page it is on, so the list only shrinks and a new violation of
 that rule elsewhere still fails. It lists none.
 
 What it holds the components to: a popover's trigger is named by its
-visible text, the co-op's mark and the account's initials hidden from
+visible text, the coop's mark and the account's initials hidden from
 assistive technology; a list of errors is a list inside its live
 region, never a list made one; and a region that scrolls with nothing
 in it the keyboard reaches, the page frame's content or a table's

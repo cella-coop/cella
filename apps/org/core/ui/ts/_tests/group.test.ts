@@ -1,12 +1,13 @@
-// A group's header, alone: the ink it wears, a record's own, seeded by
-// its name, none for an enumeration keeping its tone, a month or no
-// value; and the primary button's ink, landed in `styles/base.css`,
+// A group's header, alone: the ink it wears, only a closed set's (a
+// state's whose tone has no colour of its own, seeded by its value),
+// never an open set's (a record's, a circle's, a person's), a month's or
+// no value's; and the primary button's ink, landed in `styles/base.css`,
 // still the specimen's lead. Run by `cella test slice ui`.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import type { Column } from '../src/models/view.ts'
+import { closed, type Column } from '../src/models/view.ts'
 import { fields, groupable, groupTint, laned } from '../src/models/query.ts'
 import { HUES, inkOf, nth, ROLES } from '../src/models/ink.ts'
 
@@ -16,21 +17,28 @@ const project: Column = { key: 'project', label: 'Project', kind: 'badge', recor
 const status: Column = { key: 'status', label: 'Status', kind: 'badge', tone: () => 'accent', value: () => undefined }
 const month: Column = { key: 'due', label: 'Due', kind: 'date', value: () => undefined }
 const person: Column = { key: 'member', label: 'Member', kind: 'person', value: () => undefined }
+const circle: Column = { key: 'circle', label: 'Circle', kind: 'circle', record: 'circles', value: () => undefined }
 
-test('a record names its own ink, even drawn as a badge, as a project does', () => {
-  assert.equal(groupTint(project, 'Alpha', false), inkOf('Alpha'))
-  assert.equal(groupTint(project, 'Beta', false), inkOf('Beta'))
-  assert.notEqual(inkOf('Alpha'), undefined)
+test('a state whose tone has no colour of its own wears an ink seeded by its value', () => {
+  assert.equal(groupTint(status, 'open', false, 'accent'), inkOf('open'))
+  assert.equal(groupTint(status, 'draft', false), inkOf('draft'))
+  assert.ok(closed(status.kind, status.record) && closed('priority') && closed('boolean'), 'a state, a priority and a boolean are closed sets')
 })
 
-test('an enumeration with a tone of its own keeps it, and takes no ink', () => {
-  assert.equal(groupTint(status, 'open', false), null)
+test('a state with a tone of its own keeps it, and takes no ink', () => {
+  assert.equal(groupTint(status, 'paid', false, 'positive'), null)
 })
 
-test('a month, no value, and no record take no ink either', () => {
-  assert.equal(groupTint(project, '2026-11', true), null, 'a month')
-  assert.equal(groupTint(project, '', false), null, 'no value')
-  assert.equal(groupTint(person, 'camille@lanterne.example', false), null, 'a person names no record')
+test('an open set takes no ink: a record, even drawn as a badge, a circle and a person', () => {
+  assert.equal(groupTint(project, 'Alpha', false), null, 'a project')
+  assert.equal(groupTint(circle, 'web', false), null, 'a circle')
+  assert.equal(groupTint(person, 'camille@lanterne.example', false), null, 'a person')
+  assert.ok(!closed(project.kind, project.record) && !closed('circle') && !closed('person') && !closed('text'), 'each an open set')
+})
+
+test('a month and no value take no ink either', () => {
+  assert.equal(groupTint(status, '2026-11', true), null, 'a month')
+  assert.equal(groupTint(status, '', false), null, 'no value')
 })
 
 test('the primary button already wears the specimen\'s lead ink', () => {

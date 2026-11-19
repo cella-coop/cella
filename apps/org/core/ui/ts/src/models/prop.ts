@@ -29,6 +29,9 @@ export interface Look {
   // address or an id.
   shown: string
   empty: boolean
+  // Whether it names a record: a circle, or a row of the collection its
+  // column says. `Value` draws one as a `Chip`; a person keeps its avatar.
+  record: boolean
   // A record's or circle's icon, in its own ink.
   icon?: Component<any>
   ink?: number
@@ -42,7 +45,10 @@ export function look(shell: Known, value: unknown, kind: Kind = 'text', tone?: T
   const text = show(value, kind)
   const empty = text === '—'
   const shown = kind === 'circle' ? (shell.circle(text) ?? text) : kind === 'person' ? (shell.name(text) ?? text) : text
-  const base = { text, shown, empty }
+  // A circle is always a circle's; any other value is a record where its
+  // column says of which collection.
+  const of = kind === 'circle' ? 'circles' : kind === 'person' ? undefined : record
+  const base = { text, shown, empty, record: of !== undefined && !empty }
   if (empty) {
     return { ...base, lead: kind === 'priority' ? 'bars' : 'none' }
   }
@@ -55,9 +61,6 @@ export function look(shell: Known, value: unknown, kind: Kind = 'text', tone?: T
   if (kind === 'person') {
     return { ...base, lead: 'avatar' }
   }
-  // A circle is always a circle's; any other value is a record where its
-  // column says of which collection.
-  const of = kind === 'circle' ? 'circles' : record
   const icon = of ? shell.icon(of, kind === 'circle' ? text : undefined) : undefined
   if (icon) {
     return { ...base, lead: 'icon', icon, ink: inkOf(shown) }

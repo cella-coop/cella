@@ -100,6 +100,7 @@
     sorted = null,
     declared = null,
     whole = false,
+    tab,
   }: {
     name: string
     title: string
@@ -146,6 +147,11 @@
     // Whether the member's lens leaves the collection whole, as it does
     // one whose rows name no circle that owns them, which its header says.
     whole?: boolean
+    // The record's tab it is listed in, scoped to the record: it draws no
+    // frame, views or View panel of its own, under the record's header,
+    // and every address it writes keeps the tab open. Its filters and
+    // paging work as on its page; a view of it is not saved.
+    tab?: string
   } = $props()
 
   const typed = $derived(fields(columns))
@@ -216,7 +222,16 @@
   const count = $derived(spec.q ? `${matched} of ${kept} · “${spec.q}”` : String(kept))
   const noun = $derived(title.toLowerCase())
 
-  const link = (id: string, s: Spec) => `${page.url.pathname}${address(id, s, resolved(id))}`
+  const link = (id: string, s: Spec) => {
+    const to = `${page.url.pathname}${address(id, s, resolved(id))}`
+    if (!tab) {
+      return to
+    }
+    const [path, query = ''] = to.split('?')
+    const q = new URLSearchParams(query)
+    q.set('tab', tab)
+    return `${path}?${q}`
+  }
   const presetLink = (p: Preset) => link(p.id, resolved(p.id))
   const customLink = (c: Custom) => link(c.id, c.spec)
   // The open view as Pinned holds it: at its own address, not with what
@@ -452,6 +467,9 @@
   {/if}
 {/snippet}
 
+{#if tab}
+  {@render listed()}
+{:else}
 <Frame
   {title}
   {icon}
@@ -522,6 +540,13 @@
   </nav>
   {/snippet}
 
+  {@render listed()}
+</Frame>
+{/if}
+
+<!-- What the collection lists under its header: its filter bar, New's
+     dialog and its rows; a record's tab draws them alone. -->
+{#snippet listed()}
   <FilterBar {spec} {base} fields={typed} {values} onchange={change} lens={shell.lens && !whole ? shell.lens.name : null} />
 
   {#if errors.length}
@@ -633,7 +658,7 @@
       </p>
     {/if}
   </div>
-</Frame>
+{/snippet}
 
 <style>
   /* The view bar, as Linear's: quiet tabs, the active one on a sunk fill,
@@ -702,6 +727,7 @@
   }
   .list li:not(.group):hover,
   .list li.active {
+    --surface: var(--hovered);
     background: var(--hover);
   }
   /* A group's header: a quiet line over its rows, with room above it. */
@@ -725,10 +751,12 @@
     position: absolute;
     inset: 0;
   }
+  /* Centred, not on the baseline: a line under the title clips its
+     overflow, which puts its baseline at its foot, and may be a chip. */
   .main {
     display: flex;
     flex: 1 1 auto;
-    align-items: baseline;
+    align-items: center;
     gap: var(--space-3);
     min-width: 0;
     overflow: hidden;

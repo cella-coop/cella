@@ -26,6 +26,7 @@
   import { inked } from '../models/ink.ts'
   import type { Search } from '../hooks/CommandState.svelte.ts'
   import Avatar from './Avatar.svelte'
+  import Logo from './Logo.svelte'
   import Command from './Command.svelte'
   import DemoBanner from './DemoBanner.svelte'
   import Icon from './Icon.svelte'
@@ -39,10 +40,10 @@
   // The shell: the sidebar and the content beside it; the last write's
   // outcome floats above. ] shows or hides every page's drawer. The
   // sidebar shows the circle the member is in: its top stays put, the
-  // co-op selector, the Inbox, Activity and Pinned, the views the
+  // coop selector, the Inbox, Activity and Pinned, the views the
   // member pinned, the same in every circle. Its middle, which alone
   // scrolls, lists the features the circle shows, each under its group,
-  // in the co-op's layout's order, so a feature two circles show sits in
+  // in the coop's layout's order, so a feature two circles show sits in
   // the same group in the same place in both, then More…. Its foot stays put too: the command menu and
   // the acting member's account.
   let {
@@ -64,8 +65,8 @@
     lens = null,
     children,
   }: {
-    // The co-op the shell serves: its address, name and legal name.
-    scope: { address: string; name: string; legal: string | null }
+    // The coop the shell serves: its address, name and legal name.
+    scope: { address: string; name: string; legal: string | null; logo?: string | null }
     nav: Nav
     actor: Person | null
     dev: boolean
@@ -84,11 +85,11 @@
     drawer: boolean
     // The sidebar accordions the viewer opened or shut, as their cookie holds them.
     kept?: string
-    // The names of the people the co-op knows, by address.
+    // The names of the people the coop knows, by address.
     people: Record<string, string>
     // The circles the member reads, the assembly first, then those they
     // sit in, each with its features spelt as one listing, and the one
-    // they lensed the co-op on, if any, the circle they are in.
+    // they lensed the coop on, if any, the circle they are in.
     circles?: { id: string; name: string; sits: boolean; assembly?: boolean; features?: string; icon?: string | null }[]
     lens?: { id: string; name: string; features?: string } | null
     children: Snippet
@@ -121,7 +122,7 @@
   const owner = (collection: string) => nav.flatMap((g) => g.items).find((i) => i.href === `/${collection}`)?.icon
   // The circles the selector lists: those the member sits in, and the lens's
   // own where they do not, so the lens shows checked and can be cleared; the
-  // assembly is the co-op's own row.
+  // assembly is the coop's own row.
   const sat = $derived(circles.filter((c) => !c.assembly && (c.sits || c.id === lens?.id)))
   // The theme button cycles system, light, dark; its icon is the current one.
   const cycle = { system: 'light', light: 'dark', dark: 'system' } as const
@@ -163,8 +164,8 @@
     return parted.sort((a, b) => areas.indexOf(a.sub) - areas.indexOf(b.sub))
   }
   // Settings is its own sidebar, in place of the features, while a page
-  // of it is open: the member's own pages, then the co-op's. The account
-  // menu leads into it at Personal, the co-op menu at Organization.
+  // of it is open: the member's own pages, then the coop's. The account
+  // menu leads into it at Personal, the coop menu at Organization.
   const areas = ['Personal', 'Organization']
   const settings = $derived(held === 'platform')
   const opens = (area: string) => (parts('platform').find((p) => p.sub === area) ?? parts('platform')[0])?.items[0]?.href
@@ -216,10 +217,10 @@
     {:else}
     <div class="top">
     <div class="coop">
-      <Popover label="Co-op: {scope.name}{lens ? ` / ${lens.name}` : ''}">
+      <Popover label="Coop: {scope.name}{lens ? ` / ${lens.name}` : ''}">
         {#snippet trigger()}
-          <span class="mark" aria-hidden="true">{scope.name.slice(0, 1).toUpperCase()}</span>
-          <!-- Through a circle, the circle is the name and the co-op its
+          <Logo name={scope.name} logo={scope.logo} />
+          <!-- Through a circle, the circle is the name and the coop its
                eyebrow. -->
           {#if lens}
             <span class="names"><span>{scope.name}</span><b class="name">{lens.name}</b></span>
@@ -228,13 +229,13 @@
           {/if}
           <Icon icon={CaretUpDown} size="0.9em" />
         {/snippet}
-        <!-- The co-op and its circles are one radio group: the co-op, whose
+        <!-- The coop and its circles are one radio group: the coop, whose
              root is the assembly, clears the member's lens, a circle sets it,
              and every collection reads through the one chosen. -->
-        <form method="post" action="/lens" class="list" role="group" aria-label="Co-op">
+        <form method="post" action="/lens" class="list" role="group" aria-label="Coop">
           <input type="hidden" name="back" value={back} />
           <button role="menuitemradio" aria-checked={!lens} class="item" name="lens" value="">
-            <span class="mark small">{scope.name.slice(0, 1).toUpperCase()}</span>
+            <Logo name={scope.name} logo={scope.logo} size="sm" />
             <span class="names">
               <b>{scope.name}</b>
               <span>{scope.legal ?? scope.address}</span>
@@ -502,27 +503,11 @@
   .main {
     position: relative;
     margin: var(--space-2) var(--space-2) var(--space-2) 0;
-    background: var(--panel);
+    --surface: var(--panel);
+    background: var(--surface);
     border-radius: var(--radius-panel);
     min-height: 0;
     overflow: hidden;
-  }
-  .mark {
-    display: grid;
-    place-items: center;
-    flex: none;
-    width: 1.75rem;
-    height: 1.75rem;
-    border-radius: 7px;
-    background: var(--accent-fill);
-    color: var(--on-accent);
-    font-family: var(--font-display);
-    font-weight: 500;
-  }
-  .mark.small {
-    width: 1.5rem;
-    height: 1.5rem;
-    border-radius: 6px;
   }
   .name {
     flex: 1;
@@ -608,7 +593,7 @@
     color: var(--text-muted);
   }
   /* Settings' own title, standing apart from its subsections (.group):
-     the sidebar's heading, as the co-op's name is the main sidebar's. */
+     the sidebar's heading, as the coop's name is the main sidebar's. */
   .heading {
     margin: 0;
     padding: var(--space-2) var(--space-2) var(--space-3);

@@ -4,19 +4,24 @@
 
   // A financial statement: its rubrics in order, a figure in each column,
   // headings over their lines and totals ruled off. A line with accounts
-  // opens on them, each with its figures and a link to its ledger.
+  // opens on them, each with its figures and a link to its ledger. Its
+  // columns are its spans, each named; a list of totals under a table's
+  // lines is the table's own (`Table`'s `totals`), never a sheet. In a
+  // panel its lines sit flush with the panel's content edge.
   let { columns, rows }: { columns: string[]; rows: SheetRow[] } = $props()
 
   const tone = (r: SheetRow, a: number | null) => (r.kind === 'total' && a !== null && a < 0 ? 'negative' : undefined)
 </script>
 
 <div class="sheet" style:--columns={columns.length}>
-  <div class="row head">
-    <span></span>
-    {#each columns as c (c)}
-      <span class="figure">{c}</span>
-    {/each}
-  </div>
+  {#if columns.some(Boolean)}
+    <div class="row head">
+      <span></span>
+      {#each columns as c (c)}
+        <span class="figure">{c}</span>
+      {/each}
+    </div>
+  {/if}
   {#each rows as r (r.id)}
     {#if r.kind === 'heading'}
       <div class="row heading"><span>{r.label}</span></div>
@@ -49,14 +54,17 @@
 </div>
 
 <style>
+  /* Its lines' text starts at the inset of what it sits in, their hover
+     reaching past it by their own padding. */
   .sheet {
     display: grid;
+    margin-inline: calc(var(--inset, var(--space-3)) - var(--space-3));
     font-size: var(--text-sm);
     overflow-x: auto;
   }
   .row {
     display: grid;
-    grid-template-columns: minmax(12rem, 1fr) repeat(var(--columns), minmax(7.5rem, 9rem));
+    grid-template-columns: minmax(9rem, 1fr) repeat(var(--columns), minmax(6.5rem, 9rem));
     gap: var(--space-3);
     align-items: baseline;
     padding: var(--space-1) var(--space-3);

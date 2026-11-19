@@ -1,12 +1,12 @@
 <script lang="ts">
-  // A quiet line in a block: a state, a reason nothing is offered.
-  // `subtle` and `end` dim it further and set it at its corner, as a
-  // save indicator stands by what it saves rather than over it. `quiet` is
-  // an empty state: italic, small and the dimmest shade, as "No comments yet".
-  let { text, subtle = false, end = false, quiet = false }: { text: string; subtle?: boolean; end?: boolean; quiet?: boolean } = $props()
+  // A line in a block that says something: a state, a reason nothing is
+  // offered. `subtle` and `end` dim it further and set it at its corner,
+  // as a save indicator stands by what it saves rather than over it.
+  // Where there is nothing to show, `Empty` says so instead.
+  let { text, subtle = false, end = false }: { text: string; subtle?: boolean; end?: boolean } = $props()
 </script>
 
-<p class="note" class:subtle class:end class:quiet>{text}</p>
+<p class="note" class:subtle class:end>{text}</p>
 
 <style>
   .note {
@@ -17,11 +17,6 @@
   }
   .subtle {
     font-size: var(--text-xs);
-    color: var(--text-subtle);
-  }
-  .quiet {
-    font-size: var(--text-xs);
-    font-style: italic;
     color: var(--text-subtle);
   }
   .end {

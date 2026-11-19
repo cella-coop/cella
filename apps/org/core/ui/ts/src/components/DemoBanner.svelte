@@ -14,7 +14,7 @@
 
   // A demo build's banner, one fixed strip along the viewport's bottom, on
   // every page it serves, signed in or not: that this is a prototype for
-  // demo purposes and no place for real work, and that its co-op is a
+  // demo purposes and no place for real work, and that its coop is a
   // mock anyone may sign in to, behind its tooltip. On a visitor's
   // copy, now a room, which `cella demo serve` serves (`copy`, the
   // seconds idle before it resets, `ends`, when its lifetime ends once a
@@ -94,11 +94,11 @@
     <span class="about">
       <button type="button" class="trigger" aria-describedby="{id}-tip">
         <Icon icon={TestTube} />
-        <span>Prototype · mock co-op</span>
+        <span>Prototype · mock coop</span>
       </button>
       <span class="tip" id="{id}-tip" role="tooltip" popover="manual" {@attach tip}>
         <span
-          >Lanterne is a mock co-op: anyone may sign in as its members, whose keys anyone can derive.{#if copy}
+          >Lanterne is a mock coop: anyone may sign in as its members, whose keys anyone can derive.{#if copy}
             This copy of it is yours alone to share; it resets after {countdown.span} idle.{/if}</span
         >
         <span>This is a prototype environment for demo purposes and can't be used for real work.</span>

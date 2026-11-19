@@ -11,7 +11,7 @@
     font-size: var(--text-lg);
     line-height: 1.6;
     white-space: pre-wrap;
-    max-width: 44rem;
-    padding-inline: var(--space-3);
+    max-width: 48rem;
+    padding-inline: var(--inset, var(--space-3));
   }
 </style>

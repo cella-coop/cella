@@ -10,14 +10,17 @@
   import Icon from './Icon.svelte'
   import Value from './Value.svelte'
   import Popover from './Popover.svelte'
+  import { glyph, glyphs } from '../glyphs.ts'
 
   // The collection's filter bar: on the line above its rows once a
   // condition or a search holds, or, while neither does, folded into the
-  // header as Search and + Filter alone. Chips on the left, a condition
+  // header as + Filter alone, whose menu opens with Search, then a rule,
+  // then each field it can filter by, marked by its kind's icon. Chips on
+  // the left, a condition
   // each (its popover the same one the View panel opened, field, then,
   // for a date, the month or the year, else the values it offers; click
   // edits it, its own x removes it at once) and, once it holds text or is
-  // being typed, the search's; Search and + Filter on the right, then,
+  // being typed, the search's; + Filter on the right, then,
   // while the view differs from what it opened as, Save (through the
   // same save the View panel's own went through) and Reset (back to what
   // the view opened as). A chip the open view's own saved form already
@@ -127,8 +130,10 @@
   const labelled = (f: { label: string; type?: string }) => (f.type === 'date' ? `${f.label}, by month` : f.label)
 
   // A field picked from the menu: it closes, and its condition goes on.
+  const shut = (e: MouseEvent) => (e.currentTarget as HTMLElement).closest<HTMLElement>('[popover]')?.hidePopover()
+
   function pick(e: MouseEvent, key: string) {
-    ;(e.currentTarget as HTMLElement).closest<HTMLElement>('[popover]')?.hidePopover()
+    shut(e)
     add(key)
   }
 
@@ -136,8 +141,13 @@
     state.searching = true
   }
 
+  function searchFromMenu(e: MouseEvent) {
+    shut(e)
+    openSearch()
+  }
+
   // A blur commits the typed text as the chip, or, with none, folds the
-  // search back to the magnifier.
+  // search away.
   function closeSearch() {
     state.searching = false
   }
@@ -177,8 +187,6 @@
         placeholder="Search"
         aria-label="Search"
       />
-    {:else}
-      <button type="button" class="icon" data-search-trigger aria-label="Search" title="Search  /" onclick={openSearch}><Icon icon={MagnifyingGlass} /></button>
     {/if}
   </div>
 
@@ -237,11 +245,13 @@
   <span class="adder" {@attach captureAdder}>
     <Popover label="Filter by a field" button>
       {#snippet trigger()}<Icon icon={Funnel} /><span>Filter</span>{/snippet}
+      <button type="button" role="menuitem" class="item field" data-search onclick={searchFromMenu}><Icon icon={MagnifyingGlass} /><span>Search</span><kbd>/</kbd></button>
+      <hr />
       {#if lens && !scoped}
-        <button type="button" role="menuitem" class="item" onclick={() => onchange({ ...spec, across: false })}>Circle: {lens}</button>
+        <button type="button" role="menuitem" class="item field" onclick={() => onchange({ ...spec, across: false })}><Icon icon={glyphs.circle} /><span>Circle: {lens}</span></button>
       {/if}
       {#each offered as f (f.key)}
-        <button type="button" role="menuitem" class="item" data-field={f.key} onclick={(e) => pick(e, f.key)}>{labelled(f)}</button>
+        <button type="button" role="menuitem" class="item field" data-field={f.key} onclick={(e) => pick(e, f.key)}><Icon icon={glyph(f.kind)} /><span>{labelled(f)}</span></button>
       {:else}
         <span class="none">Every field is filtered</span>
       {/each}
@@ -371,8 +381,31 @@
     text-align: start;
     cursor: pointer;
   }
-  /* Search at the bar's start; the chips, then the Filter pill, at its
+  /* The Filter menu's items: the icon, the name, and Search's key at the
      end. */
+  .field {
+    justify-content: flex-start;
+  }
+  .field :global(svg) {
+    flex: none;
+    color: var(--text-muted);
+  }
+  .field kbd {
+    margin-inline-start: auto;
+    padding: 0 0.3em;
+    border-radius: 4px;
+    background: oklch(0.5 0 0 / 12%);
+    font-family: var(--font-ui);
+    font-size: var(--text-2xs);
+    color: var(--text-muted);
+  }
+  hr {
+    margin: var(--space-1) var(--space-2);
+    border: none;
+    border-top: 1px solid var(--line);
+  }
+  /* Search, while typed, at the bar's start; the chips, then the Filter
+     pill, at its end. */
   .lead {
     display: flex;
     align-items: center;
@@ -390,21 +423,6 @@
      quiet the chip's own accent-text falls under AA. */
   .op {
     opacity: 0.9;
-  }
-  .icon {
-    display: grid;
-    place-items: center;
-    width: var(--bar-h);
-    height: var(--bar-h);
-    border: none;
-    border-radius: var(--radius-control);
-    background: none;
-    color: var(--text-subtle);
-    cursor: pointer;
-  }
-  .icon:hover {
-    background: var(--hover);
-    color: var(--text);
   }
   .search {
     flex: 0 1 11rem;

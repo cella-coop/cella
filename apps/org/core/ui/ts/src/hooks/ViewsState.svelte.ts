@@ -7,7 +7,7 @@ import { usePinned } from './usePinned.ts'
 const key = 'cella-views'
 
 // The viewer's own views of one collection: preferences kept in their
-// browser, never records of the co-op's, so they go through no write and
+// browser, never records of the coop's, so they go through no write and
 // no log. Read once the page is in the browser, as the server cannot; the
 // store is versioned to move into a member's preferences as it is. How
 // many rows each keeps is asked of the server, which renders the page

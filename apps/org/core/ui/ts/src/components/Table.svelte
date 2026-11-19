@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Component } from 'svelte'
-  import type { Column } from '../models/view.ts'
+  import type { Column, Total } from '../models/view.ts'
   import { opens, under, type Grouping } from '../models/query.ts'
   import { focused, scroller } from '../models/keys.ts'
   import { inked, inkOf } from '../models/ink.ts'
@@ -8,11 +8,18 @@
   import SortAscending from 'phosphor-svelte/lib/SortAscending'
   import SortDescending from 'phosphor-svelte/lib/SortDescending'
   import Cell from './Cell.svelte'
+  import Empty from './Empty.svelte'
   import Group from './Group.svelte'
   import Icon from './Icon.svelte'
 
-  // A table of rows; with none, one quiet line in their place, named for
-  // the section it sits in unless `empty` says otherwise, and no headers.
+  // A table of rows; with none, `Empty` in their place, named for the
+  // section it sits in unless `empty` says otherwise, and no headers. Its
+  // first column's text starts at the inset of what it sits in. `dense`,
+  // as inside a panel, sets its rows closer, their text flush with the
+  // panel's content edge and a row's hover reaching a little past it.
+  // `totals` are ruled off under the rows, each figure under the last
+  // column, a total heavier under its own rule; a table of totals alone
+  // draws them with no headers, as a payslip's pay.
   // Where the keyboard roves its rows, `stop` is the one row in the tab
   // order, the keyboard's row (`active`) takes the focus and a row
   // focused otherwise is reported (`onfocusrow`); `sorted` is the column
@@ -32,9 +39,13 @@
     empty,
     group,
     mark,
+    dense = false,
+    totals = [],
   }: {
     columns: Column[]
     rows: any[]
+    dense?: boolean
+    totals?: Total[]
     href?: (row: any) => string | undefined
     active?: number
     stop?: number
@@ -53,15 +64,15 @@
   const end = (c: Column) => c.kind === 'money' || c.kind === 'number'
 </script>
 
-{#if rows.length === 0}
-  <p class="empty">{none}</p>
+{#if rows.length === 0 && totals.length === 0}
+  <Empty text={none} />
 {:else}
-  <div class="scroll" {@attach scroller(section?.() ?? 'Table')}>
+  <div class="scroll" class:dense {@attach scroller(section?.() ?? 'Table')}>
     <table>
-      <thead>
+      <thead class:none={!rows.length}>
         <tr>
           {#each columns as c (c.key)}
-            <th class:end={end(c)} aria-sort={sorted?.key === c.key ? sorted.dir : undefined}>
+            <th class:end={end(c)} class:titled={c.kind === 'title'} aria-sort={sorted?.key === c.key ? sorted.dir : undefined}>
               {#if onsort}
                 <button class="sort" onclick={() => onsort(c.key)}>
                   {c.label}{#if sorted?.key === c.key}<Icon icon={sorted.dir === 'ascending' ? SortAscending : SortDescending} />{/if}
@@ -103,7 +114,7 @@
             >
               {#each columns as c, j (c.key)}
                 {const rowIcon = $derived(c.role === 'title' ? mark?.(row) : undefined)}
-                <td class:end={end(c)}>
+                <td class:end={end(c)} class:titled={c.kind === 'title'}>
                   {#if link && j === 0}
                     <a href={link} class="stretched" tabindex={stop < 0 ? undefined : -1}>
                       {#if rowIcon}<span class="mark" style={inked(inkOf(String(c.value(row))))}><Icon icon={rowIcon} /></span>{/if}
@@ -119,18 +130,82 @@
           {/if}
         {/each}
       </tbody>
+      {#if totals.length}
+        <tfoot class:ruled={rows.length > 0}>
+          {#each totals as t (t.label)}
+            <tr class:total={t.total}>
+              <th scope="row" colspan={Math.max(1, columns.length - 1)}>{t.label}</th>
+              <td class="end"><Cell value={t.value} kind={t.kind ?? 'money'} tone={t.tone} /></td>
+            </tr>
+          {/each}
+        </tfoot>
+      {/if}
     </table>
   </div>
 {/if}
 
 <style>
-  .empty {
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    padding-inline: var(--space-3);
-  }
+  /* The first column's text starts at the inset of what the table sits
+     in, a section's or the content's; a dense table's rows reach a
+     little past it, so their text is flush with a panel's content edge
+     and a row's hover fill bleeds into the panel's padding. */
   .scroll {
+    --edge: var(--inset, var(--space-3));
     overflow-x: auto;
+  }
+  .dense {
+    --edge: var(--space-2);
+    margin-inline: calc(-1 * var(--space-2));
+  }
+  .dense td {
+    height: 2rem;
+    padding-inline: var(--space-2);
+  }
+  .dense th {
+    padding-inline: var(--space-2);
+  }
+  /* In a panel the title column gives way first, its text ending in an
+     ellipsis, so the figures and the totals under them stay in view on a
+     narrow screen. */
+  .dense .titled {
+    width: 100%;
+    max-width: 0;
+  }
+  td:first-child,
+  th:first-child {
+    padding-inline-start: var(--edge);
+  }
+  td:last-child,
+  th:last-child {
+    padding-inline-end: var(--edge);
+  }
+  /* A table of totals alone keeps its columns for assistive technology
+     and shows no headers. */
+  thead.none {
+    display: none;
+  }
+  tfoot th {
+    text-align: start;
+    font-size: var(--text-sm);
+    font-weight: 400;
+    color: var(--text-muted);
+    white-space: normal;
+  }
+  tfoot td,
+  tfoot th {
+    height: 1.875rem;
+    padding-block: 0;
+  }
+  tfoot.ruled tr:first-child > * {
+    border-block-start: 1px solid var(--line);
+  }
+  tfoot tr.total > * {
+    border-block-start: 1px solid var(--line);
+    font-weight: 600;
+    color: var(--text);
+  }
+  tfoot tr > * {
+    border-radius: 0;
   }
   table {
     width: 100%;
@@ -178,6 +253,7 @@
   }
   tbody tr:not(.group):hover,
   tr.active {
+    --surface: var(--hovered);
     background: var(--hover);
   }
   /* A group's header, a quiet line over its rows with room above it. */

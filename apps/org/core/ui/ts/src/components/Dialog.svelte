@@ -84,7 +84,8 @@
     padding: var(--space-4);
     border: 1px solid var(--line);
     border-radius: var(--radius-float);
-    background: var(--float);
+    --surface: var(--float);
+    background: var(--surface);
     color: var(--text);
     box-shadow: var(--shadow-float);
   }

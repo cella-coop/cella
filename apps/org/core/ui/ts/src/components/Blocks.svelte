@@ -26,18 +26,24 @@
 </div>
 
 <style>
-  /* A document is the co-op's writing, not the app's: set whole, headings
+  /* A document is the coop's writing, not the app's: set whole, headings
      too, in the text face; the display face stays the shell's. */
+  /* Its text starts at the inset of what it sits in, a record's column's
+     as its title's and its panels' content, a panel's flush: the body's
+     own padding is taken back, and the grip hangs in the margin before
+     it. */
   .blocks {
-    padding: var(--space-2) var(--space-2) var(--space-5) var(--space-5);
+    margin-inline-start: calc(-1 * var(--space-1));
+    padding: var(--space-2) var(--space-2) var(--space-5) var(--inset, 0px);
     font-family: var(--font-ui);
     font-size: var(--text-md);
     line-height: 1.55;
-    max-width: 46rem;
+    max-width: 48rem;
     color: var(--text);
   }
   .blocks[data-readonly] {
-    padding: var(--space-1) 0;
+    padding-block: var(--space-1);
+    padding-inline-end: 0;
   }
   .blocks[data-chosen] {
     caret-color: transparent;
@@ -65,9 +71,12 @@
   .blocks :global([data-selected] > .children) {
     background: var(--accent-soft);
   }
+  /* The grip hangs before its line, a small gap from it, taking no room
+     in it, so a line's text starts where a reader's does. */
   .blocks :global(.line > .handle) {
     flex: none;
     margin-left: -1.4rem;
+    margin-right: 0.15rem;
     margin-top: 0.15rem;
     cursor: grab;
     opacity: 0;

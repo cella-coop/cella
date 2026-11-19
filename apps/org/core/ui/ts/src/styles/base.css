@@ -198,6 +198,7 @@ button[role='option']:not([aria-disabled='true'], :disabled):hover,
 button[role='option']:focus-visible,
 button[role^='menuitem']:hover,
 button[role^='menuitem']:focus-visible {
+  --surface: var(--hovered);
   background: var(--hover);
 }
 button[role='option'][aria-selected='true'],

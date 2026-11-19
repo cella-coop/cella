@@ -11,7 +11,7 @@
   // Its `actions`, small icon buttons, sit at its top right, shown on
   // hover or focus, always where there is no hover. A reply is set in by
   // how deep it is. `who` draws the name where a slice draws people its
-  // own way; else it is the person's name as the co-op knows it.
+  // own way; else it is the person's name as the coop knows it.
   let {
     author,
     name,

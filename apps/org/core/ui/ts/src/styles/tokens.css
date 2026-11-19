@@ -31,6 +31,19 @@
   --neutral-text: var(--text-muted);
   --neutral-soft: var(--sunk);
 
+  /* Layering. Each surface declares the solid colour it is as --surface,
+     beside its own background, and its descendants inherit it, so what
+     sits on a surface knows what it sits on: a chip fills one step
+     (--lift) from it toward the text, which darkens in light and
+     lightens in dark, and an avatar's ring cuts out in its colour. The
+     page's own is the ground. A row the pointer or the keyboard is on is
+     a surface too, the hover over the panel or a floating list
+     (--hovered: --hover is --line at 60%, laid solid here), so a chip in
+     it steps from the hover, not from the panel under it. */
+  --surface: var(--ground);
+  --lift: 7%;
+  --hovered: color-mix(in oklab, var(--line) 60%, var(--panel));
+
   --focus: 0 0 0 2px var(--accent-border);
   /* The same ring as an outline, where a shadow would be clipped, as on
      a table's cell. */

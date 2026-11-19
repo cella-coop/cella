@@ -1,18 +1,20 @@
 <script lang="ts">
   import type { Component, Snippet } from 'svelte'
   import { navigating } from '$app/state'
-  import CaretLeft from 'phosphor-svelte/lib/CaretLeft'
+  import CaretRight from 'phosphor-svelte/lib/CaretRight'
   import SidebarSimple from 'phosphor-svelte/lib/SidebarSimple'
-  import type { Panel, Tone } from '../models/view.ts'
+  import type { DrawerPanel, Tone } from '../models/view.ts'
   import { useShell } from '../hooks/useShell.ts'
   import { scroller, typing } from '../models/keys.ts'
   import Badge from './Badge.svelte'
   import Icon from './Icon.svelte'
 
   // The one page frame, its header one compact row as Linear's: on an
-  // item, a quiet way back to its collection; the page's name with its
-  // count and status; the page's tabs right after it, a collection's views, scrolling in their own strip
-  // when they run out of room; then the page's writes and one quiet icon
+  // item, a breadcrumb, its collection's icon and name, the way back,
+  // then the item's name; elsewhere the page's icon and name; either with
+  // its count and status; the page's tabs right after it, a collection's
+  // views, scrolling in their own strip when they run out of room; then
+  // the page's writes and one quiet icon
   // group, the drawer's panel tabs beside its toggle, which stays there
   // when the drawer is shut. The header spans the content and the drawer
   // on one grid; under it, the content with an item's subtitle, and the
@@ -25,7 +27,6 @@
     subtitle,
     badges = [],
     back,
-    heading = true,
     actions,
     bar,
     panels = [],
@@ -43,13 +44,13 @@
     subtitle?: string
     // Whether the whole page's subject holds, beside its count.
     badges?: { label: string; tone: Tone }[]
-    back?: { href: string; label: string }
-    // Whether the name is the page's heading; a record's page names its
-    // kind and reference here and holds its title as the heading.
-    heading?: boolean
+    // An item's collection, its name and icon as the sidebar shows them:
+    // the breadcrumb's first segment and the way back. The page's name is
+    // then the crumb's last, not the heading, which the content holds.
+    back?: { href: string; label: string; icon?: Component<any> }
     actions?: Snippet
     bar?: Snippet
-    panels?: Panel[]
+    panels?: DrawerPanel[]
     children: Snippet
   } = $props()
 
@@ -87,13 +88,16 @@
   <header class="top">
     <div class="name">
       {#if back}
-        <a href={back.href} class="back" title="Back to {back.label}  Esc" aria-label="Back to {back.label}"><Icon icon={CaretLeft} /></a>
-      {/if}
-      {#if icon && !back}<span class="mark" aria-hidden="true"><Icon {icon} size="1.15rem" /></span>{/if}
-      {#if heading}
-        <h1 title={caption}>{title}</h1>
+        <nav class="crumbs" aria-label="Breadcrumb">
+          <a href={back.href} class="up" title="Back to {back.label}  Esc">
+            {#if back.icon}<span class="mark"><Icon icon={back.icon} size="1.15rem" /></span>{/if}{back.label}
+          </a>
+          <span class="sep" aria-hidden="true"><Icon icon={CaretRight} weight="regular" size="0.8rem" /></span>
+          <span class="here" aria-current="page" title={caption ? `${caption}: ${title}` : title}>{title}</span>
+        </nav>
       {:else}
-        <span class="crumb" title={caption}>{title}</span>
+        {#if icon}<span class="mark" aria-hidden="true"><Icon {icon} size="1.15rem" /></span>{/if}
+        <h1 title={caption}>{title}</h1>
       {/if}
       {#if count}<span class="count">{count}</span>{/if}
       {#each badges as b (b.label)}<Badge tone={b.tone}>{b.label}</Badge>{/each}
@@ -175,26 +179,13 @@
     min-width: 0;
     white-space: nowrap;
   }
-  .back {
-    display: grid;
-    place-items: center;
-    width: 1.5rem;
-    height: 1.5rem;
-    margin-inline-start: calc(-1 * var(--space-1));
-    border-radius: var(--radius-control);
-    color: var(--text-muted);
-  }
-  .back:hover {
-    background: var(--hover);
-    color: var(--text);
-  }
   .mark {
     display: flex;
     flex: none;
     color: var(--text-muted);
   }
   h1,
-  .crumb {
+  .crumbs {
     font-family: var(--font-ui);
     font-size: var(--text-md);
     font-weight: 500;
@@ -202,8 +193,43 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .crumb {
+  /* The breadcrumb as Linear's: the collection quiet and whole, a small
+     caret, then the item's name in the text's own colour, which alone
+     gives way to the row, cut short by an ellipsis. */
+  .crumbs {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+  .up {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: none;
+    padding: 2px var(--space-1);
+    margin-inline-start: calc(-1 * var(--space-1));
+    border-radius: var(--radius-control);
     color: var(--text-muted);
+    text-decoration: none;
+  }
+  .up:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
+  .up:hover .mark {
+    color: inherit;
+  }
+  .sep {
+    display: flex;
+    flex: none;
+    color: var(--text-muted);
+  }
+  .here {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
   }
   .count {
     font-size: var(--text-sm);
@@ -324,10 +350,15 @@
     overflow-x: hidden;
     overflow-y: auto;
     min-width: 0;
-    /* No inset of its own on the content's side: the content's padding
-       alone is the gap, as wide as the content's own edge by the sidebar
-       (the operator, 17 Nov). */
-    padding: var(--space-4) var(--space-4) var(--space-4) 0;
+    /* The gap to the content is as wide as the content's own edge by the
+       sidebar (the operator, 17 Nov), with the content's scrollbar midway
+       across it, touching neither (the operator, 19 Nov). An overlay bar
+       is drawn inside the content's padding, at its edge, so the content
+       keeps the larger share and the drawer the smaller. */
+    padding: var(--space-4) var(--space-4) var(--space-4) var(--space-1);
+  }
+  .drawn > .content {
+    padding-inline-end: var(--space-3);
   }
   .panel {
     display: grid;
@@ -343,6 +374,9 @@
   @media (max-width: 75.5rem) {
     .drawn {
       grid-template-columns: minmax(0, 1fr);
+    }
+    .drawn > .content {
+      padding-inline-end: var(--space-4);
     }
     .drawer {
       grid-column: 1;

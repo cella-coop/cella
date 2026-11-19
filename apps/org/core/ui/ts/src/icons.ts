@@ -38,3 +38,29 @@ export { default as ArrowCounterClockwise } from 'phosphor-svelte/lib/ArrowCount
 export { default as ArrowUp } from 'phosphor-svelte/lib/ArrowUp'
 export { default as CheckCircle } from 'phosphor-svelte/lib/CheckCircle'
 export { default as SmileySticker } from 'phosphor-svelte/lib/SmileySticker'
+export { default as Envelope } from 'phosphor-svelte/lib/Envelope'
+export { default as Phone } from 'phosphor-svelte/lib/Phone'
+export { default as MapPinSimple } from 'phosphor-svelte/lib/MapPinSimple'
+export { default as Link } from 'phosphor-svelte/lib/Link'
+// A drawer row's own glyph, naming its field where its value would not:
+// terms a motion needs, a digest, a signing device, a legal form, an
+// agenda, a milestone, a tag, a contract, a quorum, what makes minutes
+// bind.
+export { default as ListChecks } from 'phosphor-svelte/lib/ListChecks'
+export { default as Fingerprint } from 'phosphor-svelte/lib/Fingerprint'
+export { default as DeviceMobile } from 'phosphor-svelte/lib/DeviceMobile'
+export { default as Certificate } from 'phosphor-svelte/lib/Certificate'
+export { default as ListNumbers } from 'phosphor-svelte/lib/ListNumbers'
+export { default as Flag } from 'phosphor-svelte/lib/Flag'
+export { default as Tag } from 'phosphor-svelte/lib/Tag'
+export { default as Signature } from 'phosphor-svelte/lib/Signature'
+export { default as UsersFour } from 'phosphor-svelte/lib/UsersFour'
+export { default as Stamp } from 'phosphor-svelte/lib/Stamp'
+// A panel's footer actions: where a link leads on, an affirmative choice,
+// an objection, a choice left open, a file opened.
+export { default as ArrowRight } from 'phosphor-svelte/lib/ArrowRight'
+export { default as Check } from 'phosphor-svelte/lib/Check'
+export { default as Hand } from 'phosphor-svelte/lib/Hand'
+export { default as Minus } from 'phosphor-svelte/lib/Minus'
+export { default as ArrowSquareOut } from 'phosphor-svelte/lib/ArrowSquareOut'
+export { default as PencilSimple } from 'phosphor-svelte/lib/PencilSimple'

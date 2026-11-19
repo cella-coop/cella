@@ -10,7 +10,7 @@ import type { Option } from './select.ts'
 // Where the sidebar puts a collection that is not a feature's: `home`,
 // what waits on the acting member, always shown; and `platform`,
 // Settings, a sidebar of its own, its collections under Personal, the
-// member's own, or Organization, the co-op's, as each names its
+// member's own, or Organization, the coop's, as each names its
 // `subgroup`. A collection that names neither is its feat's, in the
 // sidebar where the circle the member is in enabled that feature.
 export type Group = 'home' | 'platform'
@@ -19,6 +19,12 @@ export type Group = 'home' | 'platform'
 // address on hover, after the icon of the collection of people; a `circle`
 // is a circle's id, shown as its name.
 export type Kind = 'text' | 'title' | 'mono' | 'money' | 'date' | 'number' | 'badge' | 'priority' | 'boolean' | 'person' | 'circle'
+
+// Whether a field's values are a closed set the code declares, a state's,
+// a priority's or a boolean's, rather than an open one the data holds (a
+// circle, a person, a record, free text): a handful of values can each own
+// a colour, so only a closed set's group headers wear one.
+export const closed = (kind: Kind = 'text', record?: string): boolean => !record && (kind === 'badge' || kind === 'priority' || kind === 'boolean')
 
 export type Tone = 'neutral' | 'accent' | 'positive' | 'negative' | 'warning'
 
@@ -98,8 +104,17 @@ export interface Prop {
   // the first leads.
   people?: string[]
   edit?: Edit | Editor
-  // Clustered with its neighbours of the same group, a little apart from
-  // the rest, in the order its first names it.
+  // The field's own icon, leading its row, where it and the value say
+  // what the field is without its name, as an envelope before an email:
+  // the row is then drawn bare, its name on hover alone.
+  glyph?: Component<any>
+  // A quiet word or two set before its value in the drawer, so the row
+  // says what it is with no name shown: "closes" before a day, "quorum"
+  // before "half the seats". A day without one leads with its name.
+  lead?: string
+  // The section it sits under, by its heading; without one, its kind
+  // places it: a sum or a count under Figures, a day under Dates, the
+  // rest under Properties.
   group?: string
 }
 
@@ -155,15 +170,31 @@ export type Block<T = any> = Component<{ data: T; id: string; embeds?: Embeds; v
 // item at SSR.
 export type Comment<T = any> = Component<{ data: T; id: string; embeds?: Embeds; viewer?: Viewer | null; readers?: () => Promise<unknown[]> }>
 
-// A block in a tab of the item's page: a bare block sits in the first.
+// A block in a tab of the item's page: a bare block sits in the first,
+// the overview, where it is a panel.
 // An extension's block names a tab its owner's page declares.
 export type Placed<T = any> = Block<T> | { tab: string; block: Block<T> }
 
-// A tab of an item's page, a genuinely different view of the item. Only
-// the page's owner declares tabs, at most four.
+// A tab of an item's page, a further view of the item: a collection
+// scoped to it, or what is too big to summarise on its overview. Only the
+// page's owner declares tabs, at most four.
 export interface Tab {
   id: string
   label: string
+}
+
+// How a record's overview, its first tab, opens: on its body, the block
+// editor, with the slice's panels inline in it after; or on its panels,
+// with the body a Notes panel at their foot: the record page layout, a
+// collection's layout being how its rows are laid out.
+export type PageLayout = 'body' | 'panels'
+
+// A collection a record's tab lists, scoped to the record: the rows of
+// `collection` that name it, by a column `of` the record's collection, or
+// a person's or a circle's, as its jump in Related counts them.
+export interface Scoped {
+  tab: string
+  collection: string
 }
 
 export interface Page<T = any> {
@@ -198,7 +229,26 @@ export interface Page<T = any> {
   // that holds no block, as one whose extension is pruned, is not shown;
   // an extension the owner gives no tab is a jump in Related.
   tabs?: Tab[]
+  // The page's record page layout: `body` for a record of words, which
+  // opens on them; `panels`, unset, as most records are, for one of
+  // structured data, which opens on its panels.
+  layout?: PageLayout
+  // The record's body, its own words: the block editor over its body, or
+  // a text it is written in, as a motion's proposal. It opens the
+  // overview in the `body` layout, and is the Notes panel at its foot in
+  // the `panels` layout.
+  body?: Block<T>
+  // Its computed figures, sums and counts, each a `Stat` in the overview's
+  // Figures panel with every slice's, never a property of the drawer.
+  figures?: (data: T) => Prop[]
+  // Its blocks, each in a tab; on the overview each is a panel (`Panel`),
+  // after the body or before its Notes, which the layout check holds.
   blocks?: Placed<T>[]
+  // The collections its tabs list, each scoped to the record: a tab the
+  // owner names showing another collection's rows that name the record,
+  // as the collection's page shows them, declared by the slice that joins
+  // the two, as a project's Tasks.
+  scoped?: Scoped[]
   // What this slice draws inside the item's blocks, by kind.
   embeds?: Record<string, Embed<T>>
   // Writes on the item, in the header.
@@ -207,7 +257,7 @@ export interface Page<T = any> {
 
 // A panel of the drawer, behind its tab: an icon, the label it is named
 // by, and what it holds.
-export interface Panel {
+export interface DrawerPanel {
   id: string
   label: string
   icon: Component<any>
@@ -310,7 +360,7 @@ export interface Added<E = any> {
   // What it adds to the item's page, its blocks in the tabs the owner's
   // page declares; its subtitle stands where the owner's page gives none,
   // as a mandate reads as its policy's sentence.
-  page?: Omit<Partial<Page<E>>, 'eyebrow' | 'title' | 'summary' | 'tabs'>
+  page?: Omit<Partial<Page<E>>, 'eyebrow' | 'title' | 'summary' | 'tabs' | 'layout' | 'body'>
 }
 
 // The sidebar's navigation, by group, `home`, `feature` and `platform`: a
@@ -356,6 +406,17 @@ export interface SheetAccount {
 // A rubric of a financial statement, with its figure in each column: a
 // heading names what follows and has none; a line gathers accounts, which
 // it opens on; a total sums lines.
+// A line of a table's totals, ruled off under its rows: a sum before
+// VAT, the VAT, the total. A `total` is set heavier under its own rule;
+// its figure lines up with the table's last column.
+export interface Total {
+  label: string
+  value: unknown
+  kind?: Kind
+  tone?: Tone
+  total?: boolean
+}
+
 export interface SheetRow {
   id: string
   kind: 'heading' | 'line' | 'total'

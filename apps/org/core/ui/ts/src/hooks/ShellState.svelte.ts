@@ -3,7 +3,7 @@ import type { Outcome } from '../models/outcome.ts'
 import type { Nav } from '../models/view.ts'
 import { recordIcon } from '../record-icons.ts'
 
-// The circle a member lenses the co-op on, from the co-op selector.
+// The circle a member lenses the coop on, from the coop selector.
 export interface Lens {
   id: string
   name: string
@@ -16,7 +16,7 @@ export interface Lens {
 // URI-encoded so it holds no `:` or `,`.
 const KEY = /^[\w.~!*'()%-]{1,120}$/
 
-// The accordions a cookie holds, as `feature%3AGovernance:1,feature%3AWork:0`:
+// The accordions a cookie holds, as `feature%3AOrganization:1,feature%3AWork:0`:
 // an oversized value is ignored, a malformed pair dropped.
 function parse(raw: string): Record<string, boolean> {
   const out: Record<string, boolean> = {}
@@ -39,10 +39,10 @@ function parse(raw: string): Record<string, boolean> {
 // The shell's own state: the last write's outcome, until it is dismissed,
 // whether the drawer is open and which sidebar accordions the viewer
 // opened or shut, which the viewer's cookies keep so the server renders
-// the page as they left it, the names of the people the co-op knows, by
+// the page as they left it, the names of the people the coop knows, by
 // address, which a person's chip shows, the names of the circles the
 // member reads, by id, which a circle's column shows, the circle the
-// member lensed the co-op on, which the server read from their cookie,
+// member lensed the coop on, which the server read from their cookie,
 // and the sidebar's navigation, whose collections' icons a record's chip
 // wears.
 export class ShellState {
@@ -109,7 +109,7 @@ export class ShellState {
     })
   }
 
-  // A person's name by their address, or none where the co-op knows no
+  // A person's name by their address, or none where the coop knows no
   // one by it.
   name(address: string): string | undefined {
     return this.#names()[address]

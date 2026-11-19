@@ -22,7 +22,7 @@ const settings: Setting[] = [
   { name: 'email', label: 'Email', value: 'camille@lanterne.example', write: 'profile' },
   { name: 'theme', label: 'Theme', value: 'system', write: 'theme' },
   { name: 'circle', label: 'Name', value: 'Coordination', write: 'rename', refused: refusal, motion: { ...amend('name'), says: (v, was) => `Rename ${was} to ${v}` } },
-  { name: 'purpose', label: 'Purpose', value: 'Runs the co-op between assemblies', motion: amend('purpose') },
+  { name: 'purpose', label: 'Purpose', value: 'Runs the coop between assemblies', motion: amend('purpose') },
   { name: 'timezone', label: 'Timezone', value: 'Europe/Paris' },
 ]
 const typed: Record<string, string> = { name: 'Camille Martin-Roy' }
@@ -52,8 +52,8 @@ test('a change refused the reader is offered as the deciding circle\'s motion, i
 })
 
 test('a setting with no write of its own says so, and its title the change where the motion words none', () => {
-  const p = proposal(settings[4], 'Runs the co-op day to day', assembly)
-  assert.equal(p?.title, 'Change purpose from “Runs the co-op between assemblies” to “Runs the co-op day to day”')
+  const p = proposal(settings[4], 'Runs the coop day to day', assembly)
+  assert.equal(p?.title, 'Change purpose from “Runs the coop between assemblies” to “Runs the coop day to day”')
   assert.equal(p?.reason, 'Purpose has no write of its own: Assembly changes it by motion')
 })
 

@@ -290,7 +290,7 @@ digest, and once it settles the form shows the link, once, to pass on. A
 person's page gains, as a panel of its overview, where they stand as a
 member in a sentence, invited, a member since a day with the shares
 they hold, suspended or gone, linking to their Membership tab; and,
-among its properties, the membership's days and shares and, once taken up,
+among its properties, the membership's days and, once taken up,
 the first device the invitation enrolled and the day; while they are
 invited and have not, the Devices step offers a new link, shown the same
 way. Taking an invitation up is the shell's `/join/<secret>` page,

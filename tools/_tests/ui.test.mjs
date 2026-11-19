@@ -327,6 +327,10 @@ test('a panel draws only Panels at its top level, past control blocks, declarati
   assert.deepEqual(loose(component('', '<Inlay name="A" />')), ['<Inlay>'], 'the retired Inlay is no panel')
 })
 
+test('an escaped quote inside an expression closes nothing, so the scanner still finds the tag past it', () => {
+  assert.deepEqual(loose(component('', '<p title={"\\""}>x</p>\nmore loose text')), ['<p>', 'text'])
+})
+
 test("a button in a Panel's body is refused; its footer's actions, and a bare form's fields in its body, pass", () => {
   const pressed = (markup) => panels(block, component('', markup))
   assert.match(pressed('<Panel title="A">\n  <Table />\n  <Row end><Button href="/x">Open</Button></Row>\n</Panel>')[0], /draws a button in a Panel's body/)

@@ -410,14 +410,19 @@ export function inlineCreates(sources, ui = (path) => /(^|\/)core\/ui\/ts\//.tes
 const voids = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr'])
 
 // Where a `{…}` or a tag opened at `at` ends: its closing brace or `>`,
-// past nested braces and quoted strings.
+// past nested braces and quoted strings, an escaped quote inside one
+// closing nothing.
 function ending(markup, at, close) {
   let depth = 0
   let quote = null
   for (let i = at; i < markup.length; i++) {
     const c = markup[i]
     if (quote) {
-      quote = c === quote ? null : quote
+      if (c === '\\') {
+        i++
+      } else if (c === quote) {
+        quote = null
+      }
     } else if (c === '"' || c === "'" || c === '`') {
       quote = c
     } else if (c === '{') {

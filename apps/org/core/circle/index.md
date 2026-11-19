@@ -457,12 +457,17 @@ with it: `circle_policy.particulars_from`, which
 `circle_policy.mandate_ended` calls.
 
 The logo's guard, `circle.logo_flaw`, holds an SVG to what is safe to
-draw anywhere: one `<svg>` element of at most 4096 characters,
-declaring nothing (`<!…>`, `<?…>`), with no `<script>`, no
-`<foreignObject>`, no event handler (`on…=`), no `javascript:`, and
-no reference outside itself, every `href`, `xlink:href` and `url()`
-naming only `#…` and no animation setting an `href`; each refusal names
-what to drop. The shell never inlines it: its `Logo` draws it as an
+draw anywhere: one `<svg>` element of at most 4096 characters, an XML
+document that Postgres parses with each prefix declared
+(`circle.xml_flaw`), declaring nothing (`<!…>`, `<?…>`) and escaping
+no character (`&#…;`, `\`), so the text it reads is the text a browser
+reads. It reads the document by local names, whatever the prefix: no
+element named `script` or `foreignObject`, no attribute named `on…`,
+no `javascript:`, and no reference outside itself, every attribute
+named `href`, `xlink:href` among them, and every `url()` naming only
+`#…`, no `@import` or `image-set`, and no animation setting an `href`;
+each refusal names what to drop, and a malformed logo the parser's
+reason. The shell never inlines it: its `Logo` draws it as an
 image from a `data:` URL, where no script runs and nothing outside it
 loads, whatever the guard let through
 ([components](../ui/index.md#components)).

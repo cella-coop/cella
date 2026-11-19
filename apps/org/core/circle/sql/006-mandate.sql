@@ -126,15 +126,34 @@ LANGUAGE sql IMMUTABLE
 RETURN ARRAY['particulars_name', 'particulars_legal_name', 'particulars_form', 'particulars_capital',
              'particulars_siren', 'particulars_rcs', 'particulars_vat', 'particulars_seat', 'particulars_logo'];
 
+-- What is wrong with an XML document as its parser reads it, or null
+-- when it is one: well formed, each prefix it uses declared. The reason
+-- is the parser's, its first line, as `AttValue: " or ' expected`.
+CREATE FUNCTION circle.xml_flaw(doc text) RETURNS text
+LANGUAGE plpgsql IMMUTABLE AS $$
+DECLARE
+  why text;
+BEGIN
+  PERFORM xpath('/*', xmlparse(document doc));
+  RETURN NULL;
+EXCEPTION WHEN invalid_xml_document THEN
+  GET STACKED DIAGNOSTICS why = PG_EXCEPTION_DETAIL;
+  RETURN coalesce(nullif(regexp_replace(split_part(why, E'\n', 1), '^line [0-9]+: ', ''), ''), 'it does not parse');
+END
+$$;
+
 -- What is wrong with a coop's logo, an SVG as its rule marks it, or
 -- null. The shell draws it only as an image, where no script runs and
 -- nothing outside it loads; this refuses what would matter anywhere else
 -- too, should the text be served or opened as a document: one `<svg>`
--- element of at most 4096 characters, declaring nothing (`<!…>`, `<?…>`),
--- with no script, no HTML (`<foreignObject>`), no event handler
--- (`on…=`), no `javascript:`, and no reference outside itself: an
--- `href`, an `xlink:href` or a `url()` names only `#…`, and no
--- animation sets an `href`.
+-- element of at most 4096 characters, an XML document that parses with
+-- each prefix declared, declaring nothing (`<!…>`, `<?…>`), escaping no
+-- character (`&#…;`, `\`), and, read as XML whatever the prefix, with
+-- no element named `script` or `foreignObject`, no attribute named
+-- `on…`, no `javascript:`, and no reference outside itself: every
+-- attribute named `href`, `xlink:href` among them, and every `url()`
+-- names only `#…`, no style imports (`@import`) or picks an image
+-- (`image-set`), and no animation sets an `href`.
 CREATE FUNCTION circle.logo_flaw(svg text) RETURNS text
 LANGUAGE sql IMMUTABLE
 BEGIN ATOMIC
@@ -145,21 +164,38 @@ BEGIN ATOMIC
       THEN 'a coop''s logo is one SVG, from <svg to </svg>'
     WHEN svg ~ '<[!?]'
       THEN 'a coop''s logo declares nothing: drop its ' || substring(svg from '<[!?][^>]{0,30}')
-    WHEN svg ~* '<\s*script'
-      THEN 'a coop''s logo runs no script: drop its <script>'
-    WHEN svg ~* '<\s*foreignObject'
-      THEN 'a coop''s logo embeds no HTML: drop its <foreignObject>'
-    WHEN svg ~* '[\s"''/]on[a-z]+\s*='
-      THEN 'a coop''s logo handles no event: drop its ' || substring(svg from '(?i)on[a-z]+\s*=') || '…'
+    WHEN x.malformed IS NOT NULL
+      THEN 'a coop''s logo is well-formed XML, each element closed, each attribute quoted and each prefix declared, as <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">, not: ' || x.malformed
+    WHEN svg ~ '&#|\\'
+      THEN 'a coop''s logo writes each character as itself: drop its ' || substring(svg from '&#[^;]{0,10};?|\\.{0,6}')
+    WHEN x.script IS NOT NULL
+      THEN 'a coop''s logo runs no script: drop its <' || x.script || '>'
+    WHEN x.html IS NOT NULL
+      THEN 'a coop''s logo embeds no HTML: drop its <' || x.html || '>'
+    WHEN x.handler IS NOT NULL
+      THEN 'a coop''s logo handles no event: drop its ' || x.handler || '=…'
     WHEN svg ~* 'javascript\s*:'
       THEN 'a coop''s logo links nowhere: drop its javascript:'
-    WHEN svg ~* 'href\s*=\s*(?!["'']#)'
-      THEN 'a coop''s logo references only its own parts, as href="#flame", not ' || substring(svg from '(?i)href\s*=\s*\S{0,40}')
+    WHEN x.href IS NOT NULL
+      THEN 'a coop''s logo references only its own parts, as href="#flame", not href="' || left(x.href, 40) || '"'
     WHEN svg ~* 'url\(\s*(?!["'']?#)'
       THEN 'a coop''s logo references only its own parts, as url(#glow), not ' || substring(svg from '(?i)url\([^)]{0,40}\)?')
-    WHEN svg ~* 'attributeName\s*=\s*["'']?\s*(xlink:)?href'
+    WHEN svg ~* '@import|image-set'
+      THEN 'a coop''s logo loads nothing from outside itself: drop its ' || substring(svg from '(?i)@import|[-a-z]*image-set')
+    WHEN x.animated
       THEN 'a coop''s logo animates no reference: drop the animation of its href'
-  END;
+  END
+  FROM (
+    SELECT p.malformed,
+           nullif((xpath('name((//*[translate(local-name(), ''SCRIPT'', ''script'') = ''script''])[1])', d.doc))[1]::text, '') AS script,
+           nullif((xpath('name((//*[translate(local-name(), ''FOREIGNOBJECT'', ''foreignobject'') = ''foreignobject''])[1])', d.doc))[1]::text, '') AS html,
+           nullif((xpath('name((//@*[starts-with(translate(local-name(), ''ON'', ''on''), ''on'')])[1])', d.doc))[1]::text, '') AS handler,
+           (xpath('(//@*[local-name() = ''href'' and not(starts-with(., ''#''))])[1]', d.doc))[1]::text AS href,
+           xpath_exists('//@*[local-name() = ''attributeName''
+                              and (normalize-space(.) = ''href'' or substring-after(normalize-space(.), '':'') = ''href'')]', d.doc) AS animated
+    FROM (SELECT circle.xml_flaw(svg) AS malformed) p
+    CROSS JOIN LATERAL (SELECT CASE WHEN p.malformed IS NULL THEN xmlparse(document svg) END AS doc) d
+  ) x;
 END;
 
 -- What is wrong with the particulars, by their marks as written, each name

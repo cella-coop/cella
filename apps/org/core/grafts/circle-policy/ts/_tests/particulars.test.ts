@@ -149,15 +149,31 @@ test('a logo is one SVG that runs nothing and reaches nothing outside itself, co
   await staged()
   try {
     assert.equal(await unsound(logo(lantern)), null, 'a logo referencing only its own parts is sound')
+    const linked =
+      '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 8 8"><defs><circle id="dot" r="2" cx="4" cy="4"/></defs><use xlink:href="#dot" opacity="0.8"/><text x="1" y="7">L&amp;co</text></svg>'
+    assert.equal(await unsound(logo(linked)), null, 'a logo referencing its own parts by a declared xlink, its text escaped as XML, is sound')
+    const xlink = 'xmlns:xlink="http://www.w3.org/1999/xlink"'
     const refusals: [string, RegExp][] = [
+      ['<svg xmlns:s="http://www.w3.org/2000/svg"><s:script>alert(1)</s:script></svg>', /^a coop's logo runs no script: drop its <s:script>$/],
+      ['<svg xmlns:h="urn:x"><h:foreignObject/></svg>', /^a coop's logo embeds no HTML: drop its <h:foreignObject>$/],
+      ['<svg xmlns:e="urn:x"><rect e:onload="alert(1)"/></svg>', /^a coop's logo handles no event: drop its e:onload=…$/],
+      [`<svg ${xlink}><a xlink:href="https://evil.example/"><rect/></a></svg>`, /^a coop's logo references only its own parts, as href="#flame", not href="https:\/\/evil\.example\/"$/],
+      ['<svg xmlns:x="http://www.w3.org/1999/xlink"><image x:href="//evil.example/p.png"/></svg>', /references only its own parts, as href="#flame", not href="\/\/evil/],
+      [`<svg ${xlink}><set attributeName="xlink:href" to="#x"/></svg>`, /animates no reference/],
+      ['<svg><rect></svg>', /^a coop's logo is well-formed XML, each element closed, each attribute quoted and each prefix declared, as <svg xmlns=.*, not: Opening and ending tag mismatch/],
+      ['<svg><use href=data:image/svg+xml,x /></svg>', /is well-formed XML, .* not: AttValue/],
+      ['<svg><a xlink:href="#x"/></svg>', /is well-formed XML, .* not: Namespace prefix xlink for href on a is not defined$/],
+      ['<svg><a href="&#106;avascript:alert(1)"/></svg>', /^a coop's logo writes each character as itself: drop its &#106;$/],
+      ['<svg><rect style="fill:u\\72l(https://evil.example/f)"/></svg>', /writes each character as itself: drop its \\72l/],
+      ['<svg><style>@import "https://evil.example/a.css";</style></svg>', /^a coop's logo loads nothing from outside itself: drop its @import$/],
+      ['<svg><rect style="fill:image-set(\'https://evil.example/f.png\' 1x)"/></svg>', /loads nothing from outside itself: drop its image-set/],
       ['<svg><script>alert(1)</script></svg>', /^a coop's logo runs no script: drop its <script>$/],
       ['<svg><SCRIPT href="#x"></SCRIPT></svg>', /runs no script/],
       ['<svg onload="alert(1)"></svg>', /^a coop's logo handles no event: drop its onload=…$/],
       ['<svg><rect x="0" onclick="alert(1)"/></svg>', /handles no event: drop its onclick=/],
       ['<svg><a href="javascript:alert(1)"><rect/></a></svg>', /references only its own parts|links nowhere/],
-      ['<svg><a xlink:href="https://evil.example/"><rect/></a></svg>', /references only its own parts, as href="#flame", not href="https:/],
       ['<svg><image href="https://evil.example/pixel.png"/></svg>', /references only its own parts/],
-      ['<svg><use href=data:image/svg+xml,x /></svg>', /references only its own parts/],
+      ['<svg><use href="data:image/svg+xml,x"/></svg>', /references only its own parts/],
       ['<svg><rect fill="url(https://evil.example/f)"/></svg>', /references only its own parts, as url\(#glow\)/],
       ['<svg><foreignObject><iframe src="https://evil.example"></iframe></foreignObject></svg>', /embeds no HTML/],
       ['<svg><set attributeName="href" to="#x"/></svg>', /animates no reference/],

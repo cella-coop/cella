@@ -143,7 +143,7 @@ test('a room stays in the registry once its last browser’s cookie is gone, unt
   const room = { name: 'demo_v_abc' }
   register(registry, room.name, room)
   cookies.set('cookie-a', room)
-  // A browser forgotten idle, as a front's own tick does: the room keeps
+  // A browser gone to another room, as a front's join does: the room keeps
   // no cookie naming it, but the registry still holds it.
   cookies.delete('cookie-a')
   assert.deepEqual(registered(registry), new Set([room]), 'an orphaned room fell out of the registry')

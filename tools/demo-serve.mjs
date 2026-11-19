@@ -24,8 +24,13 @@
 // browser at a time, are the server behind its socket's
 // (`apps/org/ts/src/lib/server/leases.ts`), told each browser by an id
 // the front derives from its cookie, a one-way hash, never the cookie
-// itself. A browser unseen 15 minutes is forgotten: the room forgets its
-// cookie, and its server's own idle sweep frees the member it leased.
+// itself. A browser unseen 15 minutes counts as gone from its room, for
+// its cap and for Reset now, and its server's own idle sweep frees the
+// member it leased; the front keeps its cookie's place in the room as
+// long as the room lives, so a visitor back from a pause lands in it
+// again, never on a fresh copy, and the room's server alone decides
+// whether the member is still theirs (renewed where no one took it, else
+// the sign-in, saying who was freed).
 // Nothing about a visitor is written down: no address, no name, no log
 // line naming their cookie or a join code.
 //
@@ -285,8 +290,10 @@ async function sweep() {
 // The rooms, by every browser's cookie that is in one; two or more
 // cookies may name the same room, a shared reference, where one browser
 // joined another's. `seenAt`, that cookie's own last request, apart from
-// `copy.seen`, the room's: a browser unseen `--browser-idle` seconds is
-// forgotten here, its room untouched.
+// `copy.seen`, the room's: a browser unseen `--browser-idle` seconds
+// counts as gone from it (`roomFull`, `alone`), never forgotten, so its
+// cookie reaches the room for as long as the room lives; only the room's
+// end, or this browser joining another, forgets it.
 const copies = new Map()
 const seenAt = new Map()
 let preparing = 0
@@ -548,16 +555,6 @@ setInterval(() => {
       end(copy, `its age of ${2 * config.lifetime} s, twice its lifetime, however busy`)
     } else if (copy.child && rss(copy.child) > config.memory) {
       end(copy, `its server passed ${config.memory} MiB`)
-    }
-  }
-  // A browser unseen past `--browser-idle` is forgotten: its room keeps
-  // going, for another browser or a fresh join, but this one reaches it
-  // no more. Never while its room is still being made, however long
-  // that takes: nothing but its own request is waiting on it yet.
-  for (const [cookie, room] of [...copies]) {
-    if (!room.ended && room.readied && now - (seenAt.get(cookie) ?? now) > config.browserIdle * 1000) {
-      copies.delete(cookie)
-      seenAt.delete(cookie)
     }
   }
 }, config.tick * 1000).unref()
@@ -855,16 +852,11 @@ function plain(res, status, text, headers = {}) {
 async function handle(req, res) {
   const path = (req.url ?? '/').split('?')[0]
   const cookie = cookieOf(req)
-  let copy = copyOf(cookie)
-  // A browser found idle past `--browser-idle` is forgotten here, at
-  // once, not only once the tick next sweeps it, so it reaches its old
-  // room no more from the moment it is found idle, whichever asks first.
-  // Never while its own room is still being made: a slow first request
-  // is this very browser's, not an idle one's.
-  if (copy && copy.readied && Date.now() - (seenAt.get(cookie) ?? 0) > config.browserIdle * 1000) {
-    copies.delete(cookie)
-    seenAt.delete(cookie)
-    copy = null
+  const copy = copyOf(cookie)
+  // Seen now, whatever it asks: a browser back from a pause is present
+  // in its room again from its first request, Reset now's own among them.
+  if (copy) {
+    seenAt.set(cookie, Date.now())
   }
 
   if (path === '/robots.txt') {
@@ -992,8 +984,23 @@ async function handle(req, res) {
     return ok ? plain(res, 200, 'ready', headers) : plain(res, 503, 'Your copy could not be made; try again.')
   }
 
+  // Where a page's script, its room ended under it, asks one of its
+  // queries next (`/_app/remote/…`), it is answered with the redirect
+  // SvelteKit's client follows from a query, `{ redirect }` in devalue's
+  // form, to a path no page of its router matches, so it loads in full
+  // and lands on the loading page below, never this page's HTML read as
+  // a query's answer, which the page would draw as broken.
+  if (path.startsWith('/_demo/ended/')) {
+    req.resume()
+    return plain(res, 303, 'Your copy was reset.', { location: '/' })
+  }
+
   if (!copy) {
     req.resume()
+    if (req.method === 'GET' && path.startsWith('/_app/remote/')) {
+      res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'private, no-store' })
+      return res.end(JSON.stringify({ type: 'result', data: JSON.stringify([{ redirect: 1 }, '/_demo/ended/room']) }))
+    }
     if (req.method === 'GET' || req.method === 'HEAD') {
       return prepare(res, { again: !!cookie })
     }

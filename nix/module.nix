@@ -202,7 +202,7 @@ in
             idle = mkOption {
               type = types.ints.positive;
               default = 900;
-              description = "Seconds with no request from any browser in a visitor's room before it ends: its server stopped, its database and role dropped. A browser itself, idle this long, is forgotten by its room apart, its member lease freed.";
+              description = "Seconds with no request from any browser in a visitor's room before it ends: its server stopped, its database and role dropped.";
             };
             lifetime = mkOption {
               type = types.ints.positive;
@@ -222,7 +222,7 @@ in
             browserIdle = mkOption {
               type = types.ints.positive;
               default = 900;
-              description = "Seconds a browser in a room may go unseen before the front forgets it and the room's own server frees the fixture member it leased, Reset now asking it be alone first.";
+              description = "Seconds a browser in a room may go unseen before it counts as gone from the room, for its cap and for Reset now, and the room's own server frees the fixture member it leased; the front keeps it in the room as long as the room lives, so it comes back to the same room.";
             };
             roomBrowsers = mkOption {
               type = types.ints.positive;

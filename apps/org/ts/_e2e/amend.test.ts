@@ -19,7 +19,9 @@
 // neither Léa, a member of Web, nor Yusuf over Brand's or over the
 // layout may. The manager, granted the power over the root, has a
 // malformed layout refused in the guard's words, and two arrangements at
-// once each log the layout the other left. Then in every browser, light and
+// once each log the layout the other left. A close whose effect fails for
+// a serialization failure after its verdict runs again whole, signed once
+// and logged once. Then in every browser, light and
 // dark, through the dev server: Camille opens Web's Settings tab, its
 // name, purpose and procedure in force, each changed by a motion of the
 // Assembly; she types Brand's name and presses Enter, and the
@@ -459,6 +461,52 @@ test('a motion carrying a row that is so by its close still passes, its action f
   settled(await show({ circle: 'web', group: 'payments', shown: false }, as(yusuf)))
 })
 
+
+test('a close whose effect fails for a serialization failure after its verdict runs again whole: signed once, logged once, and its connection left writing nothing', async () => {
+  const { motion } = settled(
+    await propose({ circle: 'web', title: 'Show Payments in Web', deadline: fortnight(), body: '', actions: [{ kind: 'show-group', args: { circle: 'web', group: 'payments', shown: 'yes' } }] }, as(lea)),
+  ) as { motion: string }
+  await due(motion)
+  // The first write of a showing fails as a serialization failure, after
+  // the close's submit, inside its effect; a sequence counts the tries,
+  // each statement writing one, as nothing a rolled-back attempt wrote
+  // outlasts it.
+  await su.query(`
+    CREATE SEQUENCE public.retry_tries;
+    CREATE FUNCTION public.retry_once() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog AS $f$
+    BEGIN
+      IF nextval('public.retry_tries') = 1 THEN
+        RAISE EXCEPTION 'a serialization failure, once' USING ERRCODE = 'serialization_failure';
+      END IF;
+      RETURN NULL;
+    END
+    $f$;
+    CREATE TRIGGER retry_once BEFORE INSERT OR UPDATE OR DELETE ON circle.shown FOR EACH STATEMENT EXECUTE FUNCTION public.retry_once();`)
+  try {
+    const deps = reacting(as(lea))
+    let signs = 0
+    const before = Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
+    settled(await close({ motion }, { ...deps, sign: (op, request) => (signs++, deps.sign(op, request)) }))
+    assert.equal(signs, 1, 'the close is signed once, before its tries')
+    assert.ok(Number((await one<{ n: string }>('SELECT last_value AS n FROM public.retry_tries')).n) > 1, 'it failed once, then ran again')
+    assert.deepEqual(
+      (await all<{ op: string; settled: boolean; cause: string | null }>('SELECT op, settled, cause FROM cella.log WHERE n > $1 ORDER BY n', [before])).map((e) => [e.op, e.settled, e.cause === null]),
+      [['motion:motion:close', true, true], ['circle:circle:show', true, false]],
+      'the try that failed left nothing in the log: one close, and the show it caused',
+    )
+    assert.deepEqual(await all(`SELECT "group" FROM circle.shown WHERE circle = 'web' AND "group" = 'payments'`), [{ group: 'payments' }])
+    assert.deepEqual(
+      // Its actor is the test reader's, set for the session; a server's
+      // borrow (`lending`) sets it for the transaction alone.
+      (await (app as pg.Client).query(`SELECT coalesce(current_setting('cella.writing', true), '') AS writing`)).rows,
+      [{ writing: '' }],
+      'the connection is left writing nothing',
+    )
+  } finally {
+    await su.query('DROP TRIGGER retry_once ON circle.shown; DROP FUNCTION public.retry_once(); DROP SEQUENCE public.retry_tries')
+  }
+  settled(await show({ circle: 'web', group: 'payments', shown: false }, as(yusuf)))
+})
 eachBrowser((name, launch) => {
   test(`${name}: Camille renames Web from its Settings tab by the assembly's motion, and its page and the co-op selector name it so, light and dark`, async () => {
     mkdirSync(shots, { recursive: true })

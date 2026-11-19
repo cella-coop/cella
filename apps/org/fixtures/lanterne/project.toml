@@ -549,7 +549,7 @@ body = [
   { type = "heading", level = 2, text = "How" },
   { text = "Each follows the case study brief template. Each client agrees in writing before anything is published, by a short email for clients whose contracts predate the motion." },
   { type = "heading", level = 2, text = "Steps" },
-  { type = "todo", checked = true, text = "Drafts, by 24 October" },
+  { type = "todo", checked = false, text = "Drafts, by 24 October" },
   { type = "todo", checked = false, text = "Each client's sign-off" },
   { type = "todo", checked = false, text = "Published on the studio's site under CC BY 4.0, by 1 December" },
 ]
@@ -758,7 +758,7 @@ body = [
   { type = "bullet", text = "Buttons, form fields, cards and the site header first" },
   { type = "bullet", text = "Every component meets WCAG 2.2 AA, the floor m-2026-017 proposes" },
   { type = "heading", level = 2, text = "Steps" },
-  { type = "todo", checked = true, text = "An audit of what repeats across sites, by 23 October" },
+  { type = "todo", checked = false, text = "An audit of what repeats across sites, by 23 October" },
   { type = "todo", checked = false, text = "The first components shared, by 1 February" },
 ]
 

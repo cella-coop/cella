@@ -113,8 +113,10 @@
     <span class="actions">
       {#if copy}
         <!-- A fresh copy answers to a fresh join code: every draft this
-             browser kept on this one, now gone, is dropped with it. -->
-        <form method="post" action="/_demo/reset" onsubmit={clearDrafts}>
+             browser kept on this one, now gone, is dropped with it. Its
+             button stands in the actions' run, beside Copy invite
+             (`data-through`, `attachments/cell.ts`). -->
+        <form method="post" action="/_demo/reset" onsubmit={clearDrafts} data-through>
           <Button tone="quiet" type="submit"><Icon icon={ArrowCounterClockwise} size="0.95em" />Reset</Button>
         </form>
       {/if}
@@ -228,17 +230,19 @@
   /* Both buttons wear the strip's amber: Reset quiet, in a dim outline,
      and Copy invite the one bright fill, so it reads first. Copy
      invite's fill and label are fixed, not shaded by theme, so the
-     label keeps about 8:1 on it in light and dark alike. */
+     label keeps about 8:1 on it in light and dark alike. Each sets its
+     fill and edge, not its background and border, which a button drawn
+     as a cell paints on its path (`Button.svelte`). */
   .actions :global(.button.quiet) {
-    background: oklch(var(--shade-4) var(--tone-warning) / 35%);
-    border-color: oklch(var(--shade-6) var(--tone-warning));
+    --fill: oklch(var(--shade-4) var(--tone-warning) / 35%);
+    --edge: oklch(var(--shade-6) var(--tone-warning));
     color: var(--warning-text);
   }
   .actions :global(.button.quiet:hover) {
-    background: oklch(var(--shade-4) var(--tone-warning) / 60%);
+    --fill: oklch(var(--shade-4) var(--tone-warning) / 60%);
   }
   .actions :global(.button.primary) {
-    background: oklch(0.8 0.15 80);
+    --fill: oklch(0.8 0.15 80);
     color: oklch(0.25 0.05 80);
   }
   /* The strip's buttons, 20% shorter than Button's own 2rem, in step
@@ -253,11 +257,11 @@
     padding: 0;
     width: 1.6rem;
     justify-content: center;
-    background: none;
+    --fill: none;
     color: var(--warning-text);
   }
   .hide :global(.button:hover) {
-    background: oklch(var(--shade-4) var(--tone-warning) / 35%);
+    --fill: oklch(var(--shade-4) var(--tone-warning) / 35%);
   }
   /* A subtle watermark where the strip is dismissed: the bottom of the
      drawer (the frame's own right column, `PageFrame.svelte`), since it

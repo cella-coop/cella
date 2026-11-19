@@ -8,10 +8,11 @@ export type Method = 'consent' | 'majority'
 // Whether every member reads each stance, or each its own alone.
 export type Ballot = 'open' | 'secret'
 
-// The stances each method counts.
+// The stances each method counts, in the order they are offered: the
+// negative first, the positive last, as a run of actions stands.
 export const stances: Record<Method, Stance[]> = {
-  consent: ['consent', 'object', 'abstain'],
-  majority: ['for', 'against', 'abstain'],
+  consent: ['object', 'abstain', 'consent'],
+  majority: ['against', 'abstain', 'for'],
 }
 
 // How a motion is taken: its method; for a majority, the share of the

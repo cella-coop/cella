@@ -123,6 +123,12 @@
     svg {
       display: none;
     }
+    /* The svg carrying the focus stroke is hidden here, and the drawn
+       button's rule above cleared its box-shadow ring: a system-colour
+       outline stands in for both. */
+    .button:global([data-drawn]):focus-visible {
+      outline: 2px solid Highlight;
+    }
   }
   .button.icon {
     justify-content: center;

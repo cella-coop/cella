@@ -1,6 +1,8 @@
+import { status } from './status.ts'
+
 // In the board's order: the way forward, then the way out.
-export const statuses = ['draft', 'submitted', 'approved', 'reimbursed', 'refused'] as const
-export type Status = (typeof statuses)[number]
+export type Status = (typeof status.states)[number]['value']
+export const statuses: Status[] = status.states.map((s) => s.value)
 
 // What an expense may be charged to: accounts of class 6 of the French
 // chart, by code.

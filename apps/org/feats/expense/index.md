@@ -25,6 +25,13 @@ draft → submitted → approved → reimbursed, or submitted → refused. Any
 other move is refused, whatever writes it, and a submitted expense's
 figures never change.
 
+Its statuses are its lifecycle in its models (`models/status.ts`),
+which `cella check feats` holds equal to `expense.expense`'s CHECK and
+the UI kit draws as the `status` kind
+([statuses](../../core/ui/index.md#statuses)): draft unstarted,
+submitted and approved started, reimbursed completed, refused cancelled
+and negative; the board's columns follow that order.
+
 ## Actions
 
 | Action | Label | Why |

@@ -1,11 +1,11 @@
-import { icons, type App, type Tone } from '@cella/org-ui'
-import { categories, statuses, type Expense, type Status as Stage } from '../models/expense.ts'
+import { icons, type App } from '@cella/org-ui'
+import { categories, type Expense } from '../models/expense.ts'
+import { status } from '../models/status.ts'
 import Capture from './blocks/Capture.svelte'
 import Claim from './blocks/Claim.svelte'
 import Status from './blocks/Status.svelte'
 import Body from './blocks/Body.svelte'
 
-const tones: Record<Stage, Tone> = { draft: 'neutral', submitted: 'accent', approved: 'accent', refused: 'negative', reimbursed: 'positive' }
 const category = (e: Expense) => categories.find((c) => c.code === e.category)?.label ?? e.category
 
 // The feat's client side: the expenses as a board by status, on which a
@@ -28,7 +28,7 @@ export const app: App = {
           { key: 'category', label: 'Category', kind: 'badge', role: 'hidden', value: (e: Expense) => e.category },
           { key: 'day', label: 'Spent on', kind: 'date', role: 'meta', value: (e: Expense) => e.day },
           { key: 'total', label: 'Amount', kind: 'money', role: 'meta', value: (e: Expense) => e.total },
-          { key: 'status', label: 'Status', kind: 'badge', role: 'meta', value: (e: Expense) => e.status, tone: (e: Expense) => tones[e.status] },
+          { key: 'status', label: 'Status', kind: 'status', states: status, role: 'meta', value: (e: Expense) => e.status },
           { key: 'net', label: 'Before VAT', kind: 'money', role: 'hidden', value: (e: Expense) => e.net },
           { key: 'vat', label: 'VAT', kind: 'money', role: 'hidden', value: (e: Expense) => e.vat },
           { key: 'decided', label: 'Decided', kind: 'date', role: 'hidden', value: (e: Expense) => e.decided },
@@ -37,7 +37,7 @@ export const app: App = {
         ],
         // A board by status, whose moves are the writes; the latest spent
         // first, each card naming who spent it, how much and when.
-        look: { layout: 'board', by: 'status', sort: { field: 'day', dir: 'desc' }, lanes: { status: [...statuses] }, cards: ['member', 'total', 'day'] },
+        look: { layout: 'board', by: 'status', sort: { field: 'day', dir: 'desc' }, cards: ['member', 'total', 'day'] },
         shifts: [
           { by: 'status', to: ['submitted'], action: 'submit' },
           { by: 'status', to: ['approved'], action: 'approve' },
@@ -61,7 +61,7 @@ export const app: App = {
         subtitle: (e: Expense) => e.id,
         // The day it was spent is the Claim panel's header's.
         properties: (e: Expense) => [
-          { label: 'Status', value: e.status, kind: 'badge', tone: tones[e.status] },
+          { label: 'Status', value: e.status, kind: 'status', states: status },
           { label: 'Category', value: `${category(e)}, ${e.category}`, kind: 'badge' },
           { label: 'Receipt', value: e.receipt, kind: 'mono', glyph: icons.Paperclip, lead: 'receipt' },
           { label: 'Member', value: e.member, kind: 'person', href: `/people/${e.member}` },

@@ -2,14 +2,14 @@
   import { onMount } from 'svelte'
   import { browser } from '$app/env'
   import { page as here } from '$app/state'
-  import { Basket, Failed, Frame, ProposeBasket, Skeleton, icons, useBasket, useShell, useWrites, type Panel } from '@cella/org-ui'
+  import { Basket, Failed, Frame, ProposeBasket, Skeleton, icons, useBasket, useShell, useWrites, type DrawerPanel } from '@cella/org-ui'
   import { page as read } from '#lib/remote/settings.remote.ts'
   import { settings } from '#lib/slices.ts'
   import { onSettings } from '#lib/writes.ts'
 
   const name = $derived(here.params.page ?? '')
   // The one thing a page of one is of, `/settings/<name>/<id>`; none on a
-  // page of the co-op's or the person's own.
+  // page of the coop's or the person's own.
   const id = $derived(here.params.id ?? '')
   // Its writes are posted to the page's, and a save that took or reached
   // a verdict reads the page again.
@@ -47,7 +47,7 @@
   {/snippet}
   {const data = $derived(await one)}
   {const shown = $derived(settings(data.name))}
-  {const panels = $derived<Panel[]>(basket.count ? [{ id: 'basket', label: 'Changes to propose', icon: icons.Scales, body: gathered }] : [])}
+  {const panels = $derived<DrawerPanel[]>(basket.count ? [{ id: 'basket', label: 'Changes to propose', icon: icons.Scales, body: gathered }] : [])}
   {#if shown}
     {#key `${data.name}/${data.id}`}
       <Frame title={shown.title} icon={shown.icon} caption={shown.caption} {panels}>

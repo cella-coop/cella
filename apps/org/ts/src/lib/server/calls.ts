@@ -1,4 +1,4 @@
-import { ask as asking, counts, made, ordered, read, texts, today, type Db, type Source } from '@cella/org-db'
+import { ask as asking, counts, made, ordered, read, texts, today, type Condition, type Db, type Source } from '@cella/org-db'
 import { scoped } from '@cella/org-analytics'
 import { anchor, defaults, fields, grouping, limits, logged, period, resolve, swimlane, wheres, widgets, type Field, type Sort, type Spec } from '@cella/org-ui/models'
 import { named } from '@cella/org-log/api'
@@ -45,10 +45,12 @@ export class Missing extends Error {}
 // keeps, a calendar those on the days it shows, and a dashboard draws
 // none. Under the member's lens it reads only the lensed circle's rows,
 // but in a view that reads across circles, and says where the lens
-// leaves it whole. `search` is the page's address's query.
+// leaves it whole. `search` is the page's address's query; `scope`, where
+// a record's tab lists it, the conditions keeping its rows to those
+// naming the record, which every part of the read keeps to.
 export const collection = {
   schema: texts(['name', 'search']),
-  async run(db: Db, { name, search }: { name: string; search: string }, who: Reader) {
+  async run(db: Db, { name, search }: { name: string; search: string }, who: Reader, scope: Condition[] = []) {
     const m = mounted(name)
     const named = source(name)
     if (!m || !named) {
@@ -64,7 +66,8 @@ export const collection = {
     // Its rows through the member's lens, where they have one, but in a
     // view that reads across circles, which reads every circle's rows the
     // member reads.
-    const from = source(name, spec.across ? null : await lensed(db, who.cookies, who.actor)) ?? named
+    const seen = source(name, spec.across ? null : await lensed(db, who.cookies, who.actor)) ?? named
+    const from = scope.length ? { ...seen, scope } : seen
     const day = await today(db)
     const paged = spec.layout === 'list' || spec.layout === 'table' || spec.layout === 'gallery'
     // The field a list, a table or a gallery groups its rows by,
@@ -118,6 +121,21 @@ export const collection = {
       // circle that owns them.
       whole,
     }
+  },
+}
+
+// A collection as a record's tab lists it: `name`'s rows that name the
+// record `id` of the collection `of`, by the column that does, as its
+// jump in Related counts them, read as any collection's page is, its view,
+// filters and paging in `search`.
+export const within = {
+  schema: texts(['name', 'search', 'of', 'id']),
+  async run(db: Db, { name, search, of, id }: { name: string; search: string; of: string; id: string }, who: Reader) {
+    const key = naming(name, of)
+    if (!key) {
+      throw new Missing(`No row of ${name} names a record of ${of}`)
+    }
+    return collection.run(db, { name, search }, who, [{ field: key, is: [id] }])
   },
 }
 
@@ -247,10 +265,10 @@ export const index = {
 }
 
 // What the shell around every page reads: the scope, who is signed in,
-// everyone the co-op knows by address, so a person shows by name wherever
-// a page names them, the circles the co-op selector offers, each with its
+// everyone the coop knows by address, so a person shows by name wherever
+// a page names them, the circles the coop selector offers, each with its
 // features, which the sidebar draws for the circle the member is in, and
-// the one the member lensed the co-op on, and how many rows the counted collections
+// the one the member lensed the coop on, and how many rows the counted collections
 // hold for them, as what waits on them, the owner's and its extensions',
 // counted in SQL. `waiting` is every one of them, whole whatever the lens,
 // as a shut accordion's dot reads it; `counts` those in the lensed circle,
@@ -270,7 +288,7 @@ export const shell = {
       held[`/${name}`] = through?.lens ? ((await counts(db, through, [{ where: [] }]))[0] ?? 0) : waiting[`/${name}`]
     }
     return {
-      scope: { address: s.address ?? 'no scope', name: s.name ?? s.address ?? 'No scope', legal: s.legal },
+      scope: { address: s.address ?? 'no scope', name: s.name ?? s.address ?? 'No scope', legal: s.legal, logo: s.logo },
       actor: someone && { address: someone.address, name: someone.name },
       people: someone ? Object.fromEntries((await people(db)).map((p) => [p.address, p.name])) : ({} as Record<string, string>),
       counts: held,

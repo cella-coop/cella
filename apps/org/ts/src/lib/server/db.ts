@@ -10,8 +10,15 @@ import { lending } from '@cella/org-db'
 // migrates with, every borrow acts as `cella_app`, so the row-level
 // policies hold: an owner or a superuser would read past them. Each
 // pool names its connections, as `pg_stat_activity` shows them.
-const connections = (max: number, application_name: string) =>
-  new pg.Pool({ connectionString: DATABASE_URL, user: DATABASE_URL ? undefined : 'cella_app', max, application_name })
+//
+// An idle connection the server ends, as a restart or a dropped database
+// ends every one, is reported on its pool, which discards it and opens a
+// fresh one at the next borrow; unheard, the report would end the process.
+const connections = (max: number, application_name: string) => {
+  const p = new pg.Pool({ connectionString: DATABASE_URL, user: DATABASE_URL ? undefined : 'cella_app', max, application_name })
+  p.on('error', (e) => console.warn(`${application_name}: an idle connection ended: ${e.message}`))
+  return p
+}
 
 // Eight connections: six for pages and writes, and two kept for reading
 // sessions, which nothing else takes, so pages and writes holding all six

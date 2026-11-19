@@ -1,5 +1,5 @@
 import { command, form, query } from '$app/server'
-import { collection as call, index as indexed } from '#lib/server/calls.ts'
+import { collection as call, index as indexed, within as scoped } from '#lib/server/calls.ts'
 import { action } from '#lib/server/slices.ts'
 import { failed } from '#lib/server/write.ts'
 import { item } from './item.remote.ts'
@@ -11,12 +11,15 @@ import { answer, keyed, pairs, posted, written } from './write.ts'
 // its about, as the `[collection]` page reads them.
 export const collection = query(call.schema, (arg) => served((db, who) => call.run(db, arg, who)))
 
+// A collection scoped to a record, as the record's tab lists it.
+export const within = query(scoped.schema, (arg) => served((db, who) => scoped.run(db, arg, who)))
+
 // What the command menu searches: every item each collection indexes.
 export const index = query(() => served((db) => indexed.run(db)))
 
 // What a write on a collection's page or an item's may change, read again
 // in its answer where the page reads it.
-const touched = () => [collection, item, index]
+const touched = () => [collection, within, item, index]
 
 // A write on a collection's page or an item's, by the write its
 // collection's slices name, keyed by the collection, the item and the

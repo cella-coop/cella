@@ -9,7 +9,7 @@ import { own } from './fixture.ts'
 // members: the browser derives the TEST-ONLY key of the device picked
 // (`fixture` in `@cella/org-sign`), keeps it as its own and signs in and
 // signs each write with it, as with any device. A demo build, a
-// production build serving a mock co-op, offers them too, each marked as
+// production build serving a mock coop, offers them too, each marked as
 // a demo member, and wears the demo's banner on every page. The server
 // signs nothing, in either mode or none; a production build that is no
 // demo offers no one.

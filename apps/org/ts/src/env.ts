@@ -19,7 +19,7 @@ export const variables = defineEnvVars({
   },
   CELLA_DEMO: {
     description:
-      'Demo mode: "1" lets a production build\'s sign-in offer the fixture members, each marked as a demo member, whose TEST-ONLY device keys the browser derives, and puts the demo\'s banner on every page. `cella serve --prod --demo` and the NixOS module\'s demo option set it, on a demo scope alone: never a real co-op\'s.',
+      'Demo mode: "1" lets a production build\'s sign-in offer the fixture members, each marked as a demo member, whose TEST-ONLY device keys the browser derives, and puts the demo\'s banner on every page. `cella serve --prod --demo` and the NixOS module\'s demo option set it, on a demo scope alone: never a real coop\'s.',
     schema: (v) => v === '1',
   },
   CELLA_DEMO_IDLE: {

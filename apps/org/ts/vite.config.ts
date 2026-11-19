@@ -23,9 +23,11 @@ export default defineConfig({
   // Phosphor ships Svelte sources only, so SSR bundles it rather than
   // importing it from node_modules. Loro loads its WebAssembly beside its
   // own files, and pg is plain Node, so the server imports both at run time
-  // instead; the feats' packages, linked in, are bundled as source.
+  // instead; the feats' packages, linked in, are bundled as source. So is
+  // the brand, which SSR would otherwise import once from node_modules and
+  // keep, so that a change to it reached the server only on a restart.
   ssr: {
-    noExternal: ['phosphor-svelte'],
+    noExternal: ['phosphor-svelte', '@cella/brand'],
     external: ['loro-crdt', 'pg'],
   },
   // In the browser, Loro's bundler build imports its WebAssembly as an ES

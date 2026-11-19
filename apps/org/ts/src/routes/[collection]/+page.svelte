@@ -47,7 +47,7 @@
      renders the content, its queries awaited. A page reading again keeps
      its content, its frame busy. -->
 {#snippet loading()}
-  <Skeleton title={opening?.view.title} />
+  <Skeleton title={opening?.view.title} icon={opening?.view.icon} />
 {/snippet}
 
 <svelte:boundary pending={browser ? loading : undefined}>

@@ -2,7 +2,7 @@ import { redirect } from '@sveltejs/kit'
 import { back } from '#lib/server/back.ts'
 import type { RequestHandler } from './$types'
 
-// The member's lens, a circle the co-op selector chose, kept in a cookie
+// The member's lens, a circle the coop selector chose, kept in a cookie
 // as the theme is and never in the log; none clears it. The root layout
 // reads it, and a lens naming a circle the member does not read is none.
 export const POST: RequestHandler = async ({ request, cookies, url }) => {

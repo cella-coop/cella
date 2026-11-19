@@ -48,7 +48,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
     return new Response('Sign in first', { status: 401 })
   }
-  // The co-op has no home page for now: `/` lands the member in their
+  // The coop has no home page for now: `/` lands the member in their
   // Inbox, what waits on them, until a better first page is designed.
   if (event.url.pathname === '/') {
     return new Response(null, { status: 307, headers: { location: '/inbox' } })

@@ -8,7 +8,7 @@
   // page's writes. The dev server alone serves it, which its query says.
   const served = ink()
   const areas = [
-    { name: 'Governance', collections: [{ title: 'Motions', icon: icons.Scales }, { title: 'Meetings', icon: icons.Calendar }, { title: 'Circles', icon: icons.CirclesThree }] },
+    { name: 'Organization', collections: [{ title: 'Motions', icon: icons.Scales }, { title: 'Meetings', icon: icons.Calendar }, { title: 'Circles', icon: icons.CirclesThree }] },
     { name: 'Office', collections: [{ title: 'Documents', icon: icons.FileText }, { title: 'Contacts', icon: icons.Buildings }] },
     { name: 'Work', collections: [{ title: 'Projects', icon: icons.Briefcase }, { title: 'Tasks', icon: icons.CheckSquare }] },
     { name: 'Payments', collections: [{ title: 'Invoices', icon: icons.Receipt }] },

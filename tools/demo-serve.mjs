@@ -754,7 +754,7 @@ const NOTICE = "This is a prototype environment for demo purposes and can't be u
 // package ships the whole tree), shown while a copy is made, each cell
 // lit in turn around the ring: the front cannot say how far a copy has
 // come, only when it is ready, so a turn and not a bar.
-const MARK = readFileSync(new URL('../packages/brand/mark.svg', import.meta.url), 'utf8')
+const LOGO = readFileSync(new URL('../packages/brand/mark.svg', import.meta.url), 'utf8')
   .replace(/ class="" | width="[^"]*" height="[^"]*"/g, ' ')
   .replace(/role="img" aria-label="Cella"/, 'class="mark" aria-hidden="true"')
 
@@ -773,7 +773,7 @@ main.loading{text-align:center}.mark{width:4.5rem;height:4.5rem;display:block;ma
 @keyframes lit{0%,100%{opacity:.25}30%{opacity:1}}
 @media (prefers-reduced-motion:reduce){.mark path{animation:none;opacity:1}}
 </style></head><body><main${notice ? '' : ' class="loading"'}>
-${notice ? `<p class="notice" role="note"><b>Prototype.</b> ${NOTICE}</p>` : MARK}
+${notice ? `<p class="notice" role="note"><b>Prototype.</b> ${NOTICE}</p>` : LOGO}
 ${lines.map((l) => `<p>${l}</p>`).join('\n')}
 </main>${script}</body></html>`
   // `frame-ancestors 'none'`: never framed, by this host's own pages or

@@ -30,9 +30,11 @@ const f = (v: number) => v.toFixed(1)
 type Parent = { cells: Set<HTMLElement>; seen: MutationObserver }
 type Page = { sized: ResizeObserver; parents: Map<HTMLElement, Parent>; marked: Set<HTMLElement>; frame: number }
 
-// Browser state only: an attachment never runs on the server, so no two
-// requests share it.
-const pages = new WeakMap<Document, Page>()
+// A document's observers are held by the document itself, under a key
+// of this module's, so the module keeps no state of its own; an
+// attachment never runs on the server.
+const PAGE = Symbol('cella cells')
+type Held = Document & { [PAGE]?: Page }
 
 const shaped = (el: Element): el is HTMLElement => el instanceof HTMLElement && el.dataset.cell !== undefined
 
@@ -151,8 +153,8 @@ function mark(page: Page, parent: HTMLElement) {
   }
 }
 
-function pageOf(doc: Document): Page {
-  const known = pages.get(doc)
+function pageOf(doc: Held): Page {
+  const known = doc[PAGE]
   if (known) {
     return known
   }
@@ -169,7 +171,7 @@ function pageOf(doc: Document): Page {
     marked: new Set(),
     frame: 0,
   }
-  pages.set(doc, page)
+  doc[PAGE] = page
   return page
 }
 

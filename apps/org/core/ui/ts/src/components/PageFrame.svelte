@@ -384,10 +384,22 @@
     .drawer {
       grid-column: 1;
       grid-row: 2;
+      /* A grid item stretches to its row's own height by default
+         (`align-self: stretch`), the row sized to fill the frame
+         (`minmax(0, 1fr)` above), never its content's: at this width the
+         content and the drawer share the one cell, floating, so a
+         drawer shorter than the content left an unseen stretch of its
+         own box past its last row, over the content beneath it,
+         catching every press there meant for the content, never
+         reaching it (narrow.test.ts's own 760-1100px never pressed
+         anything past a short drawer's foot to catch this). `start`
+         sizes it to its content instead, `max-height` still bounding a
+         longer one to the frame's own height, to scroll within itself. */
+      align-self: start;
       justify-self: end;
       z-index: 2;
       width: min(var(--drawer), 100%);
-      height: 100%;
+      max-height: 100%;
       padding-left: var(--space-4);
       border-left: 1px solid var(--line);
       --surface: var(--float);

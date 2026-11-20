@@ -34,9 +34,9 @@ export const app: App = {
           { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: (p: Project) => p.state, tone: (p: Project) => tones[p.state] },
           { key: 'due', label: 'Due', kind: 'date', role: 'meta', value: (p: Project) => p.due },
         ],
-        // A board of the circles' projects, a column each, the soonest due
+        // A board by state, a swimlane for each circle, the soonest due
         // first (the operator, 20 Nov).
-        look: { layout: 'board', by: 'circle', sort: { field: 'due', dir: 'asc' }, cards: ['progress', 'state', 'due'], lanes: { state: ['active', 'done'] } },
+        look: { layout: 'board', columns: 'state', by: 'circle', sort: { field: 'due', dir: 'asc' }, cards: ['progress', 'due'], lanes: { state: ['active', 'done'] } },
       },
       page: {
         comment: Comments,

@@ -6,14 +6,12 @@
   import CalendarDots from 'phosphor-svelte/lib/CalendarDots'
   import SortAscending from 'phosphor-svelte/lib/SortAscending'
   import SortDescending from 'phosphor-svelte/lib/SortDescending'
-  import PushPin from 'phosphor-svelte/lib/PushPin'
-    import type { Column } from '../models/view.ts'
+  import type { Column } from '../models/view.ts'
   import { spans } from '../models/calendar.ts'
-  import { arranged, groupable, laned, type Custom, type Field, type Layout, type Pin, type Spec } from '../models/query.ts'
+  import { arranged, groupable, laned, type Custom, type Field, type Layout, type Spec } from '../models/query.ts'
   import { marks } from '../marks.ts'
   import { useCollection } from '../hooks/useCollection.ts'
   import { useShell } from '../hooks/useShell.ts'
-  import { usePinned } from '../hooks/usePinned.ts'
   import { useViews } from '../hooks/useViews.ts'
   import { Plus } from '../icons.ts'
   import Button from './Button.svelte'
@@ -30,9 +28,11 @@
   // Linear's display menu: the layout on top, then the same rows in the
   // same order, each a label and a dropdown, Group by and Order by, then
   // Fields, what is shown, and Circles, whether the view reads the lens's
-  // circle or every circle the reader reads; then, on one of the viewer's
-  // own, its name and its removal; the pin of the open view under Pinned
-  // is an icon in the corner. Filtering, and Save, are the filter bar's,
+  // circle or every circle the reader reads; then, while a view is being
+  // saved, its name and its icon. It holds how a view looks alone:
+  // renaming, pinning, duplicating and deleting a view are its chip's
+  // menu, in the view bar (`Collection`). Filtering, and Save, are the
+  // filter bar's,
   // on the line above the collection (`FilterBar`). What the collection
   // offers lives only inside the dropdowns and popovers, and a row the
   // layout has no use for is disabled, never dropped. A change hands the
@@ -51,12 +51,9 @@
     placing,
     declared = null,
     opened,
-    custom,
-    pin = null,
     whole = false,
     onchange,
     onsave,
-    onremove,
     changed = false,
     keep,
     discard,
@@ -87,14 +84,11 @@
     // and what the view showed as it was opened: Order by's default.
     declared?: { key: string; dir: 'ascending' | 'descending' } | null
     opened?: Spec
-    custom?: Custom
-    // The open view as Pinned holds it, and whether the lens leaves the
-    // collection whole, its rows naming no circle that owns them.
-    pin?: Pin | null
+    // Whether the lens leaves the collection whole, its rows naming no
+    // circle that owns them.
     whole?: boolean
     onchange: (spec: Spec) => void
     onsave: (view: Custom) => void
-    onremove: () => void
     // Whether this page has changed the open view since it was opened (a
     // filter, a search, a layout), and what keeps or drops those changes:
     // the view's own Save and Reset, here rather than in the filter bar.
@@ -107,7 +101,6 @@
   const state = useCollection()
   const views = useViews(() => name)
   const shell = useShell()
-  const pinned = usePinned()
 
   const groups = $derived(fields.filter((f) => groupable(f, values[f.key] ?? [])))
   const lanes = $derived(fields.filter((f) => laned(f, values[f.key] ?? [])))
@@ -209,21 +202,6 @@
 </script>
 
 <Card title="View">
-  {#snippet actions()}
-    {#if pin}
-      {const on = $derived(pinned.pinned(pin.collection, pin.view))}
-      <button
-        type="button"
-        class="pin"
-        aria-pressed={on}
-        aria-label={on ? 'Unpin this view' : 'Pin this view'}
-        title={on ? 'Unpin this view' : 'Pin this view'}
-        onclick={() => pin && (on ? pinned.unpin(pin.collection, pin.view) : pinned.pin(pin))}
-      >
-        <Icon icon={PushPin} weight={on ? 'fill' : 'regular'} />
-      </button>
-    {/if}
-  {/snippet}
   <Segmented label="Layout" options={layouts.map((l) => ({ value: l.id, label: l.label, icon: l.icon }))} value={spec.layout} onchange={(id) => change({ layout: id as Layout })} />
 
   <div class="rows">
@@ -320,17 +298,10 @@
     </ul>
   </div>
 
-  <!-- The foot, one row: Pin, which pins the open view under Pinned in
-       the sidebar, or unpins it; and, on a view of the viewer's own, its
-       removal. Its name edits above them; Save is the filter bar's. -->
-  <div class="saving">
-    {#if custom}
-      <label class="option">
-        <span class="label">Name</span>
-        <input value={custom.name} onchange={(e) => views.rename(custom.id, e.currentTarget.value)} aria-label="View name" />
-      </label>
-    {/if}
-    {#if views.naming}
+  <!-- A view being saved, named and given its icon; Save is the filter
+       bar's, and a view saved is renamed on its chip. -->
+  {#if views.naming}
+    <div class="saving">
       <form class="naming" onsubmit={save}>
         <!-- svelte-ignore a11y_autofocus: the form opens to name the view -->
         <input bind:value={views.name} placeholder="Name the view" aria-label="View name" autofocus />
@@ -346,14 +317,8 @@
           <Button lead={verb('Save view')} tone="primary" type="submit">Save view</Button>
         </div>
       </form>
-    {:else}
-      <div class="foot">
-        {#if custom}
-          <span class="end"><Button lead={verb('Delete')} tone="danger" onclick={onremove}>Delete</Button></span>
-        {/if}
-      </div>
-    {/if}
-  </div>
+    </div>
+  {/if}
   {#if changed && keep && discard}
     <div class="unsaved" role="status">
       <span>Unsaved changes</span>
@@ -402,17 +367,6 @@
   .direction:disabled {
     cursor: default;
     opacity: 0.5;
-  }
-  .option {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-1) var(--space-3);
-  }
-  .option input {
-    width: auto;
-    max-width: 11rem;
   }
   .label {
     font-size: var(--text-sm);
@@ -508,38 +462,6 @@
   .unsaved .keep {
     display: flex;
     gap: var(--space-1);
-  }
-  /* The pin: icon only, quiet, in the card's top-right corner. */
-  .pin {
-    display: grid;
-    place-items: center;
-    width: 1.5rem;
-    height: 1.5rem;
-    padding: 0;
-    border: none;
-    border-radius: var(--radius-control);
-    background: none;
-    color: oklch(var(--shade-5) var(--tone-base));
-    cursor: pointer;
-  }
-  /* Quiet even pinned: its fill says so; hover brings it up. */
-  .pin[aria-pressed='true'] {
-    color: var(--text-muted);
-  }
-  .pin:hover {
-    color: var(--text);
-  }
-  .pin:hover {
-    background: var(--hover);
-  }
-  /* The foot's one row: a view's Delete at its end. */
-  .foot {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-  }
-  .end {
-    margin-inline-start: auto;
   }
   .marks {
     display: flex;

@@ -4,9 +4,10 @@
 // own; she chooses Every circle in the View panel and saves the view,
 // which reads the rows of both circles she reads and none of the
 // others', and counts them so on its tab. She pins it and the tasks'
-// All under Pinned, and finds both in the sidebar from every circle she
-// reads and after a reload, the view across circles opening on the rows
-// of both from any of them. `SHOTS` names where its screenshots go. It
+// All under Pinned, each from its chip's menu, and finds both in the
+// sidebar from every circle she reads and after a reload, the view
+// across circles opening on the rows of both from any of them; renamed
+// on its chip, its pin follows, and deleted from its menu, it goes. `SHOTS` names where its screenshots go. It
 // writes nothing to the log. Run by `cella test e2e pinned`.
 // covers: task
 
@@ -31,6 +32,14 @@ async function listed(page: Page, owner: Map<string, string>): Promise<string[]>
   const ids = await page.locator('main a[href^="/tasks/"]').evaluateAll((as) => as.map((a) => decodeURIComponent(a.getAttribute('href')!.split('/')[2]!.split(/[?#]/)[0]!)))
   assert.ok(ids.length > 0, 'the page lists tasks')
   return [...new Set(ids.map((id) => owner.get(id) ?? `unknown ${id}`))].sort()
+}
+
+// A view's chip in the view bar, and an item of its menu chosen, opened
+// by a right click on it.
+const viewChip = (page: Page, view: string) => page.getByRole('navigation', { name: 'Views' }).getByRole('link', { name: view, exact: true })
+async function chosen(page: Page, view: string, item: string) {
+  await viewChip(page, view).click({ button: 'right' })
+  await page.getByRole('menu', { name: `view ${view}` }).getByRole('menuitem', { name: item }).click()
 }
 
 // The views Pinned lists, each its name and address.
@@ -96,18 +105,20 @@ eachBrowser((engine, launch) => {
       assert.equal(await tab.getAttribute('title'), `View ${name} tasks ${across}`, `${engine}: its tab counts the tasks of both circles`)
       assert.deepEqual(await listed(page, owner), reads, `${engine}: the saved view reads across circles`)
 
-      // Pinned, then the tasks' All.
-      await page.getByRole('button', { name: 'Pin this view', exact: true }).click()
+      // Pinned from each chip's menu, her view, then the tasks' All.
+      await chosen(page, name, 'Pin to sidebar')
       await page.getByRole('navigation', { name: 'Views' }).getByRole('link', { name: 'All' }).click()
       await page.waitForURL((u) => !u.searchParams.has('v'))
       await page.waitForLoadState('networkidle')
       assert.deepEqual(await listed(page, owner), ['web'], `${engine}: All reads Web's tasks`)
-      await page.getByRole('button', { name: 'Pin this view', exact: true }).click()
+      await chosen(page, 'All', 'Pin to sidebar')
       await page.waitForFunction(() => document.querySelectorAll('.pinned a').length === 2)
       const pinned = await pins(page)
       assert.deepEqual(pinned.map((f) => f.name), [name, 'Tasks'], `${engine}: both pinned, in the order she pinned them`)
       assert.match(pinned[0]!.href, /^\/tasks\?v=c-[\w-]+&.*across=1/, `${engine}: the view across circles opens at its own address`)
-      assert.equal(await page.getByRole('button', { name: 'Unpin this view', exact: true }).count(), 1, `${engine}: All reads as pinned`)
+      await viewChip(page, 'All').click({ button: 'right' })
+      assert.equal(await page.getByRole('menu', { name: 'view All' }).getByRole('menuitem', { name: 'Unpin from sidebar' }).count(), 1, `${engine}: All reads as pinned`)
+      await page.keyboard.press('Escape')
       await page.screenshot({ path: `${shots}/pinned-web-${engine}.png` })
 
       // The same in every circle she reads, and after a reload.
@@ -135,13 +146,12 @@ eachBrowser((engine, launch) => {
       await nav.locator('.pinned').getByRole('link', { name, exact: true }).click()
       await page.waitForURL(/[?&]v=c-/)
       await page.waitForLoadState('networkidle')
-      const naming = page.locator('.saving').getByRole('textbox', { name: 'View name' })
+      await chosen(page, name, 'Rename')
+      const naming = page.getByRole('textbox', { name: `Rename view ${name}` })
       await naming.fill('Our tasks')
       await naming.press('Enter')
-      await naming.blur()
       await page.waitForFunction(() => [...document.querySelectorAll('.pinned a')].some((a) => a.textContent?.trim() === 'Our tasks'))
-      page.once('dialog', (d) => void d.accept())
-      await page.getByRole('button', { name: 'Delete', exact: true }).click()
+      await chosen(page, 'Our tasks', 'Delete')
       await page.waitForFunction(() => document.querySelectorAll('.pinned a').length === 1)
       assert.deepEqual((await pins(page)).map((f) => f.name), ['Tasks'], `${engine}: the deleted view's pin goes with it`)
       assert.deepEqual(errors, [], `${engine}: the pages threw nothing`)

@@ -24,6 +24,9 @@ import PencilSimple from 'phosphor-svelte/lib/PencilSimple'
 import Play from 'phosphor-svelte/lib/Play'
 import Plus from 'phosphor-svelte/lib/Plus'
 import Prohibit from 'phosphor-svelte/lib/Prohibit'
+import PushPin from 'phosphor-svelte/lib/PushPin'
+import PushPinSlash from 'phosphor-svelte/lib/PushPinSlash'
+import CopySimple from 'phosphor-svelte/lib/CopySimple'
 import Receipt from 'phosphor-svelte/lib/Receipt'
 import Scales from 'phosphor-svelte/lib/Scales'
 import SignIn from 'phosphor-svelte/lib/SignIn'
@@ -87,6 +90,10 @@ const verbs: Record<string, Component<any>> = {
   run: Play,
   correct: PencilSimple,
   rename: PencilSimple,
+  duplicate: CopySimple,
+  pin: PushPin,
+  unpin: PushPinSlash,
+  move: ArrowRight,
   change: PencilSimple,
   export: DownloadSimple,
   continue: ArrowRight,

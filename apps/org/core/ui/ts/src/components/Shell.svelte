@@ -272,7 +272,7 @@
               <a href={f.href} class:on aria-current={on ? 'page' : undefined}>
                 <Icon icon={f.icon ? mark(f.icon) : (owner(f.collection) ?? mark())} /><span class="title">{f.name}</span>
               </a>
-              <!-- Unpinned from here as from its View panel, shown while its
+              <!-- Unpinned from here as from its chip's menu, shown while its
                    row is hovered or holds focus (the operator, 20 Nov). -->
               <button type="button" class="unpin" aria-label="Unpin {f.name}" title="Unpin" onclick={() => pinned.unpin(f.collection, f.view)}>
                 <Icon icon={X} size="0.85em" />
@@ -281,7 +281,7 @@
           {/each}
         </ul>
       {:else}
-        <p class="hint empty">Pin a view from its View panel.</p>
+        <p class="hint empty">Pin a view from its tab's menu.</p>
       {/if}
     </div>
 

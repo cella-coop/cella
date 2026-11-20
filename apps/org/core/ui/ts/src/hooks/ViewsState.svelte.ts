@@ -22,6 +22,11 @@ export class ViewsState {
   naming = $state(false)
   name = $state('')
   icon = $state('bookmark')
+  // The view renamed in place on its chip, the name it holds, and the
+  // chip the focus goes back to once the keyboard ends it.
+  renaming: string | null = $state(null)
+  draft = $state('')
+  back: string | null = $state(null)
   readonly #collection: () => string
   readonly #href: (view: Custom) => string
   readonly #layout: () => Layout
@@ -106,6 +111,44 @@ export class ViewsState {
     }
     this.list = this.list.map((c) => (c.id === id ? { ...c, name: name.trim() } : c))
     this.#write()
+  }
+
+  // Renaming on the chip: begun from its menu, the chip an input holding
+  // the name; kept on Enter or as it loses the focus, dropped on Escape.
+  begin(id: string) {
+    this.draft = this.find(id)?.name ?? ''
+    this.renaming = id
+  }
+
+  // Ends the renaming, keeping the name or not; `back`, by the keyboard,
+  // so the focus goes back to its chip.
+  commit(back = false) {
+    if (this.renaming) {
+      this.rename(this.renaming, this.draft)
+      this.back = back ? this.renaming : null
+    }
+    this.renaming = null
+  }
+
+  cancel() {
+    this.back = this.renaming
+    this.renaming = null
+  }
+
+  // The icon a view wears in its tab and under Pinned.
+  mark(id: string, icon: string) {
+    this.list = this.list.map((c) => (c.id === id ? { ...c, icon } : c))
+    this.#write()
+  }
+
+  // A copy of a view, the viewer's own or a preset's, as one of theirs
+  // just after the one it copies, or last for a preset's.
+  duplicate(from: { id: string; name: string; icon?: string; spec: Spec }): Custom {
+    const view = { id: `c-${Date.now().toString(36)}`, name: `${from.name} copy`, ...(from.icon ? { icon: from.icon } : {}), spec: $state.snapshot(from.spec) as Spec }
+    const at = this.list.findIndex((c) => c.id === from.id)
+    this.list = at >= 0 ? [...this.list.slice(0, at + 1), view, ...this.list.slice(at + 1)] : [...this.list, view]
+    this.#write()
+    return view
   }
 
   remove(id: string) {

@@ -247,6 +247,9 @@ export interface Look {
   layout?: Layout
   hide?: string[]
   by?: string
+  // A board's columns, where they are not `by`: then `by` is its
+  // swimlanes, as projects' are their circles (the operator, 20 Nov).
+  columns?: string
   sort?: Sort
   // What breaks the ties of any sort, before the collection's read order,
   // as the inbox's since: never the view's, always the collection's.
@@ -475,7 +478,7 @@ export const spec = (p?: Preset, look: Look = {}): Spec => ({
   // Unset until a view names its own: a board's columns read from `by`
   // instead (`grouping`), as every board did before it had columns of
   // its own.
-  columns: p?.columns ?? null,
+  columns: p?.columns ?? look.columns ?? null,
   cards: p?.cards ?? look.cards ?? [],
   on: p?.on ?? look.on ?? null,
   span: p?.span ?? look.span ?? 'month',

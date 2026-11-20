@@ -1,6 +1,6 @@
 +++
 title = "Lanterne"
-updated = 2026-11-19
+updated = 2026-11-20
 +++
 
 # Lanterne
@@ -442,9 +442,11 @@ buyer's grant and change below.
    cover, each refused with the mandate missing or exceeded and what
    would fix it: Approve on Imprimerie du Parc's bill, 1 440 €, over
    her 1 200 €, naming her mandate and the motion of Operations that
-   would raise its limit; Approve on Atelier Lumen's rent, the
-   assembly's, outside her scope, naming what her mandate covers and
-   the role that would cover it; and a bill recorded from the Bills
+   would raise its limit, once she presses it, since what an amount
+   exceeds is judged once it is given; Approve on Atelier Lumen's rent,
+   the assembly's, outside her scope, unavailable before she presses
+   it, its tooltip naming what her mandate covers and the role that
+   would cover it; and a bill recorded from the Bills
    list's New form, on the assembly's records since the form names no
    circle, which she holds by no mandate, naming finance, which holds
    record-bill, and the tenure that would allow it.
@@ -473,9 +475,9 @@ buyer's grant and change below.
    finance's with it, the same day; its page lists those four, each
    under the one it ends, and not the print buyer's 1 200 €, which the
    change's own close revoked that day and the change's page lists;
-   and Sofia's Approve on the paper bill is refused, naming her
-   mandate, the day it was revoked and the motion of Operations that
-   would grant it anew.
+   and Sofia's Approve on the paper bill is unavailable, its tooltip
+   naming her mandate, the day it was revoked and the motion of
+   Operations that would grant it anew.
 
 The scenario's test plays the story, then the steps the seed skips
 (`unseeded`): it walks each step in every browser, light and dark, as

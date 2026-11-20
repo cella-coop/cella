@@ -11,12 +11,15 @@
 // --scenario authority-walk` leaves four motions for the operator to
 // close. Its unseeded steps, which the test alone runs, walk it in
 // every browser, light and dark, as the person each step names: the chain, Sofia's powers, her refusals,
+// the paper bill's on pressing Approve, the rent's before it, its Approve
+// unavailable with the reason as its tooltip,
 // Brand's Propose…, the print buyer's mandate's Change… and Revoke…
 // and what each open motion would issue or revoke;
 // closes the grant, the change, m-2026-013 and m-2026-014 in that order,
 // m-2026-014's revoking every mandate under coordination's the same day,
 // each closed motion naming only what its own close revoked;
-// and walks again, the revocation's page and the refusal it leaves.
+// and walks again, the revocation's page and the refusal it leaves, the
+// paper bill's Approve now unavailable before she presses it.
 // `SHOTS` names where its screenshots go. Run by `cella test e2e
 // authority-walk`.
 // covers: bill bill-transaction membership-motion motion
@@ -228,13 +231,25 @@ const section = (page: Page, heading: string) => page.locator('section', { has: 
 // A panel of a record's overview by its name.
 const panel = (page: Page, name: string) => page.getByRole('complementary', { name, exact: true })
 
-// Clicks a bill's Approve and returns the refusal its page shows.
-async function approving(w: Walker, bill: string) {
+// A bill's Approve as the signed-in person meets it, and the refusal it
+// shows: where the page judged it before it is pressed, as a power held
+// over no record of the bill's circle, or no longer held, the button is
+// unavailable and its tooltip, shown as the pointer rests on it, says why
+// (`early`); where only the amount refuses it, it is pressed and the page
+// shows the guard's reason.
+async function approving(w: Walker, bill: string): Promise<{ early: boolean; said: string }> {
   await w.open(`/bills/${bill}`)
-  await w.page().getByRole('button', { name: 'Approve' }).click()
+  const button = w.page().locator('form[data-write="approve"] button[type="submit"]')
+  if ((await button.getAttribute('aria-disabled')) === 'true') {
+    await button.hover()
+    const tip = w.page().locator(`[id="${await button.getAttribute('aria-describedby')}"]`)
+    await tip.waitFor()
+    return { early: true, said: (await tip.textContent()) ?? '' }
+  }
+  await button.click()
   const said = w.page().getByText(/the actor holds/).first()
   await said.waitFor()
-  return (await said.textContent()) ?? ''
+  return { early: false, said: (await said.textContent()) ?? '' }
 }
 
 // Records a bill from the Bills list's New form, as the signed-in
@@ -271,9 +286,13 @@ unseeded('before any close: the chain, Sofia\'s powers and refusals, Brand\'s Pr
     assert.match((await section(w.page(), 'Powers').textContent()) ?? '', /Approve bill/, `${w.at}: her powers list approve-bill`)
     await w.shot('2-powers')
 
-    assert.match(await approving(w, paper), /up to 1440\.00 €: mandate \d+ grants it to print-buyer in brand up to 1200\.00 € a write/, `${w.at}: over her limit`)
+    const over = await approving(w, paper)
+    assert.equal(over.early, false, `${w.at}: her limit is judged once the amount is given, on pressing Approve`)
+    assert.match(over.said, /up to 1440\.00 €: mandate \d+ grants it to print-buyer in brand up to 1200\.00 € a write/, `${w.at}: over her limit`)
     await w.shot('3-refused-over')
-    assert.match(await approving(w, rent), /by no mandate covering ag's records/, `${w.at}: outside her scope`)
+    const outside = await approving(w, rent)
+    assert.equal(outside.early, true, `${w.at}: outside her scope, Approve is unavailable before she presses it`)
+    assert.match(outside.said, /by no mandate covering ag's records/, `${w.at}: outside her scope`)
     await w.shot('3-refused-outside')
     assert.match(await recording(w), /no mandate for record-bill .*: it is held by finance in operations/, `${w.at}: a bill recorded`)
     await w.shot('3-refused-record')
@@ -357,7 +376,9 @@ unseeded('after them all: m-2026-014\'s page shows what it revoked, and Sofia\'s
     assert.match((await mandates.textContent()) ?? '', /revoked 4 mandates the same day, the one it ends and every one issued under it/, `${w.at}: the cascade`)
     await mandates.scrollIntoViewIfNeeded()
     await w.shot('5-revoked')
-    assert.match(await approving(w, paper), /revoked on 2026-10-31/, `${w.at}: the refusal names the day`)
+    const revoked = await approving(w, paper)
+    assert.equal(revoked.early, true, `${w.at}: her mandate revoked, Approve is unavailable before she presses it`)
+    assert.match(revoked.said, /revoked on 2026-10-31/, `${w.at}: the refusal names the day`)
     await w.shot('5-refused-revoked')
   })
 })

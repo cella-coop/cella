@@ -642,7 +642,7 @@ function refusal(address, resetting) {
     return [503, 'Several copies are being prepared; yours is next in a moment.']
   }
   if (held >= config.perAddress) {
-    return [429, `Your network holds ${held} copies of the demo already, as many as one may; try again once one resets.`]
+    return [429, `Your network holds ${count(held, 'copy', 'copies')} of the demo already, as many as one may; try again once ${held === 1 ? 'it resets' : 'one resets'}.`]
   }
   if (rateLimited(address)) {
     return [429, 'Many copies were made from here lately; try again in a few minutes.']
@@ -842,6 +842,24 @@ function joinPage(res) {
   })
 }
 
+// A number with its noun, one or many: "1 copy", "2 copies".
+function count(n, one, many) {
+  return `${n} ${n === 1 ? one : many}`
+}
+
+// A span of seconds as a person says it: "15 minutes", "1 minute", "45
+// seconds".
+function span(s) {
+  return s >= 120 || s % 60 === 0 ? count(Math.round(s / 60), 'minute', 'minutes') : count(s, 'second', 'seconds')
+}
+
+// Reset now refused: the banner's form posts it as a page, so the answer
+// is the front's own page saying why, with the way back to the copy,
+// never a bare line of text with none.
+function unreset(res, status, why, { back = 'Back to your copy', headers = {} } = {}) {
+  page(res, status, { title: 'Your copy was not reset', lines: [why, `<a href="/">${back}</a>`], headers })
+}
+
 function plain(res, status, text, headers = {}) {
   res.writeHead(status, { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', ...headers })
   res.end(text)
@@ -944,7 +962,11 @@ async function handle(req, res) {
         return plain(res, 303, 'Your copy is fresh already.', { location: '/' })
       }
       if (!alone(browsersOf(copy), cookie, Date.now(), config.browserIdle * 1000)) {
-        return plain(res, 409, 'Reset now works only while you are alone in this room; another browser is still in it.')
+        return unreset(
+          res,
+          409,
+          `Another browser is in this copy with you, let in by its Share this copy link, and a reset would end it for them too. Ask them to leave it, or wait until they have been away for ${span(config.browserIdle)}; then Reset now works.`,
+        )
       }
     } else if (copy) {
       await copy.ready.catch(() => {})
@@ -954,12 +976,16 @@ async function handle(req, res) {
     const address = addressOf(req)
     const refused = refusal(address, path === '/_demo/reset' ? copy : null)
     if (refused) {
-      return plain(res, refused[0], refused[1], { 'retry-after': refused[0] === 503 ? '5' : '60' })
+      const headers = { 'retry-after': refused[0] === 503 ? '5' : '60' }
+      return path === '/_demo/reset' ? unreset(res, refused[0], refused[1], { headers }) : plain(res, refused[0], refused[1], headers)
     }
     if (copy) {
       await end(copy, 'Reset now')
     }
     if (!(await room())) {
+      if (path === '/_demo/reset') {
+        return unreset(res, 503, 'Your copy ended, and every copy the demo holds is in use; a fresh one is made for you as soon as one is free.', { back: 'Wait for a fresh copy', headers: { 'retry-after': '60' } })
+      }
       return plain(res, 503, 'Every copy the demo holds is in use; try again in a few minutes.', { 'retry-after': '60' })
     }
     // A fresh cookie for every copy: an earlier one names nothing.
@@ -1171,7 +1197,7 @@ const front = http.createServer((req, res) => {
 front.headersTimeout = 20_000
 front.requestTimeout = 120_000
 front.listen(config.port, config.host, () => {
-  log(`on http://${config.host}:${config.port}, ${config.cap} copies of ${template} at most, each ending after ${config.idle} s idle or ${config.lifetime} s old`)
+  log(`on http://${config.host}:${config.port}, ${count(config.cap, 'copy', 'copies')} of ${template} at most, each ending after ${config.idle} s idle or ${config.lifetime} s old`)
 })
 
 async function stop() {

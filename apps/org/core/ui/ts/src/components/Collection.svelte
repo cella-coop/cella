@@ -577,17 +577,21 @@
         <DropIndicator show={drag.before('views', i)} axis="x" />
         <li data-drag-item="views" data-drag-index={i}>
           {#if saved.renaming === c.id}
-            <!-- Renamed in place: the chip an input holding its name, kept
-                 on Enter or as it loses the focus, dropped on Escape. -->
-            <input
-              class="rename"
-              bind:value={saved.draft}
-              size={Math.max(saved.draft.length, 6)}
-              aria-label="Rename view {c.name}"
-              onkeydown={renameKey}
-              onblur={() => saved.commit()}
-              {@attach renamer}
-            />
+            <!-- Renamed in place: the chip an input holding its name, its
+                 icon kept before it, kept on Enter or as it loses the
+                 focus, dropped on Escape. -->
+            <span class="renaming">
+              <Icon icon={mark(c.icon)} size="1em" />
+              <input
+                class="rename"
+                bind:value={saved.draft}
+                size={Math.max(saved.draft.length, 4)}
+                aria-label="Rename view {c.name}"
+                onkeydown={renameKey}
+                onblur={() => saved.commit()}
+                {@attach renamer}
+              />
+            </span>
           {:else}
             <ContextMenu label="view {c.name}" items={customMenu(c)} always>
               <Pill
@@ -763,12 +767,34 @@
   }
   /* A view renamed in place: an input of its chip's shape and type, as
      wide as the name, ringed as a field holding the focus. */
+  /* The icon stands inside the input's start, where the chip wore it. */
+  .renaming {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  .renaming > :global(svg) {
+    position: absolute;
+    inset-inline-start: var(--space-2);
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+  /* The chip's own box while it is being renamed (`Pill`, and the room the
+     view bar keeps for its ⋯): its height, its 1px edge, its padding, as
+     wide as its name, so it neither grows nor shifts; the edge takes the
+     accent while it is typed in, never a ring outside it. */
   .rename {
+    box-sizing: border-box;
     width: auto;
-    min-width: 0;
+    min-width: 4ch;
+    field-sizing: content;
     height: 1.6rem;
     min-height: 0;
-    padding: 0 var(--space-2);
+    padding: 0 calc(var(--space-2) + 1rem) 0 calc(var(--space-2) + 1em + var(--space-1));
+    border: 1px solid var(--accent-border);
+    outline: none;
+    box-shadow: none;
+    background: var(--sunk);
     border-radius: var(--radius-pill);
     font-size: var(--text-sm);
     font-weight: 700;

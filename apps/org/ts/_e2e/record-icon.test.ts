@@ -1,7 +1,7 @@
 // The record icon scenario, in Chromium, on a seeded Lanterne through the
 // dev server: before anything is picked, the Shop's project wears its
-// collection's icon, Briefcase, in its header and in its row in the
-// Projects list, as every project does. Yusuf, Web's lead, picks Rocket
+// collection's icon, Briefcase, in its header and on its card on the
+// Projects board, as every project does. Yusuf, Web's lead, picks Rocket
 // from the curated grid by the Details drawer's Icon property, and both
 // change to it, in the project's own ink; clearing it, with the grid's
 // None, takes it away from both, back to Briefcase, as before. `SHOTS`
@@ -67,13 +67,13 @@ eachBrowser((name, launch) => {
 
       await page.goto(`${base}/projects`)
       await page.waitForLoadState('networkidle')
-      const item = page.locator('li').filter({ has: page.getByText(title, { exact: true }) }).first()
+      const item = page.locator('.tile').filter({ has: page.getByText(title, { exact: true }) }).first()
       await item.waitFor()
-      assert.equal(await markOf(item.locator('.title')), rocket, `${name}: the list cell wears the same icon as the header`)
+      assert.equal(await markOf(item.locator('.title')), rocket, `${name}: the board's card wears the same icon as the header`)
       await page.screenshot({ path: `${shots}/record-icon-${name}-list.png`, fullPage: true })
 
       // Clearing it: the grid's None takes it away
-      // from the header and the row, back to the collection's Briefcase.
+      // from the header and the card, back to the collection's Briefcase.
       await page.goto(`${base}/projects/halles-shop`)
       await page.waitForLoadState('networkidle')
       await page.getByRole('tab', { name: 'Details' }).click()
@@ -88,9 +88,9 @@ eachBrowser((name, launch) => {
 
       await page.goto(`${base}/projects`)
       await page.waitForLoadState('networkidle')
-      const again = page.locator('li').filter({ has: page.getByText(title, { exact: true }) }).first()
+      const again = page.locator('.tile').filter({ has: page.getByText(title, { exact: true }) }).first()
       await again.waitFor()
-      assert.equal(await markOf(again.locator('.title')), briefcase, `${name}: the list cell wears the collection's icon again too`)
+      assert.equal(await markOf(again.locator('.title')), briefcase, `${name}: the board's card wears the collection's icon again too`)
 
       assert.deepEqual(errors, [], `${name}: the page threw nothing`)
       await context.close()

@@ -69,60 +69,70 @@
   }
 </script>
 
-<table class="grid">
-  <caption>{caption}</caption>
-  <thead>
-    <tr>
-      <td class="corner">{@render corner?.()}</td>
-      {#if pick}<th scope="col" class="pick">{pick.label}</th>{/if}
-      {#each columns as c (c.key)}
-        <th scope="col" class:closed={!c.open}>{c.label}{#if c.sub}<small>{c.sub}</small>{/if}</th>
-      {/each}
-      <th scope="col" class="total">Total</th>
-    </tr>
-  </thead>
-  <tbody>
-    {#each rows as r, i (r.key)}
+<!-- Wider than where it sits, it scrolls sideways; a dialog holding it
+     widens to a week (Dialog). -->
+<div class="scroll" data-wide>
+  <table class="grid">
+    <caption>{caption}</caption>
+    <thead>
       <tr>
-        <th scope="row">{r.label}</th>
-        {#if pick}
-          <td class="pick">
-            {#if pick.options(r.key).length}
-              <span class="choice"><Select name={form.name(pick.name(r.key))} label="{r.label}: {pick.label}" options={pick.options(r.key)} /></span>
-            {/if}
-          </td>
-        {/if}
-        {#each columns as c, j (c.key)}
-          <td class:closed={!c.open}>
-            <span class="held" aria-hidden="true">{shown(held(r.key, c.key))}</span>
-            <input
-              name={form.name(name(r.key, c.key))}
-              inputmode="decimal"
-              autocomplete="off"
-              placeholder={c.open ? '+' : ''}
-              disabled={!c.open}
-              aria-label="{r.label}, {c.label}{c.sub ? ` ${c.sub}` : ''}: add {unit}{held(r.key, c.key) ? `, ${shown(held(r.key, c.key))} ${unit} logged` : ''}"
-              data-row={i}
-              data-column={j}
-              onkeydown={move}
-            />
-          </td>
+        <td class="corner">{@render corner?.()}</td>
+        {#if pick}<th scope="col" class="pick">{pick.label}</th>{/if}
+        {#each columns as c (c.key)}
+          <th scope="col" class:closed={!c.open}>{c.label}{#if c.sub}<small>{c.sub}</small>{/if}</th>
         {/each}
-        <td class="total">{shown(across(r.key))}</td>
+        <th scope="col" class="total">Total</th>
       </tr>
-    {/each}
-  </tbody>
-  <tfoot>
-    <tr>
-      <th scope="row">Total</th>
-      {#if pick}<td></td>{/if}
-      {#each columns as c (c.key)}<td class="total">{shown(down(c.key))}</td>{/each}
-      <td class="total">{shown(all)}</td>
-    </tr>
-  </tfoot>
-</table>
+    </thead>
+    <tbody>
+      {#each rows as r, i (r.key)}
+        <tr>
+          <th scope="row">{r.label}</th>
+          {#if pick}
+            <td class="pick">
+              {#if pick.options(r.key).length}
+                <span class="choice"><Select name={form.name(pick.name(r.key))} label="{r.label}: {pick.label}" options={pick.options(r.key)} /></span>
+              {/if}
+            </td>
+          {/if}
+          {#each columns as c, j (c.key)}
+            <td class:closed={!c.open}>
+              <span class="held" aria-hidden="true">{shown(held(r.key, c.key))}</span>
+              <input
+                name={form.name(name(r.key, c.key))}
+                inputmode="decimal"
+                autocomplete="off"
+                placeholder={c.open ? '+' : ''}
+                disabled={!c.open}
+                aria-label="{r.label}, {c.label}{c.sub ? ` ${c.sub}` : ''}: add {unit}{held(r.key, c.key) ? `, ${shown(held(r.key, c.key))} ${unit} logged` : ''}"
+                data-row={i}
+                data-column={j}
+                onkeydown={move}
+              />
+            </td>
+          {/each}
+          <td class="total">{shown(across(r.key))}</td>
+        </tr>
+      {/each}
+    </tbody>
+    <tfoot>
+      <tr>
+        <th scope="row">Total</th>
+        {#if pick}<td></td>{/if}
+        {#each columns as c (c.key)}<td class="total">{shown(down(c.key))}</td>{/each}
+        <td class="total">{shown(all)}</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
 
 <style>
+  .scroll {
+    grid-column: 1 / -1;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+  }
   .grid {
     width: 100%;
     border-collapse: separate;

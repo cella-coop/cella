@@ -20,10 +20,11 @@ const plus = (day: string, n: number) => {
 
 // A worker's week from its Monday, as the grid enters it, or null for
 // someone the coop does not employ: its days, open once they have come
-// while the worker is employed; the projects not archived, those they
-// booked to in the four weeks before first; the coop's own time; the
-// circles each row offers, those the worker sits in that week, the
-// project's first where they sit in it and the root's for the coop's
+// while the worker is employed; the projects not archived that are
+// theirs, of a circle they sit in that week, booked to in the four weeks
+// before or logged to in this one, those booked to first; the coop's own
+// time; the circles each row offers, those the worker sits in that week,
+// the project's first where they sit in it and the root's for the coop's
 // own time; and what is logged in each.
 export async function week(db: Db, worker: string | null, from: string, today: string): Promise<Week | null> {
   if (!worker || !(await db.query('SELECT FROM employment.worker WHERE address = $1', [worker])).rowCount) {
@@ -35,8 +36,8 @@ export async function week(db: Db, worker: string | null, from: string, today: s
      FROM generate_series($2::date, $2::date + 6, interval '1 day') AS d ORDER BY d`,
     [worker, from, today],
   )
-  const projects = await db.query<{ project: string; title: string; circle: string }>(
-    `SELECT p.id AS project, p.title, p.circle
+  const projects = await db.query<{ project: string; title: string; circle: string; booked: boolean }>(
+    `SELECT p.id AS project, p.title, p.circle, u.last IS NOT NULL AS booked
      FROM project.project p
      LEFT JOIN LATERAL (
        SELECT max(e.day) AS last FROM project_timesheet.booking b JOIN timesheet.entry e ON e.id = b.entry
@@ -60,12 +61,14 @@ export async function week(db: Db, worker: string | null, from: string, today: s
   for (const l of logged.rows) {
     cells[l.project] = { ...cells[l.project], [l.day]: l.minutes }
   }
+  const mine = new Set(sat.map((c) => c.id))
+  const theirs = projects.rows.filter((p) => p.booked || mine.has(p.circle) || cells[p.project])
   return {
     worker,
     monday: from,
     days: days.rows,
     rows: [
-      ...projects.rows.map((p) => ({ project: p.project, title: p.title, circles: offering(sat, p.circle) })),
+      ...theirs.map((p) => ({ project: p.project, title: p.title, circles: offering(sat, p.circle) })),
       { project: '', title: 'The coop’s own time', circles: sat },
     ],
     logged: cells,

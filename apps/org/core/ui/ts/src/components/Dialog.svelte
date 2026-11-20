@@ -90,6 +90,11 @@
     color: var(--text);
     box-shadow: var(--shadow-float);
   }
+  /* A dialog holding something wide, as a week's grid, widens to show it
+     whole where the screen allows. */
+  .dialog:has(:global([data-wide])) {
+    width: min(54rem, calc(100vw - 2rem));
+  }
   .dialog[open] {
     display: grid;
     gap: var(--space-3);

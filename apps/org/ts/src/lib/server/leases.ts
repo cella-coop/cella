@@ -19,31 +19,44 @@ import { browserIdle, copy, lifetime } from './device.ts'
 // (`hooks.server.ts`), and times the room's end from that, never guessing
 // it on its own (`tools/demo-serve.mjs`).
 
-const held = new Map<string, string>() // member address -> browser id
-const seen = new Map<string, number>() // browser id -> last seen
+// The room's state lives on the process, not the module: the dev server
+// re-imports a server module on every hot reload, which emptied these
+// and ended every session under the person working (the operator, 20
+// Nov). In production the module loads once and nothing changes.
+type Room = {
+  held: Map<string, string>
+  seen: Map<string, number>
+  last: Map<string, string>
+  left: Set<string>
+  away: Map<string, { member: string; at: number }>
+  // When the room's lifetime ends, in milliseconds since 1970; 0 before
+  // the first sign-in, outside a room, or where `lifetime` names none.
+  endsAt: number
+  // When this room's server started, about when the front made the room:
+  // the front ends a room at its making plus twice its lifetime, signed
+  // in or not, so the lifetime this server names never runs past that.
+  born: number
+}
+const process$ = globalThis as typeof globalThis & { cellaRoom?: Room }
+const room: Room = (process$.cellaRoom ??= { held: new Map(), seen: new Map(), last: new Map(), left: new Set(), away: new Map(), endsAt: 0, born: Date.now() })
+const held = room.held // member address -> browser id
+const seen = room.seen // browser id -> last seen
 // The browser each member was last granted to, kept through an idle
 // sweep and a release alike: only that browser's session is renewed
 // (`renew`), so once another browser took the member, the session that
 // held it before stays ended, even after the taker lets it go, and a
 // kept session cookie never renews under another browser's id.
-const last = new Map<string, string>() // member address -> browser id
+const last = room.last // member address -> browser id
 // The browsers that signed out since they last signed in, whose sessions
 // are never renewed, so a cookie kept past a sign-out opens nothing.
-const left = new Set<string>()
+const left = room.left
 // The member another browser took from a browser while it was away, and
 // when its session was found ended for it: what its sign-in says, the
 // server's own record, never a link's say-so (`lost`).
-const away = new Map<string, { member: string; at: number }>() // browser id -> member
+const away = room.away // browser id -> member
 // How long a sign-in goes on saying so: ten minutes, long past the
 // redirect that lands the browser on it.
 const telling = 10 * 60 * 1000
-// When the room's lifetime ends, in seconds since 1970; 0 before the
-// first sign-in, outside a room, or where `lifetime` names none.
-let endsAt = 0
-// When this room's server started, about when the front made the room:
-// the front ends a room at its making plus twice its lifetime, signed in
-// or not, so the lifetime this server names never runs past that.
-const born = Date.now()
 
 function sweep(now: number) {
   for (const [id, record] of away) {
@@ -99,8 +112,8 @@ export function grant(member: string, id: string | null | undefined): boolean {
   left.delete(id)
   // The room's lifetime starts at its first sign-in ever, never again:
   // it runs on even once everyone signs out.
-  if (!endsAt && lifetime) {
-    endsAt = Math.min(now + lifetime * 1000, born + 2 * lifetime * 1000)
+  if (!room.endsAt && lifetime) {
+    room.endsAt = Math.min(now + lifetime * 1000, room.born + 2 * lifetime * 1000)
   }
   return true
 }
@@ -109,7 +122,7 @@ export function grant(member: string, id: string | null | undefined): boolean {
 // first sign-in, outside a room, or where `lifetime` names none. What
 // the banner counts down to, once it holds.
 export function ends(): number {
-  return endsAt ? Math.floor(endsAt / 1000) : 0
+  return room.endsAt ? Math.floor(room.endsAt / 1000) : 0
 }
 
 // Whether `member` is leased to a browser other than `id`.

@@ -289,8 +289,8 @@
   </div>
 
   <!-- Fields, a block of its own under the rows: its label on its own
-       line, the fields drawn as chips flowing across the panel's whole
-       width, and Add after the last (the operator, 19 Nov). -->
+       line, the fields drawn as chips at the panel's end, wrapping as
+       they grow, and Add after the last (the operator, 19 and 20 Nov). -->
   <div class="fields">
     <span class="label" id="{id}-display">Fields</span>
     <ul class="chips" aria-labelledby="{id}-display">
@@ -430,11 +430,12 @@
   legend {
     padding: 0 0 var(--space-1);
   }
-  /* Fields: its label over the chips, which flow from the panel's start
-     across its whole width, in even rows. */
+  /* Fields: its label over the chips, a little apart, which stand at
+     the panel's end, as the rows' controls do, and wrap leftward into
+     even rows as they grow. */
   .fields {
     display: grid;
-    gap: var(--space-1);
+    gap: var(--space-2);
   }
   .chips {
     list-style: none;
@@ -442,7 +443,7 @@
     padding: 0;
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-start;
+    justify-content: flex-end;
     align-items: center;
     gap: var(--space-1);
     min-width: 0;

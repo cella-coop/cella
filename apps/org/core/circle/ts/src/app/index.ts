@@ -65,14 +65,17 @@ export const app: App = {
         icon: icons.TreeStructure,
         columns: [
           { key: 'power', label: 'Power', kind: 'title', role: 'title', value: (m: Standing) => power(m.power) },
-          { key: 'granteeName', label: 'Granted to', role: 'sub', value: (m: Standing) => m.granteeName },
+          // A circle granted one wears its icon, in the row and in the
+          // group's header; a role every circle has, the circles' own.
+          { key: 'granteeName', label: 'Granted to', kind: 'circle', role: 'sub', value: (m: Standing) => (m.grantee === m.circle ? m.grantee : m.granteeName) },
           { key: 'cap', label: 'Cap', role: 'meta', value: (m: Standing) => cap(m) },
           { key: 'scope', label: 'Covers', value: (m: Standing) => covers(m) },
-          { key: 'issuer', label: 'Issued by', kind: 'circle', value: (m: Standing) => m.issuer },
+          { key: 'issuer', label: 'Issued by', kind: 'circle', role: 'meta', value: (m: Standing) => m.issuer },
           { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: (m: Standing) => m.state, tone: (m: Standing) => tones[m.state] },
         ],
-        // Read as the chain: grouped by the circle that issued them.
-        look: { by: 'issuer', sort: { field: 'power', dir: 'asc' } },
+        // Read by who holds them: grouped by whom each is granted to, the
+        // circle that issued it a chip on its row (the operator, 20 Nov).
+        look: { by: 'granteeName', sort: { field: 'power', dir: 'asc' } },
       },
       page: {
         eyebrow: 'Mandate',

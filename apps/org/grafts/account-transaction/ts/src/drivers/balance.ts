@@ -6,6 +6,10 @@ const number = (b: Record<string, unknown>): Balance => ({ debit: Number(b.debit
 // The trial balance, by account code, from `account_transaction.balance`.
 export const balances = 'SELECT code AS id, debit::bigint AS debit, credit::bigint AS credit, balance::bigint AS balance FROM account_transaction.balance'
 
+// What each entry is about, by the chart: its category and its flow
+// (`account_transaction.about`), joined onto the entries the reader reads.
+export const categories = 'SELECT id, category, flow FROM account_transaction.about()'
+
 // Whether the whole journal's debits and credits agree, whatever the
 // reader reads of it.
 export async function agrees(db: Db): Promise<{ agrees: boolean }> {

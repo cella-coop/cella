@@ -167,6 +167,12 @@
         --reach: calc(var(--h) * var(--cell-reach));
         --ring: calc(var(--h) * var(--cell-ring));
         --ends: calc(2 * var(--h) * (var(--cell-reach) + var(--cell-end)) - 2px);
+        /* The straight edges between the ends, drawn as the ends' masks
+           draw theirs: one unit inside the cell's 32, in the same frame of
+           36 with the ring's 2 above and below, stretched to the middle's
+           width. A gradient of a pixel was rasterised apart from the ends'
+           SVG and stepped at each corner where a rem is not 16px. */
+        --mid-edge: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -2 1 36' preserveAspectRatio='none'%3E%3Cpath d='M0 0H1V1H0ZM0 31H1V32H0Z'/%3E%3C/svg%3E");
         position: relative;
         isolation: isolate;
         padding-inline: var(--space-4);
@@ -196,8 +202,7 @@
           background: var(--edge, transparent);
           mask:
             var(--run-start-edge, var(--cell-start-point-edge)) left / auto 100% no-repeat,
-            linear-gradient(#000 0 0) 50% var(--ring) / calc(100% - var(--ends)) 1px no-repeat,
-            linear-gradient(#000 0 0) 50% calc(100% - var(--ring)) / calc(100% - var(--ends)) 1px no-repeat,
+            var(--mid-edge) center / calc(100% - var(--ends)) 100% no-repeat,
             var(--run-end-edge, var(--cell-end-point-edge)) right / auto 100% no-repeat;
         }
         /* Focused, the edge gives way to the ring, astride the outline

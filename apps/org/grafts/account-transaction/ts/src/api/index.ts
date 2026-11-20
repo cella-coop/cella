@@ -3,7 +3,7 @@
 // ledger and a period's entries on their pages, and a company's books
 // imported from its last tool's FEC.
 import type { Slice } from '@cella/org-db'
-import { agrees, balances, entries, ledger } from '../drivers/balance.ts'
+import { agrees, balances, categories, entries, ledger } from '../drivers/balance.ts'
 import { fec } from './imports.ts'
 import { contract } from './contract.ts'
 
@@ -17,5 +17,6 @@ export const slice: Slice = {
   extends: {
     accounts: { list: balances, item: ledger, about: agrees },
     periods: { item: entries },
+    transactions: { list: categories },
   },
 }

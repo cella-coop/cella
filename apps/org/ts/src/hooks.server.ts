@@ -74,6 +74,15 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
     return new Response('Sign in first', { status: 401, headers })
   }
+  // Signed in, the sign-in page is passed by: a tab left on it once a
+  // session ended, reloaded after the member signed in again, goes where
+  // it was going, its `back` if that is a page of this origin, else home,
+  // never the sign-in drawn inside the shell (the operator, 20 Nov).
+  if (event.url.pathname === '/sign-in' && event.locals.session && event.request.method === 'GET') {
+    const back = event.url.searchParams.get('back') ?? ''
+    const location = back.startsWith('/') && !back.startsWith('//') && !back.startsWith('/sign-in') ? back : '/inbox'
+    return new Response(null, { status: 303, headers: { location } })
+  }
   // The coop has no home page for now: `/` lands the member in their
   // Inbox, what waits on them, until a better first page is designed.
   if (event.url.pathname === '/') {

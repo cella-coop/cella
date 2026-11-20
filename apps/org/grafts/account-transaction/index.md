@@ -125,6 +125,15 @@ every entry dated in its month as its reader reads the journal, each
 with what it moved, in an Entries tab. The financial
 statements are the `report` feat's.
 
+Each entry in the journal wears its category as a chip, the chart's
+names of the income or expense accounts it posts to, else, for a
+payment or a return, of its non-cash accounts, "Members" where one is
+held: green what came in, amber what was spent, plain a move. It comes
+from `about()` (`sql/007-about.sql`), one pass over every line as its
+owner, declared `audience: shared by id, category, flow`, which the
+list joins onto the entries its reader reads; reading each line by its
+row-level policy again took the list seconds.
+
 ## Lanterne
 
 July to September 2026 are closed; October to December are open. The

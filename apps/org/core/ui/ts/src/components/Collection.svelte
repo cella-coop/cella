@@ -203,7 +203,14 @@
     return icoded && 'icon' in icoded ? (recordIcon(icoded.icon) ?? icon) : undefined
   }
   const subs = $derived(columns.filter((c) => c.role === 'sub'))
-  const metas = $derived(columns.filter((c) => c.role === 'meta'))
+  // The trailing fields in their columns' order, but an amount last, so a
+  // list's amounts stand in one column whatever chips come before them
+  // (the transactions' categories, 20 Nov); fields a view chose keep its
+  // order.
+  const metas = $derived([
+    ...columns.filter((c) => c.role === 'meta' && c.kind !== 'money'),
+    ...columns.filter((c) => c.role === 'meta' && c.kind === 'money'),
+  ])
   // A table's columns, but the one its rows are grouped by, which each
   // group's header names.
   const visible = $derived(arranged(columns, spec.order).filter((c) => c === titled || (!hidden.has(c.key) && c !== group?.by)))
@@ -642,6 +649,8 @@
                 {#if c.kind === 'date'}
                   <!-- A date takes the width of the widest, an empty one its dim dash in the same box, so what comes before it lines up down the list. -->
                   <span class="dated"><span class="widest" aria-hidden="true">{widest}</span><Cell value={c.value(row)} kind="date" tone={c.tone?.(row)} /></span>
+                {:else if c.kind === 'money'}
+                  <span class="amount"><Cell value={c.value(row)} kind="money" tone={c.tone?.(row)} /></span>
                 {:else}
                   <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} states={c.states} record={c.record} />
                 {/if}
@@ -785,6 +794,14 @@
     align-items: center;
     gap: var(--space-4);
     flex-shrink: 0;
+  }
+  /* A trailing amount's box: wide enough for most, in tabular figures,
+     at its end, so the chips before it line up down the list. */
+  .amount {
+    display: inline-flex;
+    justify-content: flex-end;
+    min-width: 11ch;
+    font-variant-numeric: tabular-nums;
   }
   /* A trailing date's box: as wide as the widest date, in tabular
      figures, the date or its dash at its end. */

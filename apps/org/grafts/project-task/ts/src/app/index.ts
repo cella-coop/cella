@@ -16,6 +16,10 @@ export const app: App = {
         { key: 'project', label: 'Project', kind: 'badge', role: 'hidden', record: 'projects', value: (r: { project?: string }) => r.project },
         { key: 'project_id', label: 'Project id', kind: 'mono', role: 'hidden', of: 'projects', value: (r: { project_id?: string }) => r.project_id },
       ],
+      // Tasks read by the project each is filed in, a list, its status a
+      // chip on its row (the operator, 20 Nov); one in no project gathers
+      // under none.
+      look: { layout: 'list', by: 'project' },
       page: {
         properties: (f: Filed) => [
           {

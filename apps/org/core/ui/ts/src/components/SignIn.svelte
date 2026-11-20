@@ -235,14 +235,14 @@
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-4);
     align-items: start;
-    width: min(28rem, 100%);
+    width: min(32rem, 100%);
     margin-inline: auto;
   }
   /* The real card keeps the centre; the dev list sits on the page's own
      ground at the right, never in a panel. */
   @media (min-width: 80rem) {
     .sign.two {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 28rem) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 32rem) minmax(0, 1fr);
       width: 100%;
     }
     .sign.two .card {

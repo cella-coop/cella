@@ -1,6 +1,6 @@
 +++
 title = "Report"
-updated = 2026-11-19
+updated = 2026-11-20
 +++
 
 The coop's reports: what the books and the work add up to, read through
@@ -107,7 +107,8 @@ A custom report is a port report as JSON: the views it reads, how they
 join, its fields, filters, measures and order
 ([a report](../../core/analytics/index.md#a-report)), and, to chart it,
 `chart`: the field its bars run over and the measure or field they
-measure. Its page runs it and draws its rows as a table and its chart;
+measure. Its page runs it and draws its rows as a table and its chart,
+the kit's `Bars`;
 what the port refuses it shows with every reason. It runs for whoever
 opens it, never for whoever saved it: where it reads a scoped view, the
 server hands the port that reader and their circles

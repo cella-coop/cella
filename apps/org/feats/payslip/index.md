@@ -1,6 +1,6 @@
 +++
 title = "Payslip"
-updated = 2026-11-19
+updated = 2026-11-20
 +++
 
 Pay: each worker's salary, member or not, and a pay run each month, one
@@ -130,9 +130,7 @@ Who reads pay is a row-level policy (`sql/004-reads.sql`, [the pattern](../../..
 
 The `payslips` collection in Payments, a list grouped by the pay run's
 month, the latest first, each payslip titled by the person it pays, with
-its gross, its net and its run; with a dashboard of the
-payroll by month (gross, net, the cost to the coop, what awaits
-payment); preparing a month's run; and a payslip's page with its
+its gross, its net and its run; preparing a month's run; and a payslip's page with its
 run's approval and payment, laid out as `panels` ([record page
 layout](../../../../_corpus/doc/architecture.md#record-page-layout)),
 with no tab: it opens on its Pay, the payslip line by line, its net pay

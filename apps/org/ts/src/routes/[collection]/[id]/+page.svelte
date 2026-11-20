@@ -237,7 +237,6 @@
               shifts={[]}
               values={listed.values}
               groups={listed.groups}
-              dashboard={listed.dashboard}
               sorted={listed.sorted}
               declared={listed.declared}
               whole={listed.whole}

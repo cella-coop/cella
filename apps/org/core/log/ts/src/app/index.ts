@@ -21,11 +21,6 @@ export const app: App = {
         // each load.
         status: (head: Head) =>
           head.verified ? { label: 'log verifies', tone: 'positive' } : { label: 'log broken', tone: 'negative' },
-        dashboard: [
-          { kind: 'kpi', title: 'Entries', measure: { op: 'count' } },
-          { kind: 'kpi', title: 'This month', measure: { op: 'count' }, where: [{ field: 'date', within: 'month' }] },
-          { kind: 'chart', title: 'Entries by month', measure: { op: 'count' }, by: 'date' },
-        ],
         look: { layout: 'list' },
         empty: 'No write has reached the notary yet: the seed is the state before the log.',
         columns: [

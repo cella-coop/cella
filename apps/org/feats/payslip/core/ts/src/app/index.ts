@@ -5,8 +5,8 @@ import Run from './blocks/Run.svelte'
 import Slip from './blocks/Slip.svelte'
 import { Body } from '@cella/org-body/app'
 
-// The feat's client side: every payslip in a table, with a dashboard of
-// the payroll by month; preparing a month's run; and a payslip's page,
+// The feat's client side: every payslip in a table; preparing a month's
+// run; and a payslip's page,
 // with its run's approval and payment, which opens on its pay, line by
 // line, then its notes.
 export const app: App = {
@@ -33,14 +33,6 @@ export const app: App = {
         // A pay run is a month: grouped by it, the latest first, each
         // worker's slip in it by name.
         look: { layout: 'list', by: 'month', sort: { field: 'month', dir: 'desc' }, lanes: { state: [...states] } },
-        dashboard: [
-          { kind: 'kpi', title: 'Gross pay', measure: { op: 'sum', field: 'gross' } },
-          { kind: 'kpi', title: 'Net pay', measure: { op: 'sum', field: 'net' } },
-          { kind: 'kpi', title: 'Cost to the coop', measure: { op: 'sum', field: 'cost' } },
-          { kind: 'kpi', title: 'Awaiting payment', measure: { op: 'sum', field: 'net' }, where: [{ field: 'state', is: ['prepared', 'approved'] }] },
-          { kind: 'chart', title: 'Payroll by month', measure: { op: 'sum', field: 'cost' }, by: 'month' },
-          { kind: 'chart', title: 'Gross pay by month', measure: { op: 'sum', field: 'gross' }, by: 'month' },
-        ],
       },
       page: {
         eyebrow: 'Payslip',

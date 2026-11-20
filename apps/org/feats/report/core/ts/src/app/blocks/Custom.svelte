@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Dashboard, Empty, icons, Panel, Table, type Column } from '@cella/org-ui'
+  import { Bars, Empty, icons, Panel, Table, type Column } from '@cella/org-ui'
   import type { Value } from '@cella/org-analytics'
   import type { Custom, Drawn } from '../../models/report.ts'
 
@@ -21,7 +21,7 @@
   {#if data.drawn}
     {#if chart && data.drawn.bars.length}
       <Panel title={`${chart.value} by ${chart.by}`} icon={icons.ChartLine}>
-        <Dashboard results={[{ kind: 'chart', title: `${chart.value} by ${chart.by}`, format: 'number', line: false, points: data.drawn.bars }]} />
+        <Bars points={data.drawn.bars} />
       </Panel>
     {/if}
     <Panel title="Rows" icon={icons.SquaresFour} count={data.drawn.result.rows.length} help={data.drawn.result.more ? more : undefined}>

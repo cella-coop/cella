@@ -8,19 +8,20 @@ import type { Tone } from './view.ts'
 export const categories = ['backlog', 'unstarted', 'started', 'completed', 'cancelled'] as const
 export type Category = (typeof categories)[number]
 
-// Each category's tone, by the house's classes: at rest, under way,
-// settled. A cancelled state is at rest too, its glyph saying it ended.
+// Each category's tone, one of the five status tones: grey at rest,
+// backlog and unstarted; amber under way; green completed; red, the
+// danger hue, cancelled.
 export const tones: Record<Category, Tone> = {
   backlog: 'neutral',
   unstarted: 'neutral',
-  started: 'accent',
+  started: 'warning',
   completed: 'positive',
-  cancelled: 'neutral',
+  cancelled: 'negative',
 }
 
 // A state: its value as its SQL CHECK lists it, its category and, where
-// the house keeps one, a tone of its own (refused and rejected stay
-// negative, suspended warning); its word is its value unless `label`.
+// the house keeps one, a tone of its own (a member positive, a former
+// member neutral); its word is its value unless `label`.
 export interface State<V extends string = string> {
   value: V
   category: Category

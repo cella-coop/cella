@@ -3,8 +3,8 @@
   import type { Tone } from '../models/view.ts'
   import Heading from './Heading.svelte'
 
-  // A borderless card, raised on the panel: the drawer's View or Legend,
-  // a dashboard's figure. Its header is the one heading, as a `Panel`'s:
+  // A borderless card, raised on the panel: the drawer's View or Legend.
+  // Its header is the one heading, as a `Panel`'s:
   // its icon, its count muted, a state's pill and an optional quiet
   // control at its end, which the title's own line makes room for; its
   // own padding insets what it holds.

@@ -1,6 +1,6 @@
 +++
 title = "Org"
-updated = 2026-11-19
+updated = 2026-11-20
 +++
 
 The cooperative workspace, for member-governed organisations. One deployment
@@ -63,8 +63,8 @@ Every collection is the same component: a filter bar on the line under
 its header, above its rows, chips of its conditions and its search on
 the left, + Filter and Search on the right (folded into the header
 instead while no chip holds), and its drawer's View panel of one shape
-holding the layout (list, table, gallery, board, calendar or
-dashboard), Group by, Order by and Display; and every item the same
+holding the layout (list, table, gallery, board or calendar), Group
+by, Order by and Fields; and every item the same
 detail view, its drawer's cards filled by the feat and the grafts that
 join it.
 Ctrl-K jumps to any collection or item.

@@ -1,6 +1,6 @@
 +++
 title = "account-transaction"
-updated = 2026-11-19
+updated = 2026-11-20
 +++
 
 A transaction's lines post to accounts. The graft resolves each line's
@@ -116,8 +116,7 @@ It says whose an account's lines are (`holds`, registered in `cella.reach` for `
 
 Adds each account's debits, credits and balance to the chart, from
 `account_transaction.balance`, with whether the whole trial balance agrees
-(`agrees`, the collection's `about`) as the collection's status, and the chart's dashboard: the debits, the
-credits, the cash the cash accounts hold and the balance by kind; an
+(`agrees`, the collection's `about`) as the collection's status; an
 account's balance, its debits, credits and balance with the latest
 lines posted to it, the panel its overview opens on, and its ledger,
 every line posted to it, in a Ledger tab; and a period's entries summed,

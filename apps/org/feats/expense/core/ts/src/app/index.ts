@@ -44,13 +44,6 @@ export const app: App = {
           { by: 'status', to: ['refused'], action: 'refuse' },
           { by: 'status', to: ['reimbursed'], action: 'reimburse' },
         ],
-        dashboard: [
-          { kind: 'kpi', title: 'Awaiting approval', measure: { op: 'sum', field: 'total' }, where: [{ field: 'status', is: ['submitted'] }] },
-          { kind: 'kpi', title: 'To reimburse', measure: { op: 'sum', field: 'total' }, where: [{ field: 'status', is: ['approved'] }] },
-          { kind: 'kpi', title: 'Reimbursed', measure: { op: 'sum', field: 'total' }, where: [{ field: 'status', is: ['reimbursed'] }] },
-          { kind: 'chart', title: 'By category', measure: { op: 'sum', field: 'total' }, by: 'category' },
-          { kind: 'chart', title: 'By month', measure: { op: 'sum', field: 'total' }, by: 'day' },
-        ],
       },
       page: {
         layout: 'panels',

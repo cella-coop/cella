@@ -1,6 +1,6 @@
 +++
 title = "Expense"
-updated = 2026-11-19
+updated = 2026-11-20
 +++
 
 What the coop's workers spend for it from their own pocket, to be paid back:
@@ -159,8 +159,7 @@ make its total, and moves along its lifecycle on its entries' days.
 
 The `expenses` collection in Payments, a board by status on which dragging
 a card into the next column is that column's write (submit, approve,
-refuse, reimburse), with a dashboard of what awaits approval and
-reimbursement and the spend by category and month; a new claim as the
+refuse, reimburse); a new claim as the
 acting member, which `expense-file` replaces with one carrying its
 receipt; and an expense's page, its header's crumb its id, with its next
 write, laid out as `panels` ([record page

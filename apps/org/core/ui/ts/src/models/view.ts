@@ -1,5 +1,5 @@
 import type { Component, Snippet } from 'svelte'
-import type { Look, Preset, Shift, Widget } from './query.ts'
+import type { Look, Preset, Shift } from './query.ts'
 import type { Option } from './select.ts'
 import type { Lifecycle } from './status.ts'
 
@@ -300,12 +300,8 @@ export interface View<R = any> {
   create?: Component<{ rows: R[]; about: any }>
   // A badge beside the header's count saying whether the whole collection
   // holds, as the log's verifying; the collection's `about`, from its
-  // server side, is handed to it and to `create`. Figures over the rows
-  // are a dashboard's widgets, never a component of the page's own.
+  // server side, is handed to it and to `create`.
   status?: Status
-  // The dashboard's widgets until a viewer configures their own; without
-  // them, defaults derived from the columns' kinds.
-  dashboard?: Widget[]
   // The views offered as tabs before the viewer's own, All after them.
   views?: Preset[]
   // How it looks before a view changes it, and the board's moves that are
@@ -361,8 +357,6 @@ export interface Added<E = any> {
   columns?: Column[]
   // A badge over the collection's `about`, with what this adds to it.
   status?: Status
-  // Widgets over the fields this adds, after the owner's.
-  dashboard?: Widget[]
   // Preset views over the fields this adds, after the owner's.
   views?: Preset[]
   // A look over the fields this adds, each part of which overrides the

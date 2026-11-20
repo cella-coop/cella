@@ -1,4 +1,4 @@
-import { type Added, type App, type Column, type Look, type Nav, type Owned, type Preset, type SettingsPage, type Shift, type Widget } from '@cella/org-ui'
+import { type Added, type App, type Column, type Look, type Nav, type Owned, type Preset, type SettingsPage, type Shift } from '@cella/org-ui'
 import { logged, logging, presets } from '@cella/org-ui/models'
 import { app as log } from '@cella/org-log/app'
 import { app as person } from '@cella/org-person/app'
@@ -21,12 +21,6 @@ export const extensions = (name: string): { slice: string; extension: Added }[] 
 // row from the log, but those of a key it has.
 export const columns = (name: string): Column[] =>
   logging([...(collection(name)?.view.columns ?? []), ...extensions(name).flatMap((e) => e.extension.columns ?? [])])
-
-// The dashboard a collection's owner and extensions declare, if they do.
-export const dashboard = (name: string): Widget[] | undefined => {
-  const declared = [...(collection(name)?.view.dashboard ?? []), ...extensions(name).flatMap((e) => e.extension.dashboard ?? [])]
-  return declared.length ? declared : undefined
-}
 
 // How a collection looks before a view changes it: its owner's look, each
 // extension's overriding it, its table hiding the logged fields it adds

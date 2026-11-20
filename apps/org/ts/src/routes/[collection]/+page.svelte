@@ -84,7 +84,6 @@
         shifts={shifts(data.name)}
         values={data.values}
         groups={data.groups}
-        dashboard={data.dashboard}
         sorted={data.sorted}
         declared={data.declared}
         whole={data.whole}

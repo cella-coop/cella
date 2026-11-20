@@ -1,6 +1,6 @@
 +++
 title = "project-timesheet"
-updated = 2026-11-19
+updated = 2026-11-20
 +++
 
 Time against a project, what it spent of the budget, what it cost the
@@ -76,8 +76,8 @@ the founding carries.
 
 ## Shell
 
-Adds to each entry its project's title, and to the timesheets' dashboard
-the hours by project; to each project its hours and what they spent, a
+Adds to each entry its project's title, a field the timesheets group
+and filter by; to each project its hours and what they spent, a
 card field of the projects' gallery, and its project's id, a hidden field by
 which a project's page jumps in Related to its time. On a project's Budget
 tab it adds: the hours, billable hours and what they spent, the hours by member,

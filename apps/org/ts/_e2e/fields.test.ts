@@ -1,4 +1,4 @@
-// A view chooses the fields it shows in every layout but the dashboard,
+// A view chooses the fields it shows in every layout,
 // in every browser: signed in as Julien on the dev server, the files in
 // a list grouped by nothing show who uploaded them under each row's title and their kind, size and
 // day after it, by their columns' roles; Display hides the size and who
@@ -132,7 +132,7 @@ eachBrowser((browserName, launch) => {
       await visit('/files?view=list&by=&cards=class,uploaded,type')
       await draws(page, listed, `${browserName}: the address alone draws the list's fields`)
 
-      // Every other layout but the dashboard: a field taken away by its
+      // Every other layout: a field taken away by its
       // chip's × is one chip fewer.
       for (const [path, noun] of [
         ['/files?view=table', 'columns'],

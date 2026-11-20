@@ -1,6 +1,6 @@
 +++
 title = "Invoice"
-updated = 2026-11-19
+updated = 2026-11-20
 +++
 
 What the coop bills: issue an invoice, send it, record what is paid
@@ -219,10 +219,7 @@ labels never wait.
 
 The `invoices` collection, grouped by standing, overdue first, the
 soonest due first, each with whom it bills, its label, what is owed and
-its due day; its
-dashboard shows what is owed and overdue, what was invoiced this year,
-the amounts by month and the invoices by standing, and its calendar
-places each on the day it is due; overdue reads the
+its due day; its calendar places each on the day it is due; overdue reads the
 server's clock, a read no guard depends on. New issues one (`issue`) in a
 series the feat offers, to a name and the address billed. An invoice's
 page, its header's crumb its number, is titled by what it bills for,

@@ -1,15 +1,15 @@
-import { ask as asking, counts, made, ordered, read, texts, today, type Condition, type Db, type Source } from '@cella/org-db'
+import { ask as asking, counts, made, ordered, read, texts, today, type Condition, type Db } from '@cella/org-db'
 import { scoped } from '@cella/org-analytics'
-import { anchor, declared, defaults, fields, grouping, limits, logged, period, resolve, swimlane, wheres, widgets, type Field, type Sort, type Spec } from '@cella/org-ui/models'
+import { anchor, declared, fields, grouping, limits, logged, period, resolve, swimlane, wheres, type Field, type Sort, type Spec } from '@cella/org-ui/models'
 import { named } from '@cella/org-log/api'
 import type { Named } from '@cella/org-body/models'
 import { people, person } from '@cella/org-person/api'
 import { lensed, lensing } from '#lib/server/lens.ts'
-import { drawn, keeping, run } from '#lib/server/reads.ts'
+import { drawn, keeping } from '#lib/server/reads.ts'
 import { port } from '#lib/server/analytics.ts'
 import { published } from '#lib/server/published.ts'
 import { mounted, queried, refusals, slices, source } from '#lib/server/slices.ts'
-import { collection as owned, columns, counted, dashboard, look, views } from '#lib/slices.ts'
+import { collection as owned, columns, counted, look, views } from '#lib/slices.ts'
 
 // The shell's queries over the slices' reads, as the slice registry
 // mounts them: framework-free, each with the schema its argument is
@@ -40,10 +40,8 @@ export class Missing extends Error {}
 // view's other conditions keep, where they number at most
 // `limits.values`, what Filter offers; the field
 // its rows are ordered by first;
-// what its header says about it; and, in the dashboard layout, its
-// widgets run over the rows it keeps. A board places every row the view
-// keeps, a calendar those on the days it shows, and a dashboard draws
-// none. Under the member's lens it reads only the lensed circle's rows,
+// and what its header says about it. A board places every row the view
+// keeps, and a calendar those on the days it shows. Under the member's lens it reads only the lensed circle's rows,
 // but in a view that reads across circles, and says where the lens
 // leaves it whole. `search` is the page's address's query; `scope`, where
 // a record's tab lists it, the conditions keeping its rows to those
@@ -86,9 +84,10 @@ export const collection = {
       paged && by
         ? { field: by.key, values: declared(looks, by.key, by.states), ...(by.type === 'date' ? { month: true } : {}), ...(spec.sort ? { dir: spec.sort.dir } : {}) }
         : undefined
-    const full = (f: Field) => f.type === 'enum' || ((f === by || f === lane) && f.type !== 'date' && spec.layout !== 'dashboard')
+    const full = (f: Field) => f.type === 'enum' || ((f === by || f === lane) && f.type !== 'date')
     const { rows, counts, values, groups, whole } = await read(db, from, {
-      ...(spec.layout === 'dashboard' ? {} : { keep: placing(spec, fs, url, day, looks.then) ?? { ...keeps, ...(group ? { group } : {}) }, ...(paged ? { limit } : {}) }),
+      keep: placing(spec, fs, url, day, looks.then) ?? { ...keeps, ...(group ? { group } : {}) },
+      ...(paged ? { limit } : {}),
       counts: [{ where: spec.where }, keeps, ...tabs.map((p) => ({ where: wheres(p.where, fs) }))],
       values: fs.filter(full).map((f) => f.key),
       few: { keys: fs.filter((f) => !full(f) && f.type !== 'date').map((f) => f.key), most: limits.values, keep: keeps },
@@ -112,7 +111,6 @@ export const collection = {
       spec,
       look: looks,
       errors,
-      dashboard: spec.layout === 'dashboard' ? await measured(db, from, spec, fs, name) : null,
       // The field the rows are sorted by first and which way: the view's,
       // else the one the collection's read orders by first, which is
       // `declared`, what Order by's default names.
@@ -150,18 +148,6 @@ function placing(spec: Spec, fs: Field[], url: URLSearchParams, today: string, t
   }
   const { days } = period(anchor(url.get('at'), today), spec.span, today)
   return { ...keeping(spec, fs, then), where: [...spec.where, { field: on.key, from: days[0]?.day ?? today, to: days.at(-1)?.day ?? today }] }
-}
-
-// The dashboard: the view's widgets, else the collection's, else the
-// defaults, each run over the rows the view keeps.
-async function measured(db: Db, from: Source, spec: Spec, fs: Field[], name: string) {
-  const checked = spec.widgets ? { widgets: spec.widgets, errors: [] } : widgets(dashboard(name) ?? defaults(fs), fs)
-  return {
-    custom: spec.widgets !== null,
-    widgets: checked.widgets,
-    results: await run(db, from, checked.widgets, spec.where, fs),
-    errors: checked.errors,
-  }
 }
 
 // An item: its owner's data, given the address, and each extension's data

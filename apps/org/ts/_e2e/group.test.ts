@@ -143,7 +143,7 @@ async function groups(page: Page, name: string, layout: string, want: Drawn[], a
 }
 
 eachBrowser((browserName, launch) => {
-  test(`${browserName}: every layout but the calendar and the dashboard groups by an enumeration, a person and a circle, saved in a view and in the address`, async () => {
+  test(`${browserName}: every layout but the calendar groups by an enumeration, a person and a circle, saved in a view and in the address`, async () => {
     const { base, stop } = await serve()
     const browser = await launch()
     try {

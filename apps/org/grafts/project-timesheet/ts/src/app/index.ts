@@ -2,8 +2,8 @@ import type { App } from '@cella/org-ui'
 import type { Burn, Time as Spent } from '../models/booking.ts'
 import Time from './blocks/Time.svelte'
 
-// The graft's client side: each entry's project, and the hours by project
-// on the timesheets' dashboard; what each project's time spent of its
+// The graft's client side: each entry's project, a field the timesheets
+// group and filter by; what each project's time spent of its
 // budget; and on a project's Budget tab, its time, a table by member and
 // entry the overview has no room for, with logging time against it.
 export const app: App = {
@@ -14,7 +14,6 @@ export const app: App = {
         { key: 'project', label: 'Project', kind: 'badge', role: 'meta', record: 'projects', value: (r: { project?: string }) => r.project },
         { key: 'project_id', label: 'Project id', kind: 'mono', role: 'hidden', of: 'projects', value: (r: { project_id?: string }) => r.project_id },
       ],
-      dashboard: [{ kind: 'chart', title: 'Hours by project', measure: { op: 'sum', field: 'hours' }, by: 'project' }],
     },
     projects: {
       columns: [

@@ -41,13 +41,6 @@ export const app: App = {
         // The approval queue first: grouped by standing, the soonest due
         // first.
         look: { by: 'standing', sort: { field: 'due', dir: 'asc' }, lanes: { standing: ['overdue', 'recorded', 'approved', 'paid'] } },
-        dashboard: [
-          { kind: 'kpi', title: 'To approve', measure: { op: 'sum', field: 'total' }, where: [{ field: 'standing', is: ['recorded'] }] },
-          { kind: 'kpi', title: 'To pay', measure: { op: 'sum', field: 'total' }, where: [{ field: 'standing', is: ['approved'] }] },
-          { kind: 'kpi', title: 'Overdue', measure: { op: 'sum', field: 'total' }, where: [{ field: 'standing', is: ['overdue'] }] },
-          { kind: 'chart', title: 'By month', measure: { op: 'sum', field: 'total' }, by: 'issued' },
-          { kind: 'chart', title: 'By category', measure: { op: 'sum', field: 'total' }, by: 'category' },
-        ],
       },
       page: {
         eyebrow: 'Bill',

@@ -206,42 +206,14 @@ test('the sidebar’s counts narrow with the lens, and the Inbox and a shut acco
   assert.deepEqual(organization(lensed), organization(whole),'and a shut accordion’s dot is the same under the lens as without')
 })
 
-test('every collection has a dashboard, its widgets run by the server', async () => {
+test('an address naming the retired dashboard opens the collection in its own layout', async () => {
+  const timesheets = await page('/timesheets?view=dashboard')
+  assert.equal(timesheets.status, 200)
+  assert.match(timesheets.text, /class="table[\s"]|<table/, 'the timesheets open as their table, the layout they declare')
   const invoices = await page('/invoices?view=dashboard')
   assert.equal(invoices.status, 200)
-  for (const says of ['Owed', 'Overdue', 'Amounts by month', 'By standing', '€']) {
-    assert.ok(invoices.text.includes(says), `the invoices' dashboard says ${says}`)
-  }
-  const people = await page('/people?view=dashboard')
-  assert.equal(people.status, 200)
-  assert.ok(people.text.includes('By member'), 'the people\'s dashboard is derived from their fields, the membership\'s among them')
-  const own = encodeURIComponent(JSON.stringify([{ kind: 'kpi', title: 'Active members', measure: { op: 'count' }, where: [{ field: 'member', is: ['member'] }] }]))
-  const configured = await page(`/people?view=dashboard&w=${own}`)
-  assert.ok(configured.text.includes('Active members'), 'a viewer\'s widgets in the address are run')
-  const bad = encodeURIComponent(JSON.stringify([{ kind: 'kpi', title: 'x', measure: { op: 'sum', field: 'name; DROP TABLE member' } }]))
-  const refused = await page(`/people?view=dashboard&w=${bad}`)
-  assert.equal(refused.status, 200)
-  assert.ok(refused.text.includes('names no field of the collection'), 'an undeclared field is refused, and said')
-})
-
-test('widgets reordered as the keyboard drops them stay in their new order', async () => {
-  const ws = [
-    { kind: 'kpi', title: 'Owed', measure: { op: 'sum', field: 'owed' } },
-    { kind: 'kpi', title: 'Overdue', measure: { op: 'sum', field: 'owed' }, where: [{ field: 'state', is: ['overdue'] }] },
-    { kind: 'chart', title: 'By standing', measure: { op: 'count' }, by: 'state' },
-  ]
-  // Lifting the first, two steps down and a drop: what the View panel hands
-  // the address.
-  const move = drag.drop(drag.step(drag.step(drag.start('widgets', 0, ws.length, 'keyboard'), 1), 1)).move
-  assert.ok(move)
-  const moved = drag.reorder(ws, move.from, move.to)
-  const { text } = await page(`/invoices?view=dashboard&w=${encodeURIComponent(JSON.stringify(moved))}`)
-  // Scoped to the dashboard's own div: a field picker's options list a
-  // field by the same name it titles a widget with (here "Owed"), and
-  // read unscoped, the first match may be its menu item, not its card.
-  const dashboard = text.slice(text.indexOf('class="dashboard'))
-  const at = (title: string) => dashboard.indexOf(`>${title}<`)
-  assert.ok(at('Overdue') > 0 && at('Overdue') < at('By standing') && at('By standing') < at('Owed'), 'the dashboard renders in the dropped order')
+  assert.ok(/class="list[\s"]/.test(invoices.text) && !invoices.text.includes('<table'), 'the invoices, declaring none, open as a list')
+  assert.ok(!invoices.text.includes('class="dashboard'), 'and no dashboard is drawn')
 })
 
 test('circles open as a gallery and motions as a board, by what each declares', async () => {

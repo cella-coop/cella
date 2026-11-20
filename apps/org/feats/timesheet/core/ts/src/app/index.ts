@@ -8,8 +8,7 @@ import { Body } from '@cella/org-body/app'
 const tones: Record<State, Tone> = { open: 'neutral', submitted: 'accent', approved: 'positive' }
 const kind = (e: Entry) => (e.billable ? 'billable' : 'internal')
 
-// The feat's client side: every entry in a table, with a dashboard of the
-// hours; logging time as the acting member; and an entry's page, titled
+// The feat's client side: every entry in a table; logging time as the acting member; and an entry's page, titled
 // by its note, which opens on its member's month, submitted or approved
 // from its header, then its notes.
 export const app: App = {
@@ -34,13 +33,6 @@ export const app: App = {
         // The approval queue: grouped by where each month stands, the
         // latest day first; the month and the circle stay in the drawer.
         look: { layout: 'table', by: 'state', sort: { field: 'day', dir: 'desc' }, hide: ['month', 'circle'], lanes: { state: ['open', 'submitted', 'approved'] } },
-        dashboard: [
-          { kind: 'kpi', title: 'Hours', measure: { op: 'sum', field: 'hours' } },
-          { kind: 'kpi', title: 'Billable hours', measure: { op: 'sum', field: 'hours' }, where: [{ field: 'billable', is: ['billable'] }] },
-          { kind: 'kpi', title: 'Hours awaiting approval', measure: { op: 'sum', field: 'hours' }, where: [{ field: 'state', is: ['submitted'] }] },
-          { kind: 'chart', title: 'Hours by month', measure: { op: 'sum', field: 'hours' }, by: 'day' },
-          { kind: 'chart', title: 'Hours by kind', measure: { op: 'sum', field: 'hours' }, by: 'billable' },
-        ],
       },
       page: {
         eyebrow: 'Time entry',

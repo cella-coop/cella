@@ -1,5 +1,5 @@
 import { onMount } from 'svelte'
-import { saved, type Pin, type Saved } from '../models/query.ts'
+import { saved, writable, type Pin, type Saved } from '../models/query.ts'
 
 const key = 'cella-views'
 
@@ -26,9 +26,17 @@ export class PinnedState {
     }
   }
 
+  #store(): Saved {
+    try {
+      return writable(JSON.parse(localStorage.getItem(key) ?? 'null'))
+    } catch {
+      return saved(null)
+    }
+  }
+
   // Changes the pins as `change` says, from what the store holds now.
   #change(change: (pins: Pin[]) => Pin[]) {
-    const store = this.#read()
+    const store = this.#store()
     store.pins = change(store.pins)
     this.list = store.pins
     try {

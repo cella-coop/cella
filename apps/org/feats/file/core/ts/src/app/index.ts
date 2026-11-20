@@ -33,10 +33,6 @@ export const app: App = {
           { key: 'type', label: 'Type', kind: 'mono', role: 'hidden', value: (f: File) => f.type },
           { key: 'subject', label: 'Concerns', kind: 'person', role: 'hidden', of: 'people', value: (f: File) => f.subject },
         ],
-        dashboard: [
-          { kind: 'kpi', title: 'Files', measure: { op: 'count' } },
-          { kind: 'chart', title: 'By kind', measure: { op: 'count' }, by: 'class' },
-        ],
         // By kind, the latest uploaded first.
         look: { by: 'class', sort: { field: 'uploaded', dir: 'desc' }, lanes: { class: ['expense-receipt', 'payroll', 'profile', 'none'] } },
       },

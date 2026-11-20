@@ -13,7 +13,7 @@ import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { register } from 'node:module'
 import pg from 'pg'
-import { counts, measures, page, read, today, values, type Deps, type Keep, type Sort, type Source } from '@cella/org-db'
+import { counts, page, read, today, values, type Deps, type Keep, type Sort, type Source } from '@cella/org-db'
 import { add, update } from '@cella/org-contact/api'
 import { fields } from '@cella/org-ui/models'
 import { slices, source } from '#lib/server/slices.ts'
@@ -122,7 +122,7 @@ test('a group orders the rows by its field\'s value, the given values first, a r
   assert.deepEqual(kept.groups, { 'Nuvola Énergie': 1, '': 1 }, 'over the rows the keep keeps')
 })
 
-test('the composer counts, gives each enumeration\'s values, and runs the widgets as aggregates, the month the scope\'s', async () => {
+test('the composer counts and gives each enumeration\'s values, the month the scope\'s', async () => {
   const db = await as(hugo)
   assert.equal(await today(db), '2026-10-24', 'today is the verdict date')
   assert.deepEqual(
@@ -136,25 +136,6 @@ test('the composer counts, gives each enumeration\'s values, and runs the widget
     { rows: [{ id: 'c', state: 'paid', issued: '2026-10-20', total: 200, owed: 0, client: 'Les Halles' }], counts: [3], values: { state: ['overdue', 'paid', 'unpaid'], nothing: [] }, groups: {}, whole: false },
     'a page\'s rows, counts and values in one statement',
   )
-  const [owed, month, average, byMonth, byClient] = await measures(db, invoices, [
-    { where: [{ field: 'state', is: ['unpaid', 'overdue'] }], op: 'sum', field: 'owed' },
-    { where: [{ field: 'issued', within: 'month' }], op: 'count' },
-    { where: [{ field: 'state', is: ['voided'] }], op: 'avg', field: 'total' },
-    { where: [], op: 'sum', field: 'total', by: { field: 'issued', month: true } },
-    { where: [], op: 'count', by: { field: 'client', month: false } },
-  ])
-  assert.equal(owed, 1300)
-  assert.equal(month, 2)
-  assert.equal(average, null, 'nothing to average over is no figure')
-  assert.deepEqual(byMonth, [
-    { label: '2026-08', value: 1000 },
-    { label: '2026-10', value: 700 },
-  ])
-  assert.deepEqual(byClient, [
-    { label: '—', value: 1 },
-    { label: 'Les Halles', value: 1 },
-    { label: 'Nuvola Énergie', value: 1 },
-  ], 'a row without the field falls under "—"')
 })
 
 test('under a lens the composer keeps the lensed circle\'s rows, and a select that names no circle reads whole', async () => {
@@ -169,7 +150,6 @@ test('under a lens the composer keeps the lensed circle\'s rows, and a select th
   const lensed = { ...owned, lens: 'web' }
   assert.deepEqual((await page(db, lensed, { where: [] })).map((r) => r.id), ['a', 'c', 'd'], 'Web\'s row, the row that names no circle, and every row of the select that names none')
   assert.deepEqual(await counts(db, lensed, [{ where: [] }]), [3], 'the counts narrow with it')
-  assert.deepEqual(await measures(db, lensed, [{ where: [], op: 'count' }]), [3], 'and the widgets')
   assert.equal((await read(db, lensed, { counts: [{ where: [] }] })).whole, false, 'a select names the circle, so the lens does not leave it whole')
   assert.equal((await read(db, { ...invoices, lens: 'web' }, { counts: [{ where: [] }] })).whole, true, 'no select names one: the lens leaves it whole')
   assert.deepEqual(await counts(db, { ...invoices, lens: 'web' }, [{ where: [] }]), [3], 'and keeps every row')
@@ -196,7 +176,7 @@ test('every collection reads in one statement, as a worker and as finance', asyn
   }
 })
 
-test('each badge, status and date column\'s key holds what the column shows, as conditions, boards and widgets read it', async () => {
+test('each badge, status and date column\'s key holds what the column shows, as conditions and boards read it', async () => {
   const db = await as(julien)
   let checked = 0
   for (const name of collections) {
@@ -267,7 +247,6 @@ test('every row carries when and by whom it was created and last updated, from t
   const theirs = (await page(db, scoped, { where: [] })) as Record<string, unknown>[]
   assert.ok(theirs.some((r) => r.id === 'dated-atelier') && theirs.every((r) => r.created_by === camille), 'a scope reads them as any condition, though nothing else asks after them')
   assert.deepEqual(await counts(db, scoped, [{ where: [] }]), [theirs.length], 'and so do its counts')
-  assert.deepEqual(await measures(db, scoped, [{ where: [], op: 'count' }]), [theirs.length], 'and its widgets')
   assert.ok((await values(db, contacts, ['updated_by'])).updated_by.includes(julien), 'and so do the values')
   assert.equal((await page(db, contacts, { where: [], sort: { field: 'updated', dir: 'desc' } }))[0]?.id, 'dated-atelier', 'and a sort, the rows no entry names last')
   const seeded = (await page(db, contacts, { where: [] })).find((r) => r.id !== 'dated-atelier') as Record<string, unknown>

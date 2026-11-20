@@ -13,8 +13,8 @@
   // around muted text, quieter than what wants attention; positive
   // settled (paid, passed); warning wanting attention (overdue,
   // suspended); negative refused; failed, an operational failure rather
-  // than a refusal (an import row, a run), its own tone so it is never
-  // confused with one. The fills are soft tints, lighter still in dark
+  // than a refusal (an import row, a run), in the danger hue as negative
+  // is, told from it by its word. The fills are soft tints, lighter still in dark
   // (`--soft`), so a tone shows in its text and never saturates. A badge
   // naming a record wears its collection's `icon` before its text, in
   // the record's own ink (`ink`, `models/ink.ts`'s `inkOf`) where one is
@@ -91,7 +91,7 @@
     color: var(--warning-text);
   }
   .failed {
-    background: var(--help-soft);
-    color: var(--help-text);
+    background: var(--negative-soft);
+    color: var(--negative-text);
   }
 </style>

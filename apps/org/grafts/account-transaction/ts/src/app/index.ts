@@ -20,12 +20,6 @@ export const app: App = {
         about?.agrees
           ? { label: 'trial balance agrees', tone: 'positive' }
           : { label: 'trial balance off', tone: 'negative' },
-      dashboard: [
-        { kind: 'kpi', title: 'Debits', measure: { op: 'sum', field: 'debit' } },
-        { kind: 'kpi', title: 'Credits', measure: { op: 'sum', field: 'credit' } },
-        { kind: 'kpi', title: 'Cash', measure: { op: 'sum', field: 'balance' }, where: [{ field: 'cash', is: ['cash'] }] },
-        { kind: 'chart', title: 'Balance by kind', measure: { op: 'sum', field: 'balance' }, by: 'kind' },
-      ],
       columns: [
         { key: 'debit', label: 'Debit', kind: 'money', role: 'hidden', value: (r: Partial<Balanced>) => r.debit ?? 0 },
         { key: 'credit', label: 'Credit', kind: 'money', role: 'hidden', value: (r: Partial<Balanced>) => r.credit ?? 0 },

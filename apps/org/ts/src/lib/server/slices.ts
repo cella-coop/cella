@@ -1,4 +1,4 @@
-import { malformed, type Action, type Collection, type Deps, type Done, type Extension, type Joining, type Query, type Reaction, type SettingsPage, type Slice, type Source } from '@cella/org-db'
+import { malformed, type Action, type Collection, type Db, type Deps, type Done, type Extension, type Joining, type Query, type Reaction, type SettingsPage, type Slice, type Source } from '@cella/org-db'
 import type { Permission } from '@cella/org-actions'
 import { slice as log } from '@cella/org-log/api'
 import { slice as person } from '@cella/org-person/api'
@@ -73,6 +73,32 @@ export function action(name: string, write: string): Action | undefined {
     return undefined
   }
   return m.extensions.map((e) => e.extension.actions?.[write]).find((a) => a) ?? m.collection.actions?.[write]
+}
+
+// Who judges a write before it is made: the one slice that serves it, the
+// membership feat; where none does, every write is judged as it is made.
+const judging = slices.filter((s) => s.judges)
+if (judging.length > 1) {
+  throw new Error(`${judging.map((s) => s.name).join(' and ')} both judge a write before it is made`)
+}
+const judge = judging[0]?.judges
+
+// Why the reader may not make each write a collection's pages offer on a
+// record of `circle`, by the write's name, for those refused alone: every
+// write of the collection, its owner's and its extensions', judged in one
+// read by the slice that judges them, which asks the guard's own SQL.
+export async function refusals(db: Db, name: string, circle: string | null): Promise<Record<string, string>> {
+  const m = collections.get(name)
+  if (!m || !judge) {
+    return {}
+  }
+  const names = [...new Set([...Object.keys(m.collection.actions ?? {}), ...m.extensions.flatMap((e) => Object.keys(e.extension.actions ?? {}))])]
+  const ops = new Map(names.flatMap((n) => {
+    const a = action(name, n)
+    return a ? [[n, a.op] as const] : []
+  }))
+  const refused = await judge(db, [...new Set(ops.values())], circle)
+  return Object.fromEntries([...ops].flatMap(([n, op]) => (refused[op] ? [[n, refused[op]]] : [])))
 }
 
 // Every action name, for the routes' action tables.

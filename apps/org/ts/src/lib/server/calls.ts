@@ -8,7 +8,7 @@ import { lensed, lensing } from '#lib/server/lens.ts'
 import { drawn, keeping, run } from '#lib/server/reads.ts'
 import { port } from '#lib/server/analytics.ts'
 import { published } from '#lib/server/published.ts'
-import { mounted, queried, slices, source } from '#lib/server/slices.ts'
+import { mounted, queried, refusals, slices, source } from '#lib/server/slices.ts'
 import { collection as owned, columns, counted, dashboard, look, views } from '#lib/slices.ts'
 
 // The shell's queries over the slices' reads, as the slice registry
@@ -194,6 +194,10 @@ export const item = {
       item: found,
       added: Object.fromEntries(added),
       viewer,
+      // Why the reader may not make each write the page offers, by its
+      // name, judged before they make it: a form that is its one button
+      // draws itself unavailable, saying why.
+      refused: who.actor ? await refusals(db, name, await owning(db, name, id, found)) : {},
       made: (await made(db, [id]))[id] ?? null,
       jumps: await jumps(db, name, id, who),
     }
@@ -318,4 +322,22 @@ export const ask = {
     const arg = Object.fromEntries(new URLSearchParams(search))
     return q.published ? published(scoped(port, db), q, arg) : asking(db, q, arg)
   },
+}
+
+// The circle that owns a record, which the writes on it name: the one its
+// item names, else the one its row in the collection's list names, or
+// none, where neither names one, which asks whether the reader holds a
+// power at all.
+async function owning(db: Db, name: string, id: string, item: unknown): Promise<string | null> {
+  const named = (row: unknown) => {
+    const c = (Object(row) as { circle?: unknown }).circle
+    return typeof c === 'string' ? c : null
+  }
+  const own = named(item)
+  const from = source(name)
+  if (own || !from) {
+    return own
+  }
+  const [row] = (await read(db, from, { keep: { where: [{ field: 'id', is: [id] }] }, limit: 1 })).rows
+  return named(row)
 }

@@ -205,6 +205,7 @@
       actions={v.writes.length ? header : undefined}
       comment={v.comment ? commenting : undefined}
       fields={v.fields.length ? setting : undefined}
+      refused={data.refused}
     >
       {#if v.scope}
         <!-- The collection the open tab lists, scoped to the record, as

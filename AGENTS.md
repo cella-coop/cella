@@ -320,5 +320,10 @@ entries.**
   `--no-verify`.
 - Small commits with honest messages, by path: `feat(<feat>):`,
   `doc(<feat>):`, `graft(<a>-<b>):`, `lib(<lib>):`, `chore:`.
+- **A commit's author is the human who answers for it**, as the Linux
+  kernel asks of work an AI assistant helped with: the operator, never an
+  agent. An agent adds no `Signed-off-by:` and no `Co-Authored-By:`; it is
+  credited by one trailer naming itself and its model,
+  `Assisted-by: Claude:claude-opus-5-5`.
 - The spec and the code disagreeing is a question for the operator, not
   something to reconcile silently.

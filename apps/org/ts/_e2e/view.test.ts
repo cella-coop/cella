@@ -96,10 +96,10 @@ eachBrowser((name, launch) => {
 
         await visit('/tasks')
         const view = panel(page)
-        // Columns, above Grouping, migrated from the status an older
-        // view grouped by; Grouping opens on None, one lane.
+        // Columns, above Grouping: tasks open as a board by status in a
+        // swimlane for each project (project-task's look, 20 Nov).
         assert.equal(await chosen(view.getByLabel('Columns')), 'status', `${at}: a board's columns are its enumeration`)
-        assert.equal(await chosen(view.getByLabel('Grouping')), '', `${at}: a board opens with one lane`)
+        assert.equal(await chosen(view.getByLabel('Grouping')), 'project', `${at}: tasks open in a swimlane for each project`)
         await page.screenshot({ path: `${shots}/tasks-${name}-${scheme}.png` })
         // Order by names a field alone, never "Default", its direction
         // before it, so every control ends on the panel's one right edge;

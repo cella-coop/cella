@@ -414,9 +414,11 @@
   // A new view: its chip made at once, holding what is shown, and named
   // in place on it, as a chip is renamed; its icon is its menu's (the
   // operator, 20 Nov: never a form in the View panel).
-  function naming() {
+  async function naming() {
     const view = saved.save({ ...spec, q: state.filter })
-    opened(view)
+    // Named once it is open: begun before, the navigation took the
+    // input's focus and its blur ended the naming at once.
+    await goto(customLink(view)).catch(abandon)
     saved.begin(view.id)
   }
 
@@ -781,8 +783,8 @@
   }
   /* The chip's own box while it is being renamed (`Pill`, and the room the
      view bar keeps for its ⋯): its height, its 1px edge, its padding, as
-     wide as its name, so it neither grows nor shifts; the edge takes the
-     accent while it is typed in, never a ring outside it. */
+     wide as its name, so it neither grows nor shifts; the focus ring is
+     a shadow, which takes no room. */
   .rename {
     box-sizing: border-box;
     width: auto;
@@ -791,9 +793,7 @@
     height: 1.6rem;
     min-height: 0;
     padding: 0 calc(var(--space-2) + 1rem) 0 calc(var(--space-2) + 1em + var(--space-1));
-    border: 1px solid var(--accent-border);
-    outline: none;
-    box-shadow: none;
+    border: 1px solid var(--line);
     background: var(--sunk);
     border-radius: var(--radius-pill);
     font-size: var(--text-sm);

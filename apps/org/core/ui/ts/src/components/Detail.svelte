@@ -21,6 +21,7 @@
   import Prose from './Prose.svelte'
   import Related from './Related.svelte'
   import { useTab } from '../hooks/useTab.ts'
+  import { judging } from '../hooks/useRefusals.ts'
 
   // The one record page, as Linear's issue page: in the content, the
   // record's title, large, its own words where it holds them as text,
@@ -61,6 +62,7 @@
     actions,
     comment,
     fields,
+    refused = {},
     children,
   }: {
     eyebrow: string
@@ -103,8 +105,15 @@
     comment?: Snippet
     // What the record's slices set in the Details, over its properties.
     fields?: Snippet
+    // The writes on the record the reader may not make, each by its name
+    // with why, as the server judged them before they are made: every form
+    // on the page that is its one button draws itself unavailable, its
+    // reason its tooltip, and is judged again when it is made.
+    refused?: Record<string, string>
     children?: Snippet
   } = $props()
+
+  judging(() => refused)
 
   const id = $props.id()
   const first = $derived(!tab || tab === tabs[0]?.id)

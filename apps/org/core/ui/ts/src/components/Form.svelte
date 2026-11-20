@@ -2,6 +2,7 @@
   import type { Component, Snippet } from 'svelte'
   import { inCreate } from '../hooks/useCreate.ts'
   import { useForm } from '../hooks/useForm.ts'
+  import { useRefusals } from '../hooks/useRefusals.ts'
   import { useWrites } from '../hooks/useWrites.ts'
   import { formOf } from '../models/bound.ts'
   import { took, type Answer } from '../post.ts'
@@ -64,6 +65,12 @@
   // dialog, whose Cancel it keeps.
   const alone = $derived(button || (!children && !bare && !create))
   const icon = $derived(lead ?? verb(submit))
+  // Why the reader may not make its write, as the page judged it before:
+  // a form that is its one button takes no input that could change it, so
+  // it draws itself unavailable, saying why; one with fields is judged
+  // when it is made, on what was given.
+  const refusals = useRefusals()
+  const refused = $derived(alone ? refusals(action) : undefined)
   // Each form on a page binds a `write` instance of its own.
   const n = $props.id()
   const remote = $derived(writes.route.form(action, n))
@@ -81,7 +88,7 @@
   // stays.
   const enhanced = $derived(
     remote.enhance(async (f) => {
-      if (!form.start()) {
+      if (refused || !form.start()) {
         return
       }
       form.problem = null
@@ -123,7 +130,7 @@
 <form {...enhanced} {id} enctype="multipart/form-data" class="form" class:inline class:bare={bare || alone} data-write={action} data-through={alone || undefined}>
   {#if alone}
     {@render children?.()}
-    <Button type="submit" {tone} lead={icon} busy={form.pending} disabled={!ready}>{submit}</Button>
+    <Button type="submit" {tone} lead={icon} busy={form.pending} disabled={!ready} {refused}>{submit}</Button>
   {:else if bare}
     {@render children?.()}
   {:else if children}

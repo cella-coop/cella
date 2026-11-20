@@ -720,7 +720,12 @@ draws.
   check (`tools/tabs.mjs`, run by `cella check feats`) refuses a page
   declaring a fifth tab, an extension declaring a tab, and a block in a
   tab its owner does not name, each by the slice, the record and what
-  would fix it. Every collection's item page is drawn by `Detail`
+  would fix it. Its `refused` names the writes on the record the reader
+  may not make, each by its name with why, as the server judged them
+  before they are made (`useRefusals`): every form on it that is its one
+  button draws itself unavailable, saying why
+  ([who may act](../grafts/circle-person/index.md#who-may-act)). Every
+  collection's item page is drawn by `Detail`
   alone, and the ui check refuses an item page that frames itself. Esc
   goes back to the collection.
 - `Card` (a borderless card raised on the panel, in the drawer, as the
@@ -771,7 +776,10 @@ draws.
   `danger` is), `quiet` or `subtle`, an icon before its words (`lead`),
   or its `icon` alone, small and square; a link with `href`; the submit
   of a form drawn elsewhere by its id (`form`); `busy`
-  keeps its focus and reads as unavailable; a filled tone, `primary`,
+  keeps its focus and reads as unavailable; `refused`, why the reader
+  may not make the write it makes, as the server judged it before, draws
+  it unavailable, `aria-disabled` and kept focusable, a press doing
+  nothing, with the reason as its tooltip (`tip`) and its description; a filled tone, `primary`,
   `info`, `danger` or `positive`, is one of the brand's cells, as the site's row of
   actions is, from the same geometry (`@cella/brand`'s `actions.ts`):
   flat along its top and foot, its ends pointed past its words; a row
@@ -807,7 +815,11 @@ draws.
   written before it stopped, are emptied; its button floats right, an
   inline form's at the end of its line (the operator, 19 Nov); in New's
   dialog it ends in Cancel, closes the dialog once settled and says a
-  refusal's reason itself),
+  refusal's reason itself; a form that is its one button, on a page
+  that judged its write refused (`useRefusals`, which `Detail`'s
+  `refused` names), draws its button `refused`, with the reason, and
+  posts nothing, while a form with fields is judged as it is made, on
+  what was given),
   `Hidden` (a value a form posts that no one types, named through the
   form it is in),
   `Field` (text, a number, a date, a time, an address, an email or a

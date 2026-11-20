@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Component, Snippet } from 'svelte'
+  import { tip } from '../attachments/tip.ts'
   import Icon from './Icon.svelte'
 
   let {
@@ -11,6 +12,7 @@
     kbd,
     busy = false,
     disabled = false,
+    refused,
     onclick,
     icon = false,
     lead,
@@ -36,6 +38,10 @@
     busy?: boolean
     // Nothing to do yet, as a form with nothing changed.
     disabled?: boolean
+    // Why the reader may not make the write it makes, as the server
+    // judged it before: drawn unavailable but kept focusable, a press does
+    // nothing, and the reason is its tooltip and its description.
+    refused?: string
     onclick?: (e: MouseEvent) => void
     // An icon-only button's name, where its words say nothing of it.
     'aria-label'?: string
@@ -46,14 +52,32 @@
   // parent marks (`data-run`) that holds a filled one, or in a group
   // (`data-run="group"`); an icon alone never is. Its style draws it.
   const shape = $derived(icon ? undefined : tone === 'primary' || tone === 'info' || tone === 'danger' || tone === 'positive' ? 'fill' : 'plain')
+  const id = $props.id()
+  // A refused press, by the pointer or the keyboard, submits nothing.
+  const press = $derived(refused ? (e: MouseEvent) => e.preventDefault() : onclick)
 </script>
 
 {#if href}
   <a class="button {tone}" class:icon {href} {download} {title} {onclick} aria-label={ariaLabel} data-cell={shape}>{#if lead}<Icon icon={lead} size="1em" />{/if}{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}</a>
 {:else}
-  <button class="button {tone}" class:icon {type} {form} {title} {onclick} {disabled} aria-busy={busy} aria-disabled={busy} aria-label={ariaLabel} data-cell={shape}>
+  <button
+    class="button {tone}"
+    class:icon
+    {type}
+    {form}
+    {title}
+    onclick={press}
+    {disabled}
+    aria-busy={busy}
+    aria-disabled={busy || !!refused}
+    aria-describedby={refused ? `${id}-why` : undefined}
+    aria-label={ariaLabel}
+    data-cell={shape}
+    data-refused={refused ? '' : undefined}
+  >
     {#if lead}<Icon icon={lead} size="1em" />{/if}{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}
   </button>
+  {#if refused}<span class="why" id="{id}-why" role="tooltip" popover="manual" {@attach tip}>{refused}</span>{/if}
 {/if}
 
 <style>
@@ -219,6 +243,31 @@
   .button[aria-busy='true'] {
     opacity: 0.6;
     cursor: progress;
+  }
+  /* Refused before it is pressed: drawn as a disabled one is, and kept
+     focusable, so the keyboard reaches its tooltip. */
+  .button[data-refused] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .button[data-refused]:hover {
+    filter: none;
+  }
+  .why {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    max-width: 20rem;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    background: var(--float);
+    color: var(--text);
+    box-shadow: var(--shadow-float);
+    font-size: var(--text-xs);
+    font-weight: 400;
+    line-height: 1.45;
+    white-space: normal;
   }
   .quiet {
     --fill: var(--sunk);

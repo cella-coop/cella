@@ -12,6 +12,22 @@ body {
   height: 100%;
 }
 
+/* Scrollbars thin and quiet, as Firefox draws them, in every browser
+   that takes the standard properties (Firefox, and Chrome and Edge
+   since 121; Safari keeps its own overlay bars): no arrows, no track,
+   and the thumb shown only while the pointer is over its scroller or
+   focus is inside it (the operator, 20 Nov). Each element sets its own,
+   so a scroller nested in a hovered one stays hidden until it is
+   hovered itself. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+*:hover,
+*:focus-within {
+  scrollbar-color: color-mix(in oklab, var(--text) 28%, transparent) transparent;
+}
+
 body {
   background: var(--ground);
   color: var(--text);

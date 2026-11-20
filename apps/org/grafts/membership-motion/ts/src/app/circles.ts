@@ -37,8 +37,10 @@ export const app: App = {
         },
       ],
       // A list by circle, each motion's state a chip on its row (the
-      // operator, 20 Nov); as a board, its columns are the states.
-      look: { layout: 'list', by: 'circle', lanes: { state: [...states] }, cards: ['circle', 'deadline', 'turnout'] },
+      // operator, 20 Nov); as a board, its columns are the states, a
+      // swimlane for each circle, as the project and task boards declare
+      // theirs.
+      look: { layout: 'list', by: 'circle', columns: 'state', lanes: { state: [...states] }, cards: ['circle', 'deadline', 'turnout'] },
       // The close freezes which stances counted; whether it passed is the
       // database's, so Passed and Rejected both take the drop.
       shifts: [{ by: 'state', from: ['open'], to: ['passed', 'rejected'], action: 'close' }],

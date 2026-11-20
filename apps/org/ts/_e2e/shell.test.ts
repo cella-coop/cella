@@ -216,16 +216,17 @@ test('an address naming the retired dashboard opens the collection in its own la
   assert.ok(!invoices.text.includes('class="dashboard'), 'and no dashboard is drawn')
 })
 
-test('circles open as a gallery and motions as a board, by what each declares', async () => {
+test('circles open as a gallery, motions a list by circle, and a view in the address opens its board by state', async () => {
   const circles = await page('/circles')
   assert.match(circles.text, /class="gallery[\s"]/, 'circles default to the gallery')
   assert.ok(circles.text.includes('Seated'), 'a circle\'s card shows its seats')
   const motions = await page('/motions')
-  assert.match(motions.text, /class="board[\s"]/, 'motions default to the board')
+  assert.match(motions.text, /class="list[\s"]/, 'motions default to a list by circle')
+  const board = await page('/motions?view=board')
+  assert.match(board.text, /class="board[\s"]/, 'a view in the address opens the board')
   for (const lane of ['open', 'passed', 'rejected']) {
-    assert.ok(motions.text.includes(`data-drop-list="${lane}"`), `the board has its ${lane} column`)
+    assert.ok(board.text.includes(`data-drop-list="${lane}"`), `the board has its ${lane} column`)
   }
-  assert.match((await page('/motions?view=list')).text, /class="list[\s"]/, 'a view in the address overrides the default')
 })
 
 test('a motion is open, passed or rejected, as the database reads it', async () => {
@@ -273,11 +274,11 @@ test('a card dropped on a closed column is the close write; refused before the d
   assert.equal(drag.shift(shifts, 'state', 'open', 'open'), undefined)
   assert.equal(drag.shift(shifts, 'circle', 'open', 'passed'), undefined, 'a move is a write only on the board it is declared for')
   const lane = (html: string, name: string) => html.split(`data-drop-list="${name}"`)[1]?.split('data-drop-list=')[0] ?? ''
-  assert.ok(lane((await page('/motions')).text, 'open').includes('Admit Inès Haddad'))
+  assert.ok(lane((await page('/motions?view=board')).text, 'open').includes('Admit Inès Haddad'))
   const done = await act('/motions/m-2026-012', 'close', {}, hugo)
   assert.notEqual(done.state, 'settled', 'the close is refused before its deadline')
   assert.ok(done.reason, 'and says why')
-  assert.ok(lane((await page('/motions')).text, 'open').includes('Admit Inès Haddad'), 'the card snaps back to open')
+  assert.ok(lane((await page('/motions?view=board')).text, 'open').includes('Admit Inès Haddad'), 'the card snaps back to open')
 })
 
 test('a collection leads with its All tab and its count, and a view in the address applies its filter', async () => {

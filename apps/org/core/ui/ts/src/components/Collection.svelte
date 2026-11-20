@@ -543,7 +543,7 @@
     <ul>
       {#each views as v (v.id)}
         <li>
-          <ContextMenu label="view {v.name}" items={presetMenu(v)}>
+          <ContextMenu label="view {v.name}" items={presetMenu(v)} always>
             <Pill
               href={presetLink(v)}
               on={view === v.id}
@@ -586,7 +586,7 @@
               {@attach renamer}
             />
           {:else}
-            <ContextMenu label="view {c.name}" items={customMenu(c)}>
+            <ContextMenu label="view {c.name}" items={customMenu(c)} always>
               <Pill
                 href={customLink(c)}
                 on={view === c.id}
@@ -751,6 +751,11 @@
     list-style: none;
     margin: 0;
     padding: 0;
+  }
+  /* Each chip keeps room at its end for its menu's ⋯, always shown, so
+     the ⋯ covers none of its name (the operator, 20 Nov). */
+  .viewbar :global(.pill) {
+    padding-inline-end: calc(var(--space-2) + 1rem);
   }
   /* A view renamed in place: an input of its chip's shape and type, as
      wide as the name, ringed as a field holding the focus. */

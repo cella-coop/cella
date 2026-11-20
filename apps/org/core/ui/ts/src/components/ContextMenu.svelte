@@ -29,6 +29,7 @@
     items,
     children,
     block = false,
+    always = false,
   }: {
     // What the menu is of, which names it and its ⋯: "View Open".
     label: string
@@ -37,6 +38,9 @@
     // The target is a block, as a row, rather than a run of a line, as a
     // chip.
     block?: boolean
+    // Its ⋯ always shown, as a view chip's (the operator, 20 Nov), rather
+    // than on hover and focus alone.
+    always?: boolean
   } = $props()
 
   const id = $props.id()
@@ -192,6 +196,7 @@
   bind:this={wrap}
   class="target"
   class:block
+  class:always
   class:open={menu.open}
   {oncontextmenu}
   {onkeydown}
@@ -281,28 +286,31 @@
     translate: 0 -50%;
     display: grid;
     place-items: center;
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 1rem;
+    height: 1rem;
     padding: 0;
     border: none;
     border-radius: var(--radius-pill);
-    background: var(--float);
-    box-shadow: 0 0 0 1px var(--line);
+    background: none;
     color: var(--text-muted);
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
     cursor: pointer;
     opacity: 0;
     pointer-events: none;
     transition: opacity var(--fast) var(--ease);
   }
+  .target.always .more,
   .target:hover .more,
   .target:focus-within .more,
   .target.open .more {
     opacity: 1;
     pointer-events: auto;
   }
+  /* Bare at rest, the ellipsis alone; hovered or open, a round fill
+     behind it (the operator, 20 Nov). */
   .more:hover,
   .target.open .more {
+    background: var(--hover);
     color: var(--text);
   }
   /* Compact rows, as Linear's: a mark in the muted ink, the label, a

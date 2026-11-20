@@ -128,11 +128,12 @@ eachBrowser((engine, launch) => {
         const icons_ = opened('Icon')
         await icons_.waitFor()
         assert.equal(await icon.getAttribute('aria-expanded'), 'true', `${at}: Icon reads as open`)
+        // Measured once its scale-in has ended, not mid-animation.
+        await settled(page)
         const sub = await icons_.boundingBox()
         const parent = await mine.boundingBox()
         assert.ok(sub && parent && sub.x >= parent.x + parent.width - 8, `${at}: the submenu opens beside the menu`)
         assert.equal(await icons_.locator('[role=menuitemradio][aria-checked=true]').textContent().then((t) => t?.trim()), 'Bookmark', `${at}: the icon she wears is checked`)
-        await settled(page)
         await page.screenshot({ path: `${shots}/menu-submenu-${engine}-${scheme}.png` })
         await page.keyboard.press('Escape')
         await icons_.waitFor({ state: 'detached' })

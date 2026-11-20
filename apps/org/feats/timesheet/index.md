@@ -1,6 +1,6 @@
 +++
 title = "Timesheet"
-updated = 2026-11-19
+updated = 2026-11-20
 +++
 
 Time worked, by worker and day, member or not, and each worker's
@@ -140,9 +140,7 @@ Who reads time is a row-level policy (`sql/004-reads.sql`, [the pattern](../../.
 The `timesheets` collection lists every entry in a table grouped by where
 its month stands, open, submitted (the approval queue) and approved, the
 latest day first, with its worker, a person, and its project from the
-grafts; its dashboard sums
-the hours, the billable hours and those awaiting approval, by month and
-by kind, and by worker and by project from the grafts. Its New form is the
+grafts. Its New form is the
 acting worker's week (`employment-project-timesheet`): a project to a row,
 the coop's own time last, and a day to a column, each cell adding the
 hours typed into it, the feat's log, booked to the row's project by

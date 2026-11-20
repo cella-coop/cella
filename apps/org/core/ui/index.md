@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-19
+updated = 2026-11-20
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -264,7 +264,9 @@ draws.
   it alike; whoever opens it holds the element and decides what a
   cancel takes back. It holds forms of their own where its opener hands
   it no submit, as New does a collection's create forms, each ending in
-  its own confirming button and Cancel.
+  its own confirming button and Cancel. Holding something wide
+  (`data-wide`), as a week's `Grid`, it widens to show it whole where
+  the screen allows, and the grid scrolls sideways where it does not.
 - `Diff`: a change shown in its own terms, never a programmer's text
   diff (`models/diff.ts`), the one view of a change wherever it is
   shown, a motion's dialog and its page alike, one shape a kind of
@@ -1478,6 +1480,11 @@ and down arrow or caret buttons that move things. The primitives:
   Space or Enter, each place announced in the list's own words
   (`describe`), Escape cancelling either. `DragState` holds the lifted
   item's key beside its drag (`placing`, `aiming`, `holding`).
+
+A handle may be a link, as a board's card and a view's tab are: each
+attachment refuses the browser's own drag of a handle (`dragstart`),
+which would cancel the pointer's and snap the item back, and `Tile`'s
+link on a board is not `draggable`.
 
 Dashboard widgets, a table's columns by their headers in the table itself
 (`Table`'s `onmove`, kept in the view's order as the View panel keeps

@@ -2,6 +2,7 @@ import type { Handle } from '@sveltejs/kit/hooks'
 import { reading } from '#lib/server/db.ts'
 import { copy } from '#lib/server/device.ts'
 import { ends, renew, touch } from '#lib/server/leases.ts'
+import { safe } from '#lib/server/back.ts'
 import { end, ended, read } from '#lib/server/session.ts'
 
 const themes = ['light', 'dark', 'system'] as const
@@ -80,7 +81,8 @@ export const handle: Handle = async ({ event, resolve }) => {
   // never the sign-in drawn inside the shell (the operator, 20 Nov).
   if (event.url.pathname === '/sign-in' && event.locals.session && event.request.method === 'GET') {
     const back = event.url.searchParams.get('back') ?? ''
-    const location = back.startsWith('/') && !back.startsWith('//') && !back.startsWith('/sign-in') ? back : '/inbox'
+    const path = safe(back)
+    const location = path !== '/' && !path.startsWith('/sign-in') ? path : '/inbox'
     return new Response(null, { status: 303, headers: { location } })
   }
   // The coop has no home page for now: `/` lands the member in their

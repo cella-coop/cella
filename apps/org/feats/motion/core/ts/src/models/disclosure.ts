@@ -47,7 +47,7 @@ export const settings: { setting: Setting; label: string; range: string }[] = [
 ]
 
 // Whether a value exposes personal data and why, in the disclosure
-// study's plain words (`_corpus/review/2026-11-05/disclosure.md`), for a
+// study's plain words (`_corpus/doc/disclosure.md`), for a
 // member who is no statistician. `share` is whether a rule stands at all.
 export function exposure(setting: Setting, value: number | boolean | null): { level: Level; words: string } {
   if (setting === 'share') {

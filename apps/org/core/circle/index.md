@@ -510,7 +510,7 @@ Open books shares a total of members' own figures with every member where at lea
   `disclosure_largest`: the most two people may put in together. At
   80 % it holds every total the p% rule holds at p = 10 %.
 
-The defaults are those [the disclosure study](../../../../_corpus/review/2026-11-05/disclosure.md)
+The defaults are those [the disclosure study](../../../../_corpus/doc/disclosure.md)
 recommends; the contract fixes none. Circle-policy copies them into
 `circle.disclosure` in the write that adopts the rule, as it copies a
 mandate's values, and ends them with it: `circle_policy.disclosure_from`,

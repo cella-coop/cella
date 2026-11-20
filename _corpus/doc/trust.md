@@ -841,7 +841,7 @@ What the build does not yet do, and what lifts each:
   page says beside every value it proposes
   ([the circles in the shell](../../apps/org/feats/motion/index.md#the-circles-in-the-shell)).
   A release checked as one set across related views and periods, as the
-  [disclosure study](../review/2026-11-05/disclosure.md) recommends,
+  [disclosure study](disclosure.md) recommends,
   lifts the first; nothing lifts the second.
 - **A backup carries its keys.** `cella backup` writes the notary's and
   the vault's key files beside the dump, owner-only but not encrypted, so

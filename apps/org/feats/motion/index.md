@@ -515,7 +515,7 @@ their pay, time, capital, work share and expenses (`disclosure`, read
 from `circle.disclosed` on the verdict date). It says whether a
 disclosure rule stands, since when and by which motion, linked, and
 shows one row per setting the
-[disclosure study](../../../../_corpus/review/2026-11-05/disclosure.md)
+[disclosure study](../../../../_corpus/doc/disclosure.md)
 recommends: whether such totals are shared at all, off unless a rule
 stands; the fewest people a total may count, 5 by default, from 2 to
 200; the most of a total one person may put in, 50 % by default, from

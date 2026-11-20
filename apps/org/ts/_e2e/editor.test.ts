@@ -689,8 +689,8 @@ eachBrowser((name, launch) => {
     })
   })
 
-  // What the walk in a headless browser found broken
-  // (_corpus/review/2026-11-09/editor-walk.md), each walked again.
+  // What a walk of the editor in a headless browser found broken, each
+  // walked again.
   describe('what the walk found broken', () => {
     // A document with no draft yet, as the New form starts one, open in
     // one tab only.

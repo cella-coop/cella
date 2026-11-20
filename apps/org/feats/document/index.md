@@ -401,9 +401,8 @@ draft still subject to change is neutral.
   undo of one's own edits, offline edits converging, a block repainted
   after a foreign mutation, and a fuzzer of random keys, compositions and
   remote edits that checks the page shows the model and the tabs
-  converge. Then what the walk in a headless browser found broken
-  ([the review](../../../../_corpus/review/2026-11-09/editor-walk.md)),
-  each walked again: a new document typed into, and one undone past its
+  converge. Then what a walk of the editor in a headless browser found
+  broken, each walked again: a new document typed into, and one undone past its
   first block; the caret leaving a code block that ends the document; the
   caret after a picked embed, and its picker browsed by arrow without
   picking; the slash menu near the window's bottom; the drag preview

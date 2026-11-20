@@ -40,5 +40,20 @@ export const app: App = {
         blocks: [Month, { tab: 'entries', block: Entries }],
       },
     },
+    // Each entry in the journal wears its category, the accounts it is
+    // about, as a chip: green what came in, amber what was spent, plain
+    // what only moved between the balance sheet's accounts.
+    transactions: {
+      columns: [
+        {
+          key: 'category',
+          label: 'Category',
+          kind: 'badge',
+          role: 'meta',
+          value: (r: { category?: string | null }) => r.category ?? null,
+          tone: (r: { flow?: string }) => (r.flow === 'income' ? 'positive' : r.flow === 'expense' ? 'warning' : 'neutral'),
+        },
+      ],
+    },
   },
 }

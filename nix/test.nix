@@ -444,7 +444,8 @@ pkgs.testers.runNixOSTest {
 
       with subtest("the scope's server serves a sign-in offering no one"):
           page = host.succeed("curl -sf http://127.0.0.1:${toString port}/sign-in")
-          assert "signed in to" in page, "no sign-in page"
+          # The sign-in by its structure, not its wording: its heading, `#in`.
+          assert 'id="in"' in page, "no sign-in page"
           assert "Fixture members" not in page and "Demo members" not in page, "a production sign-in offers someone"
           assert notice not in page, "a scope wears the demo banner"
 

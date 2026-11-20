@@ -32,7 +32,8 @@
   import { abandon } from '../models/navigation.ts'
   import { control, focused, typing } from '../models/keys.ts'
   import { inked, inkOf } from '../models/ink.ts'
-  import { mark } from '../marks.ts'
+  import { mark, marks } from '../marks.ts'
+  import { rule, type Entry as MenuEntry } from '../models/menu.ts'
   import { recordIcon } from '../record-icons.ts'
   import { sortable } from '../attachments/sortable.ts'
   import { useWrites } from '../hooks/useWrites.ts'
@@ -42,7 +43,9 @@
   import { useRow } from '../hooks/useRow.ts'
   import { useShell } from '../hooks/useShell.ts'
   import { useViews } from '../hooks/useViews.ts'
+  import { usePinned } from '../hooks/usePinned.ts'
   import Board from './Board.svelte'
+  import ContextMenu from './ContextMenu.svelte'
   import Button from './Button.svelte'
   import { verb } from '../verbs.ts'
   import Calendar from './Calendar.svelte'
@@ -191,6 +194,7 @@
     () => kept,
     (c) => customLink(c),
   )
+  const pinned = usePinned()
   const drag = useDrag()
   const writes = useWrites()
   // New: the shell's one Dialog, holding the create forms.
@@ -250,15 +254,58 @@
   }
   const presetLink = (p: Preset) => link(p.id, resolved(p.id))
   const customLink = (c: Custom) => link(c.id, c.spec)
-  // The open view as Pinned holds it: at its own address, not with what
-  // is changed from it, named by the collection where it is a preset.
-  const pin: Pin | null = $derived(
-    custom
-      ? { collection: name, view: custom.id, name: custom.name, ...(custom.icon ? { icon: custom.icon } : {}), href: customLink(custom) }
-      : active
-        ? { collection: name, view: active.id, name: active.id === 'all' ? title : `${title}: ${active.name}`, ...(active.icon ? { icon: active.icon } : {}), href: presetLink(active) }
-        : null,
-  )
+  // A view as Pinned holds it: at its own address, not with what is
+  // changed from it, named by the collection where it is a preset.
+  const customPin = (c: Custom): Pin => ({ collection: name, view: c.id, name: c.name, ...(c.icon ? { icon: c.icon } : {}), href: customLink(c) })
+  const presetPin = (p: Preset): Pin => ({ collection: name, view: p.id, name: p.id === 'all' ? title : `${title}: ${p.name}`, ...(p.icon ? { icon: p.icon } : {}), href: presetLink(p) })
+
+  // A chip's menu, as Linear's: what can be done to the view, here and
+  // not in the View panel, which holds how it looks. Every view pins and
+  // duplicates; the viewer's own also renames in place on its chip,
+  // changes its icon and is deleted.
+  function pinning(pin: Pin): MenuEntry {
+    const on = pinned.pinned(pin.collection, pin.view)
+    return on ? { label: 'Unpin from sidebar', onselect: () => pinned.unpin(pin.collection, pin.view) } : { label: 'Pin to sidebar', onselect: () => pinned.pin(pin) }
+  }
+  const presetMenu = (p: Preset): MenuEntry[] => [
+    pinning(presetPin(p)),
+    { label: 'Duplicate', onselect: () => opened(saved.duplicate({ id: p.id, name: p.id === 'all' ? title : p.name, icon: p.icon, spec: resolved(p.id) })) },
+  ]
+  const customMenu = (c: Custom): MenuEntry[] => [
+    { label: 'Rename', onselect: () => saved.begin(c.id) },
+    {
+      label: 'Icon',
+      icon: mark(c.icon),
+      items: Object.entries(marks).map(([key, glyph]) => ({ label: key[0]!.toUpperCase() + key.slice(1), icon: glyph, checked: (c.icon ?? 'bookmark') === key, onselect: () => saved.mark(c.id, key) })),
+    },
+    pinning(customPin(c)),
+    { label: 'Duplicate', onselect: () => opened(saved.duplicate(c)) },
+    rule,
+    { label: 'Delete', danger: true, onselect: () => remove(c.id) },
+  ]
+
+  // The rename's input takes the focus as it opens, its name chosen
+  // whole; the chip takes it back as the keyboard ends it.
+  const renamer = (el: HTMLInputElement) => {
+    el.focus()
+    el.select()
+  }
+  const returning = (id: string) => (el: HTMLElement) => {
+    if (saved.back === id) {
+      saved.back = null
+      el.focus()
+    }
+  }
+  function renameKey(e: KeyboardEvent) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      saved.commit(true)
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation()
+      saved.cancel()
+    }
+  }
 
   // The gallery's and the board's cards: the view's fields, or the
   // collection's lines under a title and its trailing meta; and the
@@ -346,9 +393,10 @@
     goto(customLink(c)).catch(abandon)
   }
 
-  function remove() {
-    if (custom) {
-      saved.remove(custom.id)
+  // A view deleted from its chip; the open one leaves for All.
+  function remove(id: string) {
+    saved.remove(id)
+    if (view === id) {
       goto(link('all', resolved('all'))).catch(abandon)
     }
   }
@@ -468,12 +516,9 @@
     placing={placing?.key}
     {declared}
     opened={base}
-    {custom}
-    {pin}
     {whole}
     onchange={change}
     onsave={opened}
-    onremove={remove}
     changed={dirty}
     keep={saveView}
     discard={reset}
@@ -505,19 +550,21 @@
     <ul>
       {#each views as v (v.id)}
         <li>
-          <Pill
-            href={presetLink(v)}
-            on={view === v.id}
-            icon={mark(v.icon ?? (v.id === 'all' ? 'all' : undefined))}
-            title="View {v.name} {noun} {v.count}"
-            onclick={() => {
-              state.filter = ''
-              state.searching = false
-              state.adding = null
-            }}
-          >
-            {v.name}
-          </Pill>
+          <ContextMenu label="view {v.name}" items={presetMenu(v)}>
+            <Pill
+              href={presetLink(v)}
+              on={view === v.id}
+              icon={mark(v.icon ?? (v.id === 'all' ? 'all' : undefined))}
+              title="View {v.name} {noun} {v.count}"
+              onclick={() => {
+                state.filter = ''
+                state.searching = false
+                state.adding = null
+              }}
+            >
+              {v.name}
+            </Pill>
+          </ContextMenu>
         </li>
       {/each}
     </ul>
@@ -533,21 +580,38 @@
       {#each saved.list as c, i (c.id)}
         <DropIndicator show={drag.before('views', i)} axis="x" />
         <li data-drag-item="views" data-drag-index={i}>
-          <Pill
-            href={customLink(c)}
-            on={view === c.id}
-            icon={mark(c.icon)}
-            title="View {c.name} {noun} {saved.tallies[c.id] ?? ''}"
-            aria-roledescription="draggable view"
-            data-drag-handle
-            onclick={() => {
-              state.filter = c.spec.q
-              state.searching = false
-              state.adding = null
-            }}
-          >
-            {c.name}
-          </Pill>
+          {#if saved.renaming === c.id}
+            <!-- Renamed in place: the chip an input holding its name, kept
+                 on Enter or as it loses the focus, dropped on Escape. -->
+            <input
+              class="rename"
+              bind:value={saved.draft}
+              size={Math.max(saved.draft.length, 6)}
+              aria-label="Rename view {c.name}"
+              onkeydown={renameKey}
+              onblur={() => saved.commit()}
+              {@attach renamer}
+            />
+          {:else}
+            <ContextMenu label="view {c.name}" items={customMenu(c)}>
+              <Pill
+                href={customLink(c)}
+                on={view === c.id}
+                icon={mark(c.icon)}
+                title="View {c.name} {noun} {saved.tallies[c.id] ?? ''}"
+                aria-roledescription="draggable view"
+                data-drag-handle
+                onclick={() => {
+                  state.filter = c.spec.q
+                  state.searching = false
+                  state.adding = null
+                }}
+                {@attach returning(c.id)}
+              >
+                {c.name}
+              </Pill>
+            </ContextMenu>
+          {/if}
         </li>
       {/each}
       <DropIndicator show={drag.before('views', saved.list.length)} axis="x" />
@@ -696,6 +760,19 @@
     list-style: none;
     margin: 0;
     padding: 0;
+  }
+  /* A view renamed in place: an input of its chip's shape and type, as
+     wide as the name, ringed as a field holding the focus. */
+  .rename {
+    width: auto;
+    min-width: 0;
+    height: 1.6rem;
+    min-height: 0;
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--text);
   }
   .new {
     display: grid;

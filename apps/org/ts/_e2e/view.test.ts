@@ -103,8 +103,8 @@ eachBrowser((name, launch) => {
         await page.screenshot({ path: `${shots}/tasks-${name}-${scheme}.png` })
         // Order by names a field alone, never "Default", its direction
         // before it, so every control ends on the panel's one right edge;
-        // Pin is an icon in the corner. Filtering and Save are
-        // the filter bar's, never the panel's.
+        // pinning, renaming and deleting are a view chip's menu, never the
+        // panel's (`menu`). Filtering and Save are the filter bar's.
         assert.doesNotMatch((await view.textContent()) ?? '', /Default/, `${at}: the panel never says Default`)
         const edge = async (control: string) => {
           const box = await view.getByRole('combobox', { name: control }).boundingBox()
@@ -117,9 +117,9 @@ eachBrowser((name, launch) => {
         for (const control of ['Grouping', 'Order by']) {
           assert.ok(Math.abs((await edge(control)) - (await edge('Columns'))) < 1.5, `${at}: ${control} ends on Columns's right edge`)
         }
-        const pin = view.getByRole('button', { name: 'Pin this view', exact: true })
         assert.equal(await view.getByRole('button', { name: 'Save', exact: true }).count(), 0, `${at}: no Save in the View panel, which the filter bar carries instead`)
-        assert.equal(await pin.locator('svg').count(), 1, `${at}: Pin is an icon alone`)
+        assert.equal(await view.getByRole('button', { name: /pin|delete/i }).count(), 0, `${at}: no Pin and no Delete in the View panel, which a view's chip menu carries instead`)
+        assert.equal(await view.getByRole('textbox', { name: 'View name' }).count(), 0, `${at}: no name to edit in the View panel, which a chip renames in place`)
         assert.equal(await view.getByRole('button', { name: 'Filter', exact: true }).count(), 0, `${at}: the View panel offers no Filter`)
         assert.equal(await view.getByPlaceholder('Search').count(), 0, `${at}: the View panel has no search box`)
         // Columns answers the keyboard: an arrow opens its list, past six

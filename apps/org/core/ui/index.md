@@ -379,10 +379,17 @@ draws.
   read of its own for it
   ([the lens](../../../../_corpus/doc/architecture.md#the-lens)),
   disabled with no lens or where the lens leaves the collection whole;
-  and last, on a view of the viewer's own, its name over its Delete. The
-  panel's pin is an icon alone, quiet, in its top-right corner on the
-  title's line (a filled pin once pinned, "Pin this view" or "Unpin this
-  view"), which pins the open view under Pinned in the sidebar. A row the layout has no use for is shown disabled, never
+  and last, while a view is being saved, its name and its icon. The
+  panel holds how a view looks alone: what is done to a view is its
+  chip's menu in the view bar (`ContextMenu`), as Linear's, every view's
+  Pin to sidebar (or Unpin from sidebar), which pins it under Pinned,
+  and Duplicate, which saves a copy of it as one of the viewer's own,
+  named "… copy", just after it, and opens it; and on one of the
+  viewer's own, first Rename, which turns its chip into an input holding
+  its name in place, kept on Enter or as it loses the focus and dropped
+  on Escape, and Icon, a submenu of the icons a view may wear, the one it
+  wears ticked, and last, ruled off, Delete, which leaves for All where
+  it was open. A row the layout has no use for is shown disabled, never
   dropped, so the rows never move; a control that offers no choice
   reads as its value, not as a control: a disabled field is muted, and
   a disabled select drops its field and chevron. What a collection offers lives only
@@ -865,11 +872,40 @@ draws.
   read on its first open by the `source` the shell hands it, the shell's
   query of every collection's index).
 - `Floating`: what floats at a point rather than from a trigger, a menu at
-  the caret or a toolbar over a selection: in the top layer, opened
-  manually, kept in the viewport by its own measured size, and drawn above
-  the point it is given (`above`) where below it would pass the window's
-  bottom; a press on its buttons never takes the focus, so the caret
-  stays.
+  the caret or at the pointer, or a toolbar over a selection: in the top
+  layer, opened manually, kept in the viewport by its own measured size,
+  drawn above the point it is given (`above`) where below it would pass
+  the window's bottom and ending at `before` where from it it would pass
+  the right edge, as a submenu flips to its parent's other side (`fit` in
+  `models/menu.ts`); a press on its buttons never takes the focus, so the
+  caret stays. As a `menu` it fades and grows in quickly from the corner
+  it opens at.
+- `ContextMenu`: what can be done to a target, a chip, a row, a card, as
+  Linear's: the target wrapped, its menu built from `items`, plain data
+  (`MenuEntry` in `models/menu.ts`): each item a `label`, an `icon`, else
+  its verb's (`verb`, as a button's), a shortcut's hint (`kbd`), what
+  choosing it does (`onselect`), `danger` for a write that cannot be
+  undone, drawn in the negative ink, `disabled` with the reason it cannot
+  be chosen, shown quiet, reached by the keyboard and read out, its
+  reason on hover, so a record's menu lists the writes its reader cannot
+  make and why, `checked` for a choice among its siblings, ticked
+  (`menuitemradio`), and `items`, a submenu, drawn with a chevron; a
+  `rule` between runs of them. It opens on a right click at the pointer,
+  a long press on touch where the finger rests (a tap still follows a
+  link, a drag still drags), the Menu key or Shift+F10 where the target
+  has the focus, and from a ⋯ over the target's end, shown on hover, on
+  focus and while open, so it is never reached by a right click alone. It
+  floats on `Floating`, compact rows on the float's fill with its radius,
+  hairline and shadow, the marks in the muted ink, the row under the
+  pointer or the keyboard on the hover's fill; a submenu opens beside its
+  item on hover, the right arrow, Enter or Space, and shuts on the left
+  arrow or Escape. The arrows wrap and pass over a rule, Home and End
+  reach the ends, a letter reaches the item it starts, Enter or Space
+  chooses, Escape shuts it and Tab leaves it, the focus back on the
+  target; opened by the keyboard it is on its first item, by the pointer
+  on none. A press outside, a scroll, a resize or leaving the window
+  shuts it. Its state is `MenuState`, one for each target (`useMenu`).
+  A collection's view chips wear it first.
 - `FormatBar`: the toolbar over a selection, on `Floating`: a run of
   named, titled toggles, pressed where the selection already carries
   one (`active`), and, after them, whatever the caller puts there, a
@@ -1425,9 +1461,11 @@ drawer's opening, the lens and the people's names, what a date field
 holds typed and says of it and the day its calendar is on, what a time
 field holds typed and whether its list is open and the time its
 keyboard is on, the file a picker holds and why it refused one, and
-whether a select is open and the option its keyboard is on, are state
-classes in `hooks/` (`CollectionState`, `CreateState`, `CommandState`,
-`ShellState`, `DateState`, `TimeState`, `FileState`, `SelectState`),
+whether a select is open and the option its keyboard is on, a context
+menu's levels open and the item each is on, and a view chip renamed in
+place, are state classes in `hooks/` (`CollectionState`, `CreateState`,
+`CommandState`, `ShellState`, `DateState`, `TimeState`, `FileState`,
+`SelectState`, `MenuState`, `ViewsState`),
 and the sign-in and
 an invitation taken up (`SignInState`, `JoinState`), each reached through
 its `use*` hook, as [architecture](../../../../_corpus/doc/architecture.md#client-state)
@@ -1562,7 +1600,10 @@ graft declares on the page it extends and the detail view hands every
 block as `embeds`; `Viewer` who looks, the signed-in person and the
 device their session signs with, which the detail view hands every block
 as `viewer`, for what only the viewer may do on the page; `Done` a write's outcome as
-the page receives it. `Lens` is a circle the coop selector offers, its id,
+the page receives it. `MenuEntry` is an item of a `ContextMenu` or the
+`rule` between them, as data, so a record's menu is built from its
+writes: a write the reader holds no power for an item `disabled` with
+the reason, a "Move to" a submenu of where it may go. `Lens` is a circle the coop selector offers, its id,
 name, own icon and features spelt as one listing, the shape `ShellState`'s
 `lens` and `circles` take and a slice's own circle choices may
 ([the lens](../../../../_corpus/doc/architecture.md#the-lens)).

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Select } from '@cella/org-ui'
+  import { Select, blocks } from '@cella/org-ui'
   import Text from '../Text.svelte'
   import { useEditor } from '../../hooks/useEditor.ts'
   import type { View } from '../../hooks/EditorState.svelte.ts'
@@ -9,14 +9,14 @@
   const languages = ['text', 'toml', 'sql', 'typescript', 'rust']
 </script>
 
-<div class="code">
-  <span class="language">
+<blocks.Code>
+  {#snippet language()}
     <Select
       fit
       label="Language"
       options={languages.map((l) => ({ value: l, label: l }))}
       bind:value={() => view.props.language ?? 'text', (language) => ed.setKind(view.id, 'code', { language })}
     />
-  </span>
+  {/snippet}
   <Text id={view.id} placeholder="Code" />
-</div>
+</blocks.Code>

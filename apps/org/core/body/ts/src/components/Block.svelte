@@ -16,13 +16,18 @@
   const last = $derived(index === ed.rows.length - 1)
   const drop = $derived(ed.drag.before('blocks', index) ? 'before' : last && ed.drag.before('blocks', ed.rows.length) ? 'after' : undefined)
   const label = $derived(view ? (atomic.has(view.kind) ? view.kind : `${view.kind} ${index + 1}`) : '')
+  // A bullet or numbered item is the kit's own `Item`, an `<li>`; each
+  // sits alone, dragged on its own row rather than grouped under one
+  // shared list, so its own body stands for the list it is the one item
+  // of.
+  const listed = $derived(view?.kind === 'bullet' || view?.kind === 'numbered')
 </script>
 
 {#if view && Body}
   <div class="block" data-row={id} data-kind={view.kind} data-last={last || undefined} data-selected={ed.chosen.selected.has(id) || undefined}>
     <div class="line" data-drag-item="blocks" data-drag-index={index} data-drop={drop} data-dragging={ed.drag.dragging('blocks', index) || undefined}>
       <DragHandle {label} />
-      <div class="body" data-content>
+      <div class="body" data-content role={listed ? 'list' : undefined}>
         <Body {view} />
       </div>
     </div>

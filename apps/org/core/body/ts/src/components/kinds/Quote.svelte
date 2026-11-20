@@ -1,10 +1,11 @@
 <script lang="ts">
+  import { blocks } from '@cella/org-ui'
   import Text from '../Text.svelte'
   import type { View } from '../../hooks/EditorState.svelte.ts'
 
   let { view }: { view: View } = $props()
 </script>
 
-<blockquote class="quote">
+<blocks.Quote>
   <Text id={view.id} placeholder="Quote" />
-</blockquote>
+</blocks.Quote>

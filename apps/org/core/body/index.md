@@ -161,6 +161,17 @@ highlighted in the draft where their cursors still find them. The look is the UI
 styles itself. `Reader` draws a canonical form read-only, for a version on
 a motion's page.
 
+Every kind draws the UI core's own presentational block (`Paragraph`,
+`Heading`, `Quote`, `List`'s `Item`, `Todo`, `Code`, `Divider`, `Embed`,
+each in `@cella/org-ui`'s `blocks`), styled wholly by `Blocks`; the
+editor attaches only the editing behaviour, a kind's `Text` and its
+controls, inside it. `Reader`'s own list draws the same components,
+read-only: a to-do's box the UI core's `Checkbox`, `disabled`. The
+toolbar over a selection and the slash menu at the caret are the UI
+core's own `FormatBar` and `CaretMenu`, the same `Floating` a comment's
+`RichField` floats one over a selection from; core body attaches what
+each chooses (a mark, a link, a block's new kind) and styles neither.
+
 A slice mounts the editor over its own draft: it hands it the Loro
 document, the write that takes an update, sent by the page's `send`, and
 the live stream it

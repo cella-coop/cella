@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Select } from '@cella/org-ui'
+  import { Select, blocks } from '@cella/org-ui'
   import { useEditor } from '../../hooks/useEditor.ts'
   import type { View } from '../../hooks/EditorState.svelte.ts'
 
@@ -14,7 +14,7 @@
   const choices = $derived(found?.embed.choices?.(found.data) ?? [])
 </script>
 
-<div class="embed" data-atomic={view.id} contenteditable="false">
+<blocks.Embed data-atomic={view.id} contenteditable="false">
   {#if found && !view.props.ref}
     <div class="pick">
       <span class="kind">{found.embed.label}</span>
@@ -32,4 +32,4 @@
   {:else}
     <div class="unknown">{view.props.embed} {view.props.ref}</div>
   {/if}
-</div>
+</blocks.Embed>

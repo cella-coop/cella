@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, verb, Field, Floating, Popover } from '@cella/org-ui'
+  import { Button, verb, Field, FormatBar, Popover } from '@cella/org-ui'
   import { useEditor } from '../hooks/useEditor.ts'
 
   // The toolbar over a selection: bold, italic and code, and a link, whose
@@ -11,14 +11,11 @@
     { key: 'bold', label: 'B', title: 'Bold (Ctrl-B)' },
     { key: 'italic', label: 'I', title: 'Italic (Ctrl-I)' },
     { key: 'code', label: '</>', title: 'Code (Ctrl-E)' },
-  ] as const
+  ]
 </script>
 
 {#if bar && !ed.chosen.range}
-  <Floating x={bar.x} y={bar.y} label="Format" role="toolbar">
-    {#each tools as t (t.key)}
-      <button class={t.key} title={t.title} aria-label={t.title} tabindex="-1" onclick={() => ed.input.mark(t.key)}>{t.label}</button>
-    {/each}
+  <FormatBar x={bar.x} y={bar.y} {tools} onchoose={(key) => ed.input.mark(key as 'bold' | 'italic' | 'code')}>
     <Popover label="Link (Ctrl-K)" menu={false}>
       {#snippet trigger()}
         <span data-link>Link</span>
@@ -34,5 +31,5 @@
         <Button lead={verb('Link')} type="submit">Link</Button>
       </form>
     </Popover>
-  </Floating>
+  </FormatBar>
 {/if}

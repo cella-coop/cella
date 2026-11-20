@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Checkbox } from '@cella/org-ui'
+  import { blocks } from '@cella/org-ui'
   import Text from '../Text.svelte'
   import { useEditor } from '../../hooks/useEditor.ts'
   import type { View } from '../../hooks/EditorState.svelte.ts'
@@ -9,16 +9,14 @@
   let { view }: { view: View } = $props()
   const ed = useEditor()
   const checked = $derived(view.props.checked ?? false)
-  const bullet = $derived(['•', '◦', '▪'][view.depth % 3])
 </script>
 
-<div class="item" data-done={(view.kind === 'todo' && checked) || undefined}>
-  {#if view.kind === 'todo'}
-    <Checkbox label="Done" bind:checked={() => checked, (on) => ed.check(view.id, on)} />
-  {:else if view.kind === 'numbered'}
-    <span class="marker" data-numbered aria-hidden="true">{view.number}.</span>
-  {:else}
-    <span class="marker" aria-hidden="true">{bullet}</span>
-  {/if}
-  <Text id={view.id} placeholder={view.kind === 'todo' ? 'To-do' : 'List'} />
-</div>
+{#if view.kind === 'todo'}
+  <blocks.Todo {checked} oncheck={(on) => ed.check(view.id, on)}>
+    <Text id={view.id} placeholder="To-do" />
+  </blocks.Todo>
+{:else}
+  <blocks.Item numbered={view.kind === 'numbered'} number={view.number} depth={view.depth}>
+    <Text id={view.id} placeholder="List" />
+  </blocks.Item>
+{/if}

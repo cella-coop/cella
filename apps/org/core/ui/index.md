@@ -1141,7 +1141,7 @@ declares in its models, `models/status.ts`, as a `Lifecycle`
 feat's own schema, and its states in order, each a value and one of five
 fixed categories, `backlog`, `unstarted`, `started`, `completed` and
 `cancelled`, with a tone of its own only where the house keeps one
-(refused and rejected negative, suspended warning). A column, a
+(a member positive, a former member neutral). A column, a
 property or an option of the `status` kind names its lifecycle
 (`states`), and the kit reads the category, never the word, so a coop's
 "review" or "à valider" both read as under way:
@@ -1151,9 +1151,11 @@ property or an option of the `status` kind names its lifecycle
   filling by the state's place among the started ones, so active and
   review read apart and in order, completed a disc with a check and
   cancelled one with a cross, each cut out of it;
-- its tone is its category's, neutral at rest (backlog, unstarted,
-  cancelled), accent under way, positive completed, never an ink seeded
-  by its word, and its group's bar wears it;
+- its tone is its category's, one of the five status tones: neutral,
+  grey, at rest (backlog, unstarted), warning, amber, under way,
+  positive, green, completed, and negative, red in the danger hue,
+  cancelled; never an ink seeded by its word, and its group's bar wears
+  it;
 - its order is the lifecycle's: a board's columns and a list's groups
   follow it where the look declares no lanes of its own;
 - `open`, `within` and `finished` say which states are open, in a

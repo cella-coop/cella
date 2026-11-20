@@ -13,14 +13,14 @@ const task: Lifecycle = {
     { value: 'backlog', category: 'backlog' },
     { value: 'next', category: 'unstarted' },
     { value: 'active', category: 'started' },
-    { value: 'review', category: 'started' },
+    { value: 'review', category: 'started', tone: 'accent' },
     { value: 'done', category: 'completed' },
-    { value: 'refused', category: 'cancelled', tone: 'negative' },
+    { value: 'refused', category: 'cancelled' },
   ],
 }
 
 test("a state's tone is its category's, else its own; one not listed is neutral", () => {
-  assert.deepEqual(values(task).map((v) => toneOf(task, v)), ['neutral', 'neutral', 'accent', 'accent', 'positive', 'negative'])
+  assert.deepEqual(values(task).map((v) => toneOf(task, v)), ['neutral', 'neutral', 'warning', 'accent', 'positive', 'negative'])
   assert.equal(toneOf(task, 'lost'), 'neutral')
 })
 

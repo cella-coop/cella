@@ -1,8 +1,8 @@
 import type { Db } from '@cella/org-db'
 import type { Month, Months } from '../models/sheet.ts'
 
-// Whose each entry is, by entry: the worker's name, which the dashboard
-// groups hours by.
+// Whose each entry is, by entry: the worker's name, which the
+// timesheets group by.
 export const whose = `SELECT e.id::text AS id, wp.name AS who
   FROM timesheet.entry e JOIN (employment.worker w JOIN person.person wp ON wp.address = w.address) ON w.address = e.member`
 

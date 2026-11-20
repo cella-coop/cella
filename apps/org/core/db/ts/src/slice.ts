@@ -187,6 +187,15 @@ export interface Body {
 // membership feat serves it; with no slice serving it, no one holds any.
 export type May = (db: Db, actor: string, power: string, circle: string) => Promise<boolean>
 
+// Why the reader may not make each of these writes on a record of a
+// circle, asked before they make it, as the guard on every write with a
+// power would answer at its verdict with no amount, in one read: the
+// reason by op, for the ops it refuses alone. `circle` null asks of no
+// record, whether the reader holds the power at all. The membership feat
+// serves it, as it serves `may`; with no slice serving it, every write is
+// judged as it is made.
+export type Judge = (db: Db, ops: Permission[], circle: string | null) => Promise<Partial<Record<Permission, string>>>
+
 // What a graft, or the root, adds to a collection of a feat it joins:
 // fields on each row by its id, data for the item's blocks, and writes.
 // An item's data may depend on who looks: `actor` is the acting member's
@@ -282,6 +291,7 @@ export interface Slice {
   settings?: Record<string, SettingsPage>
   joins?: Joining
   may?: May
+  judges?: Judge
   // Its queries written in SQL, by name, each a view of its own schema,
   // which the shell serves as any query.
   queries?: Record<string, Query>

@@ -23,8 +23,13 @@ const thomas = 'thomas@lanterne.example'
 const yusuf = 'yusuf@lanterne.example'
 const hugo = 'hugo@lanterne.example'
 const ines = 'ines@lanterne.example'
+const shop = 'Les Halles Paysannes, online shop'
 
 const one = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows[0] as R
+// The board kanban's swimlane for a project, each its own run of
+// columns (the board rework, 20 Nov): scoped to it first, so the same
+// column name in another project's swimlane is never mistaken for it.
+const swimlane = (html: string, project: string) => html.split(`aria-label="Project: ${project},`)[1]?.split('class="swimlane"')[0] ?? ''
 const lane = (html: string, name: string) => html.split(`data-drop-list="${name}"`)[1]?.split('data-drop-list=')[0] ?? ''
 
 let task = ''
@@ -120,7 +125,7 @@ test('Thomas creates a task; Yusuf gives it to him and files it under the shop\'
   const away = await shell.act(`/tasks/${task}`, 'assign', { member: 'ines@lanterne.example' }, yusuf)
   assert.equal(away.state, 'refused')
   assert.match(away.reason ?? '', /ines@lanterne.example is no active member/)
-  assert.ok(lane((await shell.page('/tasks', thomas)).text, 'next').includes('Audit the checkout for RGAA'), 'it waits in Next')
+  assert.ok(lane(swimlane((await shell.page('/tasks', thomas)).text, shop), 'next').includes('Audit the checkout for RGAA'), 'it waits in Next')
 })
 
 test('Thomas drags it into Active, then Review, then Done, each drop a write signed as him', async () => {
@@ -129,7 +134,7 @@ test('Thomas drags it into Active, then Review, then Done, each drop a write sig
   for (const to of ['active', 'review']) {
     const moved = await shell.act(`/tasks/${task}`, 'move', { to }, thomas)
     assert.deepEqual([moved.op, moved.state], ['task:task:move', 'settled'])
-    assert.ok(lane((await shell.page('/tasks', thomas)).text, to).includes('Audit the checkout for RGAA'), `it moves into ${to}`)
+    assert.ok(lane(swimlane((await shell.page('/tasks', thomas)).text, shop), to).includes('Audit the checkout for RGAA'), `it moves into ${to}`)
   }
   const done = await shell.act(`/tasks/${task}`, 'complete', { to: 'done' }, thomas)
   assert.deepEqual([done.op, done.state], ['task:task:complete', 'settled'])

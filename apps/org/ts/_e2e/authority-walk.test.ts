@@ -234,14 +234,17 @@ const panel = (page: Page, name: string) => page.getByRole('complementary', { na
 // A bill's Approve as the signed-in person meets it, and the refusal it
 // shows: where the page judged it before it is pressed, as a power held
 // over no record of the bill's circle, or no longer held, the button is
-// unavailable and its tooltip, shown as the pointer rests on it, says why
-// (`early`); where only the amount refuses it, it is pressed and the page
-// shows the guard's reason.
+// unavailable and its tooltip, shown as the pointer rests on it or the
+// keyboard focuses it, says why (`early`) — reached here by focus, since
+// a prior click or navigation leaves the pointer resting where the next
+// page happens to draw the same button, and a browser then sees no
+// pointer move to answer; where only the amount refuses it, it is
+// pressed and the page shows the guard's reason.
 async function approving(w: Walker, bill: string): Promise<{ early: boolean; said: string }> {
   await w.open(`/bills/${bill}`)
   const button = w.page().locator('form[data-write="approve"] button[type="submit"]')
   if ((await button.getAttribute('aria-disabled')) === 'true') {
-    await button.hover()
+    await button.focus()
     const tip = w.page().locator(`[id="${await button.getAttribute('aria-describedby')}"]`)
     await tip.waitFor()
     return { early: true, said: (await tip.textContent()) ?? '' }

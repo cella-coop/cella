@@ -1,5 +1,5 @@
 // tools/qa/personas.mjs: a QA round of main's tip as the demo serves it,
-// 5 to 10 simulated co-op members, each a fixture member of Lanterne with
+// 5 to 10 simulated coop members, each a fixture member of Lanterne with
 // a goal through the demo's key flows, each its own browser context, run
 // concurrently in Chromium, then one pass of every persona in Firefox and
 // one in WebKit. Reuses tools/qa/rooms.mjs's harness (a throwaway

@@ -243,6 +243,6 @@
     color: var(--accent-text);
   }
   .toned[data-tone='failed'] {
-    color: var(--help-text);
+    color: var(--negative-text);
   }
 </style>

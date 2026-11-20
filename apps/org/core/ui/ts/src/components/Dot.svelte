@@ -38,7 +38,7 @@
     background: var(--warning-text);
   }
   .failed {
-    background: var(--help-text);
+    background: var(--negative-text);
   }
   /* An ink seeded by the value, last, over whatever tone it was drawn
      with: only `neutral` and `accent` carry one. */

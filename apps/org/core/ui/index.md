@@ -77,10 +77,11 @@ ink. Components read roles, never shades:
   and not yet paid), drawn as an ink ring with no fill so it never reads
   as an alarm, positive settled, warning wanting attention (overdue,
   suspended), negative refused, failed an operational failure rather
-  than a refusal (an import row, a run), never confused with one;
+  than a refusal (an import row, a run), told from one by its word;
   positive and negative are the brand's success and error
   (`--positive-*` reads `--success-*`, `--negative-*` reads `--error-*`),
-  failed the brand's help (`--help-*`), and info waits for a state that
+  failed the danger hue, the error a danger button wears too
+  (`--negative-*`), and info waits for a state that
   needs it still. The soft fills are
   tints (`--soft`, the brand's `--soft-a`), lighter in dark, so a tone
   shows in its text and never saturates; a state is never told by colour

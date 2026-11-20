@@ -155,6 +155,9 @@ async function start(): Promise<Served> {
 // session's cookie is the context's from then on; every write its pages
 // post, this browser signs.
 export async function signIn(context: BrowserContext, base: string, actor: string) {
+  // A signed-in browser is sent past the sign-in (hooks.server.ts), so a
+  // context switching members drops its session first, as signing out does.
+  await context.clearCookies({ name: 'cella-session' })
   const page = await context.newPage()
   try {
     await page.goto(`${base}/sign-in`)

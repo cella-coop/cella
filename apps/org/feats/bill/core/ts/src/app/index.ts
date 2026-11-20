@@ -4,7 +4,7 @@ import { status } from '../models/status.ts'
 import Lines from './blocks/Lines.svelte'
 import Record from './blocks/Record.svelte'
 import Status from './blocks/Status.svelte'
-import Body from './blocks/Body.svelte'
+import { Body } from '@cella/org-body/app'
 
 // A bill's standing is its status, drawn by its lifecycle, but overdue,
 // which wants attention.

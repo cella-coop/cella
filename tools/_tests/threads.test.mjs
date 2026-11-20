@@ -121,11 +121,15 @@ test('scaffold body writes a feat its body, named for it, into its own folder, a
     const api = read(join(t.ts, 'src/api/index.ts'))
     assert.match(api, /item: withBody\(item\),/)
     assert.match(api, /body: bodyMount,\n\s+actions: \{\n\s+\.\.\.bodyActions,/)
-    assert.match(read(join(t.ts, 'src/hooks/BodyState.svelte.ts')), /`\/notes\/\$\{encodeURIComponent\(id\)\}\/body\/live`/)
-    assert.match(read(join(t.ts, 'src/app/index.ts')), /page: \{\n\s+blocks: \[Body\],/)
+    const app = read(join(t.ts, 'src/app/index.ts'))
+    assert.match(app, /import \{ Body \} from '@cella\/org-body\/app'/)
+    assert.match(app, /page: \{\n\s+body: Body,/)
     assert.equal(JSON.parse(read(join(t.ts, 'package.json'))).dependencies['@cella/org-body'], 'workspace:*')
-    for (const f of ['models/body.ts', 'handlers/body.ts', 'drivers/body.ts', 'api/body.ts', 'app/blocks/Body.svelte', 'hooks/useBody.ts']) {
+    for (const f of ['models/body.ts', 'handlers/body.ts', 'drivers/body.ts', 'api/body.ts']) {
       assert.ok(existsSync(join(t.ts, 'src', f)), f)
+    }
+    for (const f of ['app/blocks/Body.svelte', 'hooks/useBody.ts', 'hooks/BodyState.svelte.ts']) {
+      assert.ok(!existsSync(join(t.ts, 'src', f)), `${f}: core body's own Body is mounted, not copied`)
     }
   } finally {
     rmSync(t.repo, { recursive: true, force: true })

@@ -12,6 +12,19 @@ own. The document feat keeps its drafts and versions in it
 ([document](../../feats/document/index.md)), and the task feat each
 task's body ([task](../../feats/task/index.md)); it knows no slice.
 
+One `Body` (`./app`) draws every record page's body: a slice with one
+mounts it on its page (`body: Body`), naming nothing of its own. `Body`
+reads the record's collection from the page that renders it, the record
+itself (`Bodied`, `./models`: its `snapshot` and `canon`) from `data`,
+and its one state (opening, read-only, saving, saved, offline or not
+saved, by a banner where it is not simply "saved" and a quiet note by
+the editor's foot otherwise) from `useBody(collection, page)`, which
+holds the one `BodyState` for the body mounted, over the live session
+`Editor` or `Reader` beneath it draws. A slice keeps its own commands
+and schema (`BodySave`, `BodySaved`, its save action, its guard) in its
+own `models/`, `handlers/` and `drivers/`, read through `Bodied`; it
+never holds a `Body` block, a `BodyState` or a `useBody` of its own.
+
 ## The model
 
 A body of blocks is one `LoroTree` (`blocks`). Each node is a block: its data
@@ -86,8 +99,8 @@ function (`#lib/remote/item.remote.ts`, a SvelteKit `query` from
 the page's component, so it runs during SSR and its canonical form is
 serialized into the page the server sends: the page shows, and its body
 reads, whole, at once, hydration finding the same data already there and
-fetching nothing again for it. Only once the page has mounted does a
-slice's `BodyState` (or a document's `DraftState`) build the Loro document
+fetching nothing again for it. Only once the page has mounted does
+`Body`'s own `BodyState` (or a document's `DraftState`) build the Loro document
 from that same read's snapshot and open the live stream
 (`/<collection>/<record>/body/live`) to hydrate it for editing: the
 `Reader` draws the canonical form the whole time until then, and the

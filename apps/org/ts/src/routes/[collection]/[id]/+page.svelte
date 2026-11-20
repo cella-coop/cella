@@ -169,7 +169,7 @@
 
     {#snippet bodied()}
       {#if v.body}
-        <v.body.block data={v.body.data} id={data.id} embeds={v.embeds} viewer={data.viewer} />
+        <v.body.block data={v.body.data} id={data.id} collection={data.name} embeds={v.embeds} viewer={data.viewer} />
       {/if}
     {/snippet}
 

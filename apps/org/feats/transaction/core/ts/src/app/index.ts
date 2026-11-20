@@ -1,7 +1,7 @@
 import { icons, type App } from '@cella/org-ui'
 import type { Detail, Journaled } from '../models/transaction.ts'
 import Lines from './blocks/Lines.svelte'
-import Body from './blocks/Body.svelte'
+import { Body } from '@cella/org-body/app'
 
 // The feat's client side: the journal as the shell's transactions, and an
 // entry's page, named by its label, which opens on its lines, then its

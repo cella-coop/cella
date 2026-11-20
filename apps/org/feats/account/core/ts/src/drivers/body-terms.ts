@@ -1,9 +1,8 @@
 import type { Db } from '@cella/org-db'
-import { b64, type Canon } from '@cella/org-body/models'
-import type { BodiedTerms } from '../models/body-terms.ts'
+import { b64, type Bodied, type Canon } from '@cella/org-body/models'
 
 // A record's body as its page reads it: its snapshot and its canonical form.
-export async function bodiedTerms(db: Db, id: string): Promise<BodiedTerms> {
+export async function bodiedTerms(db: Db, id: string): Promise<Bodied> {
   const { rows } = await db.query<{ body: Uint8Array | null; canon: string | null }>(
     'SELECT body, cella.document_canonical(body) AS canon FROM account.terms WHERE id = $1',
     [id],

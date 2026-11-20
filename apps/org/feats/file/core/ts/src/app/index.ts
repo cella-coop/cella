@@ -2,7 +2,7 @@ import { icons, type App, type Tone } from '@cella/org-ui'
 import { kinds, sized, type Class, type File, type Listed } from '../models/file.ts'
 import Upload from './blocks/Upload.svelte'
 import Kept from './blocks/Kept.svelte'
-import Body from './blocks/Body.svelte'
+import { Body } from '@cella/org-body/app'
 
 const tones: Record<Class, Tone> = { none: 'neutral', 'expense-receipt': 'accent', payroll: 'warning', profile: 'positive' }
 

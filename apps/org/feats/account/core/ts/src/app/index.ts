@@ -4,9 +4,7 @@ import type { Terms } from '../models/terms.ts'
 import Clauses from './blocks/Clauses.svelte'
 import Close from './blocks/Close.svelte'
 import Open from './blocks/Open.svelte'
-import BodyAccount from './blocks/BodyAccount.svelte'
-import BodyPeriod from './blocks/BodyPeriod.svelte'
-import BodyTerms from './blocks/BodyTerms.svelte'
+import { Body } from '@cella/org-body/app'
 
 // A row as its collection lists it: its state, and an account cash or
 // other, as their badges show them.
@@ -54,7 +52,7 @@ export const app: App = {
         ],
         // Its balance is the panel the graft joining the journal adds.
         layout: 'panels',
-        body: BodyAccount,
+        body: Body,
       },
     },
     periods: {
@@ -84,7 +82,7 @@ export const app: App = {
         // Its entries summed are the panel the graft joining the journal
         // adds.
         layout: 'panels',
-        body: BodyPeriod,
+        body: Body,
         actions: Close,
       },
     },
@@ -109,7 +107,7 @@ export const app: App = {
         // Clauses panel's, said as the statutes say them.
         properties: (t: Terms) => [{ label: 'State', value: adopted(t), kind: 'badge', tone: t.adopted ? 'positive' : 'accent' }],
         layout: 'panels',
-        body: BodyTerms,
+        body: Body,
         blocks: [Clauses],
       },
     },

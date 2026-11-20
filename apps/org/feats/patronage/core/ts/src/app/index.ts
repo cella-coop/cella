@@ -1,4 +1,5 @@
 import { icons, type App, type Tone } from '@cella/org-ui'
+import { Body } from '@cella/org-body/app'
 import { stage, type Detail, type Distribution } from '../models/distribution.ts'
 import { divides, type Terms } from '../models/terms.ts'
 import type { Sheet, Statement } from '../models/statement.ts'
@@ -6,8 +7,6 @@ import Shares from './blocks/Shares.svelte'
 import Basis from './blocks/Basis.svelte'
 import Divides from './blocks/Divides.svelte'
 import Draft from './blocks/Draft.svelte'
-import BodyDistribution from './blocks/BodyDistribution.svelte'
-import BodyTerms from './blocks/BodyTerms.svelte'
 
 const tones: Record<ReturnType<typeof stage>, Tone> = { draft: 'neutral', approved: 'accent', distributed: 'positive' }
 // A row as its collection lists it: its state, and how terms divide, as
@@ -60,7 +59,7 @@ export const app: App = {
         ],
         related: (d: Detail) => (d.approved ? [{ label: `${d.year} statements`, sub: 'each worker’s part', href: '/statements' }] : []),
         layout: 'panels',
-        body: BodyDistribution,
+        body: Body,
         blocks: [Shares],
       },
     },
@@ -86,7 +85,7 @@ export const app: App = {
         // Clauses panel's, said as the statutes say them.
         properties: (t: Terms) => [{ label: 'As the rule', value: t.policy, kind: 'mono', glyph: icons.Scales, lead: 'rule' }],
         layout: 'panels',
-        body: BodyTerms,
+        body: Body,
         blocks: [Divides],
       },
     },

@@ -1,9 +1,8 @@
 import type { Db } from '@cella/org-db'
-import { b64, type Canon } from '@cella/org-body/models'
-import type { BodiedDistribution } from '../models/body-distribution.ts'
+import { b64, type Bodied, type Canon } from '@cella/org-body/models'
 
 // A record's body as its page reads it: its snapshot and its canonical form.
-export async function bodiedDistribution(db: Db, id: string): Promise<BodiedDistribution> {
+export async function bodiedDistribution(db: Db, id: string): Promise<Bodied> {
   const { rows } = await db.query<{ body: Uint8Array | null; canon: string | null }>(
     'SELECT body, cella.document_canonical(body) AS canon FROM patronage.distribution WHERE id = $1',
     [id],

@@ -2,7 +2,7 @@ import { icons, type App } from '@cella/org-ui'
 import type { Listed, Run } from '../models/run.ts'
 import Create from './blocks/Create.svelte'
 import Lines from './blocks/Lines.svelte'
-import Body from './blocks/Body.svelte'
+import { Body } from '@cella/org-body/app'
 
 // The feat's client side: the imports made, a file imported or tried in a
 // dry run from the list, and each import's page, which opens on its lines,

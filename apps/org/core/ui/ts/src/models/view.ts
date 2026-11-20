@@ -180,6 +180,10 @@ export type Block<T = any> = Component<{ data: T; id: string; embeds?: Embeds; v
 // item at SSR.
 export type Comment<T = any> = Component<{ data: T; id: string; embeds?: Embeds; viewer?: Viewer | null; readers?: () => Promise<unknown[]> }>
 
+// The record's body: a block that also reads its own collection, since
+// one `Body` in core body mounts every slice's, named by it alone.
+export type BodyBlock<T = any> = Component<{ data: T; id: string; collection: string; embeds?: Embeds; viewer?: Viewer | null }>
+
 // A block in a tab of the item's page: a bare block sits in the first,
 // the overview, where it is a panel.
 // An extension's block names a tab its owner's page declares.
@@ -247,7 +251,7 @@ export interface Page<T = any> {
   // a text it is written in, as a motion's proposal. It opens the
   // overview in the `body` layout, and is the Notes panel at its foot in
   // the `panels` layout.
-  body?: Block<T>
+  body?: BodyBlock<T>
   // Its computed figures, sums and counts, each a `Stat` in the overview's
   // Figures panel with every slice's, never a property of the drawer.
   figures?: (data: T) => Prop[]

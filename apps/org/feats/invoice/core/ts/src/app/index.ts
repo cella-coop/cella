@@ -4,7 +4,7 @@ import Issue from './blocks/Issue.svelte'
 import Lines from './blocks/Lines.svelte'
 import Payments from './blocks/Payments.svelte'
 import Send from './blocks/Send.svelte'
-import Body from './blocks/Body.svelte'
+import { Body } from '@cella/org-body/app'
 
 const standing = (i: Listed) => (i.overdue ? 'overdue' : i.state)
 const tones: Record<string, Tone> = { overdue: 'warning', unpaid: 'accent', partial: 'accent', paid: 'positive', overpaid: 'warning', voided: 'neutral' }

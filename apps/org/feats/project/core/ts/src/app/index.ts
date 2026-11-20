@@ -4,7 +4,7 @@ import Archive from './blocks/Archive.svelte'
 import Budget from './blocks/Budget.svelte'
 import Create from './blocks/Create.svelte'
 import Milestones from './blocks/Milestones.svelte'
-import Body from './blocks/Body.svelte'
+import { Body } from '@cella/org-body/app'
 import Comments from './blocks/Comments.svelte'
 
 const tones: Record<State, Tone> = { active: 'accent', done: 'positive' }

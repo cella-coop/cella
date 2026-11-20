@@ -137,15 +137,10 @@ function depend(text) {
   return JSON.stringify(pkg, null, 2) + '\n'
 }
 
-// The page's blocks: the body first, on its first tab.
+// The page's body: core body's own `Body`, which every slice with one
+// mounts, named by its collection alone at render.
 function bodyBlock(repo, file, text) {
-  if (/^\s+blocks: \[$/m.test(text)) {
-    return edit(repo, file, text, /^(\s+)blocks: \[$/m, (_, sp) => `${sp}blocks: [\n${sp}  Body,`, 'the body block')
-  }
-  if (/^\s+blocks: \[/m.test(text)) {
-    return edit(repo, file, text, /^(\s+)blocks: \[/m, (_, sp) => `${sp}blocks: [Body, `, 'the body block')
-  }
-  return within(repo, file, text, 'page', 'blocks: [Body],', 'the body block')
+  return within(repo, file, text, 'page', 'body: Body,', 'the body block')
 }
 
 const has = (repo, f, ts, feat, files, ops, keys) => {
@@ -183,7 +178,7 @@ export function scaffold(repo, part, feat) {
   const text = (path) => writes.get(path) ?? readFileSync(path, 'utf8')
   const ts = (p) => join(f.ts, p)
   if (part === 'body') {
-    has(repo, 'a body', f.ts, feat, ['src/models/body.ts', 'src/handlers/body.ts', 'src/drivers/body.ts', 'src/api/body.ts', 'src/app/blocks/Body.svelte', 'src/hooks/BodyState.svelte.ts', 'src/hooks/useBody.ts'], [`${feat}:body:save`], ['save'])
+    has(repo, 'a body', f.ts, feat, ['src/models/body.ts', 'src/handlers/body.ts', 'src/drivers/body.ts', 'src/api/body.ts'], [`${feat}:body:save`], ['save'])
     if (new RegExp(`ADD COLUMN body\\b|^\\s+body bytea`, 'm').test(f.sql)) {
       refuse(`${feat} has a body already: its SQL makes a body column`)
     }
@@ -193,9 +188,6 @@ export function scaffold(repo, part, feat) {
     put(ts('src/handlers/body.ts'), bodyHandler(feat))
     put(ts('src/drivers/body.ts'), bodyDrivers(feat))
     put(ts('src/api/body.ts'), bodyApi(feat))
-    put(ts('src/hooks/BodyState.svelte.ts'), bodyState(feat, f.collection))
-    put(ts('src/hooks/useBody.ts'), useBody())
-    put(ts('src/app/blocks/Body.svelte'), bodyBlockSvelte(feat))
     put(ts('src/models/actions.ts'), declare(repo, ts('src/models/actions.ts'), text(ts('src/models/actions.ts')), [
       `  // each save carries the whole merged snapshot, so the later receipt holds every edit before it`,
       `  '${feat}:body:save': confluent({ power: 'discuss' }),`,
@@ -209,7 +201,7 @@ export function scaffold(repo, part, feat) {
     api = api.replace(/\n\nexport const slice/, `\nexport { saveBody } from '../handlers/body.ts'\n\nexport const slice`)
     put(ts('src/api/index.ts'), api)
     let app = text(ts('src/app/index.ts'))
-    app = imports(repo, ts('src/app/index.ts'), app, [`import Body from './blocks/Body.svelte'`])
+    app = imports(repo, ts('src/app/index.ts'), app, [`import { Body } from '@cella/org-body/app'`])
     app = bodyBlock(repo, ts('src/app/index.ts'), app)
     put(ts('src/app/index.ts'), app)
   } else {
@@ -319,19 +311,12 @@ END;
 SELECT cella.lets_fold('${F}:body:save', 1, '${F}.fold_body_save(jsonb)', '${F}');
 `
 
-const bodyModels = (F) => `import type { Canon } from '@cella/org-body/models'
-
-// A ${F}'s body, written by \`cella scaffold body ${F}\`: as its page reads
-// it, a Loro snapshot in base64, which the browser's editor opens, and its
-// canonical form, which the page draws until it does, null both where it
-// has none yet; and an editor's save of it, the merged snapshot as its
-// browser holds it, the hash of the saved body it merged, empty for
-// none, and who contributed since the last save, by address.
-
-export interface Bodied {
-  snapshot: string | null
-  canon: Canon | null
-}
+const bodyModels = (F) => `// A ${F}'s save of its body, written by \`cella scaffold body ${F}\`: the
+// merged snapshot as its browser holds it, the hash of the saved body it
+// merged, empty for none, and who contributed since the last save, by
+// address. The body itself, as the page reads it, is core body's own
+// shape (\`Bodied\`, \`@cella/org-body/models\`), which every slice with a
+// body shares.
 
 export interface BodySave {
   ${F}: string
@@ -393,8 +378,7 @@ export async function saveBody(input: BodySave, deps: Deps): Promise<Outcome<(ty
 `
 
 const bodyDrivers = (F) => `import type { Db } from '@cella/org-db'
-import { b64, type Canon } from '@cella/org-body/models'
-import type { Bodied } from '../models/body.ts'
+import { b64, type Bodied, type Canon } from '@cella/org-body/models'
 
 // A ${F}'s body as its page reads it: its snapshot and its canonical form.
 export async function bodied(db: Db, id: string): Promise<Bodied> {
@@ -453,130 +437,6 @@ export const withBody =
     const item = await read(db, id, query)
     return item && { ...item, ...(await bodied(db, id)) }
   }
-`
-
-const bodyState = (F, collection) => `import { onMount, untrack } from 'svelte'
-import { b64, canonical, createDoc, type Canon, type LoroDoc } from '@cella/org-body/models'
-import { LiveState } from '@cella/org-body/app'
-import { useWrites } from '@cella/org-ui'
-import type { Bodied } from '../models/body.ts'
-
-type Page = Bodied & { id: string }
-
-// A ${F}'s body in the browser: a Loro document made from the page's
-// snapshot as the body mounts, kept live over core body's session until
-// it unmounts, and saved by this browser through the ${F}'s \`save\` write,
-// signed by its device. When a write refreshes the page, its snapshot is
-// merged in, which Loro does without changing what is already there.
-export class BodyState {
-  readonly #page: () => Page
-  doc: LoroDoc | null = $state.raw(null)
-  live: LiveState | null = $state.raw(null)
-
-  constructor(page: () => Page) {
-    this.#page = page
-    const writes = useWrites()
-    onMount(() => {
-      const doc = createDoc()
-      const snapshot = this.#page().snapshot
-      if (snapshot) {
-        doc.import(b64.decode(snapshot))
-      }
-      const id = this.#page().id
-      const live = new LiveState(doc, {
-        live: () => \`/${collection}/\${encodeURIComponent(id)}/body/live\`,
-        save: (write, fields) => writes.send(write, fields, id, '${collection}'),
-      })
-      const stop = live.start()
-      this.doc = doc
-      this.live = live
-      return () => {
-        stop()
-        this.doc = null
-        this.live = null
-      }
-    })
-    $effect(() => {
-      const snapshot = this.#page().snapshot
-      if (snapshot) {
-        untrack(() => this.doc)?.import(b64.decode(snapshot))
-      }
-    })
-  }
-
-  // The body as it reads now: the live document's, which follows every
-  // edit that reaches this browser, or the page's until it holds one.
-  get canon(): Canon | null {
-    const live = this.live
-    if (!live || !this.doc) {
-      return this.#page().canon
-    }
-    void live.hash
-    return canonical(this.doc)
-  }
-}
-`
-
-const useBody = () => `import { createContext } from 'svelte'
-import type { Bodied } from '../models/body.ts'
-import { BodyState } from './BodyState.svelte.ts'
-
-const [get, set, has] = createContext<BodyState>()
-
-export function useBody(page: () => Bodied & { id: string }): BodyState {
-  if (has()) {
-    return get()
-  }
-  return set(new BodyState(page))
-}
-`
-
-const bodyBlockSvelte = (F) => `<script lang="ts">
-  import { Note, type Embeds } from '@cella/org-ui'
-  import { Editor, Reader } from '@cella/org-body/app'
-  import type { Bodied } from '../../models/body.ts'
-  import { useBody } from '../../hooks/useBody.ts'
-
-  // The ${F}'s body, its free-form content, edited together over core
-  // body's live session: every member with it open sees the others' edits
-  // as they make them, and each browser saves at a pause and on leaving.
-  // The server renders it to read; the editor takes it over once the
-  // session says this member may edit it, and one who may read the ${F}
-  // and not discuss it reads it as it changes. Over it, whether this
-  // member's edits are saved, and how a block is added.
-  let { data, embeds = {} }: { data: Bodied & { id: string; title: string }; id: string; embeds?: Embeds } = $props()
-
-  const body = useBody(() => data)
-  const canon = $derived(body.canon ?? { v: 1 as const, blocks: [] })
-  const state = $derived.by(() => {
-    const l = body.live
-    if (!l || !l.joined) {
-      return 'opening'
-    }
-    if (l.problem) {
-      return \`not saved: \${l.problem}\`
-    }
-    if (!l.writable) {
-      return 'read-only'
-    }
-    if (!l.online) {
-      return l.unsaved ? 'offline, edits wait' : 'offline'
-    }
-    return l.unsaved ? 'saving' : 'saved'
-  })
-  const note = $derived(
-    state === 'opening' ? 'Opening the body' : !body.live?.writable ? (body.live?.problem ?? 'Read-only: editing it needs discuss in its circle') : \`Edits \${state} · type / for blocks\`,
-  )
-</script>
-
-<div data-body={body.live?.writable ? 'edit' : 'read'} data-hash={body.live?.hash ?? ''} data-state={state}>
-  <Note text={note} />
-</div>
-{#if body.doc && body.live?.writable}
-  <Editor doc={body.doc} name={data.title} {embeds} />
-{:else}
-  <Reader {canon} label={data.title} {embeds} readonly={!!body.live?.joined} />
-{/if}
 `
 
 // ─── comments ───────────────────────────────────────────────────────────

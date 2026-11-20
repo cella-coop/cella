@@ -1,6 +1,5 @@
 import type { Db } from '@cella/org-db'
-import { b64, type Canon } from '@cella/org-body/models'
-import type { Bodied } from '../models/body.ts'
+import { b64, type Bodied, type Canon } from '@cella/org-body/models'
 
 // A project's body as its page reads it: its snapshot and its canonical form.
 export async function bodied(db: Db, id: string): Promise<Bodied> {

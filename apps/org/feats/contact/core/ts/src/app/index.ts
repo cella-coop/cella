@@ -1,7 +1,7 @@
 import { icons, type App } from '@cella/org-ui'
 import type { Contact } from '../models/contact.ts'
 import Client from './blocks/Client.svelte'
-import Body from './blocks/Body.svelte'
+import { Body } from '@cella/org-body/app'
 
 // The feat's client side: the contacts, with a view of the clients among
 // them, and a contact's page, which opens on its client role, then its

@@ -2,8 +2,19 @@ import { VersionVector, type LoroDoc } from 'loro-crdt'
 import { sha256 } from '@noble/hashes/sha2.js'
 import { bytesToHex } from '@noble/hashes/utils.js'
 import type { TreeID } from './blocks.ts'
+import type { Canon } from './canonical.ts'
 
 export type { LoroDoc }
+
+// A record's body, as its page reads it: a Loro snapshot in base64,
+// which the browser's editor opens, and its canonical form, which the
+// page draws until it does, null both where it has none yet. Every
+// slice that keeps a body reads it this way; its own save and saved
+// shapes, named by its collection, stay its own.
+export interface Bodied {
+  snapshot: string | null
+  canon: Canon | null
+}
 
 // Where a quote sits: the block holding it and Loro cursors at its two
 // ends, each as Loro encodes it, in base64. A cursor names a character,

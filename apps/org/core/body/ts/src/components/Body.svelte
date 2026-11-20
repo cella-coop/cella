@@ -1,19 +1,26 @@
 <script lang="ts">
   import { Note, type Embeds } from '@cella/org-ui'
-  import { Editor, Reader } from '@cella/org-body/app'
-  import type { Page } from '../../models/task.ts'
-  import { useBody } from '../../hooks/useBody.ts'
+  import Editor from './Editor.svelte'
+  import Reader from './Reader.svelte'
+  import { useBody } from '../hooks/useBody.ts'
+  import type { Bodied } from '../models/index.ts'
 
-  // The task's body, its free-form content, edited together over core
-  // body's live session: every member with the task open sees the
-  // others' edits as they make them, and each browser saves at a pause
-  // and on leaving. The server renders it to read; the editor takes it
-  // over once the session says this member may edit it, and one who may
-  // read the task and not discuss it reads it as it changes. Over it,
+  // The record's body, its free-form content, edited together over core
+  // body's live session: every member with it open sees the others'
+  // edits as they make them, and each browser saves at a pause and on
+  // leaving. The server renders it to read; the editor takes it over
+  // once the session says this member may edit it, and one who may
+  // read the record and not discuss it reads it as it changes. Over it,
   // whether this member's edits are saved, and how a block is added.
-  let { data, embeds = {} }: { data: Page; id: string; embeds?: Embeds } = $props()
+  // Every slice with a body mounts this one, naming only its own
+  // collection; its commands and schema stay the slice's own.
+  let {
+    data,
+    collection,
+    embeds = {},
+  }: { data: Bodied & { id: string; title: string }; id: string; collection: string; embeds?: Embeds } = $props()
 
-  const body = useBody(() => data)
+  const body = useBody(() => collection, () => data)
   const canon = $derived(body.canon ?? { v: 1 as const, blocks: [] })
   const state = $derived.by(() => {
     const l = body.live
@@ -34,7 +41,9 @@
   // The empty line already hints how a block is added; this line only
   // says whether the edit stood, so it says that alone, dimmer, by the
   // box it stands for.
-  const banner = $derived(state === 'opening' ? 'Opening the body' : !body.live?.writable ? (body.live?.problem ?? 'Read-only: editing it needs discuss in its circle') : null)
+  const banner = $derived(
+    state === 'opening' ? 'Opening the body' : !body.live?.writable ? (body.live?.problem ?? 'Read-only: editing it needs discuss in its circle') : null,
+  )
   const saved = $derived(`Edits ${state}`)
 </script>
 

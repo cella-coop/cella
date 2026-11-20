@@ -4,7 +4,7 @@ import { status } from '../models/status.ts'
 import Capture from './blocks/Capture.svelte'
 import Claim from './blocks/Claim.svelte'
 import Status from './blocks/Status.svelte'
-import Body from './blocks/Body.svelte'
+import { Body } from '@cella/org-body/app'
 
 const category = (e: Expense) => categories.find((c) => c.code === e.category)?.label ?? e.category
 

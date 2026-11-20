@@ -7,7 +7,7 @@ import Statement from './blocks/Statement.svelte'
 import Margins from './blocks/Margins.svelte'
 import Federation from './blocks/Federation.svelte'
 import Custom from './blocks/Custom.svelte'
-import Body from './blocks/Body.svelte'
+import { Body } from '@cella/org-body/app'
 
 // The spans or years a page moves between: a statement's years and
 // quarters, and the months of the year its span is in; the federation

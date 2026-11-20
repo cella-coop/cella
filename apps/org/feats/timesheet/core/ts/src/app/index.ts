@@ -3,7 +3,7 @@ import type { Detail, Entry, Listed, State } from '../models/timesheet.ts'
 import Log from './blocks/Log.svelte'
 import Period from './blocks/Period.svelte'
 import Sheet from './blocks/Sheet.svelte'
-import Body from './blocks/Body.svelte'
+import { Body } from '@cella/org-body/app'
 
 const tones: Record<State, Tone> = { open: 'neutral', submitted: 'accent', approved: 'positive' }
 const kind = (e: Entry) => (e.billable ? 'billable' : 'internal')

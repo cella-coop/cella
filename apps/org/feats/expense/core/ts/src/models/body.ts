@@ -1,16 +1,8 @@
-import type { Canon } from '@cella/org-body/models'
-
-// A record's body, as its page reads it: a Loro snapshot in base64,
-// which the browser's editor opens, and its canonical form, which the
-// page draws until it does, null both where it has none yet; and an
-// editor's save of it, the merged snapshot as its browser holds it, the
-// hash of the saved body it merged, empty for none, and who contributed
-// since the last save, by address.
-
-export interface Bodied {
-  snapshot: string | null
-  canon: Canon | null
-}
+// A expense's save of its body: the merged snapshot as its browser holds
+// it, the hash of the saved body it merged, empty for none, and who
+// contributed since the last save, by address. The body itself, as the
+// page reads it, is core body's own shape (`Bodied`,
+// `@cella/org-body/models`), which every slice with a body shares.
 
 export interface BodySave {
   expense: string

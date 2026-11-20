@@ -4,7 +4,7 @@ import { status } from '../models/status.ts'
 import Agenda from './blocks/Agenda.svelte'
 import Create from './blocks/Create.svelte'
 import Settle from './blocks/Settle.svelte'
-import Body from './blocks/Body.svelte'
+import { Body } from '@cella/org-body/app'
 
 // A meeting's day and time, as people say it.
 export const when = (m: Meeting) => `${date(m.at)}, ${m.at.slice(11, 16)}`

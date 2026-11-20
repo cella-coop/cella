@@ -1,7 +1,7 @@
 import { icons, open, within, type App } from '@cella/org-ui'
 import { status } from '../models/status.ts'
 import { priorities, statuses, type Page, type Priority, type Task } from '../models/task.ts'
-import Body from './blocks/Body.svelte'
+import { Body } from '@cella/org-body/app'
 import Comments from './blocks/Comments.svelte'
 import Create from './blocks/Create.svelte'
 import Complete from './blocks/Complete.svelte'

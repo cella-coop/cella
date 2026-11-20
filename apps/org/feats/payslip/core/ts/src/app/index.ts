@@ -3,7 +3,7 @@ import { states, tones, type Payslip } from '../models/payslip.ts'
 import Prepare from './blocks/Prepare.svelte'
 import Run from './blocks/Run.svelte'
 import Slip from './blocks/Slip.svelte'
-import Body from './blocks/Body.svelte'
+import { Body } from '@cella/org-body/app'
 
 // The feat's client side: every payslip in a table, with a dashboard of
 // the payroll by month; preparing a month's run; and a payslip's page,

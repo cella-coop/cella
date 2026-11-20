@@ -567,9 +567,14 @@ eachBrowser((name, launch) => {
           await page.waitForLoadState('networkidle')
           assert.equal(await page.locator('h1.record').textContent().then((t) => t?.trim()), renamed, `${at}: the circle's page names it so`)
           // Seen through it, the selector names the circle as it is now.
+          // The native form's POST redirects before it draws the lensed
+          // page, so its name arrives after `networkidle` settles: wait
+          // for the selector's own text, not a fixed pause.
           await page.getByRole('button', { name: 'View as this circle' }).click()
           await page.waitForLoadState('networkidle')
-          assert.equal(await page.locator('.coop .name').textContent().then((t) => t?.trim()), renamed, `${at}: the coop selector names it so`)
+          const coopName = page.locator('.coop .name')
+          await coopName.filter({ hasText: renamed }).waitFor()
+          assert.equal(await coopName.textContent().then((t) => t?.trim()), renamed, `${at}: the coop selector names it so`)
           await page.screenshot({ path: `${shots}/amended-${name}-${scheme}.png` })
           assert.deepEqual(errors, [], `${at}: the page threw nothing`)
         } finally {

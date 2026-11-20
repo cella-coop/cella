@@ -85,6 +85,7 @@
     data-drag-id={group ? row.id : undefined}
     data-drag-from={from}
     data-drag-handle={group ? '' : undefined}
+    draggable={group ? false : undefined}
     aria-roledescription={group ? 'draggable card' : undefined}
   >
     {@render body()}

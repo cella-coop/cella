@@ -100,6 +100,16 @@ export const sortable =
       e.stopPropagation()
     }
 
+    // A handle that is a link, or holds one or an image, would start the
+    // browser's own drag, which cancels the pointer's and snaps the item
+    // back; the pointer moves it instead.
+    function unnative(e: DragEvent) {
+      const t = e.target as Element
+      if (t.closest?.('[data-drag-handle]') && node.contains(t)) {
+        e.preventDefault()
+      }
+    }
+
     function onpointerdown(e: PointerEvent) {
       const handle = (e.target as Element).closest('[data-drag-handle]')
       if (!handle || !node.contains(handle) || !ours(handle) || e.button !== 0 || drag.lifted) {
@@ -248,12 +258,14 @@ export const sortable =
     }
 
     node.addEventListener('pointerdown', onpointerdown)
+    node.addEventListener('dragstart', unnative)
     node.addEventListener('keydown', onkeydown)
     node.addEventListener('focusout', onfocusout)
     window.addEventListener('keydown', onwindowkey, { capture: true })
     return () => {
       finish()
       node.removeEventListener('pointerdown', onpointerdown)
+      node.removeEventListener('dragstart', unnative)
       node.removeEventListener('keydown', onkeydown)
       node.removeEventListener('focusout', onfocusout)
       window.removeEventListener('keydown', onwindowkey, { capture: true })

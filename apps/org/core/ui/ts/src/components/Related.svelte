@@ -52,9 +52,12 @@
   /* Each line as the drawer's Properties draw theirs: one height, its
      icon in a column of one width, bleeding past the heading's edge by
      its padding so its hover fill does while its text lines up. */
+  /* One column no wider than the drawer, so a long label or note ends in
+     an ellipsis there rather than widen the row past it. */
   .related {
     list-style: none;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 2px;
     margin: 0 calc(-1 * var(--space-2));
     padding: 0;
@@ -109,6 +112,7 @@
     font-variant-numeric: tabular-nums;
   }
   .sub {
+    flex: 0 1 auto;
     max-width: 45%;
     overflow: hidden;
     text-overflow: ellipsis;

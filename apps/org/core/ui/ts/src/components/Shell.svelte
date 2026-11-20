@@ -14,6 +14,7 @@
   import Plus from 'phosphor-svelte/lib/Plus'
   import SquaresFour from 'phosphor-svelte/lib/SquaresFour'
   import Sun from 'phosphor-svelte/lib/Sun'
+  import X from 'phosphor-svelte/lib/X'
   import type { Jump, Nav, Person, Theme } from '../models/view.ts'
   import { listed, runs } from '../models/arrange.ts'
   import type { Outcome as Done } from '../models/outcome.ts'
@@ -271,6 +272,11 @@
               <a href={f.href} class:on aria-current={on ? 'page' : undefined}>
                 <Icon icon={f.icon ? mark(f.icon) : (owner(f.collection) ?? mark())} /><span class="title">{f.name}</span>
               </a>
+              <!-- Unpinned from here as from its View panel, shown while its
+                   row is hovered or holds focus (the operator, 20 Nov). -->
+              <button type="button" class="unpin" aria-label="Unpin {f.name}" title="Unpin" onclick={() => pinned.unpin(f.collection, f.view)}>
+                <Icon icon={X} size="0.85em" />
+              </button>
             </li>
           {/each}
         </ul>
@@ -408,6 +414,35 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  /* A pin's ✕ at its row's end, over its link, seen while the row is
+     hovered or focus is in it; the name ends short of it then. */
+  .pinned li {
+    position: relative;
+  }
+  .unpin {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: var(--space-1);
+    display: inline-flex;
+    align-items: center;
+    padding: 0 var(--space-1);
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    opacity: 0;
+  }
+  .unpin:hover {
+    color: var(--text);
+  }
+  .pinned li:hover .unpin,
+  .pinned li:focus-within .unpin {
+    opacity: 1;
+  }
+  .pinned li:hover .title,
+  .pinned li:focus-within .title {
+    padding-inline-end: var(--space-4);
   }
   /* One column no wider than the sidebar: a long name truncates rather
      than widen it. */

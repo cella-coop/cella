@@ -1,3 +1,4 @@
+import type { Permission } from '@cella/org-actions'
 import type { Db } from '@cella/org-db'
 import { sentences } from '@cella/org-policy'
 import type { Held, Seat } from '@cella/org-circle/models'
@@ -96,4 +97,19 @@ export async function may(db: Db, actor: string, power: string, circle: string):
     [actor, power, circle],
   )
   return rows[0]?.may ?? false
+}
+
+// Why the reader may not make each write on a record of a circle, before
+// they make it, in one read: circle-person's judgement of each op, the
+// guard's own function with no amount (`circle_person.judged`), for the
+// ops it refuses alone.
+export async function judge(db: Db, ops: Permission[], circle: string | null): Promise<Partial<Record<Permission, string>>> {
+  if (!ops.length) {
+    return {}
+  }
+  const { rows } = await db.query<{ op: Permission; reason: string | null }>(
+    'SELECT o AS op, circle_person.judged(o, $2) AS reason FROM unnest($1::text[]) o',
+    [ops, circle],
+  )
+  return Object.fromEntries(rows.flatMap((r) => (r.reason ? [[r.op, r.reason]] : [])))
 }

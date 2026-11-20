@@ -3,7 +3,7 @@ import { devices } from '@cella/org-person/api'
 import { accept, erase, invite, link, withdraw } from '../handlers/index.ts'
 import { first, invitation, links, member, memberships } from '../drivers/member.ts'
 import { inbox } from '../drivers/inbox.ts'
-import { may } from '../drivers/seat.ts'
+import { judge, may } from '../drivers/seat.ts'
 import { members as importing } from './imports.ts'
 import { contract } from './contract.ts'
 
@@ -19,13 +19,16 @@ import { contract } from './contract.ts'
 // person's invitation while they are invited; and members imported from
 // another tool's list, each invited, to be given a link from their page.
 // Whether a person holds a power over a circle's records, which a live
-// body's session asks as its peers edit, is the seats' mandates', `may`.
+// body's session asks as its peers edit, is the seats' mandates', `may`;
+// and why the reader may not make the writes a page offers, before they
+// make them, circle-person's judgement, `judges`.
 export const slice: Slice = {
   name: 'membership',
   queries: contract,
   imports: { members: importing },
   joins: { op: 'membership:member:accept', invited: invitation, accept },
   may,
+  judges: judge,
   extends: {
     people: {
       list: memberships,

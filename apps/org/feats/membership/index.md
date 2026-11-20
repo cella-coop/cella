@@ -1,6 +1,6 @@
 +++
 title = "Membership"
-updated = 2026-11-19
+updated = 2026-11-20
 +++
 
 A person's membership, from invited to exited, with the shares they hold.
@@ -203,7 +203,12 @@ Its slice serves the shell `may`, whether a person holds a power over a
 circle's records on the verdict date, by a mandate or a right, as
 circle-person's guard asks it, which core body's live session asks as
 its editors edit ([the live
-session](../../core/body/index.md#the-live-session)).
+session](../../core/body/index.md#the-live-session)); and `judges`, why
+the reader may not make each of the writes a record's page offers,
+before they make them, circle-person's `circle_person.judged` of every
+op in one read, the refused alone, which the page draws unavailable
+with the reason ([who may
+act](../../core/grafts/circle-person/index.md#who-may-act)).
 Its SQL is `010-standing.sql`; its part of the shell, `membership/seats`,
 is `api/seats.ts` and `app/seats.ts`.
 

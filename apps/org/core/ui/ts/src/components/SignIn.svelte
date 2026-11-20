@@ -42,6 +42,8 @@
   // another browser leased reads `taken`, drawn disabled and greyed,
   // until they are freed. A notice, where the page has one, says in a
   // sentence why this browser is here again, under the coop's name.
+  // In a demo, a browser holding no key is pointed at that list, and
+  // Link device stays quiet, so a newcomer is never led to it first.
   let {
     scope,
     name,
@@ -130,7 +132,11 @@
       <div class="empty">
         <h1 id="in" class="title">This browser isn't signed in to {name} yet</h1>
       </div>
-      <p class="hint">Open the invitation link you were sent, or link this browser from a device you already use.</p>
+      {#if demo && fixtures.length}
+        <p class="hint">To look around, pick anyone from the Demo members list: no invitation or device is needed.</p>
+      {:else}
+        <p class="hint">Open the invitation link you were sent, or link this browser from a device you already use.</p>
+      {/if}
     {:else}
       <!-- Which keys this browser holds only its script can read: until
            it has, the page the server sends says nothing of them. -->
@@ -146,7 +152,7 @@
              though both are quiet (`data-run="group"`, `Button`). -->
         <span class="others" data-run="group">
           <span data-link data-through>
-            <Button tone={pick || !state.loaded ? 'quiet' : 'primary'} onclick={() => (state.opened = true)}>
+            <Button tone={pick || !state.loaded || demo ? 'quiet' : 'primary'} onclick={() => (state.opened = true)}>
               <Icon icon={Link} size="1rem" />Link device
             </Button>
           </span>

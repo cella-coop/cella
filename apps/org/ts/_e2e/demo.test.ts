@@ -1,7 +1,8 @@
 // A demo build, end to end on a seeded Lanterne: the built server outside
 // dev mode with `CELLA_DEMO`, as `cella serve --prod --demo` and the NixOS
 // module's demo option run it. Its sign-in offers Lanterne's fixture
-// members, under a heading naming them the demo’s, and a member signed in with
+// members, under a heading naming them the demo’s, to which a newcomer's
+// card points, its Link device quiet; and a member signed in with
 // their TEST-ONLY device finds the banner on their pages and writes
 // through the notary. The same build without it, a scope's server, offers
 // no one and wears no banner. A visitor's copy, as `cella demo serve`
@@ -128,6 +129,24 @@ it('a successful Copy invite leaves the page where it is and shows Copied, never
     assert.equal(page.url(), `${shell.base}/inbox`, 'the click never followed the link')
     const clipboard = await page.evaluate(() => navigator.clipboard.readText())
     assert.match(clipboard, new RegExp(`/_demo/join#${join}$`), 'the room’s own link, join code and all, is what was copied')
+  } finally {
+    await browser.close()
+  }
+})
+
+// browsers: Chromium alone: what it proves is the page the shell draws.
+it('a newcomer to a demo is pointed at the Demo members list, Link device kept quiet', async () => {
+  await shell.start('2026-10-24', { CELLA_DEMO: '1', CELLA_DEMO_IDLE: '7200' })
+  const browser = await chromium.launch()
+  try {
+    const context = await browser.newContext({ extraHTTPHeaders: { 'x-forwarded-proto': 'http', 'x-cella-browser': 'e2e-newcomer' } })
+    const page = await context.newPage()
+    await page.goto(`${shell.base}/sign-in`)
+    await page.getByText('pick anyone from the Demo members list').waitFor()
+    const link = page.getByRole('button', { name: 'Link device' })
+    assert.match((await link.getAttribute('class')) ?? '', /\bquiet\b/, 'Link device is quiet')
+    assert.doesNotMatch((await link.getAttribute('class')) ?? '', /\bprimary\b/, 'and never the primary button')
+    assert.equal(await page.getByText('Open the invitation link you were sent, or link this browser').count(), 0, 'the card says nothing of invitations')
   } finally {
     await browser.close()
   }

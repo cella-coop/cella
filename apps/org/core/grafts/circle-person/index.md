@@ -1,6 +1,6 @@
 +++
 title = "circle-person"
-updated = 2026-11-19
+updated = 2026-11-20
 +++
 
 Core's graft joining the circles to the people, two of org's core feats
@@ -143,7 +143,26 @@ and removing one changes no other slice's authorization.
   write with no power, or whose power is in `motion.cites`, a
   collective mandate's, gets no such guard. No slice checks a scope
   again: a project's, a month's and a meeting's circle are read here,
-  from the payload their writes name.
+  from the payload their writes name. What it answers once the payload
+  names its amount is `circle_person.refused(actor, power, cents, about,
+  day)`: null where `may` or `entitled` grants it, else `why_not`'s
+  reason.
+- `circle_person.judged(op, about)`: the same judgement asked before the
+  write, as a guard refuses as early as its terms are known ([early and
+  actionable](../../../../../_corpus/doc/architecture.md#early-and-actionable)):
+  what `empowered` would answer the reader (`cella.reader()`) for the
+  op over a record of the circle `about` on the verdict date, by
+  `refused`, with no amount, since what an amount exceeds is judged once
+  it is given; null where it would let it, or where no such guard
+  attaches to the op. `about` null asks of no record, so a record naming
+  no circle is judged by whether the reader holds the power at all. It
+  runs as its owner, reading the seats, the mandates and what bars a
+  seat whole as the guard does as the guards role, and judges the reader
+  alone: a scalar, it says only what making the write would say to
+  them. A record's page asks it of every write its collection offers in
+  one read (`Judge`, which membership serves), and draws a write that is
+  its one button and refused unavailable, with the reason as its tooltip
+  ([the UI core](../../ui/index.md)).
 
 Its tests are the membership feat's (`counts.test.ts`, `may.test.ts`,
 `holds.test.ts`, `rights.test.ts`, `why-not.test.ts`), which run it with

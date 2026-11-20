@@ -280,6 +280,20 @@ BEGIN ATOMIC
   END;
 END;
 
+-- Why a person may not use a power over a record of the circle `about`
+-- on a day, for an amount: NULL where a seat's mandate (`may`) or a right
+-- (`entitled`) grants it, else the reason `why_not` gives. The guard asks
+-- it of a write as it is made (`empowered`), and a page of the writes it
+-- offers before they are made (`judged`), so both judge by this one
+-- function.
+CREATE FUNCTION circle_person.refused(actor text, power text, cents bigint, about text, day date) RETURNS text
+LANGUAGE sql STABLE
+RETURN CASE
+  WHEN circle_person.may(refused.actor, refused.power, refused.cents, refused.about, refused.day)
+    OR circle_person.entitled(refused.actor, refused.power, refused.cents, refused.day) THEN NULL
+  ELSE circle_person.why_not(refused.actor, refused.power, refused.cents, refused.about, refused.day)
+END;
+
 -- Every op with a power in cella.power — the actor holds it on the verdict
 -- date, by a seat's mandate whose scope covers the owning circle of the
 -- record the write concerns, or by a right, within the mandate's limit
@@ -294,9 +308,7 @@ LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
     WHEN w.amount IS NOT NULL AND w.cents IS NULL THEN w.op || ' names its amount in ' || w.amount || ', which the payload lacks'
-    WHEN circle_person.may(cella.actor(), w.power, w.cents, w.about, cella.verdict_date())
-      OR circle_person.entitled(cella.actor(), w.power, w.cents, cella.verdict_date()) THEN NULL
-    ELSE circle_person.why_not(cella.actor(), w.power, w.cents, w.about, cella.verdict_date())
+    ELSE circle_person.refused(cella.actor(), w.power, w.cents, w.about, cella.verdict_date())
   END
   FROM (
     SELECT p.op, p.power, p.amount, (payload ->> p.amount)::bigint AS cents,
@@ -305,6 +317,31 @@ BEGIN ATOMIC
     WHERE p.op = cella.action()
   ) w;
 END;
+
+-- Why the reader may not make a write over a record of the circle
+-- `about`, asked before they make it: what `empowered` would answer at a
+-- verdict on the verdict date, by `refused`, with no amount, since what an
+-- amount would exceed is judged once the amount is given; NULL where it
+-- would let it, or where no such guard attaches to the op, as to a write
+-- with no power or a collective mandate's. `about` null asks of no
+-- record, as `may` does, so a record naming no circle is judged by whether
+-- the reader holds the power at all. It runs as its owner, so it reads the
+-- seats, the mandates and what bars a seat whole, as the guard reads them
+-- as the guards role, and it judges the reader alone (`cella.reader()`):
+-- a scalar, it says only what making the write would say to them.
+CREATE FUNCTION circle_person.judged(op text, about text) RETURNS text
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = pg_catalog, pg_temp
+BEGIN ATOMIC
+  SELECT circle_person.refused(cella.reader(), p.power, NULL, judged.about, cella.verdict_date())
+  FROM cella.power p
+  WHERE p.op = judged.op
+    AND cella.reader() IS NOT NULL
+    AND EXISTS (SELECT FROM cella.guard g WHERE g.op = p.op AND g.fn = 'circle_person.empowered(jsonb)'::regprocedure);
+END;
+
+REVOKE EXECUTE ON FUNCTION circle_person.judged(text, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION circle_person.judged(text, text) TO cella_app;
 
 -- The guard attaches to every op with a power: those core's feats
 -- registered before this graft migrated, and every one registered after.

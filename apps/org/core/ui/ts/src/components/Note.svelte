@@ -1,12 +1,21 @@
 <script lang="ts">
+  import type { HTMLAttributes } from 'svelte/elements'
+
   // A line in a block that says something: a state, a reason nothing is
   // offered. `subtle` and `end` dim it further and set it at its corner,
   // as a save indicator stands by what it saves rather than over it.
-  // Where there is nothing to show, `Empty` says so instead.
-  let { text, subtle = false, end = false }: { text: string; subtle?: boolean; end?: boolean } = $props()
+  // Where there is nothing to show, `Empty` says so instead. Its
+  // attributes pass through, as a draft's own state a slice reads off
+  // it would.
+  let {
+    text,
+    subtle = false,
+    end = false,
+    ...rest
+  }: { text: string; subtle?: boolean; end?: boolean } & HTMLAttributes<HTMLParagraphElement> = $props()
 </script>
 
-<p class="note" class:subtle class:end>{text}</p>
+<p class="note" class:subtle class:end {...rest}>{text}</p>
 
 <style>
   .note {

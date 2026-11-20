@@ -1,4 +1,11 @@
+import type { Tone } from '@cella/org-ui'
 import type { Anchor, Canon, Fragment } from '@cella/org-body/models'
+
+// A version adopted is positive, binding; one not is neutral, a draft
+// still subject to change.
+export function tone(adopted: boolean): Tone {
+  return adopted ? 'positive' : 'neutral'
+}
 
 // A Loro frontier: the last operation of each peer the document includes.
 export interface OpId {

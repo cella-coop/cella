@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Conversation, Floating, Form, Hidden, Icon, icons, Message, Note, Remark, Rich, RichField } from '@cella/org-ui'
+  import { Button, Composer, Conversation, Floating, Icon, icons, Message, Note, Remark, Rich } from '@cella/org-ui'
   import type { Page } from '../../models/document.ts'
   import { useQuote } from '../../hooks/useQuote.ts'
 
@@ -20,16 +20,14 @@
 </script>
 
 {#each comments as c (c.id)}
-  <div data-thread={c.id} data-resolved={c.resolved ? 'true' : ''}>
-    <Conversation resolved={c.resolved ? 'Resolved' : null}>
-      <Message author={c.author} at={c.at}>
-        {#if c.quote}
-          <Remark on="On {c.version}" quote={c.quote} />
-        {/if}
-        <Rich text={c.text} />
-      </Message>
-    </Conversation>
-  </div>
+  <Conversation id={c.id} resolved={c.resolved ? 'Resolved' : null}>
+    <Message author={c.author} at={c.at}>
+      {#if c.quote}
+        <Remark on="On {c.version}" quote={c.quote} />
+      {/if}
+      <Rich text={c.text} />
+    </Message>
+  </Conversation>
 {/each}
 {#if !latest}
   <Note text="Save a version to comment on it" />
@@ -41,13 +39,14 @@
       {/key}
     {/if}
   {/snippet}
-  <div data-box>
-    <Form action="comment" bare>
-      <Hidden name="version" value={latest.id} />
-      <Hidden name="quote" value={quote.quote ?? ''} />
-      <RichField label="Comment" name="text" placeholder="Comment on the document, or select text in it to quote" send="Comment" head={quote.quote ? attached : undefined} />
-    </Form>
-  </div>
+  <Composer
+    action="comment"
+    hidden={{ version: latest.id, quote: quote.quote ?? '' }}
+    label="Comment"
+    placeholder="Comment on the document, or select text in it to quote"
+    send="Comment"
+    head={quote.quote ? attached : undefined}
+  />
   {#if quote.at}
     <Floating x={quote.at.x} y={quote.at.y} label="Comment on the selection" role="toolbar">
       <Button aria-label="Quote the selection" onclick={() => quote.attach()}><Icon icon={icons.ChatCircle} /> Comment</Button>

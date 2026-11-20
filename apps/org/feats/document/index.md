@@ -1,6 +1,6 @@
 +++
 title = "Document"
-updated = 2026-11-19
+updated = 2026-11-20
 +++
 
 The coop's texts: statutes, internal rules, rate cards, policies and
@@ -349,6 +349,15 @@ mounted over the document's draft with its `edit` action and its live
 stream; this feat anchors its comments to quotes, and the editor
 highlights them where their cursors still find them. `Reader`, core's
 too, draws a version read-only on a motion's page.
+
+Its pages and blocks draw only the UI core's and core body's own
+components: a thread is the UI core's `Conversation`, by its own `id`
+rather than a wrapping div naming it, and its reply and comment boxes
+are the UI core's `Composer`; no raw element, no `class=`, no
+`phosphor-svelte` and no `Intl` of its own. Where a tone is drawn (a
+version's Binding, a document's Adopted), it is `document`'s own tone
+map (`tone`, `models/document.ts`): adopted is positive, binding; a
+draft still subject to change is neutral.
 
 ## Tests
 

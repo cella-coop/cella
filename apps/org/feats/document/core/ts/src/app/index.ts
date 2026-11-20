@@ -1,5 +1,5 @@
 import { icons, short, type App } from '@cella/org-ui'
-import type { Listed, Page } from '../models/document.ts'
+import { tone, type Listed, type Page } from '../models/document.ts'
 import Comment from './blocks/Comment.svelte'
 import Create from './blocks/Create.svelte'
 import Draft from './blocks/Draft.svelte'
@@ -29,7 +29,7 @@ export const app: App = {
             kind: 'badge',
             role: 'meta',
             value: (d: Listed) => d.adopted,
-            tone: (d: Listed) => (d.adopted && d.adopted !== 'not adopted' ? 'positive' : 'neutral'),
+            tone: (d: Listed) => tone(!!d.adopted),
           },
         ],
         // Each circle's own texts, the latest edited first.
@@ -42,7 +42,7 @@ export const app: App = {
         // Its versions, updates and comments are counted by its Versions
         // tab and its Activity, so it keeps no figures.
         properties: (d: Page) => [
-          { label: 'Adopted', value: d.adopted ?? 'not adopted', kind: 'badge', tone: d.adopted ? 'positive' : 'neutral', lead: d.adopted ? 'adopted' : undefined },
+          { label: 'Adopted', value: d.adopted ?? 'not adopted', kind: 'badge', tone: tone(!!d.adopted), lead: d.adopted ? 'adopted' : undefined },
           { label: 'Draft hash', value: short(d.hash, 16), kind: 'mono', glyph: icons.Fingerprint, lead: 'draft' },
         ],
         activity: (d: Page) => [

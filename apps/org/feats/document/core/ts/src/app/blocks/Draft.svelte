@@ -34,16 +34,14 @@
     return s.waiting ? 'saving' : 'saved'
   })
 </script>
-  {#if data.generated}
-    <Note text="Generated from the policies of {data.generated} at each adoption · {data.adopted ? `adopted as ${data.adopted}` : 'not adopted'} · not edited by hand" subtle end />
-    <Reader canon={data.draft} label={data.title} {embeds} />
+{#if data.generated}
+  <Note text="Generated from the policies of {data.generated} at each adoption · {data.adopted ? `adopted as ${data.adopted}` : 'not adopted'} · not edited by hand" subtle end />
+  <Reader canon={data.draft} label={data.title} {embeds} />
+{:else}
+  <Note text="Draft · {stands} · edits {state}" subtle end data-sync={draft.sync?.online ? 'live' : 'off'} data-hash={hash} data-state={state} />
+  {#if draft.doc}
+    <Editor doc={draft.doc} name={data.title} {anchors} {embeds} />
   {:else}
-    <div data-sync={draft.sync?.online ? 'live' : 'off'} data-hash={hash} data-state={state}>
-      <Note text="Draft · {stands} · edits {state}" subtle end />
-    </div>
-    {#if draft.doc}
-      <Editor doc={draft.doc} name={data.title} {anchors} {embeds} />
-    {:else}
-      <Reader canon={data.draft} label={data.title} {embeds} readonly={false} />
-    {/if}
+    <Reader canon={data.draft} label={data.title} {embeds} readonly={false} />
   {/if}
+{/if}

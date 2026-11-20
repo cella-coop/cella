@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Section, short, Table, type Column } from '@cella/org-ui'
-  import type { Page, Version } from '../../models/document.ts'
+  import { tone, type Page, type Version } from '../../models/document.ts'
 
   // The saved versions, each named by its canonical hash, the adopted one
   // marked. The comments on them are the page's Activity.
@@ -10,7 +10,7 @@
     { key: 'n', label: 'Version', kind: 'title', value: (v) => v.id },
     { key: 'saved', label: 'Saved', kind: 'date', value: (v) => v.saved },
     { key: 'hash', label: 'Hash', kind: 'mono', value: (v) => short(v.hash, 16) },
-    { key: 'adopted', label: 'Binding', kind: 'badge', value: (v) => (v.adopted ? 'adopted' : null), tone: () => 'positive' },
+    { key: 'adopted', label: 'Binding', kind: 'badge', value: (v) => (v.adopted ? 'adopted' : null), tone: (v) => tone(v.adopted) },
   ]
 </script>
 

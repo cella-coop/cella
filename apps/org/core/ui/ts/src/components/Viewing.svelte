@@ -1,7 +1,6 @@
 <script lang="ts">
   import Rows from 'phosphor-svelte/lib/Rows'
   import TableIcon from 'phosphor-svelte/lib/Table'
-  import ChartBar from 'phosphor-svelte/lib/ChartBar'
   import SquaresFour from 'phosphor-svelte/lib/SquaresFour'
   import Kanban from 'phosphor-svelte/lib/Kanban'
   import CalendarDots from 'phosphor-svelte/lib/CalendarDots'
@@ -10,7 +9,7 @@
   import PushPin from 'phosphor-svelte/lib/PushPin'
     import type { Column } from '../models/view.ts'
   import { spans } from '../models/calendar.ts'
-  import { arranged, groupable, laned, type Custom, type Field, type Layout, type Pin, type Result, type Spec, type Widget } from '../models/query.ts'
+  import { arranged, groupable, laned, type Custom, type Field, type Layout, type Pin, type Spec } from '../models/query.ts'
   import { marks } from '../marks.ts'
   import { useCollection } from '../hooks/useCollection.ts'
   import { useShell } from '../hooks/useShell.ts'
@@ -26,16 +25,14 @@
   import Popover from './Popover.svelte'
   import Segmented from './Segmented.svelte'
   import Select from './Select.svelte'
-  import Widgets from './Widgets.svelte'
 
   // The drawer's View panel, of one shape for every collection, as
   // Linear's display menu: the layout on top, then the same rows in the
-  // same order, each a label and a dropdown, Group by, Order by and
-  // Display, a popover of what is shown, and Circles, whether the view
-  // reads the lens's circle or every circle the reader reads; then, on one of
-  // the viewer's own, its name and its removal; the pin of the open view
-  // under Pinned is an icon in the corner. Dashboard is not a layout it
-  // offers. Filtering, and Save, are the filter bar's,
+  // same order, each a label and a dropdown, Group by and Order by, then
+  // Fields, what is shown, and Circles, whether the view reads the lens's
+  // circle or every circle the reader reads; then, on one of the viewer's
+  // own, its name and its removal; the pin of the open view under Pinned
+  // is an icon in the corner. Filtering, and Save, are the filter bar's,
   // on the line above the collection (`FilterBar`). What the collection
   // offers lives only inside the dropdowns and popovers, and a row the
   // layout has no use for is disabled, never dropped. A change hands the
@@ -47,7 +44,6 @@
     columns,
     titled,
     values,
-    dashboard,
     shown,
     choices,
     grouped,
@@ -70,11 +66,10 @@
     fields: Field[]
     columns: Column[]
     titled: Column
-    // Each field's values, over every row: a dashboard widget's choices
-    // over an enumeration (the filter bar reads the same values for its
-    // own conditions).
+    // Each field's values, over every row, which say what a view may
+    // group by (the filter bar reads the same values for its own
+    // conditions).
     values: Record<string, string[]>
-    dashboard: { custom: boolean; widgets: Widget[]; results: Result[]; errors: string[] } | null
     // The fields the layout shows, a list's or its cards', and
     // those Display offers; and the board's enumeration, person or circle.
     shown: Column[]
@@ -117,8 +112,6 @@
   const groups = $derived(fields.filter((f) => groupable(f, values[f.key] ?? [])))
   const lanes = $derived(fields.filter((f) => laned(f, values[f.key] ?? [])))
   const dates = $derived(fields.filter((f) => f.type === 'date'))
-  // Dashboard is not offered; a view already laid out as one keeps it
-  // shown, and keeps rendering as it does.
   // A board only where a field is one it groups by, an enumeration, a
   // person or a circle, a calendar only where one is a date.
   const layouts: { id: Layout; label: string; icon: typeof Rows }[] = $derived(
@@ -128,8 +121,7 @@
       { id: 'gallery' as const, label: 'Gallery', icon: SquaresFour },
       { id: 'board' as const, label: 'Board', icon: Kanban },
       { id: 'calendar' as const, label: 'Calendar', icon: CalendarDots },
-      { id: 'dashboard' as const, label: 'Dashboard', icon: ChartBar },
-    ].filter((l) => (l.id !== 'dashboard' || spec.layout === 'dashboard') && (l.id !== 'board' || lanes.length > 0) && (l.id !== 'calendar' || dates.length > 0)),
+    ].filter((l) => (l.id !== 'board' || lanes.length > 0) && (l.id !== 'calendar' || dates.length > 0)),
   )
   const showing = $derived(new Set(shown.map((c) => c.key)))
   const hidden = $derived(new Set(spec.hide))
@@ -159,15 +151,11 @@
   // fields of a list's line or a card, as chips in their order, each
   // removable but a table's title; and those not drawn, which its + adds.
   // A table's columns reorder in its own header (`Table`'s `onmove`).
-  // A dashboard's widgets keep their own popover.
   const picks = $derived(
     spec.layout === 'table'
       ? { shown: ordered.filter((c) => c === titled || !hidden.has(c.key)), rest: ordered.filter((c) => c !== titled && hidden.has(c.key)), noun: 'Columns' }
-      : spec.layout === 'list' || spec.layout === 'gallery' || spec.layout === 'board' || spec.layout === 'calendar'
-        ? { shown: choices.filter((c) => showing.has(c.key)), rest: choices.filter((c) => !showing.has(c.key)), noun: spec.layout === 'list' ? 'Fields' : 'Card fields' }
-        : null,
+      : { shown: choices.filter((c) => showing.has(c.key)), rest: choices.filter((c) => !showing.has(c.key)), noun: spec.layout === 'list' ? 'Fields' : 'Card fields' },
   )
-  const widgets = $derived(spec.layout === 'dashboard' && dashboard ? `${dashboard.widgets.length} widgets` : null)
 
   // A field shown or hidden: a table's by its hidden columns, any other
   // layout's by the fields it shows.
@@ -277,8 +265,6 @@
              drew; a field splits it into a swimlane per value, each
              holding the whole set of columns. -->
         <Select fit labelledby="{id}-group" options={[none, ...as(lanes)]} bind:value={() => swimlane ?? '', (v) => swimlaned(v)} />
-      {:else if spec.layout === 'dashboard'}
-        <Select fit labelledby="{id}-group" options={[none]} disabled />
       {:else}
         <Select fit labelledby="{id}-group" options={[none, ...as(groups)]} bind:value={() => spec.by ?? '', (v) => change({ by: v || null })} />
       {/if}
@@ -293,63 +279,46 @@
         class="direction"
         aria-label={descending ? 'Descending' : 'Ascending'}
         title={descending ? 'Descending' : 'Ascending'}
-        disabled={!sorted || spec.layout === 'dashboard'}
+        disabled={!sorted}
         onclick={() => sorted && change({ sort: { field: sorted.field, dir: descending ? 'asc' : 'desc' } })}
       >
         <Icon icon={descending ? SortDescending : SortAscending} />
       </button>
-      <Select fit labelledby="{id}-order" options={orders} disabled={spec.layout === 'dashboard'} bind:value={() => sorted?.field ?? '', (key) => order(key)} />
+      <Select fit labelledby="{id}-order" options={orders} bind:value={() => sorted?.field ?? '', (key) => order(key)} />
     </div>
-
-    {#if !picks}
-      <span class="label" id="{id}-display">Display</span>
-      <div class="control">
-        {#if widgets && dashboard}
-          <Popover label="Display" menu={false} wide button>
-            {#snippet trigger()}{widgets}{/snippet}
-            <Widgets widgets={dashboard.widgets} {fields} {values} custom={dashboard.custom} onchange={(ws) => change({ widgets: ws })} />
-          </Popover>
-        {:else}
-          <Select fit labelledby="{id}-display" options={[{ value: '', label: 'As listed' }]} disabled />
-        {/if}
-      </div>
-    {/if}
-
   </div>
 
-  {#if picks}
-    <!-- Fields, a block of its own under the rows: its label on its own
-         line, the fields drawn as chips flowing across the panel's whole
-         width, and Add after the last (the operator, 19 Nov). -->
-    <div class="fields">
-      <span class="label" id="{id}-display">Fields</span>
-      <ul class="chips" aria-labelledby="{id}-display">
-        {#each picks.shown as c (c.key)}
-          <li>
-            <Chip label={c.label} remove={c === titled ? undefined : { label: `Hide ${c.label}`, onclick: () => shows(c.key, false) }} />
-          </li>
-        {/each}
-        <!-- Add, after the last chip, wrapping as a chip would. -->
-        {#if picks.rest.length}
-          <li class="add">
-            <Popover label="Add a field" menu={false} align="start">
-              {#snippet trigger()}<Icon icon={Plus} size="1em" />Add{/snippet}
-              <fieldset class="columns">
-                <legend class="label">{picks.noun}</legend>
-                <ul>
-                  {#each picks.rest as c (c.key)}
-                    <li>
-                      <Checkbox checked={false} onchange={(on) => shows(c.key, on)}>{c.label}</Checkbox>
-                    </li>
-                  {/each}
-                </ul>
-              </fieldset>
-            </Popover>
-          </li>
-        {/if}
-      </ul>
-    </div>
-  {/if}
+  <!-- Fields, a block of its own under the rows: its label on its own
+       line, the fields drawn as chips flowing across the panel's whole
+       width, and Add after the last (the operator, 19 Nov). -->
+  <div class="fields">
+    <span class="label" id="{id}-display">Fields</span>
+    <ul class="chips" aria-labelledby="{id}-display">
+      {#each picks.shown as c (c.key)}
+        <li>
+          <Chip label={c.label} remove={c === titled ? undefined : { label: `Hide ${c.label}`, onclick: () => shows(c.key, false) }} />
+        </li>
+      {/each}
+      <!-- Add, after the last chip, wrapping as a chip would. -->
+      {#if picks.rest.length}
+        <li class="add">
+          <Popover label="Add a field" menu={false} align="start">
+            {#snippet trigger()}<Icon icon={Plus} size="1em" />Add{/snippet}
+            <fieldset class="columns">
+              <legend class="label">{picks.noun}</legend>
+              <ul>
+                {#each picks.rest as c (c.key)}
+                  <li>
+                    <Checkbox checked={false} onchange={(on) => shows(c.key, on)}>{c.label}</Checkbox>
+                  </li>
+                {/each}
+              </ul>
+            </fieldset>
+          </Popover>
+        </li>
+      {/if}
+    </ul>
+  </div>
 
   <!-- The foot, one row: Pin, which pins the open view under Pinned in
        the sidebar, or unpins it; and, on a view of the viewer's own, its

@@ -177,51 +177,35 @@ eachBrowser((name, launch) => {
 })
 
 eachBrowser((name, launch) => {
-  test(`${name}: a dashboard widget is added and edited through the shared Dialog, each cancelled first`, async () => {
+  test(`${name}: a view saved as a dashboard opens in its collection's own layout, its widgets dropped`, async () => {
     const { base, stop } = await serve()
     const browser = await launch()
     try {
       const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
       await signIn(context, base, 'camille@lanterne.example')
+      // A store from before the dashboard was retired: one timesheets
+      // view laid out as a dashboard, with its widgets.
+      const old = {
+        v: 1,
+        views: { timesheets: [{ id: 'c-old', name: 'Old dashboard', icon: 'bookmark', spec: { layout: 'dashboard', widgets: [{ kind: 'kpi', title: 'Hours', measure: { op: 'sum', field: 'hours' } }] } }] },
+        pins: [],
+      }
+      await context.addInitScript((store) => {
+        if (!localStorage.getItem('cella-views')) {
+          localStorage.setItem('cella-views', store)
+        }
+      }, JSON.stringify(old))
       const page = await context.newPage()
-      await page.goto(`${base}/invoices?view=dashboard`)
+      await page.goto(`${base}/timesheets`)
       await page.waitForLoadState('networkidle')
-      await page.getByRole('button', { name: /widgets$/ }).click()
-      const display = page.getByRole('dialog', { name: 'Display' })
-      const dialog = page.locator('dialog[open]')
-      const item = (title: string) => display.locator('li').filter({ hasText: title })
-
-      // Cancel while adding changes nothing: the widget's form draws no
-      // inline Save, only the shared Dialog.
-      await display.getByRole('button', { name: 'Add widget' }).click()
-      await dialog.getByLabel('Title').fill('Should not appear')
-      await dialog.getByRole('button', { name: 'Cancel' }).click()
-      await dialog.waitFor({ state: 'hidden' })
-      assert.equal(await item('Should not appear').count(), 0, 'Cancel adds nothing')
-
-      // Add widget opens the Dialog, ending in Add.
-      await display.getByRole('button', { name: 'Add widget' }).click()
-      await dialog.getByLabel('Title').fill('E2E widget')
-      await dialog.getByRole('button', { name: 'Add', exact: true }).click()
-      await dialog.waitFor({ state: 'hidden' })
-      await item('E2E widget').waitFor()
-
-      // Cancel while editing changes nothing.
-      await display.getByRole('button', { name: 'Edit E2E widget' }).click()
-      await dialog.getByLabel('Title').fill('Should not save')
-      await dialog.getByRole('button', { name: 'Cancel' }).click()
-      await dialog.waitFor({ state: 'hidden' })
-      assert.equal(await item('Should not save').count(), 0, 'Cancel saves nothing')
-      await item('E2E widget').waitFor()
-
-      // A widget's edit opens the Dialog too, ending in Save.
-      await display.getByRole('button', { name: 'Edit E2E widget' }).click()
-      await dialog.getByLabel('Title').fill('E2E edited')
-      await dialog.getByRole('button', { name: 'Save', exact: true }).click()
-      await dialog.waitFor({ state: 'hidden' })
-      await item('E2E edited').waitFor()
-      assert.equal(await item('E2E widget').count(), 0, 'the edit replaces the old title')
-
+      const tab = page.getByRole('navigation', { name: 'Views' }).getByRole('link', { name: 'Old dashboard' })
+      const href = (await tab.getAttribute('href')) ?? ''
+      assert.ok(!href.includes('view='), `the saved view's address names no layout of its own, the timesheets' table: ${href}`)
+      assert.ok(!href.includes('w='), 'nor any widgets')
+      await tab.click()
+      await page.waitForURL(/v=c-old/)
+      await page.locator('.rows .table, .rows table').first().waitFor()
+      assert.equal(await page.locator('.dashboard').count(), 0, 'no dashboard is drawn')
       await context.close()
     } finally {
       await browser.close()

@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-11-19
+updated = 2026-11-20
 +++
 
 # Architecture
@@ -1985,7 +1985,7 @@ two halves of one **slice**, matched by name:
   membership feat alone serves.
 - from `./app`, its client side (`App` in `@cella/org-ui`): for each
   collection it owns, a view (its columns, its New form, the status
-  badge its header shows and its dashboard's widgets) and a page (its title, its Properties, Related and Activity cards, its
+  badge its header shows) and a page (its title, its Properties, Related and Activity cards, its
   blocks and its header writes); for each collection it extends, columns
   over the fields it adds, cards and blocks over its data on an item,
   and a New form for a write of its own, replacing the owner's, or, where
@@ -2193,9 +2193,8 @@ asks the circles the reader reads in as an uncorrelated subquery,
 `(SELECT circle.reads(…))`, which Postgres runs once, and compares each
 row's owning circle with that list, so a page costs the same reading
 by mandate as reading everything. The same statement counts
-the rows each tab keeps and that the sidebar counts, gives each
-enumeration's values, and runs a dashboard's widgets as
-SQL aggregates. A field is read in SQL as the row holds it under the
+the rows each tab keeps and that the sidebar counts, and gives each
+enumeration's values. A field is read in SQL as the row holds it under the
 column's key, so a slice's select returns what each badge and date
 column shows under its key, already derived, such as an invoice's
 standing, overdue past its due date; `value` only reads it. The text
@@ -2241,9 +2240,8 @@ under `circle`, as nearly every table holds one since circles are core
 ([circles are core](#circles-are-core)), and where the member has a
 lens the composed read keeps only the rows whose `circle` is the
 lens's, one condition in the one statement
-([reading at scale](#reading-at-scale)): its page, its tabs' counts,
-its enumerations' values and its dashboard's widgets all narrow with
-it. The lens is one circle and not its subcircles, so a record the
+([reading at scale](#reading-at-scale)): its page, its tabs' counts
+and its enumerations' values all narrow with it. The lens is one circle and not its subcircles, so a record the
 root circle owns, the assembly's, leaves the view while a working
 circle is lensed. A collection whose rows name no owning circle, a
 registry (the chart of accounts, the periods, the imports, the circles

@@ -1,5 +1,5 @@
 import { onMount } from 'svelte'
-import { saved, type Custom, type Saved, type Spec } from '../models/query.ts'
+import { saved, writable, type Custom, type Layout, type Saved, type Spec } from '../models/query.ts'
 import { reorder } from '../models/drag.ts'
 import type { PinnedState } from './PinnedState.svelte.ts'
 import { usePinned } from './usePinned.ts'
@@ -13,7 +13,8 @@ const key = 'cella-views'
 // many rows each keeps is asked of the server, which renders the page
 // without them, once they are read and again whenever the rows change.
 // A view pinned under Pinned follows it: renamed, changed or deleted, so
-// is its pin, at the address `href` gives it.
+// is its pin, at the address `href` gives it. A view saved in a layout
+// no longer drawn opens in the collection's own, `layout`.
 export class ViewsState {
   list: Custom[] = $state([])
   tallies: Record<string, number> = $state({})
@@ -23,14 +24,16 @@ export class ViewsState {
   icon = $state('bookmark')
   readonly #collection: () => string
   readonly #href: (view: Custom) => string
+  readonly #layout: () => Layout
   readonly #pinned: PinnedState
 
   // `rows` is anything that changes when the rows do, such as how many
   // the view keeps. Another collection is another component, and so
   // another state, so the views are read once, as it mounts.
-  constructor(collection: () => string, rows: () => unknown = () => null, href: (view: Custom) => string = (c) => `/${collection()}?v=${c.id}`) {
+  constructor(collection: () => string, rows: () => unknown = () => null, href: (view: Custom) => string = (c) => `/${collection()}?v=${c.id}`, layout: () => Layout = () => 'list') {
     this.#collection = collection
     this.#href = href
+    this.#layout = layout
     this.#pinned = usePinned()
     onMount(() => {
       this.list = this.#read().views[this.#collection()] ?? []
@@ -58,7 +61,7 @@ export class ViewsState {
 
   #read(): Saved {
     try {
-      return saved(JSON.parse(localStorage.getItem(key) ?? 'null'))
+      return saved(JSON.parse(localStorage.getItem(key) ?? 'null'), (c) => (c === this.#collection() ? this.#layout() : 'list'))
     } catch {
       return saved(null)
     }
@@ -66,7 +69,7 @@ export class ViewsState {
 
   #write() {
     try {
-      const store = this.#read()
+      const store = writable(JSON.parse(localStorage.getItem(key) ?? 'null'))
       store.views[this.#collection()] = $state.snapshot(this.list)
       localStorage.setItem(key, JSON.stringify(store))
     } catch {

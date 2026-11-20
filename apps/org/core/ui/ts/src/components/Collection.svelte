@@ -20,10 +20,8 @@
     type Pin,
     type Look,
     type Preset,
-    type Result,
     type Shift,
     type Spec,
-    type Widget,
     under,
   } from '../models/query.ts'
   import { anchor, legend, period, placed } from '../models/calendar.ts'
@@ -52,7 +50,6 @@
   import Group from './Group.svelte'
   import Pill from './Pill.svelte'
   import Cell from './Cell.svelte'
-  import Dashboard from './Dashboard.svelte'
   import DropIndicator from './DropIndicator.svelte'
   import FilterBar from './FilterBar.svelte'
   import Frame from './PageFrame.svelte'
@@ -62,7 +59,7 @@
 
   // The one collection component: the same header, view bar, filter bar
   // and rows for every collection, as a list, a table, a gallery, a
-  // board, a calendar or a dashboard, and the drawer's View panel holding
+  // board or a calendar, and the drawer's View panel holding
   // how they are shown (layout, grouping, sort, fields; display only).
   // The filter bar always draws on its own line under the header, above
   // the rows, at one height: chips on the left, Search and + Filter on
@@ -98,7 +95,6 @@
     today,
     look,
     shifts,
-    dashboard = null,
     sorted = null,
     declared = null,
     whole = false,
@@ -139,8 +135,6 @@
     // moves it makes writes.
     look: Look
     shifts: Shift[]
-    // In the dashboard layout, the server's run of its widgets.
-    dashboard?: { custom: boolean; widgets: Widget[]; results: Result[]; errors: string[] } | null
     // The field the rows are ordered by first, and which way, the view's
     // sort or else the collection's own order (`declared`), which a
     // table's header says.
@@ -190,6 +184,7 @@
     () => name,
     () => kept,
     (c) => customLink(c),
+    () => resolved('all').layout,
   )
   const drag = useDrag()
   const writes = useWrites()
@@ -313,9 +308,8 @@
   // collection, so only a collection with no rows says it is empty.
 
   // A list, a table and a gallery draw a page of rows at a time; a board
-  // and a calendar place every row the view keeps, and a dashboard draws
-  // none.
-  const paging = $derived(!(spec.layout === 'dashboard' || (spec.layout === 'board' && grouped) || (spec.layout === 'calendar' && placing)))
+  // and a calendar place every row the view keeps.
+  const paging = $derived(!((spec.layout === 'board' && grouped) || (spec.layout === 'calendar' && placing)))
 
   const at = (day: string | null) => {
     const q = new URLSearchParams(page.url.search)
@@ -453,7 +447,6 @@
     {columns}
     {titled}
     {values}
-    {dashboard}
     {shown}
     {choices}
     grouped={grouped?.key}
@@ -584,9 +577,7 @@
   {/if}
 
   <div class="rows">
-    {#if spec.layout === 'dashboard'}
-      <Dashboard results={dashboard?.results ?? []} errors={dashboard?.errors ?? []} />
-    {:else if state.shown.length === 0 && !(spec.layout === 'calendar' && placing && kept > 0)}
+    {#if state.shown.length === 0 && !(spec.layout === 'calendar' && placing && kept > 0)}
       <p class="empty">{spec.q ? `Nothing matches “${spec.q}”.` : empty}</p>
     {:else if spec.layout === 'table'}
       <Table

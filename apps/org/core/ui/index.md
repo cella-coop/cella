@@ -301,8 +301,8 @@ draws.
   ([enforcement](../../../../_corpus/doc/enforcement.md)); a block
   drawing a form that creates a record of another kind on its own page
   no tool sees, and review holds it. **No page draws a Save button**
-  either: a document's New version and a dashboard widget's Add or
-  Save confirm in the one `Dialog`, never an inline form. The ui check
+  either: a document's New version confirms in the one `Dialog`, never
+  an inline form. The ui check
   refuses a `Form` drawn on a page, outside a `Dialog` or
   `ProposeInstead`, whose submit starts with Save
   ([enforcement](../../../../_corpus/doc/enforcement.md)).
@@ -350,8 +350,9 @@ draws.
   Linear's display menu, display only: layout, grouping, sort and
   fields. At its top the layout, a segmented control of icons (list ·
   table · gallery · board · calendar, those the
-  collection's fields allow; a dashboard is no choice here, though a view
-  already laid out as one keeps showing it and rendering as it does), then the same rows in the same order
+  collection's fields allow; an address or a saved view naming a layout
+  no longer drawn, as the retired dashboard, opens in the collection's
+  own), then the same rows in the same order
   everywhere, each a label and a dropdown, ending on one right edge:
   Group by (any enumeration, person or circle field, a record link, a
   boolean, a text field holding few distinct values, at most 20 across
@@ -372,8 +373,7 @@ draws.
   list, the fields under and after each row's title, in a table, its
   columns, which reorder by their headers in the table itself, in a
   gallery or on a board, its cards' fields, in a calendar, its cards'
-  fields), or, in a dashboard, Display, a row whose popover holds its
-  widgets; then Circles, what the view
+  fields); then Circles, what the view
   reads: This circle, the lens's, or Every circle, which drops the
   lens's condition and reads every circle's rows the reader may read,
   so a view across circles is a person's own and no feature holds a
@@ -1489,7 +1489,7 @@ attachment refuses the browser's own drag of a handle (`dragstart`),
 which would cancel the pointer's and snap the item back, and `Tile`'s
 link on a board is not `draggable`.
 
-Dashboard widgets, a table's columns by their headers in the table itself
+A table's columns by their headers in the table itself
 (`Table`'s `onmove`, kept in the view's order as the View panel keeps
 it; the operator, 19 Nov), the viewer's own view tabs, a document's blocks and a meeting's agenda reorder this way, and an
 arrangement (`Arrange`) places its choices so;
@@ -1506,32 +1506,20 @@ all at once; its moves, add, remove and move, are `models/repeat.ts`'s
 plain functions, which tests run without a browser, `RepeatState`
 wrapping them in reactive state.
 
-## Dashboards
+## Fields and charts
 
-Every collection has a dashboard, the third layout, configured and never
-coded. `models/query.ts`, exported alone as `@cella/org-ui/models` for the
+`models/query.ts`, exported alone as `@cella/org-ui/models` for the
 server, types a collection's fields from its columns' kinds (money and
-number, date, a badge as an enumeration, a person, a circle, else text) and defines a widget
-as a plain object: a figure (`kpi`), the count of rows or the sum,
-average, minimum or maximum of a numeric field, or a chart of either,
-grouped by an enumeration (bars) or by a date's month (a line), each
-over optional conditions (a field among some of its values, a date in
-the month or year of the scope's day). A view or a graft may declare its widgets
-(`dashboard`); without any, defaults derive from the fields. The
-viewer's own are JSON in the address (`w`), so the server renders them;
-the server checks them against the fields, drops and reports what
-names an undeclared field or asks what a field cannot give, and runs the
-rest as SQL aggregates over the collection's rows (`measures` in
-`@cella/org-db`); `result` shapes what they measured into what
-`Dashboard` draws, a line through every month from the first. `Dashboard` draws the results: figures as text, bars with their
-values beside them, a line with its months and values in a table for
-assistive technology and each month's tooltip. `Widgets`, in the View
-panel's Display popover, reorders and removes them inline; Add widget
-opens the shared Dialog with the widget's form (field, measure,
-filter) ending in Add and Cancel, and an edit opens it the same way,
-ending in Save and Cancel; confirming saves the view's widgets and
-closes the dialog, and Cancel, Escape or a click outside it changes
-nothing.
+number, date, a badge as an enumeration, a person, a circle, else text),
+and a view as a plain object the server checks against them: its
+conditions (a field among some of its values, a date in the month or
+year of the scope's day), its grouping, its order and its fields. A
+view's layout is a list, a table, a gallery, a board or a calendar; the
+dashboard and its widgets are retired, and a view saved in it opens in
+its collection's own layout. `Bars` draws a bar chart, each value a row
+with its label, its bar beside the largest and its figure as text, so it
+reads without the bars, as a custom report's chart does; the panel that
+holds it gives its heading.
 
 ## Accessibility
 

@@ -61,7 +61,6 @@ test('the work pages render, each collection in its own layout', async () => {
     ['/tasks', 'Press check at the printer'],
     ['/tasks/t-6', 'Fix VAT display on mixed baskets'],
     ['/timesheets', 'Shop: VAT fixes'],
-    ['/timesheets?view=dashboard', 'Hours by project'],
     [`/people/${yusuf}?tab=work`, 'Timesheets'],
     ['/contacts/halles?tab=projects', 'Les Halles Paysannes, online shop'],
     ['/invoices/F-2026-0054', 'Les Halles Paysannes, online shop'],
@@ -97,10 +96,6 @@ test('the work pages render, each collection in its own layout', async () => {
     assert.ok(tasks.text.includes(`data-drop-list="${l}"`), `the board has its ${l} column`)
   }
   assert.match((await shell.page('/timesheets', thomas)).text, /class="table[\s"]|<table/, 'timesheets open as a table')
-  const dashboard = await shell.page('/timesheets?view=dashboard', thomas)
-  for (const says of ['Hours by worker', 'Hours by project', 'Billable hours', 'Thomas Nguyen', 'Les Halles Paysannes, online shop']) {
-    assert.ok(dashboard.text.includes(says), `the timesheets' dashboard says ${says}`)
-  }
   const tabs = await shell.page('/projects/halles-shop', thomas)
   for (const tab of ['Overview', 'Tasks', 'Milestones', 'Budget']) {
     assert.ok(tabs.text.includes(`>${tab}<`), `a project's page has its ${tab} tab`)

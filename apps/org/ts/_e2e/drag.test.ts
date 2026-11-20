@@ -6,7 +6,7 @@ import assert from 'node:assert/strict'
 import { cancel, drop, idle, lifted, over, reorder, slot, start, step } from '@cella/org-ui/models'
 
 test('a lifted item moves within its list and drops where it is carried', () => {
-  let d = start('widgets', 1, 4, 'keyboard')
+  let d = start('fields', 1, 4, 'keyboard')
   assert.ok(lifted(d))
   assert.deepEqual([d.from, d.to], [1, 1])
   d = step(d, 1)
@@ -36,8 +36,8 @@ test('the indicator sits where the item will land', () => {
 
 test('a move reorders a list of any item type, and the keyboard path lands as the pointer does', () => {
   const ws = [{ title: 'Owed' }, { title: 'Overdue' }, { title: 'By month' }]
-  const keyboard = drop(step(step(start('widgets', 0, 3, 'keyboard'), 1), 1)).move
-  const pointer = drop(over(start('widgets', 0, 3, 'pointer'), 2)).move
+  const keyboard = drop(step(step(start('fields', 0, 3, 'keyboard'), 1), 1)).move
+  const pointer = drop(over(start('fields', 0, 3, 'pointer'), 2)).move
   assert.deepEqual(keyboard, pointer)
   assert.deepEqual(
     reorder(ws, keyboard!.from, keyboard!.to).map((w) => w.title),

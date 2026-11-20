@@ -143,13 +143,19 @@ eachBrowser((name, launch) => {
         const made = await context(browser, scheme)
         await signIn(made, dev.base, thomas)
         const page = await made.newPage()
-        await visit(page, dev.base, '/tasks')
+        // The board's swimlanes are by project (the board rework, 20
+        // Nov): a task made here holds none yet, so it draws on no
+        // swimlane at all, by the board's own rule (`e2e group`, "the
+        // rows with none being in none"); the list, which never drops a
+        // row for a group it lacks, is where New's settled row is
+        // checked for.
+        await visit(page, dev.base, '/tasks?view=list')
         await page.getByRole('button', { name: /^New/ }).click()
         const form = dialog(page).locator('form')
         const title = `From New's dialog in ${name}, ${scheme}`
         await form.getByLabel('Title').fill(title)
         await form.getByRole('button', { name: 'Create task' }).click()
-        await closed(page, 'a settled create', '/tasks')
+        await closed(page, 'a settled create', '/tasks?view=list')
         await page.locator('main .rows').getByText(title, { exact: true }).waitFor({ timeout: 10000 })
 
         const refused = await context(browser, scheme)

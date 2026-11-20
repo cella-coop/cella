@@ -94,17 +94,20 @@ async function drawn(page: Page, name: string, layout: string): Promise<Drawn[]>
         // a board's lane, a card-sized Value, drops a person's name for
         // its avatar alone and keeps it only in the value's own title.
         const label = [...(h?.children ?? [])]
-          .filter((c) => c !== count)
+          .filter((c) => c !== count && c.tagName !== 'BUTTON')
           .map((c) => (c.querySelector('.text')?.textContent ?? (c as HTMLElement).getAttribute?.('title') ?? c.textContent ?? '').trim())
           .join(' ')
         return { label, count: Number(count?.textContent ?? -1) }
       }
       const out: { label: string; count: number; ids: string[] }[] = []
       if (board) {
-        for (const lane of el.querySelectorAll('section.lane')) {
+        // The column headers are one row over the columns, the nth over
+        // the nth.
+        const heads = [...el.querySelectorAll('.head h3')]
+        el.querySelectorAll('section.lane').forEach((lane, i) => {
           const ids = [...lane.querySelectorAll(`a[href^="${prefix}"]`)].map(id)
-          out.push({ ...head(lane.querySelector('h3')), ids })
-        }
+          out.push({ ...head(heads[i] ?? null), ids })
+        })
         return out
       }
       for (const n of el.querySelectorAll(`li.group, tr.group, a[href^="${prefix}"]`)) {

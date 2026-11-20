@@ -36,10 +36,17 @@ eachBrowser((browserName, launch) => {
       await page.goto(`${base}/tasks`)
       await page.waitForLoadState('networkidle')
 
+      // The board splits into a swimlane per project, each with the whole
+      // set of columns under the one header row; a card moves within its
+      // own lane, so Active is its lane's.
       const lane = (name: string) => page.locator(`[data-drop-list="${name}"]`)
-      const card = lane('next').locator('a[data-drag-item]').first()
-      const id = await card.getAttribute('data-drag-id')
+      const first = lane('next').locator('a[data-drag-item]').first()
+      const id = await first.getAttribute('data-drag-id')
       assert.ok(id, 'Next holds a card')
+      const card = page.locator(`a[data-drag-id="${id}"]`)
+      const swim = page.locator('section.swimlane', { has: card })
+      const into = swim.locator('[data-drop-list="active"]')
+      const held = () => page.locator(`[data-drop-list="active"] a[data-drag-id="${id}"]`)
       assert.equal(await card.getAttribute('draggable'), 'false', 'the link starts no drag of the browser\'s own')
 
       // Pressed, carried in small steps as a hand moves, and let go over
@@ -48,15 +55,14 @@ eachBrowser((browserName, launch) => {
       await page.exposeFunction('__native', () => natives++)
       await page.evaluate(() => window.addEventListener('dragstart', () => (window as any).__native(), true))
       const from = (await card.boundingBox())!
-      const to = (await lane('active').boundingBox())!
+      const to = (await into.boundingBox())!
       await page.mouse.move(from.x + 30, from.y + 10)
       await page.mouse.down()
-      await page.mouse.move(to.x + to.width / 2, to.y + 120, { steps: 20 })
+      await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 20 })
       await page.mouse.up()
       assert.equal(natives, 0, 'the browser started no drag of its own')
 
-      const moved = lane('active').locator(`a[data-drag-id="${id}"]`)
-      await moved.waitFor()
+      await into.locator(`a[data-drag-id="${id}"]`).waitFor()
       for (let i = 0; i < 50; i++) {
         const { rows } = await su.query(`SELECT status FROM task.task WHERE id = $1`, [id])
         if (rows[0]?.status === 'active') {
@@ -70,10 +76,10 @@ eachBrowser((browserName, launch) => {
       assert.ok(entries[0].n >= 1, 'the move is in the log, as hers')
       await page.reload()
       await page.waitForLoadState('networkidle')
-      assert.equal(await lane('active').locator(`a[data-drag-id="${id}"]`).count(), 1, 'drawn again, it is still in Active')
+      assert.equal(await held().count(), 1, 'drawn again, it is still in Active')
 
       // A click is not a drag: it opens the task.
-      await lane('active').locator(`a[data-drag-id="${id}"]`).click()
+      await held().click()
       await page.waitForURL(`${base}/tasks/${id}`)
       assert.deepEqual(errors, [])
     } finally {

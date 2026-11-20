@@ -482,7 +482,20 @@ draws.
   board and a calendar place every row the view keeps. `Gallery`
   lays the items out as cards (`Tile`, drawn as Linear's: a muted reference and a person's avatar on top, the title in two lines at most, the other fields as quiet unlabelled chips (a hairline outline with an icon or a tone's dot, a record its filled `Chip`, none drawn for an empty field) and a muted created or updated line at the foot); `Board` puts them in a column
   per value of an enumeration, a person or a circle, each with its
-  count, the board offered only where a field is one of them; `Calendar` puts them on the days of a
+  count, the board offered only where a field is one of them. As
+  Linear's, its column headers are one row across the top, each value's
+  chip, its count over the whole board and, where the collection offers
+  New, a + that opens it; the row stays pinned to the top of the
+  content as it scrolls down and moves across with the columns
+  (`mirror`). A board grouped by a field of its own splits into a
+  swimlane per value, each a thin bar across every column (`Group`,
+  collapsible as a list's group, a group with its chevron's
+  `aria-expanded`), its cards under it in the header's columns, every
+  lane's columns on one width so each stands under its header; a lane's
+  column with no card is its faint band alone. A column's or a lane's
+  chip takes its tone from a row holding its value anywhere on the
+  board, else from one holding the value alone, so "done" is green
+  with cards or without; `Calendar` puts them on the days of a
   month, in whole weeks from Monday, or of a week, by a date field, in
   the order of their time where the date holds one
   (`YYYY-MM-DDTHH:MM`), or in the view's order where it sorts them,

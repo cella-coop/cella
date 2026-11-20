@@ -683,6 +683,7 @@
         {href}
         {shifts}
         onshift={(id, s, _, to) => move(id, s, to)}
+        oncreate={creates.length ? () => create.show() : undefined}
         mark={markOf}
       />
     {:else if spec.layout === 'calendar' && placing}

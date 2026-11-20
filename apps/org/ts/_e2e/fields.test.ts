@@ -97,8 +97,8 @@ eachBrowser((browserName, launch) => {
       }
       const save = async (name: string) => {
         await panel(page).getByRole('button', { name: 'Save', exact: true }).click()
-        await panel(page).getByLabel('View name').fill(name)
-        await panel(page).getByRole('button', { name: 'Save view' }).click()
+        await page.getByLabel('Rename view Untitled view').fill(name)
+        await page.getByLabel('Rename view Untitled view').press('Enter')
         await page.waitForURL((u) => u.searchParams.get('v')?.startsWith('c-') ?? false)
       }
 

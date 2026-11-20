@@ -95,8 +95,8 @@ eachBrowser((engine, launch) => {
 
         // Her own view, saved from the view bar's +.
         await page.getByRole('button', { name: 'Save this as a view' }).click()
-        await page.getByRole('textbox', { name: 'View name' }).fill('Mine')
-        await page.getByRole('button', { name: 'Save view' }).click()
+        await page.getByLabel('Rename view Untitled view').fill('Mine')
+        await page.getByLabel('Rename view Untitled view').press('Enter')
         await page.waitForURL(/[?&]v=c-/)
         await page.waitForLoadState('networkidle')
         await chip('Mine').waitFor()

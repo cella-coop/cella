@@ -411,14 +411,18 @@
     }
   }
 
+  // A new view: its chip made at once, holding what is shown, and named
+  // in place on it, as a chip is renamed; its icon is its menu's (the
+  // operator, 20 Nov: never a form in the View panel).
   function naming() {
-    shell.choose('view')
-    saved.naming = true
+    const view = saved.save({ ...spec, q: state.filter })
+    opened(view)
+    saved.begin(view.id)
   }
 
   // The filter bar's Save: through the view's own save, as its Save
-  // always went, a viewer's own view updated at once, a preset named as
-  // a new one, in the drawer's View panel.
+  // always went, a viewer's own view updated at once, a preset's saved as
+  // a new one, named on its chip.
   function saveView() {
     if (custom) {
       saved.update(custom.id, { ...spec, q: state.filter })
@@ -511,7 +515,6 @@
     opened={base}
     {whole}
     onchange={change}
-    onsave={opened}
     changed={dirty}
     keep={saveView}
     discard={reset}

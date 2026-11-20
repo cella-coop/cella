@@ -18,10 +18,6 @@ const key = 'cella-views'
 export class ViewsState {
   list: Custom[] = $state([])
   tallies: Record<string, number> = $state({})
-  // The View panel's save form: open, and the name and icon it holds.
-  naming = $state(false)
-  name = $state('')
-  icon = $state('bookmark')
   // The view renamed in place on its chip, the name it holds, and the
   // chip the focus goes back to once the keyboard ends it.
   renaming: string | null = $state(null)
@@ -92,10 +88,9 @@ export class ViewsState {
   }
 
   save(spec: Spec): Custom {
-    const view = { id: `c-${Date.now().toString(36)}`, name: this.name.trim() || 'Untitled view', icon: this.icon, spec }
+    // Named on its chip as it is made (`begin`), its icon its menu's.
+    const view = { id: `c-${Date.now().toString(36)}`, name: 'Untitled view', icon: 'bookmark', spec }
     this.list = [...this.list, view]
-    this.naming = false
-    this.name = ''
     this.#write()
     return view
   }

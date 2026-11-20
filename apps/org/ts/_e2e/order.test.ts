@@ -170,8 +170,8 @@ eachBrowser((browserName, launch) => {
 
       // A view saved with its order restores it from its tab.
       await panel(page).getByRole('button', { name: 'Save', exact: true }).click()
-      await panel(page).getByLabel('View name').fill('Largest first')
-      await panel(page).getByRole('button', { name: 'Save view' }).click()
+      await page.getByLabel('Rename view Untitled view').fill('Largest first')
+      await page.getByLabel('Rename view Untitled view').press('Enter')
       await page.waitForURL((u) => u.searchParams.get('v')?.startsWith('c-') ?? false)
       await visit('/expenses?view=table')
       assert.equal(sort(), null)

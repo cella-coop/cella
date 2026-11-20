@@ -8,11 +8,9 @@
   import SortDescending from 'phosphor-svelte/lib/SortDescending'
   import type { Column } from '../models/view.ts'
   import { spans } from '../models/calendar.ts'
-  import { arranged, groupable, laned, type Custom, type Field, type Layout, type Spec } from '../models/query.ts'
-  import { marks } from '../marks.ts'
+  import { arranged, groupable, laned, type Field, type Layout, type Spec } from '../models/query.ts'
   import { useCollection } from '../hooks/useCollection.ts'
   import { useShell } from '../hooks/useShell.ts'
-  import { useViews } from '../hooks/useViews.ts'
   import { Plus } from '../icons.ts'
   import Button from './Button.svelte'
   import { verb } from '../verbs.ts'
@@ -28,12 +26,11 @@
   // Linear's display menu: the layout on top, then the same rows in the
   // same order, each a label and a dropdown, Group by and Order by, then
   // Fields, what is shown, and Circles, whether the view reads the lens's
-  // circle or every circle the reader reads; then, while a view is being
-  // saved, its name and its icon. It holds how a view looks alone:
-  // renaming, pinning, duplicating and deleting a view are its chip's
-  // menu, in the view bar (`Collection`). Filtering, and Save, are the
-  // filter bar's,
-  // on the line above the collection (`FilterBar`). What the collection
+  // circle or every circle the reader reads. It holds how a view looks
+  // alone: making, naming, pinning, duplicating and deleting a view are
+  // its chip's, in the view bar (`Collection`). Filtering, and Save, are
+  // the filter bar's, on the line above the collection (`FilterBar`).
+  // What the collection
   // offers lives only inside the dropdowns and popovers, and a row the
   // layout has no use for is disabled, never dropped. A change hands the
   // whole spec on to the collection, which puts it in the address.
@@ -53,7 +50,6 @@
     opened,
     whole = false,
     onchange,
-    onsave,
     changed = false,
     keep,
     discard,
@@ -88,7 +84,6 @@
     // circle that owns them.
     whole?: boolean
     onchange: (spec: Spec) => void
-    onsave: (view: Custom) => void
     // Whether this page has changed the open view since it was opened (a
     // filter, a search, a layout), and what keeps or drops those changes:
     // the view's own Save and Reset, here rather than in the filter bar.
@@ -99,7 +94,6 @@
 
   const id = $props.id()
   const state = useCollection()
-  const views = useViews(() => name)
   const shell = useShell()
 
   const groups = $derived(fields.filter((f) => groupable(f, values[f.key] ?? [])))
@@ -193,11 +187,6 @@
       keys.delete(key)
     }
     change({ hide: [...keys] })
-  }
-
-  function save(e: SubmitEvent) {
-    e.preventDefault()
-    onsave(views.save({ ...spec, q: state.filter }))
   }
 </script>
 
@@ -298,27 +287,6 @@
     </ul>
   </div>
 
-  <!-- A view being saved, named and given its icon; Save is the filter
-       bar's, and a view saved is renamed on its chip. -->
-  {#if views.naming}
-    <div class="saving">
-      <form class="naming" onsubmit={save}>
-        <!-- svelte-ignore a11y_autofocus: the form opens to name the view -->
-        <input bind:value={views.name} placeholder="Name the view" aria-label="View name" autofocus />
-        <div class="marks" role="radiogroup" aria-label="Icon">
-          {#each Object.entries(marks) as [key, mark] (key)}
-            <button type="button" role="radio" class:on={views.icon === key} aria-checked={views.icon === key} title={key} onclick={() => (views.icon = key)}>
-              <Icon icon={mark} />
-            </button>
-          {/each}
-        </div>
-        <div class="buttons" data-run>
-          <Button lead={verb('Cancel')} onclick={() => (views.naming = false)}>Cancel</Button>
-          <Button lead={verb('Save view')} tone="primary" type="submit">Save view</Button>
-        </div>
-      </form>
-    </div>
-  {/if}
   {#if changed && keep && discard}
     <div class="unsaved" role="status">
       <span>Unsaved changes</span>
@@ -433,19 +401,6 @@
     align-items: center;
     gap: var(--space-1);
   }
-  .saving,
-  .naming {
-    display: grid;
-    gap: var(--space-2);
-  }
-  .saving {
-    padding-top: var(--space-2);
-  }
-  .buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-  }
   /* Changes this page made to the open view: one quiet line at the panel's
      foot, under a hairline, what keeps or drops them at its end. */
   .unsaved {
@@ -462,28 +417,5 @@
   .unsaved .keep {
     display: flex;
     gap: var(--space-1);
-  }
-  .marks {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px;
-  }
-  .marks button {
-    display: grid;
-    place-items: center;
-    width: 1.9rem;
-    height: 1.9rem;
-    border: none;
-    border-radius: var(--radius-control);
-    background: none;
-    color: var(--text-muted);
-    cursor: pointer;
-  }
-  .marks button:hover {
-    background: var(--hover);
-  }
-  .marks button.on {
-    background: var(--sunk);
-    color: var(--text);
   }
 </style>
